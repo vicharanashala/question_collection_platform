@@ -79,14 +79,14 @@ export class RedisService implements OnModuleDestroy {
     );
   }
 
-  async expire(key: string, seconds: number): Promise<void> {
+  async expire(key: string, seconds: number): Promise<number> {
     return this.safeOp(
       () => (this.client as Redis).expire(key, seconds),
       () => (this.client as InMemoryStore).expire(key, seconds),
     );
   }
 
-  async del(key: string): Promise<void> {
+  async del(key: string): Promise<number> {
     return this.safeOp(
       () => (this.client as Redis).del(key),
       () => (this.client as InMemoryStore).del(key),
@@ -124,14 +124,16 @@ class InMemoryStore {
     return parseInt(next, 10);
   }
 
-  async expire(key: string, seconds: number): Promise<void> {
+  async expire(key: string, seconds: number): Promise<number> {
     const entry = this.store.get(key);
     if (entry) {
       entry.expiresAt = Date.now() + seconds * 1000;
+      return 1;
     }
+    return 0;
   }
 
-  async del(key: string): Promise<void> {
-    this.store.delete(key);
+  async del(key: string): Promise<number> {
+    return this.store.delete(key) ? 1 : 0;
   }
 }
