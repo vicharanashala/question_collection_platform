@@ -29,8 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const stored = await getStoredUser();
-        const hasToken = await isAuthenticated();
+        const [stored, hasToken] = await Promise.all([
+          getStoredUser(),
+          isAuthenticated(),
+        ]);
         if (stored && hasToken) {
           setState({ user: stored as PublicUser, isLoading: false, isReady: true });
         } else {

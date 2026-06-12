@@ -18,13 +18,33 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// TEMP DEBUG: log all outgoing requests
+api.interceptors.request.use((config) => {
+  console.log('[API DEBUG] REQUEST:', config.method?.toUpperCase(), config.baseURL + config.url, JSON.stringify(config.data));
+  return config;
+});
+api.interceptors.response.use(
+  (res) => {
+    console.log('[API DEBUG] RESPONSE OK:', res.status, JSON.stringify(res.data));
+    return res;
+  },
+  (err) => {
+    console.log('[API DEBUG] RESPONSE ERR:', err.response?.status, err.config?.baseURL + err.config?.url, JSON.stringify(err.response?.data), err.message);
+    return Promise.reject(err);
+  }
+);
+
 // ─── Request Interceptor: Attach JWT ─────────────────────────────────────────
 
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch {
+      // AsyncStorage unavailable (e.g. Expo Go native module issue) — proceed without token
     }
     return config;
   },
