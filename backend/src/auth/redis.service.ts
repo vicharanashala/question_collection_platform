@@ -9,65 +9,88 @@ import Redis from 'ioredis';
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
-  private readonly client: Redis | InMemoryStore;
+  private client: Redis | InMemoryStore;
 
   constructor(private readonly configService: ConfigService) {
     const host = this.configService.get<string>('redis.host') ?? 'localhost';
     const port = this.configService.get<number>('redis.port') ?? 6379;
     const password = this.configService.get<string>('redis.password');
 
-    try {
-      this.client = new Redis({
-        host,
-        port,
-        password: password || undefined,
-        lazyConnect: true,
-        maxRetriesPerRequest: 1,
-        enableOfflineQueue: false,
-        connectTimeout: 2000,
-      });
+    const redis = new Redis({
+      host,
+      port,
+      password: password || undefined,
+      lazyConnect: true,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 2000,
+    });
 
-      this.client.on('error', (err) => {
-        this.logger.warn(`Redis unavailable (using in-memory fallback): ${err.message}`);
-      });
-
-      this.client.on('connect', () => {
-        this.logger.log('Connected to Redis');
-      });
-    } catch (err) {
-      this.logger.warn('Redis connection failed, using in-memory store');
+    // When Redis hits an error, disconnect and swap to in-memory store so that
+    // subsequent requests are served by the fallback immediately.
+    redis.on('error', (err) => {
+      this.logger.warn(`Redis error: ${err.message} — switching to in-memory fallback`);
+      redis.disconnect(false);
       this.client = new InMemoryStore();
-    }
+    });
+
+    redis.on('connect', () => {
+      this.logger.log('Connected to Redis');
+    });
+
+    this.client = redis;
   }
 
   async onModuleDestroy(): Promise<void> {
     if (this.client instanceof Redis) {
-      await this.client.quit();
+      await this.client.quit().catch(() => {/* ignore */});
     }
+  }
+
+  private safeOp<T>(op: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+    return op().catch(() => fallback());
   }
 
   async get(key: string): Promise<string | null> {
-    return this.client.get(key);
+    return this.safeOp(
+      () => (this.client as Redis).get(key),
+      () => (this.client as InMemoryStore).get(key),
+    );
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (ttlSeconds !== undefined) {
-      await this.client.set(key, value, 'EX', ttlSeconds);
-    } else {
-      await this.client.set(key, value);
-    }
+    return this.safeOp(
+      async () => {
+        if (ttlSeconds !== undefined) {
+          await (this.client as Redis).set(key, value, 'EX', ttlSeconds);
+        } else {
+          await (this.client as Redis).set(key, value);
+        }
+      },
+      async () => {
+        await (this.client as InMemoryStore).set(key, value);
+      },
+    );
   }
 
   async incr(key: string): Promise<number> {
-    return this.client.incr(key);
+    return this.safeOp(
+      () => (this.client as Redis).incr(key),
+      () => (this.client as InMemoryStore).incr(key),
+    );
   }
 
   async expire(key: string, seconds: number): Promise<void> {
-    await this.client.expire(key, seconds);
+    return this.safeOp(
+      () => (this.client as Redis).expire(key, seconds),
+      () => (this.client as InMemoryStore).expire(key, seconds),
+    );
   }
 
   async del(key: string): Promise<void> {
-    await this.client.del(key);
+    return this.safeOp(
+      () => (this.client as Redis).del(key),
+      () => (this.client as InMemoryStore).del(key),
+    );
   }
 }
 

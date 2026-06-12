@@ -45,14 +45,8 @@ export class AuthController {
   @Public()
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
-  async verifyOtp(
-    @Body('mobileNumber') mobileNumber: string,
-    @Body() dto: VerifyOtpDto,
-  ) {
-    if (!mobileNumber) {
-      throw new BadRequestException('mobileNumber is required');
-    }
-    return this.authService.verifyOtp(mobileNumber, dto);
+  async verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto.mobileNumber, dto);
   }
 
   /**
