@@ -1,9 +1,10 @@
 # Task 1: Authentication (OTP Login + Registration)
 
 **Module:** Auth
-**Status:** In Progress
+**Status:** Completed
 **Developer:** Claw
 **Started:** 2026-06-12
+**Completed:** 2026-06-12
 **Completed:** -
 
 ---
@@ -25,36 +26,36 @@ From Architecture:
 ## Sub-Tasks
 
 ### 1. Auth Module
-- [ ] OTP generation and SMS gateway integration
-- [ ] OTP verification endpoint
-- [ ] JWT token issuance on successful login
-- [ ] Mobile number registration with category selection
-- [ ] Language preference selection (22 Indian languages)
+- [x] OTP generation and SMS gateway integration
+- [x] OTP verification endpoint
+- [x] JWT token issuance on successful login
+- [x] Mobile number registration with category selection
+- [x] Language preference selection (22 Indian languages)
 
 ### 2. User Registration Fields
-- [ ] Name
-- [ ] Mobile Number
-- [ ] State, District, Block
-- [ ] Category: Farmer, FPO, Student, Volunteer, NGO
-- [ ] Category-specific fields:
+- [x] Name
+- [x] Mobile Number
+- [x] State, District, Block
+- [x] Category: Farmer, FPO, Student, Volunteer, NGO
+- [x] Category-specific fields:
   - Farmer: farm_size, crop_type
   - Student: course_name, university_name
   - FPO: organization_name, role
   - Volunteer/NGO: organization_name, role
 
 ### 3. Profile Management
-- [ ] View profile
-- [ ] Edit profile
-- [ ] Update crop details
+- [x] View profile
+- [x] Edit profile
+- [x] Update crop details
 
 ### 4. Database Tables
-- [ ] `users` table (see database.md)
-- [ ] `user_crop_details` table (see database.md)
+- [x] `users` table (see database.md)
+- [x] `user_crop_details` table (see database.md)
 
 ### 5. Security
-- [ ] Rate limiting on OTP requests
-- [ ] OTP expiry (5 minutes)
-- [ ] RBAC for protected routes
+- [x] Rate limiting on OTP requests
+- [x] OTP expiry (5 minutes)
+- [x] RBAC for protected routes
 
 ---
 
