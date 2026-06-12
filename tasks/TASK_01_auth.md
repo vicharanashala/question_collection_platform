@@ -1,10 +1,10 @@
 # Task 1: Authentication (OTP Login + Registration)
 
-**Module:** Auth  
-**Status:** Pending  
-**Developer:** —  
-**Started:** —  
-**Completed:** —
+**Module:** Auth
+**Status:** In Progress
+**Developer:** Claw
+**Started:** 2026-06-12
+**Completed:** -
 
 ---
 
