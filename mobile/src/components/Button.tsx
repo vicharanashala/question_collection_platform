@@ -7,15 +7,17 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   disabled?: boolean;
   loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export function Button({
@@ -26,29 +28,59 @@ export function Button({
   loading = false,
   style,
   textStyle,
+  size = 'md',
 }: ButtonProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
   const isDisabled = disabled || loading;
+
+  const heightMap = { sm: 36, md: 48, lg: 56 };
+  const paddingHMap = { sm: 16, md: 24, lg: 32 };
+  const fontSizeMap = { sm: 13, md: 15, lg: 17 };
+
+  const baseStyle: ViewStyle = {
+    paddingVertical: (heightMap[size] - 20) / 2,
+    paddingHorizontal: paddingHMap[size],
+    borderRadius: tokens.radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  };
+
+  const variantStyles: Record<string, ViewStyle> = {
+    primary: { backgroundColor: isDisabled ? c.muted : c.primary },
+    secondary: { backgroundColor: c.secondary },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: isDisabled ? c.borderSubtle : c.primary,
+    },
+    ghost: { backgroundColor: 'transparent' },
+  };
+
+  const textColors: Record<string, string> = {
+    primary: isDisabled ? c.mutedForeground : c.primaryForeground,
+    secondary: c.secondaryForeground,
+    outline: isDisabled ? c.mutedForeground : c.primary,
+    ghost: isDisabled ? c.mutedForeground : c.primary,
+  };
 
   return (
     <TouchableOpacity
-      style={[
-        styles.base,
-        styles[variant],
-        isDisabled && styles.disabled,
-        style,
-      ]}
+      style={[baseStyle, variantStyles[variant], isDisabled && styles.disabled, style]}
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.8}
+      activeOpacity={0.75}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#2E7D32' : '#fff'} />
+        <ActivityIndicator color={textColors[variant]} size="small" />
       ) : (
         <Text
           style={[
             styles.text,
-            variant === 'outline' && styles.outlineText,
-            isDisabled && styles.disabledText,
+            { color: textColors[variant], fontSize: fontSizeMap[size], lineHeight: fontSizeMap[size] + 4 },
             textStyle,
           ]}
         >
@@ -59,38 +91,9 @@ export function Button({
   );
 }
 
+import { tokens } from '../utils/theme';
+
 const styles = StyleSheet.create({
-  base: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-  },
-  primary: {
-    backgroundColor: '#2E7D32',
-  },
-  secondary: {
-    backgroundColor: '#558B2F',
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#2E7D32',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  text: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  outlineText: {
-    color: '#2E7D32',
-  },
-  disabledText: {
-    opacity: 0.7,
-  },
+  text: { fontWeight: '600', letterSpacing: 0.025 * 16 },
+  disabled: { opacity: 0.5 },
 });

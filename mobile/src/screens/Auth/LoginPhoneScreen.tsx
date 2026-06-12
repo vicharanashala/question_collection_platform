@@ -12,13 +12,18 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
+import { tokens } from '../../utils/theme';
 
 type Props = { navigation: NativeStackNavigationProp<AuthStackParamList, 'LoginPhone'> };
 
 export function LoginPhoneScreen({ navigation }: Props) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const { login } = useAuth();
+
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,17 +31,16 @@ export function LoginPhoneScreen({ navigation }: Props) {
   const validMobile = /^[6-9]\d{9}$/.test(mobile);
 
   async function handleRequestOtp() {
-    if (!validMobile) {
-      setError('Please enter a valid 10-digit mobile number');
-      return;
-    }
+    if (!validMobile) { setError('Enter a valid 10-digit mobile number'); return; }
     setError('');
     setLoading(true);
     try {
       await login(`+91${mobile}`);
       navigation.navigate('Otp', { mobileNumber: `+91${mobile}` });
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to send OTP. Please try again.';
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Unable to send OTP. Please try again.';
       Alert.alert('Error', msg);
     } finally {
       setLoading(false);
@@ -44,24 +48,31 @@ export function LoginPhoneScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.logo}>🌾</Text>
-            <Text style={styles.title}>AgriQuestion</Text>
-            <Text style={styles.subtitle}>
-              Empowering farmers with AI-driven{'\n'}agricultural knowledge
+            <View style={[styles.logoMark, { backgroundColor: c.primary }]}>
+              <Text style={[styles.logoText, { color: c.primaryForeground }]}>AQ</Text>
+            </View>
+            <Text style={[styles.brand, { color: c.text }]}>AgriQuestion</Text>
+            <Text style={[styles.tagline, { color: c.textSecondary }]}>
+              Agricultural knowledge, powered by AI
             </Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Sign In</Text>
-            <Text style={styles.cardDesc}>
-              Enter your mobile number to receive a verification code
+          {/* Card */}
+          <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
+            <Text style={[styles.cardTitle, { color: c.text }]}>Sign In</Text>
+            <Text style={[styles.cardDesc, { color: c.textSecondary }]}>
+              Enter your registered mobile number to continue
             </Text>
 
             <Input
@@ -70,9 +81,11 @@ export function LoginPhoneScreen({ navigation }: Props) {
               keyboardType="phone-pad"
               maxLength={10}
               value={mobile}
-              onChangeText={(text) => { setMobile(text.replace(/\D/g, '')); setError(''); }}
+              onChangeText={(t) => { setMobile(t.replace(/\D/g, '')); setError(''); }}
               error={error}
-              leftIcon={<Text style={styles.phoneCode}>+91</Text>}
+              leftIcon={
+                <Text style={[styles.phoneCode, { color: c.primary }]}>+91</Text>
+              }
             />
 
             <Button
@@ -82,8 +95,10 @@ export function LoginPhoneScreen({ navigation }: Props) {
               loading={loading}
             />
 
-            <Text style={styles.disclaimer}>
-              By continuing, you agree to our Terms of Service and Privacy Policy
+            <Text style={[styles.legal, { color: c.textTertiary }]}>
+              By continuing, you agree to our{' '}
+              <Text style={{ color: c.primary }}>Terms of Service</Text> and{' '}
+              <Text style={{ color: c.primary }}>Privacy Policy</Text>
             </Text>
           </View>
         </ScrollView>
@@ -93,25 +108,33 @@ export function LoginPhoneScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1F8E9' },
+  container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  header: { alignItems: 'center', marginBottom: 32 },
-  logo: { fontSize: 64, marginBottom: 12 },
-  title: { fontSize: 28, fontWeight: '800', color: '#1B5E20' },
-  subtitle: { fontSize: 14, color: '#558B2F', textAlign: 'center', marginTop: 8, lineHeight: 20 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
-    elevation: 4,
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: tokens.spacing6 },
+  header: { alignItems: 'center', marginBottom: tokens.spacing8 },
+  logoMark: {
+    width: 64,
+    height: 64,
+    borderRadius: tokens.radiusLg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: tokens.spacing3,
   },
-  cardTitle: { fontSize: 22, fontWeight: '700', color: '#212121', marginBottom: 6 },
-  cardDesc: { fontSize: 14, color: '#757575', marginBottom: 24, lineHeight: 20 },
-  phoneCode: { fontSize: 16, fontWeight: '600', color: '#2E7D32' },
-  disclaimer: { fontSize: 11, color: '#9E9E9E', textAlign: 'center', marginTop: 16, lineHeight: 16 },
+  logoText: { fontSize: 22, fontWeight: '800', letterSpacing: 1 },
+  brand: { fontSize: 26, fontWeight: '800', letterSpacing: 0.3 },
+  tagline: { fontSize: 14, marginTop: tokens.spacing1, letterSpacing: 0.01 * 14 },
+  card: {
+    borderRadius: tokens.radiusXl,
+    padding: tokens.spacing6,
+  },
+  cardTitle: { fontSize: 22, fontWeight: '700', marginBottom: tokens.spacing1 },
+  cardDesc: { fontSize: 14, marginBottom: tokens.spacing5, lineHeight: 20 },
+  phoneCode: { fontSize: 15, fontWeight: '700' },
+  legal: {
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: tokens.spacing4,
+    lineHeight: 16,
+    letterSpacing: 0.01 * 11,
+  },
 });

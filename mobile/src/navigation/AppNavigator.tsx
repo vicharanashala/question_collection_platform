@@ -1,9 +1,10 @@
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View } from 'react-native';
 
+import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingScreen } from '../components/Loading';
 import { AuthStackParamList, MainTabParamList } from './types';
@@ -21,26 +22,55 @@ import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
 
+// ─── Type definitions ─────────────────────────────────────────────────────────
+
+type RootStackParamList = {
+  Auth: undefined;
+  Main: undefined;
+  EditProfile: undefined;
+};
+
+// ─── Navigators ───────────────────────────────────────────────────────────────
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
-const RootStack = createNativeStackNavigator();
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    Home: '🏠',
-    Ask: '❓',
-    Wallet: '💰',
-    Profile: '👤',
-  };
+// ─── Tab Icon ─────────────────────────────────────────────────────────────────
+
+interface TabIconProps {
+  icon: string;
+  label: string;
+  focused: boolean;
+}
+
+function TabIcon({ icon, label, focused }: TabIconProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   return (
-    <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 22 }}>{icons[label] ?? '•'}</Text>
-      <Text style={{ fontSize: 10, color: focused ? '#2E7D32' : '#9E9E9E', fontWeight: focused ? '700' : '400', marginTop: 2 }}>
+    <View style={tabStyles.container}>
+      <Text style={[tabStyles.icon, { opacity: focused ? 1 : 0.5 }]}>{icon}</Text>
+      <Text
+        style={[
+          tabStyles.label,
+          { color: focused ? c.primary : c.textTertiary },
+          focused && tabStyles.labelActive,
+        ]}
+      >
         {label}
       </Text>
     </View>
   );
 }
+
+const tabStyles = StyleSheet.create({
+  container: { alignItems: 'center', justifyContent: 'center' },
+  icon: { fontSize: 20 },
+  label: { fontSize: 10, marginTop: 3, letterSpacing: 0.02 * 10 },
+  labelActive: { fontWeight: '700' },
+});
+
+// ─── Auth Navigator ───────────────────────────────────────────────────────────
 
 function AuthNavigator() {
   return (
@@ -53,18 +83,23 @@ function AuthNavigator() {
   );
 }
 
+// ─── Main Tab Navigator ───────────────────────────────────────────────────────
+
 function MainNavigator() {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
   return (
     <MainTab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          height: 70,
-          paddingBottom: 8,
-          paddingTop: 8,
-          backgroundColor: '#fff',
+          height: 72,
+          paddingBottom: 10,
+          paddingTop: 10,
+          backgroundColor: c.surface,
           borderTopWidth: 1,
-          borderTopColor: '#E0E0E0',
+          borderTopColor: c.borderSubtle,
         },
         tabBarShowLabel: false,
       }}
@@ -72,39 +107,67 @@ function MainNavigator() {
       <MainTab.Screen
         name="HomeTab"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Home" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} /> }}
       />
       <MainTab.Screen
         name="AskQuestion"
         component={QuestionScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Ask" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="❓" label="Ask" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Wallet"
         component={WalletScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Wallet" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💰" label="Wallet" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Profile" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} /> }}
       />
     </MainTab.Navigator>
   );
 }
 
+// ─── Root Navigator ───────────────────────────────────────────────────────────
+
 export function AppNavigator() {
-  const { isLoading, isReady, user } = useAuth();
+  const { theme, isDark } = useTheme();
+  const { user, isLoading, isReady } = useAuth();
 
   if (!isReady || isLoading) {
-    return <LoadingScreen message="Starting app..." />;
+    return <LoadingScreen message="Starting app…" />;
   }
 
+  const navTheme = {
+    dark: isDark,
+    colors: {
+      primary: theme.colors.primary,
+      background: theme.colors.background,
+      card: theme.colors.card,
+      text: theme.colors.text,
+      border: theme.colors.border,
+      notification: theme.colors.primary,
+    },
+    fonts: {
+      regular: { fontFamily: 'System', fontWeight: '400' as const },
+      medium: { fontFamily: 'System', fontWeight: '500' as const },
+      bold: { fontFamily: 'System', fontWeight: '700' as const },
+      heavy: { fontFamily: 'System', fontWeight: '900' as const },
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <RootStack.Screen name="Main" component={MainNavigator} />
+          <>
+            <RootStack.Screen name="Main" component={MainNavigator} />
+            <RootStack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={{ presentation: 'modal' }}
+            />
+          </>
         ) : (
           <RootStack.Screen name="Auth" component={AuthNavigator} />
         )}

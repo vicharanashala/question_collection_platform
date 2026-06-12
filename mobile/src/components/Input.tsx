@@ -7,6 +7,10 @@ import {
   TextInputProps,
   TouchableOpacity,
 } from 'react-native';
+import { tokens } from '../utils/theme';
+import { useTheme as useThemed } from '../hooks/useTheme';
+
+// ─── Shared Input wrapper ─────────────────────────────────────────────────────
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -16,32 +20,44 @@ interface InputProps extends TextInputProps {
   rightElement?: React.ReactNode;
 }
 
-export function Input({
-  label,
-  error,
-  hint,
-  leftIcon,
-  rightElement,
-  style,
-  ...props
-}: InputProps) {
+export function Input({ label, error, hint, leftIcon, rightElement, style, ...props }: InputProps) {
+  const { theme } = useThemed();
+  const c = theme.colors;
+
   return (
     <View style={styles.wrapper}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputRow, error && styles.inputError]}>
+      {label && (
+        <Text style={[styles.label, { color: c.text }]}>{label}</Text>
+      )}
+      <View
+        style={[
+          styles.inputRow,
+          {
+            borderColor: error ? c.error : c.borderSubtle,
+            backgroundColor: c.input,
+          },
+        ]}
+      >
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, leftIcon ? styles.inputWithLeftIcon : undefined, style]}
-          placeholderTextColor="#9E9E9E"
+          style={[
+            styles.input,
+            leftIcon ? { paddingLeft: tokens.spacing1 } : undefined,
+            { color: c.text },
+            style,
+          ]}
+          placeholderTextColor={c.textTertiary}
           {...props}
         />
         {rightElement && <View style={styles.rightElement}>{rightElement}</View>}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
-      {hint && !error && <Text style={styles.hint}>{hint}</Text>}
+      {error && <Text style={[styles.errorText, { color: c.error }]}>{error}</Text>}
+      {hint && !error && <Text style={[styles.hintText, { color: c.textTertiary }]}>{hint}</Text>}
     </View>
   );
 }
+
+// ─── OTP Input ────────────────────────────────────────────────────────────────
 
 interface OtpInputProps {
   length?: number;
@@ -51,27 +67,18 @@ interface OtpInputProps {
 }
 
 export function OtpInput({ length = 6, value, onChange, error }: OtpInputProps) {
+  const { theme } = useThemed();
+  const c = theme.colors;
   const refs = React.useRef<(TextInput | null)[]>([]);
-
   const digits = value.padEnd(length, '').slice(0, length).split('');
 
   function handleKeyPress(index: number, key: string) {
-    if (key === 'Backspace') {
-      if (value[index]) {
-        const next = value.slice(0, index);
-        onChange(next);
-      } else if (index > 0) {
-        const next = value.slice(0, index - 1);
-        onChange(next);
-        refs.current[index - 1]?.focus();
-      }
-      return;
-    }
-    if (!/^\d$/.test(key)) return;
-    const next = value.slice(0, index) + key + value.slice(index + 1);
-    onChange(next);
-    if (index < length - 1) {
-      refs.current[index + 1]?.focus();
+    if (key !== 'Backspace') return;
+    if (value[index]) {
+      onChange(value.slice(0, index));
+    } else if (index > 0) {
+      onChange(value.slice(0, index - 1));
+      refs.current[index - 1]?.focus();
     }
   }
 
@@ -82,7 +89,18 @@ export function OtpInput({ length = 6, value, onChange, error }: OtpInputProps) 
           <TextInput
             key={i}
             ref={(el) => { refs.current[i] = el; }}
-            style={[styles.otpBox, error && styles.otpError, digits[i] && styles.otpFilled]}
+            style={[
+              styles.otpBox,
+              {
+                borderColor: error
+                  ? c.error
+                  : digits[i]
+                  ? c.focus
+                  : c.borderSubtle,
+                backgroundColor: c.input,
+                color: c.text,
+              },
+            ]}
             value={digits[i] ?? ''}
             keyboardType="number-pad"
             maxLength={1}
@@ -93,84 +111,50 @@ export function OtpInput({ length = 6, value, onChange, error }: OtpInputProps) 
               onChange(next);
               if (i < length - 1) refs.current[i + 1]?.focus();
             }}
-            onFocus={() => {
-              refs.current[i]?.focus();
-            }}
+            onFocus={() => refs.current[i]?.focus()}
+            placeholderTextColor={c.textTertiary}
+            placeholder="•"
           />
         ))}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: c.error, textAlign: 'center', marginTop: tokens.spacing2 }]}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 }
 
+// ─── Styles (shared base — colour applied inline via theme) ───────────────────
+
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 16 },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 6,
-  },
+  wrapper: { marginBottom: tokens.spacing4 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing1, letterSpacing: 0.01 * 13 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#BDBDBD',
-    borderRadius: 12,
-    backgroundColor: '#FAFAFA',
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
   },
-  inputError: {
-    borderColor: '#E53935',
-  },
-  leftIcon: {
-    paddingLeft: 12,
-  },
-  rightElement: {
-    paddingRight: 12,
-  },
+  leftIcon: { paddingLeft: tokens.spacing3 },
+  rightElement: { paddingRight: tokens.spacing3 },
   input: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    fontSize: 16,
-    color: '#212121',
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing3 + 2,
+    fontSize: 15,
   },
-  inputWithLeftIcon: {
-    paddingLeft: 8,
-  },
-  error: {
-    fontSize: 12,
-    color: '#E53935',
-    marginTop: 4,
-  },
-  hint: {
-    fontSize: 12,
-    color: '#757575',
-    marginTop: 4,
-  },
-  otpRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-  },
+  errorText: { fontSize: 12, marginTop: tokens.spacing1, letterSpacing: 0.01 * 12 },
+  hintText: { fontSize: 12, marginTop: tokens.spacing1, letterSpacing: 0.01 * 12 },
+  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: tokens.spacing2 + 2 },
   otpBox: {
     width: 48,
     height: 56,
     borderWidth: 1.5,
-    borderColor: '#BDBDBD',
-    borderRadius: 12,
+    borderRadius: tokens.radiusMd,
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#212121',
-    backgroundColor: '#FAFAFA',
-  },
-  otpFilled: {
-    borderColor: '#2E7D32',
-    backgroundColor: '#F1F8E9',
-  },
-  otpError: {
-    borderColor: '#E53935',
   },
 });

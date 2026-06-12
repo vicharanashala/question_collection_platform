@@ -1,15 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { tokens } from '../utils/theme';
+import { useTheme } from '../hooks/useTheme';
 
 interface LoadingScreenProps {
   message?: string;
 }
 
 export function LoadingScreen({ message = 'Loading...' }: LoadingScreenProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#2E7D32" />
-      <Text style={styles.message}>{message}</Text>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
+      <ActivityIndicator size="large" color={c.primary} />
+      <Text style={[styles.message, { color: c.textSecondary }]}>{message}</Text>
     </View>
   );
 }
@@ -20,11 +24,13 @@ interface ErrorBannerProps {
 }
 
 export function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   return (
-    <View style={styles.banner}>
-      <Text style={styles.bannerText}>{message}</Text>
+    <View style={[styles.banner, { backgroundColor: c.destructive + '18' }]}>
+      <Text style={[styles.bannerText, { color: c.error }]}>{message}</Text>
       {onRetry && (
-        <Text style={styles.retry} onPress={onRetry}>Retry</Text>
+        <Text style={[styles.retry, { color: c.primary }]} onPress={onRetry}>Retry</Text>
       )}
     </View>
   );
@@ -38,11 +44,13 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   return (
     <View style={styles.emptyContainer}>
       {icon && <Text style={styles.emptyIcon}>{icon}</Text>}
-      <Text style={styles.emptyTitle}>{title}</Text>
-      {message && <Text style={styles.emptyMessage}>{message}</Text>}
+      <Text style={[styles.emptyTitle, { color: c.text }]}>{title}</Text>
+      {message && <Text style={[styles.emptyMessage, { color: c.textSecondary }]}>{message}</Text>}
       {action && <View style={styles.emptyAction}>{action}</View>}
     </View>
   );
@@ -53,28 +61,26 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FAFAFA',
   },
-  message: { marginTop: 12, fontSize: 14, color: '#757575' },
+  message: { marginTop: tokens.spacing3, fontSize: 14, letterSpacing: 0.01 * 14 },
   banner: {
-    backgroundColor: '#FFEBEE',
-    padding: 12,
+    padding: tokens.spacing3,
+    borderRadius: tokens.radiusMd,
+    marginBottom: tokens.spacing3,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 8,
-    marginBottom: 12,
   },
-  bannerText: { flex: 1, color: '#C62828', fontSize: 14 },
-  retry: { color: '#2E7D32', fontWeight: '700', marginLeft: 12 },
+  bannerText: { flex: 1, fontSize: 14 },
+  retry: { fontWeight: '700', marginLeft: tokens.spacing3 },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 64,
+    paddingHorizontal: tokens.spacing8,
+    paddingVertical: tokens.spacing8 * 2,
   },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#212121', textAlign: 'center', marginBottom: 8 },
-  emptyMessage: { fontSize: 14, color: '#757575', textAlign: 'center', marginBottom: 24 },
-  emptyAction: { marginTop: 8 },
+  emptyIcon: { fontSize: 48, marginBottom: tokens.spacing4 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center', marginBottom: tokens.spacing2 },
+  emptyMessage: { fontSize: 14, textAlign: 'center', marginBottom: tokens.spacing5 },
+  emptyAction: { marginTop: tokens.spacing2 },
 });

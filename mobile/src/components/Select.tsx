@@ -8,6 +8,8 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { tokens } from '../utils/theme';
+import { useTheme } from '../hooks/useTheme';
 
 interface Option {
   value: string;
@@ -24,39 +26,42 @@ interface SelectProps {
   error?: string;
 }
 
-export function Select({
-  label,
-  placeholder = 'Select an option',
-  value,
-  options,
-  onChange,
-  error,
-}: SelectProps) {
+export function Select({ label, placeholder = 'Select an option', value, options, onChange, error }: SelectProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
 
   return (
     <View style={styles.wrapper}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: c.text }]}>{label}</Text>
+      )}
       <TouchableOpacity
-        style={[styles.trigger, error && styles.triggerError]}
+        style={[
+          styles.trigger,
+          {
+            borderColor: error ? c.error : c.borderSubtle,
+            backgroundColor: c.input,
+          },
+        ]}
         onPress={() => setOpen(true)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.triggerText, !selected && styles.placeholder]}>
+        <Text style={[styles.triggerText, { color: selected ? c.text : c.textTertiary }]}>
           {selected?.label ?? placeholder}
         </Text>
-        <Text style={styles.arrow}>▼</Text>
+        <Text style={[styles.arrow, { color: c.textSecondary }]}>▼</Text>
       </TouchableOpacity>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: c.error }]}>{error}</Text>}
 
       <Modal visible={open} animationType="slide" transparent>
         <View style={styles.overlay}>
-          <SafeAreaView style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label ?? 'Select'}</Text>
-              <TouchableOpacity onPress={() => setOpen(false)}>
-                <Text style={styles.closeBtn}>✕</Text>
+          <SafeAreaView style={[styles.modal, { backgroundColor: c.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: c.borderSubtle }]}>
+              <Text style={[styles.modalTitle, { color: c.text }]}>{label ?? 'Select'}</Text>
+              <TouchableOpacity onPress={() => setOpen(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={[styles.closeBtn, { color: c.textSecondary }]}>✕</Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -64,23 +69,27 @@ export function Select({
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[styles.option, item.value === value && styles.optionSelected]}
+                  style={[
+                    styles.option,
+                    item.value === value && { backgroundColor: c.accent },
+                  ]}
                   onPress={() => { onChange(item.value); setOpen(false); }}
                 >
                   <Text
                     style={[
                       styles.optionText,
+                      { color: item.value === value ? c.primary : c.text },
                       item.value === value && styles.optionTextSelected,
                     ]}
                   >
                     {item.label}
                   </Text>
                   {item.sublabel && (
-                    <Text style={styles.optionSublabel}>{item.sublabel}</Text>
+                    <Text style={[styles.optionSublabel, { color: c.textSecondary }]}>{item.sublabel}</Text>
                   )}
                 </TouchableOpacity>
               )}
-              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: c.borderSubtle }]} />}
             />
           </SafeAreaView>
         </View>
@@ -90,46 +99,39 @@ export function Select({
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 6 },
+  wrapper: { marginBottom: tokens.spacing4 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing1, letterSpacing: 0.01 * 13 },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1.5,
-    borderColor: '#BDBDBD',
-    borderRadius: 12,
-    backgroundColor: '#FAFAFA',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing3 + 2,
   },
-  triggerError: { borderColor: '#E53935' },
-  triggerText: { fontSize: 16, color: '#212121' },
-  placeholder: { color: '#9E9E9E' },
-  arrow: { fontSize: 10, color: '#757575' },
-  error: { fontSize: 12, color: '#E53935', marginTop: 4 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  triggerText: { fontSize: 15, flex: 1 },
+  arrow: { fontSize: 10, marginLeft: tokens.spacing2 },
+  error: { fontSize: 12, marginTop: tokens.spacing1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   modal: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: tokens.radiusXl,
+    borderTopRightRadius: tokens.radiusXl,
     maxHeight: '70%',
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: tokens.spacing6,
+    paddingVertical: tokens.spacing4,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#212121' },
-  closeBtn: { fontSize: 20, color: '#757575' },
-  option: { paddingHorizontal: 20, paddingVertical: 16 },
-  optionSelected: { backgroundColor: '#F1F8E9' },
-  optionText: { fontSize: 16, color: '#212121' },
-  optionTextSelected: { color: '#2E7D32', fontWeight: '700' },
-  optionSublabel: { fontSize: 12, color: '#757575', marginTop: 2 },
-  separator: { height: 1, backgroundColor: '#F0F0F0' },
+  modalTitle: { fontSize: 17, fontWeight: '700' },
+  closeBtn: { fontSize: 18 },
+  option: { paddingHorizontal: tokens.spacing6, paddingVertical: tokens.spacing4 },
+  optionText: { fontSize: 15 },
+  optionTextSelected: { fontWeight: '700' },
+  optionSublabel: { fontSize: 12, marginTop: 2 },
+  separator: { height: 1 },
 });

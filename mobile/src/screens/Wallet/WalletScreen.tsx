@@ -12,8 +12,10 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { EmptyState } from '../../components/Loading';
+import { useTheme } from '../../hooks/useTheme';
 import { walletApi } from '../../api/client';
 import { MIN_WITHDRAWAL } from '../../utils/constants';
+import { tokens } from '../../utils/theme';
 import { Transaction } from '../../types';
 
 const payoutOptions = [
@@ -22,6 +24,9 @@ const payoutOptions = [
 ];
 
 export function WalletScreen() {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
   const [balance, setBalance] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,11 +48,8 @@ export function WalletScreen() {
       ]);
       setBalance(balanceRes.data.balance);
       setTransactions(txRes.data.transactions ?? []);
-    } catch {
-      // Wallet may not exist yet for new users
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* wallet may not exist for new users */ }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -72,11 +74,9 @@ export function WalletScreen() {
       Alert.alert('Error', 'Please enter your UPI ID');
       return;
     }
-    if (payoutMethod === 'bank_transfer') {
-      if (!accountHolder.trim() || !accountNumber.trim() || !ifscCode.trim()) {
-        Alert.alert('Error', 'Please fill in all bank details');
-        return;
-      }
+    if (payoutMethod === 'bank_transfer' && (!accountHolder.trim() || !accountNumber.trim() || !ifscCode.trim())) {
+      Alert.alert('Error', 'Please fill in all bank details');
+      return;
     }
 
     setWithdrawing(true);
@@ -105,48 +105,44 @@ export function WalletScreen() {
     }
   }
 
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-  }
-
   const statusColors: Record<string, string> = {
-    completed: '#2E7D32',
-    pending: '#F57C00',
-    failed: '#C62828',
-    reversed: '#757575',
+    completed: c.success, pending: c.warning, failed: c.error, reversed: c.textTertiary,
   };
 
   if (loading) return null;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
         contentContainerStyle={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Wallet</Text>
+          <Text style={[styles.title, { color: c.text }]}>Wallet</Text>
         </View>
 
         {/* Balance Card */}
-        <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Available Balance</Text>
-          <Text style={styles.balanceAmount}>
+        <View style={[styles.balanceCard, { backgroundColor: c.primary }]}>
+          <Text style={[styles.balanceLabel, { color: c.primaryForeground }]}>Available Balance</Text>
+          <Text style={[styles.balanceAmount, { color: c.primaryForeground }]}>
             ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
-          <Text style={styles.balanceCurrency}>INR</Text>
+          <Text style={[styles.balanceCurrency, { color: c.primaryForeground }]}>INR</Text>
         </View>
 
-        {/* Withdraw Button */}
+        {/* Withdraw */}
         {!showWithdraw ? (
-          <Button
-            title={`Withdraw (Min ₹${MIN_WITHDRAWAL})`}
-            onPress={() => setShowWithdraw(true)}
-            disabled={(balance ?? 0) < MIN_WITHDRAWAL}
-          />
+          <View style={styles.withdrawSection}>
+            <Button
+              title={`Withdraw  ·  Min ₹${MIN_WITHDRAWAL}`}
+              onPress={() => setShowWithdraw(true)}
+              disabled={(balance ?? 0) < MIN_WITHDRAWAL}
+              variant="outline"
+            />
+          </View>
         ) : (
-          <View style={styles.withdrawCard}>
-            <Text style={styles.withdrawTitle}>Request Withdrawal</Text>
+          <View style={[styles.withdrawCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
+            <Text style={[styles.withdrawTitle, { color: c.text }]}>Request Withdrawal</Text>
             <Input
               label="Amount (₹)"
               placeholder={`Min ₹${MIN_WITHDRAWAL}`}
@@ -170,42 +166,21 @@ export function WalletScreen() {
               />
             ) : (
               <>
-                <Input
-                  label="Account Holder Name"
-                  placeholder="Enter name as per bank records"
-                  value={accountHolder}
-                  onChangeText={setAccountHolder}
-                  autoCapitalize="words"
-                />
-                <Input
-                  label="Account Number"
-                  placeholder="Enter account number"
-                  keyboardType="numeric"
-                  value={accountNumber}
-                  onChangeText={setAccountNumber}
-                  autoCapitalize="none"
-                />
-                <Input
-                  label="IFSC Code"
-                  placeholder="e.g., SBIN0001234"
-                  value={ifscCode}
-                  onChangeText={(t) => setIfscCode(t.toUpperCase())}
-                  autoCapitalize="characters"
-                  maxLength={11}
-                />
+                <Input label="Account Holder Name" placeholder="As per bank records" value={accountHolder} onChangeText={setAccountHolder} autoCapitalize="words" />
+                <Input label="Account Number" placeholder="Enter account number" keyboardType="numeric" value={accountNumber} onChangeText={setAccountNumber} autoCapitalize="none" />
+                <Input label="IFSC Code" placeholder="e.g., SBIN0001234" value={ifscCode} onChangeText={(t) => setIfscCode(t.toUpperCase())} autoCapitalize="characters" maxLength={11} />
               </>
             )}
             <View style={styles.withdrawActions}>
-              <Button title="Cancel" variant="outline" onPress={() => setShowWithdraw(false)} />
-              <View style={{ width: 12 }} />
-              <Button title="Submit" onPress={handleWithdraw} loading={withdrawing} />
+              <Button title="Cancel" variant="ghost" onPress={() => setShowWithdraw(false)} />
+              <Button title="Submit Request" onPress={handleWithdraw} loading={withdrawing} />
             </View>
           </View>
         )}
 
         {/* Transaction History */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Transaction History</Text>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Transaction History</Text>
           {transactions.length === 0 ? (
             <EmptyState
               icon="📜"
@@ -214,16 +189,28 @@ export function WalletScreen() {
             />
           ) : (
             transactions.map((tx) => (
-              <View key={tx.id} style={styles.txRow}>
+              <View
+                key={tx.id}
+                style={[styles.txRow, { backgroundColor: c.surface, ...tokens.shadowXs }]}
+              >
                 <View style={styles.txLeft}>
-                  <Text style={styles.txSource}>{tx.source.charAt(0).toUpperCase() + tx.source.slice(1)}</Text>
-                  <Text style={styles.txDate}>{formatDate(tx.createdAt)}</Text>
+                  <Text style={[styles.txSource, { color: c.text }]}>
+                    {tx.source.charAt(0).toUpperCase() + tx.source.slice(1).replace(/_/g, ' ')}
+                  </Text>
+                  <Text style={[styles.txDate, { color: c.textTertiary }]}>
+                    {new Date(tx.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </Text>
                 </View>
                 <View style={styles.txRight}>
-                  <Text style={[styles.txAmount, tx.type === 'credit' ? styles.credit : styles.debit]}>
+                  <Text
+                    style={[
+                      styles.txAmount,
+                      { color: tx.type === 'credit' ? c.success : c.error },
+                    ]}
+                  >
                     {tx.type === 'credit' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
                   </Text>
-                  <Text style={[styles.txStatus, { color: statusColors[tx.status] ?? '#757575' }]}>
+                  <Text style={[styles.txStatus, { color: statusColors[tx.status] ?? c.textTertiary }]}>
                     {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                   </Text>
                 </View>
@@ -237,50 +224,37 @@ export function WalletScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1F8E9' },
-  scroll: { padding: 20 },
-  header: { marginBottom: 16 },
-  title: { fontSize: 26, fontWeight: '800', color: '#1B5E20' },
+  container: { flex: 1 },
+  scroll: { padding: tokens.spacing6 },
+  header: { marginBottom: tokens.spacing4 },
+  title: { fontSize: 26, fontWeight: '800' },
   balanceCard: {
-    backgroundColor: '#2E7D32',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing6,
     alignItems: 'center',
+    marginBottom: tokens.spacing4,
   },
-  balanceLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 8 },
-  balanceAmount: { fontSize: 40, fontWeight: '800', color: '#fff' },
-  balanceCurrency: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
-  withdrawCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  withdrawTitle: { fontSize: 16, fontWeight: '700', color: '#212121', marginBottom: 16 },
-  withdrawActions: { flexDirection: 'row', marginTop: 8 },
-  section: { marginTop: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#212121', marginBottom: 12 },
+  balanceLabel: { fontSize: 13, opacity: 0.8, letterSpacing: 0.01 * 13 },
+  balanceAmount: { fontSize: 40, fontWeight: '800', marginVertical: tokens.spacing2 },
+  balanceCurrency: { fontSize: 13, opacity: 0.7 },
+  withdrawSection: { marginBottom: tokens.spacing5 },
+  withdrawCard: { borderRadius: tokens.radiusXl, padding: tokens.spacing5, marginBottom: tokens.spacing5 },
+  withdrawTitle: { fontSize: 17, fontWeight: '700', marginBottom: tokens.spacing4 },
+  withdrawActions: { flexDirection: 'row', gap: tokens.spacing3, marginTop: tokens.spacing2 },
+  section: { marginTop: tokens.spacing2 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', marginBottom: tokens.spacing3 },
   txRow: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: tokens.spacing2,
   },
   txLeft: {},
-  txSource: { fontSize: 14, fontWeight: '600', color: '#212121' },
-  txDate: { fontSize: 11, color: '#9E9E9E', marginTop: 2 },
+  txSource: { fontSize: 14, fontWeight: '600' },
+  txDate: { fontSize: 11, marginTop: 2, letterSpacing: 0.01 * 11 },
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: 15, fontWeight: '700' },
-  credit: { color: '#2E7D32' },
-  debit: { color: '#C62828' },
   txStatus: { fontSize: 11, marginTop: 2 },
 });
