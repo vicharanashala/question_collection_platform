@@ -2,7 +2,7 @@ import { UserCategory } from '../types';
 
 // ─── API Base URL ─────────────────────────────────────────────────────────────
 // In production, replace with your deployed backend URL
-export const API_BASE_URL = 'http://localhost:3000/api/v1';
+export const API_BASE_URL = 'http://192.168.1.5:3000/api/v1';
 
 // ─── Indian States ─────────────────────────────────────────────────────────────
 

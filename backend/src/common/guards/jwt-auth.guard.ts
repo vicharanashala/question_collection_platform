@@ -2,6 +2,7 @@ import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/com
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { IS_SKIP_JWT_KEY } from '../../auth/decorators/skip-jwt-auth.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -16,6 +17,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     ]);
 
     if (isPublic) {
+      return true;
+    }
+
+    const isSkipJwt = this.reflector.getAllAndOverride<boolean>(IS_SKIP_JWT_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isSkipJwt) {
       return true;
     }
 

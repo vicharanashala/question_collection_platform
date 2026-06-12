@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-const BASE_URL = 'http://localhost:3000/api/v1';
+// Use LAN IP for mobile/emulator — localhost points to the device itself, not the dev machine
+const BASE_URL = 'http://192.168.1.5:3000/api/v1';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';

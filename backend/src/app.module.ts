@@ -24,6 +24,7 @@ import {
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AuthModule,
     UserModule,
   ],
+  controllers: [HealthController],
   providers: [
     // Global rate-limit guard
     {
