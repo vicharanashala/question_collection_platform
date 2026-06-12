@@ -109,6 +109,17 @@
 * Use pagination for large result sets.
 * Monitor and optimize slow queries.
 
+## Database Operations & Security
+
+* Never create, modify, or delete database users without explicit approval.
+* Never grant SUPERUSER privileges unless explicitly requested.
+* Do not assume passwords; ask before setting credentials.
+* Prefer read-only diagnostics first.
+* Explain the proposed actions and their impact before executing destructive or privileged operations.
+* Use the principle of least privilege when creating database roles.
+* Show the exact commands before executing them if they affect security or infrastructure.
+* Distinguish between discovery, verification, and modification steps.
+
 ## Pull Request Expectations
 
 * Summarize what changed and why.
