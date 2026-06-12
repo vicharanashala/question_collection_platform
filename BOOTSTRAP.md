@@ -76,7 +76,7 @@ All task definitions live in `tasks/`. See `tasks/_TASKS.md` for the task index.
 When assigned a task, follow this checklist:
 
 **1. Start the task:**
-- Create a branch from `develop` — name it `<type>/<task-id>-<short-description>` (e.g., `feat/TASK-01-auth`, `docs/TASK-01-auth`)
+- Create a branch from `develop` — name it `<keyword>/<module-name>` (e.g., `feat/auth`, `fix/wallet`)
 - Update `tasks/_TASKS.md` — change status from `Pending` to `In Progress`
 - Update the corresponding task file — set Developer and Started date
 - Commit the status change
@@ -95,20 +95,20 @@ When assigned a task, follow this checklist:
 ### Git Conventions
 
 **Branching:**
-- Format: `<type>/<task-id>-<short-description>` (e.g., `feat/TASK-01-auth`)
-- Types: `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`
+- Format: `<keyword>/<module-name>` (e.g., `feat/auth`, `fix/wallet`, `docs/api`)
+- Keywords: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
 - Branch from `develop`
 - Never work directly on `develop`
 
 **Commit Messages (Conventional Commits):**
 - Format: `<type>(<scope>): <description>`
 - Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
-- Scope: task ID or module name (e.g., `TASK-01`, `auth`)
+- Scope: module name (e.g., `auth`, `wallet`, `home`)
 - Description: imperative mood, lowercase, no period
 - Examples:
-  - `feat(TASK-01): implement OTP login and JWT issuance`
-  - `fix(TASK-08): add in-app notification on duplicate rejection`
-  - `chore(TASK-01): add migration for users table`
+  - `feat(auth): implement OTP login and JWT issuance`
+  - `fix(wallet): add in-app notification on duplicate rejection`
+  - `chore(auth): add migration for users table`
 
 ### Task File Naming Convention
 

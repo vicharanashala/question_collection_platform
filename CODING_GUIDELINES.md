@@ -69,10 +69,12 @@
 
 ## Testing
 
-* Add or update tests for new functionality.
-* Ensure existing tests continue to pass.
+* **Backend tests are required** for every new endpoint and module. Add test cases at the same time as the implementation — not after.
 * Cover happy paths, edge cases, and error scenarios.
+* Ensure existing tests continue to pass before committing.
 * Avoid reducing test coverage without justification.
+* Test file location: `backend/src/<module>/<module>.spec.ts` (unit tests) alongside the module it tests.
+* Integration tests live in `backend/src/<module>/<module>.e2e-spec.ts`.
 
 ## React Native Specific
 
@@ -112,7 +114,7 @@
 * Summarize what changed and why.
 * Mention any assumptions made.
 * Highlight potential risks or breaking changes.
-* Include testing details and validation steps.
+* Include testing details and validation steps — tests are required for every new endpoint or module.
 * Keep changes focused on the requested scope.
 * Do not modify unrelated files without justification.
 
