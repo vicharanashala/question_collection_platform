@@ -16,12 +16,12 @@ import { tokens } from '../../utils/theme';
 export function HomeScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
   async function onRefresh() {
     setRefreshing(true);
-    await useAuth().refreshProfile?.();
+    await refreshProfile();
     setRefreshing(false);
   }
 
