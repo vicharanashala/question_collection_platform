@@ -84,6 +84,24 @@ When assigned a task, follow this checklist:
 - Commit all doc updates
 - Merge the branch to `develop` (via PR or direct merge)
 
+### Git Conventions
+
+**Branching:**
+- Format: `<type>/<task-id>-<short-description>` (e.g., `feat/TASK-01-auth`)
+- Types: `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`
+- Branch from `develop`
+- Never work directly on `develop`
+
+**Commit Messages (Conventional Commits):**
+- Format: `<type>(<scope>): <description>`
+- Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
+- Scope: task ID or module name (e.g., `TASK-01`, `auth`)
+- Description: imperative mood, lowercase, no period
+- Examples:
+  - `feat(TASK-01): implement OTP login and JWT issuance`
+  - `fix(TASK-08): add in-app notification on duplicate rejection`
+  - `chore(TASK-01): add migration for users table`
+
 ### Task File Naming Convention
 
 Task files use the format: `TASK_<count>_<module-name>.md` (e.g., `TASK_01_auth.md`, `TASK_02_profile.md`).
