@@ -68,6 +68,7 @@ All task definitions live in `tasks/`. See `tasks/_TASKS.md` for the task index.
 When assigned a task, follow this checklist:
 
 **1. Start the task:**
+- Create a branch from `develop` — name it `<type>/<task-id>-<short-description>` (e.g., `feat/TASK-01-auth`, `docs/TASK-01-auth`)
 - Update `tasks/_TASKS.md` — change status from `Pending` to `In Progress`
 - Update the corresponding task file — set Developer and Started date
 - Commit the status change
@@ -81,6 +82,7 @@ When assigned a task, follow this checklist:
 - Update `tasks/TASK_<count>_<module-name>.md` — set status to `Completed`, fill in API endpoints, notes from implementation, set Completed date
 - Update other relevant docs (architecture.md, database.md) if schema or design changed
 - Commit all doc updates
+- Merge the branch to `develop` (via PR or direct merge)
 
 ### Task File Naming Convention
 
