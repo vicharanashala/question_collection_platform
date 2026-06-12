@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
@@ -39,7 +40,7 @@ const MainTab = createBottomTabNavigator<MainTabParamList>();
 // ─── Tab Icon ─────────────────────────────────────────────────────────────────
 
 interface TabIconProps {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   focused: boolean;
 }
@@ -49,7 +50,11 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
   const c = theme.colors;
   return (
     <View style={tabStyles.container}>
-      <Text style={[tabStyles.icon, { opacity: focused ? 1 : 0.5 }]}>{icon}</Text>
+      <Ionicons
+        name={icon as keyof typeof Ionicons.glyphMap}
+        size={20}
+        color={focused ? c.primary : c.textTertiary}
+      />
       <Text
         style={[
           tabStyles.label,
@@ -107,22 +112,22 @@ function MainNavigator() {
       <MainTab.Screen
         name="HomeTab"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="Home" focused={focused} /> }}
       />
       <MainTab.Screen
         name="AskQuestion"
         component={QuestionScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="❓" label="Ask" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Submit" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Wallet"
         component={WalletScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💰" label="Wallet" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="wallet" label="Wallet" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="person" label="Profile" focused={focused} /> }}
       />
     </MainTab.Navigator>
   );

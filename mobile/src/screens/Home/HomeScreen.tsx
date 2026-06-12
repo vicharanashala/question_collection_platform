@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -12,11 +15,13 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { REWARD_TIERS, EDIT_WINDOW_SEC, DAILY_QUESTION_LIMIT } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
+import { MainTabParamList } from '../../navigation/types';
 
 export function HomeScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user, refreshProfile } = useAuth();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const [refreshing, setRefreshing] = useState(false);
 
   async function onRefresh() {
@@ -87,15 +92,16 @@ export function HomeScreen() {
           <Text style={[styles.sectionTitle, { color: c.text }]}>Quick Actions</Text>
           <View style={styles.actionGrid}>
             {[
-              { icon: '❓', label: 'Ask a Question', sub: 'Submit agricultural queries' },
-              { icon: '💰', label: 'View Wallet', sub: 'Rewards & withdrawals' },
+              { icon: 'create' as const, label: 'Submit a Question', sub: 'Submit agricultural queries', screen: 'AskQuestion' as const },
+              { icon: 'wallet' as const, label: 'View Wallet', sub: 'Rewards & withdrawals', screen: 'Wallet' as const },
             ].map((a) => (
               <TouchableOpacity
                 key={a.label}
                 style={[styles.actionCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}
-                activeOpacity={0.8}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate(a.screen)}
               >
-                <Text style={styles.actionIcon}>{a.icon}</Text>
+                <Ionicons name={a.icon} size={28} color={c.primary} style={styles.actionIcon} />
                 <Text style={[styles.actionLabel, { color: c.text }]}>{a.label}</Text>
                 <Text style={[styles.actionSub, { color: c.textSecondary }]}>{a.sub}</Text>
               </TouchableOpacity>
@@ -171,7 +177,7 @@ const styles = StyleSheet.create({
   sectionBadge: { fontSize: 11, fontWeight: '600', letterSpacing: 0.01 * 11 },
   actionGrid: { flexDirection: 'row', gap: tokens.spacing3 },
   actionCard: { flex: 1, borderRadius: tokens.radiusLg, padding: tokens.spacing4, alignItems: 'center' },
-  actionIcon: { fontSize: 32, marginBottom: tokens.spacing2 },
+  actionIcon: { marginBottom: tokens.spacing2 },
   actionLabel: { fontSize: 14, fontWeight: '700', textAlign: 'center' },
   actionSub: { fontSize: 11, textAlign: 'center', marginTop: 2 },
   tierTable: { borderRadius: tokens.radiusMd, overflow: 'hidden' },
