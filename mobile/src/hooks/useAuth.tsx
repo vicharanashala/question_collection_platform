@@ -54,13 +54,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if ('requiresRegistration' in data && data.requiresRegistration) {
       // New user — registration token is in data.tempToken
-      return;
+      return { requiresRegistration: true, tempToken: data.tempToken };
     }
 
     if ('tokens' in data && 'user' in data) {
       await saveAuth(data.tokens, data.user);
       setState({ user: data.user, isLoading: false, isReady: true });
-      return;
+      return { requiresRegistration: false, user: data.user };
     }
 
     throw new Error('Unexpected response from verify-otp');

@@ -25,13 +25,14 @@ export function OtpScreen({ navigation, route }: Props) {
   const { mobileNumber } = route.params;
   const { theme } = useTheme();
   const c = theme.colors;
-  const { verifyOtp } = useAuth();
+  const { verifyOtp, login } = useAuth();
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const verifyInFlight = useRef(false);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -49,11 +50,20 @@ export function OtpScreen({ navigation, route }: Props) {
   }, [otp]);
 
   async function handleVerify() {
+    if (verifyInFlight.current) return;
     if (otp.length < 6) { setError('Enter the complete 6-digit code'); return; }
+    verifyInFlight.current = true;
     setLoading(true);
     setError('');
     try {
-      await verifyOtp(mobileNumber, otp);
+      const result = await verifyOtp(mobileNumber, otp);
+
+      if (result?.requiresRegistration) {
+        // AuthProvider state update triggers navigator to switch to Main via user=null,
+        // but since this is a new user we explicitly navigate to Register first
+        navigation.replace('Register', { mobileNumber });
+      }
+      // else: AuthProvider updated user state → AppNavigator re-renders → shows Main
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
@@ -62,6 +72,7 @@ export function OtpScreen({ navigation, route }: Props) {
       setOtp('');
     } finally {
       setLoading(false);
+      verifyInFlight.current = false;
     }
   }
 
@@ -74,9 +85,8 @@ export function OtpScreen({ navigation, route }: Props) {
         return c - 1;
       });
     }, 1000);
-    useAuth()
-      .login(mobileNumber)
-      .catch(() => { /* proceed; user can retry from login screen */ });
+      login(mobileNumber)
+        .catch(() => { /* proceed; user can retry from login screen */ });
     Alert.alert('OTP Resent', `A new code has been sent to ${mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1******$3')}`);
   }
 
@@ -113,13 +123,6 @@ export function OtpScreen({ navigation, route }: Props) {
                 : `Code expires in ${countdown}s`}
             </Text>
           </View>
-
-          <Button
-            title="Verify & Continue"
-            onPress={handleVerify}
-            loading={loading}
-            disabled={otp.length < 6}
-          />
 
           <View style={styles.resendRow}>
             <Text style={[styles.resendPrompt, { color: c.textSecondary }]}>

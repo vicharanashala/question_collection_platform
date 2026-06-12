@@ -258,11 +258,12 @@ export function RegisterScreen({ navigation, route }: Props) {
                 />
                 <Select
                   label="State"
-                  placeholder="Select your state"
+                  placeholder="Search your state"
                   value={state}
                   options={stateOptions}
                   onChange={(v) => { setState(v); setErrors({}); }}
                   error={errors.state}
+                  searchable
                 />
                 <Input
                   label="District"
@@ -352,10 +353,12 @@ export function RegisterScreen({ navigation, route }: Props) {
                 </Text>
                 <Select
                   label="Language"
+                  placeholder="Search language"
                   value={language}
                   options={languageOptions}
                   onChange={(v) => { setLanguage(v); setErrors({}); }}
                   error={errors.language}
+                  searchable
                 />
                 <Button title="Complete Registration" onPress={handleSubmit} loading={loading} />
               </>

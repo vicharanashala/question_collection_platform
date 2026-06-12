@@ -74,13 +74,17 @@ export class AuthService {
   async requestOtp(dto: RequestOtpDto): Promise<{ message: string }> {
     const { mobileNumber } = dto;
     const rateLimitKey = `otp_rl:${mobileNumber}`;
+    console.log(`[DEBUG requestOtp] received mobile=${mobileNumber} (len=${mobileNumber.length})`);
 
-    // Rate-limit check via Redis
-    const current = await this.redisService.get(rateLimitKey);
-    if (current !== null && parseInt(current, 10) >= this.otpMaxRequestsPerWindow) {
-      throw new BadRequestException(
-        'Too many OTP requests. Please try again after 15 minutes.',
-      );
+    // Rate-limit check via Redis — skip in dev when OTP_RATE_LIMIT=false
+    const otpRateLimitEnabled = this.configService.get<boolean>('app.otpRateLimit') ?? true;
+    if (otpRateLimitEnabled) {
+      const current = await this.redisService.get(rateLimitKey);
+      if (current !== null && parseInt(current, 10) >= this.otpMaxRequestsPerWindow) {
+        throw new BadRequestException(
+          'Too many OTP requests. Please try again after 15 minutes.',
+        );
+      }
     }
 
     // Generate 6-digit OTP
@@ -113,8 +117,10 @@ export class AuthService {
     await this.userRepo.save(user);
 
     // Increment rate-limit counter
-    await this.redisService.incr(rateLimitKey);
-    await this.redisService.expire(rateLimitKey, 15 * 60); // 15 minutes
+    if (otpRateLimitEnabled) {
+      await this.redisService.incr(rateLimitKey);
+      await this.redisService.expire(rateLimitKey, 15 * 60); // 15 minutes
+    }
 
     // Send OTP via SMS gateway
     await this.smsService.sendOtp(mobileNumber, otp);
@@ -131,6 +137,7 @@ export class AuthService {
    * On subsequent verification of an existing user → return access + refresh tokens
    */
   async verifyOtp(mobileNumber: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string }> {
+    console.log(`[DEBUG verifyOtp] mobile=${mobileNumber} (len=${mobileNumber.length}) dto=${JSON.stringify(dto)}`);
     const user = await this.userRepo.findOne({ where: { mobileNumber } });
 
     if (!user) {

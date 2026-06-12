@@ -35,18 +35,22 @@ import { HealthController } from './health/health.controller';
       envFilePath: ['.env'],
     }),
 
-    // Rate limiting — global throttle for OTP endpoints
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => [
-        {
-          ttl: 60_000,   // 1 minute window
-          limit: 100,    // 100 requests per minute globally
-          name: 'default',
-        },
-      ],
-    }),
+    // Rate limiting — global throttle (disabled when THROTTLE_ENABLED=false, e.g. in dev)
+    ...(process.env.THROTTLE_ENABLED !== 'false'
+      ? [
+          ThrottlerModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => [
+              {
+                ttl: 60_000, // 1 minute window
+                limit: 100, // 100 requests per minute globally
+                name: 'default',
+              },
+            ],
+          }),
+        ]
+      : []),
 
     // Database
     TypeOrmModule.forRootAsync({
@@ -81,11 +85,15 @@ import { HealthController } from './health/health.controller';
   ],
   controllers: [HealthController],
   providers: [
-    // Global rate-limit guard
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    // Global rate-limit guard (skip in dev when THROTTLE_ENABLED=false)
+    ...(process.env.THROTTLE_ENABLED !== 'false'
+      ? [
+          {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+          },
+        ]
+      : []),
     // Global JWT auth guard (public routes opt out via @Public())
     {
       provide: APP_GUARD,

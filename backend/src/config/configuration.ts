@@ -29,4 +29,6 @@ export const smsConfig = registerAs('sms', () => ({
 export const appConfig = registerAs('app', () => ({
   port: parseInt(process.env.PORT || '3000', 10),
   environment: process.env.NODE_ENV || 'development',
+  otpRateLimit: process.env.OTP_RATE_LIMIT !== 'false', // defaults to true
+  throttleEnabled: process.env.THROTTLE_ENABLED !== 'false', // defaults to true
 }));
