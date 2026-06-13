@@ -6,12 +6,12 @@ import {
   SafeAreaView,
   ScrollView,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { EmptyState } from '../../components/Loading';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { walletApi } from '../../api/client';
 import { MIN_WITHDRAWAL } from '../../utils/constants';
@@ -26,6 +26,7 @@ const payoutOptions = [
 export function WalletScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
+  const { showToast } = useToast();
 
   const [balance, setBalance] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -48,7 +49,10 @@ export function WalletScreen() {
       ]);
       setBalance(balanceRes.data.balance);
       setTransactions(txRes.data.transactions ?? []);
-    } catch { /* wallet may not exist for new users */ }
+    } catch (err) {
+      const { getErrorMessage } = await import('../../api/client');
+      console.warn('[Wallet] Failed to load:', getErrorMessage(err));
+    }
     finally { setLoading(false); }
   }, []);
 
@@ -63,19 +67,19 @@ export function WalletScreen() {
   async function handleWithdraw() {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < MIN_WITHDRAWAL) {
-      Alert.alert('Error', `Minimum withdrawal amount is ₹${MIN_WITHDRAWAL}`);
+      showToast(`Minimum withdrawal amount is ₹${MIN_WITHDRAWAL}`, 'warning');
       return;
     }
     if (amount > (balance ?? 0)) {
-      Alert.alert('Error', 'Withdrawal amount exceeds available balance');
+      showToast('Withdrawal amount exceeds available balance', 'warning');
       return;
     }
     if (payoutMethod === 'upi' && !upiId.trim()) {
-      Alert.alert('Error', 'Please enter your UPI ID');
+      showToast('Please enter your UPI ID', 'warning');
       return;
     }
     if (payoutMethod === 'bank_transfer' && (!accountHolder.trim() || !accountNumber.trim() || !ifscCode.trim())) {
-      Alert.alert('Error', 'Please fill in all bank details');
+      showToast('Please fill in all bank details', 'warning');
       return;
     }
 
@@ -87,7 +91,7 @@ export function WalletScreen() {
           : { accountHolderName: accountHolder.trim(), accountNumber: accountNumber.trim(), ifscCode: ifscCode.trim() };
 
       await walletApi.withdraw({ amount, payoutMethod, payoutDetails });
-      Alert.alert('Success', 'Withdrawal request submitted. You will be notified once processed.');
+      showToast('Withdrawal request submitted. You will be notified once processed.', 'success');
       setShowWithdraw(false);
       setWithdrawAmount('');
       setUpiId('');
@@ -99,7 +103,7 @@ export function WalletScreen() {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Withdrawal failed. Please try again.';
-      Alert.alert('Error', msg);
+      showToast(msg, 'error');
     } finally {
       setWithdrawing(false);
     }

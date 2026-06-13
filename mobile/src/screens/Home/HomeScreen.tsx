@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { walletApi, questionApi } from '../../api/client';
@@ -44,6 +45,7 @@ export function HomeScreen() {
   const c = theme.colors;
   const { user, refreshProfile } = useAuth();
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -286,10 +288,7 @@ export function HomeScreen() {
             activeOpacity={0.75}
             onPress={() => {
               if (stats && stats.remainingToday <= 0) {
-                Alert.alert(
-                  'Daily Limit Reached',
-                  `You've used all ${DAILY_QUESTION_LIMIT} submissions for today. Try again tomorrow!`,
-                );
+                showToast(`You've used all ${DAILY_QUESTION_LIMIT} submissions for today. Try again tomorrow!`, 'warning');
               } else {
                 navigation.navigate('AskQuestion');
               }

@@ -10,13 +10,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   TouchableOpacity,
   Image,
 } from 'react-native';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { questionApi } from '../../api/client';
@@ -109,6 +109,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigation = useNavigation();
 
   const editingQuestionId = route?.params?.questionId;
@@ -157,7 +158,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       }).catch(async (err) => {
         console.log('[QuestionScreen] fetch error:', err);
         const { getErrorMessage } = await import('../../api/client');
-        Alert.alert('Error', getErrorMessage(err, 'Could not load question to edit.'));
+        showToast(getErrorMessage(err, 'Could not load question to edit.'), 'error');
         navigation.navigate('Submissions' as never);
       });
     } else {
@@ -218,10 +219,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     if (!validate()) return;
 
     if (!isEditMode && remainingToday <= 0) {
-      Alert.alert(
-        'Daily Limit Reached',
-        `You have reached your limit of ${DAILY_QUESTION_LIMIT} questions today. Please try again tomorrow.`,
-      );
+      showToast(`You have reached your limit of ${DAILY_QUESTION_LIMIT} questions today. Please try again tomorrow.`, 'warning');
       return;
     }
 
@@ -237,7 +235,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           mediaUrls = [url];
         } catch (err) {
           const { getErrorMessage } = await import('../../api/client');
-          Alert.alert('Upload Failed', getErrorMessage(err, 'Failed to upload media. Please try again.'));
+          showToast(getErrorMessage(err, 'Failed to upload media. Please try again.'), 'error');
           setLoading(false);
           setUploadingMedia(false);
           return;
@@ -279,7 +277,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
       const msg = getErrorMessage(err, 'Failed to submit. Please try again.');
-      Alert.alert('Submit Error', msg);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
       setUploadingMedia(false);

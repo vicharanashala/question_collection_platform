@@ -7,13 +7,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../api/client';
@@ -33,6 +33,7 @@ export function EditProfileScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user, refreshProfile } = useAuth();
+  const { showToast } = useToast();
 
   const [name, setName] = useState(user?.name ?? '');
   const [state, setState] = useState(user?.state ?? '');
@@ -63,11 +64,11 @@ export function EditProfileScreen() {
         languagePreference: language,
       });
       await refreshProfile();
-      Alert.alert('Success', 'Profile updated successfully');
+      showToast('Profile updated successfully', 'success');
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
       const msg = getErrorMessage(err, 'Failed to update profile. Please try again.');
-      Alert.alert('Error', msg);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }

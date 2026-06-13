@@ -7,11 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
-  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Button } from '../../components/Button';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
@@ -27,14 +27,18 @@ export function ConsentScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleContinue() {
-    if (!accepted) { Alert.alert('Consent Required', 'Please accept the Privacy Policy to continue.'); return; }
+    if (!accepted) { showToast('Please accept the Privacy Policy to continue.', 'warning'); return; }
     setLoading(true);
     try { await login(mobileNumber); }
-    catch { /* OTP request may fail; navigation to Register still proceeds */ }
+    catch (err) {
+      const { getErrorMessage } = await import('../../api/client');
+      showToast(getErrorMessage(err, 'Unable to send OTP. Please try again.'), 'error');
+    }
     finally { setLoading(false); }
     navigation.navigate('Register', { mobileNumber });
   }
