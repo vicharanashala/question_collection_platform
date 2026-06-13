@@ -71,9 +71,9 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
 }
 
 const tabStyles = StyleSheet.create({
-  container: { width: 72, alignItems: 'center', justifyContent: 'center' },
+  container: { width: 76, alignItems: 'center', justifyContent: 'center' },
   icon: { fontSize: 20 },
-  label: { fontSize: 11, marginTop: 3, letterSpacing: 0.02 * 11 },
+  label: { fontSize: 10, marginTop: 3, letterSpacing: 0.2 },
   labelActive: { fontWeight: '700' },
 });
 
@@ -123,7 +123,7 @@ function MainNavigator() {
       />
       <MainTab.Screen
         name="AskQuestion"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Ask" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Submit" focused={focused} /> }}
       >
         {() => {
           const route = useRoute<RouteProp<MainTabParamList, 'AskQuestion'>>();
