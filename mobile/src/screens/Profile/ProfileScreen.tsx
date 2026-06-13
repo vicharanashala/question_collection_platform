@@ -7,41 +7,81 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { userApi } from '../../api/client';
+import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
-import { CropDetail } from '../../types';
+import type { CropDetail, WalletBalance } from '../../types';
 
-const STATUS_COLORS: Record<string, string> = {
-  verified: '#22C55E',
-  pending: '#F59E0B',
-  manual_review: '#3B82F6',
-  suspended: '#EF4444',
-  banned: '#991B1B',
+const categoryLabels: Record<string, string> = {
+  farmer: 'Farmer', fpo: 'FPO Member', student: 'Student',
+  volunteer: 'Volunteer', ngo: 'NGO Partner',
 };
+
+const categoryEmoji: Record<string, string> = {
+  farmer: '🌾', fpo: '🤝', student: '🎓',
+  volunteer: '🙋', ngo: '🏢',
+};
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
+  verified:       { label: 'Verified',        color: '#22C55E', icon: 'checkmark-circle' },
+  pending:        { label: 'Pending',         color: '#F59E0B', icon: 'time-outline' },
+  manual_review:  { label: 'Under Review',    color: '#3B82F6', icon: 'eye-outline' },
+  suspended:      { label: 'Suspended',       color: '#EF4444', icon: 'alert-circle-outline' },
+  banned:         { label: 'Banned',          color: '#991B1B', icon: 'close-circle-outline' },
+};
+
+type ProfileStats = { totalQuestions: number };
 
 export function ProfileScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user, logout, refreshProfile } = useAuth();
   const navigation = useNavigation<any>();
-  const [crops, setCrops] = useState<CropDetail[]>([]);
 
-  const fetchCrops = useCallback(async () => {
+  const [crops, setCrops] = useState<CropDetail[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
+
+  const status = STATUS_CONFIG[user?.verificationStatus ?? ''] ?? {
+    label: 'Unknown', color: c.textTertiary, icon: 'help-circle-outline',
+  };
+
+  const fetchAll = useCallback(async () => {
+    setLoadingData(true);
     try {
-      const { data } = await userApi.getProfile();
-      setCrops(data.crops ?? []);
-    } catch { /* ignore */ }
+      const results = await Promise.allSettled([
+        userApi.getProfile(),
+        walletApi.getBalance(),
+        questionApi.list({ page: 1, limit: 1 }),
+      ]);
+      if (results[0].status === 'fulfilled') {
+        setCrops(results[0].value.data.crops ?? []);
+      }
+      if (results[1].status === 'fulfilled') {
+        setWalletBalance((results[1].value.data as WalletBalance).balance);
+      }
+      if (results[2].status === 'fulfilled') {
+        const d = results[2].value.data as { total?: number };
+        setTotalQuestions(d.total ?? null);
+      }
+    } catch {
+      // non-fatal
+    } finally {
+      setLoadingData(false);
+    }
   }, []);
 
-  useEffect(() => { fetchCrops(); }, [fetchCrops]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   async function handleLogout() {
-    Alert.alert('Logout', 'Are you sure you want to sign out?', [
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',
@@ -51,98 +91,166 @@ export function ProfileScreen() {
     ]);
   }
 
-  const verificationLabel = user?.verificationStatus
-    ? user.verificationStatus.replace(/_/g, ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase())
-    : 'Unknown';
-
-  const categoryLabels: Record<string, string> = {
-    farmer: 'Farmer', fpo: 'FPO Member', student: 'Student',
-    volunteer: 'Volunteer', ngo: 'NGO Partner',
-  };
+  function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+    return (
+      <View style={styles.infoRow}>
+        <View style={[styles.infoIconWrap, { backgroundColor: c.primary + '18' }]}>
+          <Ionicons name={icon as any} size={14} color={c.primary} />
+        </View>
+        <Text style={[styles.infoLabel, { color: c.textSecondary }]}>{label}</Text>
+        <Text style={[styles.infoValue, { color: c.text }]}>{value}</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: c.text }]}>Profile</Text>
-        </View>
-
-        {/* Identity Card */}
-        <View style={[styles.profileCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-          <View style={[styles.avatar, { backgroundColor: c.primary }]}>
-            <Text style={[styles.avatarText, { color: c.primaryForeground }]}>
-              {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
-            </Text>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Hero ──────────────────────────────────────────────────────── */}
+        <View style={[styles.hero, { backgroundColor: c.primary }]}>
+          <View style={styles.heroTop}>
+            <View style={styles.heroLeft}>
+              <Text style={styles.heroName}>{user?.name ?? 'Farmer'}</Text>
+              <View style={[styles.categoryPill, { backgroundColor: '#ffffff22' }]}>
+                <Text style={styles.categoryEmoji}>
+                  {user?.category ? categoryEmoji[user.category] : '🌱'}
+                </Text>
+                <Text style={styles.categoryLabel}>
+                  {user?.category ? categoryLabels[user.category] : ''}
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
+              <Text style={styles.avatarText}>
+                {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
+              </Text>
+            </View>
           </View>
-          <Text style={[styles.profileName, { color: c.text }]}>{user?.name ?? '—'}</Text>
-          <Text style={[styles.profileCategory, { color: c.textSecondary }]}>
-            {user?.category ? categoryLabels[user.category] : ''}
-          </Text>
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: STATUS_COLORS[user?.verificationStatus ?? ''] ?? c.textTertiary },
-              ]}
-            />
-            <Text style={[styles.statusText, { color: c.textSecondary }]}>{verificationLabel}</Text>
+
+          {/* Status badge */}
+          <View style={[styles.statusBadge, { backgroundColor: status.color + '25' }]}>
+            <Ionicons name={status.icon as any} size={13} color={status.color} />
+            <Text style={[styles.statusBadgeText, { color: status.color }]}>{status.label}</Text>
           </View>
-        </View>
 
-        {/* Details */}
-        <View style={[styles.detailsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Account Details</Text>
-          <DetailsRow label="Mobile" value={user?.mobileNumber ?? '—'} theme={theme} />
-          <DetailsRow label="State" value={user?.state ?? '—'} theme={theme} />
-          <DetailsRow label="District" value={user?.district ?? '—'} theme={theme} />
-          {user?.block && <DetailsRow label="Block" value={user.block} theme={theme} />}
-          <DetailsRow label="Language" value={user?.languagePreference ?? '—'} theme={theme} />
-          <DetailsRow
-            label="Registered"
-            value={
-              user?.createdAt
-                ? new Date(user.createdAt).toLocaleDateString('en-IN', {
-                    day: '2-digit', month: 'long', year: 'numeric',
-                  })
-                : '—'
-            }
-            theme={theme}
-          />
-        </View>
-
-        {/* Crops */}
-        <View style={[styles.detailsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Crops</Text>
-          {crops.length === 0 ? (
-            <Text style={[styles.emptyText, { color: c.textTertiary }]}>No crops added yet</Text>
-          ) : (
-            <View style={styles.cropTags}>
-              {crops.map((crop) => (
-                <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.accent }]}>
-                  <Text style={[styles.cropTagText, { color: c.accentForeground }]}>{crop.cropName}</Text>
-                  {crop.season && (
-                    <Text style={[styles.cropSeason, { color: c.textSecondary }]}>  ({crop.season})</Text>
-                  )}
-                </View>
-              ))}
+          {user?.mobileNumber && (
+            <View style={styles.heroContact}>
+              <Ionicons name="call-outline" size={12} color="#ffffffaa" />
+              <Text style={styles.heroContactText}>{user.mobileNumber}</Text>
             </View>
           )}
         </View>
 
-        {/* Actions */}
-        <View style={styles.actions}>
+        {/* ── Stats row ─────────────────────────────────────────────────── */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            {loadingData ? (
+              <ActivityIndicator size="small" color={c.primary} />
+            ) : (
+              <>
+                <Text style={[styles.statValue, { color: c.text }]}>
+                  {walletBalance !== null ? `₹${walletBalance}` : '—'}
+                </Text>
+                <Text style={[styles.statLabel, { color: c.textSecondary }]}>Wallet</Text>
+              </>
+            )}
+          </View>
+          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            {loadingData ? (
+              <ActivityIndicator size="small" color={c.primary} />
+            ) : (
+              <>
+                <Text style={[styles.statValue, { color: c.text }]}>
+                  {totalQuestions !== null ? totalQuestions : '—'}
+                </Text>
+                <Text style={[styles.statLabel, { color: c.textSecondary }]}>Questions</Text>
+              </>
+            )}
+          </View>
+          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <>
+              <Text style={[styles.statValue, { color: c.text }]}>
+                {user?.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                  : '—'}
+              </Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Member Since</Text>
+            </>
+          </View>
+        </View>
+
+        {/* ── Location & Language ───────────────────────────────────────── */}
+        <View style={styles.section}>
+          <View style={[styles.infoCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <Text style={[styles.infoCardTitle, { color: c.text }]}>Location</Text>
+            <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
+            <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
+            {user?.block && (
+              <InfoRow icon="business-outline" label="Block" value={user.block} />
+            )}
+            <InfoRow
+              icon="chatbubbles-outline"
+              label="Language"
+              value={
+                user?.languagePreference
+                  ? (user.languagePreference).toUpperCase()
+                  : '—'
+              }
+            />
+          </View>
+        </View>
+
+        {/* ── Crops ─────────────────────────────────────────────────────── */}
+        {crops.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>My Crops</Text>
+            <View style={[styles.cropsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+              <View style={styles.cropTags}>
+                {crops.map((crop) => (
+                  <View
+                    key={crop.id}
+                    style={[styles.cropTag, { backgroundColor: c.primary + '18' }]}
+                  >
+                    <Text style={[styles.cropTagText, { color: c.primary }]}>
+                      🌱 {crop.cropName}
+                    </Text>
+                    {crop.season && (
+                      <Text style={[styles.cropSeason, { color: c.textSecondary }]}>
+                        {' '}({crop.season})
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* ── Actions ───────────────────────────────────────────────────── */}
+        <View style={styles.section}>
           <TouchableOpacity
             style={[styles.actionRow, { backgroundColor: c.surface, ...tokens.shadowSm }]}
+            activeOpacity={0.75}
             onPress={() => navigation.navigate('EditProfile')}
           >
+            <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+              <Ionicons name="create-outline" size={17} color={c.primary} />
+            </View>
             <Text style={[styles.actionText, { color: c.text }]}>Edit Profile</Text>
-            <Text style={[styles.actionArrow, { color: c.textTertiary }]}>›</Text>
+            <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
           </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.actionRow, { backgroundColor: c.surface, ...tokens.shadowSm }]}
+            activeOpacity={0.75}
             onPress={handleLogout}
           >
+            <View style={[styles.actionIconWrap, { backgroundColor: c.error + '15' }]}>
+              <Ionicons name="log-out-outline" size={17} color={c.error} />
+            </View>
             <Text style={[styles.actionText, { color: c.error }]}>Sign Out</Text>
           </TouchableOpacity>
         </View>
@@ -151,47 +259,177 @@ export function ProfileScreen() {
   );
 }
 
-function DetailsRow({ label, value, theme }: { label: string; value: string; theme: any }) {
-  return (
-    <View style={[styles.detailRow, { borderBottomColor: theme.colors.borderSubtle }]}>
-      <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
-      <Text style={[styles.detailValue, { color: theme.colors.text }]}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { padding: tokens.spacing6 },
-  header: { marginBottom: tokens.spacing4 },
-  title: { fontSize: 26, fontWeight: '800' },
-  profileCard: { borderRadius: tokens.radiusXl, padding: tokens.spacing6, alignItems: 'center', marginBottom: tokens.spacing4 },
-  avatar: { width: 72, height: 72, borderRadius: tokens.radiusFull, alignItems: 'center', justifyContent: 'center', marginBottom: tokens.spacing3 },
-  avatarText: { fontSize: 30, fontWeight: '800' },
-  profileName: { fontSize: 22, fontWeight: '800', marginBottom: tokens.spacing1 },
-  profileCategory: { fontSize: 14, marginBottom: tokens.spacing2 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
-  statusDot: { width: 8, height: 8, borderRadius: tokens.radiusFull },
-  statusText: { fontSize: 12 },
-  detailsCard: { borderRadius: tokens.radiusLg, padding: tokens.spacing4, marginBottom: tokens.spacing3 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: tokens.spacing3 },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: tokens.spacing3, borderBottomWidth: 1 },
-  detailLabel: { fontSize: 13 },
-  detailValue: { fontSize: 13, fontWeight: '600', textAlign: 'right', flex: 1, marginLeft: tokens.spacing3 },
-  cropTags: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
-  cropTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.spacing3, paddingVertical: tokens.spacing1 + 2, borderRadius: tokens.radiusFull },
-  cropTagText: { fontSize: 13, fontWeight: '600' },
-  cropSeason: { fontSize: 11 },
-  emptyText: { fontSize: 13 },
-  actions: { marginTop: tokens.spacing2 },
-  actionRow: {
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing4,
+  scroll: { paddingBottom: tokens.spacing8 },
+
+  // ── Hero ──────────────────────────────────────────────────────────────────
+  hero: {
+    margin: tokens.spacing4,
+    borderRadius: tokens.radiusXl,
+    padding: tokens.spacing5,
+  },
+  heroTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing2,
+    alignItems: 'flex-start',
+    marginBottom: tokens.spacing4,
   },
-  actionText: { fontSize: 15, fontWeight: '600' },
-  actionArrow: { fontSize: 20 },
+  heroLeft: { flex: 1 },
+  heroName: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: tokens.spacing3,
+  },
+  categoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: tokens.spacing3 + 2,
+    paddingVertical: tokens.spacing1 + 1,
+    borderRadius: tokens.radiusFull,
+    gap: 5,
+  },
+  categoryEmoji: { fontSize: 13 },
+  categoryLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ffffffdd',
+  },
+  avatarWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    alignSelf: 'flex-start',
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: tokens.spacing1 + 1,
+    borderRadius: tokens.radiusFull,
+    marginBottom: tokens.spacing3,
+  },
+  statusBadgeText: { fontSize: 12, fontWeight: '700' },
+  heroContact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  heroContactText: {
+    fontSize: 12,
+    color: '#ffffffaa',
+    fontWeight: '500',
+  },
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: tokens.spacing4,
+    gap: tokens.spacing3,
+    marginBottom: tokens.spacing6,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3 + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 62,
+  },
+  statValue: { fontSize: 17, fontWeight: '800', marginBottom: 2 },
+  statLabel: { fontSize: 10, fontWeight: '500', textAlign: 'center' },
+
+  // ── Sections ──────────────────────────────────────────────────────────────
+  section: {
+    paddingHorizontal: tokens.spacing4,
+    marginBottom: tokens.spacing5,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: tokens.spacing3,
+    paddingHorizontal: tokens.spacing4,
+  },
+
+  // ── Info card ─────────────────────────────────────────────────────────────
+  infoCard: {
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+  },
+  infoCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: tokens.spacing3,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing3 - 2,
+    gap: tokens.spacing3,
+  },
+  infoIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: tokens.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoLabel: {
+    fontSize: 13,
+    width: 72,
+  },
+  infoValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+  },
+
+  // ── Crops ─────────────────────────────────────────────────────────────────
+  cropsCard: {
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+  },
+  cropTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.spacing2,
+  },
+  cropTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: tokens.spacing1 + 2,
+    borderRadius: tokens.radiusFull,
+  },
+  cropTagText: { fontSize: 13, fontWeight: '600' },
+  cropSeason: { fontSize: 11 },
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+    marginBottom: tokens.spacing2,
+    gap: tokens.spacing3,
+  },
+  actionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: tokens.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });
