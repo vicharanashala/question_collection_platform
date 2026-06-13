@@ -18,7 +18,6 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { questionApi } from '../../api/client';
 import {
-  LANGUAGES,
   SEASONS,
   DOMAIN_CATEGORIES,
   INDIAN_STATES,
@@ -74,7 +73,6 @@ async function pickVideo(): Promise<PickerResult> {
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: l.label }));
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
 const domainOptions = DOMAIN_CATEGORIES.map((d) => ({ value: d.value, label: d.label }));
 const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
@@ -87,7 +85,6 @@ export function QuestionScreen() {
   const { user } = useAuth();
 
   // Form state
-  const [language, setLanguage] = useState(user?.languagePreference ?? 'hi');
   const [state, setState] = useState(user?.state ?? '');
   const [district, setDistrict] = useState(user?.district ?? '');
   const [block, setBlock] = useState(user?.block ?? '');
@@ -214,7 +211,6 @@ export function QuestionScreen() {
       }
 
       const payload = {
-        language,
         state,
         district: district.trim(),
         block: block.trim() || null,
@@ -319,14 +315,6 @@ export function QuestionScreen() {
 
           {/* Form card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            {/* Language */}
-            <Select
-              label="Language"
-              value={language}
-              options={languageOptions}
-              onChange={setLanguage}
-            />
-
             {/* Location */}
             <Select
               label="State"
