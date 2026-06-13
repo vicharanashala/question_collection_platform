@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   View,
@@ -26,6 +28,7 @@ import {
   EDIT_WINDOW_SEC,
 } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
+import { MainTabParamList } from '../../navigation/types';
 import { compressImage, compressVideo, uploadToStorage, validateVideo } from '../../utils/media';
 
 // ─── Media picker stubs (install expo-image-picker + expo-video-thumbnails to enable) ───
@@ -84,10 +87,32 @@ const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export function QuestionScreen() {
+interface QuestionScreenProps {
+  route?: RouteProp<MainTabParamList, 'AskQuestion'>;
+}
+
+interface Question {
+  id: string;
+  questionText: string;
+  domainCategory: string;
+  season: string;
+  cropType: string;
+  state: string;
+  district: string;
+  block?: string | null;
+  mediaType: 'none' | 'image' | 'video' | 'audio';
+  mediaUrls?: string[] | null;
+  editWindowClosesAt: string | null;
+}
+
+export function QuestionScreen({ route }: QuestionScreenProps) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
+  const navigation = useNavigation();
+
+  const editingQuestionId = route?.params?.questionId;
+  const isEditMode = Boolean(editingQuestionId);
 
   // Form state
   const [state, setState] = useState(user?.state ?? '');
@@ -113,19 +138,40 @@ export function QuestionScreen() {
   const [dailyCount, setDailyCount] = useState(0);
   const [remainingToday, setRemainingToday] = useState(DAILY_QUESTION_LIMIT);
 
-  // Load stats on mount
+  // Load stats on mount; fetch question if editing
   useEffect(() => {
-    questionApi
-      .getStats()
-      .then((res) => {
-        const data = res.data as { dailyCount: number; remainingToday: number };
-        setDailyCount(data.dailyCount);
-        setRemainingToday(data.remainingToday);
-      })
-      .catch(() => {
-        // Non-fatal — show default limits
+    if (isEditMode && editingQuestionId) {
+      questionApi.get(editingQuestionId).then((res) => {
+        const q = res.data as Question;
+        setState(q.state ?? '');
+        setDistrict(q.district ?? '');
+        setBlock(q.block ?? '');
+        setDomainCategory(q.domainCategory);
+        setSeason(q.season);
+        setCropType(q.cropType);
+        setQuestionText(q.questionText);
+        if (q.mediaUrls?.length) {
+          setMediaPreview(q.mediaUrls[0]);
+          setMediaMode(q.mediaType);
+        }
+      }).catch((err) => {
+        console.log('[QuestionScreen] fetch error:', err);
+        Alert.alert('Error', 'Could not load question to edit.');
+        navigation.navigate('MyQuestions' as never);
       });
-  }, []);
+    } else {
+      questionApi
+        .getStats()
+        .then((res) => {
+          const data = res.data as { dailyCount: number; remainingToday: number };
+          setDailyCount(data.dailyCount);
+          setRemainingToday(data.remainingToday);
+        })
+        .catch(() => {
+          // Non-fatal — show default limits
+        });
+    }
+  }, [isEditMode, editingQuestionId]);
 
   // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -192,7 +238,7 @@ export function QuestionScreen() {
   async function handleSubmit() {
     if (!validate()) return;
 
-    if (remainingToday <= 0) {
+    if (!isEditMode && remainingToday <= 0) {
       Alert.alert(
         'Daily Limit Reached',
         `You have reached your limit of ${DAILY_QUESTION_LIMIT} questions today. Please try again tomorrow.`,
@@ -204,7 +250,7 @@ export function QuestionScreen() {
     try {
       let mediaUrls: string[] | undefined;
 
-      // Upload media if present
+      // Upload new media if present and changed (edit mode)
       if (mediaUri && user?.id) {
         setUploadingMedia(true);
         try {
@@ -223,7 +269,6 @@ export function QuestionScreen() {
         season,
         cropType: cropType.trim(),
         questionText: questionText.trim(),
-        submittedAt: new Date().toISOString(),
         mediaType: mediaMode,
         mediaUrls,
         deviceInfo: {
@@ -232,14 +277,20 @@ export function QuestionScreen() {
         },
       };
 
-      const response = await questionApi.submit(payload);
+      if (isEditMode && editingQuestionId) {
+        await questionApi.update(editingQuestionId, payload);
+      } else {
+        await questionApi.submit(payload);
+      }
       setSubmitted(true);
 
-      // Refresh stats
-      const res = await questionApi.getStats();
-      const stats = res.data as { dailyCount: number; remainingToday: number };
-      setDailyCount(stats.dailyCount);
-      setRemainingToday(stats.remainingToday);
+      // Refresh stats only for new submissions
+      if (!isEditMode) {
+        const res = await questionApi.getStats();
+        const stats = res.data as { dailyCount: number; remainingToday: number };
+        setDailyCount(stats.dailyCount);
+        setRemainingToday(stats.remainingToday);
+      }
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
       console.log('[QuestionSubmit] Error:', axiosErr.response?.status, axiosErr.response?.data, axiosErr.message);
@@ -279,16 +330,22 @@ export function QuestionScreen() {
           <View style={[styles.successIconWrap, { backgroundColor: c.success + '18' }]}>
             <Ionicons name="checkmark-circle" size={40} color={c.success} />
           </View>
-          <Text style={[styles.successTitle, { color: c.text }]}>Question Submitted</Text>
+          <Text style={[styles.successTitle, { color: c.text }]}>
+            {isEditMode ? 'Question Updated' : 'Question Submitted'}
+          </Text>
           <Text style={[styles.successBody, { color: c.textSecondary }]}>
             Your question is under review. You will be notified once it is approved.
           </Text>
-          <View style={[styles.editNote, { backgroundColor: c.warning + '15' }]}>
-            <Text style={[styles.editNoteText, { color: c.warning }]}>
-              ⏱ Edit window: {EDIT_WINDOW_SEC}s after submission
-            </Text>
-          </View>
-          <Button title="Submit Another Question" onPress={reset} />
+          <Button
+            title={isEditMode ? 'Back to My Questions' : 'Submit Another Question'}
+            onPress={() => {
+              if (isEditMode) {
+                navigation.navigate('MyQuestions' as never);
+              } else {
+                reset();
+              }
+            }}
+          />
         </View>
       </SafeAreaView>
     );
@@ -305,20 +362,24 @@ export function QuestionScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: c.text }]}>Ask a Question</Text>
+            <Text style={[styles.title, { color: c.text }]}>
+            {isEditMode ? 'Edit Question' : 'Ask a Question'}
+          </Text>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              Submit your agriculture-related query
+              {isEditMode ? 'Update your question within the edit window' : 'Submit your agriculture-related query'}
             </Text>
           </View>
 
-          {/* Daily limit badge */}
-          <View style={[styles.limitBadge, { backgroundColor: remainingToday > 5 ? c.success + '18' : c.warning + '18' }]}>
-            <Text style={[styles.limitBadgeText, { color: remainingToday > 5 ? c.success : c.warning }]}>
-              {remainingToday > 0
-                ? `${remainingToday} of ${DAILY_QUESTION_LIMIT} submissions remaining today`
-                : `Daily limit of ${DAILY_QUESTION_LIMIT} reached — come back tomorrow`}
-            </Text>
-          </View>
+          {/* Daily limit badge — hide in edit mode */}
+          {!isEditMode && (
+            <View style={[styles.limitBadge, { backgroundColor: remainingToday > 5 ? c.success + '18' : c.warning + '18' }]}>
+              <Text style={[styles.limitBadgeText, { color: remainingToday > 5 ? c.success : c.warning }]}>
+                {remainingToday > 0
+                  ? `${remainingToday} of ${DAILY_QUESTION_LIMIT} submissions remaining today`
+                  : `Daily limit of ${DAILY_QUESTION_LIMIT} reached — come back tomorrow`}
+              </Text>
+            </View>
+          )}
 
           {/* Form card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
@@ -446,7 +507,7 @@ export function QuestionScreen() {
             </View>
 
             <Button
-              title={loading ? 'Submitting…' : 'Submit Question'}
+              title={loading ? (isEditMode ? 'Updating…' : 'Submitting…') : (isEditMode ? 'Update Question' : 'Submit Question')}
               onPress={handleSubmit}
               loading={loading || uploadingMedia}
               disabled={remainingToday <= 0}

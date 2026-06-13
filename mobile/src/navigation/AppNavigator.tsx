@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import { RegisterScreen } from '../screens/Auth/RegisterScreen';
 
 // Main screens
 import { HomeScreen } from '../screens/Home/HomeScreen';
+import { MyQuestionsScreen } from '../screens/MyQuestions/MyQuestionsScreen';
 import { QuestionScreen } from '../screens/Question/QuestionScreen';
 import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
@@ -115,10 +117,19 @@ function MainNavigator() {
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="Home" focused={focused} /> }}
       />
       <MainTab.Screen
-        name="AskQuestion"
-        component={QuestionScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Submit" focused={focused} /> }}
+        name="MyQuestions"
+        component={MyQuestionsScreen}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="My Questions" focused={focused} /> }}
       />
+      <MainTab.Screen
+        name="AskQuestion"
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Ask" focused={focused} /> }}
+      >
+        {() => {
+          const route = useRoute<RouteProp<MainTabParamList, 'AskQuestion'>>();
+          return <QuestionScreen route={route} />;
+        }}
+      </MainTab.Screen>
       <MainTab.Screen
         name="Wallet"
         component={WalletScreen}
