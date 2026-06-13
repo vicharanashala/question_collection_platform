@@ -24,7 +24,7 @@ import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
 
 interface AuthenticatedRequest extends Request {
-  user: { userId: string; role: string };
+  user: { id: string; role: string };
 }
 
 @Controller('questions')
@@ -39,7 +39,7 @@ export class QuestionController {
     @Body() dto: SubmitQuestionDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<SubmitQuestionResponseDto> {
-    return this.questionService.submit(req.user.userId, dto);
+    return this.questionService.submit(req.user.id, dto);
   }
 
   // GET /questions — List questions (own or all for admin)
@@ -48,7 +48,7 @@ export class QuestionController {
     @Query() dto: ListQuestionsDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<{ items: unknown[]; total: number; page: number; limit: number; pages: number }> {
-    return this.questionService.list(req.user.userId, dto, req.user.role === 'admin' || req.user.role === 'super_admin');
+    return this.questionService.list(req.user.id, dto, req.user.role === 'admin' || req.user.role === 'super_admin');
   }
 
   // GET /questions/:id — Get single question
@@ -57,7 +57,7 @@ export class QuestionController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.questionService.findOne(id, req.user.userId);
+    return this.questionService.findOne(id, req.user.id);
   }
 
   // PATCH /questions/:id — Update question (edit window only)
@@ -67,14 +67,14 @@ export class QuestionController {
     @Body() dto: UpdateQuestionDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.questionService.update(req.user.userId, id, dto);
+    return this.questionService.update(req.user.id, id, dto);
   }
 
   // GET /questions/stats/me — Daily submission count for current user
   @Get('stats/me')
   async getMyStats(@Req() req: AuthenticatedRequest) {
     const [dailyCount, limits] = await Promise.all([
-      this.questionService.getDailyCount(req.user.userId),
+      this.questionService.getDailyCount(req.user.id),
       Promise.resolve(this.questionService.getLimits()),
     ]);
 
@@ -94,7 +94,7 @@ export class QuestionController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.questionService.approve(id, req.user.userId);
+    return this.questionService.approve(id, req.user.id);
   }
 
   @Post(':id/reject')
@@ -106,6 +106,6 @@ export class QuestionController {
     @Body('reason') reason: string,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.questionService.reject(id, req.user.userId, reason ?? 'Not provided');
+    return this.questionService.reject(id, req.user.id, reason ?? 'Not provided');
   }
 }
