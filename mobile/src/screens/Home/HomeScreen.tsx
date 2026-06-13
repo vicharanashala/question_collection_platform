@@ -105,39 +105,6 @@ export function HomeScreen() {
     );
   }
 
-  function TierCard({
-    tier, index,
-  }: {
-    tier: (typeof REWARD_TIERS)[number]; index: number;
-  }) {
-    const tierColors = [c.primary, '#0891B2', '#7C3AED'];
-    const tierBg = [c.primary + '12', '#0891B212', '#7C3AED12'];
-    const accentColor = tierColors[index % tierColors.length];
-    const bg = tierBg[index % tierBg.length];
-    const isTop = index === 0;
-    return (
-      <View
-        style={[
-          styles.tierCard,
-          { backgroundColor: bg, borderColor: accentColor + '40', borderWidth: isTop ? 2 : 1 },
-        ]}
-      >
-        {isTop && (
-          <View style={[styles.tierBadge, { backgroundColor: accentColor }]}>
-            <Text style={[styles.tierBadgeText, { color: '#fff' }]}>Best Value</Text>
-          </View>
-        )}
-        <Text style={[styles.tierRange, { color: accentColor }]}>
-          {tier.min}–{tier.max}{index === REWARD_TIERS.length - 1 ? '+' : ''} questions
-        </Text>
-        <Text style={[styles.tierReward, { color: c.text }]}>
-          ₹{tier.reward}
-          <Text style={[styles.tierPer, { color: c.textSecondary }]}> /question</Text>
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
@@ -254,18 +221,79 @@ export function HomeScreen() {
         {/* ── Reward tiers ───────────────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionHead}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Earn Rewards</Text>
-            <View style={[styles.earnBadge, { backgroundColor: c.success + '18' }]}>
-              <Ionicons name="trending-up" size={11} color={c.success} />
-              <Text style={[styles.earnBadgeText, { color: c.success }]}>
-                Per approved question
+            <View>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>Earn Rewards</Text>
+              <Text style={[styles.sectionSub, { color: c.textSecondary }]}>
+                ₹10 for 251–500 approved questions
               </Text>
             </View>
           </View>
-          <View style={styles.tierRow}>
-            {REWARD_TIERS.map((tier, i) => (
-              <TierCard key={tier.min} tier={tier} index={i} />
-            ))}
+
+          {/* Step path */}
+          <View style={[styles.tierPath, { backgroundColor: c.surfaceVariant }]}>
+            {/* Track line */}
+            <View style={[styles.tierTrack, { backgroundColor: c.borderSubtle }]} />
+
+            {REWARD_TIERS.map((tier, i) => {
+              const colors = [c.warning, c.textSecondary, c.success];
+              const icons = ['leaf', 'leaf', 'leaf'];
+              const labels = ['Bronze', 'Silver', 'Gold'];
+              const color = colors[i];
+              const next = REWARD_TIERS[i + 1];
+
+              return (
+                <View key={tier.min} style={styles.tierStep}>
+                  {/* Step node */}
+                  <View style={[styles.tierNode, { backgroundColor: color }]}>
+                    <Ionicons name={icons[i] as any} size={16} color="#fff" />
+                  </View>
+
+                  {/* Connector to next */}
+                  {next && (
+                    <View style={styles.tierConnector}>
+                      <View
+                        style={[
+                          styles.tierConnectorFill,
+                          { backgroundColor: color, width: '50%' },
+                        ]}
+                      />
+                    </View>
+                  )}
+
+                  {/* Label below */}
+                  <View style={styles.tierStepLabel}>
+                    <Text style={[styles.tierStepName, { color }]}>{labels[i]}</Text>
+                    <Text style={[styles.tierStepRange, { color: c.textSecondary }]}>
+                      {tier.min}–{tier.max}Qs
+                    </Text>
+                    <Text style={[styles.tierStepReward, { color: c.text }]}>
+                      ₹{tier.reward}/Q
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Total earnings potential card */}
+          <View
+            style={[
+              styles.earningsCard,
+              { backgroundColor: c.success + '12', borderColor: c.success + '30', borderWidth: 1 },
+            ]}
+          >
+            <View style={styles.earningsLeft}>
+              <Ionicons name="trophy-outline" size={22} color={c.success} />
+              <View>
+                <Text style={[styles.earningsTitle, { color: c.text }]}>Reach Gold Tier</Text>
+                <Text style={[styles.earningsSub, { color: c.textSecondary }]}>
+                  Earn up to ₹10 per question after 250 approvals
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.earningsArrow, { backgroundColor: c.success + '20' }]}>
+              <Ionicons name="arrow-forward" size={14} color={c.success} />
+            </View>
           </View>
         </View>
 
@@ -429,7 +457,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
-    marginBottom: tokens.spacing4,
+  },
+  sectionSub: {
+    fontSize: 12,
+    marginTop: 3,
   },
   earnBadge: {
     flexDirection: 'row',
@@ -476,43 +507,94 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // ── Tiers ─────────────────────────────────────────────────────────────────
-  tierRow: {
+  // ── Reward path ──────────────────────────────────────────────────────────
+  tierPath: {
     flexDirection: 'row',
-    gap: tokens.spacing3,
+    alignItems: 'flex-start',
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing5,
+    marginBottom: tokens.spacing4,
   },
-  tierCard: {
+  tierTrack: {
+    position: 'absolute',
+    top: tokens.spacing5 + 10,
+    left: tokens.spacing5 + 18,
+    right: tokens.spacing5 + 18,
+    height: 3,
+    borderRadius: 2,
+  },
+  tierStep: {
     flex: 1,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing4,
     alignItems: 'center',
     position: 'relative',
   },
-  tierBadge: {
-    position: 'absolute',
-    top: -10,
-    alignSelf: 'center',
-    paddingHorizontal: tokens.spacing2 + 2,
-    paddingVertical: 2,
+  tierNode: {
+    width: 36,
+    height: 36,
     borderRadius: tokens.radiusFull,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
-  tierBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
+  tierConnector: {
+    position: 'absolute',
+    top: tokens.spacing5 + 10,
+    left: '50%',
+    right: '-50%',
+    height: 3,
   },
-  tierRange: {
+  tierConnectorFill: {
+    height: 3,
+    borderRadius: 2,
+  },
+  tierStepLabel: {
+    alignItems: 'center',
+    marginTop: tokens.spacing3,
+  },
+  tierStepName: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  tierStepRange: {
     fontSize: 10,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  tierReward: {
-    fontSize: 22,
+  tierStepReward: {
+    fontSize: 16,
     fontWeight: '800',
   },
-  tierPer: {
-    fontSize: 11,
-    fontWeight: '500',
+
+  // ── Earnings card ─────────────────────────────────────────────────────────
+  earningsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+  },
+  earningsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing3,
+    flex: 1,
+  },
+  earningsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  earningsSub: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  earningsArrow: {
+    width: 30,
+    height: 30,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: tokens.spacing3,
   },
 
   // ── Guidelines ────────────────────────────────────────────────────────────
