@@ -16,7 +16,6 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
-import { Public } from '../common/decorators/public.decorator';
 import { QuestionService } from './question.service';
 import { SubmitQuestionDto, SubmitQuestionResponseDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';

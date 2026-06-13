@@ -6,13 +6,14 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, In } from 'typeorm';
+import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Question, AuditLog } from '../database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season } from '../common/enums';
 import { SubmitQuestionDto, SubmitQuestionResponseDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class QuestionService {
@@ -28,6 +29,7 @@ export class QuestionService {
     private readonly auditRepo: Repository<AuditLog>,
     private readonly dataSource: DataSource,
     private readonly config: ConfigService,
+    private readonly userService: UserService,
   ) {
     this.dailyLimit = this.config.get<number>('question.dailyLimit') ?? 20;
     this.editWindowSec = this.config.get<number>('question.editWindowSec') ?? 30;
@@ -44,10 +46,16 @@ export class QuestionService {
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + this.editWindowSec * 1000);
 
-    // 2. Persist question in a transaction
+    // 2. Derive language from the user's profile if the client did not send it
+    const userLanguage = dto.language
+      ? undefined
+      : await this.userService.getProfile(userId).then((u) => u.languagePreference).catch(() => 'hi');
+    const language = dto.language ?? userLanguage ?? 'hi';
+
+    // 3. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
-      language: dto.language,
+      language,
       domainCategory: dto.domainCategory,
       season: dto.season as Season,
       cropType: dto.cropType,

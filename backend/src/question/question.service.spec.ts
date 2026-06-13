@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { QuestionService } from './question.service';
+import { UserService } from '../user/user.service';
 import { Question, AuditLog } from '../database/entities';
 import { QuestionStatus, MediaType, Season } from '../common/enums';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
@@ -35,6 +36,11 @@ const mockConfigService = () => ({
   }),
 });
 
+// UserService is injected to look up languagePreference when client omits `language`
+const mockUserService = () => ({
+  getProfile: jest.fn().mockResolvedValue({ languagePreference: 'hi' }),
+});
+
 describe('QuestionService', () => {
   let service: QuestionService;
   let questionRepo: ReturnType<typeof mockQuestionRepo>;
@@ -44,13 +50,13 @@ describe('QuestionService', () => {
   const questionId = '22222222-2222-2222-2222-222222222222';
 
   const baseDto = {
-    language: 'hi',
     domainCategory: 'crop_protection',
     season: Season.KHARIF,
     cropType: 'Rice',
     questionText: 'What is the best pesticide for brown planthopper?',
     state: 'Odisha',
     district: 'Bhubaneswar',
+    agroClimaticZone: 'eastern_ghats_and_coastal_odisha',
   };
 
   beforeEach(async () => {
@@ -61,6 +67,8 @@ describe('QuestionService', () => {
         { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
         { provide: DataSource, useFactory: mockDataSource },
         { provide: ConfigService, useFactory: mockConfigService },
+        { provide: UserService, useFactory: mockUserService },
+        { provide: 'UserService', useFactory: mockUserService },
       ],
     }).compile();
 

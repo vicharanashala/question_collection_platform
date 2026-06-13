@@ -3,19 +3,21 @@ import {
   IsNotEmpty,
   IsOptional,
   IsIn,
-  IsUUID,
   IsObject,
   IsArray,
   MaxLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { Season } from '../../common/enums';
 
 export class SubmitQuestionDto {
+  /**
+   * Language code (ISO 639-1). If omitted, defaults to the user's languagePreference.
+   * The mobile app no longer sends this field — it is derived server-side.
+   */
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(50)
-  language: string;
+  language?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -37,21 +39,21 @@ export class SubmitQuestionDto {
   questionText: string;
 
   @IsString()
-  @IsOptional()
-  state?: string;
+  @IsNotEmpty()
+  state: string;
 
   @IsString()
-  @IsOptional()
-  district?: string;
+  @IsNotEmpty()
+  district: string;
 
   @IsString()
   @IsOptional()
   block?: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @MaxLength(255)
-  agroClimaticZone?: string;
+  agroClimaticZone: string;
 
   @IsOptional()
   @IsIn(['none', 'image', 'video', 'audio'])
