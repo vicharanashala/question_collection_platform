@@ -206,28 +206,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     setErrors({});
   }
 
-  async function handleAttachVideo() {
-    setMediaMode('video');
-    const result = await pickVideo();
-    if (result.cancelled || !result.uri) {
-      setMediaMode('none');
-      return;
-    }
-
-    // Validate file size
-    const validation = validateVideo(result.fileSize ?? 0);
-    if (!validation.valid) {
-      Alert.alert('Video Too Large', validation.error);
-      setMediaMode('none');
-      return;
-    }
-
-    const compressedUri = await compressVideo(result.uri);
-    setMediaUri(compressedUri);
-    setMediaPreview(result.uri);
-    setErrors({});
-  }
-
   function handleRemoveMedia() {
     setMediaMode('none');
     setMediaUri(null);
@@ -458,15 +436,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               {/* Preview */}
               {mediaPreview && (
                 <View style={styles.mediaPreview}>
-                  {mediaMode === 'image' && (
-                    <Image source={{ uri: mediaPreview }} style={styles.previewImage} resizeMode="cover" />
-                  )}
-                  {mediaMode === 'video' && (
-                    <View style={[styles.previewPlaceholder, { backgroundColor: c.muted }]}>
-                      <Ionicons name="videocam" size={28} color={c.textSecondary} />
-                      <Text style={[styles.previewPlaceholderText, { color: c.textSecondary }]}>Video attached</Text>
-                    </View>
-                  )}
+                  <Image source={{ uri: mediaPreview }} style={styles.previewImage} resizeMode="cover" />
                   <TouchableOpacity onPress={handleRemoveMedia} style={[styles.removeBtn, { backgroundColor: c.error }]}>
                     <Text style={styles.removeBtnText}>✕</Text>
                   </TouchableOpacity>
@@ -483,13 +453,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   >
                     <Ionicons name="image" size={18} color={c.text} />
                     <Text style={styles.mediaBtnText}>Photo</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.mediaBtn, { backgroundColor: c.muted, opacity: 0.4 }]}
-                    disabled
-                  >
-                    <Ionicons name="videocam" size={18} color={c.textTertiary} />
-                    <Text style={[styles.mediaBtnText, { color: c.textTertiary }]}>Video (Coming Soon)</Text>
                   </TouchableOpacity>
                 </View>
               )}
