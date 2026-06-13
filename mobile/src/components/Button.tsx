@@ -18,6 +18,7 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   size?: 'sm' | 'md' | 'lg';
+  testID?: string;
 }
 
 export function Button({
@@ -29,6 +30,7 @@ export function Button({
   style,
   textStyle,
   size = 'md',
+  testID,
 }: ButtonProps) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -73,6 +75,7 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.75}
+      testID={testID}
     >
       {loading ? (
         <ActivityIndicator color={textColors[variant]} size="small" />

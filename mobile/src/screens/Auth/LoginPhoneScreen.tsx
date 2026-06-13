@@ -30,6 +30,15 @@ export function LoginPhoneScreen({ navigation }: Props) {
 
   const validMobile = /^[6-9]\d{9}$/.test(mobile);
 
+  function handleChangeText(t: string) {
+    const newMobile = t.replace(/\D/g, '');
+    setMobile(newMobile);
+    // Validate against the new value (not stale state) so error shows on first keystroke
+    const newValid = /^[6-9]\d{9}$/.test(newMobile);
+    const isShort = newMobile.length > 0 && !newValid;
+    setError(isShort ? 'Enter a valid 10-digit mobile number' : '');
+  }
+
   async function handleRequestOtp() {
     if (!validMobile) { setError('Enter a valid 10-digit mobile number'); return; }
     setError('');
@@ -81,7 +90,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
               keyboardType="phone-pad"
               maxLength={10}
               value={mobile}
-              onChangeText={(t) => { setMobile(t.replace(/\D/g, '')); setError(''); }}
+              onChangeText={handleChangeText}
               error={error}
               leftIcon={
                 <Text style={[styles.phoneCode, { color: c.primary }]}>+91</Text>
@@ -93,6 +102,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
               onPress={handleRequestOtp}
               disabled={!validMobile}
               loading={loading}
+              testID="send-otp-button"
             />
 
             <Text style={[styles.legal, { color: c.textTertiary }]}>
