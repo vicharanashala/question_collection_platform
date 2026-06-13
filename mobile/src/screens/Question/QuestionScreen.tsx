@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -270,7 +271,7 @@ export function QuestionScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
         <View style={[styles.successCard, { backgroundColor: c.surface, ...tokens.shadowLg }]}>
           <View style={[styles.successIconWrap, { backgroundColor: c.success + '18' }]}>
-            <Text style={styles.successIcon}>✅</Text>
+            <Ionicons name="checkmark-circle" size={40} color={c.success} />
           </View>
           <Text style={[styles.successTitle, { color: c.text }]}>Question Submitted</Text>
           <Text style={[styles.successBody, { color: c.textSecondary }]}>
@@ -391,7 +392,10 @@ export function QuestionScreen() {
                   )}
                   {mediaMode === 'video' && (
                     <View style={[styles.previewPlaceholder, { backgroundColor: c.muted }]}>
-                      <Text style={{ color: c.textSecondary }}>🎥 Video attached</Text>
+                      <View style={[styles.previewPlaceholder, { backgroundColor: c.muted }]}>
+                        <Ionicons name="videocam" size={28} color={c.textSecondary} />
+                        <Text style={[styles.previewPlaceholderText, { color: c.textSecondary }]}>Video attached</Text>
+                      </View>
                     </View>
                   )}
                   <TouchableOpacity onPress={handleRemoveMedia} style={[styles.removeBtn, { backgroundColor: c.error }]}>
@@ -408,14 +412,16 @@ export function QuestionScreen() {
                     onPress={handleAttachImage}
                     disabled={uploadingMedia || loading}
                   >
-                    <Text style={styles.mediaBtnText}>📷 Photo</Text>
+                    <Ionicons name="image" size={18} color={c.text} />
+                    <Text style={styles.mediaBtnText}>Photo</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.mediaBtn, { backgroundColor: c.muted }]}
                     onPress={handleAttachVideo}
                     disabled={uploadingMedia || loading}
                   >
-                    <Text style={styles.mediaBtnText}>🎥 Video ({EDIT_WINDOW_SEC}s, 10 MB)</Text>
+                    <Ionicons name="videocam" size={18} color={c.text} />
+                    <Text style={styles.mediaBtnText}>Video ({EDIT_WINDOW_SEC}s, 10 MB)</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -468,13 +474,14 @@ const styles = StyleSheet.create({
   removeBtn: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   removeBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   mediaButtons: { flexDirection: 'row', gap: tokens.spacing2 },
-  mediaBtn: { flex: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing3, alignItems: 'center' },
+  mediaBtn: { flex: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing3, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: tokens.spacing2 },
   mediaBtnText: { fontSize: 13, fontWeight: '600' },
   uploadText: { fontSize: 12, marginBottom: tokens.spacing2, textAlign: 'center' },
   mediaHint: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginBottom: tokens.spacing4 },
   mediaHintText: { fontSize: 12, letterSpacing: 0.12 },
   successCard: { flex: 1, justifyContent: 'center', alignItems: 'center', margin: tokens.spacing6, borderRadius: tokens.radiusXl, padding: tokens.spacing8 },
   successIconWrap: { width: 80, height: 80, borderRadius: tokens.radiusFull, alignItems: 'center', justifyContent: 'center', marginBottom: tokens.spacing5 },
+  previewPlaceholderText: { fontSize: 13, marginTop: tokens.spacing1 },
   successIcon: { fontSize: 40 },
   successTitle: { fontSize: 22, fontWeight: '800', marginBottom: tokens.spacing3 },
   successBody: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: tokens.spacing5 },
