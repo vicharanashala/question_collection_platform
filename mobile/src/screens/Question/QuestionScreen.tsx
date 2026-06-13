@@ -154,9 +154,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           setMediaPreview(q.mediaUrls[0]);
           setMediaMode(q.mediaType);
         }
-      }).catch((err) => {
+      }).catch(async (err) => {
         console.log('[QuestionScreen] fetch error:', err);
-        Alert.alert('Error', 'Could not load question to edit.');
+        const { getErrorMessage } = await import('../../api/client');
+        Alert.alert('Error', getErrorMessage(err, 'Could not load question to edit.'));
         navigation.navigate('Submissions' as never);
       });
     } else {
@@ -256,6 +257,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         try {
           const url = await uploadToStorage(mediaUri, mediaMode as 'image' | 'video' | 'audio', user.id);
           mediaUrls = [url];
+        } catch (err) {
+          const { getErrorMessage } = await import('../../api/client');
+          Alert.alert('Upload Failed', getErrorMessage(err, 'Failed to upload media. Please try again.'));
+          setLoading(false);
+          setUploadingMedia(false);
+          return;
         } finally {
           setUploadingMedia(false);
         }
@@ -292,11 +299,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         setRemainingToday(stats.remainingToday);
       }
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
-      console.log('[QuestionSubmit] Error:', axiosErr.response?.status, axiosErr.response?.data, axiosErr.message);
-      const msg =
-        axiosErr.response?.data?.message ??
-        `Error ${axiosErr.response?.status ?? 'unknown'}: Failed to submit. Check that the backend is running.`;
+      const { getErrorMessage } = await import('../../api/client');
+      const msg = getErrorMessage(err, 'Failed to submit. Please try again.');
       Alert.alert('Submit Error', msg);
     } finally {
       setLoading(false);

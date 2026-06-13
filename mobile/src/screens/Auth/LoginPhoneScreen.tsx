@@ -47,10 +47,8 @@ export function LoginPhoneScreen({ navigation }: Props) {
       await login(`+91${mobile}`);
       navigation.navigate('Otp', { mobileNumber: `+91${mobile}` });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Unable to send OTP. Please try again.';
-      Alert.alert('Error', msg);
+      const { getErrorMessage } = await import('../../api/client');
+      Alert.alert('Error', getErrorMessage(err, 'Unable to send OTP. Please try again.'));
     } finally {
       setLoading(false);
     }
