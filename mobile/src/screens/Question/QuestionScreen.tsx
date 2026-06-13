@@ -21,6 +21,7 @@ import {
   LANGUAGES,
   SEASONS,
   DOMAIN_CATEGORIES,
+  INDIAN_STATES,
   DAILY_QUESTION_LIMIT,
   EDIT_WINDOW_SEC,
 } from '../../utils/constants';
@@ -76,6 +77,7 @@ async function pickVideo(): Promise<PickerResult> {
 const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: l.label }));
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
 const domainOptions = DOMAIN_CATEGORIES.map((d) => ({ value: d.value, label: d.label }));
+const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
@@ -86,6 +88,9 @@ export function QuestionScreen() {
 
   // Form state
   const [language, setLanguage] = useState(user?.languagePreference ?? 'hi');
+  const [state, setState] = useState(user?.state ?? '');
+  const [district, setDistrict] = useState(user?.district ?? '');
+  const [block, setBlock] = useState(user?.block ?? '');
   const [domainCategory, setDomainCategory] = useState('');
   const [season, setSeason] = useState('');
   const [cropType, setCropType] = useState('');
@@ -124,6 +129,8 @@ export function QuestionScreen() {
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
+    if (!state) errs.state = 'Select your state';
+    if (!district.trim()) errs.district = 'Enter your district';
     if (!domainCategory) errs.domainCategory = 'Select a domain category';
     if (!season) errs.season = 'Select a season';
     if (!cropType.trim()) errs.cropType = 'Enter the crop type';
@@ -208,13 +215,13 @@ export function QuestionScreen() {
 
       const payload = {
         language,
+        state,
+        district: district.trim(),
+        block: block.trim() || null,
         domainCategory,
         season,
         cropType: cropType.trim(),
         questionText: questionText.trim(),
-        state: user?.state ?? '',
-        district: user?.district ?? '',
-        block: user?.block ?? null,
         submittedAt: new Date().toISOString(),
         mediaType: mediaMode,
         mediaUrls,
@@ -246,6 +253,9 @@ export function QuestionScreen() {
   // ─── Reset ───────────────────────────────────────────────────────────────────
 
   function reset() {
+    setState(user?.state ?? '');
+    setDistrict(user?.district ?? '');
+    setBlock(user?.block ?? '');
     setDomainCategory('');
     setSeason('');
     setCropType('');
@@ -315,6 +325,29 @@ export function QuestionScreen() {
               value={language}
               options={languageOptions}
               onChange={setLanguage}
+            />
+
+            {/* Location */}
+            <Select
+              label="State"
+              value={state}
+              options={stateOptions}
+              onChange={(v) => { setState(v); setErrors({}); }}
+              error={errors.state}
+              searchable
+            />
+            <Input
+              label="District"
+              placeholder="Enter your district"
+              value={district}
+              onChangeText={(t) => { setDistrict(t); setErrors({}); }}
+              error={errors.district}
+            />
+            <Input
+              label="Block / Mandal (Optional)"
+              placeholder="Enter your block or mandal"
+              value={block}
+              onChangeText={setBlock}
             />
 
             {/* Domain */}
