@@ -7,6 +7,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^react-native-gesture-handler$': '<rootDir>/__mocks__/react-native-gesture-handler.js',
+    '^expo-image-picker$': '<rootDir>/__mocks__/expo-image-picker.js',
   },
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
   collectCoverageFrom: [

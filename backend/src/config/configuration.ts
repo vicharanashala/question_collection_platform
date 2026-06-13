@@ -32,3 +32,10 @@ export const appConfig = registerAs('app', () => ({
   otpRateLimit: process.env.OTP_RATE_LIMIT !== 'false', // defaults to true
   throttleEnabled: process.env.THROTTLE_ENABLED !== 'false', // defaults to true
 }));
+
+export const questionConfig = registerAs('question', () => ({
+  dailyLimit: parseInt(process.env.QUESTION_DAILY_LIMIT || '20', 10),
+  editWindowSec: parseInt(process.env.QUESTION_EDIT_WINDOW_SEC || '30', 10),
+  videoMaxSizeMb: parseInt(process.env.QUESTION_VIDEO_MAX_SIZE_MB || '10', 10),
+  videoMaxDurationSec: parseInt(process.env.QUESTION_VIDEO_MAX_DURATION_SEC || '10', 10),
+}));

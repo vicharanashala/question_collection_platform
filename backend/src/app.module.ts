@@ -10,6 +10,7 @@ import {
   redisConfig,
   smsConfig,
   appConfig,
+  questionConfig,
 } from './config/configuration';
 import {
   User,
@@ -23,6 +24,7 @@ import {
 } from './database/entities';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { QuestionModule } from './question/question.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 
@@ -31,7 +33,7 @@ import { HealthController } from './health/health.controller';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig],
+      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig],
       envFilePath: ['.env'],
     }),
 
@@ -82,6 +84,7 @@ import { HealthController } from './health/health.controller';
     // Feature modules
     AuthModule,
     UserModule,
+    QuestionModule,
   ],
   controllers: [HealthController],
   providers: [
