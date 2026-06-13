@@ -485,12 +485,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                     <Text style={styles.mediaBtnText}>Photo</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.mediaBtn, { backgroundColor: c.muted }]}
-                    onPress={handleAttachVideo}
-                    disabled={uploadingMedia || loading}
+                    style={[styles.mediaBtn, { backgroundColor: c.muted, opacity: 0.4 }]}
+                    disabled
                   >
-                    <Ionicons name="videocam" size={18} color={c.text} />
-                    <Text style={styles.mediaBtnText}>Video ({EDIT_WINDOW_SEC}s, 10 MB)</Text>
+                    <Ionicons name="videocam" size={18} color={c.textTertiary} />
+                    <Text style={[styles.mediaBtnText, { color: c.textTertiary }]}>Video (Coming Soon)</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -503,12 +502,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               </Text>
             )}
 
-            {/* Media hint */}
-            <View style={[styles.mediaHint, { backgroundColor: c.muted }]}>
-              <Text style={[styles.mediaHintText, { color: c.textSecondary }]}>
-                Video submissions: max {EDIT_WINDOW_SEC}s, 10 MB
-              </Text>
-            </View>
+
 
             <Button
               title={loading ? (isEditMode ? 'Updating…' : 'Submitting…') : (isEditMode ? 'Update Question' : 'Submit Question')}
