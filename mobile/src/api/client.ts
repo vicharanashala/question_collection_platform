@@ -1,10 +1,17 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-// Use LAN IP for mobile/emulator — localhost points to the device itself, not the dev machine
-const BASE_URL = 'http://192.168.1.5:3000/api/v1';
+// iOS Simulator / Android Emulator → use localhost (same machine as backend)
+// Physical device → use LAN IP of the machine running the backend
+const BASE_URL =
+  Platform.OS === 'ios' || Platform.OS === 'android'
+    ? 'http://localhost:3000/api/v1'
+    : 'http://localhost:3000/api/v1';
+// TODO(abiram): Replace with your LAN IP (e.g. http://192.168.1.5:3000/api/v1)
+// when testing on a physical device from a different machine on the network.
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -20,7 +27,7 @@ const api = axios.create({
 
 // TEMP DEBUG: log all outgoing requests
 api.interceptors.request.use((config) => {
-  console.log('[API DEBUG] REQUEST:', config.method?.toUpperCase(), config.baseURL + config.url, JSON.stringify(config.data));
+  console.log('[API DEBUG] REQUEST:', config.method?.toUpperCase(), config.baseURL + (config.url ?? ''), JSON.stringify(config.data));
   return config;
 });
 api.interceptors.response.use(
@@ -29,7 +36,7 @@ api.interceptors.response.use(
     return res;
   },
   (err) => {
-    console.log('[API DEBUG] RESPONSE ERR:', err.response?.status, err.config?.baseURL + err.config?.url, JSON.stringify(err.response?.data), err.message);
+    console.log('[API DEBUG] RESPONSE ERR:', err.response?.status, err.config?.baseURL + (err.config?.url ?? ''), JSON.stringify(err.response?.data), err.message);
     return Promise.reject(err);
   }
 );

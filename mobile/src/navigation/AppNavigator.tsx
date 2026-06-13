@@ -71,7 +71,7 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
 const tabStyles = StyleSheet.create({
   container: { width: 72, alignItems: 'center', justifyContent: 'center' },
   icon: { fontSize: 20 },
-  label: { fontSize: 11, marginTop: 3, letterSpacing: 0.02 * 11, numberOfLines: 1 },
+  label: { fontSize: 11, marginTop: 3, letterSpacing: 0.02 * 11 },
   labelActive: { fontWeight: '700' },
 });
 

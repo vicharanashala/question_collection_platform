@@ -10,7 +10,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (mobileNumber: string) => Promise<void>;
-  verifyOtp: (mobileNumber: string, otp: string) => Promise<void>;
+  verifyOtp: (mobileNumber: string, otp: string) => Promise<{ requiresRegistration: boolean; user?: PublicUser; tempToken?: string }>;
   register: (data: Record<string, unknown>) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -54,13 +54,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if ('requiresRegistration' in data && data.requiresRegistration) {
       // New user — registration token is in data.tempToken
-      return { requiresRegistration: true, tempToken: data.tempToken };
+      return { requiresRegistration: true, tempToken: (data as { tempToken?: string }).tempToken };
     }
 
     if ('tokens' in data && 'user' in data) {
-      await saveAuth(data.tokens, data.user);
-      setState({ user: data.user, isLoading: false, isReady: true });
-      return { requiresRegistration: false, user: data.user };
+      const userData = data.user as PublicUser;
+      await saveAuth(data.tokens, userData);
+      setState({ user: userData, isLoading: false, isReady: true });
+      return { requiresRegistration: false, user: userData };
     }
 
     throw new Error('Unexpected response from verify-otp');

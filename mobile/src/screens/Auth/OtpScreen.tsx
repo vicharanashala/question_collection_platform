@@ -56,9 +56,9 @@ export function OtpScreen({ navigation, route }: Props) {
     setLoading(true);
     setError('');
     try {
-      const result = await verifyOtp(mobileNumber, otp);
+      const result = await verifyOtp(mobileNumber, otp) as { requiresRegistration: boolean; user?: unknown };
 
-      if (result?.requiresRegistration) {
+      if (result.requiresRegistration) {
         // AuthProvider state update triggers navigator to switch to Main via user=null,
         // but since this is a new user we explicitly navigate to Register first
         navigation.replace('Register', { mobileNumber });
