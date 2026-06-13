@@ -241,10 +241,12 @@ export function QuestionScreen() {
       setDailyCount(stats.dailyCount);
       setRemainingToday(stats.remainingToday);
     } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      console.log('[QuestionSubmit] Error:', axiosErr.response?.status, axiosErr.response?.data, axiosErr.message);
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Failed to submit question. Please try again.';
-      Alert.alert('Error', msg);
+        axiosErr.response?.data?.message ??
+        `Error ${axiosErr.response?.status ?? 'unknown'}: Failed to submit. Check that the backend is running.`;
+      Alert.alert('Submit Error', msg);
     } finally {
       setLoading(false);
       setUploadingMedia(false);
@@ -305,7 +307,7 @@ export function QuestionScreen() {
           <View style={styles.header}>
             <Text style={[styles.title, { color: c.text }]}>Ask a Question</Text>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              Submit your agriculture-related query in your preferred language
+              Submit your agriculture-related query
             </Text>
           </View>
 
