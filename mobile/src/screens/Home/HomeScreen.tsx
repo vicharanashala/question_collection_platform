@@ -185,6 +185,7 @@ export function HomeScreen() {
         {/* ── Quick actions ──────────────────────────────────────────────── */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>Quick Actions</Text>
+
           <View style={styles.actionGrid}>
             {[
               {
@@ -469,6 +470,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
+    marginBottom: tokens.spacing4,
   },
   sectionSub: {
     fontSize: 12,
