@@ -165,6 +165,12 @@ export const questionApi = {
 
   get: (id: string) =>
     api.get(`/questions/${id}`),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    api.patch(`/questions/${id}`, data),
+
+  getStats: () =>
+    api.get('/questions/stats/me'),
 };
 
 export const walletApi = {
