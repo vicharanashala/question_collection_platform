@@ -1,10 +1,10 @@
 # Task 3: Question Submission
 
 **Module:** Question  
-**Status:** Pending  
-**Developer:** —  
-**Started:** —  
-**Completed:** —
+**Status:** Completed  
+**Developer:** Claw  
+**Started:** 2026-06-13  
+**Completed:** 2026-06-13
 
 ---
 
@@ -28,25 +28,25 @@ Metadata captured:
 ## Sub-Tasks
 
 ### 1. Core Submission
-- [ ] Text question submission
-- [ ] Image upload (compress, store in object storage)
-- [ ] Video upload (duration check, size check, compress)
-- [ ] Audio upload
-- [ ] Media URL storage and retrieval
+- [x] Text question submission
+- [x] Image upload (compress, store in object storage)
+- [x] Video upload (duration check, size check, compress)
+- [x] Audio upload
+- [x] Media URL storage and retrieval
 
 ### 2. Metadata Capture
-- [ ] Auto-capture: user_id, language, timestamp, device_info
-- [ ] User-select: crop_type, domain_category, season, agro_climatic_zone
-- [ ] Auto-capture: state, district, block (from user profile)
+- [x] Auto-capture: user_id, language, timestamp, device_info
+- [x] User-select: crop_type, domain_category, season, agro_climatic_zone
+- [x] Auto-capture: state, district, block (from user profile)
 
 ### 3. Submission Limits
-- [ ] Daily limit enforcement (20/day, configurable)
-- [ ] Edit window (30 seconds, configurable)
-- [ ] Rate limiting
+- [x] Daily limit enforcement (20/day, configurable)
+- [x] Edit window (30 seconds, configurable)
+- [x] Rate limiting
 
 ### 4. Database
-- [ ] `questions` table operations
-- [ ] Question status workflow: pending → ai_review → human_review → approved/rejected
+- [x] `questions` table operations
+- [x] Question status workflow: pending → ai_review → human_review → approved/rejected
 
 ---
 
