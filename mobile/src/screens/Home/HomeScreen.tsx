@@ -11,6 +11,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -276,11 +277,22 @@ export function HomeScreen() {
           </View>
 
           {/* Total earnings potential card */}
-          <View
+          <TouchableOpacity
             style={[
               styles.earningsCard,
               { backgroundColor: c.success + '12', borderColor: c.success + '30', borderWidth: 1 },
             ]}
+            activeOpacity={0.75}
+            onPress={() => {
+              if (stats && stats.remainingToday <= 0) {
+                Alert.alert(
+                  'Daily Limit Reached',
+                  `You've used all ${DAILY_QUESTION_LIMIT} submissions for today. Try again tomorrow!`,
+                );
+              } else {
+                navigation.navigate('AskQuestion');
+              }
+            }}
           >
             <View style={styles.earningsLeft}>
               <Ionicons name="trophy-outline" size={22} color={c.success} />
@@ -294,7 +306,7 @@ export function HomeScreen() {
             <View style={[styles.earningsArrow, { backgroundColor: c.success + '20' }]}>
               <Ionicons name="arrow-forward" size={14} color={c.success} />
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* ── Guidelines ─────────────────────────────────────────────────── */}
