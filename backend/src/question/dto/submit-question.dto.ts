@@ -14,11 +14,6 @@ import { Season } from '../../common/enums';
 export class SubmitQuestionDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
-  language: string;
-
-  @IsString()
-  @IsNotEmpty()
   @IsIn(['crop_protection', 'spray', 'irrigation', 'fertilizer', 'soil_health', 'seed', 'harvest', 'post_harvest', 'weather', 'market', 'livestock', 'other'])
   domainCategory: string;
 

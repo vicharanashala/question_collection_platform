@@ -47,7 +47,6 @@ export class QuestionService {
     // 2. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
-      language: dto.language,
       domainCategory: dto.domainCategory,
       season: dto.season as Season,
       cropType: dto.cropType,
@@ -76,7 +75,7 @@ export class QuestionService {
       action: AuditAction.QUESTION_SUBMITTED,
       entityType: 'question',
       entityId: saved.id,
-      newValue: { status: saved.status, language: saved.language, domainCategory: saved.domainCategory },
+      newValue: { status: saved.status, domainCategory: saved.domainCategory },
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
@@ -153,7 +152,7 @@ export class QuestionService {
   // ─── List ───────────────────────────────────────────────────────────────────
 
   async list(userId: string, dto: ListQuestionsDto, isAdmin = false) {
-    const { page = 1, limit = 20, status, language, domainCategory, cropType, season, state, search, fromDate, toDate } = dto;
+    const { page = 1, limit = 20, status, domainCategory, cropType, season, state, search, fromDate, toDate } = dto;
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -168,7 +167,6 @@ export class QuestionService {
       if (status) where.status = status;
     }
 
-    if (language) where.language = language;
     if (domainCategory) where.domainCategory = domainCategory;
     if (search) where.cropType = Like(`%${search}%`);
     else if (cropType) where.cropType = Like(`%${cropType}%`);
@@ -189,7 +187,7 @@ export class QuestionService {
       skip,
       take: limit,
       select: [
-        'id', 'language', 'domainCategory', 'season', 'cropType', 'questionText',
+        'id', 'domainCategory', 'season', 'cropType', 'questionText',
         'mediaType', 'mediaUrls', 'status', 'aiConfidenceScore', 'duplicateFlag',
         'submittedAt', 'reviewedAt', 'rejectionReason', 'state', 'district', 'block',
         'editWindowClosesAt', 'createdAt',
