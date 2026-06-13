@@ -51,7 +51,9 @@ async function pickImage(): Promise<PickerResult> {
       quality: 0.8,
       allowsEditing: false,
     });
-    return { cancelled: result.cancelled, uri: result.uri, fileSize: result.fileSize };
+    if (result.canceled || !result.assets?.length) return { cancelled: true };
+    const asset = result.assets[0];
+    return { cancelled: false, uri: asset.uri, fileSize: asset.fileSize, type: 'image' };
   } catch {
     return { cancelled: true };
   }
@@ -66,7 +68,9 @@ async function pickVideo(): Promise<PickerResult> {
       quality: 0.6,
       allowsEditing: false,
     });
-    return { cancelled: result.cancelled, uri: result.uri, fileSize: result.fileSize };
+    if (result.canceled || !result.assets?.length) return { cancelled: true };
+    const asset = result.assets[0];
+    return { cancelled: false, uri: asset.uri, fileSize: asset.fileSize, type: 'video' };
   } catch {
     return { cancelled: true };
   }
@@ -392,10 +396,8 @@ export function QuestionScreen() {
                   )}
                   {mediaMode === 'video' && (
                     <View style={[styles.previewPlaceholder, { backgroundColor: c.muted }]}>
-                      <View style={[styles.previewPlaceholder, { backgroundColor: c.muted }]}>
-                        <Ionicons name="videocam" size={28} color={c.textSecondary} />
-                        <Text style={[styles.previewPlaceholderText, { color: c.textSecondary }]}>Video attached</Text>
-                      </View>
+                      <Ionicons name="videocam" size={28} color={c.textSecondary} />
+                      <Text style={[styles.previewPlaceholderText, { color: c.textSecondary }]}>Video attached</Text>
                     </View>
                   )}
                   <TouchableOpacity onPress={handleRemoveMedia} style={[styles.removeBtn, { backgroundColor: c.error }]}>
