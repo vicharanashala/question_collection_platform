@@ -149,20 +149,13 @@ export function SubmissionsScreen() {
             <Ionicons name={statusMeta.icon as keyof typeof Ionicons.glyphMap} size={13} color={statusMeta.color} />
             <Text style={[styles.statusBadgeText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
           </View>
-          {q.status === 'pending' && (
+          {q.status === 'pending' && isWithinEditWindow(q) && (
             <TouchableOpacity
-              style={[styles.editBtn, { backgroundColor: withinEditWindow ? c.primary : c.muted }]}
+              style={[styles.editBtn, { backgroundColor: c.primary }]}
               onPress={() => handleEdit(q)}
-              disabled={!withinEditWindow}
             >
-              <Ionicons
-                name="pencil"
-                size={14}
-                color={withinEditWindow ? '#fff' : c.textTertiary}
-              />
-              <Text style={[styles.editBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>
-                Edit
-              </Text>
+              <Ionicons name="pencil" size={14} color="#fff" />
+              <Text style={[styles.editBtnText, { color: '#fff' }]}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
