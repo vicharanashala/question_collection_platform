@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { OtpInput } from '../../components/Input';
 import { Button } from '../../components/Button';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
@@ -26,6 +26,7 @@ export function OtpScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { verifyOtp, login } = useAuth();
+  const { showToast } = useToast();
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,9 +66,8 @@ export function OtpScreen({ navigation, route }: Props) {
       }
       // else: AuthProvider updated user state → AppNavigator re-renders → shows Main
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Invalid OTP. Please try again.';
+      const { getErrorMessage } = await import('../../api/client');
+      const msg = getErrorMessage(err, 'Invalid OTP. Please try again.');
       setError(msg);
       setOtp('');
     } finally {
@@ -87,7 +87,7 @@ export function OtpScreen({ navigation, route }: Props) {
     }, 1000);
       login(mobileNumber)
         .catch(() => { /* proceed; user can retry from login screen */ });
-    Alert.alert('OTP Resent', `A new code has been sent to ${mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1******$3')}`);
+    showToast(`A new code has been sent to ${mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1******$3')}`, 'success');
   }
 
   const masked = mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1 ···· ··$3');

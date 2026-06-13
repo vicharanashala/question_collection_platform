@@ -7,7 +7,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,6 +14,7 @@ import { RouteProp } from '@react-navigation/native';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
@@ -45,6 +45,7 @@ export function RegisterScreen({ navigation, route }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { register } = useAuth();
+  const { showToast } = useToast();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -120,10 +121,9 @@ export function RegisterScreen({ navigation, route }: Props) {
         profileData,
       });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Registration failed. Please try again.';
-      Alert.alert('Error', msg);
+      const { getErrorMessage } = await import('../../api/client');
+      const msg = getErrorMessage(err, 'Registration failed. Please try again.');
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }

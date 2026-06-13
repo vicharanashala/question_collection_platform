@@ -163,6 +163,9 @@ export const questionApi = {
   list: (params?: Record<string, string | number>) =>
     api.get('/questions', { params }),
 
+  getMyQuestions: (params?: Record<string, string | number>) =>
+    api.get('/questions', { params }),
+
   get: (id: string) =>
     api.get(`/questions/${id}`),
 

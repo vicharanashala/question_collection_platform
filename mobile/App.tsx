@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from './src/hooks/useTheme';
 import { AuthProvider } from './src/hooks/useAuth';
+import { ToastProvider } from './src/components/Toast';
 import { AppNavigator } from './src/navigation/AppNavigator';
 
 export default function App() {
@@ -11,7 +12,9 @@ export default function App() {
       <StatusBar style="auto" />
       <ThemeProvider>
         <AuthProvider>
-          <AppNavigator />
+          <ToastProvider>
+            <AppNavigator />
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -7,11 +7,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
@@ -23,6 +23,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { login } = useAuth();
+  const { showToast } = useToast();
 
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,10 +48,8 @@ export function LoginPhoneScreen({ navigation }: Props) {
       await login(`+91${mobile}`);
       navigation.navigate('Otp', { mobileNumber: `+91${mobile}` });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Unable to send OTP. Please try again.';
-      Alert.alert('Error', msg);
+      const { getErrorMessage } = await import('../../api/client');
+      showToast(getErrorMessage(err, 'Unable to send OTP. Please try again.'), 'error');
     } finally {
       setLoading(false);
     }
