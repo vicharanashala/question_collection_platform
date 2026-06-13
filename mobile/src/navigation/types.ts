@@ -9,7 +9,7 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   HomeTab: undefined;
-  MyQuestions: undefined;
+  Submissions: undefined;
   AskQuestion: { questionId?: string } | undefined;
   Wallet: undefined;
   Profile: undefined;

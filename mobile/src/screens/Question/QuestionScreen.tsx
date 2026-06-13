@@ -157,7 +157,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       }).catch((err) => {
         console.log('[QuestionScreen] fetch error:', err);
         Alert.alert('Error', 'Could not load question to edit.');
-        navigation.navigate('MyQuestions' as never);
+        navigation.navigate('Submissions' as never);
       });
     } else {
       questionApi
@@ -337,10 +337,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             Your question is under review. You will be notified once it is approved.
           </Text>
           <Button
-            title={isEditMode ? 'Back to My Questions' : 'Submit Another Question'}
+            title={isEditMode ? 'Back to Submissions' : 'Submit Another Question'}
             onPress={() => {
               if (isEditMode) {
-                navigation.navigate('MyQuestions' as never);
+                navigation.navigate('Submissions' as never);
               } else {
                 reset();
               }

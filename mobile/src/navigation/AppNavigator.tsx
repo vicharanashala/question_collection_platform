@@ -19,7 +19,7 @@ import { RegisterScreen } from '../screens/Auth/RegisterScreen';
 
 // Main screens
 import { HomeScreen } from '../screens/Home/HomeScreen';
-import { MyQuestionsScreen } from '../screens/MyQuestions/MyQuestionsScreen';
+import { SubmissionsScreen } from '../screens/Submissions/SubmissionsScreen';
 import { QuestionScreen } from '../screens/Question/QuestionScreen';
 import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
@@ -117,9 +117,9 @@ function MainNavigator() {
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="Home" focused={focused} /> }}
       />
       <MainTab.Screen
-        name="MyQuestions"
-        component={MyQuestionsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="My Questions" focused={focused} /> }}
+        name="Submissions"
+        component={SubmissionsScreen}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="Submissions" focused={focused} /> }}
       />
       <MainTab.Screen
         name="AskQuestion"
