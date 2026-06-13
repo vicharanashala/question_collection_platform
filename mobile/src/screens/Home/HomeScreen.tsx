@@ -233,20 +233,7 @@ export function HomeScreen() {
                 screen: 'Wallet' as const,
                 color: c.success,
               },
-              {
-                icon: 'document-text-outline',
-                label: 'My Questions',
-                sub: 'View all submissions',
-                screen: 'Submissions' as const,
-                color: '#0891B2',
-              },
-              {
-                icon: 'person-outline',
-                label: 'Edit Profile',
-                sub: 'Update your details',
-                screen: 'Profile' as const,
-                color: '#7C3AED',
-              },
+
             ].map((a) => (
               <TouchableOpacity
                 key={a.screen}
