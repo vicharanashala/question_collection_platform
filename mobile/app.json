@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "KisanDekho",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs photo library access to attach images or videos to your questions."
       },
-      "bundleIdentifier": "com.anonymous.mobile"
+      "bundleIdentifier": "com.kisanMitra.kisanDekho"
     },
     "android": {
       "adaptiveIcon": {

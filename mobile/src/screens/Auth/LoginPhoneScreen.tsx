@@ -71,7 +71,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
           {/* Logo */}
           <View style={styles.logoSection}>
             <View style={[styles.logoMark, { backgroundColor: c.primary }]}>
-              <Text style={[styles.logoText, { color: c.primaryForeground }]}>AQ</Text>
+              <Text style={[styles.logoText, { color: c.primaryForeground }]}>KD</Text>
             </View>
             <Text style={[styles.brand, { color: c.text }]}>{t('loginPhone.title')}</Text>
             <Text style={[styles.tagline, { color: c.textSecondary }]}>
