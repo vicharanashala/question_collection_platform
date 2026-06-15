@@ -31,12 +31,12 @@ function fieldLabel(key: string, t: (k: string) => string): string {
   return map[key] ?? key;
 }
 
-function buildStatus(user: PublicUser | null, hasCrops: boolean): ProfileCompletionStatus {
+function buildStatus(user: PublicUser | null, hasCrops: boolean, t: (k: string) => string): ProfileCompletionStatus {
   if (!user) return { percentage: 0, fields: [], isComplete: false };
 
   const check = (key: string, value: unknown) => ({
     field: key,
-    label: fieldLabel(key, (k) => k),
+    label: fieldLabel(key, t),
     completed: !!value,
   });
 
@@ -79,7 +79,7 @@ export function ProfileCompletionWidget({ onEdit, hasCrops }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const status = useMemo(() => buildStatus(user, hasCrops), [user, hasCrops]);
+  const status = useMemo(() => buildStatus(user, hasCrops, t), [user, hasCrops, t]);
 
   if (status.isComplete) return null;
 
