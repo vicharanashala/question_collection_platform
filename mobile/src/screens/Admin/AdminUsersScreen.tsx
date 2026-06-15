@@ -17,24 +17,45 @@ import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
+import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
+import { INDIAN_STATES } from '../../utils/constants';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
 const STATUS_COLORS: Record<string, string> = {
-  verified: '#22c55e',
-  pending: '#f59e0b',
+  verified:      '#22c55e',
+  pending:       '#f59e0b',
   manual_review: '#8b5cf6',
-  suspended: '#ef4444',
-  banned: '#991b1b',
+  suspended:     '#ef4444',
+  banned:        '#991b1b',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  farmer: 'Farmer',
-  fpo: 'FPO',
-  student: 'Student',
-  volunteer: 'Volunteer',
-  ngo: 'NGO',
-};
+const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'pending',       label: 'Pending' },
+  { value: 'manual_review', label: 'Manual Review' },
+  { value: 'verified',      label: 'Verified' },
+  { value: 'suspended',     label: 'Suspended' },
+  { value: 'banned',        label: 'Banned' },
+];
+
+const CATEGORY_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'farmer',    label: 'Farmer' },
+  { value: 'fpo',       label: 'FPO' },
+  { value: 'student',   label: 'Student' },
+  { value: 'volunteer', label: 'Volunteer' },
+  { value: 'ngo',       label: 'NGO' },
+];
+
+const STATE_OPTIONS = INDIAN_STATES.map((s) => ({ value: s, label: s }));
+
+const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'createdAt:DESC',          label: 'Newest First' },
+  { value: 'createdAt:ASC',           label: 'Oldest First' },
+  { value: 'name:ASC',                label: 'Name A→Z' },
+  { value: 'name:DESC',               label: 'Name Z→A' },
+  { value: 'state:ASC',               label: 'State A→Z' },
+  { value: 'verificationStatus:ASC',  label: 'Status A→Z' },
+];
 
 interface UserItem {
   id: string;
@@ -49,6 +70,60 @@ interface UserItem {
   lastLoginAt: string | null;
 }
 
+const FILTERS: FilterOption[] = [
+  {
+    key: 'search',
+    label: 'Search',
+    type: 'text',
+    placeholder: 'Name or mobile number…',
+  },
+  {
+    key: 'status',
+    label: 'Verification Status',
+    type: 'select',
+    options: STATUS_OPTIONS,
+  },
+  {
+    key: 'category',
+    label: 'Category',
+    type: 'select',
+    options: CATEGORY_OPTIONS,
+  },
+  {
+    key: 'state',
+    label: 'State',
+    type: 'select',
+    options: STATE_OPTIONS,
+  },
+  {
+    key: 'sortBy',
+    label: 'Sort By',
+    type: 'select',
+    options: SORT_OPTIONS,
+  },
+];
+
+const EMPTY_FILTERS: ActiveFilters = {
+  search: '',
+  status: '',
+  category: '',
+  state: '',
+  sortBy: 'createdAt:DESC',
+};
+
+function buildQueryParams(active: ActiveFilters, page: number): Record<string, string | number> {
+  const params: Record<string, string | number> = { page, limit: 20 };
+  if (active.search) params.search = active.search;
+  if (active.state) params.state = active.state;
+  if (active.category) params.category = active.category;
+  if (active.status) params.status = active.status;
+  const sortBy = active.sortBy?.split(':')[0];
+  const sortOrder = active.sortBy?.split(':')[1];
+  if (sortBy && sortBy !== 'createdAt') params.sortBy = sortBy;
+  if (sortOrder) params.sortOrder = sortOrder;
+  return params;
+}
+
 export function AdminUsersScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -61,10 +136,13 @@ export function AdminUsersScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
 
-  const fetch = useCallback(async (pageNum = 1, refresh = false) => {
+  const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
-      const res = await adminApi.listUsers({ page: pageNum, limit: 20 });
+      const params = buildQueryParams(filters, pageNum);
+      const res = await adminApi.listUsers(params);
       const data = res.data;
       const newItems: UserItem[] = data.items ?? [];
       setItems((prev) => (refresh ? newItems : [...prev, ...newItems]));
@@ -77,18 +155,41 @@ export function AdminUsersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [activeFilters]);
 
-  useEffect(() => { fetch(1, true); }, [fetch]);
+  useEffect(() => { fetch(1, true, activeFilters); }, []);
 
   async function onRefresh() {
     setRefreshing(true);
-    await fetch(1, true);
+    await fetch(1, true, activeFilters);
   }
 
   async function loadMore() {
     if (!hasMore || loading) return;
-    await fetch(page + 1, false);
+    await fetch(page + 1, false, activeFilters);
+  }
+
+  function handleApplyFilters(filters: ActiveFilters) {
+    setActiveFilters(filters);
+    setPage(1);
+    setItems([]);
+    setLoading(true);
+    fetch(1, true, filters);
+  }
+
+  function handleResetFilters() {
+    setActiveFilters({ ...EMPTY_FILTERS });
+    setPage(1);
+    setItems([]);
+    setLoading(true);
+    fetch(1, true, EMPTY_FILTERS);
+  }
+
+  function activeFilterCount(): number {
+    return Object.entries(activeFilters).filter(([k, v]) => {
+      if (k === 'sortBy') return v !== 'createdAt:DESC';
+      return v && v.trim().length > 0;
+    }).length;
   }
 
   function renderItem({ item }: { item: UserItem }) {
@@ -100,17 +201,17 @@ export function AdminUsersScreen() {
         activeOpacity={0.7}
       >
         <View style={styles.cardTop}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={[styles.userName, { color: c.text }]}>
               {item.name || item.mobileNumber}
             </Text>
             <Text style={[styles.userMeta, { color: c.textSecondary }]}>
-              {item.mobileNumber} · {CATEGORY_LABELS[item.category] ?? item.category}
+              {item.mobileNumber} · {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
             </Text>
           </View>
           <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>
             <Text style={[styles.badgeText, { color: statusColor }]}>
-              {item.verificationStatus}
+              {item.verificationStatus.replace('_', ' ')}
             </Text>
           </View>
         </View>
@@ -126,13 +227,7 @@ export function AdminUsersScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-        <View style={styles.centered}><ActivityIndicator size="large" color={c.primary} /></View>
-      </SafeAreaView>
-    );
-  }
+  const countBadge = activeFilterCount();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -142,7 +237,20 @@ export function AdminUsersScreen() {
         </TouchableOpacity>
         <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Users</Text>
         <Text style={[styles.count, { color: c.textSecondary }]}>{total} total</Text>
+        <TouchableOpacity
+          style={[styles.filterBtn, { backgroundColor: countBadge > 0 ? c.primary + '18' : c.surfaceVariant }]}
+          onPress={() => setFilterVisible(true)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="options" size={18} color={countBadge > 0 ? c.primary : c.textSecondary} />
+          {countBadge > 0 && (
+            <View style={[styles.filterBadge, { backgroundColor: c.primary }]}>
+              <Text style={styles.filterBadgeText}>{countBadge}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
+
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -153,9 +261,24 @@ export function AdminUsersScreen() {
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={[styles.emptyTitle, { color: c.text }]}>No users found</Text>
+            <Text style={[styles.emptyTitle, { color: c.text }]}>
+              {loading ? '' : 'No users match your filters'}
+            </Text>
+            {!loading && (
+              <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>Try adjusting the filter criteria</Text>
+            )}
           </View>
         }
+      />
+
+      <AdminFilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        filters={FILTERS}
+        active={activeFilters}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        title="Filter Users"
       />
     </SafeAreaView>
   );
@@ -163,10 +286,19 @@ export function AdminUsersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: tokens.spacing5, paddingBottom: tokens.spacing3 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: tokens.spacing5, paddingBottom: tokens.spacing3, gap: tokens.spacing2 },
   screenTitle: { fontSize: 22, fontWeight: '800' },
   count: { fontSize: 13 },
+  filterBtn: {
+    width: 38, height: 38, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center', marginLeft: tokens.spacing1,
+  },
+  filterBadge: {
+    position: 'absolute', top: -4, right: -4,
+    width: 16, height: 16, borderRadius: 8,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '800' },
   list: { padding: tokens.spacing5, paddingTop: 0, gap: tokens.spacing2 },
   card: { borderRadius: tokens.radiusMd, padding: tokens.spacing4 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
@@ -179,4 +311,5 @@ const styles = StyleSheet.create({
   role: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
+  emptyMsg: { fontSize: 14, marginTop: 4 },
 });

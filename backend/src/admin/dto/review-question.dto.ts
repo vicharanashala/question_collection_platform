@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsIn, IsOptional, IsInt, Min, Max, IsDateString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class ListReviewQueueDto {
@@ -18,6 +18,35 @@ export class ListReviewQueueDto {
   @IsOptional()
   @IsIn(['human_review', 'ai_review'])
   queueType?: 'human_review' | 'ai_review';
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @IsIn(['pending', 'ai_review', 'human_review', 'approved', 'rejected'])
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  sortBy?: 'submittedAt' | 'aiConfidenceScore' | 'state';
+
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  @Transform(({ value }) => (value === 'true' ? 'ASC' : value === 'false' ? 'DESC' : value))
+  sortOrder?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsDateString()
+  fromDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  toDate?: string;
 }
 
 export class ReviewActionDto {

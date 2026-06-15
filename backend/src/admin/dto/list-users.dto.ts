@@ -30,5 +30,13 @@ export class ListUsersDto {
 
   @IsOptional()
   @IsString()
-  search?: string; // searches name or mobile_number
+  search?: string;
+
+  @IsOptional()
+  @IsIn(['createdAt', 'name', 'state', 'verificationStatus'])
+  sortBy?: 'createdAt' | 'name' | 'state' | 'verificationStatus';
+
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC';
 }

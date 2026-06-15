@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsIn, IsOptional, IsInt, Min, Max, IsDateString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class ListWithdrawalsDto {
@@ -22,6 +22,30 @@ export class ListWithdrawalsDto {
   @IsOptional()
   @IsString()
   state?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @IsIn(['pending', 'processing', 'completed', 'failed', 'all'])
+  filterStatus?: string;
+
+  @IsOptional()
+  @IsIn(['amount', 'createdAt', 'processedAt'])
+  sortBy?: 'amount' | 'createdAt' | 'processedAt';
+
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC';
+
+  @IsOptional()
+  @IsDateString()
+  fromDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  toDate?: string;
 }
 
 export class ProcessWithdrawalDto {

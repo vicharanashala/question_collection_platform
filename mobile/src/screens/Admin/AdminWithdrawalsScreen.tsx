@@ -17,13 +17,32 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
+import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
+import { INDIAN_STATES } from '../../utils/constants';
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: '#f59e0b',
+  pending:    '#f59e0b',
   processing: '#8b5cf6',
-  completed: '#22c55e',
-  failed: '#ef4444',
+  completed:  '#22c55e',
+  failed:     '#ef4444',
 };
+
+const WITHDRAWAL_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'pending',    label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'completed',  label: 'Completed' },
+  { value: 'failed',     label: 'Failed' },
+];
+
+const STATE_OPTIONS = INDIAN_STATES.map((s) => ({ value: s, label: s }));
+
+const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'createdAt:DESC', label: 'Newest First' },
+  { value: 'createdAt:ASC',  label: 'Oldest First' },
+  { value: 'amount:DESC',    label: 'Highest Amount' },
+  { value: 'amount:ASC',     label: 'Lowest Amount' },
+  { value: 'processedAt:DESC', label: 'Recently Processed' },
+];
 
 interface WithdrawalItem {
   id: string;
@@ -34,6 +53,68 @@ interface WithdrawalItem {
   processedAt: string | null;
   failureReason: string | null;
   user: { id: string; name: string; mobileNumber: string; state: string } | null;
+}
+
+const FILTERS: FilterOption[] = [
+  {
+    key: 'search',
+    label: 'Search',
+    type: 'text',
+    placeholder: 'Name or mobile number…',
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    type: 'select',
+    options: WITHDRAWAL_STATUS_OPTIONS,
+  },
+  {
+    key: 'state',
+    label: 'State',
+    type: 'select',
+    options: STATE_OPTIONS,
+  },
+  {
+    key: 'sortBy',
+    label: 'Sort By',
+    type: 'select',
+    options: SORT_OPTIONS,
+  },
+  {
+    key: 'fromDate',
+    label: 'From Date',
+    type: 'date',
+    placeholder: 'YYYY-MM-DD',
+  },
+  {
+    key: 'toDate',
+    label: 'To Date',
+    type: 'date',
+    placeholder: 'YYYY-MM-DD',
+  },
+];
+
+const EMPTY_FILTERS: ActiveFilters = {
+  search: '',
+  status: '',
+  state: '',
+  sortBy: 'createdAt:DESC',
+  fromDate: '',
+  toDate: '',
+};
+
+function buildQueryParams(active: ActiveFilters, page: number): Record<string, string | number> {
+  const params: Record<string, string | number> = { page, limit: 20 };
+  if (active.search) params.search = active.search;
+  if (active.state) params.state = active.state;
+  if (active.status) params.status = active.status;
+  if (active.fromDate) params.fromDate = active.fromDate;
+  if (active.toDate) params.toDate = active.toDate;
+  const sortBy = active.sortBy?.split(':')[0];
+  const sortOrder = active.sortBy?.split(':')[1];
+  if (sortBy && sortBy !== 'createdAt') params.sortBy = sortBy;
+  if (sortOrder) params.sortOrder = sortOrder;
+  return params;
 }
 
 export function AdminWithdrawalsScreen() {
@@ -49,14 +130,19 @@ export function AdminWithdrawalsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
 
-  const fetch = useCallback(async (pageNum = 1, refresh = false) => {
+  const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
-      const res = await adminApi.listWithdrawals({ page: pageNum, limit: 20 });
+      const params = buildQueryParams(filters, pageNum);
+      const res = await adminApi.listWithdrawals(params);
       const data = res.data;
       const newItems: WithdrawalItem[] = data.items ?? [];
       setItems((prev) => (refresh ? newItems : [...prev, ...newItems]));
+      setTotal(data.total ?? 0);
       setHasMore(newItems.length === 20);
       setPage(pageNum);
     } catch (e) {
@@ -65,18 +151,34 @@ export function AdminWithdrawalsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [activeFilters]);
 
-  useEffect(() => { fetch(1, true); }, [fetch]);
+  useEffect(() => { fetch(1, true, activeFilters); }, []);
 
   async function onRefresh() {
     setRefreshing(true);
-    await fetch(1, true);
+    await fetch(1, true, activeFilters);
   }
 
   async function loadMore() {
     if (!hasMore || loading) return;
-    await fetch(page + 1, false);
+    await fetch(page + 1, false, activeFilters);
+  }
+
+  function handleApplyFilters(filters: ActiveFilters) {
+    setActiveFilters(filters);
+    setPage(1);
+    setItems([]);
+    setLoading(true);
+    fetch(1, true, filters);
+  }
+
+  function handleResetFilters() {
+    setActiveFilters({ ...EMPTY_FILTERS });
+    setPage(1);
+    setItems([]);
+    setLoading(true);
+    fetch(1, true, EMPTY_FILTERS);
   }
 
   function handleAction(id: string, action: 'approve' | 'reject') {
@@ -84,9 +186,7 @@ export function AdminWithdrawalsScreen() {
       Alert.prompt(
         'Reject Withdrawal',
         'Enter rejection reason (optional):',
-        async (reason) => {
-          await doAction(id, action, reason ?? undefined);
-        },
+        async (reason) => { await doAction(id, action, reason ?? undefined); },
         'plain-text',
       );
       return;
@@ -107,12 +207,19 @@ export function AdminWithdrawalsScreen() {
     }
   }
 
+  function activeFilterCount(): number {
+    return Object.entries(activeFilters).filter(([k, v]) => {
+      if (k === 'sortBy') return v !== 'createdAt:DESC';
+      return v && v.trim().length > 0;
+    }).length;
+  }
+
   function renderItem({ item }: { item: WithdrawalItem }) {
     const statusColor = STATUS_COLORS[item.status] ?? c.textTertiary;
     return (
       <View style={[styles.card, { backgroundColor: c.surface }]}>
         <View style={styles.cardTop}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={[styles.userName, { color: c.text }]}>
               {item.user?.name ?? item.user?.mobileNumber ?? 'Unknown user'}
             </Text>
@@ -175,13 +282,7 @@ export function AdminWithdrawalsScreen() {
     );
   }
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-        <View style={styles.centered}><ActivityIndicator size="large" color={c.primary} /></View>
-      </SafeAreaView>
-    );
-  }
+  const countBadge = activeFilterCount();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -190,8 +291,21 @@ export function AdminWithdrawalsScreen() {
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Withdrawals</Text>
-        <Text style={[styles.count, { color: c.textSecondary }]}>{items.length} shown</Text>
+        <Text style={[styles.count, { color: c.textSecondary }]}>{total} total</Text>
+        <TouchableOpacity
+          style={[styles.filterBtn, { backgroundColor: countBadge > 0 ? c.primary + '18' : c.surfaceVariant }]}
+          onPress={() => setFilterVisible(true)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="options" size={18} color={countBadge > 0 ? c.primary : c.textSecondary} />
+          {countBadge > 0 && (
+            <View style={[styles.filterBadge, { backgroundColor: c.primary }]}>
+              <Text style={styles.filterBadgeText}>{countBadge}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
+
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -202,9 +316,24 @@ export function AdminWithdrawalsScreen() {
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={[styles.emptyTitle, { color: c.text }]}>No withdrawals</Text>
+            <Text style={[styles.emptyTitle, { color: c.text }]}>
+              {loading ? '' : 'No withdrawals match your filters'}
+            </Text>
+            {!loading && (
+              <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>Try adjusting the filter criteria</Text>
+            )}
           </View>
         }
+      />
+
+      <AdminFilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        filters={FILTERS}
+        active={activeFilters}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        title="Filter Withdrawals"
       />
     </SafeAreaView>
   );
@@ -213,9 +342,19 @@ export function AdminWithdrawalsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: tokens.spacing5, paddingBottom: tokens.spacing3 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: tokens.spacing5, paddingBottom: tokens.spacing3, gap: tokens.spacing2 },
   screenTitle: { fontSize: 22, fontWeight: '800' },
   count: { fontSize: 13 },
+  filterBtn: {
+    width: 38, height: 38, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center', marginLeft: tokens.spacing1,
+  },
+  filterBadge: {
+    position: 'absolute', top: -4, right: -4,
+    width: 16, height: 16, borderRadius: 8,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '800' },
   list: { padding: tokens.spacing5, paddingTop: 0, gap: tokens.spacing3 },
   card: { borderRadius: tokens.radiusLg, padding: tokens.spacing4 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: tokens.spacing3 },
@@ -235,4 +374,5 @@ const styles = StyleSheet.create({
   failureReason: { fontSize: 12, marginTop: tokens.spacing2 },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
+  emptyMsg: { fontSize: 14, marginTop: 4 },
 });

@@ -75,7 +75,7 @@ export class AdminService {
   // ─────────────────────────────────────────────────────────────
 
   async listUsers(dto: ListUsersDto) {
-    const { page = 1, limit = 20, state, category, status, search } = dto;
+    const { page = 1, limit = 20, state, category, status, search, sortBy = 'createdAt', sortOrder = 'DESC' } = dto;
     const qb = this.userRepo
       .createQueryBuilder('u')
       .select([
@@ -90,7 +90,6 @@ export class AdminService {
         'u.createdAt',
         'u.lastLoginAt',
       ])
-      .orderBy('u.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -103,6 +102,9 @@ export class AdminService {
         { search: `%${search}%` },
       );
     }
+
+    const sortCol = sortBy === 'verificationStatus' ? 'u.verificationStatus' : sortBy === 'state' ? 'u.state' : sortBy === 'name' ? 'u.name' : 'u.createdAt';
+    qb.orderBy(sortCol, sortOrder);
 
     const [items, total] = await qb.getManyAndCount();
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
@@ -191,36 +193,63 @@ export class AdminService {
   // ─────────────────────────────────────────────────────────────
 
   async listReviewQueue(dto: ListReviewQueueDto) {
-    const { page = 1, limit = 20, queueType } = dto;
-    // Include 'pending' so questions awaiting AI review are visible in the queue.
-    // Once the AI review pipeline exists, pending questions will be auto-transitioned
-    // to ai_review/human_review and this fallback can be removed.
-    const statuses = queueType === 'ai_review'
-      ? [QuestionStatus.AI_REVIEW]
-      : [QuestionStatus.PENDING, QuestionStatus.HUMAN_REVIEW, QuestionStatus.AI_REVIEW];
+    const {
+      page = 1, limit = 20, queueType, state, search,
+      status, sortBy = 'submittedAt', sortOrder = 'DESC',
+      fromDate, toDate,
+    } = dto;
 
-    const [items, total] = await this.questionRepo.findAndCount({
-      where: { status: In(statuses) },
-      relations: ['user'],
-      order: { submittedAt: 'ASC' },
-      skip: (page - 1) * limit,
-      take: limit,
-      select: [
-        'id',
-        'userId',
-        'questionText',
-        'mediaType',
-        'mediaUrls',
-        'status',
-        'aiConfidenceScore',
-        'submittedAt',
-        'language',
-        'domainCategory',
-        'cropType',
-        'state',
-      ],
-    });
+    const qb = this.questionRepo
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.user', 'u')
+      .select([
+        'q.id',
+        'q.userId',
+        'q.questionText',
+        'q.mediaType',
+        'q.mediaUrls',
+        'q.status',
+        'q.aiConfidenceScore',
+        'q.submittedAt',
+        'q.language',
+        'q.domainCategory',
+        'q.cropType',
+        'q.state',
+      ])
+      .skip((page - 1) * limit)
+      .take(limit);
 
+    // Status filter
+    if (status) {
+      qb.andWhere('q.status = :status', { status });
+    } else {
+      // Default: show all reviewable statuses (pending + queues)
+      const defaultStatuses = queueType === 'ai_review'
+        ? [QuestionStatus.AI_REVIEW]
+        : [QuestionStatus.PENDING, QuestionStatus.HUMAN_REVIEW, QuestionStatus.AI_REVIEW];
+      qb.andWhere('q.status IN (:...statuses)', { statuses: defaultStatuses });
+    }
+
+    // State filter
+    if (state) qb.andWhere('q.state = :state', { state });
+
+    // Search: question text or user mobile
+    if (search) {
+      qb.andWhere(
+        `(q.questionText ILIKE :search OR u.mobileNumber ILIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    // Date range
+    if (fromDate) qb.andWhere('q.submittedAt >= :fromDate', { fromDate: new Date(fromDate) });
+    if (toDate) qb.andWhere('q.submittedAt <= :toDate', { toDate: new Date(toDate) });
+
+    // Sorting
+    const sortColumn = sortBy === 'aiConfidenceScore' ? 'q.aiConfidenceScore' : sortBy === 'state' ? 'q.state' : 'q.submittedAt';
+    qb.orderBy(sortColumn, sortOrder);
+
+    const [items, total] = await qb.getManyAndCount();
     return {
       items: items.map((q) => ({
         ...q,
@@ -508,7 +537,11 @@ export class AdminService {
   // ─────────────────────────────────────────────────────────────
 
   async listWithdrawals(dto: ListWithdrawalsDto) {
-    const { page = 1, limit = 20, status, state } = dto;
+    const {
+      page = 1, limit = 20, status, state, search,
+      sortBy = 'createdAt', sortOrder = 'DESC',
+      fromDate, toDate,
+    } = dto;
     const qb = this.withdrawalRepo
       .createQueryBuilder('wr')
       .leftJoinAndSelect('wr.user', 'u')
@@ -521,12 +554,24 @@ export class AdminService {
         'wr.processedAt',
         'wr.failureReason',
       ])
-      .orderBy('wr.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
     if (status) qb.andWhere('wr.status = :status', { status });
     if (state) qb.andWhere('u.state = :state', { state });
+
+    if (search) {
+      qb.andWhere(
+        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    if (fromDate) qb.andWhere('wr.createdAt >= :fromDate', { fromDate: new Date(fromDate) });
+    if (toDate) qb.andWhere('wr.createdAt <= :toDate', { toDate: new Date(toDate) });
+
+    const sortColumn = sortBy === 'amount' ? 'wr.amount' : sortBy === 'processedAt' ? 'wr.processedAt' : 'wr.createdAt';
+    qb.orderBy(sortColumn, sortOrder);
 
     const [items, total] = await qb.getManyAndCount();
     return {
