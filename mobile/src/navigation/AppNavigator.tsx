@@ -28,6 +28,7 @@ import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
 import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
+import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
 
 
 
@@ -187,6 +188,11 @@ export function AppNavigator() {
             <RootStack.Screen
               name="CropManagement"
               component={CropManagementScreen}
+              options={{ presentation: 'modal' }}
+            />
+            <RootStack.Screen
+              name="QuestionPreview"
+              component={QuestionPreviewScreen}
               options={{ presentation: 'modal' }}
             />
           </>

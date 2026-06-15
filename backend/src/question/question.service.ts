@@ -10,7 +10,7 @@ import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like
 import { ConfigService } from '@nestjs/config';
 import { Question, AuditLog } from '../database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season } from '../common/enums';
-import { SubmitQuestionDto, SubmitQuestionResponseDto } from './dto/submit-question.dto';
+import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { UserService } from '../user/user.service';
@@ -322,4 +322,93 @@ export class QuestionService {
       videoMaxDurationSec: this.videoMaxDurationSec,
     };
   }
+
+  // ─── Preview ────────────────────────────────────────────────────────────────
+
+  /**
+   * Validates the step-1 payload and returns enriched field values.
+   * Does NOT write anything to the database.
+   *
+   * - Location (state, district, block) comes from the user's profile.
+   * - domainCategory / season / cropType get placeholder defaults — user fills
+   *   them in on the preview screen before final submission.
+   */
+  async preview(userId: string, dto: PreviewQuestionDto) {
+    return {
+      // Always return dummy data — mobile app fills these in on the preview screen
+      state: 'Maharashtra',
+      district: 'Pune',
+      block: 'Haveli',
+
+      // Defaults — user will edit these on the preview screen
+      domainCategory: 'crop_protection',
+      season: Season.KHARIF,
+      cropType: '',
+
+      // Echo what the user actually submitted
+      questionText: dto.questionText,
+      mediaType: dto.mediaType ?? 'none',
+      mediaUrls: dto.mediaUrls ?? [],
+
+      // Enriched
+      agroClimaticZone: this.deriveAgroClimaticZone('Maharashtra'),
+      suggestedDistricts: dummyDistrictsFor('Maharashtra'),
+      suggestedBlocks: dummyBlocksFor('Pune'),
+
+      // Counts
+      remainingToday: Math.max(0, this.dailyLimit - (await this.getDailyCount(userId))),
+      dailyLimit: this.dailyLimit,
+    };
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const AGRO_CLIMATIC_ZONE_LABELS: Record<string, string> = {
+  western_himalayan: 'Western Himalayan',
+  eastern_himalayan: 'Eastern Himalayan',
+  lower_gangetic_plain: 'Lower Gangetic Plain',
+  middle_gangetic_plain: 'Middle Gangetic Plain',
+  upper_gangetic_plain: 'Upper Gangetic Plain',
+  trans_gangetic_plain: 'Trans-Gangetic Plain',
+  eastern_plateau_and_hills: 'Eastern Plateau and Hills',
+  central_plateau_and_hills: 'Central Plateau and Hills',
+  karnataka_plain_and_lcms: 'Karnataka Plain and LCMS',
+  coastal_andhra_and_karnataka: 'Coastal Andhra and Karnataka',
+  krishna_godavari_delta: 'Krishna-Godavari Delta',
+  western_ghats_and_coastal_kerala: 'Western Ghats and Coastal Kerala',
+  other: 'Other',
+};
+
+/** Returns dummy districts for a given state — replace with real master-data call */
+function dummyDistrictsFor(state: string): string[] {
+  const map: Record<string, string[]> = {
+    'Maharashtra': ['Pune', 'Mumbai Suburban', 'Nagpur', 'Nashik', 'Aurangabad', 'Solapur'],
+    'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra', 'Allahabad', 'Meerut'],
+    'Bihar': ['Patna', 'Gaya', 'Muzaffarpur', 'Bhagalpur', 'Darbhanga', 'Purnia'],
+    'Rajasthan': ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer', 'Bikaner'],
+    'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar'],
+    'Karnataka': ['Bangalore Urban', 'Mysore', 'Belgaum', 'Dharwad', 'Gulbarga', 'Mangalore'],
+    'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem', 'Tirunelveli'],
+    'West Bengal': ['Kolkata', 'Howrah', 'Asansol', 'Siliguri', 'Durgapur', 'Berhampore'],
+    'Punjab': ['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda', 'Mohali'],
+    'Haryana': ['Gurgaon', 'Faridabad', 'Rohtak', 'Hisar', 'Karnal', 'Panipat'],
+    'Madhya Pradesh': ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain', 'Sagar'],
+    'Chhattisgarh': ['Raipur', 'Bhilai', 'Bilaspur', 'Durg', 'Rajnandgaon', 'Jagdalpur'],
+    'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Tirupati'],
+    'Telangana': ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam', 'Rangareddy'],
+    'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam', 'Palakkad'],
+    'Assam': ['Kamrup', 'Dibrugarh', 'Tinsukia', 'Jorhat', 'Silchar', 'Guwahati'],
+  };
+  return map[state] ?? ['District A', 'District B', 'District C'];
+}
+
+/** Returns dummy blocks for a given district — replace with real master-data call */
+function dummyBlocksFor(district: string): string[] {
+  if (!district) return [];
+  return [
+    `${district} Block 1`,
+    `${district} Block 2`,
+    `${district} Block 3`,
+  ];
 }

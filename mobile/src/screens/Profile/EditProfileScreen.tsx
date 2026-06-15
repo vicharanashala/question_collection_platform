@@ -58,9 +58,7 @@ export function EditProfileScreen({ navigation }: Props) {
     if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
     if (!state) errs.state = t('editProfile.selectState');
     if (!district.trim()) errs.district = t('editProfile.districtRequired');
-    if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
-      if (!farmSize.trim()) errs.farmSize = t('editProfile.farmSizeRequired');
-    }
+    // farmSize is optional — no validation required
     if (user?.category === UserCategory.STUDENT) {
       if (!courseName.trim()) errs.courseName = t('editProfile.courseNameRequired');
       if (!universityName.trim()) errs.universityName = t('editProfile.universityNameRequired');
@@ -85,8 +83,8 @@ export function EditProfileScreen({ navigation }: Props) {
         languagePreference: language,
       };
       if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
-        payload.farmSize = farmSize.trim();
-        payload.cropType = primaryCrop.trim();
+        if (farmSize.trim()) payload.farmSize = farmSize.trim();
+        if (primaryCrop.trim()) payload.cropType = primaryCrop.trim();
       } else if (user?.category === UserCategory.STUDENT) {
         payload.courseName = courseName.trim();
         payload.universityName = universityName.trim();
@@ -144,7 +142,7 @@ export function EditProfileScreen({ navigation }: Props) {
                   label={t('editProfile.fullName')}
                   placeholder={t('editProfile.fullNamePlaceholder')}
                   value={name}
-                  onChangeText={(t) => { setName(t); setErrors({}); }}
+                  onChangeText={setName}
                   error={errors.name}
                   autoCapitalize="words"
                 />
@@ -170,7 +168,7 @@ export function EditProfileScreen({ navigation }: Props) {
                   label={t('question.district')}
                   placeholder={t('editProfile.districtPlaceholder')}
                   value={district}
-                  onChangeText={(t) => { setDistrict(t); setErrors({}); }}
+                  onChangeText={setDistrict}
                   error={errors.district}
                 />
                 <Input
@@ -190,8 +188,8 @@ export function EditProfileScreen({ navigation }: Props) {
                     label={t('editProfile.farmSize')}
                     placeholder={t('editProfile.farmSizePlaceholder')}
                     value={farmSize}
-                    onChangeText={(t) => { setFarmSize(t); setErrors({}); }}
-                    error={errors.farmSize}
+                    onChangeText={setFarmSize}
+                    error={undefined}
                   />
                   <Input
                     label={t('editProfile.primaryCrop')}
@@ -210,14 +208,14 @@ export function EditProfileScreen({ navigation }: Props) {
                     label={t('editProfile.courseName')}
                     placeholder={t('editProfile.courseNamePlaceholder')}
                     value={courseName}
-                    onChangeText={(t) => { setCourseName(t); setErrors({}); }}
+                    onChangeText={setCourseName}
                     error={errors.courseName}
                   />
                   <Input
                     label={t('editProfile.universityName')}
                     placeholder={t('editProfile.universityNamePlaceholder')}
                     value={universityName}
-                    onChangeText={(t) => { setUniversityName(t); setErrors({}); }}
+                    onChangeText={setUniversityName}
                     error={errors.universityName}
                   />
                 </View>
@@ -231,14 +229,14 @@ export function EditProfileScreen({ navigation }: Props) {
                     label={t('editProfile.organisationName')}
                     placeholder={t('editProfile.organisationNamePlaceholder')}
                     value={organisationName}
-                    onChangeText={(t) => { setOrganisationName(t); setErrors({}); }}
+                    onChangeText={setOrganisationName}
                     error={errors.organisationName}
                   />
                   <Input
                     label={t('editProfile.role')}
                     placeholder={t('editProfile.rolePlaceholder')}
                     value={memberRole}
-                    onChangeText={(t) => { setMemberRole(t); setErrors({}); }}
+                    onChangeText={setMemberRole}
                     error={errors.role}
                   />
                 </View>

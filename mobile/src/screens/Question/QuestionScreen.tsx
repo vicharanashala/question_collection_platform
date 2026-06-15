@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RouteProp } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import {
@@ -12,100 +11,22 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { questionApi } from '../../api/client';
 import { useTranslation } from 'react-i18next';
-import {
-  SEASONS,
-  DOMAIN_CATEGORIES,
-  INDIAN_STATES,
-  DAILY_QUESTION_LIMIT,
-  EDIT_WINDOW_SEC,
-} from '../../utils/constants';
+import { DAILY_QUESTION_LIMIT } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
-import { deriveAgroClimaticZone, AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
-import { MainTabParamList } from '../../navigation/types';
-import { compressImage, compressVideo, uploadToStorage, validateVideo } from '../../utils/media';
-
-// ─── Media picker stubs (install expo-image-picker + expo-video-thumbnails to enable) ───
-type MediaMode = 'none' | 'image' | 'video' | 'audio';
-
-interface PickerResult {
-  cancelled: boolean;
-  uri?: string;
-  width?: number;
-  height?: number;
-  type?: 'image' | 'video' | 'audio';
-  fileSize?: number;
-}
-
-// Conditional import — resolved at runtime when the native module is available.
-// try/catch handles both "not installed" (TS path) and "native binary unavailable" (Expo Go).
-async function pickImage(): Promise<PickerResult> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod = require('expo-image-picker');
-    const result = await mod.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsEditing: false,
-    });
-    if (result.canceled || !result.assets?.length) return { cancelled: true };
-    const asset = result.assets[0];
-    return { cancelled: false, uri: asset.uri, fileSize: asset.fileSize, type: 'image' };
-  } catch {
-    return { cancelled: true };
-  }
-}
-
-async function pickVideo(): Promise<PickerResult> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod = require('expo-image-picker');
-    const result = await mod.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      quality: 0.6,
-      allowsEditing: false,
-    });
-    if (result.canceled || !result.assets?.length) return { cancelled: true };
-    const asset = result.assets[0];
-    return { cancelled: false, uri: asset.uri, fileSize: asset.fileSize, type: 'video' };
-  } catch {
-    return { cancelled: true };
-  }
-}
-
-// ─── Constants ─────────────────────────────────────────────────────────────────
-
-const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
-const domainOptions = DOMAIN_CATEGORIES.map((d) => ({ value: d.value, label: d.label }));
-const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
+import { MainTabParamList, RootStackParamList } from '../../navigation/types';
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 interface QuestionScreenProps {
   route?: RouteProp<MainTabParamList, 'AskQuestion'>;
-}
-
-interface Question {
-  id: string;
-  questionText: string;
-  domainCategory: string;
-  season: string;
-  cropType: string;
-  state: string;
-  district: string;
-  block?: string | null;
-  mediaType: 'none' | 'image' | 'video' | 'audio';
-  mediaUrls?: string[] | null;
-  editWindowClosesAt: string | null;
 }
 
 export function QuestionScreen({ route }: QuestionScreenProps) {
@@ -120,109 +41,45 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const isEditMode = Boolean(editingQuestionId);
 
   // Form state
-  const [state, setState] = useState(user?.state ?? '');
-  const [derivedZone, setDerivedZone] = useState<AgroClimaticZone>(() =>
-    user?.state ? deriveAgroClimaticZone(user.state) : AgroClimaticZone.OTHER,
-  );
-  const [district, setDistrict] = useState(user?.district ?? '');
-  const [block, setBlock] = useState(user?.block ?? '');
-  const [domainCategory, setDomainCategory] = useState('');
-  const [season, setSeason] = useState('');
-  const [cropType, setCropType] = useState('');
   const [questionText, setQuestionText] = useState('');
-
-  // Media state
-  const [mediaMode, setMediaMode] = useState<MediaMode>('none');
-  const [mediaUri, setMediaUri] = useState<string | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [uploadingMedia, setUploadingMedia] = useState(false);
-
-  // Submission state
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState(false);
-
-  // Stats
-  const [dailyCount, setDailyCount] = useState(0);
   const [remainingToday, setRemainingToday] = useState(DAILY_QUESTION_LIMIT);
 
   // Load stats on mount; fetch question if editing
   useEffect(() => {
     if (isEditMode && editingQuestionId) {
       questionApi.get(editingQuestionId).then((res) => {
-        const q = res.data as Question;
-        setState(q.state ?? '');
-        setDistrict(q.district ?? '');
-        setBlock(q.block ?? '');
-        setDomainCategory(q.domainCategory);
-        setSeason(q.season);
-        setCropType(q.cropType);
-        setQuestionText(q.questionText);
-        if (q.mediaUrls?.length) {
-          setMediaPreview(q.mediaUrls[0]);
-          setMediaMode(q.mediaType);
-        }
-      }).catch(async (err) => {
-        console.log('[QuestionScreen] fetch error:', err);
+        const q = res.data as Record<string, unknown>;
+        setQuestionText(q.questionText as string);
+      }).catch(async () => {
         const { getErrorMessage } = await import('../../api/client');
-        showToast(getErrorMessage(err, t('question.updateFailed')), 'error');
+        showToast(getErrorMessage(null, t('question.updateFailed')), 'error');
         navigation.navigate('Submissions' as never);
       });
     } else {
-      questionApi
-        .getStats()
-        .then((res) => {
-          const data = res.data as { dailyCount: number; remainingToday: number };
-          setDailyCount(data.dailyCount);
-          setRemainingToday(data.remainingToday);
-        })
-        .catch(() => {
-          // Non-fatal — show default limits
-        });
+      questionApi.getStats().then((res) => {
+        const data = res.data as { remainingToday: number };
+        setRemainingToday(data.remainingToday);
+      });
     }
   }, [isEditMode, editingQuestionId]);
 
-  // ─── Validation ─────────────────────────────────────────────────────────────
+  // ─── Validation ──────────────────────────────────────────────────────────────
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    if (!state) errs.state = t('question.selectState');
-    if (!district.trim()) errs.district = t('question.districtPlaceholder');
-    if (!domainCategory) errs.domainCategory = t('question.selectDomain');
-    if (!season) errs.season = t('question.selectSeason');
-    if (!cropType.trim()) errs.cropType = t('question.enterCrop');
-    if (!questionText.trim() && mediaMode === 'none') {
+    if (!questionText.trim()) {
       errs.questionText = t('question.enterQuestion');
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
 
-  // ─── Media handlers ──────────────────────────────────────────────────────────
+  // ─── Preview ─────────────────────────────────────────────────────────────────
 
-  async function handleAttachImage() {
-    setMediaMode('image');
-    const result = await pickImage();
-    if (result.cancelled || !result.uri) {
-      setMediaMode('none');
-      return;
-    }
-
-    const compressedUri = await compressImage(result.uri);
-    setMediaUri(compressedUri);
-    setMediaPreview(result.uri);
-    setErrors({});
-  }
-
-  function handleRemoveMedia() {
-    setMediaMode('none');
-    setMediaUri(null);
-    setMediaPreview(null);
-  }
-
-  // ─── Submit ──────────────────────────────────────────────────────────────────
-
-  async function handleSubmit() {
+  async function handlePreview() {
     if (!validate()) return;
 
     if (!isEditMode && remainingToday <= 0) {
@@ -230,125 +87,40 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       return;
     }
 
-    setLoading(true);
+    setPreviewLoading(true);
     try {
-      let mediaUrls: string[] | undefined;
-
-      // Upload new media if present and changed (edit mode)
-      if (mediaUri && user?.id) {
-        setUploadingMedia(true);
-        try {
-          const url = await uploadToStorage(mediaUri, mediaMode as 'image' | 'video' | 'audio', user.id);
-          mediaUrls = [url];
-        } catch (err) {
-          const { getErrorMessage } = await import('../../api/client');
-          showToast(getErrorMessage(err, t('question.mediaUploadFailed')), 'error');
-          setLoading(false);
-          setUploadingMedia(false);
-          return;
-        } finally {
-          setUploadingMedia(false);
-        }
-      }
-
-      const submitPayload = {
-        state,
-        district: district.trim(),
-        block: block.trim() || null,
-        domainCategory,
-        season,
-        cropType: cropType.trim(),
+      const res = await questionApi.preview({
         questionText: questionText.trim(),
-        agroClimaticZone: derivedZone,
-        mediaType: mediaMode,
-        mediaUrls,
-        deviceInfo: {
-          platform: Platform.OS,
-          version: Platform.Version,
-        },
-      };
+        mediaType: 'none',
+        mediaUrls: [],
+      });
 
-      const updatePayload = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (navigation as any).navigate('QuestionPreview', {
+        state: res.data.state ?? user?.state ?? '',
+        district: res.data.district ?? user?.district ?? '',
+        block: res.data.block ?? user?.block ?? null,
+        domainCategory: res.data.domainCategory ?? '',
+        season: res.data.season ?? '',
+        cropType: res.data.cropType ?? '',
         questionText: questionText.trim(),
-        domainCategory,
-        season,
-        cropType: cropType.trim(),
-        mediaType: mediaMode,
-        mediaUrls,
-      };
-
-      if (isEditMode && editingQuestionId) {
-        await questionApi.update(editingQuestionId, updatePayload);
-      } else {
-        await questionApi.submit(submitPayload);
-      }
-      setSubmitted(true);
-
-      // Refresh stats only for new submissions
-      if (!isEditMode) {
-        const res = await questionApi.getStats();
-        const stats = res.data as { dailyCount: number; remainingToday: number };
-        setDailyCount(stats.dailyCount);
-        setRemainingToday(stats.remainingToday);
-      }
+        mediaType: 'none',
+        mediaUrls: [],
+        agroClimaticZone: res.data.agroClimaticZone ?? 'other',
+        suggestedDistricts: res.data.suggestedDistricts ?? [],
+        suggestedBlocks: res.data.suggestedBlocks ?? [],
+        remainingToday: res.data.remainingToday ?? remainingToday,
+        dailyLimit: res.data.dailyLimit ?? DAILY_QUESTION_LIMIT,
+      } as RootStackParamList['QuestionPreview']);
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
-      const msg = getErrorMessage(err, t('question.submitFailed'));
-      showToast(msg, 'error');
+      showToast(getErrorMessage(err, t('question.submitFailed')), 'error');
     } finally {
-      setLoading(false);
-      setUploadingMedia(false);
+      setPreviewLoading(false);
     }
   }
 
-  // ─── Reset ───────────────────────────────────────────────────────────────────
-
-  function reset() {
-    setState(user?.state ?? '');
-    setDistrict(user?.district ?? '');
-    setBlock(user?.block ?? '');
-    setDomainCategory('');
-    setSeason('');
-    setCropType('');
-    setQuestionText('');
-    setMediaMode('none');
-    setMediaUri(null);
-    setMediaPreview(null);
-    setSubmitted(false);
-    setErrors({});
-  }
-
-  // ─── Render: Success ─────────────────────────────────────────────────────────
-
-  if (submitted) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-        <View style={[styles.successCard, { backgroundColor: c.surface, ...tokens.shadowLg }]}>
-          <View style={[styles.successIconWrap, { backgroundColor: c.success + '18' }]}>
-            <Ionicons name="checkmark-circle" size={40} color={c.success} />
-          </View>
-          <Text style={[styles.successTitle, { color: c.text }]}>
-            {isEditMode ? t('question.updateSuccess') : t('question.submitSuccess')}
-          </Text>
-          <Text style={[styles.successBody, { color: c.textSecondary }]}>
-            {t('question.successBody')}
-          </Text>
-          <Button
-            title={isEditMode ? t('submissions.backToSubmissions') : t('question.submitAnother')}
-            onPress={() => {
-              if (isEditMode) {
-                navigation.navigate('Submissions' as never);
-              } else {
-                reset();
-              }
-            }}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ─── Render: Form ────────────────────────────────────────────────────────────
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -356,177 +128,135 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.titleRow}>
               <Text style={[styles.title, { color: c.text }]}>
-              {isEditMode ? t('question.editQuestion') : t('question.askQuestion')}
+                {isEditMode ? t('question.editQuestion') : t('question.askQuestion')}
               </Text>
               <TooltipIcon
-                description={
-                  isEditMode
-                    ? t('question.tooltipEdit')
-                    : t('question.tooltipAsk')
-                }
+                description={isEditMode ? t('question.tooltipEdit') : t('question.tooltipAsk')}
                 size={18}
               />
             </View>
-            <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              {isEditMode ? t('question.editSubtitle') : t('question.askSubtitle')}
-            </Text>
             {!isEditMode && (
-              <View style={[styles.limitBadge, { backgroundColor: c.primary + '18' }]}>
-                <Text style={[styles.limitBadgeText, { color: c.text }]}>
-                  {remainingToday} of {DAILY_QUESTION_LIMIT} submissions remaining today
+              <View style={styles.limitRow}>
+                <View style={[styles.limitDot, { backgroundColor: c.primary }]} />
+                <Text style={[styles.limitText, { color: c.textSecondary }]}>
+                  {remainingToday} of {DAILY_QUESTION_LIMIT} submissions left today
                 </Text>
               </View>
             )}
           </View>
 
-          {/* Form card */}
-          <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            {/* Location */}
-            <Select
-              label="State"
-              value={state}
-              options={stateOptions}
-              onChange={(v) => {
-                setState(v);
-                setDerivedZone(deriveAgroClimaticZone(v));
-                setErrors({});
-              }}
-              error={errors.state}
-              searchable
-            />
-            <Input
-              label={t('question.district')}
-              placeholder={t('question.districtPlaceholder')}
-              value={district}
-              onChangeText={(t) => { setDistrict(t); setErrors({}); }}
-              error={errors.district}
-            />
-            <Input
-              label={t('question.blockOptional')}
-              placeholder={t('question.blockPlaceholder')}
-              value={block}
-              onChangeText={setBlock}
-            />
-
-            {/* Agro-Climatic Zone (auto-derived, read-only) */}
-            <View style={styles.zoneBadgeWrap}>
-              <Text style={[styles.zoneLabel, { color: c.textSecondary }]}>
-                {t('question.agroClimaticZone')}
-              </Text>
-              <View
-                style={[
-                  styles.zoneBadge,
-                  { backgroundColor: derivedZone !== AgroClimaticZone.OTHER ? c.primary + '18' : c.muted },
-                ]}
+          {/* Voice Hero Card */}
+          <View style={[styles.voiceCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
+            {/* Animated pulse rings — visual feedback that audio is "ready" */}
+            <View style={styles.pulseWrap}>
+              <View style={[styles.pulseRing, styles.pulseRing1, { borderColor: c.primary + '30' }]} />
+              <View style={[styles.pulseRing, styles.pulseRing2, { borderColor: c.primary + '20' }]} />
+              <TouchableOpacity
+                style={[styles.voiceBtn, { backgroundColor: c.primary }]}
+                disabled={true}
+                activeOpacity={0.85}
               >
-                <Text
-                  style={[
-                    styles.zoneBadgeText,
-                    { color: derivedZone !== AgroClimaticZone.OTHER ? c.primary : c.textSecondary },
-                  ]}
-                >
-                  {AGRO_CLIMATIC_ZONE_LABELS[derivedZone]}
-                </Text>
-              </View>
+                <Ionicons name="mic" size={32} color="#fff" />
+              </TouchableOpacity>
             </View>
 
-            {/* Domain */}
-            <Select
-              label={t('question.domain')}
-              placeholder={t('question.domainPlaceholder')}
-              value={domainCategory}
-              options={domainOptions}
-              onChange={(v) => { setDomainCategory(v); setErrors({}); }}
-              error={errors.domainCategory}
-            />
+            <Text style={[styles.voiceTitle, { color: c.text }]}>
+              {t('question.audio') ?? 'Speak your question'}
+            </Text>
+            <Text style={[styles.voiceSubtitle, { color: c.textSecondary }]}>
+              Voice input coming soon
+            </Text>
+          </View>
 
-            {/* Season */}
-            <Select
-              label={t('question.season')}
-              placeholder={t('question.seasonPlaceholder')}
-              value={season}
-              options={seasonOptions}
-              onChange={(v) => { setSeason(v); setErrors({}); }}
-              error={errors.season}
-            />
+          {/* Divider with "or" text */}
+          <View style={styles.orDivider}>
+            <View style={[styles.orLine, { backgroundColor: c.muted }]} />
+            <View style={[styles.orChip, { backgroundColor: c.muted }]}>
+              <Text style={[styles.orText, { color: c.textSecondary }]}>or type below</Text>
+            </View>
+            <View style={[styles.orLine, { backgroundColor: c.muted }]} />
+          </View>
 
-            {/* Crop */}
+          {/* Input card */}
+          <View style={[styles.inputCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
             <Input
-              label={t('question.cropType')}
-              placeholder={t('question.cropTypePlaceholder')}
-              value={cropType}
-              onChangeText={(t) => { setCropType(t); setErrors({}); }}
-              error={errors.cropType}
-            />
-
-            {/* Question text */}
-            <Input
-              label={t('question.yourQuestion')}
               placeholder={t('question.questionPlaceholder')}
               value={questionText}
-              onChangeText={(t) => { setQuestionText(t); setErrors({}); }}
+              onChangeText={(v) => { setQuestionText(v); setErrors({}); }}
               error={errors.questionText}
               multiline
-              numberOfLines={5}
-              style={{ height: 120, textAlignVertical: 'top', paddingTop: tokens.spacing3 }}
+              numberOfLines={8}
+              style={{
+                height: 180,
+                textAlignVertical: 'top',
+                paddingTop: tokens.spacing4,
+                paddingHorizontal: tokens.spacing4,
+                fontSize: 16,
+                lineHeight: 24,
+              }}
             />
 
-            {/* Media section */}
-            <View style={styles.mediaSection}>
-              <View style={styles.labelRow}>
-                <Text style={[styles.mediaLabel, { color: c.textSecondary }]}>{t('question.attachMedia')}</Text>
-                <TooltipIcon
-                  description={t('question.mediaHelp')}
-                  size={14}
-                />
-              </View>
-
-              {/* Preview */}
-              {mediaPreview && (
-                <View style={styles.mediaPreview}>
-                  <Image source={{ uri: mediaPreview }} style={styles.previewImage} resizeMode="cover" />
-                  <TouchableOpacity onPress={handleRemoveMedia} style={[styles.removeBtn, { backgroundColor: c.error }]}>
-                    <Text style={styles.removeBtnText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Pickers */}
-              {!mediaPreview && (
-                <View style={styles.mediaButtons}>
-                  <TouchableOpacity
-                    style={[styles.mediaBtn, { backgroundColor: c.muted }]}
-                    onPress={handleAttachImage}
-                    disabled={uploadingMedia || loading}
-                  >
-                    <Ionicons name="image" size={18} color={c.text} />
-                    <Text style={styles.mediaBtnText}>{t('question.photo')}</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+            {/* Character / line hint */}
+            <View style={styles.hintRow}>
+              <Text style={[styles.hintText, { color: c.textSecondary }]}>
+                {questionText.trim().length > 0
+                  ? `${questionText.trim().length} characters`
+                  : 'Be specific — more detail to get better rewards'}
+              </Text>
             </View>
 
-            {/* Upload progress */}
-            {uploadingMedia && (
-              <Text style={[styles.uploadText, { color: c.textSecondary }]}>
-                ⏳ {t('question.uploading')}
-              </Text>
+            {/* Submit */}
+            {!isEditMode ? (
+              <Button
+                title={previewLoading ? t('question.submitting') : t('continue')}
+                onPress={handlePreview}
+                loading={previewLoading}
+                disabled={remainingToday <= 0}
+              />
+            ) : (
+              <Button
+                title={loading ? t('question.updating') : t('question.updateQuestion')}
+                onPress={async () => {
+                  if (!questionText.trim()) {
+                    setErrors({ questionText: t('question.enterQuestion') });
+                    return;
+                  }
+                  setLoading(true);
+                  try {
+                    await questionApi.update(editingQuestionId!, {
+                      questionText: questionText.trim(),
+                      mediaType: 'none',
+                      mediaUrls: [],
+                    });
+                    showToast(t('question.updateSuccess'), 'success');
+                    navigation.navigate('Submissions' as never);
+                  } catch (err: unknown) {
+                    const { getErrorMessage } = await import('../../api/client');
+                    showToast(getErrorMessage(err, t('question.submitFailed')), 'error');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                loading={loading}
+              />
             )}
-
-
-
-            <Button
-              title={loading ? (isEditMode ? t('question.updating') : t('question.submitting')) : (isEditMode ? t('question.updateQuestion') : t('question.submitQuestion'))}
-              onPress={handleSubmit}
-              loading={loading || uploadingMedia}
-              disabled={remainingToday <= 0}
-            />
           </View>
+
+          {/* Footer hint */}
+          <Text style={[styles.footerHint, { color: c.textSecondary }]}>
+            Questions are reviewed within 24 hours. Be clear and specific for faster approval.
+          </Text>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -538,43 +268,124 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, padding: tokens.spacing6 },
-  header: { marginBottom: tokens.spacing4 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
-  title: { fontSize: 26, fontWeight: '800' },
-  subtitle: { fontSize: 13, marginTop: tokens.spacing1, lineHeight: 18 },
-  limitBadge: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginTop: tokens.spacing2 },
-  limitBadgeText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing1 },
-  card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
-  mediaSection: { marginBottom: tokens.spacing4 },
-  mediaLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
-  mediaPreview: { position: 'relative', marginBottom: tokens.spacing2, borderRadius: tokens.radiusMd, overflow: 'hidden' },
-  previewImage: { width: '100%', height: 160, borderRadius: tokens.radiusMd },
-  previewPlaceholder: { width: '100%', height: 80, borderRadius: tokens.radiusMd, alignItems: 'center', justifyContent: 'center' },
-  removeBtn: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  removeBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  mediaButtons: { flexDirection: 'row', gap: tokens.spacing2 },
-  mediaBtn: { flex: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing3, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: tokens.spacing2 },
-  mediaBtnText: { fontSize: 13, fontWeight: '600' },
-  uploadText: { fontSize: 12, marginBottom: tokens.spacing2, textAlign: 'center' },
-  mediaHint: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginBottom: tokens.spacing4 },
-  mediaHintText: { fontSize: 12, letterSpacing: 0.12 },
-  successCard: { flex: 1, justifyContent: 'center', alignItems: 'center', margin: tokens.spacing6, borderRadius: tokens.radiusXl, padding: tokens.spacing8 },
-  successIconWrap: { width: 80, height: 80, borderRadius: tokens.radiusFull, alignItems: 'center', justifyContent: 'center', marginBottom: tokens.spacing5 },
-  previewPlaceholderText: { fontSize: 13, marginTop: tokens.spacing1 },
-  successIcon: { fontSize: 40 },
-  successTitle: { fontSize: 22, fontWeight: '800', marginBottom: tokens.spacing3 },
-  successBody: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: tokens.spacing5 },
-  editNote: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginBottom: tokens.spacing5, width: '100%' },
-  editNoteText: { fontSize: 13, textAlign: 'center', fontWeight: '500' },
-  zoneBadgeWrap: { marginBottom: tokens.spacing4 },
-  zoneLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
-  zoneBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: tokens.radiusMd,
-    paddingVertical: tokens.spacing2,
-    paddingHorizontal: tokens.spacing3,
+  scroll: {
+    flexGrow: 1,
+    padding: tokens.spacing6,
+    paddingBottom: tokens.spacing8,
   },
-  zoneBadgeText: { fontSize: 13, fontWeight: '600' },
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  header: { marginBottom: tokens.spacing6 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
+  title: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  limitRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginTop: tokens.spacing2 },
+  limitDot: { width: 7, height: 7, borderRadius: 4 },
+  limitText: { fontSize: 13 },
+
+  // ── Voice Card ──────────────────────────────────────────────────────────────
+  voiceCard: {
+    borderRadius: tokens.radiusXl,
+    padding: tokens.spacing6,
+    alignItems: 'center',
+    marginBottom: tokens.spacing4,
+  },
+
+  pulseWrap: {
+    width: 96,
+    height: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: tokens.spacing4,
+    position: 'relative',
+  },
+
+  pulseRing: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 1.5,
+  },
+
+  pulseRing1: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+
+  pulseRing2: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+  },
+
+  voiceBtn: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 1,
+  },
+
+  voiceTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+
+  voiceSubtitle: {
+    fontSize: 13,
+  },
+
+  // ── Divider ─────────────────────────────────────────────────────────────────
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing4,
+    gap: tokens.spacing3,
+  },
+
+  orLine: { flex: 1, height: 1, borderRadius: 1 },
+
+  orChip: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+  },
+
+  orText: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+
+  // ── Input Card ──────────────────────────────────────────────────────────────
+  inputCard: {
+    borderRadius: tokens.radiusXl,
+    padding: tokens.spacing6,
+    marginBottom: tokens.spacing4,
+  },
+
+  hintRow: {
+    marginBottom: tokens.spacing4,
+  },
+
+  hintText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  footerHint: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: tokens.spacing4,
+  },
 });

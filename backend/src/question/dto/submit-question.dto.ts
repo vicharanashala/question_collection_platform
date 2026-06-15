@@ -76,3 +76,24 @@ export class SubmitQuestionResponseDto {
   editWindowClosesAt: string;
   message: string;
 }
+
+/**
+ * DTO for the /questions/preview endpoint.
+ * Only requires questionText + optional mediaType.
+ * All location and crop fields are derived server-side from the user's profile.
+ */
+export class PreviewQuestionDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(5000)
+  questionText: string;
+
+  @IsOptional()
+  @IsIn(['none', 'image', 'video', 'audio'])
+  mediaType?: 'none' | 'image' | 'video' | 'audio';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  mediaUrls?: string[];
+}
