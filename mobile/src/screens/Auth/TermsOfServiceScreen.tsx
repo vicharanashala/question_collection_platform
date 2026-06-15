@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
@@ -16,13 +17,72 @@ type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'TermsOfService'>;
 };
 
+const SECTIONS = [
+  {
+    id: '1',
+    title: 'Acceptance of Terms',
+    body: 'By accessing or using the KisanDekho platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.',
+  },
+  {
+    id: '2',
+    title: 'Purpose of the Platform',
+    body: 'KisanDekho is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.',
+  },
+  {
+    id: '3',
+    title: 'User Accounts',
+    body: 'You agree to provide accurate and complete information during registration. You are solely responsible for maintaining the confidentiality of your account and for all activities under your account.',
+  },
+  {
+    id: '4',
+    title: 'Content You Submit',
+    body: 'Questions and content submitted by you will be used for agricultural research, AI model training, and policy planning purposes. All submitted data is owned by the organisation and will be retained indefinitely unless you request account deletion.',
+  },
+  {
+    id: '5',
+    title: 'Moderation',
+    body: 'The platform reserves the right to moderate, edit, approve, or reject any submitted content at any time without prior notice. We may suspend or terminate your access if you violate these terms.',
+  },
+  {
+    id: '6',
+    title: 'Rewards and Incentives',
+    body: 'Rewards and incentives are subject to platform policy and may be changed or withdrawn at any time without prior notice. All rewards are subject to verification and approval of submitted content.',
+  },
+  {
+    id: '7',
+    title: 'Privacy',
+    body: 'Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services. For full details, please refer to our Privacy Policy.',
+  },
+  {
+    id: '8',
+    title: 'Account Deletion',
+    body: 'You may withdraw consent and request data deletion at any time by contacting our support team. Upon deletion, your personal data will be removed as per applicable data protection laws.',
+  },
+  {
+    id: '9',
+    title: 'Limitation of Liability',
+    body: 'The platform is provided "as is." We do not guarantee the accuracy, completeness, or usefulness of any information on the platform. You are solely responsible for the accuracy of information submitted through your account.',
+  },
+  {
+    id: '10',
+    title: 'Changes to Terms',
+    body: 'We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the updated terms.',
+  },
+  {
+    id: '11',
+    title: 'Contact',
+    body: 'For questions about these Terms of Service, please contact our support team at support@kisandekho.com.',
+  },
+];
+
 export function TermsOfServiceScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const [openId, setOpenId] = useState<string | null>('1');
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-      {/* Header bar */}
+      {/* Header */}
       <View style={[styles.topBar, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={[styles.backText, { color: c.primary }]}>← Back</Text>
@@ -32,65 +92,50 @@ export function TermsOfServiceScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-          <Text style={[styles.lastUpdated, { color: c.textTertiary }]}>
-            Last updated: June 2026
+        {/* Hero */}
+        <View style={styles.hero}>
+          <View style={[styles.heroIcon, { backgroundColor: c.primary + '18' }]}>
+            <Ionicons name="document-text-outline" size={32} color={c.primary} />
+          </View>
+          <Text style={[styles.heroTitle, { color: c.text }]}>Terms of Service</Text>
+          <Text style={[styles.heroSub, { color: c.textSecondary }]}>
+            Last updated: June 2026 · 11 sections
           </Text>
+        </View>
 
-          <Text style={[styles.sectionTitle, { color: c.text }]}>1. Acceptance of Terms</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            By accessing or using the KisanDekho platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>2. Purpose of the Platform</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            KisanDekho is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>3. User Accounts</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            You agree to provide accurate and complete information during registration. You are solely responsible for maintaining the confidentiality of your account and for all activities under your account.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>4. Content You Submit</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            Questions and content submitted by you will be used for agricultural research, AI model training, and policy planning purposes. All submitted data is owned by the organisation and will be retained indefinitely unless you request account deletion.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>5. Moderation</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            The platform reserves the right to moderate, edit, approve, or reject any submitted content at any time without prior notice. We may suspend or terminate your access if you violate these terms.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>6. Rewards and Incentives</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            Rewards and incentives are subject to platform policy and may be changed or withdrawn at any time without prior notice. All rewards are subject to verification and approval of submitted content.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>7. Privacy</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services. For full details, please refer to our Privacy Policy.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>8. Account Deletion</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            You may withdraw consent and request data deletion at any time by contacting our support team. Upon deletion, your personal data will be removed as per applicable data protection laws.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>9. Limitation of Liability</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            The platform is provided "as is." We do not guarantee the accuracy, completeness, or usefulness of any information on the platform. You are solely responsible for the accuracy of information submitted through your account.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>10. Changes to Terms</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the updated terms.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>11. Contact</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            For questions about these Terms of Service, please contact our support team.
-          </Text>
+        {/* Sections */}
+        <View style={styles.sections}>
+          {SECTIONS.map(({ id, title, body }) => {
+            const isOpen = openId === id;
+            return (
+              <View key={id} style={[styles.sectionCard, { backgroundColor: c.surface }]}>
+                <TouchableOpacity
+                  style={styles.sectionHeader}
+                  onPress={() => setOpenId(isOpen ? null : id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.sectionLeft}>
+                    <View style={[styles.sectionNum, { backgroundColor: c.primary + '18' }]}>
+                      <Text style={[styles.sectionNumText, { color: c.primary }]}>{id}</Text>
+                    </View>
+                    <Text style={[styles.sectionTitle, { color: c.text }]}>{title}</Text>
+                  </View>
+                  <Ionicons
+                    name={isOpen ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={c.textTertiary}
+                  />
+                </TouchableOpacity>
+                {isOpen && (
+                  <View style={[styles.sectionBody, { borderTopColor: c.borderSubtle }]}>
+                    <Text style={[styles.sectionBodyText, { color: c.textSecondary }]}>
+                      {body}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -112,8 +157,40 @@ const styles = StyleSheet.create({
   topBarTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center' },
   spacer: { minWidth: 60 },
   scroll: { padding: tokens.spacing6 },
-  card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
-  lastUpdated: { fontSize: 12, marginBottom: tokens.spacing5 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', marginTop: tokens.spacing5, marginBottom: tokens.spacing2 },
-  body: { fontSize: 13, lineHeight: 20 },
+  hero: { alignItems: 'center', marginBottom: tokens.spacing6 },
+  heroIcon: {
+    width: 72, height: 72,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: tokens.spacing3,
+  },
+  heroTitle: { fontSize: 22, fontWeight: '800', marginBottom: 4 },
+  heroSub: { fontSize: 13 },
+  sections: { gap: tokens.spacing2 },
+  sectionCard: {
+    borderRadius: tokens.radiusLg,
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: tokens.spacing4,
+    paddingHorizontal: tokens.spacing4,
+  },
+  sectionLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: tokens.spacing3 },
+  sectionNum: {
+    width: 26, height: 26,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sectionNumText: { fontSize: 12, fontWeight: '700' },
+  sectionTitle: { fontSize: 14, fontWeight: '600', flex: 1 },
+  sectionBody: {
+    borderTopWidth: 1,
+    paddingTop: tokens.spacing3,
+    paddingBottom: tokens.spacing4,
+    paddingHorizontal: tokens.spacing4,
+  },
+  sectionBodyText: { fontSize: 13, lineHeight: 20 },
 });

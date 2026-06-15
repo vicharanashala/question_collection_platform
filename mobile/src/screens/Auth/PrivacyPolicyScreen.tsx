@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
@@ -16,13 +17,71 @@ type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'PrivacyPolicy'>;
 };
 
+const SECTIONS = [
+  {
+    id: '1',
+    title: 'Information We Collect',
+    icon: 'information-circle-outline',
+    body: 'We collect your mobile number and registration details (name, state, district, category, and preferred language) when you create an account. We also collect questions, answers, and any media you submit through the platform.',
+  },
+  {
+    id: '2',
+    title: 'How We Use Your Information',
+    icon: 'settings-outline',
+    body: 'Your mobile number and registration details are used solely for platform authentication and agricultural knowledge services. Questions and content you submit are used for agricultural research, AI model training, and policy planning purposes.',
+  },
+  {
+    id: '3',
+    title: 'Data Storage & Security',
+    icon: 'shield-checkmark-outline',
+    body: 'All submitted data is owned by the organisation and will be retained indefinitely unless you request account deletion. We implement reasonable security measures to protect your personal information.',
+  },
+  {
+    id: '4',
+    title: 'Data Sharing',
+    icon: 'share-outline',
+    body: 'We do not sell your personal information. Your data may be used for research and policy purposes in an anonymised or aggregated form. We may share data when required by law.',
+  },
+  {
+    id: '5',
+    title: 'Your Rights',
+    icon: 'person-outline',
+    body: 'You have the right to access, correct, or delete your personal data at any time. You may withdraw consent and request data deletion at any time by contacting our support team. Upon deletion, your personal data will be removed as per applicable data protection laws.',
+  },
+  {
+    id: '6',
+    title: 'Cookies & Analytics',
+    icon: 'analytics-outline',
+    body: 'We may use cookies and analytics tools to improve the platform experience and understand usage patterns. You can control cookie preferences through your device settings.',
+  },
+  {
+    id: '7',
+    title: "Children's Privacy",
+    icon: 'people-outline',
+    body: 'The platform is not intended for users under the age of 13. We do not knowingly collect personal information from children under 13.',
+  },
+  {
+    id: '8',
+    title: 'Changes to This Policy',
+    icon: 'refresh-outline',
+    body: 'We may update this Privacy Policy from time to time. We will notify you of material changes by posting the updated policy within the app. Continued use of the platform constitutes acceptance of the updated policy.',
+  },
+  {
+    id: '9',
+    title: 'Contact & Data Requests',
+    icon: 'mail-outline',
+    body: 'For questions about this Privacy Policy, to access or delete your data, or to withdraw consent, please contact our support team at privacy@kisandekho.com.',
+  },
+];
+
 export function PrivacyPolicyScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const [openId, setOpenId] = useState<string | null>('1');
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-      {/* Header bar */}
+      {/* Header */}
       <View style={[styles.topBar, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={[styles.backText, { color: c.primary }]}>← Back</Text>
@@ -32,55 +91,58 @@ export function PrivacyPolicyScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-          <Text style={[styles.lastUpdated, { color: c.textTertiary }]}>
-            Last updated: June 2026
+        {/* Hero */}
+        <View style={styles.hero}>
+          <View style={[styles.heroIcon, { backgroundColor: c.primary + '18' }]}>
+            <Ionicons name="shield-checkmark" size={32} color={c.primary} />
+          </View>
+          <Text style={[styles.heroTitle, { color: c.text }]}>Privacy Policy</Text>
+          <Text style={[styles.heroSub, { color: c.textSecondary }]}>
+            Last updated: June 2026 · {SECTIONS.length} sections
           </Text>
+        </View>
 
-          <Text style={[styles.sectionTitle, { color: c.text }]}>1. Information We Collect</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            We collect your mobile number and registration details (name, state, district, category, and preferred language) when you create an account. We also collect questions, answers, and any media you submit through the platform.
+        {/* Info banner */}
+        <View style={[styles.banner, { backgroundColor: c.primary + '12' }]}>
+          <Ionicons name="lock-closed-outline" size={16} color={c.primary} />
+          <Text style={[styles.bannerText, { color: c.primary }]}>
+            Your data is stored securely and never sold to third parties.
           </Text>
+        </View>
 
-          <Text style={[styles.sectionTitle, { color: c.text }]}>2. How We Use Your Information</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            Your mobile number and registration details are used solely for platform authentication and agricultural knowledge services. Questions and content you submit are used for agricultural research, AI model training, and policy planning purposes.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>3. Data Storage and Security</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            All submitted data is owned by the organisation and will be retained indefinitely unless you request account deletion. We implement reasonable security measures to protect your personal information.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>4. Data Sharing</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            We do not sell your personal information. Your data may be used for research and policy purposes in an anonymised or aggregated form. We may share data when required by law.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>5. Your Rights</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            You have the right to access, correct, or delete your personal data at any time. You may withdraw consent and request data deletion at any time by contacting our support team. Upon deletion, your personal data will be removed as per applicable data protection laws.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>6. Cookies and Analytics</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            We may use cookies and analytics tools to improve the platform experience and understand usage patterns. You can control cookie preferences through your device settings.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>7. Children's Privacy</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            The platform is not intended for users under the age of 13. We do not knowingly collect personal information from children under 13.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>8. Changes to This Policy</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            We may update this Privacy Policy from time to time. We will notify you of material changes by posting the updated policy within the app. Continued use of the platform constitutes acceptance of the updated policy.
-          </Text>
-
-          <Text style={[styles.sectionTitle, { color: c.text }]}>9. Contact</Text>
-          <Text style={[styles.body, { color: c.textSecondary }]}>
-            For questions about this Privacy Policy or to request data deletion, please contact our support team.
-          </Text>
+        {/* Sections */}
+        <View style={styles.sections}>
+          {SECTIONS.map(({ id, title, icon, body }) => {
+            const isOpen = openId === id;
+            return (
+              <View key={id} style={[styles.sectionCard, { backgroundColor: c.surface }]}>
+                <TouchableOpacity
+                  style={styles.sectionHeader}
+                  onPress={() => setOpenId(isOpen ? null : id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.sectionLeft}>
+                    <View style={[styles.sectionIconBox, { backgroundColor: c.muted }]}>
+                      <Ionicons name={icon as any} size={16} color={c.primary} />
+                    </View>
+                    <Text style={[styles.sectionTitle, { color: c.text }]}>{title}</Text>
+                  </View>
+                  <Ionicons
+                    name={isOpen ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={c.textTertiary}
+                  />
+                </TouchableOpacity>
+                {isOpen && (
+                  <View style={[styles.sectionBody, { borderTopColor: c.borderSubtle }]}>
+                    <Text style={[styles.sectionBodyText, { color: c.textSecondary }]}>
+                      {body}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -102,8 +164,53 @@ const styles = StyleSheet.create({
   topBarTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center' },
   spacer: { minWidth: 60 },
   scroll: { padding: tokens.spacing6 },
-  card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
-  lastUpdated: { fontSize: 12, marginBottom: tokens.spacing5 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', marginTop: tokens.spacing5, marginBottom: tokens.spacing2 },
-  body: { fontSize: 13, lineHeight: 20 },
+  hero: { alignItems: 'center', marginBottom: tokens.spacing5 },
+  heroIcon: {
+    width: 72, height: 72,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: tokens.spacing3,
+  },
+  heroTitle: { fontSize: 22, fontWeight: '800', marginBottom: 4 },
+  heroSub: { fontSize: 13 },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3,
+    marginBottom: tokens.spacing5,
+  },
+  bannerText: { fontSize: 12, fontWeight: '600', flex: 1 },
+  sections: { gap: tokens.spacing2 },
+  sectionCard: {
+    borderRadius: tokens.radiusLg,
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: tokens.spacing4,
+    paddingHorizontal: tokens.spacing4,
+  },
+  sectionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: tokens.spacing3,
+  },
+  sectionIconBox: {
+    width: 30, height: 30,
+    borderRadius: tokens.radiusMd,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sectionTitle: { fontSize: 14, fontWeight: '600', flex: 1 },
+  sectionBody: {
+    borderTopWidth: 1,
+    paddingTop: tokens.spacing3,
+    paddingBottom: tokens.spacing4,
+    paddingHorizontal: tokens.spacing4,
+  },
+  sectionBodyText: { fontSize: 13, lineHeight: 20 },
 });
