@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
@@ -39,6 +40,8 @@ export function AdminConfigScreen() {
   const c = theme.colors;
   const nav = useNavigation();
   const { showToast } = useToast();
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'super_admin';
 
   const [configs, setConfigs] = useState<ConfigItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,9 +126,9 @@ export function AdminConfigScreen() {
             <TouchableOpacity
               key={cfg.key}
               style={[styles.row, { backgroundColor: c.surface }]}
-              onPress={() => handleUpdate(cfg.key, cfg.value)}
-              disabled={saving !== null}
-              activeOpacity={0.7}
+              onPress={isSuperAdmin ? () => handleUpdate(cfg.key, cfg.value) : undefined}
+              disabled={saving !== null || !isSuperAdmin}
+              activeOpacity={isSuperAdmin ? 0.7 : 1}
             >
               <View style={styles.rowLeft}>
                 <Text style={[styles.rowLabel, { color: c.text }]}>
@@ -145,7 +148,9 @@ export function AdminConfigScreen() {
                     {meta?.suffix === '₹' ? '₹' : ''}{cfg.value}{meta?.suffix ?? ''}
                   </Text>
                 )}
-                <Text style={[styles.editHint, { color: c.textTertiary }]}>Tap to edit</Text>
+                <Text style={[styles.editHint, { color: c.textTertiary }]}>
+                  {isSuperAdmin ? 'Tap to edit' : 'Super admin only'}
+                </Text>
               </View>
             </TouchableOpacity>
           );

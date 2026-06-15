@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
@@ -18,6 +19,8 @@ export function AdminUserDetailScreen() {
   const c = theme.colors;
   const nav = useNavigation();
   const { showToast } = useToast();
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'super_admin';
   const route = useRoute<Route>();
   const { userId } = route.params;
 
@@ -127,8 +130,8 @@ export function AdminUserDetailScreen() {
           </View>
         </View>
 
-        {/* Danger zone */}
-        {user.role !== 'super_admin' && (
+        {/* Danger zone — super admins only */}
+        {isSuperAdmin && user.role !== 'super_admin' && (
           <View style={[styles.dangerZone, { borderColor: c.error + '44' }]}>
             <Text style={[styles.dangerTitle, { color: c.error }]}>Admin Actions</Text>
             <View style={styles.dangerActions}>

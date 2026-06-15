@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
@@ -40,6 +41,8 @@ export function AdminWithdrawalsScreen() {
   const c = theme.colors;
   const nav = useNavigation();
   const { showToast } = useToast();
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === 'super_admin';
 
   const [items, setItems] = useState<WithdrawalItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,7 +143,7 @@ export function AdminWithdrawalsScreen() {
           )}
         </View>
 
-        {item.status === 'pending' && (
+        {item.status === 'pending' && isSuperAdmin && (
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.btn, { backgroundColor: '#22c55e22' }]}
