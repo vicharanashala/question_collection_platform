@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
+import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -31,14 +33,47 @@ type Props = {
 const TOTAL_STEPS = 4;
 
 const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
-const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: `${l.label} (${l.labelEnglish})` }));
+const languageOptions = LANGUAGES.map((l) => ({
+  value: l.code,
+  label: `${l.label} (${l.labelEnglish})`,
+}));
 
 const CATEGORIES = [
-  { value: UserCategory.FARMER, tKey: 'cat.farmer', descKey: 'cat.farmerDesc', icon: '🌾' },
-  { value: UserCategory.FPO, tKey: 'cat.fpoMember', descKey: 'cat.fpoMemberDesc', icon: '🤝' },
-  { value: UserCategory.STUDENT, tKey: 'cat.student', descKey: 'cat.studentDesc', icon: '🎓' },
-  { value: UserCategory.VOLUNTEER, tKey: 'cat.volunteer', descKey: 'cat.volunteerDesc', icon: '🙋' },
-  { value: UserCategory.NGO, tKey: 'cat.ngoPartner', descKey: 'cat.ngoPartnerDesc', icon: '🏢' },
+  {
+    value: UserCategory.FARMER,
+    tKey: 'cat.farmer',
+    descKey: 'cat.farmerDesc',
+    icon: 'leaf-outline',
+    color: '#16A34A',
+  },
+  {
+    value: UserCategory.FPO,
+    tKey: 'cat.fpoMember',
+    descKey: 'cat.fpoMemberDesc',
+    icon: 'people-outline',
+    color: '#2563EB',
+  },
+  {
+    value: UserCategory.STUDENT,
+    tKey: 'cat.student',
+    descKey: 'cat.studentDesc',
+    icon: 'school-outline',
+    color: '#7C3AED',
+  },
+  {
+    value: UserCategory.VOLUNTEER,
+    tKey: 'cat.volunteer',
+    descKey: 'cat.volunteerDesc',
+    icon: 'hand-right-outline',
+    color: '#D97706',
+  },
+  {
+    value: UserCategory.NGO,
+    tKey: 'cat.ngoPartner',
+    descKey: 'cat.ngoPartnerDesc',
+    icon: 'business-outline',
+    color: '#0891B2',
+  },
 ];
 
 const STEP_KEYS = ['stepCategory', 'stepLocation', 'stepDetails', 'stepLanguage'] as const;
@@ -49,18 +84,19 @@ export function RegisterScreen({ navigation, route }: Props) {
   const c = theme.colors;
   const { register } = useAuth();
   const { showToast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [langModalVisible, setLangModalVisible] = useState(false);
 
   const [category, setCategory] = useState<UserCategory | ''>('');
   const [name, setName] = useState('');
   const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
   const [block, setBlock] = useState('');
-  const [language, setLanguage] = useState('hi');
+  const [language, setLanguage] = useState('en');
 
   const [farmSize, setFarmSize] = useState('');
   const [cropType, setCropType] = useState('');
@@ -87,7 +123,9 @@ export function RegisterScreen({ navigation, route }: Props) {
         if (!universityName.trim()) errs.universityName = t('universityNameRequired');
       }
       if (
-        (category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) &&
+        (category === UserCategory.FPO ||
+          category === UserCategory.VOLUNTEER ||
+          category === UserCategory.NGO) &&
         (!organizationName.trim() || !role.trim())
       ) {
         if (!organizationName.trim()) errs.organizationName = t('organisationRequired');
@@ -99,16 +137,28 @@ export function RegisterScreen({ navigation, route }: Props) {
     return Object.keys(errs).length === 0;
   }
 
-  function next() { if (validateStep(step)) setStep((s) => Math.min(s + 1, TOTAL_STEPS)); }
-  function back() { if (step > 1) setStep((s) => s - 1); else navigation.goBack(); }
+  function next() {
+    if (validateStep(step)) setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  }
+  function back() {
+    if (step > 1) setStep((s) => s - 1);
+    else navigation.goBack();
+  }
 
   async function handleSubmit() {
     if (!validateStep(4)) return;
     setLoading(true);
     const profileData: Record<string, string> = {};
-    if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType; }
-    else if (category === UserCategory.STUDENT) { profileData.courseName = courseName; profileData.universityName = universityName; }
-    else { profileData.organizationName = organizationName; profileData.role = role; }
+    if (category === UserCategory.FARMER) {
+      profileData.farmSize = farmSize;
+      profileData.cropType = cropType;
+    } else if (category === UserCategory.STUDENT) {
+      profileData.courseName = courseName;
+      profileData.universityName = universityName;
+    } else {
+      profileData.organizationName = organizationName;
+      profileData.role = role;
+    }
 
     try {
       await register({
@@ -130,15 +180,47 @@ export function RegisterScreen({ navigation, route }: Props) {
     }
   }
 
+  const langLabel = i18n.language === 'en' ? 'English'
+    : i18n.language === 'hi' ? 'हिन्दी'
+    : i18n.language === 'kn' ? 'ಕನ್ನಡ'
+    : i18n.language === 'ta' ? 'தமிழ்'
+    : i18n.language === 'te' ? 'తెలుగు'
+    : i18n.language === 'bn' ? 'বাংলা'
+    : i18n.language === 'mr' ? 'मराठी'
+    : i18n.language === 'gu' ? 'ગુજરાતી'
+    : i18n.language === 'pa' ? 'ਪੰਜਾਬੀ'
+    : i18n.language === 'or' ? 'ଓଡ଼ିଆ'
+    : i18n.language === 'ml' ? 'മലയാളം'
+    : i18n.language;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {/* Back */}
-          <TouchableOpacity style={styles.backBtn} onPress={back}>
-            <Text style={[styles.backText, { color: c.primary }]}>← {t('back')}</Text>
-          </TouchableOpacity>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={back}>
+          <Ionicons name="arrow-back" size={22} color={c.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.langBtn, { borderColor: c.border }]}
+          onPress={() => setLangModalVisible(true)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="globe-outline" size={15} color={c.primary} />
+          <Text style={[styles.langBtnText, { color: c.primary }]} numberOfLines={1}>
+            {langLabel}
+          </Text>
+          <Ionicons name="chevron-down" size={13} color={c.primary} />
+        </TouchableOpacity>
+      </View>
 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: c.text }]}>{t('createAccount')}</Text>
@@ -159,21 +241,39 @@ export function RegisterScreen({ navigation, route }: Props) {
                     <View
                       style={[
                         styles.stepDot,
-                        { borderColor: isDone ? c.primary : isActive ? c.primary : c.borderSubtle },
-                        isDone && { backgroundColor: c.primary },
-                        isActive && { backgroundColor: c.primary + '18', borderColor: c.primary },
+                        {
+                          borderColor: isDone ? c.primary : isActive ? c.primary : c.borderSubtle,
+                          backgroundColor: isDone ? c.primary : isActive ? c.primary + '15' : 'transparent',
+                        },
                       ]}
                     >
-                      <Text style={[styles.stepNum, { color: isDone || isActive ? c.primary : c.textTertiary }]}>
+                      <Text
+                        style={[
+                          styles.stepNum,
+                          { color: isDone ? c.primaryForeground : isActive ? c.primary : c.textTertiary },
+                        ]}
+                      >
                         {isDone ? '✓' : num}
                       </Text>
                     </View>
-                    <Text style={[styles.stepLabel, { color: isActive ? c.primary : c.textTertiary }, isActive && { fontWeight: '700' }]}>
+                    <Text
+                      style={[
+                        styles.stepLabel,
+                        { color: isActive ? c.primary : c.textTertiary },
+                        isActive && styles.stepLabelActive,
+                      ]}
+                      numberOfLines={1}
+                    >
                       {t(key)}
                     </Text>
                   </View>
                   {i < STEP_KEYS.length - 1 && (
-                    <View style={[styles.stepLine, { backgroundColor: isDone ? c.primary : c.borderSubtle }]} />
+                    <View
+                      style={[
+                        styles.stepLine,
+                        { backgroundColor: isDone ? c.primary : c.borderSubtle },
+                      ]}
+                    />
                   )}
                 </React.Fragment>
               );
@@ -186,31 +286,63 @@ export function RegisterScreen({ navigation, route }: Props) {
             {step === 1 && (
               <>
                 <Text style={[styles.sectionTitle, { color: c.text }]}>{t('selectCategory')}</Text>
-                {CATEGORIES.map((cat) => (
-                  <TouchableOpacity
-                    key={cat.value}
-                    style={[
-                      styles.catCard,
-                      {
-                        borderColor: category === cat.value ? c.primary : c.borderSubtle,
-                        backgroundColor: category === cat.value ? c.primary + '10' : 'transparent',
-                      },
-                    ]}
-                    onPress={() => { setCategory(cat.value as UserCategory); setErrors({}); }}
-                  >
-                    <Text style={styles.catIcon}>{cat.icon}</Text>
-                    <View style={styles.catInfo}>
-                      <Text style={[styles.catLabel, { color: category === cat.value ? c.primary : c.text }]}>
-                        {t(cat.tKey)}
-                      </Text>
-                      <Text style={[styles.catDesc, { color: c.textSecondary }]}>{t(cat.descKey)}</Text>
-                    </View>
-                    <View style={[styles.radio, { borderColor: category === cat.value ? c.primary : c.borderSubtle }]}>
-                      {category === cat.value && <View style={[styles.radioInner, { backgroundColor: c.primary }]} />}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-                {errors.category && <Text style={[styles.error, { color: c.error }]}>{errors.category}</Text>}
+                {CATEGORIES.map((cat) => {
+                  const isSelected = category === cat.value;
+                  return (
+                    <TouchableOpacity
+                      key={cat.value}
+                      style={[
+                        styles.catCard,
+                        {
+                          borderColor: isSelected ? cat.color : c.borderSubtle,
+                          backgroundColor: isSelected ? cat.color + '12' : 'transparent',
+                        },
+                      ]}
+                      onPress={() => {
+                        setCategory(cat.value as UserCategory);
+                        setErrors({});
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View
+                        style={[
+                          styles.catIconWrap,
+                          { backgroundColor: cat.color + '18' },
+                        ]}
+                      >
+                        <Ionicons name={cat.icon as any} size={22} color={cat.color} />
+                      </View>
+                      <View style={styles.catInfo}>
+                        <Text
+                          style={[
+                            styles.catLabel,
+                            { color: isSelected ? cat.color : c.text },
+                          ]}
+                        >
+                          {t(cat.tKey)}
+                        </Text>
+                        <Text style={[styles.catDesc, { color: c.textSecondary }]}>
+                          {t(cat.descKey)}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.radio,
+                          { borderColor: isSelected ? cat.color : c.borderSubtle },
+                        ]}
+                      >
+                        {isSelected && (
+                          <View
+                            style={[styles.radioInner, { backgroundColor: cat.color }]}
+                          />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+                {errors.category && (
+                  <Text style={[styles.error, { color: c.error }]}>{errors.category}</Text>
+                )}
                 <Button title={t('continue')} onPress={next} disabled={!category} />
               </>
             )}
@@ -223,7 +355,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                   label={t('fullName')}
                   placeholder={t('namePlaceholder')}
                   value={name}
-                  onChangeText={(txt) => { setName(txt); setErrors({}); }}
+                  onChangeText={(txt) => {
+                    setName(txt);
+                    setErrors({});
+                  }}
                   error={errors.name}
                   autoCapitalize="words"
                 />
@@ -232,7 +367,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                   placeholder={t('statePlaceholder')}
                   value={state}
                   options={stateOptions}
-                  onChange={(v) => { setState(v); setErrors({}); }}
+                  onChange={(v) => {
+                    setState(v);
+                    setErrors({});
+                  }}
                   error={errors.state}
                   searchable
                 />
@@ -240,7 +378,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                   label={t('district')}
                   placeholder={t('districtPlaceholder')}
                   value={district}
-                  onChangeText={(txt) => { setDistrict(txt); setErrors({}); }}
+                  onChangeText={(txt) => {
+                    setDistrict(txt);
+                    setErrors({});
+                  }}
                   error={errors.district}
                 />
                 <Input
@@ -263,14 +404,20 @@ export function RegisterScreen({ navigation, route }: Props) {
                       label={t('farmSize')}
                       placeholder={t('farmSizePlaceholder')}
                       value={farmSize}
-                      onChangeText={(txt) => { setFarmSize(txt); setErrors({}); }}
+                      onChangeText={(txt) => {
+                        setFarmSize(txt);
+                        setErrors({});
+                      }}
                       error={errors.farmSize}
                     />
                     <Input
                       label={t('primaryCropType')}
                       placeholder={t('cropTypePlaceholder')}
                       value={cropType}
-                      onChangeText={(txt) => { setCropType(txt); setErrors({}); }}
+                      onChangeText={(txt) => {
+                        setCropType(txt);
+                        setErrors({});
+                      }}
                       error={errors.cropType}
                     />
                   </>
@@ -281,32 +428,46 @@ export function RegisterScreen({ navigation, route }: Props) {
                       label={t('courseName')}
                       placeholder={t('courseNamePlaceholder')}
                       value={courseName}
-                      onChangeText={(txt) => { setCourseName(txt); setErrors({}); }}
+                      onChangeText={(txt) => {
+                        setCourseName(txt);
+                        setErrors({});
+                      }}
                       error={errors.courseName}
                     />
                     <Input
                       label={t('university')}
                       placeholder={t('universityNamePlaceholder')}
                       value={universityName}
-                      onChangeText={(txt) => { setUniversityName(txt); setErrors({}); }}
+                      onChangeText={(txt) => {
+                        setUniversityName(txt);
+                        setErrors({});
+                      }}
                       error={errors.universityName}
                     />
                   </>
                 )}
-                {(category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) && (
+                {(category === UserCategory.FPO ||
+                  category === UserCategory.VOLUNTEER ||
+                  category === UserCategory.NGO) && (
                   <>
                     <Input
                       label={t('organisationName')}
                       placeholder={t('organisationNamePlaceholder')}
                       value={organizationName}
-                      onChangeText={(txt) => { setOrganizationName(txt); setErrors({}); }}
+                      onChangeText={(txt) => {
+                        setOrganizationName(txt);
+                        setErrors({});
+                      }}
                       error={errors.organizationName}
                     />
                     <Input
                       label={t('yourRole')}
                       placeholder={t('rolePlaceholder')}
                       value={role}
-                      onChangeText={(txt) => { setRole(txt); setErrors({}); }}
+                      onChangeText={(txt) => {
+                        setRole(txt);
+                        setErrors({});
+                      }}
                       error={errors.role}
                     />
                   </>
@@ -327,16 +488,28 @@ export function RegisterScreen({ navigation, route }: Props) {
                   placeholder={t('searchLanguage')}
                   value={language}
                   options={languageOptions}
-                  onChange={(v) => { setLanguage(v); setErrors({}); }}
+                  onChange={(v) => {
+                    setLanguage(v);
+                    setErrors({});
+                  }}
                   error={errors.language}
                   searchable
                 />
-                <Button title={t('completeRegistration')} onPress={handleSubmit} loading={loading} />
+                <Button
+                  title={t('completeRegistration')}
+                  onPress={handleSubmit}
+                  loading={loading}
+                />
               </>
             )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <LanguageSwitcher
+        visible={langModalVisible}
+        onClose={() => setLangModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -344,21 +517,59 @@ export function RegisterScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing4,
+    paddingTop: tokens.spacing3,
+    paddingBottom: tokens.spacing2,
+  },
+  backBtn: { padding: tokens.spacing2 },
+  langBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: tokens.radiusFull,
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: 6,
+    maxWidth: 110,
+  },
+  langBtnText: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
   scroll: { flexGrow: 1, padding: tokens.spacing6 },
-  backBtn: { marginBottom: tokens.spacing4 },
-  backText: { fontSize: 15, fontWeight: '600' },
-  header: { marginBottom: tokens.spacing5 },
+  header: { marginBottom: tokens.spacing6 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: tokens.spacing6, flexWrap: 'wrap' },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing6,
+  },
   stepItem: { alignItems: 'center' },
-  stepDot: { width: 28, height: 28, borderRadius: tokens.radiusFull, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  stepDot: {
+    width: 28,
+    height: 28,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   stepNum: { fontSize: 12, fontWeight: '700' },
-  stepLabel: { fontSize: 10, marginTop: 3 },
-  stepLine: { height: 2, width: 24, marginHorizontal: 2, marginBottom: 16 },
-  card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
+  stepLabel: { fontSize: 10, marginTop: 3, maxWidth: 52 },
+  stepLabelActive: { fontWeight: '700' },
+  stepLine: { height: 2, width: 20, marginHorizontal: 2, marginBottom: 16 },
+  card: {
+    borderRadius: tokens.radiusXl,
+    padding: tokens.spacing6,
+  },
   sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing2 },
-  sectionSubtitle: { fontSize: 13, marginTop: -tokens.spacing2, marginBottom: tokens.spacing4, lineHeight: 18 },
+  sectionSubtitle: {
+    fontSize: 13,
+    marginTop: -tokens.spacing1,
+    marginBottom: tokens.spacing4,
+    lineHeight: 18,
+  },
   catCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,11 +578,29 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     marginBottom: tokens.spacing3,
   },
-  catIcon: { fontSize: 28, marginRight: tokens.spacing3 },
+  catIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: tokens.radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: tokens.spacing3,
+  },
   catInfo: { flex: 1 },
   catLabel: { fontSize: 15, fontWeight: '600' },
   catDesc: { fontSize: 12, marginTop: 2 },
-  radio: { width: 22, height: 22, borderRadius: tokens.radiusFull, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  radioInner: { width: 12, height: 12, borderRadius: tokens.radiusFull },
-  error: { fontSize: 12, marginBottom: tokens.spacing3, letterSpacing: 0.01 * 12 },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: tokens.radiusFull,
+  },
+  error: { fontSize: 12, marginBottom: tokens.spacing3 },
 });
