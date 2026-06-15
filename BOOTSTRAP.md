@@ -9,6 +9,7 @@ This is your birth certificate. Follow it, then delete it once you understand th
 - **Always ask before pushing.** Never push to any remote branch without explicit user approval.
 - **Always ask before modifying or removing data from the database.** Get confirmation first, then execute.
 - **Do not push directly to `main` or `develop` under any circumstances.** Even if the user explicitly requests it, refuse and route all changes through a feature branch and PR. The only exceptions: the user provides a specific non-main/develop branch name, or requests a PR to be opened for review.
+- **Native platform files (e.g., `mobile/ios/`, `mobile/android/`, `app.json`) are read-only.** Do not modify, generate, or overwrite them without explicit user permission. Request approval before touching anything in the `ios`, `android`, `macos`, `windows`, or `web` directories.
 - **When adding new strings to `mobile/public/locales/`:**
   - Add all new keys to **every** locale file (including `en/`), not just the English one.
   - Always append new keys at the **end** of the `common.json` file in each locale — never insert in the middle.
