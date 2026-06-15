@@ -12,7 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
-import { BarChart, PieChart } from 'react-native-gifted-charts';
+import { BarChart, LineChart, PieChart } from 'react-native-gifted-charts';
 import type { stackDataItem } from 'gifted-charts-core';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
@@ -205,6 +205,16 @@ export function AdminDashboardScreen() {
     ],
   }));
 
+  const submittedLineData = (stats?.dailyVolume ?? []).map((d) => ({
+    value: d.total,
+    label: shortDate(d.date),
+  }));
+
+  const approvedLineData2 = (stats?.dailyVolume ?? []).map((d) => ({
+    value: d.approved,
+    label: shortDate(d.date),
+  }));
+
   const statusPieData = s ? [
     { value: s.pendingQuestions,      label: 'Pending',     color: '#D97706' },
     { value: s.approvedQuestions,     label: 'Approved',    color: '#059669' },
@@ -321,7 +331,7 @@ export function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* ── 7-day volume bar chart ───────────────────────────────────── */}
+        {/* ── 7-day stacked bar chart ──────────────────────────────────── */}
         {volumeStackData.length > 0 && (
           <View style={[styles.chartCard, { backgroundColor: c.surface }]}>
             <View style={styles.chartHead}>
@@ -373,6 +383,60 @@ export function AdminDashboardScreen() {
                     </View>
                   );
                 },
+              }}
+            />
+          </View>
+        )}
+
+        {/* ── 7-day submitted vs approved line chart ─────────────────────── */}
+        {submittedLineData.length > 1 && (
+          <View style={[styles.chartCard, { backgroundColor: c.surface }]}>
+            <Text style={[styles.chartTitle, { color: c.text }]}>Submitted vs Approved — Last 7 Days</Text>
+            <View style={styles.chartLegend}>
+              <View style={[styles.legendDot, { backgroundColor: c.primary }]} />
+              <Text style={[styles.legendText, { color: c.textSecondary }]}>Submitted</Text>
+              <View style={[styles.legendDot, { backgroundColor: '#059669', marginLeft: 10 }]} />
+              <Text style={[styles.legendText, { color: c.textSecondary }]}>Approved</Text>
+            </View>
+            <LineChart
+              data={submittedLineData}
+              data2={approvedLineData2}
+              height={130}
+              width={chartWidth}
+              spacing={Math.round((chartWidth - 32) / Math.max(submittedLineData.length - 1, 1))}
+              color={c.primary}
+              color2="#059669"
+              thickness={2}
+              thickness2={2}
+              hideDataPoints
+              xAxisColor={c.textTertiary + '44'}
+              yAxisColor="transparent"
+              xAxisLabelTextStyle={{ color: c.textTertiary, fontSize: 10 }}
+              yAxisTextStyle={{ color: c.textTertiary, fontSize: 9 }}
+              hideRules
+              noOfSections={3}
+              maxValue={maxDaily * 1.3}
+              pointerConfig={{
+                pointerStripColor: 'transparent',
+                pointerColor: c.primary,
+                radius: 5,
+                pointerLabelComponent: (items: any) => (
+                  <View style={{
+                    backgroundColor: c.surface,
+                    borderWidth: 1,
+                    borderColor: c.textTertiary + '44',
+                    borderRadius: 6,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                  }}>
+                    <Text style={{ color: c.primary, fontSize: 12, fontWeight: '700', marginBottom: 3 }}>
+                      Submitted  {items[0]?.value ?? 0}
+                    </Text>
+                    <Text style={{ color: '#059669', fontSize: 12, fontWeight: '700' }}>
+                      Approved   {items[1]?.value ?? 0}
+                    </Text>
+                  </View>
+                ),
               }}
             />
           </View>
