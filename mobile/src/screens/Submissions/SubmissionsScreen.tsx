@@ -15,6 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { TooltipIcon } from '../../components/TooltipIcon';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { questionApi } from '../../api/client';
@@ -624,6 +625,10 @@ export function SubmissionsScreen() {
           <View style={styles.header}>
             <View style={styles.titleRow}>
               <Text style={[styles.title, { color: c.text }]}>Submissions</Text>
+              <TooltipIcon
+                description="Browse all approved, pending, and rejected questions. Use filters to narrow down by status, domain, season, or state."
+                size={18}
+              />
               <TouchableOpacity
                 style={[styles.filterBtn, { backgroundColor: activeFilterCount > 0 ? c.primary + '20' : c.input }]}
                 onPress={() => setShowFilter(true)}
@@ -696,7 +701,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingHorizontal: tokens.spacing4, paddingBottom: tokens.spacing8, flexGrow: 1 },
   header: { paddingTop: tokens.spacing6, paddingBottom: tokens.spacing4 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing2 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1 },
   filterBtn: {

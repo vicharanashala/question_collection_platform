@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { TooltipIcon } from '../../components/TooltipIcon';
 import {
   View,
   Text,
@@ -194,7 +195,10 @@ export function HomeScreen() {
 
         {/* ── Quick actions ──────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Quick Actions</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Quick Actions</Text>
+            <TooltipIcon description="Jump straight to Ask a Question or view your Wallet balance and recent activity." />
+          </View>
 
           <View style={styles.actionGrid}>
             {[
@@ -234,7 +238,10 @@ export function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <View>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Earn Rewards</Text>
+              <View style={styles.sectionTitleRow}>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>Earn Rewards</Text>
+                <TooltipIcon description="Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates." />
+              </View>
               <Text style={[styles.sectionSub, { color: c.textSecondary }]}>
                 ₹10 for 251–500 approved questions
               </Text>
@@ -319,7 +326,10 @@ export function HomeScreen() {
 
         {/* ── Guidelines ─────────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Submission Tips</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Submission Tips</Text>
+            <TooltipIcon description="Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight." />
+          </View>
           <View style={[styles.guideCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             {[
               {
@@ -487,10 +497,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: tokens.spacing4,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    marginBottom: tokens.spacing4,
+  },
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
-    marginBottom: tokens.spacing4,
   },
   sectionSub: {
     fontSize: 12,

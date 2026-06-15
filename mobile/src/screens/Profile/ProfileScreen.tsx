@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { TooltipIcon } from '../../components/TooltipIcon';
 import { Button } from '../../components/Button';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -189,8 +190,11 @@ export function ProfileScreen() {
 
         {/* ── Location & Language ───────────────────────────────────────── */}
         <View style={styles.section}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Location</Text>
+            <TooltipIcon description="Your registered state, district, block, and preferred language for content delivery." />
+          </View>
           <View style={[styles.infoCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <Text style={[styles.infoCardTitle, { color: c.text }]}>Location</Text>
             <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
             <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
             {user?.block && (
@@ -211,7 +215,10 @@ export function ProfileScreen() {
         {/* ── Crops ─────────────────────────────────────────────────────── */}
         {crops.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>My Crops</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>My Crops</Text>
+              <TooltipIcon description="The crops you have registered. Questions are tagged to specific crops for better relevance matching." />
+            </View>
             <View style={[styles.cropsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
               <View style={styles.cropTags}>
                 {crops.map((crop) => (
@@ -236,7 +243,10 @@ export function ProfileScreen() {
 
         {/* ── Theme toggle ─────────────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Appearance</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Appearance</Text>
+            <TooltipIcon description="Choose Light, Dark, or follow your device settings. Dark mode is gentler on the eyes in low light." />
+          </View>
           <View style={[styles.themeCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             {(['light', 'dark', 'system'] as const).map((mode) => (
               <TouchableOpacity
@@ -409,11 +419,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing4,
     marginBottom: tokens.spacing5,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    marginBottom: tokens.spacing3,
+    paddingHorizontal: tokens.spacing4,
+  },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    marginBottom: tokens.spacing3,
-    paddingHorizontal: tokens.spacing4,
   },
 
   // ── Info card ─────────────────────────────────────────────────────────────

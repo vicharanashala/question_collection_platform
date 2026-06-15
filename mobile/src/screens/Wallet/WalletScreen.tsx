@@ -11,6 +11,7 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { Ionicons } from '@expo/vector-icons';
+import { TooltipIcon } from '../../components/TooltipIcon';
 import { EmptyState } from '../../components/Loading';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
@@ -184,7 +185,10 @@ export function WalletScreen() {
 
         {/* Transaction History */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Transaction History</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Transaction History</Text>
+            <TooltipIcon description="Credits from approved questions and debits from withdrawals are listed here. Withdrawals are processed within 1–2 business days." />
+          </View>
           {transactions.length === 0 ? (
             <EmptyState
               icon="receipt-outline"
@@ -247,7 +251,8 @@ const styles = StyleSheet.create({
   withdrawTitle: { fontSize: 17, fontWeight: '700', marginBottom: tokens.spacing4 },
   withdrawActions: { flexDirection: 'row', gap: tokens.spacing3, marginTop: tokens.spacing2 },
   section: { marginTop: tokens.spacing2 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', marginBottom: tokens.spacing3 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing3 },
+  sectionTitle: { fontSize: 17, fontWeight: '700' },
   txRow: {
     borderRadius: tokens.radiusMd,
     padding: tokens.spacing4,

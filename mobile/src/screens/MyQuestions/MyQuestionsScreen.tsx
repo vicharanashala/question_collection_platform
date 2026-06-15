@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { TooltipIcon } from '../../components/TooltipIcon';
 import { useTheme } from '../../hooks/useTheme';
 import { questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
@@ -238,7 +239,13 @@ export function MyQuestionsScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={[styles.title, { color: c.text }]}>My Questions</Text>
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { color: c.text }]}>My Questions</Text>
+              <TooltipIcon
+                description="All your submitted questions are listed here. Tap any question to view details, edit within the window, or check its approval status."
+                size={18}
+              />
+            </View>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {questions.length > 0
                 ? `${questions.length} submission${questions.length !== 1 ? 's' : ''}`
@@ -271,6 +278,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingHorizontal: tokens.spacing4, paddingBottom: tokens.spacing8, flexGrow: 1 },
   header: { paddingTop: tokens.spacing6, paddingBottom: tokens.spacing4 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },

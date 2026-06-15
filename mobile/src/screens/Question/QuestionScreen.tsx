@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RouteProp } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { TooltipIcon } from '../../components/TooltipIcon';
 import {
   View,
   Text,
@@ -342,9 +343,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: c.text }]}>
-            {isEditMode ? 'Edit Question' : 'Ask a Question'}
-          </Text>
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { color: c.text }]}>
+              {isEditMode ? 'Edit Question' : 'Ask a Question'}
+              </Text>
+              <TooltipIcon
+                description={
+                  isEditMode
+                    ? 'You can update your question details within 30 seconds of submission. After the edit window closes, no changes can be made.'
+                    : 'Submit a clear, specific agriculture question. Approved questions earn rewards based on the current tier you are in.'
+                }
+                size={18}
+              />
+            </View>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {isEditMode ? 'Update your question within the edit window' : 'Submit your agriculture-related query'}
             </Text>
@@ -429,7 +440,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
             {/* Media section */}
             <View style={styles.mediaSection}>
-              <Text style={[styles.mediaLabel, { color: c.textSecondary }]}>Attach Media (optional)</Text>
+              <View style={styles.labelRow}>
+                <Text style={[styles.mediaLabel, { color: c.textSecondary }]}>Attach Media (optional)</Text>
+                <TooltipIcon
+                  description="Adding a photo or video helps experts understand your question better and increases approval chances."
+                  size={14}
+                />
+              </View>
 
               {/* Preview */}
               {mediaPreview && (
@@ -485,8 +502,10 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { flexGrow: 1, padding: tokens.spacing6 },
   header: { marginBottom: tokens.spacing4 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1, lineHeight: 18 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing1 },
   limitBadge: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginBottom: tokens.spacing4 },
   limitBadgeText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
