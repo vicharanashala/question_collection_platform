@@ -149,13 +149,7 @@ export function RegisterScreen({ navigation, route }: Props) {
               <Ionicons name="chevron-back" size={22} color={c.primary} />
               <Text style={[styles.backText, { color: c.primary }]}>{step === 1 ? t('back') : t(STEP_KEYS[step - 2])}</Text>
             </TouchableOpacity>
-            {step > 1 && (
-              <TouchableOpacity onPress={() => setStep(1)}>
-                <Text style={[styles.changeCatText, { color: c.primary }]}>
-                  {t('stepCategory')}
-                </Text>
-              </TouchableOpacity>
-            )}
+
           </View>
 
           {/* Header */}
@@ -396,7 +390,6 @@ const styles = StyleSheet.create({
   },
   backBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
   backText: { fontSize: 15, fontWeight: '600', marginLeft: 2 },
-  changeCatText: { fontSize: 13, fontWeight: '600' },
   header: { marginBottom: tokens.spacing5 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1 },
