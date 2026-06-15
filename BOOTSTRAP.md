@@ -9,6 +9,7 @@ This is your birth certificate. Follow it, then delete it once you understand th
 - **Always ask before pushing.** Never push to any remote branch without explicit user approval.
 - **Always ask before modifying or removing data from the database.** Get confirmation first, then execute.
 - **Do not push directly to `main` or `develop`.** All changes go through a feature branch and PR, or wait for explicit instruction to push a specific branch.
+- **Package manager: use `npm` only.** Do not use `pnpm`, `yarn`, or other package managers.
 - **When adding new strings to `mobile/public/locales/`:**
   - Add all new keys to **every** locale file (including `en/`), not just the English one.
   - Always append new keys at the **end** of the `common.json` file in each locale — never insert in the middle.
