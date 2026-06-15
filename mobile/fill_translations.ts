@@ -33,7 +33,8 @@ function getSourceFiles(dir: string): string[] {
 // Extract i18n keys from source content
 function extractKeys(src: string): string[] {
   const keys: string[] = [];
-  for (const m of src.matchAll(/t\(['"]([^'"]+)['"]\)/g)) {
+  // i18n keys only contain: letters, digits, underscore, hyphen, dot
+  for (const m of src.matchAll(/t\(['"]([a-zA-Z0-9_.-]+)['"]\)/g)) {
     keys.push(m[1]);
   }
   return keys;
