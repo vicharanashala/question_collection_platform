@@ -71,7 +71,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
           {/* Logo */}
           <View style={styles.logoSection}>
             <View style={[styles.logoMark, { backgroundColor: c.primary }]}>
-              <Text style={[styles.logoText, { color: c.primaryForeground }]}>KD</Text>
+              <Ionicons name="leaf" size={36} color={c.primaryForeground} />
             </View>
             <Text style={[styles.brand, { color: c.text }]}>{t('loginPhone.title')}</Text>
             <Text style={[styles.tagline, { color: c.textSecondary }]}>
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: tokens.spacing3,
   },
-  logoText: { fontSize: 24, fontWeight: '800', letterSpacing: 1 },
+
   brand: { fontSize: 28, fontWeight: '800', letterSpacing: 0.3, marginBottom: 4 },
   tagline: { fontSize: 14, letterSpacing: 0.01 * 14 },
 
