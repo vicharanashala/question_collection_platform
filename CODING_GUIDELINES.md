@@ -85,6 +85,16 @@
 * Keep business logic outside screen components.
 * Use centralized state management consistently.
 
+## Internationalization (i18n)
+
+* **Always add English (`en`) as the base/fallback language first** when introducing new translation keys.
+* Edit source locale files (`public/locales/en/common.json` and `public/locales/{lang}/common.json`), **not** the auto-generated `src/i18n/resources.ts`.
+* After editing locale source files, regenerate i18n resources by running:
+  `node scripts/generate-i18n-resources.js`
+* New keys must be added to **all** supported locale files at the same time to avoid missing-translation gaps in production.
+* When adding a new language, copy from `en/common.json` as the source of truth.
+* Use dot-notation key names (e.g. `profile.completion.title`) consistent with the existing namespace structure.
+
 ## NestJS Specific
 
 * Keep controllers thin and delegate logic to services.
