@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useLanguage } from '../hooks/useLanguage';
 import {
   Modal,
   View,
@@ -18,13 +19,14 @@ interface LanguageSwitcherProps {
 
 export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
   const { i18n, t } = useTranslation();
+  const { setLanguage } = useLanguage();
 
   const handleSelect = useCallback(
-    (code: SupportedLanguageCode) => {
-      i18n.changeLanguage(code);
+    async (code: SupportedLanguageCode) => {
+      await setLanguage(code);
       onClose();
     },
-    [i18n, onClose]
+    [setLanguage, onClose]
   );
 
   const renderItem = useCallback(

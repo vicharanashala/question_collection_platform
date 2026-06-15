@@ -196,7 +196,7 @@ export function ProfileScreen() {
                 <Ionicons name="chatbubbles-outline" size={14} color={c.primary} />
               </View>
               <Text style={[styles.infoLabel, { color: c.textSecondary }]}>
-                {t('profile.language', 'Language')}
+                {t('profile.language')}
               </Text>
               <View style={styles.languageValue}>
                 <Text style={[styles.infoValue, { color: c.primary }]}>
@@ -220,7 +220,7 @@ export function ProfileScreen() {
             </View>
             <View style={styles.actionTextCol}>
               <Text style={[styles.actionTitle, { color: c.text }]}>
-                {t('auth.selectLanguage', 'App Language')}
+                {t('auth.selectLanguage')}
               </Text>
               <Text style={[styles.actionSub, { color: c.textSecondary }]}>
                 {getLanguageName(language as SupportedLanguageCode)}

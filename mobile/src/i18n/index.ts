@@ -70,6 +70,10 @@ i18n
       caches: ['localStorage'],
       lookupLocalStorage: 'appLanguage',
     },
+    // Treat dots as literal key separators, not namespace separators.
+    // 'profile.language' → look up profile.language in common.json, not 'language' in 'profile' namespace.
+    nsSeparator: false,
+    keySeparator: '.',
     react: {
       useSuspense: false,
     },
