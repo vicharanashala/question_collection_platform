@@ -46,7 +46,9 @@
     "alreadyHaveAccount": "Already have an account? Login",
     "noAccount": "No account? Register",
     "logout": "Logout",
-    "logoutConfirm": "Do you want to logout?"
+    "logoutConfirm": "Do you want to logout?",
+    "signIn": "Sign In",
+    "signInDesc": "Sign in to continue"
   },
   "blockOptional": "Block (Optional)",
   "blockPlaceholder": "Enter your block or mandal",

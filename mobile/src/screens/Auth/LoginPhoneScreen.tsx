@@ -39,11 +39,11 @@ export function LoginPhoneScreen({ navigation }: Props) {
     // Validate against the new value (not stale state) so error shows on first keystroke
     const newValid = /^[6-9]\d{9}$/.test(newMobile);
     const isShort = newMobile.length > 0 && !newValid;
-    setError(isShort ? t('invalidPhone') : '');
+    setError(isShort ? t('errors.invalidPhone') : '');
   }
 
   async function handleRequestOtp() {
-    if (!validMobile) { setError(t('invalidPhone')); return; }
+    if (!validMobile) { setError(t('errors.invalidPhone')); return; }
     setError('');
     setLoading(true);
     try {
@@ -80,14 +80,14 @@ export function LoginPhoneScreen({ navigation }: Props) {
 
           {/* Card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            <Text style={[styles.cardTitle, { color: c.text }]}>{t('signIn')}</Text>
+            <Text style={[styles.cardTitle, { color: c.text }]}>{t('auth.signIn')}</Text>
             <Text style={[styles.cardDesc, { color: c.textSecondary }]}>
-              {t('signInDesc')}
+              {t('auth.signInDesc')}
             </Text>
 
             <Input
               label="Mobile Number"
-              placeholder={t('phonePlaceholder')}
+              placeholder={t('auth.phonePlaceholder')}
               keyboardType="phone-pad"
               maxLength={10}
               value={mobile}
