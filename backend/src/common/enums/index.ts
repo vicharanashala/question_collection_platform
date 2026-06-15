@@ -102,6 +102,7 @@ export enum AuditAction {
   USER_PROFILE_UPDATED = 'user_profile_updated',
   USER_SUSPENDED = 'user_suspended',
   USER_BANNED = 'user_banned',
+  USER_VERIFIED = 'user_verified',
   // Questions
   QUESTION_SUBMITTED = 'question_submitted',
   QUESTION_APPROVED = 'question_approved',

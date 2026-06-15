@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Question, AuditLog } from '../database/entities';
-import { QuestionStatus, MediaType, AuditAction, ActorType, Season } from '../common/enums';
+import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../common/enums';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
@@ -72,6 +72,15 @@ export class QuestionService {
   }
 
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
+    // 0. User must be verified to submit questions
+    const user = await this.userService.getProfile(userId);
+    if (!user) throw new NotFoundException('User not found');
+    if (user.verificationStatus !== VerificationStatus.VERIFIED) {
+      throw new ForbiddenException(
+        'Your account has not been verified by an admin yet. You can submit questions only after verification.',
+      );
+    }
+
     // 1. Daily limit check
     await this.checkDailyLimit(userId);
 

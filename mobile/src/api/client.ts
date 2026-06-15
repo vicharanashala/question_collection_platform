@@ -215,6 +215,9 @@ export const adminApi = {
   suspendUser: (id: string, body: { action: 'suspend' | 'ban'; reason?: string }) =>
     api.post(`/admin/users/${id}/suspend`, body),
 
+  verifyUser: (id: string) =>
+    api.post(`/admin/users/${id}/verify`, {}),
+
   // Question review
   getReviewQueue: (params?: Record<string, string | number>) =>
     api.get('/admin/questions/queue', { params }),

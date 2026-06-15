@@ -8,6 +8,7 @@ export type AuthStackParamList = {
   Register: { mobileNumber: string };
   TermsOfService: undefined;
   PrivacyPolicy: undefined;
+  VerificationPending: undefined;
 };
 
 export type MainTabParamList = {

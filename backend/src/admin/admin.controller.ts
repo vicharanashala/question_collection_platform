@@ -68,6 +68,12 @@ export class AdminController {
     return this.adminService.suspendOrBanUser(req.user.id, id, body.action, body.reason);
   }
 
+  @Post('users/:id/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyUser(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.adminService.verifyUser(req.user.id, id);
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Section 2: Question Review
   // ─────────────────────────────────────────────────────────────

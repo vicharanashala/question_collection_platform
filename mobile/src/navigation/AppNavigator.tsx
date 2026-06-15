@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { LoadingScreen } from '../components/Loading';
 import { AuthStackParamList, MainTabParamList, RootStackParamList, AdminStackParamList } from './types';
 import { tokens } from '../utils/theme';
-import { UserRole } from '../types';
+import { UserRole, VerificationStatus } from '../types';
 
 // Auth screens
 import { LoginPhoneScreen } from '../screens/Auth/LoginPhoneScreen';
@@ -21,6 +21,7 @@ import { TermsScreen } from '../screens/Auth/TermsScreen';
 import { TermsOfServiceScreen } from '../screens/Auth/TermsOfServiceScreen';
 import { PrivacyPolicyScreen } from '../screens/Auth/PrivacyPolicyScreen';
 import { RegisterScreen } from '../screens/Auth/RegisterScreen';
+import { VerificationPendingScreen } from '../screens/Auth/VerificationPendingScreen';
 
 // Main screens
 import { HomeScreen } from '../screens/Home/HomeScreen';
@@ -98,6 +99,7 @@ function AuthNavigator() {
       <AuthStack.Screen name="Register" component={RegisterScreen} />
       <AuthStack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
       <AuthStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <AuthStack.Screen name="VerificationPending" component={VerificationPendingScreen} />
     </AuthStack.Navigator>
   );
 }
@@ -226,6 +228,18 @@ function MainNavigator() {
   );
 }
 
+// ─── Pending Verification Navigator ─────────────────────────────────────────
+
+const PendingStack = createNativeStackNavigator();
+
+function PendingNavigator() {
+  return (
+    <PendingStack.Navigator screenOptions={{ headerShown: false }}>
+      <PendingStack.Screen name="VerificationPending" component={VerificationPendingScreen} />
+    </PendingStack.Navigator>
+  );
+}
+
 // ─── Root Navigator ───────────────────────────────────────────────────────────
 
 export function AppNavigator() {
@@ -261,25 +275,31 @@ export function AppNavigator() {
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
-            <RootStack.Screen
-              name="Main"
-              component={isAdmin ? AdminNavigator : MainNavigator}
-            />
-            <RootStack.Screen
-              name="EditProfile"
-              component={EditProfileScreen}
-              options={{ presentation: 'modal' }}
-            />
-            <RootStack.Screen
-              name="CropManagement"
-              component={CropManagementScreen}
-              options={{ presentation: 'modal' }}
-            />
-            <RootStack.Screen
-              name="QuestionPreview"
-              component={QuestionPreviewScreen}
-              options={{ presentation: 'modal' }}
-            />
+            {user.verificationStatus === VerificationStatus.PENDING ? (
+              <RootStack.Screen name="Auth" component={PendingNavigator} />
+            ) : (
+              <>
+                <RootStack.Screen
+                  name="Main"
+                  component={isAdmin ? AdminNavigator : MainNavigator}
+                />
+                <RootStack.Screen
+                  name="EditProfile"
+                  component={EditProfileScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="CropManagement"
+                  component={CropManagementScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="QuestionPreview"
+                  component={QuestionPreviewScreen}
+                  options={{ presentation: 'modal' }}
+                />
+              </>
+            )}
           </>
         ) : (
           <RootStack.Screen name="Auth" component={AuthNavigator} />

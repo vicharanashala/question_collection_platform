@@ -162,6 +162,30 @@ export class AdminService {
     return { success: true, userId, newStatus };
   }
 
+  async verifyUser(adminId: string, userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const oldStatus = user.verificationStatus;
+    if (oldStatus === VerificationStatus.VERIFIED) {
+      return { success: true, userId, newStatus: oldStatus, message: 'User already verified' };
+    }
+
+    await this.userRepo.update(userId, { verificationStatus: VerificationStatus.VERIFIED });
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: AuditAction.USER_VERIFIED,
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { verificationStatus: oldStatus },
+      newValue: { verificationStatus: VerificationStatus.VERIFIED },
+    });
+
+    return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Section 2: Question Review
   // ─────────────────────────────────────────────────────────────

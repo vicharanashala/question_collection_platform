@@ -215,7 +215,7 @@ export class AuthService {
       user.languagePreference = dto.languagePreference;
       user.consentGiven = dto.consentGiven;
       user.consentTimestamp = dto.consentGiven ? new Date() : null;
-      user.verificationStatus = VerificationStatus.VERIFIED;
+      user.verificationStatus = VerificationStatus.PENDING;
       user.otpHash = null;
       user.otpExpiresAt = null;
 

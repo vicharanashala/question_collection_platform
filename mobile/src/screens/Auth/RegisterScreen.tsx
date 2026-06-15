@@ -130,6 +130,11 @@ export function RegisterScreen({ navigation, route }: Props) {
         consentGiven: true,
         profileData,
       });
+      showToast(t('registrationSuccess'), 'success');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'VerificationPending' }],
+      });
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
       showToast(getErrorMessage(err, t('serverError')), 'error');

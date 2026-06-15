@@ -56,6 +56,22 @@ export function AdminUserDetailScreen() {
     );
   }
 
+  async function handleVerifyUser() {
+    setActionLoading(true);
+    try {
+      await adminApi.verifyUser(userId);
+      showToast('User verified successfully', 'success');
+      // Refresh user data
+      const r = await adminApi.getUserDetail(userId);
+      setData(r.data);
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      showToast(msg ?? 'Failed to verify user', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -129,6 +145,25 @@ export function AdminUserDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* Verify action — all admins, for pending users only */}
+        {user.verificationStatus === 'pending' && (
+          <View style={[styles.verifyZone, { borderColor: c.success + '44' }]}>
+            <Text style={[styles.verifyTitle, { color: c.success }]}>Verification</Text>
+            <Text style={[styles.verifyDesc, { color: c.textSecondary }]}>
+              This user has completed registration but is awaiting verification.
+            </Text>
+            <TouchableOpacity
+              style={[styles.verifyBtn, { backgroundColor: c.success }]}
+              onPress={handleVerifyUser}
+              disabled={actionLoading}
+            >
+              {actionLoading
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.verifyBtnText}>Verify User</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Danger zone — super admins only */}
         {isSuperAdmin && user.role !== 'super_admin' && (
@@ -207,6 +242,11 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', justifyContent: 'space-between' },
   metaKey: { fontSize: 13 },
   metaVal: { fontSize: 13, fontWeight: '600' },
+  verifyZone: { borderRadius: tokens.radiusMd, padding: tokens.spacing4, borderWidth: 1, marginBottom: tokens.spacing4 },
+  verifyTitle: { fontSize: 13, fontWeight: '700', marginBottom: tokens.spacing1 },
+  verifyDesc: { fontSize: 13, lineHeight: 18, marginBottom: tokens.spacing3 },
+  verifyBtn: { borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing3, alignItems: 'center' },
+  verifyBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   dangerZone: { borderRadius: tokens.radiusMd, padding: tokens.spacing4, borderWidth: 1, marginBottom: tokens.spacing4 },
   dangerTitle: { fontSize: 13, fontWeight: '700', marginBottom: tokens.spacing3 },
   dangerActions: { flexDirection: 'row', gap: tokens.spacing3 },
