@@ -7,7 +7,7 @@ Each task file represents a deliverable to be completed. Task files use the form
 | # | Task | Module | Status |
 |---|---|---|---|
 | 1 | Authentication (OTP Login + Registration) | Auth | Completed |
-| 2 | User Profile Management | User | Pending |
+| 2 | User Profile Management | User | Completed |
 | 3 | Question Submission (Text, Image, Video, Audio) | Question | Completed |
 | 4 | On-Device AI Validation | AI | Pending |
 | 5 | Server-Side AI Validation + Human Review | AI | Pending |
