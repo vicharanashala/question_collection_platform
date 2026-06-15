@@ -361,12 +361,15 @@ export function AdminDashboardScreen() {
                       borderWidth: 1,
                       borderColor: c.textTertiary + '44',
                       borderRadius: 6,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      alignItems: 'center',
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
                     }}>
-                      <Text style={{ color: c.primary,   fontSize: 11, fontWeight: '700' }}>⬤ Submitted  {submitted}</Text>
-                      <Text style={{ color: '#059669',    fontSize: 11, fontWeight: '700' }}>⬤ Approved   {approved}</Text>
+                      <Text style={{ color: c.primary, fontSize: 12, fontWeight: '700', marginBottom: 3 }}>
+                        Submitted  {submitted}
+                      </Text>
+                      <Text style={{ color: '#059669', fontSize: 12, fontWeight: '700' }}>
+                        Approved   {approved}
+                      </Text>
                     </View>
                   );
                 },
