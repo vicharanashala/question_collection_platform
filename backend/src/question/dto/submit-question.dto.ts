@@ -6,6 +6,7 @@ import {
   IsObject,
   IsArray,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 import { Season } from '../../common/enums';
 
@@ -50,10 +51,10 @@ export class SubmitQuestionDto {
   @IsOptional()
   block?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  agroClimaticZone: string;
+  @ValidateIf((o) => o.agroClimaticZone !== undefined && o.agroClimaticZone !== null && o.agroClimaticZone !== '')
+  @IsString({ message: 'agroClimaticZone must be a string' })
+  @MaxLength(255, { message: 'agroClimaticZone must be shorter than or equal to 255 characters' })
+  agroClimaticZone?: string;
 
   @IsOptional()
   @IsIn(['none', 'image', 'video', 'audio'])

@@ -70,7 +70,7 @@ export function WalletScreen() {
   async function handleWithdraw() {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < MIN_WITHDRAWAL) {
-      showToast(`Minimum withdrawal amount is ₹${MIN_WITHDRAWAL}`, 'warning');
+      showToast(t('wallet.minWithdrawalError', { amount: MIN_WITHDRAWAL }), 'warning');
       return;
     }
     if (amount > (balance ?? 0)) {

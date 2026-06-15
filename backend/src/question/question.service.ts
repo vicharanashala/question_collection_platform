@@ -39,6 +39,38 @@ export class QuestionService {
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
 
+  /** Derives agro-climatic zone from state. Mirrors mobile/src/utils/agro-climatic-zones.ts */
+  private deriveAgroClimaticZone(state: string): string {
+    const s = state.toLowerCase().trim();
+    if (
+      s === 'jammu & kashmir' ||
+      s === 'ladakh' ||
+      s === 'himachal pradesh' ||
+      s === 'uttarakhand'
+    ) return 'western_himalayan';
+    if (
+      s === 'assam' ||
+      s === 'sikkim' ||
+      s === 'nagaland' ||
+      s === 'meghalaya' ||
+      s === 'manipur' ||
+      s === 'tripura' ||
+      s === 'mizoram' ||
+      s === 'arunachal pradesh'
+    ) return 'eastern_himalayan';
+    if (s === 'west bengal' || s === 'odisha') return 'lower_gangetic_plain';
+    if (s === 'bihar' || s === 'jharkhand') return 'middle_gangetic_plain';
+    if (s === 'uttar pradesh') return 'upper_gangetic_plain';
+    if (s === 'punjab' || s === 'haryana' || s === 'delhi' || s === 'chandigarh') return 'trans_gangetic_plain';
+    if (s === 'maharashtra' || s === 'chhattisgarh' || s === 'madhya pradesh') return 'eastern_plateau_and_hills';
+    if (s === 'rajasthan' || s === 'gujarat') return 'central_plateau_and_hills';
+    if (s === 'karnataka') return 'karnataka_plain_and_lcms';
+    if (s === 'tamil nadu' || s === 'puducherry') return 'coastal_andhra_and_karnataka';
+    if (s === 'andhra pradesh' || s === 'telangana') return 'krishna_godavari_delta';
+    if (s === 'kerala') return 'western_ghats_and_coastal_kerala';
+    return 'other';
+  }
+
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
     // 1. Daily limit check
     await this.checkDailyLimit(userId);
@@ -46,13 +78,16 @@ export class QuestionService {
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + this.editWindowSec * 1000);
 
-    // 2. Persist question in a transaction
+    // 2. Derive agro-climatic zone from state when not provided
+    const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
+
+    // 3. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
       domainCategory: dto.domainCategory,
       season: dto.season as Season,
       cropType: dto.cropType,
-      agroClimaticZone: dto.agroClimaticZone ?? null,
+      agroClimaticZone,
       questionText: dto.questionText,
       state: dto.state ?? '',
       district: dto.district ?? '',

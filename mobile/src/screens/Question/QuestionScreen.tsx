@@ -30,6 +30,7 @@ import {
   EDIT_WINDOW_SEC,
 } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
+import { deriveAgroClimaticZone, AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
 import { MainTabParamList } from '../../navigation/types';
 import { compressImage, compressVideo, uploadToStorage, validateVideo } from '../../utils/media';
 
@@ -120,6 +121,9 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
   // Form state
   const [state, setState] = useState(user?.state ?? '');
+  const [derivedZone, setDerivedZone] = useState<AgroClimaticZone>(() =>
+    user?.state ? deriveAgroClimaticZone(user.state) : AgroClimaticZone.OTHER,
+  );
   const [district, setDistrict] = useState(user?.district ?? '');
   const [block, setBlock] = useState(user?.block ?? '');
   const [domainCategory, setDomainCategory] = useState('');
@@ -247,7 +251,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         }
       }
 
-      const payload = {
+      const submitPayload = {
         state,
         district: district.trim(),
         block: block.trim() || null,
@@ -255,6 +259,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         season,
         cropType: cropType.trim(),
         questionText: questionText.trim(),
+        agroClimaticZone: derivedZone,
         mediaType: mediaMode,
         mediaUrls,
         deviceInfo: {
@@ -263,10 +268,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         },
       };
 
+      const updatePayload = {
+        questionText: questionText.trim(),
+        domainCategory,
+        season,
+        cropType: cropType.trim(),
+        mediaType: mediaMode,
+        mediaUrls,
+      };
+
       if (isEditMode && editingQuestionId) {
-        await questionApi.update(editingQuestionId, payload);
+        await questionApi.update(editingQuestionId, updatePayload);
       } else {
-        await questionApi.submit(payload);
+        await questionApi.submit(submitPayload);
       }
       setSubmitted(true);
 
@@ -361,18 +375,14 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {isEditMode ? t('question.editSubtitle') : t('question.askSubtitle')}
             </Text>
+            {!isEditMode && (
+              <View style={[styles.limitBadge, { backgroundColor: c.primary + '18' }]}>
+                <Text style={[styles.limitBadgeText, { color: c.text }]}>
+                  {remainingToday} of {DAILY_QUESTION_LIMIT} submissions remaining today
+                </Text>
+              </View>
+            )}
           </View>
-
-          {/* Daily limit badge — hide in edit mode */}
-          {!isEditMode && (
-            <View style={[styles.limitBadge, { backgroundColor: remainingToday > 5 ? c.success + '18' : c.warning + '18' }]}>
-              <Text style={[styles.limitBadgeText, { color: remainingToday > 5 ? c.success : c.warning }]}>
-                {remainingToday > 0
-                  ? t('question.dailyRemaining', { remaining: remainingToday, total: DAILY_QUESTION_LIMIT })
-                  : t('question.dailyLimitReached', { total: DAILY_QUESTION_LIMIT })}
-              </Text>
-            </View>
-          )}
 
           {/* Form card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
@@ -381,7 +391,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               label="State"
               value={state}
               options={stateOptions}
-              onChange={(v) => { setState(v); setErrors({}); }}
+              onChange={(v) => {
+                setState(v);
+                setDerivedZone(deriveAgroClimaticZone(v));
+                setErrors({});
+              }}
               error={errors.state}
               searchable
             />
@@ -398,6 +412,28 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               value={block}
               onChangeText={setBlock}
             />
+
+            {/* Agro-Climatic Zone (auto-derived, read-only) */}
+            <View style={styles.zoneBadgeWrap}>
+              <Text style={[styles.zoneLabel, { color: c.textSecondary }]}>
+                {t('question.agroClimaticZone')}
+              </Text>
+              <View
+                style={[
+                  styles.zoneBadge,
+                  { backgroundColor: derivedZone !== AgroClimaticZone.OTHER ? c.primary + '18' : c.muted },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.zoneBadgeText,
+                    { color: derivedZone !== AgroClimaticZone.OTHER ? c.primary : c.textSecondary },
+                  ]}
+                >
+                  {AGRO_CLIMATIC_ZONE_LABELS[derivedZone]}
+                </Text>
+              </View>
+            </View>
 
             {/* Domain */}
             <Select
@@ -507,9 +543,9 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1, lineHeight: 18 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing1 },
-  limitBadge: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginBottom: tokens.spacing4 },
+  limitBadge: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginTop: tokens.spacing2 },
   limitBadgeText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing1 },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
   mediaSection: { marginBottom: tokens.spacing4 },
   mediaLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
@@ -532,4 +568,13 @@ const styles = StyleSheet.create({
   successBody: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: tokens.spacing5 },
   editNote: { borderRadius: tokens.radiusMd, padding: tokens.spacing3, marginBottom: tokens.spacing5, width: '100%' },
   editNoteText: { fontSize: 13, textAlign: 'center', fontWeight: '500' },
+  zoneBadgeWrap: { marginBottom: tokens.spacing4 },
+  zoneLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
+  zoneBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing2,
+    paddingHorizontal: tokens.spacing3,
+  },
+  zoneBadgeText: { fontSize: 13, fontWeight: '600' },
 });
