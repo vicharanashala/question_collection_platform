@@ -20,6 +20,7 @@ import { walletApi, questionApi } from '../../api/client';
 import { REWARD_TIERS, EDIT_WINDOW_SEC, DAILY_QUESTION_LIMIT } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
+import { VerificationStatus } from '../../types';
 import type { WalletBalance } from '../../types';
 
 type Stats = { dailyCount: number; remainingToday: number };
@@ -132,10 +133,17 @@ export function HomeScreen() {
                 </Text>
               </View>
             </View>
-            <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
-              <Text style={styles.avatarText}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
-              </Text>
+            <View style={styles.avatarContainer}>
+              <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
+                <Text style={styles.avatarText}>
+                  {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
+                </Text>
+              </View>
+              {user?.verificationStatus === VerificationStatus.VERIFIED && (
+                <View style={[styles.avatarBadge, { backgroundColor: '#22C55E' }]}>
+                  <Ionicons name="checkmark" size={10} color="#fff" />
+                </View>
+              )}
             </View>
           </View>
 
@@ -155,7 +163,7 @@ export function HomeScreen() {
           <StatCard
             icon="wallet-outline"
             label="Wallet Balance"
-            value={loadingStats ? '…' : walletBalance !== null ? `₹${walletBalance}` : '—'}
+            value={loadingStats ? '…' : `₹${walletBalance ?? 0}`}
             color={c.success}
           />
           <StatCard
@@ -405,6 +413,19 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radiusFull,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarContainer: { position: 'relative' },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0D9488',
   },
   avatarText: {
     fontSize: 22,

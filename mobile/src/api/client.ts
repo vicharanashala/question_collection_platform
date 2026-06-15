@@ -96,6 +96,17 @@ api.interceptors.response.use(
   },
 );
 
+// ─── Error Helper ─────────────────────────────────────────────────────────────
+
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === 'object' && !Array.isArray(err)) {
+    const e = err as { response?: { data?: { message?: string } }; message?: string };
+    if (e.response?.data?.message) return e.response.data.message;
+    if (e.message) return e.message;
+  }
+  return fallback;
+}
+
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
 
 export async function saveAuth(

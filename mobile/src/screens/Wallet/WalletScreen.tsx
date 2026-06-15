@@ -13,7 +13,7 @@ import { Select } from '../../components/Select';
 import { EmptyState } from '../../components/Loading';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
-import { walletApi } from '../../api/client';
+import { walletApi, getErrorMessage } from '../../api/client';
 import { MIN_WITHDRAWAL } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { Transaction } from '../../types';
@@ -50,8 +50,7 @@ export function WalletScreen() {
       setBalance(balanceRes.data.balance);
       setTransactions(txRes.data.transactions ?? []);
     } catch (err) {
-      const { getErrorMessage } = await import('../../api/client');
-      console.warn('[Wallet] Failed to load:', getErrorMessage(err));
+      console.warn('[Wallet] Failed to load:', getErrorMessage(err, 'Failed to load wallet data. Please try again.'));
     }
     finally { setLoading(false); }
   }, []);

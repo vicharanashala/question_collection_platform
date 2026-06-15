@@ -8,7 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
@@ -19,9 +20,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../api/client';
 import { INDIAN_STATES, LANGUAGES } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
-import { MainTabParamList } from '../../navigation/types';
 
-type Props = { navigation: NativeStackNavigationProp<MainTabParamList, 'Profile'> };
+type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
 
 const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({
@@ -29,7 +29,7 @@ const languageOptions = LANGUAGES.map((l) => ({
   label: `${l.label} (${l.labelEnglish})`,
 }));
 
-export function EditProfileScreen() {
+export function EditProfileScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user, refreshProfile } = useAuth();
@@ -156,6 +156,12 @@ export function EditProfileScreen() {
               loading={loading}
               style={styles.saveButton}
             />
+            <Button
+              title="Cancel"
+              variant="ghost"
+              onPress={() => navigation.goBack()}
+              style={styles.cancelButton}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -197,5 +203,9 @@ const styles = StyleSheet.create({
   card: { borderRadius: tokens.radiusLg, padding: tokens.spacing4 },
   saveButton: {
     marginTop: tokens.spacing2,
+  },
+  cancelButton: {
+    marginTop: tokens.spacing2,
+    marginBottom: tokens.spacing4,
   },
 });

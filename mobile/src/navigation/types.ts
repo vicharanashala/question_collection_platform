@@ -18,6 +18,7 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  EditProfile: undefined;
 };
 
 // Screen props for useNavigation hooks

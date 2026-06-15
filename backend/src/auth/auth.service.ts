@@ -89,6 +89,7 @@ export class AuthService {
 
     // Generate 6-digit OTP
     const otp = randomInt(100000, 999999).toString();
+    console.log(`[OTP] >>> ${otp} <<< for mobile=${mobileNumber}`);
     const otpHash = await bcrypt.hash(otp, 12);
     const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
 

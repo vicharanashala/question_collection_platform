@@ -16,6 +16,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
+import { VerificationStatus } from '../../types';
 import type { CropDetail, WalletBalance } from '../../types';
 
 const categoryLabels: Record<string, string> = {
@@ -123,17 +124,18 @@ export function ProfileScreen() {
                 </Text>
               </View>
             </View>
-            <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
-              <Text style={styles.avatarText}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
-              </Text>
+            <View style={styles.avatarContainer}>
+              <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
+                <Text style={styles.avatarText}>
+                  {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
+                </Text>
+              </View>
+              {user?.verificationStatus === VerificationStatus.VERIFIED && (
+                <View style={[styles.avatarBadge, { backgroundColor: '#22C55E' }]}>
+                  <Ionicons name="checkmark" size={10} color="#fff" />
+                </View>
+              )}
             </View>
-          </View>
-
-          {/* Status badge */}
-          <View style={[styles.statusBadge, { backgroundColor: status.color + '25' }]}>
-            <Ionicons name={status.icon as any} size={13} color={status.color} />
-            <Text style={[styles.statusBadgeText, { color: status.color }]}>{status.label}</Text>
           </View>
 
           {user?.mobileNumber && (
@@ -151,8 +153,9 @@ export function ProfileScreen() {
               <ActivityIndicator size="small" color={c.primary} />
             ) : (
               <>
+                <Ionicons name="wallet-outline" size={16} color={c.primary} style={styles.statIcon} />
                 <Text style={[styles.statValue, { color: c.text }]}>
-                  {walletBalance !== null ? `₹${walletBalance}` : '—'}
+                  ₹{walletBalance ?? 0}
                 </Text>
                 <Text style={[styles.statLabel, { color: c.textSecondary }]}>Wallet</Text>
               </>
@@ -163,6 +166,7 @@ export function ProfileScreen() {
               <ActivityIndicator size="small" color={c.primary} />
             ) : (
               <>
+                <Ionicons name="help-circle-outline" size={16} color={c.primary} style={styles.statIcon} />
                 <Text style={[styles.statValue, { color: c.text }]}>
                   {totalQuestions !== null ? totalQuestions : '—'}
                 </Text>
@@ -172,12 +176,13 @@ export function ProfileScreen() {
           </View>
           <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <>
-              <Text style={[styles.statValue, { color: c.text }]}>
+              <Ionicons name="calendar-outline" size={16} color={c.primary} style={styles.statIcon} />
+              <Text style={[styles.statLabel, { color: c.textSecondary, marginBottom: 2 }]}>Member Since</Text>
+              <Text style={[styles.statValue, { color: c.text, fontSize: 13 }]}>
                 {user?.createdAt
                   ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
                   : '—'}
               </Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Member Since</Text>
             </>
           </View>
         </View>
@@ -304,6 +309,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarContainer: { position: 'relative' },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: tokens.radiusFull,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0D9488',
+  },
   avatarText: { fontSize: 22, fontWeight: '800', color: '#fff' },
   statusBadge: {
     flexDirection: 'row',
@@ -343,6 +361,7 @@ const styles = StyleSheet.create({
     minHeight: 62,
   },
   statValue: { fontSize: 17, fontWeight: '800', marginBottom: 2 },
+  statIcon: { marginBottom: tokens.spacing1 },
   statLabel: { fontSize: 10, fontWeight: '500', textAlign: 'center' },
 
   // ── Sections ──────────────────────────────────────────────────────────────
