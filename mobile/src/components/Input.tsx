@@ -72,6 +72,26 @@ export function OtpInput({ length = 6, value, onChange, error }: OtpInputProps) 
   const refs = React.useRef<(TextInput | null)[]>([]);
   const digits = value.padEnd(length, '').slice(0, length).split('');
 
+  // Paste via long-pressing any box — the OS pastes the full string into onChangeText.
+  // Multi-char input (>1 char) is a paste; single char is a normal keystroke.
+  function handleDigitChange(i: number, raw: string) {
+    // Strip non-digits
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length <= 1) {
+      // Normal single keystroke
+      const next = value.slice(0, i) + digits + value.slice(i + 1);
+      onChange(next);
+      if (digits && i < length - 1) refs.current[i + 1]?.focus();
+    } else {
+      // Paste: digits.length >= 2 — fill from position i onwards
+      const filled = value.slice(0, i) + digits.slice(0, length - i);
+      onChange(filled.slice(0, length));
+      // Focus last filled box (or last box if paste was short)
+      const lastIndex = Math.min(i + digits.length - 1, length - 1);
+      refs.current[Math.max(0, lastIndex)]?.focus();
+    }
+  }
+
   function handleKeyPress(index: number, key: string) {
     if (key !== 'Backspace') return;
     if (value[index]) {
@@ -105,13 +125,7 @@ export function OtpInput({ length = 6, value, onChange, error }: OtpInputProps) 
             keyboardType="number-pad"
             maxLength={1}
             onKeyPress={({ nativeEvent }) => handleKeyPress(i, nativeEvent.key)}
-            onChangeText={(text) => {
-              if (!/^\d$/.test(text)) return;
-              const next = value.slice(0, i) + text + value.slice(i + 1);
-              onChange(next);
-              if (i < length - 1) refs.current[i + 1]?.focus();
-            }}
-            onFocus={() => refs.current[i]?.focus()}
+            onChangeText={(text) => handleDigitChange(i, text)}
             placeholderTextColor={c.textTertiary}
             placeholder="•"
           />
