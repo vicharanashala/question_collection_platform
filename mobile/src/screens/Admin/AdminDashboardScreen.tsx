@@ -12,7 +12,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
-import { LineChart, BarChart, PieChart } from 'react-native-gifted-charts';
+import { BarChart, PieChart } from 'react-native-gifted-charts';
+import type { stackDataItem } from 'gifted-charts-core';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -192,20 +193,16 @@ export function AdminDashboardScreen() {
   const screenW = Dimensions.get('window').width;
   const chartWidth = screenW - (tokens.spacing5 * 2) - (tokens.spacing4 * 2);
   const maxDaily = Math.max(
-    ...(stats?.dailyVolume ?? []).map((d) => Math.max(d.total, d.approved)),
+    ...(stats?.dailyVolume ?? []).map((d) => d.total),
     5,
   );
 
-  const submittedLineData = (stats?.dailyVolume ?? []).map((d, i) => ({
-    value: d.total,
+  const volumeStackData: stackDataItem[] = (stats?.dailyVolume ?? []).map((d) => ({
     label: shortDate(d.date),
-    dataPointText: d.total > 0 ? String(d.total) : '',
-  }));
-
-  const approvedLineData2 = (stats?.dailyVolume ?? []).map((d) => ({
-    value: d.approved,
-    label: shortDate(d.date),
-    dataPointText: d.approved > 0 ? String(d.approved) : '',
+    stacks: [
+      { value: d.total,   color: c.primary },
+      { value: d.approved, color: '#059669' },
+    ],
   }));
 
   const statusPieData = s ? [
@@ -324,8 +321,8 @@ export function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* ── 7-day volume line chart ───────────────────────────────────── */}
-        {submittedLineData.length > 1 && (
+        {/* ── 7-day volume bar chart ───────────────────────────────────── */}
+        {volumeStackData.length > 0 && (
           <View style={[styles.chartCard, { backgroundColor: c.surface }]}>
             <View style={styles.chartHead}>
               <Text style={[styles.chartTitle, { color: c.text }]}>Questions — Last 7 Days</Text>
@@ -336,31 +333,21 @@ export function AdminDashboardScreen() {
                 <Text style={[styles.legendText, { color: c.textSecondary }]}>Approved</Text>
               </View>
             </View>
-            <LineChart
-              data={submittedLineData}
-              data2={approvedLineData2}
+            <BarChart
+              stackData={volumeStackData}
               height={140}
-              width={chartWidth}
-              spacing={Math.round((chartWidth - 32) / Math.max(submittedLineData.length - 1, 1))}
-              color={c.primary}
-              color2="#059669"
-              thickness={2}
-              thickness2={2}
-              hideDataPoints={false}
-              dataPointsColor={c.primary}
-              dataPointsColor2="#059669"
-              dataPointsRadius={3}
-              dataPointsRadius2={3}
+              barWidth={26}
+              spacing={Math.round((chartWidth - 26) / Math.max(volumeStackData.length, 1))}
               xAxisColor={c.textTertiary + '44'}
               yAxisColor="transparent"
               xAxisLabelTextStyle={{ color: c.textTertiary, fontSize: 10 }}
               yAxisTextStyle={{ color: c.textTertiary, fontSize: 9 }}
               hideRules
-              curved
-              areaChart={false}
-              areaChart2={false}
+              roundedTop
+              roundedBottom
               noOfSections={3}
               maxValue={maxDaily * 1.3}
+              showXAxisIndices
             />
           </View>
         )}
