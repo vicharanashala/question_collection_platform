@@ -172,18 +172,8 @@
   "primaryCropType": "Primary Crop Type",
   "privacyConsent": "Privacy & Consent",
   "profile": {
-    "title": "प्रोफाइल",
-    "edit": "संपादित करें",
-    "name": "नाम",
-    "phone": "फ़ोन",
-    "state": "राज्य",
-    "district": "जिला",
-    "language": "पसंदीदा भाषा",
-    "questionsCount": "जमा प्रश्न",
-    "approvedCount": "स्वीकृत प्रश्न",
-    "totalEarnings": "कुल कमाई",
-    "saved": "सहेजा गया!",
-    "saveError": "सहेज नहीं सका। पुनः प्रयास करें।"
+    "edit": "Edit",
+    "editProfile": "Edit Profile"
   },
   "profileLanguage": "App Language",
   "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -471,30 +461,6 @@
   "verifyOtpTitle": "verifyOtpTitle",
   "window": "window",
   "← Back": "← Back",
-  "profile": {
-    "manageCrops": "फसल प्रबंधन करें",
-    "noCrops": "अभी तक कोई फसल नहीं जोड़ी गई",
-    "addCrop": "फसल जोड़ें",
-    "completion": {
-      "title": "प्रोफाइल पूर्णता",
-      "complete": "प्रोफाइल पूर्ण है",
-      "incomplete": "{{percent}}% पूर्ण — सभी सुविधाओं के लिए प्रोफाइल पूरी करें",
-      "fieldName": "नाम",
-      "fieldState": "राज्य",
-      "fieldDistrict": "जिला",
-      "fieldBlock": "ब्लॉक",
-      "fieldCategory": "श्रेणी",
-      "fieldLanguage": "भाषा",
-      "fieldFarmSize": "खेत का आकार",
-      "fieldCropType": "प्राथमिक फसल",
-      "fieldCourseName": "कोर्स का नाम",
-      "fieldUniversityName": "विश्वविद्यालय का नाम",
-      "fieldOrganisationName": "संगठन का नाम",
-      "fieldRole": "भूमिका",
-      "fieldCrops": "फसल विवरण",
-      "missing": "अापूर्ण: {{fields}}"
-    }
-  },
   "crops": {
     "title": "मेरी फसलें",
     "addCrop": "फसल जोड़ें",
