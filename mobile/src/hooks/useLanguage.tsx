@@ -34,8 +34,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [i18n]);
 
   const setLanguage = async (code: SupportedLanguageCode) => {
+    console.log('[LanguageProvider] setLanguage called with:', code);
+    console.log('[LanguageProvider] i18n.language BEFORE:', i18n.language);
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, code);
     await i18n.changeLanguage(code);
+    console.log('[LanguageProvider] i18n.language AFTER:', i18n.language);
     setLanguageState(code);
 
     // Update RTL layout for Arabic-script languages

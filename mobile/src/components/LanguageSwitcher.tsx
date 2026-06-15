@@ -23,7 +23,9 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
 
   const handleSelect = useCallback(
     async (code: SupportedLanguageCode) => {
+      console.log('[LanguageSwitcher] handleSelect:', code, 'current i18n:', i18n.language);
       await setLanguage(code);
+      console.log('[LanguageSwitcher] after setLanguage, i18n:', i18n.language);
       onClose();
     },
     [setLanguage, onClose]
