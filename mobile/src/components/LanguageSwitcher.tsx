@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import { useLanguage } from '../hooks/useLanguage';
 import {
   Modal,
   View,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, RTL_LANGUAGES, SupportedLanguageCode } from '../i18n';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface LanguageSwitcherProps {
   visible: boolean;
@@ -23,12 +23,12 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
 
   const handleSelect = useCallback(
     async (code: SupportedLanguageCode) => {
-      console.log('[LanguageSwitcher] handleSelect:', code, 'current i18n:', i18n.language);
+      console.log('[LanguageSwitcher] handleSelect:', code, 'i18n before:', i18n.language);
       await setLanguage(code);
       console.log('[LanguageSwitcher] after setLanguage, i18n:', i18n.language);
       onClose();
     },
-    [setLanguage, onClose]
+    [setLanguage, onClose, i18n]
   );
 
   const renderItem = useCallback(
@@ -39,7 +39,10 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
       return (
         <TouchableOpacity
           style={[styles.item, isSelected && styles.itemSelected]}
-          onPress={() => handleSelect(item.code)}
+          onPress={() => {
+            console.log('[renderItem] onPress:', item.code);
+            handleSelect(item.code);
+          }}
           activeOpacity={0.7}
         >
           <View style={styles.itemContent}>
@@ -82,7 +85,10 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
 
         <FlatList
           data={SUPPORTED_LANGUAGES}
-          keyExtractor={(item) => item.code}
+          keyExtractor={(item) => {
+            console.log('[FlatList] keyExtractor:', item.code);
+            return item.code;
+          }}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
