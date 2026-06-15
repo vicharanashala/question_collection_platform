@@ -8,8 +8,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const LANGS_DIR = './public/locales';
-const HI_FILE = './public/locales/hi/common.json';
+const LANGS_DIR = path.resolve(__dirname, '..', 'public', 'locales');
+const HI_FILE = path.resolve(__dirname, '..', 'public', 'locales', 'hi', 'common.json');
 const LANGS = [
   'as','bn','brx','doi','gu','hi','kn','ks','kok',
   'mai','ml','mni','mr','ne','or','pa','sa','sat','sd','ta','te','ur',
@@ -40,7 +40,7 @@ function extractKeys(src: string): string[] {
   return keys;
 }
 
-const srcFiles = getSourceFiles('./src');
+const srcFiles = getSourceFiles(path.resolve(__dirname, '..', 'src'));
 const keySet = new Set<string>();
 for (const f of srcFiles) {
   const src = fs.readFileSync(f, 'utf-8');

@@ -6,7 +6,7 @@ set -e
 cd "$(dirname "$0")/.."
 for lang in as bn brx gu kn ks kok mai ml mni mr ne or pa sa sat sd ta te ur; do
   echo "Translating $lang..."
-  PYTHONUNBUFFERED=1 python3 mobile/translate_one.py "$lang"
+  npx tsx scripts/translate_one.ts "$lang"
   echo "Done: $lang"
   sleep 5
 done
