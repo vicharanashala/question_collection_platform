@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   RefreshControl, ActivityIndicator, TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -188,15 +189,23 @@ export function AdminDashboardScreen() {
 
   // ─── Derived chart data ────────────────────────────────────────────────────
 
-  const lineData = (stats?.dailyVolume ?? []).map((d) => ({
+  const screenW = Dimensions.get('window').width;
+  const chartWidth = screenW - (tokens.spacing5 * 2) - (tokens.spacing4 * 2);
+  const maxDaily = Math.max(
+    ...(stats?.dailyVolume ?? []).map((d) => Math.max(d.total, d.approved)),
+    5,
+  );
+
+  const submittedLineData = (stats?.dailyVolume ?? []).map((d, i) => ({
     value: d.total,
     label: shortDate(d.date),
-    dataPointText: String(d.total),
+    dataPointText: d.total > 0 ? String(d.total) : '',
   }));
 
-  const approvedLineData = (stats?.dailyVolume ?? []).map((d) => ({
+  const approvedLineData2 = (stats?.dailyVolume ?? []).map((d) => ({
     value: d.approved,
     label: shortDate(d.date),
+    dataPointText: d.approved > 0 ? String(d.approved) : '',
   }));
 
   const statusPieData = s ? [
@@ -316,21 +325,23 @@ export function AdminDashboardScreen() {
         </View>
 
         {/* ── 7-day volume line chart ───────────────────────────────────── */}
-        {lineData.length > 1 && (
+        {submittedLineData.length > 1 && (
           <View style={[styles.chartCard, { backgroundColor: c.surface }]}>
             <View style={styles.chartHead}>
               <Text style={[styles.chartTitle, { color: c.text }]}>Questions — Last 7 Days</Text>
               <View style={styles.chartLegend}>
                 <View style={[styles.legendDot, { backgroundColor: c.primary }]} />
                 <Text style={[styles.legendText, { color: c.textSecondary }]}>Submitted</Text>
+                <View style={[styles.legendDot, { backgroundColor: '#059669', marginLeft: 10 }]} />
+                <Text style={[styles.legendText, { color: c.textSecondary }]}>Approved</Text>
               </View>
             </View>
             <LineChart
-              data={lineData}
-              data2={approvedLineData}
-              height={130}
-              width={280}
-              spacing={36}
+              data={submittedLineData}
+              data2={approvedLineData2}
+              height={140}
+              width={chartWidth}
+              spacing={Math.round((chartWidth - 32) / Math.max(submittedLineData.length - 1, 1))}
               color={c.primary}
               color2="#059669"
               thickness={2}
@@ -338,20 +349,22 @@ export function AdminDashboardScreen() {
               hideDataPoints={false}
               dataPointsColor={c.primary}
               dataPointsColor2="#059669"
-              dataPointsRadius={4}
+              dataPointsRadius={3}
+              dataPointsRadius2={3}
               xAxisColor={c.textTertiary + '44'}
               yAxisColor="transparent"
               xAxisLabelTextStyle={{ color: c.textTertiary, fontSize: 10 }}
-              yAxisTextStyle={{ color: c.textTertiary, fontSize: 10 }}
-              hideRules={false}
-              rulesColor={c.textTertiary + '22'}
-              rulesType="solid"
+              yAxisTextStyle={{ color: c.textTertiary, fontSize: 9 }}
+              hideRules
               curved
               areaChart
-              startFillColor={c.primary + '33'}
-              endFillColor={c.primary + '05'}
-              startFillColor2="#05966933"
-              endFillColor2="#05966905"
+              areaChart2
+              startFillColor={c.primary + '22'}
+              endFillColor={c.primary + '02'}
+              startFillColor2="#05966922"
+              endFillColor2="#05966902"
+              noOfSections={3}
+              maxValue={maxDaily * 1.3}
             />
           </View>
         )}
