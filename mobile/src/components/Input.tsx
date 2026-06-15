@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radiusMd,
   },
-  leftIcon: { paddingLeft: tokens.spacing3 },
+  leftIcon: { paddingLeft: tokens.spacing3, justifyContent: 'center', alignSelf: 'stretch' },
   rightElement: { paddingRight: tokens.spacing3 },
   input: {
     flex: 1,
