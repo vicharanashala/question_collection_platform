@@ -195,8 +195,8 @@ export function WalletScreen() {
             <EmptyState
               icon="receipt-outline"
               iconColor={c.textTertiary}
-              title={t("wallet.noTransactions")}
-              message="t('wallet.noTransactionsDesc')"
+              title={t('wallet.noTransactions')}
+              message={t('wallet.noTransactionsDesc')}
             />
           ) : (
             transactions.map((tx) => (

@@ -187,24 +187,6 @@ export function ProfileScreen() {
             <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
             <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
             {user?.block && <InfoRow icon="business-outline" label="Block" value={user.block} />}
-            <TouchableOpacity
-              style={styles.infoRow}
-              activeOpacity={0.7}
-              onPress={() => setLangModalVisible(true)}
-            >
-              <View style={[styles.infoIconWrap, { backgroundColor: c.primary + '18' }]}>
-                <Ionicons name="chatbubbles-outline" size={14} color={c.primary} />
-              </View>
-              <Text style={[styles.infoLabel, { color: c.textSecondary }]}>
-                {t('profile.language')}
-              </Text>
-              <View style={styles.languageValue}>
-                <Text style={[styles.infoValue, { color: c.primary }]}>
-                  {getLanguageName(language as SupportedLanguageCode)}
-                </Text>
-                <Ionicons name="chevron-forward" size={14} color={c.textTertiary} />
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
 

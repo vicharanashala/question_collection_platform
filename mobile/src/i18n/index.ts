@@ -5,6 +5,7 @@ import { getLocales } from 'expo-localization';
 import bundledResources from './resources';
 
 export const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English', nativeName: 'English', script: 'Latin' },
   { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া', script: 'Bengali' },
   { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', script: 'Bengali' },
   { code: 'brx', name: 'Bodo', nativeName: 'बड़ो', script: 'Devanagari' },
@@ -17,7 +18,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'mai', name: 'Maithili', nativeName: 'মৈথিলী', script: 'Devanagari' },
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', script: 'Malayalam' },
   { code: 'mni', name: 'Manipuri', nativeName: 'মণিপুরী', script: 'Bengali' },
-  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', script: 'Devanagari' },
+  { code: 'mr', name: 'Marathi', nativeName: 'মরাঠী', script: 'Devanagari' },
   { code: 'ne', name: 'Nepali', nativeName: 'नेपाली', script: 'Devanagari' },
   { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ', script: 'Odia' },
   { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ', script: 'Gurmukhi' },
@@ -37,7 +38,7 @@ export const RTL_LANGUAGES: SupportedLanguageCode[] = ['ur', 'ks', 'sd'];
 // Get device locale and find matching supported language
 export function getDeviceLanguage(): SupportedLanguageCode {
   const locales = getLocales();
-  if (locales.length === 0) return 'hi';
+  if (locales.length === 0) return 'en';
 
   for (const locale of locales) {
     const code = locale.languageCode as SupportedLanguageCode;
@@ -45,14 +46,14 @@ export function getDeviceLanguage(): SupportedLanguageCode {
       return code;
     }
   }
-  return 'hi';
+  return 'en';
 }
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: 'hi',
+    fallbackLng: 'en',
     debug: __DEV__,
     ns: ['common', 'auth', 'home', 'question', 'wallet', 'profile', 'admin'],
     defaultNS: 'common',

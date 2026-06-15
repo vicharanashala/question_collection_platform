@@ -5,7 +5,7 @@ const LOCALES_DIR = path.join(__dirname, '..', 'public', 'locales');
 const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'i18n', 'resources.ts');
 
 const LANGS = [
-  'as','bn','brx','doi','gu','hi','kn','ks','kok','mai',
+  'en','as','bn','brx','doi','gu','hi','kn','ks','kok','mai',
   'ml','mni','mr','ne','or','pa','sa','sat','sd','ta','te','ur'
 ];
 

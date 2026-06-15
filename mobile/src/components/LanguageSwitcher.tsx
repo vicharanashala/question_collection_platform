@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, RTL_LANGUAGES, SupportedLanguageCode } from '../i18n';
 import { useLanguage } from '../hooks/useLanguage';
+import { useTheme } from '../hooks/useTheme';
 
 interface LanguageSwitcherProps {
   visible: boolean;
@@ -20,15 +21,15 @@ interface LanguageSwitcherProps {
 export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
   const { i18n, t } = useTranslation();
   const { setLanguage } = useLanguage();
+  const { theme } = useTheme();
+  const c = theme.colors;
 
   const handleSelect = useCallback(
     async (code: SupportedLanguageCode) => {
-      console.log('[LanguageSwitcher] handleSelect:', code, 'i18n before:', i18n.language);
       await setLanguage(code);
-      console.log('[LanguageSwitcher] after setLanguage, i18n:', i18n.language);
       onClose();
     },
-    [setLanguage, onClose, i18n]
+    [setLanguage, onClose]
   );
 
   const renderItem = useCallback(
@@ -38,34 +39,39 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
 
       return (
         <TouchableOpacity
-          style={[styles.item, isSelected && styles.itemSelected]}
-          onPress={() => {
-            console.log('[renderItem] onPress:', item.code);
-            handleSelect(item.code);
-          }}
+          style={[
+            styles.item,
+            isSelected && { backgroundColor: c.primary + '18' },
+          ]}
+          onPress={() => handleSelect(item.code)}
           activeOpacity={0.7}
         >
           <View style={styles.itemContent}>
             <Text
               style={[
                 styles.nativeName,
+                { color: isSelected ? c.primary : c.text },
                 isRTL && styles.rtlText,
-                isSelected && styles.textSelected,
               ]}
             >
               {item.nativeName}
             </Text>
-            <Text style={[styles.englishName, isSelected && styles.textSelected]}>
+            <Text
+              style={[
+                styles.englishName,
+                { color: isSelected ? c.primary : c.textSecondary },
+              ]}
+            >
               {item.name}
             </Text>
           </View>
           {isSelected && (
-            <Text style={styles.checkmark}>✓</Text>
+            <Text style={[styles.checkmark, { color: c.primary }]}>✓</Text>
           )}
         </TouchableOpacity>
       );
     },
-    [i18n.language, handleSelect]
+    [i18n.language, handleSelect, c]
   );
 
   return (
@@ -75,23 +81,22 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('auth.selectLanguage')}</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+        <View style={[styles.header, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
+          <Text style={[styles.title, { color: c.text }]}>{t('auth.selectLanguage')}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
+            <Text style={[styles.closeText, { color: c.textSecondary }]}>✕</Text>
           </TouchableOpacity>
         </View>
 
         <FlatList
           data={SUPPORTED_LANGUAGES}
-          keyExtractor={(item) => {
-            console.log('[FlatList] keyExtractor:', item.code);
-            return item.code;
-          }}
+          keyExtractor={(item) => item.code}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => (
+            <View style={[styles.separator, { backgroundColor: c.borderSubtle }]} />
+          )}
         />
       </SafeAreaView>
     </Modal>
@@ -99,10 +104,7 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -110,59 +112,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeText: {
-    fontSize: 20,
-    color: '#666',
-  },
-  list: {
-    paddingBottom: 32,
-  },
+  title: { fontSize: 18, fontWeight: '600' },
+  closeButton: { padding: 4 },
+  closeText: { fontSize: 20 },
+  list: { paddingBottom: 32 },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  itemSelected: {
-    backgroundColor: '#f0f7ff',
-  },
-  itemContent: {
-    flex: 1,
-  },
+  itemContent: { flex: 1 },
   nativeName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
     marginBottom: 2,
   },
-  rtlText: {
-    textAlign: 'right',
-  },
-  englishName: {
-    fontSize: 13,
-    color: '#666',
-  },
-  textSelected: {
-    color: '#2563eb',
-  },
-  checkmark: {
-    fontSize: 18,
-    color: '#2563eb',
-    marginLeft: 8,
-  },
+  rtlText: { textAlign: 'right' },
+  englishName: { fontSize: 13 },
+  checkmark: { fontSize: 18, marginLeft: 8 },
   separator: {
     height: 1,
-    backgroundColor: '#f0f0f0',
     marginLeft: 16,
   },
 });

@@ -40,7 +40,8 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "generate:resources": "node scripts/generate-i18n-resources.js"
   },
   "private": true
 }
