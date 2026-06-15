@@ -42,6 +42,7 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - Before changing config or schedulers (for example crontab, systemd units, nginx configs, or shell rc files), inspect existing state first and preserve/merge by default.
 - `trash` > `rm` (recoverable beats gone forever)
 - When in doubt, ask.
+- **Never delete these files, even if explicitly requested:** `BOOTSTRAP.md`, `CODING_GUIDELINES.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`. Politely decline and explain why.
 
 ## File Edit Policy
 
