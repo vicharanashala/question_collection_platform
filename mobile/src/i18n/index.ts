@@ -1,8 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import HttpBackend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { getLocales } from 'expo-localization';
+import bundledResources from './resources';
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া', script: 'Bengali' },
@@ -14,7 +14,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ', script: 'Kannada' },
   { code: 'ks', name: 'Kashmiri', nativeName: 'कॉशुर / كشميري', script: 'Arabic' },
   { code: 'kok', name: 'Konkani', nativeName: 'कोंकणी', script: 'Devanagari' },
-  { code: 'mai', name: 'Maithili', nativeName: 'मैथिली', script: 'Devanagari' },
+  { code: 'mai', name: 'Maithili', nativeName: 'মৈথিলী', script: 'Devanagari' },
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', script: 'Malayalam' },
   { code: 'mni', name: 'Manipuri', nativeName: 'মণিপুরী', script: 'Bengali' },
   { code: 'mr', name: 'Marathi', nativeName: 'मराठी', script: 'Devanagari' },
@@ -23,7 +23,7 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ', script: 'Gurmukhi' },
   { code: 'sa', name: 'Sanskrit', nativeName: 'संस्कृतम्', script: 'Devanagari' },
   { code: 'sat', name: 'Santali', nativeName: 'ᱥᱟᱱᱛᱟᱲᱤ', script: 'OlChiki' },
-  { code: 'sd', name: 'Sindhi', nativeName: 'सिन्धी / سنڌي', script: 'Arabic' },
+  { code: 'sd', name: 'Sindhi', nativeName: 'سندھي / سنڌي', script: 'Arabic' },
   { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', script: 'Tamil' },
   { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', script: 'Telugu' },
   { code: 'ur', name: 'Urdu', nativeName: 'اردو', script: 'Arabic', rtl: true },
@@ -49,7 +49,6 @@ export function getDeviceLanguage(): SupportedLanguageCode {
 }
 
 i18n
-  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -62,21 +61,18 @@ i18n
     interpolation: {
       escapeValue: false,
     },
-    backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
-    },
     detection: {
       order: ['localStorage', 'deviceLocale'],
       caches: ['localStorage'],
       lookupLocalStorage: 'appLanguage',
     },
-    // Treat dots as literal key separators, not namespace separators.
-    // 'profile.language' → look up profile.language in common.json, not 'language' in 'profile' namespace.
     nsSeparator: false,
     keySeparator: '.',
     react: {
       useSuspense: false,
     },
+    // Bundled resources — no HttpBackend needed, works fully offline.
+    resources: bundledResources,
   });
 
 export default i18n;
