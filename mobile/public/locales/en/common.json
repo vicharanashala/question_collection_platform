@@ -18,7 +18,7 @@
   "agreeToTerms": "By continuing, you agree to our",
   "and": "and",
   "app": {
-    "name": "AgriQuestion",
+    "name": "KisanDekho",
     "tagline": "Your district, in your language"
   },
   "auth": {
@@ -456,7 +456,7 @@
   "submissions.duplicate": "Duplicate",
   "wallet.upiTab": "UPI",
   "wallet.bankTab": "Bank Account",
-  "loginPhone.title": "AgriQuestion",
+  "loginPhone.title": "KisanDekho",
   "loginPhone.tagline": "Agricultural knowledge, powered by AI",
   "loginPhone.sendOtp": "Send OTP",
   "auth.sendOtp": "Send OTP",

@@ -46,12 +46,12 @@ export function TermsScreen({ navigation, route }: Props) {
 
           <Text style={[styles.sectionTitle, { color: c.text }]}>1. Acceptance of Terms</Text>
           <Text style={[styles.body, { color: c.textSecondary }]}>
-            By accessing or using the AgriQuestion platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.
+            By accessing or using the KisanDekho platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.
           </Text>
 
           <Text style={[styles.sectionTitle, { color: c.text }]}>2. Purpose of the Platform</Text>
           <Text style={[styles.body, { color: c.textSecondary }]}>
-            AgriQuestion is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.
+            KisanDekho is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.
           </Text>
 
           <Text style={[styles.sectionTitle, { color: c.text }]}>3. User Accounts</Text>
