@@ -147,7 +147,7 @@ export function RegisterScreen({ navigation, route }: Props) {
           <View style={styles.topRow}>
             <TouchableOpacity style={styles.backBtn} onPress={back}>
               <Ionicons name="chevron-back" size={22} color={c.primary} />
-              <Text style={[styles.backText, { color: c.primary }]}>{t('back')}</Text>
+              <Text style={[styles.backText, { color: c.primary }]}>{step === 1 ? t('back') : t(STEP_KEYS[step - 2])}</Text>
             </TouchableOpacity>
             {step > 1 && (
               <TouchableOpacity onPress={() => setStep(1)}>
