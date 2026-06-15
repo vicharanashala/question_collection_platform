@@ -46,16 +46,9 @@ export class QuestionService {
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + this.editWindowSec * 1000);
 
-    // 2. Derive language from the user's profile if the client did not send it
-    const userLanguage = dto.language
-      ? undefined
-      : await this.userService.getProfile(userId).then((u) => u.languagePreference).catch(() => 'hi');
-    const language = dto.language ?? userLanguage ?? 'hi';
-
-    // 3. Persist question in a transaction
+    // 2. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
-      language,
       domainCategory: dto.domainCategory,
       season: dto.season as Season,
       cropType: dto.cropType,
@@ -74,7 +67,7 @@ export class QuestionService {
 
     const saved = await this.dataSource.transaction(async (em) => {
       const repo = em.getRepository(Question);
-      return repo.save(question);
+      return repo.save(question) as Promise<Question>;
     });
 
     // 3. Audit log
