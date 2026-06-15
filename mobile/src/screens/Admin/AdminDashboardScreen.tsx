@@ -357,12 +357,8 @@ export function AdminDashboardScreen() {
               yAxisTextStyle={{ color: c.textTertiary, fontSize: 9 }}
               hideRules
               curved
-              areaChart
-              areaChart2
-              startFillColor={c.primary + '22'}
-              endFillColor={c.primary + '02'}
-              startFillColor2="#05966922"
-              endFillColor2="#05966902"
+              areaChart={false}
+              areaChart2={false}
               noOfSections={3}
               maxValue={maxDaily * 1.3}
             />
