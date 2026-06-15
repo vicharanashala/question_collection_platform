@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TouchableOpacity } from 'react-native';
 import {
   View,
   Text,
@@ -107,9 +108,14 @@ export function LoginPhoneScreen({ navigation }: Props) {
             />
 
             <Text style={[styles.legal, { color: c.textTertiary }]}>
-              {t('agreeToTerms')}{' '}
-              <Text style={{ color: c.primary }}>{t('termsOfService')}</Text>{' '}{t('and')}{' '}
-              <Text style={{ color: c.primary }}>{t('privacyPolicy')}</Text>
+              By continuing, you agree to our{' '}
+              <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')}>
+                <Text style={[styles.legalLink, { color: c.primary }]}>Terms of Service</Text>
+              </TouchableOpacity>
+              {' '}and{' '}
+              <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
+                <Text style={[styles.legalLink, { color: c.primary }]}>Privacy Policy</Text>
+              </TouchableOpacity>
             </Text>
           </View>
         </ScrollView>
@@ -148,4 +154,5 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.01 * 11,
   },
+  legalLink: { fontSize: 11, fontWeight: '600' },
 });

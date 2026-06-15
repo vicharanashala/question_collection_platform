@@ -50,7 +50,7 @@ export function ConsentScreen({ navigation, route }: Props) {
       showToast(getErrorMessage(err, t('serverError')), 'error');
     }
     finally { setLoading(false); }
-    navigation.navigate('Register', { mobileNumber });
+    navigation.navigate('Terms', { mobileNumber });
   }
 
   return (

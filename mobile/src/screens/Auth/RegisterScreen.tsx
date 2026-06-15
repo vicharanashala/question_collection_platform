@@ -69,7 +69,7 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
   const [block, setBlock] = useState('');
-  const [language, setLanguage] = useState('hi');
+  const [language, setLanguage] = useState('en');
 
   const [farmSize, setFarmSize] = useState('');
   const [cropType, setCropType] = useState('');
@@ -88,7 +88,6 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
       if (category === UserCategory.FARMER) {
-        if (!farmSize.trim()) errs.farmSize = t('farmSizeRequired');
         if (!cropType.trim()) errs.cropType = t('cropTypeRequired');
       }
       if (category === UserCategory.STUDENT) {
@@ -297,11 +296,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                 {category === UserCategory.FARMER && (
                   <>
                     <Input
-                      label={t('farmSize')}
+                      label={`${t('farmSize')} (Optional)`}
                       placeholder={t('farmSizePlaceholder')}
                       value={farmSize}
-                      onChangeText={(txt) => { setFarmSize(txt); setErrors({}); }}
-                      error={errors.farmSize}
+                      onChangeText={setFarmSize}
                     />
                     <Input
                       label={t('primaryCropType')}

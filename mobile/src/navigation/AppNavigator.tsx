@@ -15,6 +15,9 @@ import { AuthStackParamList, MainTabParamList, RootStackParamList } from './type
 import { LoginPhoneScreen } from '../screens/Auth/LoginPhoneScreen';
 import { OtpScreen } from '../screens/Auth/OtpScreen';
 import { ConsentScreen } from '../screens/Auth/ConsentScreen';
+import { TermsScreen } from '../screens/Auth/TermsScreen';
+import { TermsOfServiceScreen } from '../screens/Auth/TermsOfServiceScreen';
+import { PrivacyPolicyScreen } from '../screens/Auth/PrivacyPolicyScreen';
 import { RegisterScreen } from '../screens/Auth/RegisterScreen';
 
 // Main screens
@@ -80,7 +83,10 @@ function AuthNavigator() {
       <AuthStack.Screen name="LoginPhone" component={LoginPhoneScreen} />
       <AuthStack.Screen name="Otp" component={OtpScreen} />
       <AuthStack.Screen name="Consent" component={ConsentScreen} />
+      <AuthStack.Screen name="Terms" component={TermsScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+      <AuthStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     </AuthStack.Navigator>
   );
 }
