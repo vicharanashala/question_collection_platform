@@ -388,8 +388,8 @@ export function AdminDashboardScreen() {
           </View>
         )}
 
-        {/* ── 7-day side-by-side grouped bars ─────────────────────────────── */}
-        {(stats?.dailyVolume ?? []).length > 1 && (
+        {/* ── 7-day submitted vs approved line chart ─────────────────────── */}
+        {submittedLineData.length > 1 && (
           <View style={[styles.chartCard, { backgroundColor: c.surface }]}>
             <Text style={[styles.chartTitle, { color: c.text }]}>Submitted vs Approved — Last 7 Days</Text>
             <View style={styles.chartLegend}>
@@ -398,40 +398,47 @@ export function AdminDashboardScreen() {
               <View style={[styles.legendDot, { backgroundColor: '#059669', marginLeft: 10 }]} />
               <Text style={[styles.legendText, { color: c.textSecondary }]}>Approved</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 120, marginTop: 4 }}>
-              {(stats?.dailyVolume ?? []).map((d) => {
-                const submittedH = Math.round((d.total / (maxDaily * 1.3)) * 100);
-                const approvedH  = Math.round((d.approved / (maxDaily * 1.3)) * 100);
-                return (
-                  <View key={d.date} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end' }}>
-                    {/* submitted bar */}
-                    <View
-                      style={{
-                        width: 11,
-                        height: Math.max(submittedH, submittedH > 0 ? 4 : 0),
-                        backgroundColor: c.primary,
-                        borderTopLeftRadius: 3,
-                        borderTopRightRadius: 3,
-                      }}
-                    />
-                    {/* approved bar */}
-                    <View
-                      style={{
-                        width: 11,
-                        height: Math.max(approvedH, approvedH > 0 ? 4 : 0),
-                        backgroundColor: '#059669',
-                        borderTopLeftRadius: 3,
-                        borderTopRightRadius: 3,
-                        marginTop: 2,
-                      }}
-                    />
-                    <Text style={{ color: c.textTertiary, fontSize: 9, marginTop: 4 }}>
-                      {shortDate(d.date)}
+            <LineChart
+              data={submittedLineData}
+              data2={approvedLineData2}
+              height={130}
+              width={chartWidth}
+              spacing={Math.round((chartWidth - 32) / Math.max(submittedLineData.length - 1, 1))}
+              color={c.primary}
+              color2="#059669"
+              thickness={2}
+              thickness2={2}
+              hideDataPoints
+              xAxisColor={c.textTertiary + '44'}
+              yAxisColor="transparent"
+              xAxisLabelTextStyle={{ color: c.textTertiary, fontSize: 10 }}
+              yAxisTextStyle={{ color: c.textTertiary, fontSize: 9 }}
+              hideRules
+              noOfSections={3}
+              maxValue={maxDaily * 1.3}
+              pointerConfig={{
+                pointerStripColor: 'transparent',
+                pointerColor: c.primary,
+                radius: 5,
+                pointerLabelComponent: (items: any) => (
+                  <View style={{
+                    backgroundColor: c.surface,
+                    borderWidth: 1,
+                    borderColor: c.textTertiary + '44',
+                    borderRadius: 6,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                  }}>
+                    <Text style={{ color: c.primary, fontSize: 12, fontWeight: '700', marginBottom: 3 }}>
+                      Submitted  {items[0]?.value ?? 0}
+                    </Text>
+                    <Text style={{ color: '#059669', fontSize: 12, fontWeight: '700' }}>
+                      Approved   {items[1]?.value ?? 0}
                     </Text>
                   </View>
-                );
-              })}
-            </View>
+                ),
+              }}
+            />
           </View>
         )}
 
