@@ -348,6 +348,29 @@ export function AdminDashboardScreen() {
               noOfSections={3}
               maxValue={maxDaily * 1.3}
               showXAxisIndices
+              pointerConfig={{
+                pointerStripColor: 'transparent',
+                pointerColor: c.primary,
+                radius: 6,
+                pointerLabelComponent: (items: any) => {
+                  const submitted = items[0]?.value ?? 0;
+                  const approved  = items[1]?.value ?? 0;
+                  return (
+                    <View style={{
+                      backgroundColor: c.surface,
+                      borderWidth: 1,
+                      borderColor: c.textTertiary + '44',
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      alignItems: 'center',
+                    }}>
+                      <Text style={{ color: c.primary,   fontSize: 11, fontWeight: '700' }}>⬤ Submitted  {submitted}</Text>
+                      <Text style={{ color: '#059669',    fontSize: 11, fontWeight: '700' }}>⬤ Approved   {approved}</Text>
+                    </View>
+                  );
+                },
+              }}
             />
           </View>
         )}
