@@ -171,6 +171,9 @@ export const questionApi = {
   submit: (data: Record<string, unknown>) =>
     api.post('/questions', data),
 
+  preview: (data: Record<string, unknown>) =>
+    api.post('/questions/preview', data),
+
   list: (params?: Record<string, string | number>) =>
     api.get('/questions', { params }),
 

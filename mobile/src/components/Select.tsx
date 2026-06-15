@@ -27,7 +27,7 @@ interface SelectProps {
   searchable?: boolean;
 }
 
-export function Select({
+export const Select = React.memo(function Select({
   label,
   placeholder = 'Select an option',
   value,
@@ -186,7 +186,7 @@ export function Select({
       </Modal>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: tokens.spacing4 },

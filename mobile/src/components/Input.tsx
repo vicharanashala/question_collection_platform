@@ -20,7 +20,7 @@ interface InputProps extends TextInputProps {
   rightElement?: React.ReactNode;
 }
 
-export function Input({ label, error, hint, leftIcon, rightElement, style, ...props }: InputProps) {
+export const Input = React.memo(function Input({ label, error, hint, leftIcon, rightElement, style, ...props }: InputProps) {
   const { theme } = useThemed();
   const c = theme.colors;
 
@@ -55,7 +55,7 @@ export function Input({ label, error, hint, leftIcon, rightElement, style, ...pr
       {hint && !error && <Text style={[styles.hintText, { color: c.textTertiary }]}>{hint}</Text>}
     </View>
   );
-}
+});
 
 // ─── OTP Input ────────────────────────────────────────────────────────────────
 
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: tokens.radiusMd,
   },
-  leftIcon: { paddingLeft: tokens.spacing3 },
+  leftIcon: { paddingLeft: tokens.spacing3, justifyContent: 'center', alignItems: 'center', height: 48 },
   rightElement: { paddingRight: tokens.spacing3 },
   input: {
     flex: 1,

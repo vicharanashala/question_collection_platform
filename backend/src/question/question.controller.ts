@@ -17,7 +17,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
 import { QuestionService } from './question.service';
-import { SubmitQuestionDto, SubmitQuestionResponseDto } from './dto/submit-question.dto';
+import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
@@ -39,6 +39,16 @@ export class QuestionController {
     @Req() req: AuthenticatedRequest,
   ): Promise<SubmitQuestionResponseDto> {
     return this.questionService.submit(req.user.id, dto);
+  }
+
+  // POST /questions/preview — Validate and enrich fields; no DB write
+  @Post('preview')
+  @HttpCode(HttpStatus.OK)
+  async preview(
+    @Body() dto: PreviewQuestionDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.questionService.preview(req.user.id, dto);
   }
 
   // GET /questions — List questions (own or all for admin)

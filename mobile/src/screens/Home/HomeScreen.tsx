@@ -199,7 +199,7 @@ export function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.quickActions')}</Text>
-            <TooltipIcon description="Jump straight to Ask a Question or view your Wallet balance and recent activity." />
+            <TooltipIcon description="Jump straight to Submit a Question or view your Wallet balance and recent activity." />
           </View>
 
           <View style={styles.actionGrid}>

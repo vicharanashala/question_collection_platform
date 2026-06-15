@@ -16,7 +16,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
-  const [language, setLanguageState] = useState<SupportedLanguageCode>('hi');
+  const [language, setLanguageState] = useState<SupportedLanguageCode>('en');
 
   useEffect(() => {
     // Load saved language preference on mount

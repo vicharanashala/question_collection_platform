@@ -9,13 +9,11 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { OtpInput } from '../../components/Input';
-import { Button } from '../../components/Button';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
-import { useTranslation } from 'react-i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Otp'>;
@@ -28,7 +26,6 @@ export function OtpScreen({ navigation, route }: Props) {
   const colors = theme.colors;
   const { verifyOtp, login } = useAuth();
   const { showToast } = useToast();
-  const { t } = useTranslation();
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +51,7 @@ export function OtpScreen({ navigation, route }: Props) {
 
   async function handleVerify() {
     if (verifyInFlight.current) return;
-    if (otp.length < 6) { setError(t('invalidOtp')); return; }
+    if (otp.length < 6) { setError('Enter the complete 6-digit code'); return; }
     verifyInFlight.current = true;
     setLoading(true);
     setError('');
@@ -62,11 +59,11 @@ export function OtpScreen({ navigation, route }: Props) {
       const result = await verifyOtp(mobileNumber, otp) as { requiresRegistration: boolean; user?: unknown };
 
       if (result.requiresRegistration) {
-        navigation.replace('Register', { mobileNumber });
+        navigation.replace('Terms', { mobileNumber });
       }
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
-      const msg = getErrorMessage(err, t('errors.invalidOtp') ?? 'Invalid OTP. Please try again.');
+      const msg = getErrorMessage(err, 'Enter a valid OTP');
       setError(msg);
       setOtp('');
     } finally {
@@ -86,7 +83,8 @@ export function OtpScreen({ navigation, route }: Props) {
     }, 1000);
     login(mobileNumber)
       .catch(() => { /* proceed; user can retry from login screen */ });
-    showToast(t('otpSent'), 'success');
+    const masked = mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1 ···· ··$3');
+    showToast(`A 6-digit code has been sent to ${masked}`, 'success');
   }
 
   const masked = mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1 ···· ··$3');
@@ -96,7 +94,7 @@ export function OtpScreen({ navigation, route }: Props) {
       <View style={styles.content}>
         {/* Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backText, { color: colors.primary }]}>← {t('back')}</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>← Back</Text>
         </TouchableOpacity>
 
         {/* Header */}
@@ -104,33 +102,33 @@ export function OtpScreen({ navigation, route }: Props) {
           <View style={[styles.iconBadge, { backgroundColor: colors.primary + '18' }]}>
             <Text style={styles.icon}>🔐</Text>
           </View>
-          <Text style={[styles.title, { color: colors.text }]}>{t('verifyOtpTitle')}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Verify OTP</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {t('otpSent')}{'\n'}{masked}
+            A 6-digit code has been sent to{'\n'}{masked}
           </Text>
         </View>
 
         {/* Card */}
         <View style={[styles.card, { backgroundColor: colors.surface, ...tokens.shadowMd }]}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('enterOtp')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Enter OTP</Text>
           <OtpInput value={otp} onChange={setOtp} error={error} />
 
           <View style={styles.expiryRow}>
             <Text style={[styles.expiryText, { color: countdown === 0 ? colors.error : colors.textTertiary }]}>
-              {countdown === 0 ? t('otpExpired') : t('resendIn', { seconds: countdown })}
+              {countdown === 0 ? 'Code expired — request a new one' : `Resend in ${countdown} seconds`}
             </Text>
           </View>
 
           <View style={styles.resendRow}>
             <Text style={[styles.resendPrompt, { color: colors.textSecondary }]}>
-              {t('resendPrompt')}
+              Didn't receive the code?
             </Text>
             {countdown === 0 ? (
               <TouchableOpacity onPress={handleResend}>
-                <Text style={[styles.resendLink, { color: colors.primary }]}>{t('resendOtp')}</Text>
+                <Text style={[styles.resendLink, { color: colors.primary }]}>Resend OTP</Text>
               </TouchableOpacity>
             ) : (
-              <Text style={[styles.resendWait, { color: colors.textTertiary }]}>{t('resendWait', { seconds: countdown })}</Text>
+              <Text style={[styles.resendWait, { color: colors.textTertiary }]}>Resend in {countdown}s</Text>
             )}
           </View>
         </View>
