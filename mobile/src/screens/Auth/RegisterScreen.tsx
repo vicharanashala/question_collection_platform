@@ -34,13 +34,13 @@ const TOTAL_STEPS = 4;
 const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: `${l.label} (${l.labelEnglish})` }));
 
-const CATEGORY_COLORS = {
-  [UserCategory.FARMER]:     '#2D9A3E',
-  [UserCategory.FPO]:        '#7B5EA7',
-  [UserCategory.STUDENT]:    '#2563EB',
-  [UserCategory.VOLUNTEER]:  '#D97706',
-  [UserCategory.NGO]:        '#DC2626',
-} as const;
+const CATEGORY_COLORS: Record<string, string> = {
+  farmer:    '#2D9A3E',
+  fpo:       '#7B5EA7',
+  student:   '#2563EB',
+  volunteer: '#D97706',
+  ngo:       '#DC2626',
+};
 
 const CATEGORIES = [
   { value: UserCategory.FARMER,     tKey: 'cat.farmer',      descKey: 'cat.farmerDesc',      icon: 'leaf' },
@@ -228,15 +228,15 @@ export function RegisterScreen({ navigation, route }: Props) {
                     ]}
                     onPress={() => { setCategory(cat.value as UserCategory); setErrors({}); }}
                   >
-                    <View style={[styles.catIconWrap, { backgroundColor: category === cat.value ? CATEGORY_COLORS[cat.value as UserCategory] + '18' : c.background }]}>
+                    <View style={[styles.catIconWrap, { backgroundColor: category === cat.value ? CATEGORY_COLORS[cat.value as string] + '18' : c.background }]}>
                       <Ionicons
                         name={cat.icon as any}
                         size={22}
-                        color={category === cat.value ? CATEGORY_COLORS[cat.value as UserCategory] : c.textSecondary}
+                        color={category === cat.value ? CATEGORY_COLORS[cat.value as string] : c.textSecondary}
                       />
                     </View>
                     <View style={styles.catInfo}>
-                      <Text style={[styles.catLabel, { color: category === cat.value ? CATEGORY_COLORS[cat.value as UserCategory] : c.text }]}>
+                      <Text style={[styles.catLabel, { color: category === cat.value ? CATEGORY_COLORS[cat.value as string] : c.text }]}>
                         {t(cat.tKey)}
                       </Text>
                       <Text style={[styles.catDesc, { color: c.textSecondary }]}>{t(cat.descKey)}</Text>
