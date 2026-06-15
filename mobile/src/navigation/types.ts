@@ -16,6 +16,17 @@ export type MainTabParamList = {
   AskQuestion: { questionId?: string } | undefined;
   Wallet: undefined;
   Profile: undefined;
+  AdminHome: undefined;
+};
+
+export type AdminStackParamList = {
+  AdminDashboard: undefined;
+  AdminUsers: undefined;
+  AdminUserDetail: { userId: string };
+  AdminQuestions: undefined;
+  AdminQuestionDetail: { questionId: string };
+  AdminConfig: undefined;
+  AdminWithdrawals: undefined;
 };
 
 export type RootStackParamList = {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,7 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingScreen } from '../components/Loading';
-import { AuthStackParamList, MainTabParamList, RootStackParamList } from './types';
+import { AuthStackParamList, MainTabParamList, RootStackParamList, AdminStackParamList } from './types';
+import { tokens } from '../utils/theme';
+import { UserRole } from '../types';
 
 // Auth screens
 import { LoginPhoneScreen } from '../screens/Auth/LoginPhoneScreen';
@@ -30,13 +32,21 @@ import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
 import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
 import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
 
-
+// Admin screens
+import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
+import { AdminQuestionsScreen } from '../screens/Admin/AdminQuestionsScreen';
+import { AdminQuestionDetailScreen } from '../screens/Admin/AdminQuestionDetailScreen';
+import { AdminUsersScreen } from '../screens/Admin/AdminUsersScreen';
+import { AdminUserDetailScreen } from '../screens/Admin/AdminUserDetailScreen';
+import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
+import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const MainTab = createBottomTabNavigator<MainTabParamList>();
+const AdminStackNav = createNativeStackNavigator<AdminStackParamList>();
 
 // ─── Tab Icon ─────────────────────────────────────────────────────────────────
 
@@ -71,7 +81,6 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
 
 const tabStyles = StyleSheet.create({
   container: { width: 76, alignItems: 'center', justifyContent: 'center' },
-  icon: { fontSize: 20 },
   label: { fontSize: 10, marginTop: 3, letterSpacing: 0.2 },
   labelActive: { fontWeight: '700' },
 });
@@ -89,6 +98,67 @@ function AuthNavigator() {
       <AuthStack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
       <AuthStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
     </AuthStack.Navigator>
+  );
+}
+
+// ─── Admin Stack Navigator ────────────────────────────────────────────────────
+
+function AdminNavigator() {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
+  const headerRight = () => (
+    <TouchableOpacity style={{ marginRight: tokens.spacing3 }}>
+      <Ionicons name="person-circle" size={28} color={c.primary} />
+    </TouchableOpacity>
+  );
+
+  const screenOpts = {
+    headerStyle: { backgroundColor: c.surface },
+    headerTintColor: c.text,
+    headerShadowVisible: false,
+    headerRight,
+    headerBackTitleVisible: false,
+  } as const;
+
+  return (
+    <AdminStackNav.Navigator screenOptions={screenOpts}>
+      <AdminStackNav.Screen
+        name="AdminDashboard"
+        component={AdminDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminUsers"
+        component={AdminUsersScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminUserDetail"
+        component={AdminUserDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminQuestions"
+        component={AdminQuestionsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminQuestionDetail"
+        component={AdminQuestionDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminConfig"
+        component={AdminConfigScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminWithdrawals"
+        component={AdminWithdrawalsScreen}
+        options={{ headerShown: false }}
+      />
+    </AdminStackNav.Navigator>
   );
 }
 
@@ -152,6 +222,8 @@ export function AppNavigator() {
   const { theme, isDark } = useTheme();
   const { user, isLoading, isReady } = useAuth();
 
+  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
+
   if (!isReady || isLoading) {
     return <LoadingScreen message="Starting app…" />;
   }
@@ -179,7 +251,10 @@ export function AppNavigator() {
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
-            <RootStack.Screen name="Main" component={MainNavigator} />
+            <RootStack.Screen
+              name="Main"
+              component={isAdmin ? AdminNavigator : MainNavigator}
+            />
             <RootStack.Screen
               name="EditProfile"
               component={EditProfileScreen}

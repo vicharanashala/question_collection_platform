@@ -20,6 +20,10 @@ export class Question {
   @Index('idx_questions_user_id')
   userId: string;
 
+  @Column({ name: 'language', type: 'varchar', length: 50, default: 'en' })
+  @Index('idx_questions_language')
+  language: string;
+
   @Column({ name: 'domain_category', type: 'varchar', length: 100 })
   @Index('idx_questions_domain_category')
   domainCategory: string;

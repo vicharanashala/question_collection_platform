@@ -4,14 +4,14 @@ import { Platform } from 'react-native';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-// iOS Simulator / Android Emulator → use localhost (same machine as backend)
-// Physical device → use LAN IP of the machine running the backend
-const BASE_URL =
-  Platform.OS === 'ios' || Platform.OS === 'android'
-    ? 'http://localhost:3000/api/v1'
-    : 'http://localhost:3000/api/v1';
-// TODO(abiram): Replace with your LAN IP (e.g. http://192.168.1.5:3000/api/v1)
+// Default to localhost for iOS Simulator / Android Emulator on the same machine.
+// Set EXPO_PUBLIC_API_BASE_URL in .env (or via 'npx expo env') to your LAN IP
 // when testing on a physical device from a different machine on the network.
+// e.g. EXPO_PUBLIC_API_BASE_URL=http://192.168.1.5:3000/api/v1
+const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL
+  ?? (Platform.OS === 'ios' || Platform.OS === 'android'
+    ? 'http://localhost:3000/api/v1'
+    : 'http://localhost:3000/api/v1');
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -198,6 +198,53 @@ export const walletApi = {
 
   withdraw: (data: Record<string, unknown>) =>
     api.post('/wallets/withdraw', data),
+};
+
+export const adminApi = {
+  // Dashboard
+  getDashboardStats: (params?: Record<string, string | number>) =>
+    api.get('/admin/analytics/dashboard', { params }),
+  getRewardSummary: (params?: Record<string, string | number>) =>
+    api.get('/admin/analytics/rewards', { params }),
+
+  // Users
+  listUsers: (params?: Record<string, string | number>) =>
+    api.get('/admin/users', { params }),
+  getUserDetail: (id: string) =>
+    api.get(`/admin/users/${id}`),
+  suspendUser: (id: string, body: { action: 'suspend' | 'ban'; reason?: string }) =>
+    api.post(`/admin/users/${id}/suspend`, body),
+
+  // Question review
+  getReviewQueue: (params?: Record<string, string | number>) =>
+    api.get('/admin/questions/queue', { params }),
+  getQuestion: (id: string) =>
+    api.get(`/admin/questions/${id}`),
+  reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'request_info'; reason?: string }) =>
+    api.post(`/admin/questions/${id}/review`, body),
+
+  // Config
+  getConfig: () => api.get('/admin/config'),
+  updateConfig: (body: { key: string; value: number; description?: string }) =>
+    api.patch('/admin/config', body),
+
+  // Withdrawals
+  listWithdrawals: (params?: Record<string, string | number>) =>
+    api.get('/admin/withdrawals', { params }),
+  processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; failureReason?: string }) =>
+    api.post(`/admin/withdrawals/${id}/process`, body),
+
+  // Reward logs
+  getRewardLogs: (params?: Record<string, string | number>) =>
+    api.get('/admin/analytics/reward-logs', { params }),
+
+  // Fraud
+  getFraudStats: (params?: Record<string, string | number>) =>
+    api.get('/admin/fraud', { params }),
+
+  // Export
+  exportData: (params?: Record<string, string | number>) =>
+    api.get('/admin/export', { params, responseType: 'blob' }),
 };
 
 export default api;
