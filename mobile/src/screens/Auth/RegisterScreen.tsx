@@ -222,8 +222,8 @@ export function RegisterScreen({ navigation, route }: Props) {
                     style={[
                       styles.catCard,
                       {
-                        borderColor: category === cat.value ? c.primary : c.borderSubtle,
-                        backgroundColor: category === cat.value ? c.primary + '10' : 'transparent',
+                        borderColor: category === cat.value ? CATEGORY_COLORS[cat.value as string] : c.borderSubtle,
+                        backgroundColor: category === cat.value ? CATEGORY_COLORS[cat.value as string] + '12' : 'transparent',
                       },
                     ]}
                     onPress={() => { setCategory(cat.value as UserCategory); setErrors({}); }}
@@ -244,11 +244,11 @@ export function RegisterScreen({ navigation, route }: Props) {
                     <View
                       style={[
                         styles.radio,
-                        { borderColor: category === cat.value ? c.primary : c.borderSubtle },
+                        { borderColor: category === cat.value ? CATEGORY_COLORS[cat.value as string] : c.borderSubtle },
                       ]}
                     >
                       {category === cat.value && (
-                        <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
+                        <View style={[styles.radioInner, { backgroundColor: CATEGORY_COLORS[cat.value as string] }]} />
                       )}
                     </View>
                   </TouchableOpacity>
