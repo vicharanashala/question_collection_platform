@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Button } from '../../components/Button';
@@ -34,11 +35,11 @@ const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: `${l.label} (${l.labelEnglish})` }));
 
 const CATEGORIES = [
-  { value: UserCategory.FARMER, tKey: 'cat.farmer', descKey: 'cat.farmerDesc', icon: '🌾' },
-  { value: UserCategory.FPO, tKey: 'cat.fpoMember', descKey: 'cat.fpoMemberDesc', icon: '🤝' },
-  { value: UserCategory.STUDENT, tKey: 'cat.student', descKey: 'cat.studentDesc', icon: '🎓' },
-  { value: UserCategory.VOLUNTEER, tKey: 'cat.volunteer', descKey: 'cat.volunteerDesc', icon: '🙋' },
-  { value: UserCategory.NGO, tKey: 'cat.ngoPartner', descKey: 'cat.ngoPartnerDesc', icon: '🏢' },
+  { value: UserCategory.FARMER, tKey: 'cat.farmer', descKey: 'cat.farmerDesc', icon: 'leaf' },
+  { value: UserCategory.FPO, tKey: 'cat.fpoMember', descKey: 'cat.fpoMemberDesc', icon: 'people' },
+  { value: UserCategory.STUDENT, tKey: 'cat.student', descKey: 'cat.studentDesc', icon: 'school' },
+  { value: UserCategory.VOLUNTEER, tKey: 'cat.volunteer', descKey: 'cat.volunteerDesc', icon: 'hand-right' },
+  { value: UserCategory.NGO, tKey: 'cat.ngoPartner', descKey: 'cat.ngoPartnerDesc', icon: 'business' },
 ];
 
 const STEP_KEYS = ['stepCategory', 'stepLocation', 'stepDetails', 'stepLanguage'] as const;
@@ -73,11 +74,11 @@ export function RegisterScreen({ navigation, route }: Props) {
     const errs: Record<string, string> = {};
     if (s === 1 && !category) errs.category = t('selectCategoryRequired');
     if (s === 2) {
-      if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
       if (!state) errs.state = t('stateRequired');
       if (!district.trim()) errs.district = t('districtRequired');
     }
     if (s === 3) {
+      if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
       if (category === UserCategory.FARMER) {
         if (!farmSize.trim()) errs.farmSize = t('farmSizeRequired');
         if (!cropType.trim()) errs.cropType = t('cropTypeRequired');
@@ -134,10 +135,20 @@ export function RegisterScreen({ navigation, route }: Props) {
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {/* Back */}
-          <TouchableOpacity style={styles.backBtn} onPress={back}>
-            <Text style={[styles.backText, { color: c.primary }]}>← {t('back')}</Text>
-          </TouchableOpacity>
+          {/* Top nav row */}
+          <View style={styles.topRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={back}>
+              <Ionicons name="chevron-back" size={22} color={c.primary} />
+              <Text style={[styles.backText, { color: c.primary }]}>{t('back')}</Text>
+            </TouchableOpacity>
+            {step > 1 && (
+              <TouchableOpacity onPress={() => setStep(1)}>
+                <Text style={[styles.changeCatText, { color: c.primary }]}>
+                  {t('stepCategory')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Header */}
           <View style={styles.header}>
@@ -159,16 +170,27 @@ export function RegisterScreen({ navigation, route }: Props) {
                     <View
                       style={[
                         styles.stepDot,
-                        { borderColor: isDone ? c.primary : isActive ? c.primary : c.borderSubtle },
-                        isDone && { backgroundColor: c.primary },
-                        isActive && { backgroundColor: c.primary + '18', borderColor: c.primary },
+                        {
+                          borderColor: isDone ? c.primary : isActive ? c.primary : c.borderSubtle,
+                          backgroundColor: isDone ? c.primary : isActive ? c.primary + '18' : 'transparent',
+                        },
                       ]}
                     >
-                      <Text style={[styles.stepNum, { color: isDone || isActive ? c.primary : c.textTertiary }]}>
-                        {isDone ? '✓' : num}
-                      </Text>
+                      {isDone ? (
+                        <Ionicons name="checkmark" size={12} color={c.surface} />
+                      ) : (
+                        <Text style={[styles.stepNum, { color: isDone || isActive ? c.primary : c.textTertiary }]}>
+                          {num}
+                        </Text>
+                      )}
                     </View>
-                    <Text style={[styles.stepLabel, { color: isActive ? c.primary : c.textTertiary }, isActive && { fontWeight: '700' }]}>
+                    <Text
+                      style={[
+                        styles.stepLabel,
+                        { color: isActive ? c.primary : c.textTertiary },
+                        isActive && styles.stepLabelActive,
+                      ]}
+                    >
                       {t(key)}
                     </Text>
                   </View>
@@ -198,15 +220,28 @@ export function RegisterScreen({ navigation, route }: Props) {
                     ]}
                     onPress={() => { setCategory(cat.value as UserCategory); setErrors({}); }}
                   >
-                    <Text style={styles.catIcon}>{cat.icon}</Text>
+                    <View style={[styles.catIconWrap, { backgroundColor: category === cat.value ? c.primary + '15' : c.background }]}>
+                      <Ionicons
+                        name={cat.icon as any}
+                        size={22}
+                        color={category === cat.value ? c.primary : c.textSecondary}
+                      />
+                    </View>
                     <View style={styles.catInfo}>
                       <Text style={[styles.catLabel, { color: category === cat.value ? c.primary : c.text }]}>
                         {t(cat.tKey)}
                       </Text>
                       <Text style={[styles.catDesc, { color: c.textSecondary }]}>{t(cat.descKey)}</Text>
                     </View>
-                    <View style={[styles.radio, { borderColor: category === cat.value ? c.primary : c.borderSubtle }]}>
-                      {category === cat.value && <View style={[styles.radioInner, { backgroundColor: c.primary }]} />}
+                    <View
+                      style={[
+                        styles.radio,
+                        { borderColor: category === cat.value ? c.primary : c.borderSubtle },
+                      ]}
+                    >
+                      {category === cat.value && (
+                        <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
+                      )}
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -219,17 +254,9 @@ export function RegisterScreen({ navigation, route }: Props) {
             {step === 2 && (
               <>
                 <Text style={[styles.sectionTitle, { color: c.text }]}>{t('locationDetails')}</Text>
-                <Input
-                  label={t('fullName')}
-                  placeholder={t('namePlaceholder')}
-                  value={name}
-                  onChangeText={(txt) => { setName(txt); setErrors({}); }}
-                  error={errors.name}
-                  autoCapitalize="words"
-                />
                 <Select
                   label={t('state')}
-                  placeholder={t('statePlaceholder')}
+                  placeholder={t('selectState')}
                   value={state}
                   options={stateOptions}
                   onChange={(v) => { setState(v); setErrors({}); }}
@@ -253,10 +280,18 @@ export function RegisterScreen({ navigation, route }: Props) {
               </>
             )}
 
-            {/* Step 3: Category Details */}
+            {/* Step 3: Details (includes name + category-specific fields) */}
             {step === 3 && (
               <>
                 <Text style={[styles.sectionTitle, { color: c.text }]}>{t('additionalDetails')}</Text>
+                <Input
+                  label={t('fullName')}
+                  placeholder={t('namePlaceholder')}
+                  value={name}
+                  onChangeText={(txt) => { setName(txt); setErrors({}); }}
+                  error={errors.name}
+                  autoCapitalize="words"
+                />
                 {category === UserCategory.FARMER && (
                   <>
                     <Input
@@ -345,20 +380,45 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
   scroll: { flexGrow: 1, padding: tokens.spacing6 },
-  backBtn: { marginBottom: tokens.spacing4 },
-  backText: { fontSize: 15, fontWeight: '600' },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: tokens.spacing4,
+  },
+  backBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
+  backText: { fontSize: 15, fontWeight: '600', marginLeft: 2 },
+  changeCatText: { fontSize: 13, fontWeight: '600' },
   header: { marginBottom: tokens.spacing5 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1 },
-  stepRow: { flexDirection: 'row', alignItems: 'center', marginBottom: tokens.spacing6, flexWrap: 'wrap' },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing6,
+    flexWrap: 'wrap',
+  },
   stepItem: { alignItems: 'center' },
-  stepDot: { width: 28, height: 28, borderRadius: tokens.radiusFull, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  stepDot: {
+    width: 28,
+    height: 28,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   stepNum: { fontSize: 12, fontWeight: '700' },
-  stepLabel: { fontSize: 10, marginTop: 3 },
+  stepLabel: { fontSize: 10, marginTop: 3, textAlign: 'center' },
+  stepLabelActive: { fontWeight: '700' },
   stepLine: { height: 2, width: 24, marginHorizontal: 2, marginBottom: 16 },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
   sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing2 },
-  sectionSubtitle: { fontSize: 13, marginTop: -tokens.spacing2, marginBottom: tokens.spacing4, lineHeight: 18 },
+  sectionSubtitle: {
+    fontSize: 13,
+    marginTop: -tokens.spacing2,
+    marginBottom: tokens.spacing4,
+    lineHeight: 18,
+  },
   catCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,11 +427,25 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     marginBottom: tokens.spacing3,
   },
-  catIcon: { fontSize: 28, marginRight: tokens.spacing3 },
+  catIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: tokens.radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: tokens.spacing3,
+  },
   catInfo: { flex: 1 },
   catLabel: { fontSize: 15, fontWeight: '600' },
   catDesc: { fontSize: 12, marginTop: 2 },
-  radio: { width: 22, height: 22, borderRadius: tokens.radiusFull, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   radioInner: { width: 12, height: 12, borderRadius: tokens.radiusFull },
   error: { fontSize: 12, marginBottom: tokens.spacing3, letterSpacing: 0.01 * 12 },
 });
