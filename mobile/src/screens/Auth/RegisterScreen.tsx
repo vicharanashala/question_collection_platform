@@ -34,12 +34,20 @@ const TOTAL_STEPS = 4;
 const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: `${l.label} (${l.labelEnglish})` }));
 
+const CATEGORY_COLORS = {
+  [UserCategory.FARMER]:     '#2D9A3E',
+  [UserCategory.FPO]:        '#7B5EA7',
+  [UserCategory.STUDENT]:    '#2563EB',
+  [UserCategory.VOLUNTEER]:  '#D97706',
+  [UserCategory.NGO]:        '#DC2626',
+} as const;
+
 const CATEGORIES = [
-  { value: UserCategory.FARMER, tKey: 'cat.farmer', descKey: 'cat.farmerDesc', icon: 'leaf' },
-  { value: UserCategory.FPO, tKey: 'cat.fpoMember', descKey: 'cat.fpoMemberDesc', icon: 'people' },
-  { value: UserCategory.STUDENT, tKey: 'cat.student', descKey: 'cat.studentDesc', icon: 'school' },
-  { value: UserCategory.VOLUNTEER, tKey: 'cat.volunteer', descKey: 'cat.volunteerDesc', icon: 'hand-right' },
-  { value: UserCategory.NGO, tKey: 'cat.ngoPartner', descKey: 'cat.ngoPartnerDesc', icon: 'business' },
+  { value: UserCategory.FARMER,     tKey: 'cat.farmer',      descKey: 'cat.farmerDesc',      icon: 'leaf' },
+  { value: UserCategory.FPO,        tKey: 'cat.fpoMember',   descKey: 'cat.fpoMemberDesc',   icon: 'people' },
+  { value: UserCategory.STUDENT,    tKey: 'cat.student',     descKey: 'cat.studentDesc',     icon: 'school' },
+  { value: UserCategory.VOLUNTEER,  tKey: 'cat.volunteer',   descKey: 'cat.volunteerDesc',   icon: 'hand-right' },
+  { value: UserCategory.NGO,        tKey: 'cat.ngoPartner',  descKey: 'cat.ngoPartnerDesc',  icon: 'business' },
 ];
 
 const STEP_KEYS = ['stepCategory', 'stepLocation', 'stepDetails', 'stepLanguage'] as const;
@@ -220,15 +228,15 @@ export function RegisterScreen({ navigation, route }: Props) {
                     ]}
                     onPress={() => { setCategory(cat.value as UserCategory); setErrors({}); }}
                   >
-                    <View style={[styles.catIconWrap, { backgroundColor: category === cat.value ? c.primary + '15' : c.background }]}>
+                    <View style={[styles.catIconWrap, { backgroundColor: category === cat.value ? CATEGORY_COLORS[cat.value as UserCategory] + '18' : c.background }]}>
                       <Ionicons
                         name={cat.icon as any}
                         size={22}
-                        color={category === cat.value ? c.primary : c.textSecondary}
+                        color={category === cat.value ? CATEGORY_COLORS[cat.value as UserCategory] : c.textSecondary}
                       />
                     </View>
                     <View style={styles.catInfo}>
-                      <Text style={[styles.catLabel, { color: category === cat.value ? c.primary : c.text }]}>
+                      <Text style={[styles.catLabel, { color: category === cat.value ? CATEGORY_COLORS[cat.value as UserCategory] : c.text }]}>
                         {t(cat.tKey)}
                       </Text>
                       <Text style={[styles.catDesc, { color: c.textSecondary }]}>{t(cat.descKey)}</Text>
