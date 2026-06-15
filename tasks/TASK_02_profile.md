@@ -1,10 +1,10 @@
 # Task 2: User Profile Management
 
-**Module:** User  
-**Status:** Pending  
-**Developer:** —  
-**Started:** —  
-**Completed:** —
+**Module:** User
+**Status:** Completed
+**Developer:** Claw
+**Started:** 2026-06-15
+**Completed:** 2026-06-15
 
 ---
 
@@ -20,25 +20,36 @@ From PRD:
 ## Sub-Tasks
 
 ### 1. Profile Management
-- [ ] View full profile
-- [ ] Edit profile (name, state, district, block)
-- [ ] Category-specific field editing
+- [x] View full profile
+- [x] Edit profile (name, state, district, block)
+- [x] Category-specific field editing
 
 ### 2. Crop Details
-- [ ] Add crop (name, season)
-- [ ] Edit crop
-- [ ] Remove crop
-- [ ] Seasons: kharif, rabi, zaid, year_round
+- [x] Add crop (name, season)
+- [x] Edit crop
+- [x] Remove crop
+- [x] Seasons: kharif, rabi, zaid, year_round
 
 ### 3. Profile Completion
-- [ ] Progress indicator
-- [ ] Mandatory field validation
-- [ ] Verification status tracking
+- [x] Progress indicator
+- [x] Mandatory field validation
+- [x] Verification status tracking
 
 ### 4. User Limits
 - [ ] State-level user limit enforcement (max 100 per state, configurable)
 
 ---
+
+## Implementation Notes
+
+- `CropManagementScreen` — add/edit/delete crops with season picker modal
+- `ProfileCompletionWidget` — adaptive progress bar with coloured pill chips for missing fields; adapts colour by completion % (green ≥75%, amber ≥40%, red <40%)
+- `EditProfileScreen` — category-specific fields: Farmer/FPO (farmSize, cropType), Student (courseName, universityName), NGO/Volunteer (organisationName, memberRole)
+- `ProfileScreen` — crops card navigates to CropManagement; season labels localized
+- `PublicUser` type extended with `CropSeason` enum, category-specific fields, `ProfileCompletionStatus`
+- `CropManagement` registered as modal screen in `RootStackParamList`
+- All 23 locale files updated with new i18n keys (English fallback)
+- `profile.edit` / `profile.editProfile` added to all locales (was showing raw key)
 
 ## API Endpoints (TBD)
 
