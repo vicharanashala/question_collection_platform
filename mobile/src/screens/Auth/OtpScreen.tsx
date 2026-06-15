@@ -130,7 +130,7 @@ export function OtpScreen({ navigation, route }: Props) {
                 <Text style={[styles.resendLink, { color: colors.primary }]}>{t('resendOtp')}</Text>
               </TouchableOpacity>
             ) : (
-              <Text style={[styles.resendWait, { color: colors.textTertiary }]}>{t('resendWait')}</Text>
+              <Text style={[styles.resendWait, { color: colors.textTertiary }]}>{t('resendWait', { seconds: countdown })}</Text>
             )}
           </View>
         </View>
