@@ -15,6 +15,7 @@ import { TooltipIcon } from '../../components/TooltipIcon';
 import { EmptyState } from '../../components/Loading';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 import { walletApi, getErrorMessage } from '../../api/client';
 import { MIN_WITHDRAWAL } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
@@ -29,6 +30,7 @@ export function WalletScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [balance, setBalance] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -72,15 +74,15 @@ export function WalletScreen() {
       return;
     }
     if (amount > (balance ?? 0)) {
-      showToast('Withdrawal amount exceeds available balance', 'warning');
+      showToast(t('wallet.exceedBalance'), 'warning');
       return;
     }
     if (payoutMethod === 'upi' && !upiId.trim()) {
-      showToast('Please enter your UPI ID', 'warning');
+      showToast(t('wallet.enterUpiId'), 'warning');
       return;
     }
     if (payoutMethod === 'bank_transfer' && (!accountHolder.trim() || !accountNumber.trim() || !ifscCode.trim())) {
-      showToast('Please fill in all bank details', 'warning');
+      showToast(t('wallet.fillBankDetails'), 'warning');
       return;
     }
 
@@ -92,7 +94,7 @@ export function WalletScreen() {
           : { accountHolderName: accountHolder.trim(), accountNumber: accountNumber.trim(), ifscCode: ifscCode.trim() };
 
       await walletApi.withdraw({ amount, payoutMethod, payoutDetails });
-      showToast('Withdrawal request submitted. You will be notified once processed.', 'success');
+      showToast(t('wallet.success'), 'success');
       setShowWithdraw(false);
       setWithdrawAmount('');
       setUpiId('');
@@ -103,7 +105,7 @@ export function WalletScreen() {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Withdrawal failed. Please try again.';
+        t('wallet.failed');
       showToast(msg, 'error');
     } finally {
       setWithdrawing(false);
@@ -123,23 +125,23 @@ export function WalletScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
       >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: c.text }]}>Wallet</Text>
+          <Text style={[styles.title, { color: c.text }]}>{t('wallet.title')}</Text>
         </View>
 
         {/* Balance Card */}
         <View style={[styles.balanceCard, { backgroundColor: c.heroBg }]}>
-          <Text style={[styles.balanceLabel, { color: c.heroFg }]}>Available Balance</Text>
+          <Text style={[styles.balanceLabel, { color: c.heroFg }]}>{t('wallet.availableBalance')}</Text>
           <Text style={[styles.balanceAmount, { color: c.heroFg }]}>
             ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
           <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>INR</Text>
         </View>
 
-        {/* Withdraw */}
+        {/* t('wallet.withdraw') */}
         {!showWithdraw ? (
           <View style={styles.withdrawSection}>
             <Button
-              title={`Withdraw  ·  Min ₹${MIN_WITHDRAWAL}`}
+              title={`${t('wallet.withdraw')}  ·  ${t('wallet.minWithdrawal', { amount: MIN_WITHDRAWAL })}`}
               onPress={() => setShowWithdraw(true)}
               disabled={(balance ?? 0) < MIN_WITHDRAWAL}
               variant="outline"
@@ -147,10 +149,10 @@ export function WalletScreen() {
           </View>
         ) : (
           <View style={[styles.withdrawCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            <Text style={[styles.withdrawTitle, { color: c.text }]}>Request Withdrawal</Text>
+            <Text style={[styles.withdrawTitle, { color: c.text }]}>{t('wallet.requestWithdrawal')}</Text>
             <Input
-              label="Amount (₹)"
-              placeholder={`Min ₹${MIN_WITHDRAWAL}`}
+              label={t('wallet.amount')}
+              placeholder={t('wallet.amountPlaceholder', { amount: MIN_WITHDRAWAL })}
               keyboardType="numeric"
               value={withdrawAmount}
               onChangeText={setWithdrawAmount}
@@ -163,22 +165,22 @@ export function WalletScreen() {
             />
             {payoutMethod === 'upi' ? (
               <Input
-                label="UPI ID"
-                placeholder="e.g., yourname@upi"
+                label={t('wallet.upiId')}
+                placeholder={t('wallet.upiIdPlaceholder')}
                 value={upiId}
                 onChangeText={setUpiId}
                 autoCapitalize="none"
               />
             ) : (
               <>
-                <Input label="Account Holder Name" placeholder="As per bank records" value={accountHolder} onChangeText={setAccountHolder} autoCapitalize="words" />
-                <Input label="Account Number" placeholder="Enter account number" keyboardType="numeric" value={accountNumber} onChangeText={setAccountNumber} autoCapitalize="none" />
-                <Input label="IFSC Code" placeholder="e.g., SBIN0001234" value={ifscCode} onChangeText={(t) => setIfscCode(t.toUpperCase())} autoCapitalize="characters" maxLength={11} />
+                <Input label={t('wallet.accountHolderName')} placeholder={t('wallet.accountHolderPlaceholder')} value={accountHolder} onChangeText={setAccountHolder} autoCapitalize="words" />
+                <Input label={t('wallet.accountNumber')} placeholder={t('wallet.accountNumberPlaceholder')} keyboardType="numeric" value={accountNumber} onChangeText={setAccountNumber} autoCapitalize="none" />
+                <Input label={t('wallet.ifscCode')} placeholder={t('wallet.ifscCodePlaceholder')} value={ifscCode} onChangeText={(t) => setIfscCode(t.toUpperCase())} autoCapitalize="characters" maxLength={11} />
               </>
             )}
             <View style={styles.withdrawActions}>
-              <Button title="Cancel" variant="ghost" onPress={() => setShowWithdraw(false)} />
-              <Button title="Submit Request" onPress={handleWithdraw} loading={withdrawing} />
+              <Button title={t('wallet.cancel')} variant="ghost" onPress={() => setShowWithdraw(false)} />
+              <Button title={t('wallet.submitRequest')} onPress={handleWithdraw} loading={withdrawing} />
             </View>
           </View>
         )}
@@ -186,15 +188,15 @@ export function WalletScreen() {
         {/* Transaction History */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Transaction History</Text>
-            <TooltipIcon description="Credits from approved questions and debits from withdrawals are listed here. Withdrawals are processed within 1–2 business days." />
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('wallet.transactionHistory')}</Text>
+            <TooltipIcon description={t('wallet.txTooltip')} />
           </View>
           {transactions.length === 0 ? (
             <EmptyState
               icon="receipt-outline"
               iconColor={c.textTertiary}
-              title="No transactions yet"
-              message="Your reward credits will appear here after question approvals"
+              title={t("wallet.noTransactions")}
+              message="t('wallet.noTransactionsDesc')"
             />
           ) : (
             transactions.map((tx) => (

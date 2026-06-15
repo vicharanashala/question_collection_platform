@@ -16,11 +16,20 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Consent'>;
   route: RouteProp<AuthStackParamList, 'Consent'>;
 };
+
+const CLAUSES = [
+  'consentClause1',
+  'consentClause2',
+  'consentClause3',
+  'consentClause4',
+  'consentClause5',
+] as const;
 
 export function ConsentScreen({ navigation, route }: Props) {
   const { mobileNumber } = route.params;
@@ -28,16 +37,17 @@ export function ConsentScreen({ navigation, route }: Props) {
   const c = theme.colors;
   const { login } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleContinue() {
-    if (!accepted) { showToast('Please accept the Privacy Policy to continue.', 'warning'); return; }
+    if (!accepted) { showToast(t('acceptConsentRequired'), 'warning'); return; }
     setLoading(true);
     try { await login(mobileNumber); }
     catch (err) {
       const { getErrorMessage } = await import('../../api/client');
-      showToast(getErrorMessage(err, 'Unable to send OTP. Please try again.'), 'error');
+      showToast(getErrorMessage(err, t('serverError')), 'error');
     }
     finally { setLoading(false); }
     navigation.navigate('Register', { mobileNumber });
@@ -51,30 +61,24 @@ export function ConsentScreen({ navigation, route }: Props) {
           <View style={[styles.iconBadge, { backgroundColor: c.primary + '18' }]}>
             <Text style={styles.icon}>📜</Text>
           </View>
-          <Text style={[styles.title, { color: c.text }]}>Privacy & Consent</Text>
+          <Text style={[styles.title, { color: c.text }]}>{t('privacyConsent')}</Text>
         </View>
 
         {/* Card */}
         <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Terms of Service & Privacy Policy</Text>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>{t('termsTitle')}</Text>
 
           <View style={[styles.clauseBox, { backgroundColor: c.muted }]}>
             <Text style={[styles.clauseText, { color: c.textSecondary }]}>
-              Please read the following terms carefully before creating your account:
+              {t('consentIntro')}
             </Text>
           </View>
 
           <View style={styles.clauses}>
-            {[
-              ['1.', 'Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.'],
-              ['2.', 'Questions and content you submit will be used for agricultural research, AI model training, and policy planning purposes.'],
-              ['3.', 'All submitted data is owned by the organisation and will be retained indefinitely unless you request account deletion.'],
-              ['4.', 'You are solely responsible for the accuracy of information submitted through your account.'],
-              ['5.', 'You may withdraw consent and request data deletion at any time by contacting our support team.'],
-            ].map(([num, text]) => (
-              <View key={num} style={styles.clause}>
-                <Text style={[styles.clauseNum, { color: c.primary }]}>{num}</Text>
-                <Text style={[styles.clauseBody, { color: c.textSecondary }]}>{text}</Text>
+            {CLAUSES.map((key, i) => (
+              <View key={key} style={styles.clause}>
+                <Text style={[styles.clauseNum, { color: c.primary }]}>{i + 1}.</Text>
+                <Text style={[styles.clauseBody, { color: c.textSecondary }]}>{t(key)}</Text>
               </View>
             ))}
           </View>
@@ -84,7 +88,7 @@ export function ConsentScreen({ navigation, route }: Props) {
             onPress={() => Linking.openURL('https://example.com/privacy')}
           >
             <Text style={[styles.policyLinkText, { color: c.primary }]}>
-              Read full Privacy Policy →
+              {t('readFullPolicy')}
             </Text>
           </TouchableOpacity>
 
@@ -103,12 +107,12 @@ export function ConsentScreen({ navigation, route }: Props) {
               {accepted && <Text style={[styles.checkmark, { color: c.primaryForeground }]}>✓</Text>}
             </View>
             <Text style={[styles.checkboxLabel, { color: c.text }]}>
-              I have read and agree to the Terms of Service and Privacy Policy
+              {t('agreeToConsent')}
             </Text>
           </TouchableOpacity>
 
           <Button
-            title="I Accept & Continue"
+            title={t('iAcceptContinue')}
             onPress={handleContinue}
             disabled={!accepted}
             loading={loading}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import {
   View,
@@ -48,6 +49,7 @@ export function HomeScreen() {
   const { user, refreshProfile } = useAuth();
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -56,9 +58,9 @@ export function HomeScreen() {
 
   const greeting = (() => {
     const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (h < 12) return t('home.greeting.morning');
+    if (h < 17) return t('home.greeting.afternoon');
+    return t('home.greeting.evening');
   })();
 
   async function fetchDashboardData() {
@@ -163,13 +165,13 @@ export function HomeScreen() {
         <View style={styles.statsRow}>
           <StatCard
             icon="wallet-outline"
-            label="Wallet Balance"
+            label={t('home.walletBalance')}
             value={loadingStats ? '…' : `₹${walletBalance ?? 0}`}
             color={c.success}
           />
           <StatCard
             icon="checkmark-circle-outline"
-            label="Today"
+            label={t('home.today')}
             value={
               loadingStats
                 ? '…'
@@ -181,7 +183,7 @@ export function HomeScreen() {
           />
           <StatCard
             icon="time-outline"
-            label="Remaining"
+            label={t('home.remaining')}
             value={
               loadingStats
                 ? '…'
@@ -196,7 +198,7 @@ export function HomeScreen() {
         {/* ── Quick actions ──────────────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Quick Actions</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.quickActions')}</Text>
             <TooltipIcon description="Jump straight to Ask a Question or view your Wallet balance and recent activity." />
           </View>
 
@@ -204,15 +206,15 @@ export function HomeScreen() {
             {[
               {
                 icon: 'create-outline',
-                label: 'Ask a Question',
-                sub: 'Submit an agricultural query',
+                label: t('home.askQuestion'),
+                sub: t('home.askQuestionSub'),
                 screen: 'AskQuestion' as const,
                 color: c.primary,
               },
               {
                 icon: 'wallet-outline',
-                label: 'My Wallet',
-                sub: 'Rewards & withdrawals',
+                label: t('home.myWallet'),
+                sub: t('home.myWalletSub'),
                 screen: 'Wallet' as const,
                 color: c.success,
               },
@@ -239,11 +241,11 @@ export function HomeScreen() {
           <View style={styles.sectionHead}>
             <View>
               <View style={styles.sectionTitleRow}>
-                <Text style={[styles.sectionTitle, { color: c.text }]}>Earn Rewards</Text>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.earnRewards')}</Text>
                 <TooltipIcon description="Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates." />
               </View>
               <Text style={[styles.sectionSub, { color: c.textSecondary }]}>
-                ₹10 for 251–500 approved questions
+                {t('home.rewardSubtitle')}
               </Text>
             </View>
           </View>
@@ -312,9 +314,9 @@ export function HomeScreen() {
             <View style={styles.earningsLeft}>
               <Ionicons name="trophy-outline" size={22} color={c.success} />
               <View>
-                <Text style={[styles.earningsTitle, { color: c.text }]}>Reach Gold Tier</Text>
+                <Text style={[styles.earningsTitle, { color: c.text }]}>{t('home.reachGold')}</Text>
                 <Text style={[styles.earningsSub, { color: c.textSecondary }]}>
-                  Earn up to ₹10 per question after 250 approvals
+                  {t('home.reachGoldSub')}
                 </Text>
               </View>
             </View>
@@ -327,7 +329,7 @@ export function HomeScreen() {
         {/* ── Guidelines ─────────────────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Submission Tips</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t("home.submissionTips")}</Text>
             <TooltipIcon description="Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight." />
           </View>
           <View style={[styles.guideCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>

@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import { useTheme } from '../../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 import { questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
@@ -84,6 +85,7 @@ export function MyQuestionsScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const navigation = useNavigation<NativeStackNavigationProp<MainTabParamList>>();
+  const { t } = useTranslation();
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +107,7 @@ export function MyQuestionsScreen() {
       setPage(pageNum);
     } catch (err) {
       console.log('[MyQuestions] fetch error:', err);
-      Alert.alert('Error', 'Failed to load your questions.');
+      Alert.alert(t('common.error'), t('myQuestions.loadError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -127,7 +129,7 @@ export function MyQuestionsScreen() {
 
   function handleEdit(question: Question) {
     if (!isWithinEditWindow(question)) {
-      Alert.alert('Edit Window Closed', 'The edit window of 30 seconds has closed for this question.');
+      Alert.alert(t('myQuestions.editWindowClosedTitle') ?? t('common.error'), t('myQuestions.editWindowClosed'));
       return;
     }
     // Navigate to AskQuestion tab with the questionId — QuestionScreen will open in edit mode
@@ -162,7 +164,7 @@ export function MyQuestionsScreen() {
                 color={withinEditWindow ? '#fff' : c.textTertiary}
               />
               <Text style={[styles.editBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>
-                Edit
+                {t('myQuestions.edit')}
               </Text>
             </TouchableOpacity>
           )}
@@ -224,7 +226,7 @@ export function MyQuestionsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
-          <Text style={[styles.centerText, { color: c.textSecondary }]}>Loading your questions…</Text>
+          <Text style={[styles.centerText, { color: c.textSecondary }]}>{t('myQuestions.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -240,7 +242,7 @@ export function MyQuestionsScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <Text style={[styles.title, { color: c.text }]}>My Questions</Text>
+              <Text style={[styles.title, { color: c.text }]}>{t('myQuestions.title')}</Text>
               <TooltipIcon
                 description="All your submitted questions are listed here. Tap any question to view details, edit within the window, or check its approval status."
                 size={18}
@@ -248,17 +250,17 @@ export function MyQuestionsScreen() {
             </View>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {questions.length > 0
-                ? `${questions.length} submission${questions.length !== 1 ? 's' : ''}`
-                : 'No questions submitted yet'}
+                ? t('myQuestions.subtitle', { count: questions.length, s: questions.length !== 1 ? 's' : '' })
+                : t('myQuestions.noQuestions')}
             </Text>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.centered}>
             <Ionicons name="chatbubbles-outline" size={56} color={c.textTertiary} />
-            <Text style={[styles.emptyTitle, { color: c.textSecondary }]}>No questions yet</Text>
+            <Text style={[styles.emptyTitle, { color: c.textSecondary }]}>{t('myQuestions.noQuestions')}</Text>
             <Text style={[styles.emptyBody, { color: c.textTertiary }]}>
-              Start by asking a question from the Submit tab
+              {t('myQuestions.startAsking')}
             </Text>
           </View>
         }

@@ -87,9 +87,9 @@ export function ProfileScreen() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   async function handleLogout() {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    Alert.alert(t('profile.signOut'), t('profile.signOutConfirm'), [
+      { text: t('profile.signOutCancel'), style: 'cancel' },
+      { text: t('profile.signOutAction'), style: 'destructive', onPress: logout },
     ]);
   }
 
@@ -152,7 +152,7 @@ export function ProfileScreen() {
               : <>
                   <Ionicons name="wallet-outline" size={16} color={c.primary} style={styles.statIcon} />
                   <Text style={[styles.statValue, { color: c.text }]}>₹{walletBalance ?? 0}</Text>
-                  <Text style={[styles.statLabel, { color: c.textSecondary }]}>Wallet</Text>
+                  <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('profile.wallet')}</Text>
                 </>
             }
           </View>
@@ -162,13 +162,13 @@ export function ProfileScreen() {
               : <>
                   <Ionicons name="help-circle-outline" size={16} color={c.primary} style={styles.statIcon} />
                   <Text style={[styles.statValue, { color: c.text }]}>{totalQuestions ?? '—'}</Text>
-                  <Text style={[styles.statLabel, { color: c.textSecondary }]}>Questions</Text>
+                  <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('profile.questions')}</Text>
                 </>
             }
           </View>
           <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <Ionicons name="calendar-outline" size={16} color={c.primary} style={styles.statIcon} />
-            <Text style={[styles.statLabel, { color: c.textSecondary, marginBottom: 2 }]}>Member Since</Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary, marginBottom: 2 }]}>{t('profile.memberSince')}</Text>
             <Text style={[styles.statValue, { color: c.text, fontSize: 13 }]}>
               {user?.createdAt
                 ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -180,7 +180,7 @@ export function ProfileScreen() {
         {/* ── Location ──────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Location</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.location')}</Text>
             <TooltipIcon description="Your registered state, district, block, and preferred language for content delivery." />
           </View>
           <View style={[styles.infoCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
@@ -234,7 +234,7 @@ export function ProfileScreen() {
         {crops.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionTitleRow}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>My Crops</Text>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.myCrops')}</Text>
               <TooltipIcon description="The crops you have registered. Questions are tagged to specific crops for better relevance matching." />
             </View>
             <View style={[styles.cropsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
@@ -255,8 +255,8 @@ export function ProfileScreen() {
         {/* ── Appearance ────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Appearance</Text>
-            <TooltipIcon description="Choose Light, Dark, or follow your device settings." />
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.appearance')}</Text>
+            <TooltipIcon description={t("profile.themeSystemDesc")} />
           </View>
           <View style={[styles.themeCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             {(['light', 'dark', 'system'] as const).map((mode) => (
@@ -297,7 +297,7 @@ export function ProfileScreen() {
             <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
               <Ionicons name="create-outline" size={17} color={c.primary} />
             </View>
-            <Text style={[styles.actionTitle, { color: c.text }]}>Edit Profile</Text>
+            <Text style={[styles.actionTitle, { color: c.text }]}>{t('profile.editProfile')}</Text>
             <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
           </TouchableOpacity>
 
@@ -309,7 +309,7 @@ export function ProfileScreen() {
             <View style={[styles.actionIconWrap, { backgroundColor: c.error + '15' }]}>
               <Ionicons name="log-out-outline" size={17} color={c.error} />
             </View>
-            <Text style={[styles.actionTitle, { color: c.error }]}>Sign Out</Text>
+            <Text style={[styles.actionTitle, { color: c.error }]}>{t('profile.signOut')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

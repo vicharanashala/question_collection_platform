@@ -16,6 +16,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = { navigation: NativeStackNavigationProp<AuthStackParamList, 'LoginPhone'> };
 
@@ -24,6 +25,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
   const c = theme.colors;
   const { login } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,17 +33,17 @@ export function LoginPhoneScreen({ navigation }: Props) {
 
   const validMobile = /^[6-9]\d{9}$/.test(mobile);
 
-  function handleChangeText(t: string) {
-    const newMobile = t.replace(/\D/g, '');
+  function handleChangeText(text: string) {
+    const newMobile = text.replace(/\D/g, '');
     setMobile(newMobile);
     // Validate against the new value (not stale state) so error shows on first keystroke
     const newValid = /^[6-9]\d{9}$/.test(newMobile);
     const isShort = newMobile.length > 0 && !newValid;
-    setError(isShort ? 'Enter a valid 10-digit mobile number' : '');
+    setError(isShort ? t('invalidPhone') : '');
   }
 
   async function handleRequestOtp() {
-    if (!validMobile) { setError('Enter a valid 10-digit mobile number'); return; }
+    if (!validMobile) { setError(t('invalidPhone')); return; }
     setError('');
     setLoading(true);
     try {
@@ -70,22 +72,22 @@ export function LoginPhoneScreen({ navigation }: Props) {
             <View style={[styles.logoMark, { backgroundColor: c.primary }]}>
               <Text style={[styles.logoText, { color: c.primaryForeground }]}>AQ</Text>
             </View>
-            <Text style={[styles.brand, { color: c.text }]}>AgriQuestion</Text>
+            <Text style={[styles.brand, { color: c.text }]}>{t('loginPhone.title')}</Text>
             <Text style={[styles.tagline, { color: c.textSecondary }]}>
-              Agricultural knowledge, powered by AI
+              {t('loginPhone.tagline')}
             </Text>
           </View>
 
           {/* Card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            <Text style={[styles.cardTitle, { color: c.text }]}>Sign In</Text>
+            <Text style={[styles.cardTitle, { color: c.text }]}>{t('signIn')}</Text>
             <Text style={[styles.cardDesc, { color: c.textSecondary }]}>
-              Enter your registered mobile number to continue
+              {t('signInDesc')}
             </Text>
 
             <Input
               label="Mobile Number"
-              placeholder="Enter 10-digit mobile number"
+              placeholder={t('phonePlaceholder')}
               keyboardType="phone-pad"
               maxLength={10}
               value={mobile}
@@ -97,7 +99,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
             />
 
             <Button
-              title="Send OTP"
+              title={t('loginPhone.sendOtp')}
               onPress={handleRequestOtp}
               disabled={!validMobile}
               loading={loading}
@@ -105,9 +107,9 @@ export function LoginPhoneScreen({ navigation }: Props) {
             />
 
             <Text style={[styles.legal, { color: c.textTertiary }]}>
-              By continuing, you agree to our{' '}
-              <Text style={{ color: c.primary }}>Terms of Service</Text> and{' '}
-              <Text style={{ color: c.primary }}>Privacy Policy</Text>
+              {t('agreeToTerms')}{' '}
+              <Text style={{ color: c.primary }}>{t('termsOfService')}</Text>{' '}{t('and')}{' '}
+              <Text style={{ color: c.primary }}>{t('privacyPolicy')}</Text>
             </Text>
           </View>
         </ScrollView>

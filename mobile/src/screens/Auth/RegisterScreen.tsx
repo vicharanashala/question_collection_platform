@@ -21,6 +21,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { INDIAN_STATES, LANGUAGES } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;
@@ -33,12 +34,14 @@ const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: `${l.label} (${l.labelEnglish})` }));
 
 const CATEGORIES = [
-  { value: UserCategory.FARMER, label: 'Farmer', icon: '🌾', description: 'Cultivator or landowner' },
-  { value: UserCategory.FPO, label: 'FPO Member', icon: '🤝', description: 'Farmer Producer Organisation' },
-  { value: UserCategory.STUDENT, label: 'Student', icon: '🎓', description: 'Agriculture / allied sciences student' },
-  { value: UserCategory.VOLUNTEER, label: 'Volunteer', icon: '🙋', description: 'Field volunteer or extension worker' },
-  { value: UserCategory.NGO, label: 'NGO Partner', icon: '🏢', description: 'Non-governmental organisation' },
+  { value: UserCategory.FARMER, tKey: 'cat.farmer', descKey: 'cat.farmerDesc', icon: '🌾' },
+  { value: UserCategory.FPO, tKey: 'cat.fpoMember', descKey: 'cat.fpoMemberDesc', icon: '🤝' },
+  { value: UserCategory.STUDENT, tKey: 'cat.student', descKey: 'cat.studentDesc', icon: '🎓' },
+  { value: UserCategory.VOLUNTEER, tKey: 'cat.volunteer', descKey: 'cat.volunteerDesc', icon: '🙋' },
+  { value: UserCategory.NGO, tKey: 'cat.ngoPartner', descKey: 'cat.ngoPartnerDesc', icon: '🏢' },
 ];
+
+const STEP_KEYS = ['stepCategory', 'stepLocation', 'stepDetails', 'stepLanguage'] as const;
 
 export function RegisterScreen({ navigation, route }: Props) {
   const { mobileNumber } = route.params;
@@ -46,12 +49,12 @@ export function RegisterScreen({ navigation, route }: Props) {
   const c = theme.colors;
   const { register } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Form fields
   const [category, setCategory] = useState<UserCategory | ''>('');
   const [name, setName] = useState('');
   const [state, setState] = useState('');
@@ -59,7 +62,6 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [block, setBlock] = useState('');
   const [language, setLanguage] = useState('hi');
 
-  // Category-specific
   const [farmSize, setFarmSize] = useState('');
   const [cropType, setCropType] = useState('');
   const [courseName, setCourseName] = useState('');
@@ -69,30 +71,30 @@ export function RegisterScreen({ navigation, route }: Props) {
 
   function validateStep(s: number): boolean {
     const errs: Record<string, string> = {};
-    if (s === 1 && !category) errs.category = 'Please select a category to continue';
+    if (s === 1 && !category) errs.category = t('selectCategoryRequired');
     if (s === 2) {
-      if (!name.trim() || name.trim().length < 2) errs.name = 'Name must be at least 2 characters';
-      if (!state) errs.state = 'Please select your state';
-      if (!district.trim()) errs.district = 'District is required';
+      if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
+      if (!state) errs.state = t('stateRequired');
+      if (!district.trim()) errs.district = t('districtRequired');
     }
     if (s === 3) {
-      if (category === UserCategory.FARMER && (!farmSize.trim() || !cropType.trim())) {
-        if (!farmSize.trim()) errs.farmSize = 'Farm size is required';
-        if (!cropType.trim()) errs.cropType = 'Crop type is required';
+      if (category === UserCategory.FARMER) {
+        if (!farmSize.trim()) errs.farmSize = t('farmSizeRequired');
+        if (!cropType.trim()) errs.cropType = t('cropTypeRequired');
       }
-      if (category === UserCategory.STUDENT && (!courseName.trim() || !universityName.trim())) {
-        if (!courseName.trim()) errs.courseName = 'Course name is required';
-        if (!universityName.trim()) errs.universityName = 'University name is required';
+      if (category === UserCategory.STUDENT) {
+        if (!courseName.trim()) errs.courseName = t('courseNameRequired');
+        if (!universityName.trim()) errs.universityName = t('universityNameRequired');
       }
       if (
         (category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) &&
         (!organizationName.trim() || !role.trim())
       ) {
-        if (!organizationName.trim()) errs.organizationName = 'Organisation name is required';
-        if (!role.trim()) errs.role = 'Your role is required';
+        if (!organizationName.trim()) errs.organizationName = t('organisationRequired');
+        if (!role.trim()) errs.role = t('roleRequired');
       }
     }
-    if (s === 4 && !language) errs.language = 'Please select a language';
+    if (s === 4 && !language) errs.language = t('languageRequired');
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -122,14 +124,11 @@ export function RegisterScreen({ navigation, route }: Props) {
       });
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
-      const msg = getErrorMessage(err, 'Registration failed. Please try again.');
-      showToast(msg, 'error');
+      showToast(getErrorMessage(err, t('serverError')), 'error');
     } finally {
       setLoading(false);
     }
   }
-
-  const stepLabels = ['Category', 'Location', 'Details', 'Language'];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -137,25 +136,25 @@ export function RegisterScreen({ navigation, route }: Props) {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Back */}
           <TouchableOpacity style={styles.backBtn} onPress={back}>
-            <Text style={[styles.backText, { color: c.primary }]}>← Back</Text>
+            <Text style={[styles.backText, { color: c.primary }]}>← {t('back')}</Text>
           </TouchableOpacity>
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: c.text }]}>Create Account</Text>
+            <Text style={[styles.title, { color: c.text }]}>{t('createAccount')}</Text>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              Step {step} of {TOTAL_STEPS} — {stepLabels[step - 1]}
+              {t('stepOf', { step, total: TOTAL_STEPS })} — {t(STEP_KEYS[step - 1])}
             </Text>
           </View>
 
           {/* Step indicator */}
           <View style={styles.stepRow}>
-            {stepLabels.map((label, i) => {
+            {STEP_KEYS.map((key, i) => {
               const num = i + 1;
               const isActive = num === step;
               const isDone = num < step;
               return (
-                <React.Fragment key={label}>
+                <React.Fragment key={key}>
                   <View style={styles.stepItem}>
                     <View
                       style={[
@@ -165,32 +164,16 @@ export function RegisterScreen({ navigation, route }: Props) {
                         isActive && { backgroundColor: c.primary + '18', borderColor: c.primary },
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.stepNum,
-                          { color: isDone || isActive ? c.primary : c.textTertiary },
-                        ]}
-                      >
+                      <Text style={[styles.stepNum, { color: isDone || isActive ? c.primary : c.textTertiary }]}>
                         {isDone ? '✓' : num}
                       </Text>
                     </View>
-                    <Text
-                      style={[
-                        styles.stepLabel,
-                        { color: isActive ? c.primary : c.textTertiary },
-                        isActive && { fontWeight: '700' },
-                      ]}
-                    >
-                      {label}
+                    <Text style={[styles.stepLabel, { color: isActive ? c.primary : c.textTertiary }, isActive && { fontWeight: '700' }]}>
+                      {t(key)}
                     </Text>
                   </View>
-                  {i < stepLabels.length - 1 && (
-                    <View
-                      style={[
-                        styles.stepLine,
-                        { backgroundColor: isDone ? c.primary : c.borderSubtle },
-                      ]}
-                    />
+                  {i < STEP_KEYS.length - 1 && (
+                    <View style={[styles.stepLine, { backgroundColor: isDone ? c.primary : c.borderSubtle }]} />
                   )}
                 </React.Fragment>
               );
@@ -202,7 +185,7 @@ export function RegisterScreen({ navigation, route }: Props) {
             {/* Step 1: Category */}
             {step === 1 && (
               <>
-                <Text style={[styles.sectionTitle, { color: c.text }]}>Select Your Category</Text>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('selectCategory')}</Text>
                 {CATEGORIES.map((cat) => (
                   <TouchableOpacity
                     key={cat.value}
@@ -217,48 +200,36 @@ export function RegisterScreen({ navigation, route }: Props) {
                   >
                     <Text style={styles.catIcon}>{cat.icon}</Text>
                     <View style={styles.catInfo}>
-                      <Text
-                        style={[
-                          styles.catLabel,
-                          { color: category === cat.value ? c.primary : c.text },
-                        ]}
-                      >
-                        {cat.label}
+                      <Text style={[styles.catLabel, { color: category === cat.value ? c.primary : c.text }]}>
+                        {t(cat.tKey)}
                       </Text>
-                      <Text style={[styles.catDesc, { color: c.textSecondary }]}>{cat.description}</Text>
+                      <Text style={[styles.catDesc, { color: c.textSecondary }]}>{t(cat.descKey)}</Text>
                     </View>
-                    <View
-                      style={[
-                        styles.radio,
-                        { borderColor: category === cat.value ? c.primary : c.borderSubtle },
-                      ]}
-                    >
-                      {category === cat.value && (
-                        <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
-                      )}
+                    <View style={[styles.radio, { borderColor: category === cat.value ? c.primary : c.borderSubtle }]}>
+                      {category === cat.value && <View style={[styles.radioInner, { backgroundColor: c.primary }]} />}
                     </View>
                   </TouchableOpacity>
                 ))}
                 {errors.category && <Text style={[styles.error, { color: c.error }]}>{errors.category}</Text>}
-                <Button title="Continue" onPress={next} disabled={!category} />
+                <Button title={t('continue')} onPress={next} disabled={!category} />
               </>
             )}
 
             {/* Step 2: Location */}
             {step === 2 && (
               <>
-                <Text style={[styles.sectionTitle, { color: c.text }]}>Location Details</Text>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('locationDetails')}</Text>
                 <Input
-                  label="Full Name"
-                  placeholder="Enter your full legal name"
+                  label={t('fullName')}
+                  placeholder={t('namePlaceholder')}
                   value={name}
-                  onChangeText={(t) => { setName(t); setErrors({}); }}
+                  onChangeText={(txt) => { setName(txt); setErrors({}); }}
                   error={errors.name}
                   autoCapitalize="words"
                 />
                 <Select
-                  label="State"
-                  placeholder="Search your state"
+                  label={t('state')}
+                  placeholder={t('statePlaceholder')}
                   value={state}
                   options={stateOptions}
                   onChange={(v) => { setState(v); setErrors({}); }}
@@ -266,40 +237,40 @@ export function RegisterScreen({ navigation, route }: Props) {
                   searchable
                 />
                 <Input
-                  label="District"
-                  placeholder="Enter your district"
+                  label={t('district')}
+                  placeholder={t('districtPlaceholder')}
                   value={district}
-                  onChangeText={(t) => { setDistrict(t); setErrors({}); }}
+                  onChangeText={(txt) => { setDistrict(txt); setErrors({}); }}
                   error={errors.district}
                 />
                 <Input
-                  label="Block (Optional)"
-                  placeholder="Enter your block or mandal"
+                  label={t('blockOptional')}
+                  placeholder={t('blockPlaceholder')}
                   value={block}
                   onChangeText={setBlock}
                 />
-                <Button title="Continue" onPress={next} />
+                <Button title={t('continue')} onPress={next} />
               </>
             )}
 
             {/* Step 3: Category Details */}
             {step === 3 && (
               <>
-                <Text style={[styles.sectionTitle, { color: c.text }]}>Additional Details</Text>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('additionalDetails')}</Text>
                 {category === UserCategory.FARMER && (
                   <>
                     <Input
-                      label="Farm Size"
-                      placeholder="e.g., 2.5 acres"
+                      label={t('farmSize')}
+                      placeholder={t('farmSizePlaceholder')}
                       value={farmSize}
-                      onChangeText={(t) => { setFarmSize(t); setErrors({}); }}
+                      onChangeText={(txt) => { setFarmSize(txt); setErrors({}); }}
                       error={errors.farmSize}
                     />
                     <Input
-                      label="Primary Crop Type"
-                      placeholder="e.g., Rice, Wheat, Cotton"
+                      label={t('primaryCropType')}
+                      placeholder={t('cropTypePlaceholder')}
                       value={cropType}
-                      onChangeText={(t) => { setCropType(t); setErrors({}); }}
+                      onChangeText={(txt) => { setCropType(txt); setErrors({}); }}
                       error={errors.cropType}
                     />
                   </>
@@ -307,17 +278,17 @@ export function RegisterScreen({ navigation, route }: Props) {
                 {category === UserCategory.STUDENT && (
                   <>
                     <Input
-                      label="Course Name"
-                      placeholder="e.g., B.Sc. Agriculture"
+                      label={t('courseName')}
+                      placeholder={t('courseNamePlaceholder')}
                       value={courseName}
-                      onChangeText={(t) => { setCourseName(t); setErrors({}); }}
+                      onChangeText={(txt) => { setCourseName(txt); setErrors({}); }}
                       error={errors.courseName}
                     />
                     <Input
-                      label="University / College"
-                      placeholder="Enter your university name"
+                      label={t('university')}
+                      placeholder={t('universityNamePlaceholder')}
                       value={universityName}
-                      onChangeText={(t) => { setUniversityName(t); setErrors({}); }}
+                      onChangeText={(txt) => { setUniversityName(txt); setErrors({}); }}
                       error={errors.universityName}
                     />
                   </>
@@ -325,42 +296,42 @@ export function RegisterScreen({ navigation, route }: Props) {
                 {(category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) && (
                   <>
                     <Input
-                      label="Organisation Name"
-                      placeholder="Enter organisation name"
+                      label={t('organisationName')}
+                      placeholder={t('organisationNamePlaceholder')}
                       value={organizationName}
-                      onChangeText={(t) => { setOrganizationName(t); setErrors({}); }}
+                      onChangeText={(txt) => { setOrganizationName(txt); setErrors({}); }}
                       error={errors.organizationName}
                     />
                     <Input
-                      label="Your Role"
-                      placeholder="e.g., Coordinator, Field Officer"
+                      label={t('yourRole')}
+                      placeholder={t('rolePlaceholder')}
                       value={role}
-                      onChangeText={(t) => { setRole(t); setErrors({}); }}
+                      onChangeText={(txt) => { setRole(txt); setErrors({}); }}
                       error={errors.role}
                     />
                   </>
                 )}
-                <Button title="Continue" onPress={next} />
+                <Button title={t('continue')} onPress={next} />
               </>
             )}
 
             {/* Step 4: Language */}
             {step === 4 && (
               <>
-                <Text style={[styles.sectionTitle, { color: c.text }]}>App Language</Text>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profileLanguage')}</Text>
                 <Text style={[styles.sectionSubtitle, { color: c.textSecondary }]}>
-                  This will be the default language for the app interface and question submissions
+                  {t('profileLanguageDesc')}
                 </Text>
                 <Select
-                  label="Language"
-                  placeholder="Search language"
+                  label={t('language')}
+                  placeholder={t('searchLanguage')}
                   value={language}
                   options={languageOptions}
                   onChange={(v) => { setLanguage(v); setErrors({}); }}
                   error={errors.language}
                   searchable
                 />
-                <Button title="Complete Registration" onPress={handleSubmit} loading={loading} />
+                <Button title={t('completeRegistration')} onPress={handleSubmit} loading={loading} />
               </>
             )}
           </View>

@@ -21,6 +21,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { questionApi } from '../../api/client';
+import { useTranslation } from 'react-i18next';
 import {
   SEASONS,
   DOMAIN_CATEGORIES,
@@ -112,6 +113,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   const editingQuestionId = route?.params?.questionId;
   const isEditMode = Boolean(editingQuestionId);
@@ -159,7 +161,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       }).catch(async (err) => {
         console.log('[QuestionScreen] fetch error:', err);
         const { getErrorMessage } = await import('../../api/client');
-        showToast(getErrorMessage(err, 'Could not load question to edit.'), 'error');
+        showToast(getErrorMessage(err, t('question.updateFailed')), 'error');
         navigation.navigate('Submissions' as never);
       });
     } else {
@@ -180,13 +182,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    if (!state) errs.state = 'Select your state';
-    if (!district.trim()) errs.district = 'Enter your district';
-    if (!domainCategory) errs.domainCategory = 'Select a domain category';
-    if (!season) errs.season = 'Select a season';
-    if (!cropType.trim()) errs.cropType = 'Enter the crop type';
+    if (!state) errs.state = t('question.selectState');
+    if (!district.trim()) errs.district = t('question.districtPlaceholder');
+    if (!domainCategory) errs.domainCategory = t('question.selectDomain');
+    if (!season) errs.season = t('question.selectSeason');
+    if (!cropType.trim()) errs.cropType = t('question.enterCrop');
     if (!questionText.trim() && mediaMode === 'none') {
-      errs.questionText = 'Enter your question or attach media';
+      errs.questionText = t('question.enterQuestion');
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -220,7 +222,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     if (!validate()) return;
 
     if (!isEditMode && remainingToday <= 0) {
-      showToast(`You have reached your limit of ${DAILY_QUESTION_LIMIT} questions today. Please try again tomorrow.`, 'warning');
+      showToast(t('question.limitReached', { limit: DAILY_QUESTION_LIMIT }), 'warning');
       return;
     }
 
@@ -236,7 +238,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           mediaUrls = [url];
         } catch (err) {
           const { getErrorMessage } = await import('../../api/client');
-          showToast(getErrorMessage(err, 'Failed to upload media. Please try again.'), 'error');
+          showToast(getErrorMessage(err, t('question.mediaUploadFailed')), 'error');
           setLoading(false);
           setUploadingMedia(false);
           return;
@@ -277,7 +279,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       }
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
-      const msg = getErrorMessage(err, 'Failed to submit. Please try again.');
+      const msg = getErrorMessage(err, t('question.submitFailed'));
       showToast(msg, 'error');
     } finally {
       setLoading(false);
@@ -312,13 +314,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             <Ionicons name="checkmark-circle" size={40} color={c.success} />
           </View>
           <Text style={[styles.successTitle, { color: c.text }]}>
-            {isEditMode ? 'Question Updated' : 'Question Submitted'}
+            {isEditMode ? t('question.updateSuccess') : t('question.submitSuccess')}
           </Text>
           <Text style={[styles.successBody, { color: c.textSecondary }]}>
-            Your question is under review. You will be notified once it is approved.
+            {t('question.successBody')}
           </Text>
           <Button
-            title={isEditMode ? 'Back to Submissions' : 'Submit Another Question'}
+            title={isEditMode ? t('submissions.backToSubmissions') : t('question.submitAnother')}
             onPress={() => {
               if (isEditMode) {
                 navigation.navigate('Submissions' as never);
@@ -345,19 +347,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           <View style={styles.header}>
             <View style={styles.titleRow}>
               <Text style={[styles.title, { color: c.text }]}>
-              {isEditMode ? 'Edit Question' : 'Ask a Question'}
+              {isEditMode ? t('question.editQuestion') : t('question.askQuestion')}
               </Text>
               <TooltipIcon
                 description={
                   isEditMode
-                    ? 'You can update your question details within 30 seconds of submission. After the edit window closes, no changes can be made.'
-                    : 'Submit a clear, specific agriculture question. Approved questions earn rewards based on the current tier you are in.'
+                    ? t('question.tooltipEdit')
+                    : t('question.tooltipAsk')
                 }
                 size={18}
               />
             </View>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              {isEditMode ? 'Update your question within the edit window' : 'Submit your agriculture-related query'}
+              {isEditMode ? t('question.editSubtitle') : t('question.askSubtitle')}
             </Text>
           </View>
 
@@ -366,8 +368,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             <View style={[styles.limitBadge, { backgroundColor: remainingToday > 5 ? c.success + '18' : c.warning + '18' }]}>
               <Text style={[styles.limitBadgeText, { color: remainingToday > 5 ? c.success : c.warning }]}>
                 {remainingToday > 0
-                  ? `${remainingToday} of ${DAILY_QUESTION_LIMIT} submissions remaining today`
-                  : `Daily limit of ${DAILY_QUESTION_LIMIT} reached — come back tomorrow`}
+                  ? t('question.dailyRemaining', { remaining: remainingToday, total: DAILY_QUESTION_LIMIT })
+                  : t('question.dailyLimitReached', { total: DAILY_QUESTION_LIMIT })}
               </Text>
             </View>
           )}
@@ -384,23 +386,23 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               searchable
             />
             <Input
-              label="District"
-              placeholder="Enter your district"
+              label={t('question.district')}
+              placeholder={t('question.districtPlaceholder')}
               value={district}
               onChangeText={(t) => { setDistrict(t); setErrors({}); }}
               error={errors.district}
             />
             <Input
-              label="Block / Mandal (Optional)"
-              placeholder="Enter your block or mandal"
+              label={t('question.blockOptional')}
+              placeholder={t('question.blockPlaceholder')}
               value={block}
               onChangeText={setBlock}
             />
 
             {/* Domain */}
             <Select
-              label="Agriculture Domain"
-              placeholder="Select domain"
+              label={t('question.domain')}
+              placeholder={t('question.domainPlaceholder')}
               value={domainCategory}
               options={domainOptions}
               onChange={(v) => { setDomainCategory(v); setErrors({}); }}
@@ -409,8 +411,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
             {/* Season */}
             <Select
-              label="Season"
-              placeholder="Select season"
+              label={t('question.season')}
+              placeholder={t('question.seasonPlaceholder')}
               value={season}
               options={seasonOptions}
               onChange={(v) => { setSeason(v); setErrors({}); }}
@@ -419,8 +421,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
             {/* Crop */}
             <Input
-              label="Crop Type"
-              placeholder="e.g., Rice, Wheat, Cotton"
+              label={t('question.cropType')}
+              placeholder={t('question.cropTypePlaceholder')}
               value={cropType}
               onChangeText={(t) => { setCropType(t); setErrors({}); }}
               error={errors.cropType}
@@ -428,8 +430,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
             {/* Question text */}
             <Input
-              label="Your Question"
-              placeholder="Type your agriculture question here…"
+              label={t('question.yourQuestion')}
+              placeholder={t('question.questionPlaceholder')}
               value={questionText}
               onChangeText={(t) => { setQuestionText(t); setErrors({}); }}
               error={errors.questionText}
@@ -441,9 +443,9 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             {/* Media section */}
             <View style={styles.mediaSection}>
               <View style={styles.labelRow}>
-                <Text style={[styles.mediaLabel, { color: c.textSecondary }]}>Attach Media (optional)</Text>
+                <Text style={[styles.mediaLabel, { color: c.textSecondary }]}>{t('question.attachMedia')}</Text>
                 <TooltipIcon
-                  description="Adding a photo or video helps experts understand your question better and increases approval chances."
+                  description={t('question.mediaHelp')}
                   size={14}
                 />
               </View>
@@ -467,7 +469,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                     disabled={uploadingMedia || loading}
                   >
                     <Ionicons name="image" size={18} color={c.text} />
-                    <Text style={styles.mediaBtnText}>Photo</Text>
+                    <Text style={styles.mediaBtnText}>{t('question.photo')}</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -476,14 +478,14 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             {/* Upload progress */}
             {uploadingMedia && (
               <Text style={[styles.uploadText, { color: c.textSecondary }]}>
-                ⏳ Uploading media…
+                ⏳ {t('question.uploading')}
               </Text>
             )}
 
 
 
             <Button
-              title={loading ? (isEditMode ? 'Updating…' : 'Submitting…') : (isEditMode ? 'Update Question' : 'Submit Question')}
+              title={loading ? (isEditMode ? t('question.updating') : t('question.submitting')) : (isEditMode ? t('question.updateQuestion') : t('question.submitQuestion'))}
               onPress={handleSubmit}
               loading={loading || uploadingMedia}
               disabled={remainingToday <= 0}

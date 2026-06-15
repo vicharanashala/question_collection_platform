@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 import { questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
@@ -66,9 +67,9 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_META: Record<string, { label: string; color: string; icon: string }> = {
-  pending:   { label: 'Pending',   color: '#E88B00', icon: 'time-outline' },
-  approved:  { label: 'Approved',  color: '#16A34A', icon: 'checkmark-circle' },
-  rejected:  { label: 'Rejected',  color: '#DC2626', icon: 'close-circle' },
+  pending:   { label: 'Pending', color: '#E88B00', icon: 'time-outline' },
+  approved:  { label: 'Approved', color: '#16A34A', icon: 'checkmark-circle' },
+  rejected:  { label: 'Rejected', color: '#DC2626', icon: 'close-circle' },
 };
 
 const SEASON_OPTIONS = [
@@ -114,6 +115,7 @@ interface FilterModalProps {
 function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterModalProps) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const { t } = useTranslation();
 
   function ChipGroup({
     options,
@@ -162,10 +164,10 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
         <SafeAreaView style={[styles.filterModal, { backgroundColor: c.surface }]}>
           {/* Header */}
           <View style={[styles.filterHeader, { borderBottomColor: c.borderSubtle }]}>
-            <Text style={[styles.filterTitle, { color: c.text }]}>Filters</Text>
+            <Text style={[styles.filterTitle, { color: c.text }]}>{t('submissions.filters')}</Text>
             <View style={styles.filterHeaderActions}>
               <TouchableOpacity onPress={onReset} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={[styles.resetBtn, { color: c.primary }]}>Reset</Text>
+                <Text style={[styles.resetBtn, { color: c.primary }]}>{t('submissions.reset')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Text style={[styles.closeBtn, { color: c.textSecondary }]}>✕</Text>
@@ -176,7 +178,7 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
           <ScrollView style={styles.filterBody} showsVerticalScrollIndicator={false}>
             {/* Search */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: c.text }]}>Search</Text>
+              <Text style={[styles.filterLabel, { color: c.text }]}>{t('submissions.search')}</Text>
               <TouchableOpacity
                 style={[styles.searchBar, { backgroundColor: c.input, borderColor: c.borderSubtle }]}
                 onPress={() => {}}
@@ -189,7 +191,7 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
                     { color: filters.search ? c.text : c.textTertiary },
                   ]}
                 >
-                  {filters.search || 'Search questions…'}
+                  {filters.search || t('submissions.searchPlaceholder')}
                 </Text>
                 {filters.search ? (
                   <TouchableOpacity onPress={() => onChange({ ...filters, search: '' })}>
@@ -199,14 +201,14 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
               </TouchableOpacity>
               {filters.search ? null : (
                 <Text style={[styles.searchHint, { color: c.textTertiary }]}>
-                  Type in the search bar above to search questions
+                  {t('submissions.searchHint')}
                 </Text>
               )}
             </View>
 
             {/* Status */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: c.text }]}>Status</Text>
+              <Text style={[styles.filterLabel, { color: c.text }]}>{t('submissions.status')}</Text>
               <ChipGroup
                 options={STATUS_OPTIONS}
                 value={filters.status}
@@ -216,7 +218,7 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
 
             {/* Season */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: c.text }]}>Season</Text>
+              <Text style={[styles.filterLabel, { color: c.text }]}>{t('submissions.season')}</Text>
               <ChipGroup
                 options={SEASON_OPTIONS}
                 value={filters.season}
@@ -226,7 +228,7 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
 
             {/* Category */}
             <View style={styles.filterSection}>
-              <Text style={[styles.filterLabel, { color: c.text }]}>Category</Text>
+              <Text style={[styles.filterLabel, { color: c.text }]}>{t('submissions.category')}</Text>
               <ChipGroup
                 options={CATEGORY_OPTIONS}
                 value={filters.domainCategory}
@@ -242,7 +244,7 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
               onPress={onClose}
               activeOpacity={0.8}
             >
-              <Text style={styles.applyBtnText}>Apply Filters</Text>
+              <Text style={styles.applyBtnText}>{t('submissions.applyFilters')}</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -263,6 +265,7 @@ interface QuestionViewModalProps {
 function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModalProps) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const { t } = useTranslation();
 
   if (!question) return null;
 
@@ -301,7 +304,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
         <SafeAreaView style={[styles.viewModal, { backgroundColor: c.surface }]}>
           {/* Header */}
           <View style={[styles.viewModalHeader, { borderBottomColor: c.borderSubtle }]}>
-            <Text style={[styles.viewModalTitle, { color: c.text }]}>Question Details</Text>
+            <Text style={[styles.viewModalTitle, { color: c.text }]}>{t('submissions.questionDetails')}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Text style={[styles.viewModalClose, { color: c.textSecondary }]}>✕</Text>
             </TouchableOpacity>
@@ -366,7 +369,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
               <View style={[styles.viewRejectionBox, { backgroundColor: c.error + '12', borderColor: c.error + '30' }]}>
                 <Ionicons name="warning" size={16} color={c.error} />
                 <View style={styles.viewRejectionContent}>
-                  <Text style={[styles.viewRejectionLabel, { color: c.error }]}>Rejection Reason</Text>
+                  <Text style={[styles.viewRejectionLabel, { color: c.error }]}>{t('submissions.rejectionReason')}</Text>
                   <Text style={[styles.viewRejectionText, { color: c.error }]}>{question.rejectionReason}</Text>
                 </View>
               </View>
@@ -380,11 +383,11 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
                 <View style={styles.editWindowNote}>
                   <Ionicons name="timer" size={14} color={c.textTertiary} />
                   <Text style={[styles.editWindowNoteText, { color: c.textTertiary }]}>
-                    Edit window: {editTimeRemaining}
+                    {t('submissions.editWindowNote', { time: editTimeRemaining })}
                   </Text>
                 </View>
               ) : (
-                <Text style={[styles.editWindowExpired, { color: c.textTertiary }]}>Edit window closed</Text>
+                <Text style={[styles.editWindowExpired, { color: c.textTertiary }]}>{t('submissions.editWindowExpiredNote')}</Text>
               )}
               <TouchableOpacity
                 style={[
@@ -396,7 +399,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
               >
                 <Ionicons name="pencil" size={16} color={withinEditWindow ? '#fff' : c.textTertiary} />
                 <Text style={[styles.viewEditBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>
-                  Edit Question
+                  {t('submissions.editQuestion')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -414,6 +417,7 @@ export function SubmissionsScreen() {
   const c = theme.colors;
   const { showToast } = useToast();
   const navigation = useNavigation<NativeStackNavigationProp<MainTabParamList>>();
+  const { t } = useTranslation();
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -496,7 +500,7 @@ export function SubmissionsScreen() {
 
   function handleEdit(question: Question) {
     if (!isWithinEditWindow(question)) {
-      showToast('The edit window of 30 seconds has closed for this submission.', 'warning');
+      showToast(t('submissions.editWindowClosed'), 'warning');
       return;
     }
     navigation.navigate('AskQuestion', { questionId: question.id } as never);
@@ -546,7 +550,7 @@ export function SubmissionsScreen() {
                 disabled={!withinEditWindow}
               >
                 <Ionicons name="pencil" size={14} color={withinEditWindow ? '#fff' : c.textTertiary} />
-                <Text style={[styles.editBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>Edit</Text>
+                <Text style={[styles.editBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>{t('submissions.editQuestion')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -608,7 +612,7 @@ export function SubmissionsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
-          <Text style={[styles.centerText, { color: c.textSecondary }]}>Loading your submissions…</Text>
+          <Text style={[styles.centerText, { color: c.textSecondary }]}>{t('submissions.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -625,9 +629,9 @@ export function SubmissionsScreen() {
           <View style={styles.header}>
             <View style={styles.titleRow}>
               <View style={styles.titleRowLeft}>
-                <Text style={[styles.title, { color: c.text }]}>Submissions</Text>
+                <Text style={[styles.title, { color: c.text }]}>{t('submissions.title')}</Text>
                 <TooltipIcon
-                  description="Browse all approved, pending, and rejected questions. Use filters to narrow down by status, domain, season, or state."
+                  description={t('submissions.filterTooltip')}
                   size={18}
                 />
               </View>
@@ -650,7 +654,7 @@ export function SubmissionsScreen() {
             </View>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {questions.length > 0
-                ? `${questions.length} submission${questions.length !== 1 ? 's' : ''}`
+                ? t('submissions.subtitle', { count: questions.length, s: questions.length !== 1 ? 's' : '' })
                 : 'No questions submitted yet'}
             </Text>
           </View>
@@ -658,9 +662,9 @@ export function SubmissionsScreen() {
         ListEmptyComponent={
           <View style={styles.centered}>
             <Ionicons name="chatbubbles-outline" size={56} color={c.textTertiary} />
-            <Text style={[styles.emptyTitle, { color: c.textSecondary }]}>No submissions found</Text>
+            <Text style={[styles.emptyTitle, { color: c.textSecondary }]}>{t('submissions.noSubmissions')}</Text>
             <Text style={[styles.emptyBody, { color: c.textTertiary }]}>
-              {activeFilterCount > 0 ? 'Try adjusting your filters' : 'Start by asking a question from the Ask tab'}
+              {activeFilterCount > 0 ? t('submissions.adjustFilters') : t('submissions.startAsking')}
             </Text>
           </View>
         }

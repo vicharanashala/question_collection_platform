@@ -11,6 +11,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
@@ -34,6 +35,7 @@ export function EditProfileScreen({ navigation }: Props) {
   const c = theme.colors;
   const { user, refreshProfile } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [name, setName] = useState(user?.name ?? '');
   const [state, setState] = useState(user?.state ?? '');
@@ -45,9 +47,9 @@ export function EditProfileScreen({ navigation }: Props) {
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!name.trim() || name.trim().length < 2) errs.name = 'Name must be at least 2 characters';
-    if (!state) errs.state = 'Please select your state';
-    if (!district.trim()) errs.district = 'District is required';
+    if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
+    if (!state) errs.state = t('editProfile.selectState');
+    if (!district.trim()) errs.district = t('editProfile.districtRequired');
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -64,10 +66,10 @@ export function EditProfileScreen({ navigation }: Props) {
         languagePreference: language,
       });
       await refreshProfile();
-      showToast('Profile updated successfully', 'success');
+      showToast(t('editProfile.saveSuccess'), 'success');
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
-      const msg = getErrorMessage(err, 'Failed to update profile. Please try again.');
+      const msg = getErrorMessage(err, t('editProfile.saveFailed'));
       showToast(msg, 'error');
     } finally {
       setLoading(false);
@@ -99,25 +101,25 @@ export function EditProfileScreen({ navigation }: Props) {
         >
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: c.borderSubtle }]}>
-            <Text style={[styles.title, { color: c.text }]}>Edit Profile</Text>
+            <Text style={[styles.title, { color: c.text }]}>{t('editProfile.title')}</Text>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              Update your personal information
+              {t('editProfile.subtitle')}
             </Text>
           </View>
 
           <View style={styles.form}>
-            <FieldGroup icon="person-outline" label="Personal Info">
+            <FieldGroup icon="person-outline" label={t('editProfile.personalInfo')}>
               <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                 <Input
-                  label="Full Name"
-                  placeholder="Enter your full legal name"
+                  label={t('editProfile.fullName')}
+                  placeholder={t('editProfile.fullNamePlaceholder')}
                   value={name}
                   onChangeText={(t) => { setName(t); setErrors({}); }}
                   error={errors.name}
                   autoCapitalize="words"
                 />
                 <Select
-                  label="Preferred Language"
+                  label={t('editProfile.preferredLanguage')}
                   value={language}
                   options={languageOptions}
                   onChange={setLanguage}
@@ -125,25 +127,25 @@ export function EditProfileScreen({ navigation }: Props) {
               </View>
             </FieldGroup>
 
-            <FieldGroup icon="location-outline" label="Location">
+            <FieldGroup icon="location-outline" label={t('editProfile.locationSection')}>
               <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                 <Select
-                  label="State"
+                  label={t('question.state')}
                   value={state}
                   options={stateOptions}
                   onChange={(v) => { setState(v); setErrors({}); }}
                   error={errors.state}
                 />
                 <Input
-                  label="District"
-                  placeholder="Enter your district"
+                  label={t('question.district')}
+                  placeholder={t('editProfile.districtPlaceholder')}
                   value={district}
                   onChangeText={(t) => { setDistrict(t); setErrors({}); }}
                   error={errors.district}
                 />
                 <Input
-                  label="Block / Mandal (Optional)"
-                  placeholder="Enter your block or mandal"
+                  label={t('question.blockOptional')}
+                  placeholder={t('question.blockPlaceholder')}
                   value={block}
                   onChangeText={setBlock}
                 />
@@ -151,13 +153,13 @@ export function EditProfileScreen({ navigation }: Props) {
             </FieldGroup>
 
             <Button
-              title="Save Changes"
+              title={t('editProfile.saveChanges')}
               onPress={handleSave}
               loading={loading}
               style={styles.saveButton}
             />
             <Button
-              title="Cancel"
+              title={t('editProfile.cancel')}
               variant="ghost"
               onPress={() => navigation.goBack()}
               style={styles.cancelButton}
