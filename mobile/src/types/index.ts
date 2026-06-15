@@ -22,6 +22,13 @@ export enum UserRole {
   SUPER_ADMIN = 'super_admin',
 }
 
+export enum CropSeason {
+  KHARIF = 'kharif',
+  RABI = 'rabi',
+  ZAID = 'zaid',
+  YEAR_ROUND = 'year_round',
+}
+
 // ─── API Types ─────────────────────────────────────────────────────────────────
 
 export interface AuthTokens {
@@ -42,6 +49,17 @@ export interface PublicUser {
   verificationStatus: VerificationStatus;
   role: UserRole;
   createdAt: string;
+  // Farmer / FPO
+  farmSize?: string;
+  cropType?: string;
+  // Student
+  courseName?: string;
+  universityName?: string;
+  // FPO / Volunteer / NGO
+  organisationName?: string;
+  memberRole?: string;
+  // Crop details (populated from /users/me)
+  crops?: CropDetail[];
 }
 
 export interface AuthResponse {
@@ -93,7 +111,21 @@ export interface Question {
 export interface CropDetail {
   id: string;
   cropName: string;
-  season: string | null;
+  season: CropSeason | string | null;
+}
+
+// ─── Profile Completion ───────────────────────────────────────────────────────
+
+export interface ProfileFieldStatus {
+  field: string;
+  label: string;
+  completed: boolean;
+}
+
+export interface ProfileCompletionStatus {
+  percentage: number;
+  fields: ProfileFieldStatus[];
+  isComplete: boolean;
 }
 
 // ─── Form DTOs ─────────────────────────────────────────────────────────────────

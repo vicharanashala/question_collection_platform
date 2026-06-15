@@ -19,7 +19,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
-import { VerificationStatus } from '../../types';
+import { VerificationStatus, UserCategory } from '../../types';
+import { ProfileCompletionWidget } from '../../components/ProfileCompletionWidget';
 import { getLanguageName } from '../../utils/languageDetection';
 import type { CropDetail, WalletBalance } from '../../types';
 import type { SupportedLanguageCode } from '../../i18n';
@@ -63,6 +64,18 @@ export function ProfileScreen() {
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
+
+  const seasonLabels: Record<string, string> = {
+    kharif: t('season.kharif'),
+    rabi: t('season.rabi'),
+    zaid: t('season.zaid'),
+    year_round: t('season.year_round'),
+  };
+
+  function seasonLabel(raw: string | null) {
+    if (!raw) return '';
+    return seasonLabels[raw] ?? raw;
+  }
 
   const fetchAll = useCallback(async () => {
     setLoadingData(true);
@@ -108,6 +121,9 @@ export function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* ── Profile Completion ───────────────────────────── */}
+        <ProfileCompletionWidget onEdit={() => navigation.navigate('EditProfile')} hasCrops={crops.length > 0} />
 
         {/* ── Hero ─────────────────────────────────────────── */}
         <View style={[styles.hero, { backgroundColor: c.heroBg }]}>
@@ -213,26 +229,35 @@ export function ProfileScreen() {
         </View>
 
         {/* ── Crops ─────────────────────────────────────────── */}
-        {crops.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionTitleRow}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.myCrops')}</Text>
-              <TooltipIcon description="The crops you have registered. Questions are tagged to specific crops for better relevance matching." />
-            </View>
-            <View style={[styles.cropsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+        <View style={styles.section}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.myCrops')}</Text>
+            <TooltipIcon description="The crops you have registered. Questions are tagged to specific crops for better relevance matching." />
+          </View>
+          <TouchableOpacity
+            style={[styles.cropsCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}
+            activeOpacity={0.75}
+            onPress={() => navigation.navigate('CropManagement')}
+          >
+            {crops.length > 0 ? (
               <View style={styles.cropTags}>
                 {crops.map((crop) => (
                   <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.primary + '18' }]}>
                     <Text style={[styles.cropTagText, { color: c.primary }]}>🌱 {crop.cropName}</Text>
                     {crop.season && (
-                      <Text style={[styles.cropSeason, { color: c.textSecondary }]}> ({crop.season})</Text>
+                      <Text style={[styles.cropSeason, { color: c.textSecondary }]}> ({seasonLabel(crop.season)})</Text>
                     )}
                   </View>
                 ))}
               </View>
-            </View>
-          </View>
-        )}
+            ) : (
+              <View style={styles.noCropsRow}>
+                <Ionicons name="add-circle-outline" size={20} color={c.textTertiary} />
+                <Text style={[styles.noCropsText, { color: c.textTertiary }]}>{t('profile.noCrops')}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
         {/* ── Appearance ────────────────────────────────────── */}
         <View style={styles.section}>
@@ -351,6 +376,8 @@ const styles = StyleSheet.create({
   cropTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.spacing3, paddingVertical: tokens.spacing1 + 2, borderRadius: tokens.radiusFull },
   cropTagText: { fontSize: 13, fontWeight: '600' },
   cropSeason: { fontSize: 11 },
+  noCropsRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, paddingVertical: tokens.spacing1 },
+  noCropsText: { fontSize: 13 },
 
   // Actions
   actionRow: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusMd, padding: tokens.spacing4, marginBottom: tokens.spacing2, gap: tokens.spacing3 },

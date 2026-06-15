@@ -19,6 +19,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   EditProfile: undefined;
+  CropManagement: undefined;
 };
 
 // Screen props for useNavigation hooks

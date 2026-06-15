@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingScreen } from '../components/Loading';
-import { AuthStackParamList, MainTabParamList } from './types';
+import { AuthStackParamList, MainTabParamList, RootStackParamList } from './types';
 
 // Auth screens
 import { LoginPhoneScreen } from '../screens/Auth/LoginPhoneScreen';
@@ -24,14 +24,9 @@ import { QuestionScreen } from '../screens/Question/QuestionScreen';
 import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
+import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
 
-// ─── Type definitions ─────────────────────────────────────────────────────────
 
-type RootStackParamList = {
-  Auth: undefined;
-  Main: undefined;
-  EditProfile: undefined;
-};
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
 
@@ -181,6 +176,11 @@ export function AppNavigator() {
             <RootStack.Screen
               name="EditProfile"
               component={EditProfileScreen}
+              options={{ presentation: 'modal' }}
+            />
+            <RootStack.Screen
+              name="CropManagement"
+              component={CropManagementScreen}
               options={{ presentation: 'modal' }}
             />
           </>

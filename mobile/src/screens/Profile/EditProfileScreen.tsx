@@ -21,6 +21,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../api/client';
 import { INDIAN_STATES, LANGUAGES } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
+import { UserCategory } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
 
@@ -42,6 +43,13 @@ export function EditProfileScreen({ navigation }: Props) {
   const [district, setDistrict] = useState(user?.district ?? '');
   const [block, setBlock] = useState(user?.block ?? '');
   const [language, setLanguage] = useState(user?.languagePreference ?? 'en');
+  // Category-specific
+  const [farmSize, setFarmSize] = useState((user as any)?.farmSize ?? '');
+  const [primaryCrop, setPrimaryCrop] = useState((user as any)?.cropType ?? '');
+  const [courseName, setCourseName] = useState((user as any)?.courseName ?? '');
+  const [universityName, setUniversityName] = useState((user as any)?.universityName ?? '');
+  const [organisationName, setOrganisationName] = useState((user as any)?.organisationName ?? '');
+  const [memberRole, setMemberRole] = useState((user as any)?.memberRole ?? '');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -50,6 +58,17 @@ export function EditProfileScreen({ navigation }: Props) {
     if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
     if (!state) errs.state = t('editProfile.selectState');
     if (!district.trim()) errs.district = t('editProfile.districtRequired');
+    if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
+      if (!farmSize.trim()) errs.farmSize = t('editProfile.farmSizeRequired');
+    }
+    if (user?.category === UserCategory.STUDENT) {
+      if (!courseName.trim()) errs.courseName = t('editProfile.courseNameRequired');
+      if (!universityName.trim()) errs.universityName = t('editProfile.universityNameRequired');
+    }
+    if ([UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory)) {
+      if (!organisationName.trim()) errs.organisationName = t('editProfile.organisationNameRequired');
+      if (!memberRole.trim()) errs.role = t('editProfile.roleRequired');
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -58,13 +77,24 @@ export function EditProfileScreen({ navigation }: Props) {
     if (!validate()) return;
     setLoading(true);
     try {
-      await userApi.updateProfile({
+      const payload: Record<string, unknown> = {
         name: name.trim(),
         state,
         district: district.trim(),
         block: block.trim() || undefined,
         languagePreference: language,
-      });
+      };
+      if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
+        payload.farmSize = farmSize.trim();
+        payload.cropType = primaryCrop.trim();
+      } else if (user?.category === UserCategory.STUDENT) {
+        payload.courseName = courseName.trim();
+        payload.universityName = universityName.trim();
+      } else {
+        payload.organisationName = organisationName.trim();
+        payload.memberRole = memberRole.trim();
+      }
+      await userApi.updateProfile(payload);
       await refreshProfile();
       showToast(t('editProfile.saveSuccess'), 'success');
     } catch (err: unknown) {
@@ -151,6 +181,69 @@ export function EditProfileScreen({ navigation }: Props) {
                 />
               </View>
             </FieldGroup>
+
+            {/* Category-specific fields */}
+            {(user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) && (
+              <FieldGroup icon="leaf-outline" label={t('editProfile.farmerDetails')}>
+                <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <Input
+                    label={t('editProfile.farmSize')}
+                    placeholder={t('editProfile.farmSizePlaceholder')}
+                    value={farmSize}
+                    onChangeText={(t) => { setFarmSize(t); setErrors({}); }}
+                    error={errors.farmSize}
+                  />
+                  <Input
+                    label={t('editProfile.primaryCrop')}
+                    placeholder={t('editProfile.primaryCropPlaceholder')}
+                    value={primaryCrop}
+                    onChangeText={setPrimaryCrop}
+                  />
+                </View>
+              </FieldGroup>
+            )}
+
+            {user?.category === UserCategory.STUDENT && (
+              <FieldGroup icon="school-outline" label={t('editProfile.studentDetails')}>
+                <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <Input
+                    label={t('editProfile.courseName')}
+                    placeholder={t('editProfile.courseNamePlaceholder')}
+                    value={courseName}
+                    onChangeText={(t) => { setCourseName(t); setErrors({}); }}
+                    error={errors.courseName}
+                  />
+                  <Input
+                    label={t('editProfile.universityName')}
+                    placeholder={t('editProfile.universityNamePlaceholder')}
+                    value={universityName}
+                    onChangeText={(t) => { setUniversityName(t); setErrors({}); }}
+                    error={errors.universityName}
+                  />
+                </View>
+              </FieldGroup>
+            )}
+
+            {[UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory) && (
+              <FieldGroup icon="business-outline" label={t('editProfile.organisationDetails')}>
+                <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <Input
+                    label={t('editProfile.organisationName')}
+                    placeholder={t('editProfile.organisationNamePlaceholder')}
+                    value={organisationName}
+                    onChangeText={(t) => { setOrganisationName(t); setErrors({}); }}
+                    error={errors.organisationName}
+                  />
+                  <Input
+                    label={t('editProfile.role')}
+                    placeholder={t('editProfile.rolePlaceholder')}
+                    value={memberRole}
+                    onChangeText={(t) => { setMemberRole(t); setErrors({}); }}
+                    error={errors.role}
+                  />
+                </View>
+              </FieldGroup>
+            )}
 
             <Button
               title={t('editProfile.saveChanges')}
