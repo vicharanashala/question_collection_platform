@@ -1,51 +1,65 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
-import { AppTheme, lightTheme, darkTheme, Theme } from '../utils/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppTheme, lightTheme, darkTheme, Theme, ThemePreference, THEME_STORAGE_KEY } from '../utils/theme';
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// ─── Context ─────────────────────────────────────────────────────────────────
 
 interface ThemeContextValue {
   theme: AppTheme;
   resolved: Theme; // 'light' | 'dark'
   isDark: boolean;
-  toggle: () => void;
-  setMode: (m: Theme) => void;
+  preference: ThemePreference;
+  setPreference: (p: ThemePreference) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function resolveTheme(preference: ThemePreference, system: ReturnType<typeof useColorScheme>): Theme {
+  if (preference === 'system') return (system ?? 'light') as Theme;
+  return preference;
+}
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  /** Override system default. Useful for dev-mode toggles. */
-  defaultMode?: Theme;
 }
 
-export function ThemeProvider({ children, defaultMode }: ThemeProviderProps) {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const system = useColorScheme(); // 'light' | 'dark' | null
-  const [override, setOverride] = useState<Theme | null>(defaultMode ?? null);
+  const [preference, setPreferenceState] = useState<ThemePreference>('system');
+  const [loaded, setLoaded] = useState(false);
 
-  // Sync override with system when no override is set
+  // Load persisted preference from AsyncStorage on mount
   useEffect(() => {
-    if (override !== null) return;
-    // System colour scheme has changed; state update not strictly needed
-    // since we always derive from [override ?? system ?? 'light']
-  }, [system, override]);
+    AsyncStorage.getItem(THEME_STORAGE_KEY).then((stored) => {
+      if (stored === 'light' || stored === 'dark' || stored === 'system') {
+        setPreferenceState(stored);
+      }
+      setLoaded(true);
+    }).catch(() => {
+      setLoaded(true);
+    });
+  }, []);
 
-  const resolved: Theme = (override ?? (system ?? 'light')) as Theme;
+  const resolved: Theme = resolveTheme(preference, system);
   const theme = resolved === 'dark' ? darkTheme : lightTheme;
 
-  const toggle = useCallback(() => {
-    setOverride((prev) => (prev === 'dark' ? 'light' : prev === 'light' ? 'dark' : 'dark'));
+  const setPreference = useCallback(async (p: ThemePreference) => {
+    setPreferenceState(p);
+    await AsyncStorage.setItem(THEME_STORAGE_KEY, p).catch(() => {});
   }, []);
 
-  const setMode = useCallback((m: Theme) => {
-    setOverride(m);
-  }, []);
+  // Provide placeholder until AsyncStorage loads to avoid flash
+  if (!loaded) return null;
 
   return (
-    <ThemeContext.Provider value={{ theme, resolved, isDark: resolved === 'dark', toggle, setMode }}>
+    <ThemeContext.Provider
+      value={{ theme, resolved, isDark: resolved === 'dark', preference, setPreference }}
+    >
       {children}
     </ThemeContext.Provider>
   );

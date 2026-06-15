@@ -119,23 +119,23 @@ export function HomeScreen() {
         }
       >
         {/* ── Hero greeting ──────────────────────────────────────────────── */}
-        <View style={[styles.hero, { backgroundColor: c.primary }]}>
+        <View style={[styles.hero, { backgroundColor: c.heroBg }]}>
           <View style={styles.heroTop}>
             <View style={styles.heroLeft}>
-              <Text style={styles.heroGreeting}>{greeting},</Text>
-              <Text style={styles.heroName}>{user?.name ?? 'Farmer'}</Text>
-              <View style={[styles.categoryPill, { backgroundColor: '#ffffff22' }]}>
+              <Text style={[styles.heroGreeting, { color: c.heroFg + 'cc' }]}>{greeting},</Text>
+              <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
+              <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
                 <Text style={styles.categoryEmoji}>
                   {user?.category ? categoryEmoji[user.category] : '🌱'}
                 </Text>
-                <Text style={styles.categoryLabel}>
+                <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
                   {user?.category ? categoryLabels[user.category] : 'Farmer'}
                 </Text>
               </View>
             </View>
             <View style={styles.avatarContainer}>
-              <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
-                <Text style={styles.avatarText}>
+              <View style={[styles.avatarWrap, { backgroundColor: c.heroFg + '33' }]}>
+                <Text style={[styles.avatarText, { color: c.heroBg }]}>
                   {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
                 </Text>
               </View>
@@ -149,8 +149,8 @@ export function HomeScreen() {
 
           {user?.state && (
             <View style={styles.heroLocation}>
-              <Ionicons name="location-outline" size={13} color="#ffffffcc" />
-              <Text style={styles.heroLocationText}>
+              <Ionicons name="location-outline" size={13} color={c.heroFg + 'aa'} />
+              <Text style={[styles.heroLocationText, { color: c.heroFg + 'cc' }]}>
                 {user.state}
                 {user.district ? ` › ${user.district}` : ''}
               </Text>

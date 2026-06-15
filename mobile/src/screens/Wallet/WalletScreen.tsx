@@ -10,6 +10,7 @@ import {
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
+import { Ionicons } from '@expo/vector-icons';
 import { EmptyState } from '../../components/Loading';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
@@ -125,12 +126,12 @@ export function WalletScreen() {
         </View>
 
         {/* Balance Card */}
-        <View style={[styles.balanceCard, { backgroundColor: c.primary }]}>
-          <Text style={[styles.balanceLabel, { color: c.primaryForeground }]}>Available Balance</Text>
-          <Text style={[styles.balanceAmount, { color: c.primaryForeground }]}>
+        <View style={[styles.balanceCard, { backgroundColor: c.heroBg }]}>
+          <Text style={[styles.balanceLabel, { color: c.heroFg }]}>Available Balance</Text>
+          <Text style={[styles.balanceAmount, { color: c.heroFg }]}>
             ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
-          <Text style={[styles.balanceCurrency, { color: c.primaryForeground }]}>INR</Text>
+          <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>INR</Text>
         </View>
 
         {/* Withdraw */}
@@ -186,7 +187,8 @@ export function WalletScreen() {
           <Text style={[styles.sectionTitle, { color: c.text }]}>Transaction History</Text>
           {transactions.length === 0 ? (
             <EmptyState
-              icon="📜"
+              icon="receipt-outline"
+              iconColor={c.textTertiary}
               title="No transactions yet"
               message="Your reward credits will appear here after question approvals"
             />

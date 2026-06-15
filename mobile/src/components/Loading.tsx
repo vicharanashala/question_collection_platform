@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { tokens } from '../utils/theme';
 import { useTheme } from '../hooks/useTheme';
 
@@ -38,17 +39,23 @@ export function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
 
 interface EmptyStateProps {
   icon?: string;
+  iconColor?: string;
   title: string;
   message?: string;
   action?: React.ReactNode;
 }
 
-export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
+export function EmptyState({ icon, iconColor, title, message, action }: EmptyStateProps) {
   const { theme } = useTheme();
   const c = theme.colors;
+  const color = iconColor ?? c.textTertiary;
   return (
     <View style={styles.emptyContainer}>
-      {icon && <Text style={styles.emptyIcon}>{icon}</Text>}
+      {icon && (
+        <View style={styles.emptyIconWrap}>
+          <Ionicons name={icon as any} size={40} color={color} />
+        </View>
+      )}
       <Text style={[styles.emptyTitle, { color: c.text }]}>{title}</Text>
       {message && <Text style={[styles.emptyMessage, { color: c.textSecondary }]}>{message}</Text>}
       {action && <View style={styles.emptyAction}>{action}</View>}
@@ -79,6 +86,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing8,
     paddingVertical: tokens.spacing8 * 2,
   },
+  emptyIconWrap: { marginBottom: tokens.spacing4 },
   emptyIcon: { fontSize: 48, marginBottom: tokens.spacing4 },
   emptyTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center', marginBottom: tokens.spacing2 },
   emptyMessage: { fontSize: 14, textAlign: 'center', marginBottom: tokens.spacing5 },

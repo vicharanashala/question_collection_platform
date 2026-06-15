@@ -40,7 +40,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 type ProfileStats = { totalQuestions: number };
 
 export function ProfileScreen() {
-  const { theme } = useTheme();
+  const { theme, preference, setPreference } = useTheme();
   const c = theme.colors;
   const { user, logout, refreshProfile } = useAuth();
   const navigation = useNavigation<any>();
@@ -111,22 +111,22 @@ export function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <View style={[styles.hero, { backgroundColor: c.primary }]}>
+        <View style={[styles.hero, { backgroundColor: c.heroBg }]}>
           <View style={styles.heroTop}>
             <View style={styles.heroLeft}>
-              <Text style={styles.heroName}>{user?.name ?? 'Farmer'}</Text>
-              <View style={[styles.categoryPill, { backgroundColor: '#ffffff22' }]}>
+              <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
+              <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
                 <Text style={styles.categoryEmoji}>
                   {user?.category ? categoryEmoji[user.category] : '🌱'}
                 </Text>
-                <Text style={styles.categoryLabel}>
+                <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
                   {user?.category ? categoryLabels[user.category] : ''}
                 </Text>
               </View>
             </View>
             <View style={styles.avatarContainer}>
-              <View style={[styles.avatarWrap, { backgroundColor: '#ffffff33' }]}>
-                <Text style={styles.avatarText}>
+              <View style={[styles.avatarWrap, { backgroundColor: c.heroFg + '33' }]}>
+                <Text style={[styles.avatarText, { color: c.heroBg }]}>
                   {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
                 </Text>
               </View>
@@ -140,8 +140,8 @@ export function ProfileScreen() {
 
           {user?.mobileNumber && (
             <View style={styles.heroContact}>
-              <Ionicons name="call-outline" size={12} color="#ffffffaa" />
-              <Text style={styles.heroContactText}>{user.mobileNumber}</Text>
+              <Ionicons name="call-outline" size={12} color={c.heroFg + 'aa'} />
+              <Text style={[styles.heroContactText, { color: c.heroFg + 'aa' }]}>{user.mobileNumber}</Text>
             </View>
           )}
         </View>
@@ -233,6 +233,46 @@ export function ProfileScreen() {
             </View>
           </View>
         )}
+
+        {/* ── Theme toggle ─────────────────────────────────────────────── */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Appearance</Text>
+          <View style={[styles.themeCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            {(['light', 'dark', 'system'] as const).map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.themeOption, { borderBottomColor: c.borderSubtle, borderBottomWidth: mode !== 'system' ? 1 : 0 }]}
+                activeOpacity={0.7}
+                onPress={() => setPreference(mode)}
+              >
+                <View style={[styles.themeOptionIcon, { backgroundColor: mode === preference ? c.primary + '18' : c.surfaceVariant }]}>
+                  <Ionicons
+                    name={
+                      mode === 'light' ? 'sunny-outline' :
+                      mode === 'dark' ? 'moon-outline' :
+                      'phone-portrait-outline'
+                    }
+                    size={15}
+                    color={mode === preference ? c.primary : c.textSecondary}
+                  />
+                </View>
+                <View style={styles.themeOptionText}>
+                  <Text style={[styles.themeOptionLabel, { color: c.text }]}>
+                    {mode === 'light' ? 'Light' : mode === 'dark' ? 'Dark' : 'System'}
+                  </Text>
+                  <Text style={[styles.themeOptionSub, { color: c.textSecondary }]}>
+                    {mode === 'light' ? 'Always light theme' :
+                     mode === 'dark' ? 'Always dark theme' :
+                     'Follow device settings'}
+                  </Text>
+                </View>
+                {mode === preference && (
+                  <Ionicons name="checkmark-circle" size={18} color={c.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
         {/* ── Actions ───────────────────────────────────────────────────── */}
         <View style={styles.section}>
@@ -451,4 +491,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+
+  // ── Theme ─────────────────────────────────────────────────────────────────
+  themeCard: {
+    borderRadius: tokens.radiusMd,
+    overflow: 'hidden',
+  },
+  themeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing3 + 2,
+    paddingHorizontal: tokens.spacing4,
+    gap: tokens.spacing3,
+  },
+  themeOptionIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: tokens.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeOptionText: { flex: 1 },
+  themeOptionLabel: { fontSize: 14, fontWeight: '600' },
+  themeOptionSub: { fontSize: 11, marginTop: 1 },
 });

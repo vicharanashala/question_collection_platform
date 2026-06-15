@@ -39,6 +39,9 @@ export const tokens = {
 // ─── Theme type ───────────────────────────────────────────────────────────────
 
 export type Theme = 'light' | 'dark';
+export type ThemePreference = 'light' | 'dark' | 'system';
+
+export const THEME_STORAGE_KEY = 'app_theme_preference';
 
 export interface AppTheme {
   theme: Theme;
@@ -78,6 +81,8 @@ export interface AppTheme {
     // Semantic aliases for component use
     surface: string;      // main card/sheet background
     surfaceVariant: string; // secondary surface (input bg, badge bg)
+    heroBg: string;       // hero/header card background
+    heroFg: string;       // hero/header card foreground text
     text: string;         // primary readable text
     textSecondary: string; // muted/secondary text
     textTertiary: string; // placeholder, disabled text
@@ -86,6 +91,7 @@ export interface AppTheme {
     success: string;      // positive / completed
     warning: string;      // warning / pending
     error: string;        // destructive / error
+    primaryBg: string;    // card/hero background using primary color
   };
 }
 
@@ -105,6 +111,9 @@ export const lightTheme: AppTheme = {
     // Primary (teal-green — agricultural)
     primary: '#0D9488',          // oklch(0.8348 0.1302 160.908)
     primaryForeground: '#FFFFFF',
+    primaryBg: '#0D9488',
+    heroBg: '#0D9488',
+    heroFg: '#FFFFFF',
     // Secondary
     secondary: '#F3F4F6',
     secondaryForeground: '#111827',
@@ -163,6 +172,9 @@ export const darkTheme: AppTheme = {
     popoverForeground: '#F1F5F9',
     primary: '#2DD4BF',          // oklch(0.4365 0.1044 156.7556)
     primaryForeground: '#042F2E',
+    primaryBg: '#1A4D47',  // dark — teal, less saturated than full primary
+    heroBg: '#1A4D47',
+    heroFg: '#E0F7F4',
     secondary: '#1E293B',
     secondaryForeground: '#F1F5F9',
     muted: '#1E293B',
@@ -188,8 +200,8 @@ export const darkTheme: AppTheme = {
     sidebarBorder: '#334155',
     sidebarRing: '#2DD4BF',
     // Semantic aliases
-    surface: '#1E293B',
-    surfaceVariant: '#334155',
+    surface: '#1F2D3D',  // slightly lighter than #1E293B for less heaviness
+    surfaceVariant: '#2A3A4E',
     text: '#F1F5F9',
     textSecondary: '#94A3B8',
     textTertiary: '#64748B',
