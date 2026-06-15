@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { RouteProp, useRoute } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -40,6 +40,7 @@ import { AdminUsersScreen } from '../screens/Admin/AdminUsersScreen';
 import { AdminUserDetailScreen } from '../screens/Admin/AdminUserDetailScreen';
 import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
 import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
+import { AdminProfileScreen } from '../screens/Admin/AdminProfileScreen';
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
 
@@ -106,9 +107,13 @@ function AuthNavigator() {
 function AdminNavigator() {
   const { theme } = useTheme();
   const c = theme.colors;
+  const adminNav = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
 
   const headerRight = () => (
-    <TouchableOpacity style={{ marginRight: tokens.spacing3 }}>
+    <TouchableOpacity
+      style={{ marginRight: tokens.spacing3 }}
+      onPress={() => adminNav.navigate('AdminProfile')}
+    >
       <Ionicons name="person-circle" size={28} color={c.primary} />
     </TouchableOpacity>
   );
@@ -156,6 +161,11 @@ function AdminNavigator() {
       <AdminStackNav.Screen
         name="AdminWithdrawals"
         component={AdminWithdrawalsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminProfile"
+        component={AdminProfileScreen}
         options={{ headerShown: false }}
       />
     </AdminStackNav.Navigator>

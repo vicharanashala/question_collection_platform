@@ -168,9 +168,12 @@ export class AdminService {
 
   async listReviewQueue(dto: ListReviewQueueDto) {
     const { page = 1, limit = 20, queueType } = dto;
+    // Include 'pending' so questions awaiting AI review are visible in the queue.
+    // Once the AI review pipeline exists, pending questions will be auto-transitioned
+    // to ai_review/human_review and this fallback can be removed.
     const statuses = queueType === 'ai_review'
       ? [QuestionStatus.AI_REVIEW]
-      : [QuestionStatus.HUMAN_REVIEW, QuestionStatus.AI_REVIEW];
+      : [QuestionStatus.PENDING, QuestionStatus.HUMAN_REVIEW, QuestionStatus.AI_REVIEW];
 
     const [items, total] = await this.questionRepo.findAndCount({
       where: { status: In(statuses) },

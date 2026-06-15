@@ -243,11 +243,15 @@ export function AdminDashboardScreen() {
             <Text style={[styles.greeting, { color: c.textSecondary }]}>{today}</Text>
             <Text style={[styles.adminName, { color: c.text }]}>{user?.name ?? 'Admin'}</Text>
           </View>
-          <View style={[styles.avatarCircle, { backgroundColor: c.primary + '18' }]}>
+          <TouchableOpacity
+            style={[styles.avatarCircle, { backgroundColor: c.primary + '18' }]}
+            onPress={() => navigation.navigate('AdminProfile')}
+            activeOpacity={0.7}
+          >
             <Text style={[styles.avatarText, { color: c.primary }]}>
               {(user?.name ?? 'A').charAt(0).toUpperCase()}
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* ── Alert banner ──────────────────────────────────────────────── */}

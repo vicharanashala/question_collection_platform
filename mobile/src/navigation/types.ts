@@ -27,6 +27,7 @@ export type AdminStackParamList = {
   AdminQuestionDetail: { questionId: string };
   AdminConfig: undefined;
   AdminWithdrawals: undefined;
+  AdminProfile: undefined;
 };
 
 export type RootStackParamList = {
