@@ -16,8 +16,9 @@ Each task file represents a deliverable to be completed. Task files use the form
 | 8 | Fraud Detection (Duplicate + Spam) | Security | Pending |
 | 9 | Admin Dashboard | Admin | Pending |
 | 10 | Knowledge Repository | Data | Pending |
-| 11 | Analytics + Export (CSV/Excel) | Analytics | Pending |
-| 12 | Multi-Language Support (22 Indian Languages) | i18n | Pending |
+| 12 | Multi-Language Support (22 Indian Languages) | i18n | Completed |
+| 13 | Light & Dark Mode (Theme Persistence) | UI | Pending |
+| 14 | Analytics + Export (CSV/Excel) | Analytics | Pending |
 
 ## Progress
 
