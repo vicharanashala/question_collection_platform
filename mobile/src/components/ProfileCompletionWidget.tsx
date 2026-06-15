@@ -8,10 +8,6 @@ import { tokens } from '../utils/theme';
 import { UserCategory } from '../types';
 import type { PublicUser, ProfileCompletionStatus } from '../types';
 
-const WARNING = '#F59E0B';
-const WARNING_BG = '#FEF3C7';
-const WARNING_ALPHA = '#F59E0B';
-
 function fieldLabel(key: string, t: (k: string) => string): string {
   const map: Record<string, string> = {
     name: t('profile.completion.fieldName'),
@@ -31,7 +27,11 @@ function fieldLabel(key: string, t: (k: string) => string): string {
   return map[key] ?? key;
 }
 
-function buildStatus(user: PublicUser | null, hasCrops: boolean, t: (k: string) => string): ProfileCompletionStatus {
+function buildStatus(
+  user: PublicUser | null,
+  hasCrops: boolean,
+  t: (k: string) => string,
+): ProfileCompletionStatus {
   if (!user) return { percentage: 0, fields: [], isComplete: false };
 
   const check = (key: string, value: unknown) => ({
@@ -58,7 +58,7 @@ function buildStatus(user: PublicUser | null, hasCrops: boolean, t: (k: string) 
     catFields.push(check('universityName', (user as any).universityName));
   } else {
     catFields.push(check('organisationName', (user as any).organisationName));
-    catFields.push(check('role', (user as any).role));
+    catFields.push(check('role', (user as any).memberRole));
   }
 
   const allFields = [...baseFields, ...catFields, check('crops', hasCrops)];
@@ -83,42 +83,75 @@ export function ProfileCompletionWidget({ onEdit, hasCrops }: Props) {
 
   if (status.isComplete) return null;
 
+  const completed = status.fields.filter((f) => f.completed).length;
+  const total = status.fields.length;
   const missing = status.fields.filter((f) => !f.completed);
 
+  // Choose bar colour by how close to done
+  const barColor = status.percentage >= 75 ? c.success : status.percentage >= 40 ? c.warning : c.error;
+
   return (
-    <View style={[styles.wrap, { backgroundColor: WARNING_BG, borderColor: WARNING }]}>
+    <View style={[styles.wrap, { backgroundColor: c.surface, borderColor: c.border }]}>
+      {/* ── Header row ──────────────────────────────────────── */}
       <View style={styles.header}>
-        <View style={[styles.iconWrap, { backgroundColor: WARNING_ALPHA + '22' }]}>
-          <Ionicons name="alert-circle" size={16} color={WARNING} />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={[styles.title, { color: c.text }]}>{t('profile.completion.title')}</Text>
+        <View>
+          <Text style={[styles.heading, { color: c.text }]}>
+            {t('profile.completion.title')}
+          </Text>
           <Text style={[styles.sub, { color: c.textSecondary }]}>
-            {t('profile.completion.incomplete', { percent: status.percentage })}
+            {completed}/{total} {t('profile.completion.fieldsComplete', { defaultValue: 'fields complete' })}
+            {' · '}
+            <Text style={{ color: barColor, fontWeight: '700' }}>{status.percentage}%</Text>
           </Text>
         </View>
-        <TouchableOpacity onPress={onEdit} activeOpacity={0.7}>
-          <Text style={[styles.editBtn, { color: c.primary }]}>{t('profile.edit')}</Text>
+        <TouchableOpacity
+          onPress={onEdit}
+          activeOpacity={0.7}
+          style={[styles.editBtn, { backgroundColor: c.primary + '18' }]}
+        >
+          <Ionicons name="create-outline" size={13} color={c.primary} />
+          <Text style={[styles.editBtnText, { color: c.primary }]}>{t('profile.edit')}</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.fields}>
-        {missing.slice(0, 4).map((f) => (
-          <View key={f.field} style={[styles.fieldPill, { backgroundColor: WARNING_ALPHA + '18' }]}>
-            <Ionicons name="ellipse" size={6} color={WARNING} style={{ marginRight: 5 }} />
-            <Text style={[styles.fieldPillText, { color: c.text }]}>{f.label}</Text>
-          </View>
-        ))}
-        {missing.length > 4 && (
-          <Text style={[styles.moreText, { color: c.textSecondary }]}>
-            +{missing.length - 4} more
-          </Text>
-        )}
+      {/* ── Progress bar ────────────────────────────────────── */}
+      <View style={[styles.barTrack, { backgroundColor: c.borderSubtle }]}>
+        <View
+          style={[
+            styles.barFill,
+            { backgroundColor: barColor, width: `${status.percentage}%` },
+          ]}
+        />
       </View>
 
-      <View style={[styles.progressTrack, { backgroundColor: c.borderSubtle }]}>
-        <View style={[styles.progressFill, { backgroundColor: WARNING, width: `${status.percentage}%` }]} />
-      </View>
+      {/* ── Missing fields ──────────────────────────────────── */}
+      {missing.length > 0 && (
+        <View style={styles.fieldsSection}>
+          <Text style={[styles.fieldsLabel, { color: c.textTertiary }]}>
+            {t('profile.completion.stillMissing', { defaultValue: 'Still missing' })}:
+          </Text>
+          <View style={styles.pillRow}>
+            {missing.slice(0, 6).map((f) => (
+              <View
+                key={f.field}
+                style={[styles.pill, { backgroundColor: barColor + '18', borderColor: barColor + '40' }]}
+              >
+                <Ionicons name="add-circle" size={10} color={barColor} style={{ marginRight: 4 }} />
+                <Text style={[styles.pillText, { color: c.text }]} numberOfLines={1}>
+                  {f.label}
+                </Text>
+              </View>
+            ))}
+            {missing.length > 6 && (
+              <View style={[styles.pill, { backgroundColor: c.muted, borderColor: c.border }]}>
+                <Text style={[styles.pillText, { color: c.textSecondary }]}>
+                  +{missing.length - 6}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -126,21 +159,74 @@ export function ProfileCompletionWidget({ onEdit, hasCrops }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     marginHorizontal: tokens.spacing4,
-    marginBottom: tokens.spacing4,
+    marginBottom: tokens.spacing3,
     borderRadius: tokens.radiusMd,
     padding: tokens.spacing4,
     borderWidth: 1,
   },
-  header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: tokens.spacing3 },
-  iconWrap: { width: 28, height: 28, borderRadius: tokens.radius, alignItems: 'center', justifyContent: 'center', marginRight: tokens.spacing2 },
-  headerText: { flex: 1 },
-  title: { fontSize: 13, fontWeight: '700', marginBottom: 2 },
-  sub: { fontSize: 12 },
-  editBtn: { fontSize: 13, fontWeight: '700' },
-  fields: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing1 + 2, marginBottom: tokens.spacing3 },
-  fieldPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.spacing2 + 2, paddingVertical: 3, borderRadius: tokens.radiusFull },
-  fieldPillText: { fontSize: 11, fontWeight: '500' },
-  moreText: { fontSize: 11, alignSelf: 'center', marginLeft: tokens.spacing1 },
-  progressTrack: { height: 4, borderRadius: tokens.radiusFull, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: tokens.radiusFull },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: tokens.spacing3,
+    gap: tokens.spacing2,
+  },
+  heading: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  sub: {
+    fontSize: 12,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: tokens.spacing1 + 2,
+    borderRadius: tokens.radiusFull,
+    gap: 4,
+    flexShrink: 0,
+  },
+  editBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  barTrack: {
+    height: 8,
+    borderRadius: tokens.radiusFull,
+    overflow: 'hidden',
+    marginBottom: tokens.spacing3,
+  },
+  barFill: {
+    height: '100%',
+    borderRadius: tokens.radiusFull,
+  },
+  fieldsSection: {
+    gap: tokens.spacing2,
+  },
+  fieldsLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.spacing1 + 2,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: tokens.spacing2 + 2,
+    paddingVertical: 3,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 1,
+    maxWidth: '100%',
+  },
+  pillText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
 });
