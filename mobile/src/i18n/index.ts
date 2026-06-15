@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import HttpBackend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import * as RNLocalize from 'react-native-localize';
+import { getLocales } from 'expo-localization';
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া', script: 'Bengali' },
@@ -36,7 +36,7 @@ export const RTL_LANGUAGES: SupportedLanguageCode[] = ['ur', 'ks', 'sd'];
 
 // Get device locale and find matching supported language
 export function getDeviceLanguage(): SupportedLanguageCode {
-  const locales = RNLocalize.getLocales();
+  const locales = getLocales();
   if (locales.length === 0) return 'hi';
 
   for (const locale of locales) {
