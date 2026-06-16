@@ -14,11 +14,11 @@ Each task file represents a deliverable to be completed. Task files use the form
 | 6 | Reward Wallet System | Wallet | Pending |
 | 7 | Withdrawal System (UPI + Bank Transfer) | Wallet | Pending |
 | 8 | Fraud Detection (Duplicate + Spam) | Security | Pending |
-| 9 | Admin Dashboard | Admin | Pending |
+| 9 | Admin Dashboard | Admin | Completed |
 | 10 | Knowledge Repository | Data | Pending |
 | 12 | Multi-Language Support (22 Indian Languages) | i18n | Completed |
-| 13 | Light & Dark Mode (Theme Persistence) | UI | Pending |
-| 14 | Analytics + Export (CSV/Excel) | Analytics | Pending |
+| 13 | Light & Dark Mode (Theme Persistence) | UI | Completed |
+| 14 | Web Admin UI (React+Tailwind) | Web | In Progress |
 
 ## Progress
 
