@@ -2,18 +2,26 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../../database/entities';
 
 export interface JwtPayload {
   sub: string;
   mobileNumber: string;
   role: string;
+  tokenVersion: number;
   iat?: number;
   exp?: number;
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -29,8 +37,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload.sub || !payload.mobileNumber) {
       throw new UnauthorizedException('Invalid token payload');
     }
+
     // Token signature and expiry are already verified by Passport.
-    // We trust the payload — userId is embedded as `sub`.
+    // Now verify the user still exists in the DB.
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify tokenVersion matches — invalidates tokens issued before the last login/logout
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException('Session expired. Please login again.');
+    }
+
     return {
       id: payload.sub,
       mobileNumber: payload.mobileNumber,

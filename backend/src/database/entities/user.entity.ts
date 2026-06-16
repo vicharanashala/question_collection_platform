@@ -47,6 +47,9 @@ export class User {
   @Column({ name: 'language_preference', type: 'varchar', length: 50 })
   languagePreference: string;
 
+  @Column({ name: 'token_version', type: 'int', default: 0 })
+  tokenVersion: number;
+
   @Column({ name: 'otp_hash', type: 'varchar', length: 255, nullable: true })
   otpHash: string | null;
 

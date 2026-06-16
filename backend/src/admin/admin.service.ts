@@ -276,7 +276,12 @@ export class AdminService {
     };
   }
 
-  async reviewQuestion(adminId: string, questionId: string, dto: ReviewActionDto) {
+  async reviewQuestion(
+    reviewerId: string,
+    questionId: string,
+    dto: ReviewActionDto,
+    reviewerRole: UserRole = UserRole.ADMIN,
+  ) {
     const question = await this.questionRepo.findOne({ where: { id: questionId } });
     if (!question) throw new NotFoundException('Question not found');
 
@@ -284,17 +289,19 @@ export class AdminService {
       throw new BadRequestException('Question is not in a reviewable state');
     }
 
+    const actorType: ActorType =
+      reviewerRole === UserRole.CURATOR ? ActorType.CURATOR : ActorType.ADMIN;
     const oldStatus = question.status;
 
     if (dto.action === 'approve') {
       await this.questionRepo.update(questionId, {
         status: QuestionStatus.APPROVED,
-        reviewerId: adminId,
+        reviewerId: reviewerId,
         reviewedAt: new Date(),
       });
       await this.logAudit({
-        actorType: ActorType.ADMIN,
-        actorId: adminId,
+        actorType,
+        actorId: reviewerId,
         action: AuditAction.QUESTION_APPROVED,
         entityType: 'question',
         entityId: questionId,
@@ -307,13 +314,13 @@ export class AdminService {
     if (dto.action === 'reject') {
       await this.questionRepo.update(questionId, {
         status: QuestionStatus.REJECTED,
-        reviewerId: adminId,
+        reviewerId: reviewerId,
         reviewedAt: new Date(),
         rejectionReason: dto.reason ?? null,
       });
       await this.logAudit({
-        actorType: ActorType.ADMIN,
-        actorId: adminId,
+        actorType,
+        actorId: reviewerId,
         action: AuditAction.QUESTION_REJECTED,
         entityType: 'question',
         entityId: questionId,
@@ -326,6 +333,15 @@ export class AdminService {
     // request_info — move to human_review
     await this.questionRepo.update(questionId, {
       status: QuestionStatus.HUMAN_REVIEW,
+    });
+    await this.logAudit({
+      actorType,
+      actorId: reviewerId,
+      action: 'question_review_request_info',
+      entityType: 'question',
+      entityId: questionId,
+      oldValue: { status: oldStatus },
+      newValue: { status: QuestionStatus.HUMAN_REVIEW },
     });
     return { success: true, action: 'request_info', questionId };
   }
@@ -894,7 +910,127 @@ export class AdminService {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 8: Helpers
+  // Section 8: Question Metrics (curator read-only)
+  // ─────────────────────────────────────────────────────────────
+
+  async getQuestionMetrics(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state, cropType } = query;
+    const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const baseWhere: Record<string, unknown> = {
+      submittedAt: Between(from, to),
+    };
+    if (state) baseWhere['state'] = state;
+    if (cropType) baseWhere['cropType'] = cropType;
+
+    const [
+      total,
+      approved,
+      rejected,
+      pending,
+      aiReview,
+      humanReview,
+      duplicates,
+    ] = await Promise.all([
+      this.questionRepo.count({ where: { ...baseWhere } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.PENDING } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.AI_REVIEW } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.HUMAN_REVIEW } }),
+      this.questionRepo.count({ where: { ...baseWhere, duplicateFlag: true } }),
+    ]);
+
+    // Submission volume by day
+    const dailyRaw: Array<{ date: string; total: string; approved: string; rejected: string }> = await this.questionRepo
+      .createQueryBuilder('q')
+      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(*)', 'total')
+      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+      .addSelect("COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)", 'rejected')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    // Top crops by volume
+    const cropBreakdownRaw: Array<{ cropType: string; count: number }> = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('q.cropType', 'cropType')
+      .addSelect('COUNT(*)', 'count')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy('q.cropType')
+      .orderBy('count', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    // State breakdown
+    const stateBreakdownRaw: Array<{ state: string; count: number }> = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('q.state', 'state')
+      .addSelect('COUNT(*)', 'count')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy('q.state')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+
+    // Average AI confidence
+    const avgConfidence = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('AVG(q.aiConfidenceScore)', 'avg')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .andWhere('q.aiConfidenceScore IS NOT NULL')
+      .getRawOne<{ avg: string | null }>();
+
+    // Review turnaround (avg time from submittedAt to reviewedAt for approved/rejected)
+    const avgTurnaroundRaw = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('AVG(EXTRACT(EPOCH FROM (q.reviewedAt - q.submittedAt)))', 'avg_seconds')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .andWhere('q.reviewedAt IS NOT NULL')
+      .andWhere('q.status IN (:...statuses)', {
+        statuses: [QuestionStatus.APPROVED, QuestionStatus.REJECTED],
+      })
+      .getRawOne<{ avg_seconds: string | null }>();
+
+    const avgTurnaroundSeconds = Number(avgTurnaroundRaw?.avg_seconds ?? 0);
+    const avgTurnaroundMinutes = Math.round(avgTurnaroundSeconds / 60);
+
+    return {
+      period: { from: from.toISOString(), to: to.toISOString() },
+      summary: {
+        total,
+        approved,
+        rejected,
+        pending,
+        inAiReview: aiReview,
+        inHumanReview: humanReview,
+        duplicates,
+        approvalRate: total > 0 ? Math.round((approved / total) * 100) : 0,
+        rejectionRate: total > 0 ? Math.round((rejected / total) * 100) : 0,
+      },
+      dailyVolume: dailyRaw.map((r) => ({
+        date: r.date,
+        total: Number(r.total),
+        approved: Number(r.approved),
+        rejected: Number(r.rejected),
+      })),
+      cropBreakdown: cropBreakdownRaw.map((r) => ({
+        cropType: r.cropType,
+        count: Number(r.count),
+      })),
+      stateBreakdown: stateBreakdownRaw.map((r) => ({
+        state: r.state,
+        count: Number(r.count),
+      })),
+      avgAiConfidence: avgConfidence?.avg ? parseFloat(Number(avgConfidence.avg).toFixed(2)) : null,
+      avgReviewTurnaroundMinutes: avgTurnaroundMinutes || null,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 9: Helpers
   // ─────────────────────────────────────────────────────────────
 
   private async isSuperAdmin(adminId: string): Promise<boolean> {

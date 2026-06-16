@@ -259,9 +259,20 @@ export class AuthService {
 
   /**
    * Issue access + refresh JWT tokens for an authenticated user.
+   * Increments tokenVersion to invalidate all previously issued tokens.
    */
   async issueTokens(user: User): Promise<AuthTokens> {
-    const payload = { sub: user.id, mobileNumber: user.mobileNumber, role: user.role };
+    // Increment tokenVersion — invalidates all previously issued tokens
+    await this.userRepo.increment({ id: user.id }, 'tokenVersion', 1);
+    const updatedUser = await this.userRepo.findOne({ where: { id: user.id } });
+    const tokenVersion = updatedUser?.tokenVersion ?? 1;
+
+    const payload = {
+      sub: user.id,
+      mobileNumber: user.mobileNumber,
+      role: user.role,
+      tokenVersion,
+    };
 
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
@@ -271,20 +282,29 @@ export class AuthService {
 
   /**
    * Refresh access token using a valid refresh token.
+   * Also validates tokenVersion to reject tokens invalidated by logout.
    */
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
     try {
-      const payload = this.jwtService.verify<{ sub: string; mobileNumber: string; role: UserRole }>(
-        refreshToken,
-      );
+      const payload = this.jwtService.verify<{
+        sub: string;
+        mobileNumber: string;
+        role: UserRole;
+        tokenVersion: number;
+      }>(refreshToken);
 
       const user = await this.userRepo.findOne({ where: { id: payload.sub } });
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
 
+      if (user.tokenVersion !== payload.tokenVersion) {
+        throw new UnauthorizedException('Session expired. Please login again.');
+      }
+
       return this.issueTokens(user);
-    } catch {
+    } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -303,6 +323,14 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid or expired access token');
     }
+  }
+
+  /**
+   * Increment tokenVersion to invalidate all existing sessions for a user.
+   * Called on logout.
+   */
+  async incrementTokenVersion(userId: string): Promise<void> {
+    await this.userRepo.increment({ id: userId }, 'tokenVersion', 1);
   }
 
   // ─── Profile ─────────────────────────────────────────────────────────────────

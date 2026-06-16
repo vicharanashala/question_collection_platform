@@ -11,7 +11,6 @@ import {
   HttpStatus,
   Req,
   Res,
-  Header,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AdminService } from './admin.service';
@@ -30,35 +29,37 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
-import { RolesGuard as RolesGuardImport } from '../common/guards/roles.guard';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
 }
 
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuardImport)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   // ─────────────────────────────────────────────────────────────
-  // Section 1: User Management
+  // Section 1: User Management — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('users')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
   }
 
   @Get('users/:id')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getUserDetail(@Param('id') id: string) {
     return this.adminService.getUserDetail(id);
   }
 
   @Post('users/:id/suspend')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async suspendUser(
     @Param('id') id: string,
@@ -69,13 +70,14 @@ export class AdminController {
   }
 
   @Post('users/:id/verify')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async verifyUser(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.adminService.verifyUser(req.user.id, id);
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 2: Question Review
+  // Section 2: Question Review — curator allowed
   // ─────────────────────────────────────────────────────────────
 
   @Get('questions/queue')
@@ -97,20 +99,30 @@ export class AdminController {
     @Body() dto: ReviewActionDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.adminService.reviewQuestion(req.user.id, id, dto);
+    const role = req.user.role as UserRole;
+    return this.adminService.reviewQuestion(req.user.id, id, dto, role);
+  }
+
+  /** Question quality and volume metrics — curator read-only */
+  @Get('questions/metrics')
+  @HttpCode(HttpStatus.OK)
+  async getQuestionMetrics(@Query() dto: AnalyticsQueryDto) {
+    return this.adminService.getQuestionMetrics(dto);
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 3: Configuration
+  // Section 3: Configuration — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('config')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async listConfig() {
     return this.adminService.listConfig();
   }
 
   @Post('config')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.CREATED)
   async createConfig(
     @Body() dto: CreateConfigDto,
@@ -120,6 +132,7 @@ export class AdminController {
   }
 
   @Patch('config')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async updateConfig(
     @Body() dto: UpdateConfigDto,
@@ -129,7 +142,7 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 4: Analytics Dashboard
+  // Section 4: Analytics Dashboard — curator allowed (metrics only)
   // ─────────────────────────────────────────────────────────────
 
   @Get('analytics/dashboard')
@@ -139,38 +152,43 @@ export class AdminController {
   }
 
   @Get('analytics/rewards')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getRewardSummary(dto);
   }
 
   @Get('analytics/reward-logs')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.listRewardLogs(dto);
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 5: Fraud
+  // Section 5: Fraud — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('fraud')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getFraudStats(@Query() dto: { page?: number; limit?: number; state?: string }) {
     return this.adminService.getFraudStats(dto);
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 6: Withdrawals
+  // Section 6: Withdrawals — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('withdrawals')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async listWithdrawals(@Query() dto: ListWithdrawalsDto) {
     return this.adminService.listWithdrawals(dto);
   }
 
   @Post('withdrawals/:id/process')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async processWithdrawal(
     @Param('id') id: string,
@@ -181,10 +199,11 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 7: Export
+  // Section 7: Export — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('export')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async exportData(@Query() dto: ExportQueryDto, @Res() res: Response) {
     const result = await this.adminService.exportData(dto);
@@ -195,8 +214,6 @@ export class AdminController {
       return res.send(result.data);
     }
 
-    // For Excel, return JSON and the client can handle conversion
-    // A full Excel implementation would use a package like exceljs
     return res.json(result);
   }
 }

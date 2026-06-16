@@ -19,11 +19,13 @@ export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
   SUPER_ADMIN = 'super_admin',
+  CURATOR = 'curator',
 }
 
 export enum ActorType {
   USER = 'user',
   ADMIN = 'admin',
+  CURATOR = 'curator',
   SYSTEM = 'system',
 }
 

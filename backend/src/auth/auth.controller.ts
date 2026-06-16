@@ -94,5 +94,18 @@ export class AuthController {
     const user = await this.authService.getProfile(req.user.id);
     return { user };
   }
+
+  /**
+   * POST /auth/logout
+   * Invalidates the current session by incrementing tokenVersion.
+   * All previously issued tokens become invalid instantly.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Req() req: AuthenticatedRequest) {
+    await this.authService.incrementTokenVersion(req.user.id);
+    return { message: 'Logged out successfully' };
+  }
 }
 
