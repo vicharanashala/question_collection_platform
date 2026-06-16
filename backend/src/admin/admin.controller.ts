@@ -24,6 +24,7 @@ import {
   ExportQueryDto,
   ListWithdrawalsDto,
   ProcessWithdrawalDto,
+  CreateUserDto,
 } from './dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -43,6 +44,13 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
   // Section 1: User Management — curator blocked
   // ─────────────────────────────────────────────────────────────
+
+  @Post('users')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.CREATED)
+  async createUser(@Body() dto: CreateUserDto, @Req() req: AuthenticatedRequest) {
+    return this.adminService.createUser(req.user.id, req.user.role as UserRole, dto);
+  }
 
   @Get('users')
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)

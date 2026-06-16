@@ -74,6 +74,71 @@ export class AdminService {
   // Section 1: User Management
   // ─────────────────────────────────────────────────────────────
 
+  async createUser(
+    actorId: string,
+    actorRole: UserRole,
+    dto: {
+      name: string;
+      mobileNumber: string;
+      role: UserRole;
+      category: string;
+      state: string;
+      district: string;
+      block?: string;
+      languagePreference?: string;
+    },
+  ) {
+    // Super admin cannot create another super admin
+    if (actorRole === UserRole.SUPER_ADMIN && dto.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super admin cannot assign a super admin role.');
+    }
+
+    // Cannot create a super admin through this endpoint (only ADMIN can create one)
+    if (dto.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super admin role cannot be assigned via this endpoint.');
+    }
+
+    // Check for duplicate mobile number
+    const existing = await this.userRepo.findOne({ where: { mobileNumber: dto.mobileNumber } });
+    if (existing) {
+      throw new BadRequestException('A user with this mobile number already exists.');
+    }
+
+    const user = this.userRepo.create({
+      name: dto.name.trim(),
+      mobileNumber: dto.mobileNumber,
+      role: dto.role,
+      category: dto.category as any,
+      state: dto.state,
+      district: dto.district,
+      block: dto.block ?? null,
+      languagePreference: dto.languagePreference ?? 'en',
+      verificationStatus: VerificationStatus.VERIFIED,
+      tokenVersion: 0,
+      lastLoginAt: null,
+    });
+
+    await this.userRepo.save(user);
+
+    await this.logAudit({
+      actorType: actorRole === UserRole.CURATOR ? ActorType.CURATOR : ActorType.ADMIN,
+      actorId,
+      action: AuditAction.USER_REGISTERED,
+      entityType: 'user',
+      entityId: user.id,
+      newValue: {
+        name: user.name,
+        mobileNumber: user.mobileNumber,
+        role: user.role,
+        category: user.category,
+        state: user.state,
+        district: user.district,
+      },
+    });
+
+    return { user: this.toPublicUser(user) };
+  }
+
   async listUsers(dto: ListUsersDto) {
     const { page = 1, limit = 20, state, category, status, search, sortBy = 'createdAt', sortOrder = 'DESC' } = dto;
     const qb = this.userRepo
@@ -1036,6 +1101,23 @@ export class AdminService {
   private async isSuperAdmin(adminId: string): Promise<boolean> {
     const admin = await this.userRepo.findOne({ where: { id: adminId } });
     return admin?.role === UserRole.SUPER_ADMIN;
+  }
+
+  private toPublicUser(user: User): Record<string, unknown> {
+    return {
+      id: user.id,
+      mobileNumber: user.mobileNumber,
+      name: user.name,
+      category: user.category,
+      state: user.state,
+      district: user.district,
+      block: user.block,
+      languagePreference: user.languagePreference,
+      verificationStatus: user.verificationStatus,
+      role: user.role,
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt,
+    };
   }
 
   private async logAudit(params: {

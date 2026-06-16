@@ -5,3 +5,4 @@ export * from './admin-config.dto';
 export * from './analytics.dto';
 export * from './export.dto';
 export * from './withdrawal.dto';
+export * from './create-user.dto';
