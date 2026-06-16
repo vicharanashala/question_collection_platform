@@ -7,6 +7,7 @@ import { PayoutMethod } from '../common/enums';
 const mockWalletsService = () => ({
   getBalance: jest.fn(),
   getTransactions: jest.fn(),
+  getRewardTier: jest.fn(),
   withdraw: jest.fn(),
 });
 
@@ -95,6 +96,40 @@ describe('WalletsController', () => {
       await expect(
         controller.getTransactions(userReq as any, '1', '20'),
       ).rejects.toThrow('Wallet not found');
+    });
+  });
+
+  // ─── GET /wallets/me/tier ───────────────────────────────────────────────────
+
+  describe('GET /wallets/me/tier', () => {
+    it('should return tier info for the provided approvedCount', async () => {
+      const tierInfo = {
+        reward: 5,
+        maxApproved: 250,
+        nextTier: { reward: 10, maxApproved: 500 },
+      };
+      service.getRewardTier.mockReturnValue(tierInfo);
+
+      const result = await controller.getRewardTier(userReq as any, '100');
+
+      expect(result).toEqual(tierInfo);
+      expect(service.getRewardTier).toHaveBeenCalledWith(100);
+    });
+
+    it('should use approvedCount=0 when query param is omitted', async () => {
+      service.getRewardTier.mockReturnValue({ reward: 1, maxApproved: 25, nextTier: { reward: 5, maxApproved: 250 } });
+
+      await controller.getRewardTier(userReq as any, undefined as unknown as string);
+
+      expect(service.getRewardTier).toHaveBeenCalledWith(0);
+    });
+
+    it('should parse non-integer strings via parseInt', async () => {
+      service.getRewardTier.mockReturnValue({ reward: 10, maxApproved: 500, nextTier: null });
+
+      await controller.getRewardTier(userReq as any, '251');
+
+      expect(service.getRewardTier).toHaveBeenCalledWith(251);
     });
   });
 

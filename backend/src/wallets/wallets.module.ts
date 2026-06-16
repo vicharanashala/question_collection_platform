@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletsController } from './wallets.controller';
 import { WalletsService } from './wallets.service';
@@ -8,7 +8,7 @@ import { AdminModule } from '../admin/admin.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Wallet, Transaction, WithdrawalRequest, AuditLog]),
-    AdminModule,
+    forwardRef(() => AdminModule),
   ],
   controllers: [WalletsController],
   providers: [WalletsService],

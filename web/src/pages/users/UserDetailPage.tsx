@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 import { cn, formatDate, formatDateTime, getInitials } from '@/lib/utils'
 import {
   ArrowLeft, Ban, PauseCircle, PlayCircle, CheckCircle,
@@ -39,6 +38,7 @@ function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
     pending:      { label: 'Pending',      dot: 'bg-warning',  cls: 'border-warning/40 text-warning' },
     ai_review:    { label: 'AI Review',    dot: 'bg-chart2',   cls: 'border-chart2/40 text-chart2' },
     human_review: { label: 'Human Review', dot: 'bg-primary',  cls: 'border-primary/40 text-primary' },
+    held:         { label: 'Held',          dot: 'bg-[hsl(38,92%,50%)]', cls: 'border-[hsl(38,92%,50%)]/40 text-[hsl(38,92%,50%)]' },
     approved:     { label: 'Approved',     dot: 'bg-success',  cls: 'border-success/40 text-success' },
     rejected:     { label: 'Rejected',     dot: 'bg-destructive', cls: 'border-destructive/40 text-destructive' },
   }

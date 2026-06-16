@@ -334,8 +334,16 @@ export const curatorApi = {
   getQuestion: (id: string) =>
     request<import('@/types').Question>(`/admin/questions/${id}`),
 
-  reviewQuestion: (id: string, body: { action: 'approve' | 'reject'; reason?: string }) =>
-    request<{ message: string }>(`/admin/questions/${id}/review`, {
+  reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'hold'; reason?: string; heldReason?: string }) =>
+    request<{
+      message?: string;
+      success: boolean;
+      action: string;
+      rewardCredited?: number;
+      newBalance?: number;
+      rejectionReason?: string;
+      heldReason?: string;
+    }>(`/admin/questions/${id}/review`, {
       method: 'POST',
       body: JSON.stringify(body),
     }, false).finally(() => invalidateCache('/api/admin')),

@@ -1,10 +1,10 @@
 # Task 6: Reward Wallet System
 
 **Module:** Wallet  
-**Status:** Pending  
+**Status:** Completed  
 **Developer:** —  
 **Started:** —  
-**Completed:** —
+**Completed:** 2026-06-16
 
 ---
 

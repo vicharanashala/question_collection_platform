@@ -51,15 +51,21 @@ export class ListReviewQueueDto {
 
 export class ReviewActionDto {
   @IsString()
-  @IsIn(['approve', 'reject', 'request_info'])
-  action: 'approve' | 'reject' | 'request_info';
+  @IsIn(['approve', 'reject', 'hold', 'request_info'])
+  action: 'approve' | 'reject' | 'hold' | 'request_info';
 
+  /** Required when action is 'reject'; reason for rejection */
   @IsOptional()
   @IsString()
   reason?: string;
+
+  /** Required when action is 'hold'; reason for holding */
+  @IsOptional()
+  @IsString()
+  heldReason?: string;
 }
 
-export class RequestMoreInfoDto {
+export class HoldQuestionDto {
   @IsString()
-  message: string;
+  reason: string;
 }

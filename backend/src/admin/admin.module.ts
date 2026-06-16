@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './admin.controller';
@@ -12,6 +12,7 @@ import {
   AuditLog,
   AdminConfig,
 } from '../database/entities';
+import { WalletsModule } from '../wallets/wallets.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import {
       AuditLog,
       AdminConfig,
     ]),
+    forwardRef(() => WalletsModule),
   ],
   controllers: [AdminController],
   providers: [AdminService],

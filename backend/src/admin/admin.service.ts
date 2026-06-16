@@ -4,6 +4,8 @@ import {
   BadRequestException,
   ForbiddenException,
   OnModuleInit,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, ILike, Between, In } from 'typeorm';
@@ -39,6 +41,7 @@ import {
   FraudQueryDto,
 } from './dto';
 import { ConfigService } from '@nestjs/config';
+import { WalletsService } from '../wallets/wallets.service';
 
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
@@ -137,6 +140,8 @@ export class AdminService implements OnModuleInit {
     @InjectRepository(AdminConfig)
     private readonly configRepo: Repository<AdminConfig>,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => WalletsService))
+    private readonly walletsService: WalletsService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────
@@ -507,8 +512,9 @@ export class AdminService implements OnModuleInit {
     const question = await this.questionRepo.findOne({ where: { id: questionId } });
     if (!question) throw new NotFoundException('Question not found');
 
-    if (!['human_review', 'ai_review'].includes(question.status)) {
-      throw new BadRequestException('Question is not in a reviewable state');
+    const terminalStatuses = [QuestionStatus.APPROVED, QuestionStatus.REJECTED];
+    if (terminalStatuses.includes(question.status)) {
+      throw new BadRequestException('Question has already been reviewed');
     }
 
     const actorType: ActorType =
@@ -516,11 +522,26 @@ export class AdminService implements OnModuleInit {
     const oldStatus = question.status;
 
     if (dto.action === 'approve') {
+      // Count total approved questions for this user (to compute reward tier)
+      const approvedCount = await this.questionRepo.count({
+        where: { userId: question.userId, status: QuestionStatus.APPROVED },
+      });
+      // Include the one being approved right now in the count for tier calculation
+      const rewardTierCount = approvedCount + 1;
+
       await this.questionRepo.update(questionId, {
         status: QuestionStatus.APPROVED,
         reviewerId: reviewerId,
         reviewedAt: new Date(),
       });
+
+      // Credit reward to user wallet
+      const rewardResult = await this.walletsService.creditReward({
+        userId: question.userId,
+        questionId,
+        approvedCount: rewardTierCount,
+      });
+
       await this.logAudit({
         actorType,
         actorId: reviewerId,
@@ -528,12 +549,23 @@ export class AdminService implements OnModuleInit {
         entityType: 'question',
         entityId: questionId,
         oldValue: { status: oldStatus },
-        newValue: { status: QuestionStatus.APPROVED },
+        newValue: { status: QuestionStatus.APPROVED, reward: rewardResult.transaction.amount },
       });
-      return { success: true, action: 'approved', questionId };
+
+      return {
+        success: true,
+        action: 'approved',
+        questionId,
+        rewardCredited: rewardResult.transaction.amount,
+        newBalance: rewardResult.newBalance,
+      };
     }
 
     if (dto.action === 'reject') {
+      // Reason is required for rejection
+      if (!dto.reason || !dto.reason.trim()) {
+        throw new BadRequestException('Rejection reason is required when rejecting a question');
+      }
       await this.questionRepo.update(questionId, {
         status: QuestionStatus.REJECTED,
         reviewerId: reviewerId,
@@ -549,10 +581,34 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: oldStatus },
         newValue: { status: QuestionStatus.REJECTED, reason: dto.reason },
       });
-      return { success: true, action: 'rejected', questionId };
+      return { success: true, action: 'rejected', questionId, rejectionReason: dto.reason };
     }
 
-    // request_info — move to human_review
+    if (dto.action === 'hold') {
+      // Held reason is required when putting a question on hold
+      if (!dto.heldReason || !dto.heldReason.trim()) {
+        throw new BadRequestException('Held reason is required when holding a question');
+      }
+      // Held status: question is put on hold for later re-review
+      await this.questionRepo.update(questionId, {
+        status: QuestionStatus.HELD,
+        reviewerId: reviewerId,
+        reviewedAt: new Date(),
+        heldReason: dto.heldReason ?? null,
+      });
+      await this.logAudit({
+        actorType,
+        actorId: reviewerId,
+        action: 'question_held',
+        entityType: 'question',
+        entityId: questionId,
+        oldValue: { status: oldStatus },
+        newValue: { status: QuestionStatus.HELD, reason: dto.heldReason },
+      });
+      return { success: true, action: 'held', questionId, heldReason: dto.heldReason };
+    }
+
+    // request_info — move to human_review for more info from user
     await this.questionRepo.update(questionId, {
       status: QuestionStatus.HUMAN_REVIEW,
     });

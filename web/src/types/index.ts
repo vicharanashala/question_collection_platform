@@ -1,6 +1,6 @@
 export type UserRole = 'user' | 'admin' | 'super_admin' | 'curator';
 export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'suspended' | 'banned';
-export type QuestionStatus = 'pending' | 'ai_review' | 'human_review' | 'approved' | 'rejected';
+export type QuestionStatus = 'pending' | 'ai_review' | 'human_review' | 'held' | 'approved' | 'rejected';
 export type UserCategory = 'farmer' | 'fpo' | 'student' | 'volunteer' | 'ngo';
 
 export interface User {
@@ -43,6 +43,7 @@ export interface Question {
   reviewedAt: string | null;
   rejectionReason?: string | null;
   reviewerId?: string | null;
+  heldReason?: string | null;
 }
 
 export interface DashboardStats {

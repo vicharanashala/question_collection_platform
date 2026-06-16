@@ -300,4 +300,224 @@ describe('WalletsService', () => {
       expect(mockQueryRunner.release).toHaveBeenCalled();
     });
   });
+
+  // ─── getRewardTier ──────────────────────────────────────────────────────────
+
+  describe('getRewardTier', () => {
+    // Tier 1: 1–25 approved → ₹1  (stored as maxApproved=26: count < 26)
+    it.each([0, 1, 10, 25])(
+      'should return tier 1 (₹1) when approvedCount=%i',
+      (count) => {
+        const result = service.getRewardTier(count);
+        expect(result.reward).toBe(1);
+        expect(result.maxApproved).toBe(26);
+        expect(result.nextTier).not.toBeNull();
+        expect(result.nextTier?.reward).toBe(5);
+      },
+    );
+
+    // Tier 2: 26–250 approved → ₹5  (stored as maxApproved=251: count < 251)
+    it.each([26, 100, 250])(
+      'should return tier 2 (₹5) when approvedCount=%i',
+      (count) => {
+        const result = service.getRewardTier(count);
+        expect(result.reward).toBe(5);
+        expect(result.maxApproved).toBe(251);
+        expect(result.nextTier).not.toBeNull();
+        expect(result.nextTier?.reward).toBe(10);
+      },
+    );
+
+    // Tier 3: 251+ approved → ₹10  (stored as maxApproved=501: count < 501)
+    it.each([251, 500, 1000])(
+      'should return tier 3 (₹10) when approvedCount=%i',
+      (count) => {
+        const result = service.getRewardTier(count);
+        expect(result.reward).toBe(10);
+        expect(result.maxApproved).toBe(501);
+        expect(result.nextTier).toBeNull();
+      },
+    );
+
+    it('should return maxApproved=501 with nextTier=null at count=500 (boundary of tier 3)', () => {
+      const result = service.getRewardTier(500);
+      expect(result.reward).toBe(10);
+      expect(result.maxApproved).toBe(501);
+      expect(result.nextTier).toBeNull();
+    });
+  });
+
+  // ─── creditReward ───────────────────────────────────────────────────────────
+
+  describe('creditReward', () => {
+    let mockQueryRunner: {
+      connect: jest.Mock;
+      startTransaction: jest.Mock;
+      commitTransaction: jest.Mock;
+      rollbackTransaction: jest.Mock;
+      release: jest.Mock;
+      manager: {
+        findOne: jest.Mock;
+        update: jest.Mock;
+        create: jest.Mock;
+        save: jest.Mock;
+      };
+    };
+
+    const setupQueryRunner = (walletBalance = 0) => {
+      mockQueryRunner = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        startTransaction: jest.fn().mockResolvedValue(undefined),
+        commitTransaction: jest.fn().mockResolvedValue(undefined),
+        rollbackTransaction: jest.fn().mockResolvedValue(undefined),
+        release: jest.fn().mockResolvedValue(undefined),
+        manager: {
+          findOne: jest.fn().mockResolvedValue({ id: walletId, balance: walletBalance }),
+          update: jest.fn().mockResolvedValue(undefined),
+          create: jest
+            .fn()
+            .mockImplementation((_EntityClass, data) => ({
+              id: 'tx-new',
+              walletId: data.walletId,
+              type: data.type,
+              source: data.source,
+              amount: data.amount,
+              balanceAfter: data.balanceAfter,
+              referenceId: data.referenceId,
+              description: data.description,
+              status: data.status,
+            })),
+          save: jest.fn().mockImplementation((EntityClass, entity) => {
+            // TypeORM queryRunner.manager.save(EntityClass, entityInstance)
+            const instance = typeof EntityClass === 'function' ? entity : EntityClass;
+            return { id: 'tx-new', status: TransactionStatus.COMPLETED, ...(instance as object) };
+          }),
+        },
+      };
+      (
+        service as unknown as { dataSource: { createQueryRunner: jest.Mock } }
+      ).dataSource.createQueryRunner.mockReturnValue(mockQueryRunner);
+    };
+
+    beforeEach(() => {
+      // Reset the static mock between creditReward describe blocks
+      (service as unknown as { dataSource: { createQueryRunner: jest.Mock } }).dataSource.createQueryRunner.mockReset();
+    });
+
+    it('should throw NotFoundException when wallet not found', async () => {
+      walletRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.creditReward({
+          userId,
+          questionId: 'q-1',
+          approvedCount: 5,
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should credit ₹1 for tier 1 (approvedCount ≤ 25)', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(0);
+
+      const result = await service.creditReward({
+        userId,
+        questionId: 'q-tier1',
+        approvedCount: 5,
+      });
+
+      expect(result.transaction.amount).toBe(1);
+      expect(result.newBalance).toBe(1);
+      expect(mockQueryRunner.manager.update).toHaveBeenCalledWith(
+        Wallet,
+        walletId,
+        expect.objectContaining({ balance: 1 }),
+      );
+    });
+
+    it('should credit ₹5 for tier 2 (26 ≤ approvedCount ≤ 250)', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(100);
+
+      const result = await service.creditReward({
+        userId,
+        questionId: 'q-tier2',
+        approvedCount: 100,
+      });
+
+      expect(result.transaction.amount).toBe(5);
+      expect(result.newBalance).toBe(105);
+    });
+
+    it('should credit ₹10 for tier 3 (approvedCount ≥ 251)', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(500);
+
+      const result = await service.creditReward({
+        userId,
+        questionId: 'q-tier3',
+        approvedCount: 300,
+      });
+
+      expect(result.transaction.amount).toBe(10);
+      expect(result.newBalance).toBe(510);
+    });
+
+    it('should create a CREDIT transaction with REWARD source and completed status', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(0);
+
+      await service.creditReward({
+        userId,
+        questionId: 'q-tx-check',
+        approvedCount: 20,
+      });
+
+      expect(mockQueryRunner.manager.create).toHaveBeenCalledWith(
+        Transaction,
+        expect.objectContaining({
+          type: TransactionType.CREDIT,
+          source: TransactionSource.REWARD,
+          amount: 1,
+          status: TransactionStatus.COMPLETED,
+          referenceId: 'q-tx-check',
+        }),
+      );
+    });
+
+    it('should commit the transaction on success', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(0);
+
+      await service.creditReward({ userId, questionId: 'q-commit', approvedCount: 1 });
+
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
+    });
+
+    it('should rollback on unexpected error', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(0);
+      mockQueryRunner.manager.save.mockRejectedValue(new Error('DB write failure'));
+
+      await expect(
+        service.creditReward({ userId, questionId: 'q-err', approvedCount: 1 }),
+      ).rejects.toThrow('DB write failure');
+
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.release).toHaveBeenCalled();
+    });
+
+    it('should always release the query runner even on failure', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      setupQueryRunner(0);
+      mockQueryRunner.manager.save.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        service.creditReward({ userId, questionId: 'q-release', approvedCount: 1 }),
+      ).rejects.toThrow('DB error');
+
+      expect(mockQueryRunner.release).toHaveBeenCalled();
+    });
+  });
 });

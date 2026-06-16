@@ -29,6 +29,19 @@ export class WalletsController {
     return this.walletsService.getBalance(req.user.id);
   }
 
+  /**
+   * Returns the user's current reward tier based on approved question count.
+   * The query param `approvedCount` is supplied by the client (from its own tally
+   * or from the user profile).  The service does NOT query the DB for the count
+   * — it simply computes the tier from the provided number.
+   */
+  @Get('me/tier')
+  @HttpCode(HttpStatus.OK)
+  async getRewardTier(@Req() req: AuthenticatedRequest, @Query('approvedCount') approvedCount: string) {
+    const count = approvedCount !== undefined ? parseInt(approvedCount, 10) : 0;
+    return this.walletsService.getRewardTier(count);
+  }
+
   @Get('me/transactions')
   @HttpCode(HttpStatus.OK)
   async getTransactions(

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ConfigService } from '@nestjs/config';
+import { WalletsService } from '../wallets/wallets.service';
 import {
   User,
   Question,
@@ -170,6 +171,13 @@ describe('AdminService', () => {
   let configRepo: ReturnType<typeof mockConfigRepo>;
 
   beforeEach(async () => {
+    const mockWalletsService = {
+      creditReward: jest.fn().mockResolvedValue({
+        transaction: { id: 'tx-1', amount: 1, balanceAfter: 101 },
+        newBalance: 101,
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -181,6 +189,7 @@ describe('AdminService', () => {
         { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
         { provide: getRepositoryToken(AdminConfig), useFactory: mockConfigRepo },
         { provide: ConfigService, useFactory: () => ({ get: jest.fn() }) },
+        { provide: WalletsService, useValue: mockWalletsService },
       ],
     }).compile();
 

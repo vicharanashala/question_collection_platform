@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react'
-import { curatorApi, questionApi, getErrorMessage } from '@/api/client'
+import { curatorApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { cn, formatDate } from '@/lib/utils'
 import {
-  CheckCircle, XCircle,
-  MessageSquare, ChevronLeft, ChevronRight,
-  Clock, User, Star,
+  CheckCircle, XCircle, PauseCircle,
+  ChevronLeft, ChevronRight,
+  Clock, User, Star, IndianRupee,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
@@ -16,9 +22,12 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning text-white',
   ai_review: 'bg-ai_review text-white',
   human_review: 'bg-human_review text-white',
+  held: 'bg-[hsl(38,92%,50%)] text-white',
   approved: 'bg-success text-white',
   rejected: 'bg-destructive text-white',
 }
+
+const REVIEWABLE_STATUSES = ['pending', 'ai_review', 'human_review', 'held']
 
 export function ReviewsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
@@ -29,6 +38,20 @@ export function ReviewsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const limit = 20
 
+  // Reject dialog
+  const [rejectOpen, setRejectOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectQuestionId, setRejectQuestionId] = useState<string | null>(null)
+
+  // Hold dialog
+  const [holdOpen, setHoldOpen] = useState(false)
+  const [holdReason, setHoldReason] = useState('')
+  const [holdQuestionId, setHoldQuestionId] = useState<string | null>(null)
+
+  // Approve dialog (shows reward info)
+  const [approveOpen, setApproveOpen] = useState(false)
+  const [approveQuestionId, setApproveQuestionId] = useState<string | null>(null)
+
   useEffect(() => {
     setLoading(true)
     curatorApi.getReviewQueue({ page, limit, status: statusFilter || undefined })
@@ -38,11 +61,23 @@ export function ReviewsPage() {
   }, [page, statusFilter])
 
   async function handleApprove(id: string) {
-    setActionLoading(id)
+    setApproveQuestionId(id)
+    setApproveOpen(true)
+  }
+
+  async function confirmApprove() {
+    if (!approveQuestionId) return
+    setActionLoading(approveQuestionId)
     try {
-      await questionApi.approveQuestion(id)
-      toast.success('Question approved')
-      setQuestions((qs) => qs.filter((q) => q.id !== id))
+      const result = await curatorApi.reviewQuestion(approveQuestionId, { action: 'approve' })
+      toast.success(
+        result?.rewardCredited != null
+          ? `Question approved — ₹${result.rewardCredited} credited to farmer`
+          : 'Question approved',
+      )
+      setApproveOpen(false)
+      setApproveQuestionId(null)
+      setQuestions((qs) => qs.filter((q) => q.id !== approveQuestionId))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to approve'))
     } finally {
@@ -50,12 +85,26 @@ export function ReviewsPage() {
     }
   }
 
-  async function handleReject(id: string) {
-    setActionLoading(id)
+  function openRejectDialog(id: string) {
+    setRejectQuestionId(id)
+    setRejectReason('')
+    setRejectOpen(true)
+  }
+
+  async function confirmReject() {
+    if (!rejectQuestionId) return
+    if (!rejectReason.trim()) {
+      toast.error('Please provide a reason for rejection')
+      return
+    }
+    setActionLoading(rejectQuestionId)
     try {
-      await questionApi.rejectQuestion(id)
+      await curatorApi.reviewQuestion(rejectQuestionId, { action: 'reject', reason: rejectReason.trim() })
       toast.success('Question rejected')
-      setQuestions((qs) => qs.filter((q) => q.id !== id))
+      setRejectOpen(false)
+      setRejectQuestionId(null)
+      setRejectReason('')
+      setQuestions((qs) => qs.filter((q) => q.id !== rejectQuestionId))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to reject'))
     } finally {
@@ -63,7 +112,36 @@ export function ReviewsPage() {
     }
   }
 
+  function openHoldDialog(id: string) {
+    setHoldQuestionId(id)
+    setHoldReason('')
+    setHoldOpen(true)
+  }
+
+  async function confirmHold() {
+    if (!holdQuestionId) return
+    if (!holdReason.trim()) {
+      toast.error('Please provide a reason for holding this question')
+      return
+    }
+    setActionLoading(holdQuestionId)
+    try {
+      await curatorApi.reviewQuestion(holdQuestionId, { action: 'hold', heldReason: holdReason.trim() })
+      toast.success('Question put on hold')
+      setHoldOpen(false)
+      setHoldQuestionId(null)
+      setHoldReason('')
+      setQuestions((qs) => qs.filter((q) => q.id !== holdQuestionId))
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to hold question'))
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const totalPages = Math.ceil(total / limit)
+
+  const isActionDisabled = (id: string) => actionLoading === id
 
   return (
     <div className="space-y-5">
@@ -90,9 +168,12 @@ export function ReviewsPage() {
             <span className="flex items-center gap-1.5">
               <div className="h-2 w-2 rounded-full bg-[hsl(330,81%,60%)]" /> Human Review
             </span>
+            <span className="flex items-center gap-1.5">
+              <div className="h-2 w-2 rounded-full bg-[hsl(38,92%,50%)]" /> Held
+            </span>
           </div>
           <select
-            className="ml-auto h-9 rounded-md border border-input bg-surface-variant px-3 text-sm text-text !bg-surface-variant dark:!bg-surface-variant dark:border-border-subtle"
+            className="ml-auto h-9 rounded-md border border-input bg-surface-variant px-3 text-sm text-text"
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
           >
@@ -100,6 +181,7 @@ export function ReviewsPage() {
             <option value="pending">Pending</option>
             <option value="ai_review">AI Review</option>
             <option value="human_review">Human Review</option>
+            <option value="held">Held</option>
           </select>
         </div>
       </Card>
@@ -170,27 +252,39 @@ export function ReviewsPage() {
                   )}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex flex-col gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    className="bg-success hover:bg-success/90"
-                    onClick={() => handleApprove(q.id)}
-                    disabled={actionLoading === q.id}
-                    title="Approve"
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleReject(q.id)}
-                    disabled={actionLoading === q.id}
-                    title="Reject"
-                  >
-                    <XCircle className="h-4 w-4" />
-                  </Button>
-                </div>
+                {/* Action buttons — only for reviewable questions */}
+                {REVIEWABLE_STATUSES.includes(q.status) && (
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      className="bg-success hover:bg-success/90"
+                      onClick={() => handleApprove(q.id)}
+                      disabled={isActionDisabled(q.id)}
+                      title="Approve"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[hsl(38,92%,50%)] text-[hsl(38,92%,50%)] hover:bg-[hsl(38,92%,50%)]/10"
+                      onClick={() => openHoldDialog(q.id)}
+                      disabled={isActionDisabled(q.id)}
+                      title="Hold for later"
+                    >
+                      <PauseCircle className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => openRejectDialog(q.id)}
+                      disabled={isActionDisabled(q.id)}
+                      title="Reject"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
@@ -215,6 +309,92 @@ export function ReviewsPage() {
           </div>
         </div>
       )}
+
+      {/* ─── Approve Dialog ─── */}
+      <Dialog open={approveOpen} onOpenChange={(o) => { if (!o) { setApproveOpen(false); setApproveQuestionId(null) } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Question</DialogTitle>
+            <DialogDescription>
+              This will approve the question and credit reward to the farmer.
+              Are you sure you want to approve?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-success/10 border border-success/20 rounded-md p-3 flex items-center gap-2">
+            <IndianRupee className="h-4 w-4 text-success shrink-0" />
+            <p className="text-sm text-success">
+              Reward will be automatically credited to the farmer's wallet upon approval.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setApproveOpen(false)}>Cancel</Button>
+            <Button className="bg-success hover:bg-success/90" onClick={confirmApprove} disabled={!!actionLoading}>
+              <CheckCircle className="h-4 w-4 mr-1" /> Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Reject Dialog ─── */}
+      <Dialog open={rejectOpen} onOpenChange={(o) => { if (!o) { setRejectOpen(false); setRejectQuestionId(null) } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Question</DialogTitle>
+            <DialogDescription>
+              Please provide a clear reason for rejection. This will be visible to the farmer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reject-reason">Rejection Reason <span className="text-destructive">*</span></Label>
+            <Input
+              id="reject-reason"
+              placeholder="e.g., Off-topic, duplicate question, insufficient detail..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && confirmReject()}
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmReject} disabled={!!actionLoading}>
+              <XCircle className="h-4 w-4 mr-1" /> Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Hold Dialog ─── */}
+      <Dialog open={holdOpen} onOpenChange={(o) => { if (!o) { setHoldOpen(false); setHoldQuestionId(null) } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hold Question</DialogTitle>
+            <DialogDescription>
+              Put this question on hold if it needs further review, additional context,
+              or is waiting for something before a final decision.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="hold-reason">Hold Reason <span className="text-destructive">*</span></Label>
+            <Input
+              id="hold-reason"
+              placeholder="e.g., Waiting for AI model update, needs expert input..."
+              value={holdReason}
+              onChange={(e) => setHoldReason(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && confirmHold()}
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setHoldOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-[hsl(38,92%,50%)] hover:bg-[hsl(38,92%,45%)] text-white"
+              onClick={confirmHold}
+              disabled={!!actionLoading}
+            >
+              <PauseCircle className="h-4 w-4 mr-1" /> Hold
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
