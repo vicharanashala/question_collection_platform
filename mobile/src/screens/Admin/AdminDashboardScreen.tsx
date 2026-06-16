@@ -79,7 +79,97 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
   rejected:    { label: 'Rejected',    color: '#DC2626', bg: '#FEE2E2' },
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  accentColor,
+  bgColor,
+  onPress,
+}: {
+  title: string;
+  value: string;
+  subtitle?: string;
+  icon: string;
+  accentColor: string;
+  bgColor: string;
+  onPress?: () => void;
+}) {
+  const Wrapper = onPress ? TouchableOpacity : View;
+  return (
+    <Wrapper
+      style={[statStyles.card, { backgroundColor: bgColor }]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <View style={[statStyles.iconWrap, { backgroundColor: accentColor + '20' }]}>
+        <Ionicons name={icon as any} size={20} color={accentColor} />
+      </View>
+      <Text style={[statStyles.value, { color: accentColor }]}>{value}</Text>
+      <Text style={statStyles.title}>{title}</Text>
+      {subtitle && <Text style={statStyles.subtitle}>{subtitle}</Text>}
+    </Wrapper>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+  return (
+    <Text style={[sectionStyles.label, { color: c.textTertiary }]}>{children}</Text>
+  );
+}
+
+// ─── Styles for sub-components ────────────────────────────────────────────────
+
+const statStyles = StyleSheet.create({
+  card: {
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing4,
+    flex: 1,
+    gap: 6,
+    ...tokens.shadowSm,
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 28,
+    fontWeight: '800',
+    lineHeight: 32,
+  },
+  title: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  subtitle: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 1,
+  },
+});
+
+const sectionStyles = StyleSheet.create({
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: tokens.spacing3,
+    marginLeft: 2,
+  },
+});
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AdminDashboardScreen() {
   const { theme } = useTheme();
@@ -102,7 +192,6 @@ export function AdminDashboardScreen() {
       ]);
       setStats(s.data);
       setRewards(r.data);
-      // Load combined review queue (pending + human_review) for quick actions
       try {
         const [qs1, qs2] = await Promise.all([
           adminApi.getReviewQueue({ queueType: 'pending', page: 1, limit: 5 }),
@@ -171,7 +260,6 @@ export function AdminDashboardScreen() {
   }
 
   const s = stats?.summary ?? null;
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
 
   if (loading) {
     return (
@@ -181,22 +269,33 @@ export function AdminDashboardScreen() {
     );
   }
 
+  const pendingCount = s?.pendingQuestions ?? 0;
+  const approvalRate = s?.approvalRate ?? 0;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={c.primary}
+          />
+        }
       >
 
         {/* ── Header ────────────────────────────────────────────────────── */}
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.greeting, { color: c.textSecondary }]}>{today}</Text>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.greeting, { color: c.textSecondary }]}>
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </Text>
             <Text style={[styles.adminName, { color: c.text }]}>{user?.name ?? 'Admin'}</Text>
           </View>
           <TouchableOpacity
-            style={[styles.avatarCircle, { backgroundColor: c.primary + '18' }]}
+            style={[styles.avatarCircle, { backgroundColor: c.primary + '15' }]}
             onPress={() => navigation.navigate('AdminProfile')}
             activeOpacity={0.7}
           >
@@ -206,112 +305,170 @@ export function AdminDashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ── Alert banner ──────────────────────────────────────────────── */}
-        {(s?.pendingQuestions ?? 0) > 0 || (rewards?.pendingWithdrawals ?? 0) > 0 ? (
-          <View style={[styles.alertBanner, { backgroundColor: c.warning + '18' }]}>
-            <Ionicons name="warning" size={16} color={c.warning} />
+        {/* ── Alert strip ───────────────────────────────────────────────── */}
+        {pendingCount > 0 || (rewards?.pendingWithdrawals ?? 0) > 0 ? (
+          <View style={[styles.alertStrip, { backgroundColor: c.warning + '15' }]}>
+            <Ionicons name="warning-outline" size={14} color={c.warning} />
             <Text style={[styles.alertText, { color: c.warning }]}>
               {[
-                s?.pendingQuestions ? `${s.pendingQuestions} questions pending review` : null,
-                rewards?.pendingWithdrawals ? `${rewards.pendingWithdrawals} payouts awaiting approval` : null,
-              ].filter(Boolean).join(' · ')}
+                pendingCount > 0 ? `${pendingCount} questions need review` : null,
+                rewards?.pendingWithdrawals ? `${rewards.pendingWithdrawals} payouts pending` : null,
+              ].filter(Boolean).join('  ·  ')}
             </Text>
           </View>
         ) : null}
 
-        {/* ── KPI row 1 ─────────────────────────────────────────────────── */}
-        <View style={styles.kpiRow}>
-          {[
-            { label: 'Total Questions', value: (s?.totalQuestions ?? 0).toLocaleString('en-IN'), icon: 'chatbubbles', color: '#0891B2', iconBg: '#0891B618' },
-            { label: 'Approved', value: (s?.approvedQuestions ?? 0).toLocaleString('en-IN'), icon: 'checkmark-circle', color: '#059669', iconBg: '#05966918' },
-          ].map((item) => (
-            <View key={item.label} style={[styles.kpiCard, { backgroundColor: c.surface }]}>
-              <View style={[styles.kpiIconWrap, { backgroundColor: item.iconBg }]}>
-                <Ionicons name={item.icon as any} size={18} color={item.color} />
-              </View>
-              <Text style={[styles.kpiValue, { color: item.color }]}>{item.value}</Text>
-              <Text style={[styles.kpiLabel, { color: c.textSecondary }]}>{item.label}</Text>
-            </View>
-          ))}
-          <View style={[styles.kpiCard, { backgroundColor: c.surface }]}>
-            <View style={[styles.kpiIconWrap, { backgroundColor: (s?.pendingQuestions ?? 0) > 10 ? c.warning + '18' : c.success + '18' }]}>
-              <Ionicons name="time" size={18} color={(s?.pendingQuestions ?? 0) > 10 ? c.warning : c.success} />
-            </View>
-            <Text style={[styles.kpiValue, { color: (s?.pendingQuestions ?? 0) > 10 ? c.warning : c.success }]}>{s?.pendingQuestions ?? 0}</Text>
-            <Text style={[styles.kpiLabel, { color: c.textSecondary }]}>Pending</Text>
-          </View>
+        {/* ── Question Stats ────────────────────────────────────────────── */}
+        <SectionLabel>Question Overview</SectionLabel>
+        <View style={styles.statsGrid}>
+          <StatCard
+            title="Total"
+            value={(s?.totalQuestions ?? 0).toLocaleString('en-IN')}
+            icon="chatbubbles"
+            accentColor="#0891B2"
+            bgColor={c.surface}
+            onPress={() => navigation.navigate('AdminQuestions')}
+          />
+          <StatCard
+            title="Approved"
+            value={(s?.approvedQuestions ?? 0).toLocaleString('en-IN')}
+            subtitle={`${approvalRate}% acceptance`}
+            icon="checkmark-circle"
+            accentColor="#059669"
+            bgColor={c.surface}
+          />
+        </View>
+        <View style={[styles.statsGrid, { marginTop: tokens.spacing3 }]}>
+          <StatCard
+            title="Pending Review"
+            value={String(pendingCount)}
+            subtitle={pendingCount > 10 ? 'High load' : 'Under control'}
+            icon="time"
+            accentColor={pendingCount > 10 ? '#D97706' : '#7C3AED'}
+            bgColor={c.surface}
+            onPress={() => navigation.navigate('AdminQuestions')}
+          />
+          <StatCard
+            title="Rejected"
+            value={(s?.rejectedQuestions ?? 0).toLocaleString('en-IN')}
+            icon="close-circle"
+            accentColor="#DC2626"
+            bgColor={c.surface}
+          />
         </View>
 
-        {/* ── KPI row 2 ─────────────────────────────────────────────────── */}
-        <View style={styles.kpiRow}>
-          <View style={[styles.kpiCard, { backgroundColor: c.surface }]}>
-            <View style={[styles.kpiIconWrap, { backgroundColor: c.primary + '18' }]}>
-              <Ionicons name="people" size={18} color={c.primary} />
-            </View>
-            <Text style={[styles.kpiValue, { color: c.primary }]}>{s ? (s.totalUsers > 999 ? `${(s.totalUsers / 1000).toFixed(1)}k` : s.totalUsers) : '—'}</Text>
-            <Text style={[styles.kpiLabel, { color: c.textSecondary }]}>Total Users</Text>
-          </View>
-          <View style={[styles.kpiCard, { backgroundColor: c.surface }]}>
-            <View style={[styles.kpiIconWrap, { backgroundColor: '#7C3AED18' }]}>
-              <Ionicons name="checkmark-done" size={18} color="#7C3AED" />
-            </View>
-            <Text style={[styles.kpiValue, { color: '#7C3AED' }]}>{s?.approvalRate ?? 0}%</Text>
-            <Text style={[styles.kpiLabel, { color: c.textSecondary }]}>Approval Rate</Text>
-          </View>
-          <View style={[styles.kpiCard, { backgroundColor: c.surface }]}>
-            <View style={[styles.kpiIconWrap, { backgroundColor: '#DC262618' }]}>
-              <Ionicons name="flag" size={18} color="#DC2626" />
-            </View>
-            <Text style={[styles.kpiValue, { color: '#DC2626' }]}>{s?.flaggedQuestions ?? 0}</Text>
-            <Text style={[styles.kpiLabel, { color: c.textSecondary }]}>Flagged</Text>
-          </View>
+        {/* ── User Stats ────────────────────────────────────────────────── */}
+        <View style={[styles.statsGrid, { marginTop: tokens.spacing5 }]}>
+          <StatCard
+            title="Total Users"
+            value={s && s.totalUsers > 999
+              ? `${(s.totalUsers / 1000).toFixed(1)}k`
+              : String(s?.totalUsers ?? '—')}
+            icon="people"
+            accentColor={c.primary}
+            bgColor={c.surface}
+            onPress={() => navigation.navigate('AdminUsers')}
+          />
+          <StatCard
+            title="Flagged"
+            value={String(s?.flaggedQuestions ?? 0)}
+            icon="flag"
+            accentColor="#DC2626"
+            bgColor={c.surface}
+          />
         </View>
 
-        {/* ── Quick review queue ─────────────────────────────────────────── */}
+        {/* ── Rewards summary ───────────────────────────────────────────── */}
+        {rewards && (
+          <>
+            <View style={[styles.statsGrid, { marginTop: tokens.spacing5 }]}>
+              <StatCard
+                title="Total Rewarded"
+                value={formatINR(rewards.totalRewarded)}
+                icon="wallet"
+                accentColor="#059669"
+                bgColor={c.surface}
+              />
+              <StatCard
+                title="Avg. Reward"
+                value={formatINR(Math.round(rewards.avgReward))}
+                icon="trending-up"
+                accentColor="#7C3AED"
+                bgColor={c.surface}
+              />
+            </View>
+            <View style={[styles.statsGrid, { marginTop: tokens.spacing3 }]}>
+              <StatCard
+                title="Withdrawals"
+                value={formatINR(rewards.totalWithdrawn)}
+                subtitle={`${rewards.withdrawalCount} transactions`}
+                icon="cash"
+                accentColor="#D97706"
+                bgColor={c.surface}
+              />
+              <StatCard
+                title="Pending Payouts"
+                value={String(rewards.pendingWithdrawals)}
+                icon="hourglass"
+                accentColor={rewards.pendingWithdrawals > 0 ? c.warning : '#9CA3AF'}
+                bgColor={c.surface}
+                onPress={rewards.pendingWithdrawals > 0
+                  ? () => navigation.navigate('AdminWithdrawals')
+                  : undefined}
+              />
+            </View>
+          </>
+        )}
+
+        {/* ── Review queue ──────────────────────────────────────────────── */}
         {queue.length > 0 && (
-          <View style={styles.section}>
+          <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
             <View style={styles.sectionHead}>
               <Text style={[styles.sectionTitle, { color: c.text }]}>Needs Review</Text>
               <TouchableOpacity onPress={() => navigation.navigate('AdminQuestions')}>
-                <Text style={[styles.seeAll, { color: c.primary }]}>See all</Text>
+                <Text style={[styles.seeAll, { color: c.primary }]}>View all</Text>
               </TouchableOpacity>
             </View>
+
             {queue.map((q) => {
               const meta = STATUS_META[q.status] ?? { label: q.status, color: c.textSecondary, bg: c.surfaceVariant };
               return (
-                <View key={q.id} style={[styles.reviewCard, { backgroundColor: c.surface }]}>
-                  <View style={styles.reviewCardTop}>
-                    <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.statusPillText, { color: meta.color }]}>{meta.label}</Text>
+                <View key={q.id} style={[queueStyles.card, { backgroundColor: c.surface }]}>
+                  <View style={queueStyles.cardTop}>
+                    <View style={[queueStyles.pill, { backgroundColor: meta.bg }]}>
+                      <Text style={[queueStyles.pillText, { color: meta.color }]}>{meta.label}</Text>
                     </View>
-                    <Text style={[styles.reviewTime, { color: c.textTertiary }]}>{formatDate(q.submittedAt)}</Text>
+                    <Text style={[queueStyles.time, { color: c.textTertiary }]}>{formatDate(q.submittedAt)}</Text>
                   </View>
-                  <Text style={[styles.reviewQuestion, { color: c.text }]} numberOfLines={2}>{q.questionText}</Text>
-                  <View style={styles.reviewCardBot}>
-                    <Text style={[styles.reviewMeta, { color: c.textTertiary }]}>
-                      {q.state} · {(q.user?.mobileNumber ?? '').slice(-4).padStart((q.user?.mobileNumber ?? '').length, '*')}
+                  <Text style={[queueStyles.question, { color: c.text }]} numberOfLines={2}>{q.questionText}</Text>
+                  <View style={queueStyles.cardBot}>
+                    <Text style={[queueStyles.meta, { color: c.textTertiary }]}>
+                      {q.state}
+                      {q.user?.mobileNumber
+                        ? `  ·  ${q.user.mobileNumber.slice(-4).padStart(q.user.mobileNumber.length, '*')}`
+                        : ''}
                     </Text>
-                    <View style={styles.reviewActions}>
+                    <View style={queueStyles.actions}>
                       <TouchableOpacity
-                        style={[styles.quickBtn, { backgroundColor: c.success + '18' }]}
+                        style={[queueStyles.actionBtn, { backgroundColor: '#05966918' }]}
                         onPress={() => quickApprove(q.id)}
                         disabled={actionLoading === q.id}
                       >
                         {actionLoading === q.id
-                          ? <ActivityIndicator size={12} color={c.success} />
-                          : <Ionicons name="checkmark" size={14} color={c.success} />}
+                          ? <ActivityIndicator size={12} color="#059669" />
+                          : <Ionicons name="checkmark" size={14} color="#059669" />}
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.quickBtn, { backgroundColor: c.error + '18' }]}
+                        style={[queueStyles.actionBtn, { backgroundColor: '#DC262618' }]}
                         onPress={() => quickReject(q.id)}
                         disabled={actionLoading === q.id}
                       >
                         {actionLoading === q.id
-                          ? <ActivityIndicator size={12} color={c.error} />
-                          : <Ionicons name="close" size={14} color={c.error} />}
+                          ? <ActivityIndicator size={12} color="#DC2626" />
+                          : <Ionicons name="close" size={14} color="#DC2626" />}
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.quickBtn, { backgroundColor: c.primary + '18' }]}
+                        style={[queueStyles.actionBtn, { backgroundColor: c.primary + '18' }]}
                         onPress={() => navigation.navigate('AdminQuestionDetail', { questionId: q.id })}
                       >
                         <Ionicons name="chevron-forward" size={14} color={c.primary} />
@@ -324,34 +481,36 @@ export function AdminDashboardScreen() {
           </View>
         )}
 
-        {/* ── Quick-nav grid ─────────────────────────────────────────────── */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Management</Text>
-          <View style={styles.quickNavGrid}>
+        {/* ── Quick-nav cards ───────────────────────────────────────────── */}
+        <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
+          <SectionLabel>Quick Access</SectionLabel>
+          <View style={navStyles.grid}>
             {[
-              { label: 'Users',       sub: 'Manage & moderate',      icon: 'people',         screen: 'AdminUsers',       color: '#0891B2' },
-              { label: 'Questions',   sub: 'Full review queue',       icon: 'document-text',  screen: 'AdminQuestions',   color: c.primary },
-              { label: 'Withdrawals', sub: `${rewards?.pendingWithdrawals ?? 0} pending`, icon: 'cash', screen: 'AdminWithdrawals', color: c.warning },
-              { label: 'Config',      sub: 'System settings',         icon: 'settings',       screen: 'AdminConfig',      color: '#6B7280' },
+              { label: 'Users',       sub: 'Manage & moderate',     icon: 'people',         screen: 'AdminUsers',       accent: '#0891B2' },
+              { label: 'Questions',   sub: 'Review & moderate',      icon: 'document-text',  screen: 'AdminQuestions',   accent: c.primary },
+              { label: 'Withdrawals', sub: 'Approve payouts',         icon: 'card',           screen: 'AdminWithdrawals', accent: '#D97706' },
+              { label: 'Config',      sub: 'System settings',         icon: 'settings',       screen: 'AdminConfig',      accent: '#6B7280' },
             ].map((item) => (
               <TouchableOpacity
                 key={item.screen}
-                style={[styles.quickNavCard, { backgroundColor: c.surface }]}
+                style={[navStyles.card, { backgroundColor: c.surface }]}
                 onPress={() => navigation.navigate(item.screen as any)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.qnIconWrap, { backgroundColor: item.color + '18' }]}>
-                  <Ionicons name={item.icon as any} size={20} color={item.color} />
+                <View style={[navStyles.iconWrap, { backgroundColor: item.accent + '18' }]}>
+                  <Ionicons name={item.icon as any} size={22} color={item.accent} />
                 </View>
-                <View style={styles.qnText}>
-                  <Text style={[styles.qnLabel, { color: c.text }]}>{item.label}</Text>
-                  <Text style={[styles.qnSub, { color: c.textTertiary }]}>{item.sub}</Text>
+                <View style={navStyles.textWrap}>
+                  <Text style={[navStyles.label, { color: c.text }]}>{item.label}</Text>
+                  <Text style={[navStyles.sub, { color: c.textTertiary }]}>{item.sub}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
               </TouchableOpacity>
             ))}
           </View>
         </View>
+
+        <View style={{ height: tokens.spacing10 }} />
 
       </ScrollView>
     </SafeAreaView>
@@ -367,80 +526,103 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: tokens.spacing5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: tokens.spacing4,
   },
-  greeting: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
-  adminName: { fontSize: 22, fontWeight: '800' },
+  headerLeft: { flex: 1 },
+  greeting: { fontSize: 12, fontWeight: '500', marginBottom: 2 },
+  adminName: { fontSize: 26, fontWeight: '800', lineHeight: 30 },
   avatarCircle: {
-    width: 46, height: 46, borderRadius: 9999,
+    width: 50, height: 50, borderRadius: 9999,
     justifyContent: 'center', alignItems: 'center',
+    marginLeft: tokens.spacing4,
   },
-  avatarText: { fontSize: 20, fontWeight: '800' },
+  avatarText: { fontSize: 22, fontWeight: '800' },
 
   // Alert
-  alertBanner: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: tokens.radiusMd, padding: tokens.spacing3,
-    marginBottom: tokens.spacing5, gap: tokens.spacing2,
+  alertStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: tokens.radiusMd,
+    paddingVertical: 10,
+    paddingHorizontal: tokens.spacing3,
+    marginBottom: tokens.spacing5,
+    gap: 8,
+    ...tokens.shadowXs,
   },
   alertText: { fontSize: 13, fontWeight: '600', flex: 1 },
 
-  // KPI
-  kpiRow: {
-    flexDirection: 'row', gap: tokens.spacing2,
-    marginBottom: tokens.spacing3,
+  // Stats grid
+  statsGrid: {
+    flexDirection: 'row',
+    gap: tokens.spacing3,
   },
-  kpiCard: {
-    flex: 1, borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
-  },
-  kpiIconWrap: {
-    width: 30, height: 30, borderRadius: 8,
-    justifyContent: 'center', alignItems: 'center',
-    marginBottom: 4,
-  },
-  kpiValue: { fontSize: 20, fontWeight: '800', lineHeight: 24 },
-  kpiLabel: { fontSize: 10, marginTop: 2 },
 
   // Sections
-  section: { marginBottom: tokens.spacing6 },
+  section: {},
   sectionHead: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: tokens.spacing3,
   },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
   seeAll: { fontSize: 13, fontWeight: '600' },
+});
 
-  // Review queue
-  reviewCard: {
-    borderRadius: tokens.radiusMd, padding: tokens.spacing3,
-    marginBottom: tokens.spacing2, gap: tokens.spacing2,
+// Queue card styles
+const queueStyles = StyleSheet.create({
+  card: {
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+    marginBottom: tokens.spacing2,
+    ...tokens.shadowSm,
   },
-  reviewCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  statusPill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  statusPillText: { fontSize: 10, fontWeight: '700' },
-  reviewTime: { fontSize: 10 },
-  reviewQuestion: { fontSize: 13, lineHeight: 18 },
-  reviewCardBot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  reviewMeta: { fontSize: 11 },
-  reviewActions: { flexDirection: 'row', gap: tokens.spacing2 },
-  quickBtn: {
-    width: 28, height: 28, borderRadius: 8,
+  cardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pill: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  pillText: { fontSize: 11, fontWeight: '700' },
+  time: { fontSize: 11 },
+  question: { fontSize: 13.5, lineHeight: 20, marginBottom: 10 },
+  cardBot: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  meta: { fontSize: 12 },
+  actions: { flexDirection: 'row', gap: 8 },
+  actionBtn: {
+    width: 32, height: 32, borderRadius: 9,
     justifyContent: 'center', alignItems: 'center',
   },
+});
 
-  // Quick nav
-  quickNavGrid: { gap: tokens.spacing2 },
-  quickNavCard: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: tokens.radiusMd, padding: tokens.spacing3, gap: tokens.spacing3,
+// Quick nav styles
+const navStyles = StyleSheet.create({
+  grid: { gap: tokens.spacing3 },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+    gap: tokens.spacing3,
+    ...tokens.shadowSm,
   },
-  qnIconWrap: {
-    width: 36, height: 36, borderRadius: 10,
+  iconWrap: {
+    width: 44, height: 44, borderRadius: 12,
     justifyContent: 'center', alignItems: 'center', flexShrink: 0,
   },
-  qnText: { flex: 1 },
-  qnLabel: { fontSize: 14, fontWeight: '700' },
-  qnSub: { fontSize: 11, marginTop: 1 },
+  textWrap: { flex: 1 },
+  label: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  sub: { fontSize: 12 },
 });
