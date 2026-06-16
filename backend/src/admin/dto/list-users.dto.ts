@@ -33,6 +33,10 @@ export class ListUsersDto {
   search?: string;
 
   @IsOptional()
+  @IsString()
+  excludeId?: string;
+
+  @IsOptional()
   @IsIn(['createdAt', 'name', 'state', 'verificationStatus'])
   sortBy?: 'createdAt' | 'name' | 'state' | 'verificationStatus';
 

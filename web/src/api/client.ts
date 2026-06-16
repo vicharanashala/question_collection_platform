@@ -272,6 +272,27 @@ export const adminApi = {
       { method: 'POST', body: JSON.stringify(body) },
       false,
     ).finally(() => invalidateCache('/api/admin')),
+
+  getConfig: () =>
+    request<{ items: import('@/types').ConfigItem[] }>('/admin/config'),
+
+  updateConfig: (body: { key: string; value: number }) =>
+    request<{ message: string }>('/admin/config', { method: 'PATCH', body: JSON.stringify(body) }, false)
+      .finally(() => invalidateCache('/api/admin')),
+
+  listWithdrawals: (params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(p).toString()
+    return request<import('@/types').PaginatedResponse<import('@/types').Withdrawal>>(
+      `/admin/withdrawals${qs ? `?${qs}` : ''}`,
+    )
+  },
+
+  processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; failureReason?: string }) =>
+    request<{ message: string }>(`/admin/withdrawals/${id}/process`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false).finally(() => invalidateCache('/api/admin')),
 }
 
 // ─── Questions API ─────────────────────────────────────────────────────────

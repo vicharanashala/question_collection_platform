@@ -84,7 +84,7 @@ export class QuestionController {
   async getMyStats(@Req() req: AuthenticatedRequest) {
     const [dailyCount, limits] = await Promise.all([
       this.questionService.getDailyCount(req.user.id),
-      Promise.resolve(this.questionService.getLimits()),
+      this.questionService.getLimits(),
     ]);
 
     return {

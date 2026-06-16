@@ -2,10 +2,11 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserAccountLockedException } from '../common/exceptions/user-status.exception';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
@@ -21,6 +22,7 @@ import {
 import { RequestOtpDto, VerifyOtpDto, RegisterDto } from './dto';
 import { SmsService } from './sms.service';
 import { RedisService } from './redis.service';
+import { AdminService } from '../admin/admin.service';
 
 export interface AuthTokens {
   accessToken: string;
@@ -64,12 +66,13 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly smsService: SmsService,
     private readonly redisService: RedisService,
+    private readonly adminService: AdminService,
   ) {}
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
   /** Strip country code prefix so +91 / 91 / 0 are not stored in DB */
-  private normalizePhone(mobile: string): string {
+  normalizePhone(mobile: string): string {
     return mobile.replace(/^\+?91 ?/, '').replace(/^0/, '');
   }
 
@@ -285,6 +288,17 @@ export class AuthService {
         throw new BadRequestException('User is already registered');
       }
 
+      // Enforce max_users_per_state from system config
+      const maxPerState = await this.adminService.getConfigValue('max_users_per_state');
+      const stateCount = await this.userRepo.count({
+        where: { state: dto.state, verificationStatus: MoreThanOrEqual(VerificationStatus.PENDING) },
+      });
+      if (stateCount >= maxPerState) {
+        throw new BadRequestException(
+          `Registration for ${dto.state} is currently full (${stateCount}/${maxPerState} users). Please try again later or contact support.`,
+        );
+      }
+
       // Update user with registration data
       user.name = dto.name.trim();
       user.category = dto.category;
@@ -314,6 +328,10 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
+      // Record login timestamp on successful registration
+      user.lastLoginAt = new Date();
+      await this.userRepo.save(user);
+
       await this.logAudit(
         ActorType.USER,
         user.id,
@@ -341,10 +359,10 @@ export class AuthService {
    * Increments tokenVersion to invalidate all previously issued tokens.
    */
   async issueTokens(user: User): Promise<AuthTokens> {
-    // Increment tokenVersion — invalidates all previously issued tokens
-    await this.userRepo.increment({ id: user.id }, 'tokenVersion', 1);
-    const updatedUser = await this.userRepo.findOne({ where: { id: user.id } });
-    const tokenVersion = updatedUser?.tokenVersion ?? 1;
+    // NOTE: tokenVersion is NOT incremented here.
+    // It is only incremented on logout (see logout handler) to allow
+    // the same account to be used on multiple devices simultaneously.
+    const tokenVersion = user.tokenVersion;
 
     const payload = {
       sub: user.id,
@@ -416,7 +434,13 @@ export class AuthService {
         });
       }
 
-      return this.issueTokens(user);
+      const tokens = await this.issueTokens(user);
+
+      // Update last login timestamp on every token refresh
+      user.lastLoginAt = new Date();
+      await this.userRepo.save(user);
+
+      return tokens;
     } catch (err) {
       if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Invalid or expired refresh token');

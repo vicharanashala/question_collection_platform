@@ -7,6 +7,8 @@ import {
   Users,
   MessageSquare,
   CheckSquare,
+  Settings2,
+  CreditCard,
   LogOut,
 } from 'lucide-react'
 import {
@@ -15,10 +17,12 @@ import {
 import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['user', 'curator', 'admin', 'super_admin'] },
-  { to: '/users', label: 'Users', icon: Users, roles: ['admin', 'super_admin'] },
-  { to: '/questions', label: 'Questions', icon: MessageSquare, roles: ['user', 'curator', 'admin', 'super_admin'] },
-  { to: '/reviews', label: 'Review Queue', icon: CheckSquare, roles: ['curator', 'admin', 'super_admin'] },
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, roles: ['user', 'curator', 'admin', 'super_admin'] },
+  { to: '/users',     label: 'Users',        icon: Users,        roles: ['admin', 'super_admin'] },
+  { to: '/questions', label: 'Questions',     icon: MessageSquare, roles: ['user', 'curator', 'admin', 'super_admin'] },
+  { to: '/reviews',   label: 'Review Queue',  icon: CheckSquare,   roles: ['curator', 'admin', 'super_admin'] },
+  { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,   roles: ['admin', 'super_admin'] },
+  { to: '/settings',  label: 'Settings',      icon: Settings2,    roles: ['admin', 'super_admin'] },
 ]
 
 export function Sidebar() {

@@ -34,9 +34,9 @@ function CustomTooltip({ active, payload, label, valueFormatter, labelFormatter 
   if (!active || !payload?.length) return null
   const value = payload[0]?.value as number
   return (
-    <div className="rounded-lg border bg-card px-3 py-2 shadow-md">
-      <p className="text-xs text-muted-foreground">{labelFormatter ? labelFormatter(label) : label}</p>
-      <p className="mt-0.5 text-sm font-bold text-foreground">
+    <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
+      <p className="text-xs text-text-secondary">{labelFormatter ? labelFormatter(label) : label}</p>
+      <p className="mt-0.5 text-sm font-bold text-text">
         {valueFormatter ? valueFormatter(value) : value?.toLocaleString()}
       </p>
     </div>
@@ -64,11 +64,11 @@ export function AreaChartComponent({
             <stop offset="95%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
-        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
+        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border-subtle))" vertical={false} />}
         {showAxis && (
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: 11, fill: 'hsl(var(--text-tertiary))' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(d) => {
@@ -78,7 +78,7 @@ export function AreaChartComponent({
         )}
         {showAxis && (
           <YAxis
-            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: 11, fill: 'hsl(var(--text-tertiary))' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}
@@ -86,7 +86,7 @@ export function AreaChartComponent({
         )}
         <Tooltip
           content={<CustomTooltip valueFormatter={valueFormatter} labelFormatter={labelFormatter} />}
-          cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
+          cursor={{ stroke: 'hsl(var(--border-subtle))', strokeWidth: 1 }}
         />
         <Area
           type="monotone"

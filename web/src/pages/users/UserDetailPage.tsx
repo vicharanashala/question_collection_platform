@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { cn, formatDate, getInitials } from '@/lib/utils'
+import { cn, formatDate, formatDateTime, getInitials } from '@/lib/utils'
 import {
   ArrowLeft, Ban, PauseCircle, PlayCircle, CheckCircle,
   ShieldCheck, MapPin, Phone, Calendar, MessageSquare,
@@ -26,7 +26,7 @@ function VerificationBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     verified:      { label: 'Verified',      cls: 'bg-success text-white' },
     pending:       { label: 'Pending Review', cls: 'bg-warning text-white' },
-    manual_review: { label: 'Manual Review', cls: 'bg-[hsl(199,89%,48%)] text-white' },
+    manual_review: { label: 'Manual Review', cls: 'bg-chart2 text-white' },
     suspended:     { label: 'Suspended',     cls: 'bg-warning text-white' },
     banned:        { label: 'Banned',        cls: 'bg-destructive text-white' },
   }
@@ -37,7 +37,7 @@ function VerificationBadge({ status }: { status: string }) {
 function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
   const map: Record<QuestionStatus, { label: string; dot: string; cls: string }> = {
     pending:      { label: 'Pending',      dot: 'bg-warning',  cls: 'border-warning/40 text-warning' },
-    ai_review:    { label: 'AI Review',    dot: 'bg-[hsl(199,89%,48%)]', cls: 'border-[hsl(199,89%,48%)]/40 text-[hsl(199,89%,48%)]' },
+    ai_review:    { label: 'AI Review',    dot: 'bg-chart2',   cls: 'border-chart2/40 text-chart2' },
     human_review: { label: 'Human Review', dot: 'bg-primary',  cls: 'border-primary/40 text-primary' },
     approved:     { label: 'Approved',     dot: 'bg-success',  cls: 'border-success/40 text-success' },
     rejected:     { label: 'Rejected',     dot: 'bg-destructive', cls: 'border-destructive/40 text-destructive' },
@@ -350,7 +350,7 @@ export function UserDetailPage() {
                 {user.lastLoginAt && (
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    Last seen {formatDate(user.lastLoginAt)}
+                    Last seen {formatDateTime(user.lastLoginAt)}
                   </span>
                 )}
               </div>
@@ -411,7 +411,7 @@ export function UserDetailPage() {
               { label: 'District', value: user.district || '—' },
               { label: 'Block', value: user.block ?? '—' },
               { label: 'Joined', value: formatDate(user.createdAt) ?? '—' },
-              { label: 'Last Login', value: user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never' },
+              { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never' },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0 text-sm">
                 <span className="text-muted-foreground text-xs">{label}</span>

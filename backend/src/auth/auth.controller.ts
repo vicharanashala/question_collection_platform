@@ -58,9 +58,10 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {
-    // For public registration, mobile number is in the body alongside other fields.
-    // We look up the user by mobile number from the DTO.
-    const user = await this.authService.findUserByMobile(dto.mobileNumber);
+    // Normalize: strip country code and leading zeros so the lookup matches
+    // what was stored during the OTP request/verify flow.
+    const mobileNumber = this.authService.normalizePhone(dto.mobileNumber);
+    const user = await this.authService.findUserByMobile(mobileNumber);
     if (!user) {
       throw new UnauthorizedException(
         'No OTP-verified account found for this mobile number. Please request OTP first.',

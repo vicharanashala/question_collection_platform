@@ -36,17 +36,17 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
   const isPositive = (change ?? 0) >= 0
   const isNeutral = change === undefined || change === 0
   const TrendIcon = isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown
-  const trendColor = isNeutral ? 'text-muted-foreground' : isPositive ? 'text-success' : 'text-destructive'
+  const trendColor = isNeutral ? 'text-text-tertiary' : isPositive ? 'text-success' : 'text-destructive'
 
   const iconVariant = variant ?? 'primary'
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-xs">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-muted-foreground truncate">{label}</p>
-            <p className="mt-1 text-3xl font-extrabold text-foreground tabular-nums">
+            <p className="text-sm text-text-tertiary truncate">{label}</p>
+            <p className="mt-1 text-3xl font-extrabold text-text tabular-nums">
               {typeof value === 'number' ? formatNumber(value) : value}
             </p>
             {(change !== undefined || sub) && (
@@ -57,7 +57,7 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
                     {isPositive ? '+' : ''}{change}%
                   </span>
                 )}
-                {sub && <span className="text-xs text-muted-foreground truncate">{sub}</span>}
+                {sub && <span className="text-xs text-text-tertiary truncate">{sub}</span>}
               </div>
             )}
           </div>
@@ -147,7 +147,7 @@ export function DashboardPage() {
   // Bar: question status breakdown
   const qStatusData = [
     { name: 'Pending', value: d?.pendingQuestions ?? 0, color: 'hsl(var(--warning))' },
-    { name: 'Approved', value: d?.approvedQuestions ?? 0, color: 'hsl(160, 84%, 39%)' },
+    { name: 'Approved', value: d?.approvedQuestions ?? 0, color: 'hsl(var(--success))' },
     { name: 'Rejected', value: d?.rejectedQuestions ?? 0, color: 'hsl(var(--destructive))' },
   ]
 
@@ -156,22 +156,22 @@ export function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-foreground">
+          <h2 className="text-2xl font-extrabold text-text">
             Welcome back, {user?.name || 'Admin'}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-text-tertiary">
             Here's your platform overview for the past{' '}
             {TIME_RANGES.find((r) => r.value === timeRange)?.label}
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg border bg-card p-1 shadow-sm">
+        <div className="flex items-center gap-1 rounded-lg border border-border-subtle bg-surface p-1 shadow-xs">
           {TIME_RANGES.map((r) => (
             <Button
               key={r.value}
               variant={timeRange === r.value ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setTimeRange(r.value)}
-              className={cn('h-7 text-xs', timeRange !== r.value && 'text-muted-foreground')}
+              className={cn('h-7 text-xs', timeRange !== r.value && 'text-text-tertiary')}
             >
               {r.label}
             </Button>
@@ -254,7 +254,7 @@ export function DashboardPage() {
                 <span className="h-2 w-2 rounded-full bg-primary" /> Users
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[hsl(199,89%,48%)]" /> Questions
+                <span className="h-2 w-2 rounded-full bg-chart2" /> Questions
               </span>
             </div>
           }
@@ -271,7 +271,7 @@ export function DashboardPage() {
           <AreaChartComponent
             data={chartData}
             dataKey="Questions"
-            color="hsl(199, 89%, 48%)"
+            color="hsl(var(--chart-2))"
             gradientId="questionTrend"
             height={120}
             showAxis={false}
@@ -307,7 +307,7 @@ export function DashboardPage() {
               centerLabel="Total Users"
             />
           ) : (
-            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center h-48 text-sm text-text-tertiary">
               No role data available
             </div>
           )}
@@ -325,7 +325,7 @@ export function DashboardPage() {
               outerRadius={100}
             />
           ) : (
-            <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center h-48 text-sm text-text-tertiary">
               No category data available
             </div>
           )}
@@ -340,7 +340,7 @@ export function DashboardPage() {
         <BarChartComponent
           data={chartData.map((d) => ({ name: d.date, value: d.Signups }))}
           dataKey="value"
-          color="hsl(160, 84%, 39%)"
+          color="hsl(var(--success))"
           height={180}
           valueFormatter={(v) => formatNumber(v)}
           labelFormatter={(d) => {
@@ -355,27 +355,27 @@ export function DashboardPage() {
             <div className="space-y-2 pt-1">
               <Link
                 to="/users"
-                className="flex items-center justify-between rounded-md border p-3 text-sm font-medium hover:bg-accent transition-colors group"
+                className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
               >
                 <span className="flex items-center gap-3">
                   <Users className="h-4 w-4 text-primary" />
                   View all users
                 </span>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
               </Link>
               <Link
                 to="/questions"
-                className="flex items-center justify-between rounded-md border p-3 text-sm font-medium hover:bg-accent transition-colors group"
+                className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
               >
                 <span className="flex items-center gap-3">
                   <MessageSquare className="h-4 w-4 text-primary" />
                   Manage questions
                 </span>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
               </Link>
               <Link
                 to="/reviews"
-                className="flex items-center justify-between rounded-md border p-3 text-sm font-medium hover:bg-accent transition-colors group"
+                className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
               >
                 <span className="flex items-center gap-3">
                   <ShieldCheck className="h-4 w-4 text-primary" />
@@ -384,24 +384,24 @@ export function DashboardPage() {
                 {d?.pendingQuestions ? (
                   <Badge variant="destructive" className="ml-2">{d.pendingQuestions}</Badge>
                 ) : (
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
                 )}
               </Link>
             </div>
           </ChartCard>
 
-        <Card className="shadow-sm lg:col-span-2">
+        <Card className="shadow-xs lg:col-span-2">
           <ChartCard title="Recent Activity" subtitle="Latest actions on the platform">
             <div className="space-y-3 max-h-56 overflow-y-auto">
               {(stats?.recentActivity ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No recent activity</p>
+                <p className="text-sm text-text-tertiary py-4 text-center">No recent activity</p>
               ) : (
                 stats.recentActivity.slice(0, 10).map((entry) => (
                   <div key={entry.id} className="flex items-start gap-3 text-sm">
                     <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-foreground leading-snug">{entry.description}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-text leading-snug">{entry.description}</p>
+                      <p className="text-xs text-text-tertiary mt-0.5">
                         {entry.performedBy} &middot;{' '}
                         {formatDate(entry.performedAt) ?? new Date(entry.performedAt).toLocaleDateString('en-IN')}
                       </p>

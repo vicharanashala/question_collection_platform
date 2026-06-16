@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, ILike, Between, In } from 'typeorm';
@@ -52,7 +53,74 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
 };
 
 @Injectable()
-export class AdminService {
+export class AdminService implements OnModuleInit {
+  // In-memory TTL cache for config values (30-second cache)
+  private configCache: Map<string, number> = new Map();
+  private configCacheExpiry = 0;
+  private static readonly CONFIG_CACHE_TTL_MS = 30_000;
+
+  async onModuleInit() {
+    // Pre-populate cache on startup so first requests aren't cache-miss latency
+    await this.refreshConfigCache();
+  }
+
+  private async refreshConfigCache(): Promise<void> {
+    const rows = await this.configRepo.find();
+    this.configCache.clear();
+    for (const row of rows) {
+      this.configCache.set(row.key, row.value as number);
+    }
+    this.configCacheExpiry = Date.now() + AdminService.CONFIG_CACHE_TTL_MS;
+  }
+
+  private async getCachedConfigValue(key: string): Promise<number> {
+    if (Date.now() > this.configCacheExpiry) {
+      await this.refreshConfigCache();
+    }
+    if (this.configCache.has(key)) {
+      return this.configCache.get(key)!;
+    }
+    // Fallback to DB for keys that may not be seeded
+    const row = await this.configRepo.findOne({ where: { key } });
+    const value = row ? (row.value as number) : (DEFAULT_CONFIG[key]?.value ?? 0);
+    this.configCache.set(key, value);
+    return value;
+  }
+
+  /**
+   * Bulk-fetch multiple config values in a single DB call (uses cache).
+   * Returns a plain object of key → value for the requested keys.
+   */
+  async getConfigValues(keys: string[]): Promise<Record<string, number>> {
+    if (Date.now() > this.configCacheExpiry) {
+      await this.refreshConfigCache();
+    }
+    const result: Record<string, number> = {};
+    const missing: string[] = [];
+    for (const key of keys) {
+      if (this.configCache.has(key)) {
+        result[key] = this.configCache.get(key)!;
+      } else {
+        missing.push(key);
+      }
+    }
+    if (missing.length > 0) {
+      const rows = await this.configRepo.find({ where: missing.map((k) => ({ key: k })) });
+      for (const row of rows) {
+        this.configCache.set(row.key, row.value as number);
+        result[row.key] = row.value as number;
+      }
+      // Fill missing with defaults
+      for (const k of missing) {
+        if (result[k] === undefined) {
+          const def = DEFAULT_CONFIG[k]?.value ?? 0;
+          this.configCache.set(k, def);
+          result[k] = def;
+        }
+      }
+    }
+    return result;
+  }
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -106,6 +174,19 @@ export class AdminService {
     const existing = await this.userRepo.findOne({ where: { mobileNumber: mobile } });
     if (existing) {
       throw new BadRequestException('A user with this mobile number already exists.');
+    }
+
+    // Enforce max_users_per_state (only for non-privileged roles)
+    if (dto.role !== UserRole.ADMIN && dto.role !== UserRole.CURATOR) {
+      const maxPerState = await this.getConfigValue('max_users_per_state');
+      const stateCount = await this.userRepo.count({
+        where: { state: dto.state },
+      });
+      if (stateCount >= maxPerState) {
+        throw new BadRequestException(
+          `State '${dto.state}' has reached its maximum of ${maxPerState} users.`,
+        );
+      }
     }
 
     const isPrivilegedRole = dto.role === UserRole.ADMIN || dto.role === UserRole.CURATOR;
@@ -174,6 +255,7 @@ export class AdminService {
         { search: `%${search}%` },
       );
     }
+    if (dto.excludeId) qb.andWhere('u.id != :excludeId', { excludeId: dto.excludeId });
 
     const sortCol = sortBy === 'verificationStatus' ? 'u.verificationStatus' : sortBy === 'state' ? 'u.state' : sortBy === 'name' ? 'u.name' : 'u.createdAt';
     qb.orderBy(sortCol, sortOrder);
@@ -513,7 +595,7 @@ export class AdminService {
 
     const oldValue = config.value;
 
-    await this.configRepo.update(dto.key, {
+    await this.configRepo.update({ key: dto.key }, {
       value: dto.value,
       description: dto.description ?? config.description,
       updatedBy: adminId,
@@ -528,6 +610,9 @@ export class AdminService {
       oldValue: { key: dto.key, value: oldValue },
       newValue: { key: dto.key, value: dto.value },
     });
+
+    // Invalidate cache so next read gets the new value
+    this.configCache.delete(dto.key);
 
     return { success: true, key: dto.key, oldValue, newValue: dto.value };
   }
@@ -552,14 +637,15 @@ export class AdminService {
       newValue: { key: dto.key, value: dto.value },
     });
 
+    // Populate cache for the new key
+    this.configCache.set(dto.key, dto.value);
+
     return { success: true, config: { key: saved.key, value: saved.value, description: saved.description } };
   }
 
-  // Get a single config value (with fallback to default)
+  // Get a single config value (with fallback to default) — uses in-memory cache
   async getConfigValue(key: string): Promise<number> {
-    const config = await this.configRepo.findOne({ where: { key } });
-    if (config) return config.value as number;
-    return DEFAULT_CONFIG[key]?.value ?? 0;
+    return this.getCachedConfigValue(key);
   }
 
   // ─────────────────────────────────────────────────────────────

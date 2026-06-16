@@ -54,8 +54,8 @@ function StepDots({ step }: { step: 1 | 2 }) {
         <div
           key={n}
           className={cn(
-            'h-1.5 w-1.5 rounded-full transition-all duration-300',
-            n === step ? 'w-5 bg-primary' : 'bg-muted-foreground/30',
+            'h-1.5 rounded-full transition-all duration-300',
+            n === step ? 'w-5 bg-primary' : 'bg-text-tertiary/30',
           )}
         />
       ))}
@@ -73,16 +73,13 @@ export function LoginPage() {
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false) // OTP successfully sent
+  const [sent, setSent] = useState(false)
   const countdown = useCountdown()
 
-  // Auto-focus OTP input when step 2 starts
   const otpRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (step === 2) otpRef.current?.focus()
   }, [step])
-
-  // ── Step 1: send OTP ──────────────────────────────────────────────────────
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault()
@@ -104,8 +101,6 @@ export function LoginPage() {
       setLoading(false)
     }
   }
-
-  // ── Step 2: verify OTP ────────────────────────────────────────────────────
 
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault()
@@ -141,8 +136,6 @@ export function LoginPage() {
     }
   }
 
-  // ── Resend ────────────────────────────────────────────────────────────────
-
   async function handleResend() {
     if (countdown.active) return
     setOtp('')
@@ -158,15 +151,11 @@ export function LoginPage() {
     }
   }
 
-  // ── Go back ───────────────────────────────────────────────────────────────
-
   function handleBack() {
     setStep(1)
     setOtp('')
     countdown.stop()
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
@@ -180,14 +169,14 @@ export function LoginPage() {
       </div>
 
       {/* Login card */}
-      <Card className="relative w-full max-w-sm shadow-xl border-muted">
+      <Card className="relative w-full max-w-sm shadow-xl border-border-subtle">
         <CardHeader className="pb-4 text-center">
           {/* Logo mark */}
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20 ring-4 ring-primary/10">
             <ShieldCheck className="h-8 w-8 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl font-extrabold tracking-tight">Admin Portal</CardTitle>
-          <CardDescription className="text-sm text-muted-foreground px-2">
+          <CardDescription className="text-sm text-text-secondary px-2">
             Sign in to manage users, questions, and content
           </CardDescription>
           <div className="mt-4">
@@ -200,11 +189,11 @@ export function LoginPage() {
             // ── Step 1: Mobile number ────────────────────────────────────────
             <form onSubmit={handleSendOtp} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-sm font-medium text-text">
                   Mobile Number
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex items-center rounded-md border bg-muted px-3.5 text-sm font-semibold text-muted-foreground shadow-sm">
+                  <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-sm font-semibold text-text-secondary shadow-xs">
                     +91
                   </div>
                   <Input
@@ -218,7 +207,7 @@ export function LoginPage() {
                     autoComplete="tel"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-text-secondary">
                   We'll send a 6-digit OTP to this number
                 </p>
               </div>
@@ -235,9 +224,9 @@ export function LoginPage() {
             // ── Step 2: OTP ─────────────────────────────────────────────────
             <form onSubmit={handleVerifyOtp} className="space-y-5">
               {/* Mobile indicator */}
-              <div className="flex items-center gap-2 rounded-md border bg-muted/60 px-3 py-2">
-                <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-sm font-medium text-foreground">+91 {mobile}</span>
+              <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-variant/60 px-3 py-2">
+                <Smartphone className="h-4 w-4 text-text-tertiary shrink-0" />
+                <span className="text-sm font-medium text-text">+91 {mobile}</span>
                 <button
                   type="button"
                   onClick={handleBack}
@@ -248,7 +237,7 @@ export function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
+                <label className="text-sm font-medium text-text">
                   One-Time Password
                 </label>
                 <Input
@@ -262,7 +251,7 @@ export function LoginPage() {
                   maxLength={6}
                   autoComplete="one-time-code"
                 />
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-text-secondary text-center">
                   Enter the 6-digit code sent to your mobile
                 </p>
               </div>
@@ -282,7 +271,7 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1 text-text-tertiary hover:text-text transition-colors"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   Back
@@ -295,7 +284,7 @@ export function LoginPage() {
                   className={cn(
                     'font-medium transition-colors',
                     countdown.active
-                      ? 'text-muted-foreground cursor-not-allowed'
+                      ? 'text-text-tertiary cursor-not-allowed'
                       : 'text-primary hover:underline',
                   )}
                 >
@@ -310,7 +299,7 @@ export function LoginPage() {
       </Card>
 
       <div className="absolute bottom-6 text-center">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-text-tertiary">
           Question Collection Platform &middot; Admin Dashboard
         </p>
       </div>

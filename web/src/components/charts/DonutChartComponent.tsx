@@ -30,19 +30,19 @@ const DEFAULT_COLORS = [
   'hsl(var(--primary))',
   'hsl(var(--warning))',
   'hsl(var(--destructive))',
-  'hsl(160, 84%, 39%)',
-  'hsl(199, 89%, 48%)',
-  'hsl(263, 70%, 50%)',
-  'hsl(330, 81%, 60%)',
+  'hsl(var(--success))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
 ]
 
 function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null
   const { name, value } = payload[0] as DonutSegment
   return (
-    <div className="rounded-lg border bg-card px-3 py-2 shadow-md">
-      <p className="text-xs text-muted-foreground">{name}</p>
-      <p className="mt-0.5 text-sm font-bold text-foreground">{value?.toLocaleString()}</p>
+    <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
+      <p className="text-xs text-text-secondary">{name}</p>
+      <p className="mt-0.5 text-sm font-bold text-text">{value?.toLocaleString()}</p>
     </div>
   )
 }
@@ -86,12 +86,12 @@ export function DonutChartComponent({
       {(centerLabel || centerValue !== undefined) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           {centerValue !== undefined && (
-            <span className="text-xl font-extrabold text-foreground">
+            <span className="text-xl font-extrabold text-text">
               {typeof centerValue === 'number' ? centerValue.toLocaleString() : centerValue}
             </span>
           )}
           {centerLabel && (
-            <span className="text-xs text-muted-foreground">{centerLabel}</span>
+            <span className="text-xs text-text-secondary">{centerLabel}</span>
           )}
         </div>
       )}
@@ -105,11 +105,11 @@ export function DonutChartComponent({
               <div key={segment.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className={cn('h-2 w-2 rounded-full shrink-0')} style={{ backgroundColor: colors[i % colors.length] }} />
-                  <span className="text-foreground capitalize">{segment.name.replace('_', ' ')}</span>
+                  <span className="text-text capitalize">{segment.name.replace('_', ' ')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{pct}%</span>
-                  <span className="font-semibold text-foreground">{segment.value.toLocaleString()}</span>
+                  <span className="text-xs text-text-secondary">{pct}%</span>
+                  <span className="font-semibold text-text">{segment.value.toLocaleString()}</span>
                 </div>
               </div>
             )

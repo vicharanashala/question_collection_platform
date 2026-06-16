@@ -18,6 +18,22 @@ export function formatDate(iso: string | null | undefined): string | null {
   }
 }
 
+export function formatDateTime(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  try {
+    return new Date(iso).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+  } catch {
+    return null
+  }
+}
+
 export function formatRelativeDate(iso: string | null | undefined): string | null {
   if (!iso) return null
   try {

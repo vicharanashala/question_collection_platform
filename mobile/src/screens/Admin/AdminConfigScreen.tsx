@@ -31,9 +31,10 @@ const CONFIG_META: Record<string, { label: string; suffix: string }> = {
   daily_question_limit: { label: 'Daily Question Limit', suffix: '/day' },
   ai_confidence_threshold: { label: 'AI Confidence Threshold', suffix: '%' },
   duplicate_similarity_threshold: { label: 'Duplicate Similarity', suffix: '' },
-  video_max_duration_seconds: { label: 'Video Max Duration', suffix: 's' },
-  video_max_size_mb: { label: 'Video Max Size', suffix: 'MB' },
-};
+}
+
+// Config keys hidden from the UI (video features disabled)
+const HIDDEN_CONFIG_KEYS = new Set(['video_max_duration_seconds', 'video_max_size_mb'])
 
 export function AdminConfigScreen() {
   const { theme } = useTheme();
@@ -120,16 +121,18 @@ export function AdminConfigScreen() {
           Tap a config to edit. Changes apply immediately and are audit-logged.
         </Text>
 
-        {configs.map((cfg) => {
-          const meta = CONFIG_META[cfg.key];
-          return (
-            <TouchableOpacity
-              key={cfg.key}
-              style={[styles.row, { backgroundColor: c.surface }]}
-              onPress={isSuperAdmin ? () => handleUpdate(cfg.key, cfg.value) : undefined}
-              disabled={saving !== null || !isSuperAdmin}
-              activeOpacity={isSuperAdmin ? 0.7 : 1}
-            >
+        {configs
+          .filter((cfg) => !HIDDEN_CONFIG_KEYS.has(cfg.key))
+          .map((cfg) => {
+            const meta = CONFIG_META[cfg.key];
+            return (
+              <TouchableOpacity
+                key={cfg.key}
+                style={[styles.row, { backgroundColor: c.surface }]}
+                onPress={isSuperAdmin ? () => handleUpdate(cfg.key, cfg.value) : undefined}
+                disabled={saving !== null || !isSuperAdmin}
+                activeOpacity={isSuperAdmin ? 0.7 : 1}
+              >
               <View style={styles.rowLeft}>
                 <Text style={[styles.rowLabel, { color: c.text }]}>
                   {meta?.label ?? cfg.key}

@@ -16,8 +16,8 @@ import type { Question } from '@/types'
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning text-white',
-  ai_review: 'bg-[hsl(263,70%,50%)] text-white',
-  human_review: 'bg-[hsl(330,81%,60%)] text-white',
+  ai_review: 'bg-ai_review text-white',
+  human_review: 'bg-human_review text-white',
   approved: 'bg-success text-white',
   rejected: 'bg-destructive text-white',
 }
@@ -60,11 +60,11 @@ export function QuestionsPage() {
               placeholder="Search by crop type..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="pl-9"
+              className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
             />
           </div>
           <select
-            className="h-10 rounded-md border border-input bg-background dark:bg-card px-3 text-sm text-foreground"
+            className="h-10 rounded-md border border-input bg-surface-variant px-3 text-sm text-text !bg-surface-variant dark:!bg-surface-variant dark:border-border-subtle"
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
           >

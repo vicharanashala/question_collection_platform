@@ -9,6 +9,7 @@ import { SmsService } from './sms.service';
 import { RedisService } from './redis.service';
 import { User, Wallet, AuditLog } from '../database/entities';
 import { JwtStrategy } from '../common/guards/jwt.strategy';
+import { AdminModule } from '../admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { JwtStrategy } from '../common/guards/jwt.strategy';
         },
       }),
     }),
+    AdminModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, SmsService, RedisService, JwtStrategy],

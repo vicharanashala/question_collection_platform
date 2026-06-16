@@ -26,6 +26,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { QuestionModule } from './question/question.module';
 import { AdminModule } from './admin/admin.module';
+import { WalletsModule } from './wallets/wallets.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 
@@ -87,6 +88,7 @@ import { HealthController } from './health/health.controller';
     UserModule,
     QuestionModule,
     AdminModule,
+    WalletsModule,
   ],
   controllers: [HealthController],
   providers: [

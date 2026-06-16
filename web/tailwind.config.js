@@ -57,12 +57,31 @@ export default {
           foreground: 'hsl(var(--warning-foreground))',
         },
         info: 'hsl(var(--info))',
+        // Semantic aliases (mobile theme)
+        surface: 'hsl(var(--surface))',
+        'surface-variant': 'hsl(var(--surface-variant))',
+        'hero-bg': 'hsl(var(--hero-bg))',
+        'hero-fg': 'hsl(var(--hero-fg))',
+        'text': {
+          DEFAULT:  'hsl(var(--text))',
+          secondary: 'hsl(var(--text-secondary))',
+          tertiary:  'hsl(var(--text-tertiary))',
+        },
+        'border-subtle': 'hsl(var(--border-subtle))',
+        focus: 'hsl(var(--focus))',
         // Charts
         chart1: 'hsl(var(--chart-1))',
         chart2: 'hsl(var(--chart-2))',
         chart3: 'hsl(var(--chart-3))',
         chart4: 'hsl(var(--chart-4))',
         chart5: 'hsl(var(--chart-5))',
+        // Status badge colors — match mobile semantic tokens
+        ai_review:      'hsl(var(--chart-3))',   /* purple — #7C3AED / #A78BFA */
+        human_review:   'hsl(330 81% 55%)',       /* rose — mobile uses chart3 purple here too */
+        statusVerified:  'hsl(var(--success))',
+        statusPending:   'hsl(var(--warning))',
+        statusSuspended: 'hsl(var(--warning))',
+        statusBanned:   'hsl(var(--destructive))',
         // Sidebar (matches mobile theme)
         sidebar: 'hsl(var(--sidebar))',
         'sidebar-foreground': 'hsl(var(--sidebar-foreground))',

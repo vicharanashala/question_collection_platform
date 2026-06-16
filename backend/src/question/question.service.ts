@@ -7,35 +7,25 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 import { Question, AuditLog } from '../database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../common/enums';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { UserService } from '../user/user.service';
+import { AdminService } from '../admin/admin.service';
 
 @Injectable()
 export class QuestionService {
-  private readonly dailyLimit: number;
-  private readonly editWindowSec: number;
-  private readonly videoMaxSizeMb: number;
-  private readonly videoMaxDurationSec: number;
-
   constructor(
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
     @InjectRepository(AuditLog)
     private readonly auditRepo: Repository<AuditLog>,
     private readonly dataSource: DataSource,
-    private readonly config: ConfigService,
+    private readonly adminService: AdminService,
     private readonly userService: UserService,
-  ) {
-    this.dailyLimit = this.config.get<number>('question.dailyLimit') ?? 20;
-    this.editWindowSec = this.config.get<number>('question.editWindowSec') ?? 30;
-    this.videoMaxSizeMb = this.config.get<number>('question.videoMaxSizeMb') ?? 10;
-    this.videoMaxDurationSec = this.config.get<number>('question.videoMaxDurationSec') ?? 10;
-  }
+  ) {}
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
 
@@ -81,11 +71,15 @@ export class QuestionService {
       );
     }
 
-    // 1. Daily limit check
-    await this.checkDailyLimit(userId);
+    // 1. Enforce live config: daily_question_limit + question_edit_window_seconds
+    const [dailyLimit, editWindowSec] = await Promise.all([
+      this.adminService.getConfigValue('daily_question_limit'),
+      this.adminService.getConfigValue('question_edit_window_seconds'),
+    ]);
+    await this.checkDailyLimit(userId, dailyLimit);
 
     const now = new Date();
-    const editWindowClosesAt = new Date(now.getTime() + this.editWindowSec * 1000);
+    const editWindowClosesAt = new Date(now.getTime() + editWindowSec * 1000);
 
     // 2. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
@@ -308,7 +302,7 @@ export class QuestionService {
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
-  private async checkDailyLimit(userId: string): Promise<void> {
+  private async checkDailyLimit(userId: string, dailyLimit: number): Promise<void> {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -316,20 +310,21 @@ export class QuestionService {
       where: { userId, submittedAt: MoreThanOrEqual(startOfDay) },
     });
 
-    if (count >= this.dailyLimit) {
+    if (count >= dailyLimit) {
       throw new BadRequestException(
-        `Daily limit of ${this.dailyLimit} questions reached. Please try again tomorrow.`,
+        `Daily limit of ${dailyLimit} questions reached. Please try again tomorrow.`,
       );
     }
   }
 
-  getLimits() {
-    return {
-      dailyLimit: this.dailyLimit,
-      editWindowSec: this.editWindowSec,
-      videoMaxSizeMb: this.videoMaxSizeMb,
-      videoMaxDurationSec: this.videoMaxDurationSec,
-    };
+  async getLimits() {
+    const [dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec] = await Promise.all([
+      this.adminService.getConfigValue('daily_question_limit'),
+      this.adminService.getConfigValue('question_edit_window_seconds'),
+      this.adminService.getConfigValue('video_max_size_mb'),
+      this.adminService.getConfigValue('video_max_duration_seconds'),
+    ]);
+    return { dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec };
   }
 
   // ─── Preview ────────────────────────────────────────────────────────────────
@@ -365,8 +360,8 @@ export class QuestionService {
       suggestedBlocks: dummyBlocksFor('Pune'),
 
       // Counts
-      remainingToday: Math.max(0, this.dailyLimit - (await this.getDailyCount(userId))),
-      dailyLimit: this.dailyLimit,
+      remainingToday: Math.max(0, (await this.adminService.getConfigValue('daily_question_limit')) - (await this.getDailyCount(userId))),
+      dailyLimit: await this.adminService.getConfigValue('daily_question_limit'),
     };
   }
 }

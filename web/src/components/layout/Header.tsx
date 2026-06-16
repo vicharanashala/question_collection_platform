@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { Sun, Moon, LogOut, User, Menu } from 'lucide-react'
-import { cn, getInitials } from '@/lib/utils'
+import { getInitials } from '@/lib/utils'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
@@ -56,21 +56,21 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   }
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 sm:px-6">
+    <header className="flex h-14 items-center justify-between border-b border-border-subtle bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-2">
         {/* Mobile menu toggle */}
         <button
           onClick={onMobileMenuToggle}
-          className="md:hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          className="md:hidden rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-base font-bold text-foreground">{title}</h1>
+        <h1 className="text-base font-bold text-text">{title}</h1>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="h-6 w-px bg-border" />
+        <div className="h-6 w-px bg-border-subtle" />
 
         {/* Profile dropdown */}
         <div className="relative" ref={menuRef}>
@@ -82,16 +82,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               {initials}
             </div>
             {user?.name && (
-              <span className="text-sm font-medium text-foreground hidden sm:block">{user.name}</span>
+              <span className="text-sm font-medium text-text hidden sm:block">{user.name}</span>
             )}
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-52 rounded-lg border bg-popover shadow-md z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-1.5 w-52 rounded-lg border border-border-subtle bg-surface shadow-md z-50 overflow-hidden">
               {/* User info */}
-              <div className="border-b px-3 py-2.5">
-                <p className="text-sm font-semibold text-foreground truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.mobileNumber}</p>
+              <div className="border-b border-border-subtle px-3 py-2.5">
+                <p className="text-sm font-semibold text-text truncate">{user?.name || 'User'}</p>
+                <p className="text-xs text-text-tertiary truncate">{user?.mobileNumber}</p>
               </div>
 
               {/* Menu items */}
@@ -99,32 +99,32 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                 <Link
                   to="/profile"
                   onClick={() => setProfileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
                 >
-                  <User className="h-4 w-4 text-muted-foreground" />
+                  <User className="h-4 w-4 text-text-tertiary" />
                   Profile
                 </Link>
 
                 {/* Theme toggle */}
                 <button
                   onClick={() => { toggleTheme(); setProfileOpen(false) }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
                 >
                   {theme === 'dark' ? (
                     <>
-                      <Sun className="h-4 w-4 text-muted-foreground" />
+                      <Sun className="h-4 w-4 text-text-tertiary" />
                       Light Mode
                     </>
                   ) : (
                     <>
-                      <Moon className="h-4 w-4 text-muted-foreground" />
+                      <Moon className="h-4 w-4 text-text-tertiary" />
                       Dark Mode
                     </>
                   )}
                 </button>
               </div>
 
-              <div className="border-t py-1">
+              <div className="border-t border-border-subtle py-1">
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/5 transition-colors"

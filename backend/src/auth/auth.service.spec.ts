@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
 import { RedisService } from './redis.service';
+import { AdminService } from '../admin/admin.service';
 import { User, Wallet, AuditLog } from '../database/entities';
 import {
   UserCategory,
@@ -53,6 +54,17 @@ const mockRedisService = () => ({
   get: jest.fn(),
   incr: jest.fn(),
   expire: jest.fn(),
+});
+
+const mockAdminService = () => ({
+  getConfigValue: jest.fn((key: string) => {
+    const map: Record<string, number> = {
+      max_users_per_state: 100,
+      daily_question_limit: 20,
+      min_withdrawal_amount: 50,
+    };
+    return Promise.resolve(map[key] ?? 0);
+  }),
 });
 
 describe('AuthService', () => {
@@ -103,6 +115,7 @@ describe('AuthService', () => {
         { provide: ConfigService, useFactory: mockConfigService },
         { provide: SmsService, useFactory: mockSmsService },
         { provide: RedisService, useFactory: mockRedisService },
+        { provide: AdminService, useFactory: mockAdminService },
       ],
     }).compile();
 

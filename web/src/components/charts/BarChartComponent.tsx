@@ -34,9 +34,9 @@ function CustomTooltip({ active, payload, label, valueFormatter, labelFormatter 
   if (!active || !payload?.length) return null
   const value = payload[0]?.value as number
   return (
-    <div className="rounded-lg border bg-card px-3 py-2 shadow-md">
-      <p className="text-xs text-muted-foreground">{labelFormatter ? labelFormatter(label) : label}</p>
-      <p className="mt-0.5 text-sm font-bold text-foreground">
+    <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
+      <p className="text-xs text-text-secondary">{labelFormatter ? labelFormatter(label) : label}</p>
+      <p className="mt-0.5 text-sm font-bold text-text">
         {valueFormatter ? valueFormatter(value) : value?.toLocaleString()}
       </p>
     </div>
@@ -61,11 +61,11 @@ export function BarChartComponent({
         layout={layout}
         margin={{ top: 4, right: 4, left: showAxis ? 0 : -20, bottom: 0 }}
       >
-        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={layout === 'horizontal'} />}
+        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border-subtle))" vertical={layout === 'horizontal'} />}
         {showAxis && (
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: 11, fill: 'hsl(var(--text-tertiary))' }}
             tickLine={false}
             axisLine={false}
             type={layout === 'vertical' ? 'number' : 'category'}
@@ -73,7 +73,7 @@ export function BarChartComponent({
         )}
         {showAxis && (
           <YAxis
-            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: 11, fill: 'hsl(var(--text-tertiary))' }}
             tickLine={false}
             axisLine={false}
             type={layout === 'vertical' ? 'category' : 'number'}
@@ -82,7 +82,7 @@ export function BarChartComponent({
         )}
         <Tooltip
           content={<CustomTooltip valueFormatter={valueFormatter} labelFormatter={labelFormatter} />}
-          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }}
+          cursor={{ fill: 'hsl(var(--surface-variant))', opacity: 0.5 }}
         />
         <Bar
           dataKey={dataKey}

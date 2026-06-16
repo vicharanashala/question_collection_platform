@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 import { QuestionService } from './question.service';
 import { UserService } from '../user/user.service';
+import { AdminService } from '../admin/admin.service';
 import { Question, AuditLog } from '../database/entities';
 import { QuestionStatus, MediaType, Season } from '../common/enums';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
@@ -24,16 +24,17 @@ const mockDataSource = () => ({
   transaction: jest.fn((fn) => fn({ getRepository: () => mockQuestionRepo() })),
 });
 
-const mockConfigService = () => ({
-  get: jest.fn((key: string) => {
+const mockAdminService = () => ({
+  getConfigValue: jest.fn((key: string) => {
     const map: Record<string, number> = {
-      'question.dailyLimit': 20,
-      'question.editWindowSec': 30,
-      'question.videoMaxSizeMb': 10,
-      'question.videoMaxDurationSec': 10,
+      daily_question_limit: 20,
+      question_edit_window_seconds: 30,
+      video_max_size_mb: 10,
+      video_max_duration_seconds: 10,
     };
-    return map[key];
+    return Promise.resolve(map[key] ?? 0);
   }),
+  getConfigValues: jest.fn(),
 });
 
 // UserService is injected to look up languagePreference when client omits `language`
@@ -66,7 +67,7 @@ describe('QuestionService', () => {
         { provide: getRepositoryToken(Question), useFactory: mockQuestionRepo },
         { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
         { provide: DataSource, useFactory: mockDataSource },
-        { provide: ConfigService, useFactory: mockConfigService },
+        { provide: AdminService, useFactory: mockAdminService },
         { provide: UserService, useFactory: mockUserService },
         { provide: 'UserService', useFactory: mockUserService },
       ],
@@ -330,8 +331,8 @@ describe('QuestionService', () => {
   // ─── getLimits ───────────────────────────────────────────────────────────
 
   describe('getLimits', () => {
-    it('should return configured limits', () => {
-      const limits = service.getLimits();
+    it('should return configured limits', async () => {
+      const limits = await service.getLimits();
 
       expect(limits.dailyLimit).toBe(20);
       expect(limits.editWindowSec).toBe(30);

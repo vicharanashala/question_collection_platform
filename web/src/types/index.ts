@@ -111,10 +111,34 @@ export interface ActivityLogEntry {
   targetUser?: string;
 }
 
+export interface ConfigItem {
+  key: string
+  value: number
+  description?: string
+}
+
+export interface WithdrawalUser {
+  id: string
+  name: string
+  mobileNumber: string
+  state: string
+}
+
+export interface Withdrawal {
+  id: string
+  amount: number
+  payoutMethod: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  createdAt: string
+  processedAt: string | null
+  failureReason: string | null
+  user: WithdrawalUser | null
+}
+
 export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
+  items: T[]
+  total: number
+  page: number
+  limit: number
+  pages: number
 }

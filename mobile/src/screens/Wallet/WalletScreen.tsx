@@ -16,8 +16,7 @@ import { EmptyState } from '../../components/Loading';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
-import { walletApi, getErrorMessage } from '../../api/client';
-import { MIN_WITHDRAWAL } from '../../utils/constants';
+import { walletApi, adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { Transaction } from '../../types';
 
@@ -33,6 +32,7 @@ export function WalletScreen() {
   const { t } = useTranslation();
 
   const [balance, setBalance] = useState<number | null>(null);
+  const [minWithdrawal, setMinWithdrawal] = useState<number>(50);  // fetched from backend
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,12 +47,18 @@ export function WalletScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [balanceRes, txRes] = await Promise.all([
+      const [balanceRes, txRes, configRes] = await Promise.all([
         walletApi.getBalance(),
         walletApi.getTransactions(),
+        adminApi.getConfig(),
       ]);
       setBalance(balanceRes.data.balance);
       setTransactions(txRes.data.transactions ?? []);
+      // Extract min_withdrawal_amount from config list (fall back to 50 if not set)
+      const minItem = (configRes.data.items ?? []).find(
+        (item: { key: string; value: number }) => item.key === 'min_withdrawal_amount',
+      );
+      if (minItem != null) setMinWithdrawal(minItem.value);
     } catch (err) {
       console.warn('[Wallet] Failed to load:', getErrorMessage(err, 'Failed to load wallet data. Please try again.'));
     }
@@ -69,8 +75,8 @@ export function WalletScreen() {
 
   async function handleWithdraw() {
     const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount < MIN_WITHDRAWAL) {
-      showToast(t('wallet.minWithdrawalError', { amount: MIN_WITHDRAWAL }), 'warning');
+    if (isNaN(amount) || amount < minWithdrawal) {
+      showToast(t('wallet.minWithdrawalError', { amount: minWithdrawal }), 'warning');
       return;
     }
     if (amount > (balance ?? 0)) {
@@ -141,9 +147,9 @@ export function WalletScreen() {
         {!showWithdraw ? (
           <View style={styles.withdrawSection}>
             <Button
-              title={`${t('wallet.withdraw')}  ·  ${t('wallet.minWithdrawal', { amount: MIN_WITHDRAWAL })}`}
+              title={`${t('wallet.withdraw')}  ·  ${t('wallet.minWithdrawal', { amount: minWithdrawal })}`}
               onPress={() => setShowWithdraw(true)}
-              disabled={(balance ?? 0) < MIN_WITHDRAWAL}
+              disabled={(balance ?? 0) < minWithdrawal}
               variant="outline"
             />
           </View>
@@ -152,7 +158,7 @@ export function WalletScreen() {
             <Text style={[styles.withdrawTitle, { color: c.text }]}>{t('wallet.requestWithdrawal')}</Text>
             <Input
               label={t('wallet.amount')}
-              placeholder={t('wallet.amountPlaceholder', { amount: MIN_WITHDRAWAL })}
+              placeholder={t('wallet.amountPlaceholder', { amount: minWithdrawal })}
               keyboardType="numeric"
               value={withdrawAmount}
               onChangeText={setWithdrawAmount}

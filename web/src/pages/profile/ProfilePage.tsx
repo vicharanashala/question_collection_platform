@@ -62,12 +62,12 @@ export function ProfilePage() {
               {initials}
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-foreground">{user.name || 'Unnamed User'}</h2>
+              <h2 className="text-xl font-extrabold text-text">{user.name || 'Unnamed User'}</h2>
               <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full capitalize">
+                <span className="inline-flex items-center gap-1 text-xs text-text-secondary bg-surface-variant px-2 py-0.5 rounded-full capitalize">
                   <Shield className="h-3 w-3" /> {user.role.replace('_', ' ')}
                 </span>
-                <span className="text-sm text-muted-foreground">{user.mobileNumber}</span>
+                <span className="text-sm text-text-tertiary">{user.mobileNumber}</span>
               </div>
             </div>
           </div>
@@ -92,11 +92,11 @@ export function ProfilePage() {
             },
           ].map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2.5 text-muted-foreground">
+              <div className="flex items-center gap-2.5 text-text-tertiary">
                 <Icon className="h-4 w-4" />
                 {label}
               </div>
-              <span className="font-medium text-foreground">{value}</span>
+              <span className="font-medium text-text">{value}</span>
             </div>
           ))}
 
@@ -104,12 +104,12 @@ export function ProfilePage() {
 
           {/* Language preference */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2.5 text-sm text-text-tertiary">
               <Globe className="h-4 w-4" />
               Language
             </div>
             <select
-              className="h-8 rounded-md border border-input bg-background px-2 pr-6 text-sm text-foreground"
+              className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 pr-6 text-sm text-text"
               value={user.languagePreference || 'en'}
               onChange={(e) => handleLanguageChange(e.target.value)}
               disabled={savingLang}
@@ -133,10 +133,10 @@ export function ProfilePage() {
             <button
               onClick={() => handleThemeSelect('light')}
               className={cn(
-                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50',
+                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-focus',
                 effectiveTheme === 'light'
                   ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/40 text-muted-foreground hover:text-foreground',
+                  : 'border-border-subtle hover:border-primary/40 text-text-secondary hover:text-text',
               )}
             >
               <Sun className="h-5 w-5" />
@@ -146,10 +146,10 @@ export function ProfilePage() {
             <button
               onClick={() => handleThemeSelect('dark')}
               className={cn(
-                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50',
+                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-focus',
                 effectiveTheme === 'dark'
                   ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/40 text-muted-foreground hover:text-foreground',
+                  : 'border-border-subtle hover:border-primary/40 text-text-secondary hover:text-text',
               )}
             >
               <Moon className="h-5 w-5" />
@@ -162,10 +162,10 @@ export function ProfilePage() {
                 setTheme(sys)
               }}
               className={cn(
-                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50',
+                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-focus',
                 !savedTheme
                   ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/40 text-muted-foreground hover:text-foreground',
+                  : 'border-border-subtle hover:border-primary/40 text-text-secondary hover:text-text',
               )}
             >
               <Monitor className="h-5 w-5" />

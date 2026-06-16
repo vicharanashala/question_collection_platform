@@ -6,98 +6,154 @@
   :root {
     --font-sans: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    /* Light theme — matches mobile/React Native tokens */
-    --background: 0 0% 98%;           /* #FAFAFA */
-    --foreground: 222 47% 11%;        /* #111827 */
-    --card: 0 0% 100%;                /* #FFFFFF */
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
+    /* ── Light theme — matches mobile/src/utils/theme.ts exactly ── */
+    --background:       0 0% 98%;    /* #FAFAFA */
+    --foreground:       222 47% 11%; /* #111827 */
+
+    /* Card / Popover */
+    --card:             0 0% 100%;   /* #FFFFFF */
+    --card-foreground:  222 47% 11%;
+    --popover:          0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 173 58% 39%;           /* #0D9488 teal */
+
+    /* Primary (teal-green — agricultural) */
+    --primary:          173 58% 39%; /* #0D9488 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
+
+    /* Secondary */
+    --secondary:        220 14% 96%; /* #F3F4F6 */
     --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 220 14% 96%;
+
+    /* Muted */
+    --muted:            210 40% 96%; /* #F9FAFB */
+    --muted-foreground: 220 9% 46%;  /* #6B7280 */
+
+    /* Accent */
+    --accent:           220 14% 96%; /* #F3F4F6 */
     --accent-foreground: 222 47% 11%;
-    --destructive: 0 72% 51%;         /* #DC2626 */
+
+    /* Destructive */
+    --destructive:      0 72% 51%;   /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 210 40% 96%;
-    --ring: 173 58% 39%;
-    --success: 160 84% 39%;           /* #059669 */
+
+    /* Border / Input / Ring */
+    --border:           220 13% 91%; /* #E5E7EB */
+    --input:            210 40% 96%; /* #F9FAFB */
+    --ring:             173 58% 39%; /* #0D9488 */
+
+    /* Semantic status */
+    --success:          160 84% 39%; /* #059669 */
     --success-foreground: 0 0% 100%;
-    --warning: 33 93% 54%;            /* #D97706 */
+    --warning:          33 93% 54%;  /* #D97706 */
     --warning-foreground: 0 0% 100%;
+
+    /* Semantic aliases — mobile theme surface/text hierarchy */
+    --surface:          0 0% 100%;   /* #FFFFFF — main card/sheet bg */
+    --surface-variant:  220 14% 96%; /* #F3F4F6 — input bg, badge bg */
+    --hero-bg:          173 58% 39%; /* #0D9488 — hero/header card bg */
+    --hero-fg:          0 0% 100%;   /* white — hero card foreground */
+    --text:             222 47% 11%; /* #111827 — primary readable text */
+    --text-secondary:   220 9% 46%;  /* #6B7280 — muted/secondary text */
+    --text-tertiary:    214 32% 91%; /* #D1D5DB — placeholder, disabled */
+    --border-subtle:    220 13% 91%; /* #E5E7EB — dividers, input borders */
+    --focus:            173 58% 39%; /* #0D9488 — focus ring */
+
     /* Charts */
     --chart-1: 173 58% 39%;
     --chart-2: 199 89% 48%;
     --chart-3: 263 70% 50%;
     --chart-4: 33 93% 54%;
     --chart-5: 160 84% 39%;
-    --info: 199 89% 48%;
-    /* Sidebar */
-    --sidebar: 0 0% 100%;
-    --sidebar-foreground: 217 21% 22%;
-    --sidebar-primary: 173 58% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 173 58% 39%;
 
-    /* Radius */
-    --radius-sm: 0.25rem;   /* 4px */
-    --radius: 0.5rem;       /* 8px */
-    --radius-md: 0.75rem;   /* 12px */
-    --radius-lg: 1rem;      /* 16px */
-    --radius-xl: 1.25rem;   /* 20px */
+    /* Sidebar */
+    --sidebar:              0 0% 100%; /* #FFFFFF */
+    --sidebar-foreground:   217 21% 27%; /* #374151 */
+    --sidebar-primary:      173 58% 39%; /* #0D9488 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:       220 14% 96%; /* #F3F4F6 */
+    --sidebar-accent-foreground: 222 47% 11%; /* #111827 */
+    --sidebar-border:       220 13% 91%; /* #E5E7EB */
+    --sidebar-ring:         173 58% 39%;
+
+    /* Radius — matches mobile tokens */
+    --radius-sm:   0.25rem;  /* 4px  — mobile tokens.radiusXs */
+    --radius:      0.5rem;   /* 8px  — mobile tokens.radius */
+    --radius-md:   0.75rem;  /* 12px — mobile tokens.radiusMd */
+    --radius-lg:   1rem;     /* 16px — mobile tokens.radiusLg */
+    --radius-xl:   1.25rem;  /* 20px — mobile tokens.radiusXl */
   }
 
   .dark {
     --font-sans: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    /* Dark theme — dark surfaces with white text */
-    --background: 222 47% 5%;          /* #060D18 */
-    --foreground: 0 0% 100%;           /* white text */
-    --card: 222 47% 9%;                /* #0F172A */
-    --card-foreground: 0 0% 100%;
-    --popover: 222 47% 9%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 166 76% 55%;            /* #2DD4BF teal light */
-    --primary-foreground: 0 0% 0%;     /* black text on teal */
-    --secondary: 222 47% 12%;          /* #111D2E */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 215 28% 20%;             /* #1A2538 */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 215 28% 18%;
-    --input: 222 47% 12%;
-    --ring: 166 76% 55%;
-    --success: 160 84% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    /* ── Dark theme — matches mobile/src/utils/theme.ts exactly ── */
+    --background:       222 47% 5%;   /* #060D18 */
+    --foreground:       0 0% 95%;     /* #F1F5F9 */
+
+    /* Card / Popover */
+    --card:             222 47% 9%;   /* #0F172A */
+    --card-foreground:  0 0% 95%;
+    --popover:          222 47% 9%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Primary (lighter teal on dark) */
+    --primary:          166 76% 55%;  /* #2DD4BF */
+    --primary-foreground: 166 76% 8%; /* #042F2E */
+
+    /* Secondary */
+    --secondary:        222 47% 12%;  /* #111D2E */
+    --secondary-foreground: 0 0% 95%;
+
+    /* Muted */
+    --muted:            222 47% 12%;
+    --muted-foreground: 215 20% 65%;  /* #94A3B8 */
+
+    /* Accent */
+    --accent:           215 28% 20%;  /* #1A2538 */
+    --accent-foreground: 0 0% 95%;
+
+    /* Destructive */
+    --destructive:      0 72% 63%;    /* #F87171 */
+    --destructive-foreground: 0 0% 4%; /* #450A0A */
+
+    /* Border / Input / Ring */
+    --border:           215 28% 18%;  /* #1E293B */
+    --input:            222 47% 12%;
+    --ring:             166 76% 55%;
+
+    /* Semantic status */
+    --success:          160 84% 45%;  /* #34D399 */
+    --success-foreground: 160 84% 5%;
+    --warning:          38 92% 50%;   /* #FBBF24 */
+    --warning-foreground: 38 92% 6%;
+
+    /* Semantic aliases — mobile dark theme */
+    --surface:          214 27% 15%;  /* #1F2D3D — main card bg */
+    --surface-variant:  213 27% 19%;  /* #2A3A4E — input/badge bg */
+    --hero-bg:          171 41% 24%;  /* #1A4D47 — dark teal card */
+    --hero-fg:          166 76% 94%;  /* #E0F7F4 */
+    --text:             0 0% 95%;     /* #F1F5F9 — primary readable text */
+    --text-secondary:   215 20% 65%;  /* #94A3B8 — muted text */
+    --text-tertiary:    215 18% 40%;  /* #64748B — disabled/placeholder */
+    --border-subtle:    215 28% 18%;  /* #1E293B — dividers */
+    --focus:            166 76% 55%;
+
     /* Charts */
     --chart-1: 166 76% 55%;
     --chart-2: 199 89% 60%;
     --chart-3: 263 70% 60%;
     --chart-4: 38 92% 50%;
     --chart-5: 160 84% 50%;
-    --info: 199 89% 55%;
+
     /* Sidebar */
-    --sidebar: 222 47% 6%;             /* #07101F */
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 166 76% 55%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 215 28% 16%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 28% 16%;
-    --sidebar-ring: 166 76% 55%;
+    --sidebar:              222 47% 5%;  /* #07101F */
+    --sidebar-foreground:   215 20% 65%; /* #94A3B8 */
+    --sidebar-primary:      166 76% 55%; /* #2DD4BF */
+    --sidebar-primary-foreground: 166 76% 8%;
+    --sidebar-accent:       222 47% 12%; /* #0F172A */
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border:       215 28% 16%; /* #1E293B */
+    --sidebar-ring:         166 76% 55%;
   }
 }
 
@@ -110,41 +166,17 @@
     font-family: var(--font-sans);
   }
 
-  /* Dark-mode safe selects */
-  select {
-    @apply bg-background dark:bg-card;
-  }
-
   /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/40;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
 }
 
 /* Text balance utility */
-.text-balance {
-  text-wrap: balance;
-}
+.text-balance { text-wrap: balance; }
 
-/* Sidebar active nav — dark mode safe */
-.sidebar-nav-active {
-  @apply bg-sidebar-accent text-sidebar-accent-foreground;
-}
-.sidebar-nav-inactive {
-  @apply text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
-}
-
-/* Stat card icon containers */
+/* ── Stat icon helpers (match mobile stat cards) ── */
 .stat-icon {
   @apply rounded-xl p-3;
 }
@@ -165,6 +197,6 @@
   @apply text-white;
 }
 .stat-icon-info {
-  background-color: hsl(var(--info));
+  background-color: hsl(var(--info, 199 89% 48%));
   @apply text-white;
 }

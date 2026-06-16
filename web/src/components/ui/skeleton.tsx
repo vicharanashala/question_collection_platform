@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('animate-pulse rounded-md bg-muted', className)}
+      className={cn('animate-pulse rounded-md bg-surface-variant', className)}
       {...props}
     />
   )
@@ -34,7 +34,7 @@ export function SkeletonPage({ rows = 5 }: { rows?: number }) {
 
 export function CardSkeleton() {
   return (
-    <div className="rounded-lg border bg-card p-5 space-y-3">
+    <div className="rounded-lg border border-border-subtle bg-surface p-5 space-y-3">
       <Skeleton className="h-3 w-24" />
       <Skeleton className="h-8 w-16" />
       <Skeleton className="h-3 w-32" />
@@ -44,7 +44,7 @@ export function CardSkeleton() {
 
 export function TableRowSkeleton({ cols = 5 }: { cols?: number }) {
   return (
-    <div className="flex items-center gap-4 p-4 border-b">
+    <div className="flex items-center gap-4 p-4 border-b border-border-subtle">
       {Array.from({ length: cols }).map((_, i) => (
         <Skeleton key={i} className="h-3 flex-1" />
       ))}
