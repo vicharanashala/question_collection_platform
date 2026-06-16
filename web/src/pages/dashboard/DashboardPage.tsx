@@ -17,24 +17,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminStats, TimeRange, DailyStat } from '@/types'
-import { format, subDays, parseISO } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function generateMockHistorical(days: number): DailyStat[] {
-  const data: DailyStat[] = []
-  let users = 120, questions = 40
-  for (let i = days; i >= 0; i--) {
-    const d = format(subDays(new Date(), i), 'yyyy-MM-dd')
-    const signups = Math.max(0, Math.round((Math.random() - 0.3) * 12))
-    const approved = Math.round(Math.random() * 20 + 5)
-    const rejected = Math.round(Math.random() * 5)
-    users += signups
-    questions += Math.round(Math.random() * 15 - 3)
-    data.push({ date: d, users, questions, signups, approved, rejected })
-  }
-  return data
-}
 
 // ─── StatCard with trend ───────────────────────────────────────────────────────
 
@@ -112,20 +97,13 @@ export function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const { historical, periodIdx } = useMemo(() => {
-    const days = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
-    // Use real historical data if available, otherwise generate mock
-    const histData: DailyStat[] = stats?.historical && stats.historical.length > 0
-      ? stats.historical
-      : generateMockHistorical(90)
-    const idx = 90 - days
-    return { historical: histData, periodIdx: idx }
-  }, [stats, timeRange])
+  const historical = useMemo(() => {
+    return stats?.historical ?? []
+  }, [stats])
 
   const rangeDays = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
   const halfLen = Math.floor(historical.length / 2)
   const midPoint = Math.floor(halfLen)
-  const prevPeriod = sumField(historical, 'signups', halfLen, historical.length - 1)
   const currPeriod = sumField(historical, 'signups', midPoint, historical.length - 1)
 
   const d = stats?.dashboard
