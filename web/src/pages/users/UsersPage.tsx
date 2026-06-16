@@ -4,11 +4,15 @@ import { adminApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
 import {
-  Search, ChevronLeft, ChevronRight, ShieldCheck,
+  Search, ChevronLeft, ChevronRight, ShieldCheck, Plus,
   PauseCircle, Ban, Clock, CheckCircle, User,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -51,6 +55,58 @@ export function UsersPage() {
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
+  // ── Create user dialog state ─────────────────────────────────────────────
+  const [createOpen, setCreateOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    mobileNumber: '',
+    role: 'user',
+    category: 'farmer',
+    state: '',
+    district: '',
+    block: '',
+  })
+  const [formError, setFormError] = useState('')
+
+  function openCreate() {
+    setForm({ name: '', mobileNumber: '', role: 'user', category: 'farmer', state: '', district: '', block: '' })
+    setFormError('')
+    setCreateOpen(true)
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.name.trim() || !form.mobileNumber.trim() || !form.state.trim() || !form.district.trim()) {
+      setFormError('Name, mobile number, state, and district are required.')
+      return
+    }
+    setCreating(true)
+    setFormError('')
+    try {
+      await adminApi.createUser({
+        name: form.name.trim(),
+        mobileNumber: form.mobileNumber.trim(),
+        role: form.role,
+        category: form.role === 'user' ? form.category : undefined,
+        state: form.state.trim(),
+        district: form.district.trim(),
+        block: form.block.trim() || undefined,
+      })
+      toast.success('User created successfully')
+      setCreateOpen(false)
+      setPage(1)
+      // Refresh list
+      adminApi.getUsers({ page: 1, limit, search: search || undefined, status: statusFilter || undefined, role: roleFilter || undefined })
+        .then((res) => { setUsers(res.items); setTotal(res.total) })
+        .catch(() => {})
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Failed to create user'))
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -58,6 +114,12 @@ export function UsersPage() {
           <h2 className="text-xl font-extrabold text-foreground">Users</h2>
           <p className="text-sm text-muted-foreground">{total.toLocaleString()} total users</p>
         </div>
+        {isSuperAdmin && (
+          <Button onClick={openCreate} size="sm">
+            <Plus className="h-4 w-4" />
+            Add User
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -206,6 +268,111 @@ export function UsersPage() {
           </div>
         )}
       </Card>
+
+      {/* Create user dialog */}
+      <Dialog open={createOpen} onOpenChange={(v) => !v && setCreateOpen(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label htmlFor="cu-name">Full Name</Label>
+                <Input
+                  id="cu-name"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Ramesh Kumar"
+                  required
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="cu-mobile">Mobile Number</Label>
+                <Input
+                  id="cu-mobile"
+                  type="tel"
+                  value={form.mobileNumber}
+                  onChange={(e) => setForm((f) => ({ ...f, mobileNumber: e.target.value }))}
+                  placeholder="9876543210"
+                  maxLength={10}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="cu-role">Role</Label>
+                <select
+                  id="cu-role"
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background dark:bg-card px-3 py-2 text-sm text-foreground"
+                  value={form.role}
+                  onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                >
+                  <option value="user">User</option>
+                  <option value="curator">Curator</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              {form.role === 'user' && (
+                <div>
+                  <Label htmlFor="cu-category">Category</Label>
+                  <select
+                    id="cu-category"
+                    className="mt-1 flex h-10 w-full rounded-md border border-input bg-background dark:bg-card px-3 py-2 text-sm text-foreground"
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  >
+                    <option value="farmer">Farmer</option>
+                    <option value="fpo">FPO</option>
+                    <option value="student">Student</option>
+                    <option value="volunteer">Volunteer</option>
+                    <option value="ngo">NGO</option>
+                  </select>
+                </div>
+              )}
+              <div>
+                <Label htmlFor="cu-state">State</Label>
+                <Input
+                  id="cu-state"
+                  value={form.state}
+                  onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+                  placeholder="Maharashtra"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="cu-district">District</Label>
+                <Input
+                  id="cu-district"
+                  value={form.district}
+                  onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
+                  placeholder="Pune"
+                  required
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="cu-block">Block <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  id="cu-block"
+                  value={form.block}
+                  onChange={(e) => setForm((f) => ({ ...f, block: e.target.value }))}
+                  placeholder="Haveli"
+                />
+              </div>
+            </div>
+
+            {formError && <p className="text-sm text-destructive">{formError}</p>}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? 'Creating...' : 'Create User'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

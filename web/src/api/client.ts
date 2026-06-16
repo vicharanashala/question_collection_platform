@@ -256,6 +256,22 @@ export const adminApi = {
   unsuspendUser: (userId: string) =>
     request<{ message: string }>(`/admin/users/${userId}/unsuspend`, { method: 'POST' }, false)
       .finally(() => invalidateCache('/api/admin')),
+
+  createUser: (body: {
+    name: string
+    mobileNumber: string
+    role: string
+    category?: string
+    state: string
+    district: string
+    block?: string
+    languagePreference?: string
+  }) =>
+    request<{ message: string; user: import('@/types').User }>(
+      '/admin/users',
+      { method: 'POST', body: JSON.stringify(body) },
+      false,
+    ).finally(() => invalidateCache('/api/admin')),
 }
 
 // ─── Questions API ─────────────────────────────────────────────────────────
