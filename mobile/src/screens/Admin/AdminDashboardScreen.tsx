@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   RefreshControl, ActivityIndicator, TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,8 +11,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
-import { BarChart, LineChart, PieChart } from 'react-native-gifted-charts';
-import type { stackDataItem } from 'gifted-charts-core';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -74,11 +71,6 @@ function formatINR(n: number) {
   return `₹${n}`;
 }
 
-function shortDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-}
-
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   pending:     { label: 'Pending',     color: '#D97706', bg: '#FEF3C7' },
   ai_review:   { label: 'AI Review',   color: '#7C3AED', bg: '#EDE9FE' },
@@ -86,13 +78,6 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
   approved:    { label: 'Approved',    color: '#059669', bg: '#D1FAE5' },
   rejected:    { label: 'Rejected',    color: '#DC2626', bg: '#FEE2E2' },
 };
-
-const CATEGORY_LABELS: Record<string, string> = {
-  farmer: 'Farmer', fpo: 'FPO', student: 'Student',
-  volunteer: 'Volunteer', ngo: 'NGO',
-};
-
-const PIE_COLORS = ['#0891B2', '#7C3AED', '#D97706', '#059669', '#DC2626'];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -188,55 +173,6 @@ export function AdminDashboardScreen() {
   const s = stats?.summary ?? null;
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  // ─── Derived chart data ────────────────────────────────────────────────────
-
-  const screenW = Dimensions.get('window').width;
-  const chartWidth = screenW - (tokens.spacing5 * 2) - (tokens.spacing4 * 2);
-  const maxDaily = Math.max(
-    ...(stats?.dailyVolume ?? []).map((d) => d.total),
-    5,
-  );
-
-  const volumeStackData: stackDataItem[] = (stats?.dailyVolume ?? []).map((d) => ({
-    label: shortDate(d.date),
-    stacks: [
-      { value: d.total,   color: c.primary },
-      { value: d.approved, color: '#059669' },
-    ],
-  }));
-
-  const submittedLineData = (stats?.dailyVolume ?? []).map((d) => ({
-    value: d.total,
-    label: shortDate(d.date),
-  }));
-
-  const approvedLineData2 = (stats?.dailyVolume ?? []).map((d) => ({
-    value: d.approved,
-    label: shortDate(d.date),
-  }));
-
-  const statusPieData = s ? [
-    { value: s.pendingQuestions,      label: 'Pending',     color: '#D97706' },
-    { value: s.approvedQuestions,     label: 'Approved',    color: '#059669' },
-    { value: s.rejectedQuestions,     label: 'Rejected',    color: '#DC2626' },
-    { value: Math.max(0, s.totalQuestions - s.approvedQuestions - s.rejectedQuestions - s.pendingQuestions), label: 'AI Review', color: '#7C3AED' },
-  ].filter((d) => d.value > 0) : [];
-
-  const stateBarData = (stats?.stateBreakdown ?? []).slice(0, 6).map((r) => ({
-    value: r.count,
-    label: r.state.length > 8 ? r.state.slice(0, 7) + '…' : r.state,
-    frontColor: c.primary,
-    topLabelComponent: () => <Text style={[styles.barLabel, { color: c.text }]}>{r.count}</Text>,
-  }));
-
-  const categoryPieData = (stats?.categoryBreakdown ?? []).map((r, i) => ({
-    value: r.count,
-    label: CATEGORY_LABELS[r.category] ?? r.category,
-    color: PIE_COLORS[i % PIE_COLORS.length],
-  }));
-
-  const maxStateCount = stats?.stateBreakdown?.[0]?.count ?? 1;
-
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -331,110 +267,6 @@ export function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* ── Two-column: status pie + state bar ─────────────────────────── */}
-        {(statusPieData.length > 0 || stateBarData.length > 0) && (
-          <View style={styles.twoCol}>
-            {/* Status pie */}
-            {statusPieData.length > 0 && (
-              <View style={[styles.chartCard, { backgroundColor: c.surface, flex: 1 }]}>
-                <Text style={[styles.chartTitle, { color: c.text }]}>Question Status</Text>
-                <PieChart
-                  data={statusPieData}
-                  donut
-                  radius={52}
-                  innerRadius={32}
-                  centerLabelComponent={() => (
-                    <Text style={[styles.pieCenter, { color: c.text }]}>
-                      {s?.totalQuestions ?? 0}
-                    </Text>
-                  )}
-                />
-                <View style={styles.pieLegend}>
-                  {statusPieData.map((item) => (
-                    <View key={item.label} style={styles.pieLegendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-                      <Text style={[styles.legendText, { color: c.textSecondary, flex: 1 }]}>{item.label}</Text>
-                      <Text style={[styles.legendText, { color: c.text, fontWeight: '600' }]}>{item.value}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* State bar */}
-            {stateBarData.length > 0 && (
-              <View style={[styles.chartCard, { backgroundColor: c.surface, flex: 1 }]}>
-                <Text style={[styles.chartTitle, { color: c.text }]}>Top States</Text>
-                <BarChart
-                  data={stateBarData}
-                  height={110}
-                  barWidth={22}
-                  spacing={12}
-                  roundedTop
-                  roundedBottom
-                  hideRules
-                  xAxisColor={c.textTertiary + '44'}
-                  yAxisColor="transparent"
-                  xAxisLabelTextStyle={{ color: c.textTertiary, fontSize: 9 }}
-                  yAxisTextStyle={{ color: c.textTertiary, fontSize: 9 }}
-                  noOfSections={3}
-                  maxValue={maxStateCount * 1.2}
-                />
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* ── User categories pie + Reward summary ───────────────────────── */}
-        <View style={styles.twoCol}>
-          {categoryPieData.length > 0 && (
-            <View style={[styles.chartCard, { backgroundColor: c.surface, flex: 1 }]}>
-              <Text style={[styles.chartTitle, { color: c.text }]}>User Categories</Text>
-              <PieChart
-                data={categoryPieData}
-                donut
-                radius={46}
-                innerRadius={28}
-                centerLabelComponent={() => (
-                  <Text style={[styles.pieCenter, { color: c.text }]}>
-                    {s?.totalUsers ?? 0}
-                  </Text>
-                )}
-              />
-              <View style={styles.pieLegend}>
-                {categoryPieData.map((item) => (
-                  <View key={item.label} style={styles.pieLegendRow}>
-                    <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-                    <Text style={[styles.legendText, { color: c.textSecondary, flex: 1 }]}>{item.label}</Text>
-                    <Text style={[styles.legendText, { color: c.text, fontWeight: '600' }]}>{item.value}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Rewards summary */}
-          {rewards && (
-            <View style={[styles.chartCard, { backgroundColor: c.surface, flex: 1 }]}>
-              <Text style={[styles.chartTitle, { color: c.text }]}>Rewards & Payouts</Text>
-              <View style={styles.rewardStats}>
-                {[
-                  { label: 'Total Rewarded', value: formatINR(rewards.totalRewarded), icon: 'wallet', color: c.success },
-                  { label: 'Reward Count', value: String(rewards.rewardCount), icon: 'checkmark-done', color: c.primary },
-                  { label: 'Avg. Reward', value: formatINR(Math.round(rewards.avgReward)), icon: 'trending-up', color: '#7C3AED' },
-                  { label: 'Pending Payouts', value: String(rewards.pendingWithdrawals), icon: 'time', color: rewards.pendingWithdrawals > 0 ? c.warning : c.textSecondary },
-                ].map((item) => (
-                  <View key={item.label} style={styles.rewardRow}>
-                    <Ionicons name={item.icon as any} size={14} color={item.color} />
-                    <Text style={[styles.rewardLabel, { color: c.textSecondary }]}>{item.label}</Text>
-                    <Text style={[styles.rewardValue, { color: item.color }]}>{item.value}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-        </View>
-
         {/* ── Quick review queue ─────────────────────────────────────────── */}
         {queue.length > 0 && (
           <View style={styles.section}>
@@ -521,25 +353,6 @@ export function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* ── State breakdown (list fallback) ───────────────────────────── */}
-        {stats?.stateBreakdown && stats.stateBreakdown.length > 0 && stateBarData.length === 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Top States</Text>
-            </View>
-            {stats.stateBreakdown.slice(0, 6).map((row, i) => (
-              <View key={row.state} style={styles.stateRow}>
-                <Text style={[styles.stateRank, { color: c.textTertiary }]}>{i + 1}</Text>
-                <Text style={[styles.stateName, { color: c.text }]}>{row.state}</Text>
-                <View style={styles.barWrap}>
-                  <View style={[styles.bar, { width: `${Math.round((row.count / maxStateCount) * 100)}%`, backgroundColor: i === 0 ? c.primary : c.primary + '55' }]} />
-                </View>
-                <Text style={[styles.stateCount, { color: c.textSecondary }]}>{row.count}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -590,38 +403,6 @@ const styles = StyleSheet.create({
   kpiValue: { fontSize: 20, fontWeight: '800', lineHeight: 24 },
   kpiLabel: { fontSize: 10, marginTop: 2 },
 
-  // Charts
-  twoCol: {
-    flexDirection: 'row', gap: tokens.spacing3,
-    marginBottom: tokens.spacing3,
-  },
-  chartCard: {
-    borderRadius: tokens.radiusMd, padding: tokens.spacing4,
-    marginBottom: tokens.spacing3,
-  },
-  chartHead: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: tokens.spacing3,
-  },
-  chartTitle: { fontSize: 14, fontWeight: '700', marginBottom: tokens.spacing2 },
-  chartLegend: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 11 },
-
-  // Pie
-  pieCenter: { fontSize: 16, fontWeight: '800' },
-  pieLegend: { marginTop: tokens.spacing2, gap: 4 },
-  pieLegendRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-
-  // Bar
-  barLabel: { fontSize: 9, fontWeight: '700', textAlign: 'center' },
-
-  // Rewards
-  rewardStats: { gap: tokens.spacing2, marginTop: 4 },
-  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rewardLabel: { fontSize: 12, flex: 1 },
-  rewardValue: { fontSize: 14, fontWeight: '700' },
-
   // Sections
   section: { marginBottom: tokens.spacing6 },
   sectionHead: {
@@ -662,15 +443,4 @@ const styles = StyleSheet.create({
   qnText: { flex: 1 },
   qnLabel: { fontSize: 14, fontWeight: '700' },
   qnSub: { fontSize: 11, marginTop: 1 },
-
-  // State list fallback
-  stateRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: tokens.spacing2, marginBottom: tokens.spacing2,
-  },
-  stateRank: { width: 16, fontSize: 11, textAlign: 'right' },
-  stateName: { width: 90, fontSize: 13 },
-  barWrap: { flex: 1, height: 6, backgroundColor: '#F3F4F6', borderRadius: 3 },
-  bar: { height: 6, borderRadius: 3 },
-  stateCount: { width: 28, fontSize: 12, textAlign: 'right' },
 });
