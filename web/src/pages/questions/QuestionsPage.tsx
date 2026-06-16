@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { questionApi, getErrorMessage } from '@/api/client'
+import { useAuth } from '@/context/AuthContext'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,8 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export function QuestionsPage() {
+  const { user } = useAuth()
+  const canModerate = ['curator', 'admin', 'super_admin'].includes(user?.role ?? '')
   const [questions, setQuestions] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -134,8 +137,8 @@ export function QuestionsPage() {
                     )}
                   </div>
 
-                  {/* Quick status actions */}
-                  {q.status === 'pending' && (
+                  {/* Quick status actions — only for moderators */}
+                  {canModerate && q.status === 'pending' && (
                     <div className="flex flex-col gap-2 shrink-0">
                       <Button
                         size="sm"

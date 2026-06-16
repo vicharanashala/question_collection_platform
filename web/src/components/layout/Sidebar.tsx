@@ -15,9 +15,9 @@ import {
 import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/users', label: 'Users', icon: Users },
-  { to: '/questions', label: 'Questions', icon: MessageSquare },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['user', 'curator', 'admin', 'super_admin'] },
+  { to: '/users', label: 'Users', icon: Users, roles: ['admin', 'super_admin'] },
+  { to: '/questions', label: 'Questions', icon: MessageSquare, roles: ['user', 'curator', 'admin', 'super_admin'] },
   { to: '/reviews', label: 'Review Queue', icon: CheckSquare, roles: ['curator', 'admin', 'super_admin'] },
 ]
 
@@ -42,7 +42,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map(({ to, label, icon: Icon, roles }) => {
-          if (roles && !roles.includes(user?.role as string)) return null
+          if (!roles?.includes(user?.role as string)) return null
           return (
             <NavLink
               key={to}

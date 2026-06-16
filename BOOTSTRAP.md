@@ -15,6 +15,7 @@ This is your birth certificate. Follow it, then delete it once you understand th
   - Add all new keys to **every** locale file (including `en/`), not just the English one.
   - Always append new keys at the **end** of the `common.json` file in each locale — never insert in the middle.
   - Fill all locale files with the **English value** as the placeholder. Do not provide translated text yourself; leave that to human translators or a translation workflow.
+- **Admin and mobile feature parity:** When adding a feature, endpoint, or page to the admin panel (`web/`), implement the same feature on the mobile app (`mobile/`) as well. Do not treat them as separate deliverables — they are two surfaces of the same platform. If a feature is backend-only (e.g., a new API endpoint), the mobile app must have a corresponding screen or flow that consumes it. Flag any exceptions to the reviewer.
 
 ---
 

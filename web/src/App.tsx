@@ -1,24 +1,48 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
+import { lazy } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PrefetchProvider } from '@/context/PrefetchContext'
 import { lazyRoute } from '@/components/LazyRoute'
-import { SkeletonPage } from '@/components/ui/skeleton'
+import type { UserRole } from '@/types'
 
-const LoginPage     = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
-const DashboardPage = lazyRoute(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
-const UsersPage     = lazyRoute(() => import('@/pages/users/UsersPage').then(m => ({ default: m.UsersPage })))
+const LoginPage      = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
+const DashboardPage  = lazyRoute(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
+const UsersPage      = lazyRoute(() => import('@/pages/users/UsersPage').then(m => ({ default: m.UsersPage })))
 const UserDetailPage = lazyRoute(() => import('@/pages/users/UserDetailPage').then(m => ({ default: m.UserDetailPage })))
-const QuestionsPage = lazyRoute(() => import('@/pages/questions/QuestionsPage').then(m => ({ default: m.QuestionsPage })))
-const ReviewsPage   = lazyRoute(() => import('@/pages/reviews/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
-const ProfilePage   = lazyRoute(() => import('@/pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })))
+const QuestionsPage  = lazyRoute(() => import('@/pages/questions/QuestionsPage').then(m => ({ default: m.QuestionsPage })))
+const ReviewsPage    = lazyRoute(() => import('@/pages/reviews/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
+const ProfilePage    = lazyRoute(() => import('@/pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })))
+
+/** Pages visible per role */
+const PAGE_ROLES: Record<string, UserRole[]> = {
+  dashboard:    ['user', 'curator', 'admin', 'super_admin'],
+  users:        ['admin', 'super_admin'],
+  userDetail:   ['admin', 'super_admin'],
+  questions:    ['user', 'curator', 'admin', 'super_admin'],
+  reviews:      ['curator', 'admin', 'super_admin'],
+  profile:      ['user', 'curator', 'admin', 'super_admin'],
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   if (isLoading) return null
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <>{children}</>
+}
+
+/** Redirects to the first accessible page if current role has no access to the page */
+function RoleRoute({ pageKey }: { pageKey: string }) {
+  const { user } = useAuth()
+  const allowedRoles = PAGE_ROLES[pageKey] ?? []
+  if (!allowedRoles.includes(user?.role as UserRole)) {
+    // Find the first page this role can access
+    const redirectPage = Object.entries(PAGE_ROLES).find(([, roles]) =>
+      roles.includes(user?.role as UserRole)
+    )?.[0]
+    return <Navigate to={`/${redirectPage}`} replace />
+  }
+  return null
 }
 
 /**
@@ -40,12 +64,12 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard"  element={<DashboardPage />} />
-          <Route path="users"      element={<UsersPage />} />
-          <Route path="users/:userId" element={<UserDetailPage />} />
-          <Route path="questions"  element={<QuestionsPage />} />
-          <Route path="reviews"    element={<ReviewsPage />} />
-          <Route path="profile"    element={<ProfilePage />} />
+          <Route path="dashboard"  element={<><RoleRoute pageKey="dashboard" /><DashboardPage /></>} />
+          <Route path="users"      element={<><RoleRoute pageKey="users" /><UsersPage /></>} />
+          <Route path="users/:userId" element={<><RoleRoute pageKey="userDetail" /><UserDetailPage /></>} />
+          <Route path="questions"  element={<><RoleRoute pageKey="questions" /><QuestionsPage /></>} />
+          <Route path="reviews"    element={<><RoleRoute pageKey="reviews" /><ReviewsPage /></>} />
+          <Route path="profile"    element={<><RoleRoute pageKey="profile" /><ProfilePage /></>} />
         </Route>
       </Routes>
     </PrefetchProvider>
