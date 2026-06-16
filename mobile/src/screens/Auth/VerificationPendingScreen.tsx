@@ -86,8 +86,6 @@ export function VerificationPendingScreen() {
             title={t('verificationPending.contactAdmin')}
             onPress={handleContactAdmin}
             variant="secondary"
-            icon="logo-whatsapp"
-            iconPosition="left"
           />
 
           <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>

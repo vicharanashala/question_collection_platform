@@ -11,6 +11,9 @@ import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
+import { UserRole } from '../../types';
+
+const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 
 type Route = RouteProp<AdminStackParamList, 'AdminUserDetail'>;
 
@@ -190,28 +193,32 @@ export function AdminUserDetailScreen() {
           </View>
         )}
 
-        {/* Recent questions */}
-        <Text style={[styles.sectionTitle, { color: c.text }]}>Recent Questions ({questions.length})</Text>
-        {questions.length === 0 ? (
-          <Text style={[styles.empty, { color: c.textTertiary }]}>No questions submitted</Text>
-        ) : (
-          questions.map((q) => (
-            <View key={String(q.id)} style={[styles.questionCard, { backgroundColor: c.surface }]}>
-              <View style={styles.questionTop}>
-                <Text style={[styles.questionText, { color: c.text }]} numberOfLines={2}>
-                  {String(q.questionText)}
-                </Text>
-                <View style={[styles.statusBadge, { backgroundColor: statusColor(String(q.status)) + '22' }]}>
-                  <Text style={[styles.statusText, { color: statusColor(String(q.status)) }]}>
-                    {String(q.status)}
+        {/* Recent questions — hidden for admin/curator roles */}
+        {!PRIVILEGED_ROLES.includes(user.role as UserRole) && (
+          <>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Recent Questions ({questions.length})</Text>
+            {questions.length === 0 ? (
+              <Text style={[styles.empty, { color: c.textTertiary }]}>No questions submitted</Text>
+            ) : (
+              questions.map((q) => (
+                <View key={String(q.id)} style={[styles.questionCard, { backgroundColor: c.surface }]}>
+                  <View style={styles.questionTop}>
+                    <Text style={[styles.questionText, { color: c.text }]} numberOfLines={2}>
+                      {String(q.questionText)}
+                    </Text>
+                    <View style={[styles.statusBadge, { backgroundColor: statusColor(String(q.status)) + '22' }]}>
+                      <Text style={[styles.statusText, { color: statusColor(String(q.status)) }]}>
+                        {String(q.status)}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.questionDate, { color: c.textTertiary }]}>
+                    {q.submittedAt ? new Date(String(q.submittedAt)).toLocaleDateString('en-IN') : ''}
                   </Text>
                 </View>
-              </View>
-              <Text style={[styles.questionDate, { color: c.textTertiary }]}>
-                {q.submittedAt ? new Date(String(q.submittedAt)).toLocaleDateString('en-IN') : ''}
-              </Text>
-            </View>
-          ))
+              ))
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
