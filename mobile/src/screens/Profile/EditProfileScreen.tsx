@@ -81,29 +81,25 @@ export function EditProfileScreen({ navigation }: Props) {
   const handleMemberRoleChange = useCallback((text: string) => setMemberRole(text), []);
 
   function validate() {
-    if (isPrivileged) {
-      // Privileged roles only need name + location
-      const errs: Record<string, string> = {};
-      if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
-      if (!state) errs.state = t('editProfile.selectState');
-      if (!district.trim()) errs.district = t('editProfile.districtRequired');
-      setErrors(errs);
-      return Object.keys(errs).length === 0;
-    }
-
-    // Normal user validation (includes category-specific rules)
     const errs: Record<string, string> = {};
     if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
     if (!state) errs.state = t('editProfile.selectState');
     if (!district.trim()) errs.district = t('editProfile.districtRequired');
-    if (user?.category === UserCategory.STUDENT) {
+
+    // Category-specific validation — skipped for privileged roles (category is null for them)
+    if (!isPrivileged && user?.category === UserCategory.STUDENT) {
       if (!courseName.trim()) errs.courseName = t('editProfile.courseNameRequired');
       if (!universityName.trim()) errs.universityName = t('editProfile.universityNameRequired');
     }
-    if ([UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory)) {
+    if (!isPrivileged && user?.category === UserCategory.VOLUNTEER) {
       if (!organisationName.trim()) errs.organisationName = t('editProfile.organisationNameRequired');
       if (!memberRole.trim()) errs.role = t('editProfile.roleRequired');
     }
+    if (!isPrivileged && user?.category === UserCategory.NGO) {
+      if (!organisationName.trim()) errs.organisationName = t('editProfile.organisationNameRequired');
+      if (!memberRole.trim()) errs.role = t('editProfile.roleRequired');
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -119,7 +115,8 @@ export function EditProfileScreen({ navigation }: Props) {
         block: block.trim() || undefined,
         languagePreference: language,
       };
-      // Category-specific fields only for non-privileged users
+
+      // Category-specific fields — only for non-privileged users
       if (!isPrivileged) {
         if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
           if (farmSize.trim()) payload.farmSize = farmSize.trim();
@@ -127,10 +124,11 @@ export function EditProfileScreen({ navigation }: Props) {
         } else if (user?.category === UserCategory.STUDENT) {
           payload.courseName = courseName.trim();
           payload.universityName = universityName.trim();
-        } else {
+        } else if (user?.category === UserCategory.VOLUNTEER || user?.category === UserCategory.NGO) {
           payload.organisationName = organisationName.trim();
           payload.memberRole = memberRole.trim();
         }
+        // else: category is null or unknown — send nothing extra
       }
       await userApi.updateProfile(payload);
       await refreshProfile();
