@@ -133,6 +133,7 @@ export function EditProfileScreen({ navigation }: Props) {
       await userApi.updateProfile(payload);
       await refreshProfile();
       showToast(t('editProfile.saveSuccess'), 'success');
+      navigation.goBack();
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
       const msg = getErrorMessage(err, t('editProfile.saveFailed'));
