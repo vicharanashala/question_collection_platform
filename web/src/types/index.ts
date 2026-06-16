@@ -44,6 +44,16 @@ export interface Question {
   rejectionReason?: string | null;
   reviewerId?: string | null;
   heldReason?: string | null;
+  /** Populated user info returned by backend */
+  user?: {
+    id: string;
+    name: string;
+    mobileNumber?: string;
+  } | null;
+  /** Alias for user.name, returned by some endpoints */
+  userName?: string | null;
+  /** Alias for user.mobileNumber */
+  userMobileNumber?: string | null;
 }
 
 export interface DashboardStats {

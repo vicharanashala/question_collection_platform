@@ -223,6 +223,7 @@ export class QuestionService {
 
     const [items, total] = await this.questionRepo.findAndCount({
       where,
+      relations: ['user'],
       order: { submittedAt: 'DESC' },
       skip,
       take: limit,

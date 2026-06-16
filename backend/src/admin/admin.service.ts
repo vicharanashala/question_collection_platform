@@ -443,6 +443,9 @@ export class AdminService implements OnModuleInit {
         'q.domainCategory',
         'q.cropType',
         'q.state',
+        'q.district',
+        'u.name',
+        'u.mobileNumber',
       ])
       .skip((page - 1) * limit)
       .take(limit);

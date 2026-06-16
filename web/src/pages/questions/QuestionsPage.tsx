@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { questionApi, getErrorMessage } from '@/api/client'
-import { useAuth } from '@/context/AuthContext'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -12,10 +11,11 @@ import {
 } from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
 import {
-  Search, ChevronLeft, ChevronRight, CheckCircle, XCircle,
+  Search, ChevronLeft, ChevronRight,
   MessageSquare, Clock, User, Eye, Star,
   MapPin, Wheat, CloudRain, Globe, Film,
-  Hash, AlertTriangle, PauseCircle,
+  Hash, AlertTriangle, PauseCircle, ChevronDown,
+  Phone,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
@@ -27,6 +27,15 @@ const STATUS_COLORS: Record<string, string> = {
   held: 'bg-[hsl(38,92%,50%)] text-white',
   approved: 'bg-success text-white',
   rejected: 'bg-destructive text-white',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  ai_review: 'AI Review',
+  human_review: 'Human Review',
+  held: 'Held',
+  approved: 'Approved',
+  rejected: 'Rejected',
 }
 
 const SEASON_LABEL: Record<string, string> = {
@@ -47,9 +56,91 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
   )
 }
 
+function QuestionCard({ q, onOpen }: { q: Question; onOpen: (q: Question) => void }) {
+  return (
+    <Card
+      className="group overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
+      onClick={() => onOpen(q)}
+    >
+      <CardContent className="p-0">
+        {/* Top: user + meta + status */}
+        <div className="flex items-start justify-between gap-3 p-4 pb-0">
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <span className="text-xs font-semibold text-foreground truncate">
+              {q.user?.name ?? q.userName ?? q.user?.mobileNumber ?? q.userMobileNumber ?? 'Unknown'}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+                {STATUS_LABELS[q.status] ?? q.status}
+              </Badge>
+              {q.aiConfidenceScore != null && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Star className="h-3 w-3 text-warning" />
+                  <span className="font-medium">{q.aiConfidenceScore}%</span>
+                </span>
+              )}
+              {q.cropType && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Wheat className="h-3 w-3" /> {q.cropType}
+                </span>
+              )}
+              {q.season && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground capitalize">
+                  <CloudRain className="h-3 w-3" /> {SEASON_LABEL[q.season] ?? q.season}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <span className="text-xs text-muted-foreground">
+              {formatDate(q.submittedAt)}
+            </span>
+          </div>
+        </div>
+
+        {/* Question text */}
+        <div className="px-4 pt-3">
+          <p className="text-sm font-medium text-foreground leading-relaxed line-clamp-2">
+            {q.questionText}
+          </p>
+        </div>
+
+        {/* Bottom row: location + domain + media hint + view icon */}
+        <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            {q.domainCategory && (
+              <span className="text-xs font-medium text-info bg-info/10 px-2 py-0.5 rounded-full capitalize">
+                {q.domainCategory}
+              </span>
+            )}
+            {(q.state || q.district) && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                {[q.district, q.state].filter(Boolean).join(', ')}
+              </span>
+            )}
+            {q.mediaUrls && q.mediaUrls.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Film className="h-3 w-3" /> {q.mediaUrls.length} media
+              </span>
+            )}
+          </div>
+          <Eye className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+
+        {/* Rejection reason strip */}
+        {q.rejectionReason && (
+          <div className="mx-4 mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 flex items-start gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+            <p className="text-xs text-destructive line-clamp-1">{q.rejectionReason}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 export function QuestionsPage() {
-  const { user } = useAuth()
-  const canModerate = ['curator', 'admin', 'super_admin'].includes(user?.role ?? '')
   const [questions, setQuestions] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -59,9 +150,7 @@ export function QuestionsPage() {
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
 
-  // Question detail dialog
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
-  // Separate open state so closing the dialog (onOpenChange) clears detailQuestion cleanly
   const [detailOpen, setDetailOpen] = useState(false)
 
   useEffect(() => {
@@ -76,36 +165,45 @@ export function QuestionsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-extrabold text-foreground">Questions</h2>
-        <p className="text-sm text-muted-foreground">{total.toLocaleString()} total questions</p>
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Questions</h2>
+          <p className="text-sm text-muted-foreground">{total.toLocaleString()} questions in system</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">{total.toLocaleString()} total</Badge>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="p-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-48">
+      {/* Search + filters */}
+      <Card>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by crop type..."
+              placeholder="Search by crop type, keyword..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
+              className="pl-9"
             />
           </div>
-          <select
-            className="h-10 rounded-md border border-input bg-surface-variant px-3 text-sm text-text !bg-surface-variant dark:!bg-surface-variant dark:border-border-subtle"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="ai_review">AI Review</option>
-            <option value="human_review">Human Review</option>
-            <option value="held">Held</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          <div className="relative">
+            <select
+              className="h-10 rounded-md border border-border-subtle bg-surface px-3 pl-3 pr-8 text-sm text-text appearance-none cursor-pointer"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="ai_review">AI Review</option>
+              <option value="human_review">Human Review</option>
+              <option value="held">Held</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
         </div>
       </Card>
 
@@ -113,110 +211,29 @@ export function QuestionsPage() {
       <div className="space-y-3">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <Card key={i} className="p-5">
-              <div className="h-5 w-3/4 rounded bg-muted animate-pulse mb-3" />
-              <div className="h-4 w-1/2 rounded bg-muted animate-pulse" />
+            <Card key={i}>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex gap-2">
+                  <div className="h-5 w-20 rounded bg-muted animate-pulse" />
+                  <div className="h-5 w-16 rounded bg-muted animate-pulse" />
+                </div>
+                <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
+              </CardContent>
             </Card>
           ))
         ) : questions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <MessageSquare className="h-10 w-10 text-muted-foreground/50" />
-            <p className="text-muted-foreground">No questions found</p>
-          </div>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
+              <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground font-medium">No questions found</p>
+              <p className="text-xs text-muted-foreground">Try adjusting your search or filters</p>
+            </CardContent>
+          </Card>
         ) : (
           questions.map((q) => (
-            <Card
-              key={q.id}
-              className="overflow-hidden hover:border-primary/40 transition-colors cursor-pointer"
-              onClick={() => { setDetailQuestion(q); setDetailOpen(true) }}
-            >
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground leading-relaxed">{q.questionText}</p>
-
-                    {/* Meta row */}
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                      <Badge className={cn('capitalize', STATUS_COLORS[q.status] ?? 'bg-muted')}>
-                        {q.status.replace('_', ' ')}
-                      </Badge>
-                      {q.domainCategory && (
-                        <span className="text-xs text-muted-foreground">{q.domainCategory}</span>
-                      )}
-                      {q.cropType && (
-                        <span className="text-xs text-muted-foreground">{q.cropType}</span>
-                      )}
-                      {q.season && (
-                        <span className="text-xs text-muted-foreground capitalize">{q.season}</span>
-                      )}
-                      {q.state && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <User className="h-3 w-3" /> {q.state}{q.district ? `, ${q.district}` : ''}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" /> {formatDate(q.submittedAt)}
-                      </span>
-                      {q.aiConfidenceScore != null && (
-                        <span className="text-xs text-muted-foreground">
-                          AI conf: {q.aiConfidenceScore}%
-                        </span>
-                      )}
-                    </div>
-
-                    {q.rejectionReason && (
-                      <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3">
-                        <XCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-                        <p className="text-xs text-destructive">{q.rejectionReason}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quick status actions — only for moderators */}
-                  {canModerate && (
-                    <div className="flex flex-col gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-primary border-primary/50 hover:bg-primary/10"
-                        onClick={(e) => { e.stopPropagation(); setDetailQuestion(q); setDetailOpen(true) }}
-                      >
-                        <Eye className="h-4 w-4 mr-1" /> View
-                      </Button>
-                      {q.status === 'pending' && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-success border border-success/50 hover:bg-success/10"
-                            onClick={() => questionApi.approveQuestion(q.id).then(() => {
-                              setQuestions((qs) => qs.map((qq) => qq.id === q.id ? { ...qq, status: 'approved' as const } : qq))
-                              toast.success('Question approved')
-                            }).catch((e) => toast.error(getErrorMessage(e, 'Failed to approve')))}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" /> Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-destructive border border-destructive/50 hover:bg-destructive/10"
-                            onClick={() => {
-                              const reason = window.prompt('Rejection reason (optional):')
-                              questionApi.rejectQuestion(q.id, reason ?? undefined).then(() => {
-                                setQuestions((qs) => qs.map((qq) => qq.id === q.id ? { ...qq, status: 'rejected' as const } : qq))
-                                toast.success('Question rejected')
-                              }).catch((e) => toast.error(getErrorMessage(e, 'Failed to reject')))
-                            }}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" /> Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
+            <QuestionCard key={q.id} q={q} onOpen={(qq) => { setDetailQuestion(qq); setDetailOpen(true) }} />
           ))
         )}
       </div>
@@ -225,14 +242,26 @@ export function QuestionsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+            {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
           </p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+            <span className="text-xs text-muted-foreground px-2 min-w-[80px] text-center">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -241,27 +270,27 @@ export function QuestionsPage() {
 
       {/* ─── Question Detail Dialog ─── */}
       {detailQuestion && (
-        <Dialog open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetailQuestion(null) } }}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Eye className="h-4 w-4" /> Question Details
-              </DialogTitle>
-              <DialogDescription>
-                Full information for the selected question.
-              </DialogDescription>
-            </DialogHeader>
+      <Dialog open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetailQuestion(null) } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Question Details
+            </DialogTitle>
+            <DialogDescription>
+              Full information for the selected question.
+            </DialogDescription>
+          </DialogHeader>
 
             <div className="space-y-4">
               {/* Status & badges */}
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={cn('capitalize', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
-                  {detailQuestion.status.replace('_', ' ')}
+                <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
+                  {STATUS_LABELS[detailQuestion.status] ?? detailQuestion.status}
                 </Badge>
                 <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domainCategory}</span>
                 {detailQuestion.aiConfidenceScore != null && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star className="h-3 w-3" /> AI confidence: {detailQuestion.aiConfidenceScore}%
+                    <Star className="h-3 w-3 text-warning" /> AI confidence: {detailQuestion.aiConfidenceScore}%
                   </span>
                 )}
                 {detailQuestion.duplicateFlag && (
@@ -294,7 +323,7 @@ export function QuestionsPage() {
                 )}
                 {detailQuestion.rejectionReason && (
                   <div className="col-span-2 mt-1">
-                    <InfoRow icon={XCircle} label="Rejection Reason" value={detailQuestion.rejectionReason} />
+                    <InfoRow icon={AlertTriangle} label="Rejection Reason" value={detailQuestion.rejectionReason} />
                   </div>
                 )}
                 {detailQuestion.heldReason && (
@@ -331,8 +360,8 @@ export function QuestionsPage() {
                 Close
               </Button>
             </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        </DialogContent>
+      </Dialog>
       )}
     </div>
   )
