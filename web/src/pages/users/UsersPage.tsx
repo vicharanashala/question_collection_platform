@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,14 +44,15 @@ export function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const limit = 20
+  const debouncedSearch = useDebouncedValue(search, 400)
 
   useEffect(() => {
     setLoading(true)
-    adminApi.getUsers({ page, limit, search: search || undefined, status: statusFilter || undefined, role: roleFilter || undefined })
+    adminApi.getUsers({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined })
       .then((res) => { setUsers(res.items); setTotal(res.total) })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
       .finally(() => setLoading(false))
-  }, [page, search, statusFilter, roleFilter])
+  }, [page, debouncedSearch, statusFilter, roleFilter])
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -97,7 +99,7 @@ export function UsersPage() {
       setCreateOpen(false)
       setPage(1)
       // Refresh list
-      adminApi.getUsers({ page: 1, limit, search: search || undefined, status: statusFilter || undefined, role: roleFilter || undefined })
+      adminApi.getUsers({ page: 1, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined })
         .then((res) => { setUsers(res.items); setTotal(res.total) })
         .catch(() => {})
     } catch (err) {

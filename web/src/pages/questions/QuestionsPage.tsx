@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { questionApi, getErrorMessage } from '@/api/client'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -28,14 +29,15 @@ export function QuestionsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const limit = 20
+  const debouncedSearch = useDebouncedValue(search, 400)
 
   useEffect(() => {
     setLoading(true)
-    questionApi.getQuestions({ page, limit, search: search || undefined, status: statusFilter || undefined })
+    questionApi.getQuestions({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined })
       .then((res) => { setQuestions(res.items as Question[]); setTotal(res.total) })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load questions')))
       .finally(() => setLoading(false))
-  }, [page, search, statusFilter])
+  }, [page, debouncedSearch, statusFilter])
 
   const totalPages = Math.ceil(total / limit)
 
