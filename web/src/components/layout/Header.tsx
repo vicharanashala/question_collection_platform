@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { Bell, Search, Sun, Moon, LogOut, User, Menu } from 'lucide-react'
+import { Sun, Moon, LogOut, User, Menu } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -45,9 +45,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   }, [])
 
   function handleLogout() {
-    console.log('handleLogout called, current:', logoutConfirmOpen)
     setLogoutConfirmOpen(true)
-    console.log('after setState, logoutConfirmOpen:', true)
   }
 
   function confirmLogout() {
@@ -72,17 +70,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Search stub */}
-        <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-          <Search className="h-4 w-4" />
-        </button>
-
-        {/* Notifications stub */}
-        <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-        </button>
-
         <div className="h-6 w-px bg-border" />
 
         {/* Profile dropdown */}
@@ -152,7 +139,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       </div>
 
       {/* Logout confirmation */}
-      <Dialog open={logoutConfirmOpen} onOpenChange={(v) => { console.log('Dialog onOpenChange:', v); setLogoutConfirmOpen(v) }}>
+      <Dialog open={logoutConfirmOpen} onOpenChange={(v) => { setLogoutConfirmOpen(v) }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Sign Out?</DialogTitle>
