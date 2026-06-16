@@ -19,7 +19,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
-import { VerificationStatus, UserCategory } from '../../types';
+import { VerificationStatus, UserCategory, UserRole } from '../../types';
+
+const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 import { ProfileCompletionWidget } from '../../components/ProfileCompletionWidget';
 import { getLanguageName } from '../../utils/languageDetection';
 import type { CropDetail, WalletBalance } from '../../types';
@@ -130,14 +132,16 @@ export function ProfileScreen() {
           <View style={styles.heroTop}>
             <View style={styles.heroLeft}>
               <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
-              <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
-                <Text style={styles.categoryEmoji}>
-                  {user?.category ? categoryEmoji[user.category] : '🌱'}
-                </Text>
-                <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
-                  {user?.category ? categoryLabels[user.category] : ''}
-                </Text>
-              </View>
+              {!PRIVILEGED_ROLES.includes(user?.role as UserRole) && user?.category && (
+                <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
+                  <Text style={styles.categoryEmoji}>
+                    {categoryEmoji[user.category] ?? '🌱'}
+                  </Text>
+                  <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
+                    {categoryLabels[user.category] ?? ''}
+                  </Text>
+                </View>
+              )}
             </View>
             <View style={styles.avatarContainer}>
               <View style={[styles.avatarWrap, { backgroundColor: c.heroFg + '33' }]}>

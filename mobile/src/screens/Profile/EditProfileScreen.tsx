@@ -21,11 +21,13 @@ import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../api/client';
 import { INDIAN_STATES, LANGUAGES } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
-import { UserCategory } from '../../types';
+import { UserCategory, UserRole } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProfile'>;
 
-// ─── FieldGroup — extracted to module scope so it never gets recreated on parent re-renders ───
+const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
+
+// ─── FieldGroup ───────────────────────────────────────────────────────────────
 function FieldGroup({ icon, label, children, accentColor }: { icon: string; label: string; children: React.ReactNode; accentColor: string }) {
   return (
     <View style={styles.fieldGroup}>
@@ -51,12 +53,14 @@ export function EditProfileScreen({ navigation }: Props) {
   const { showToast } = useToast();
   const { t } = useTranslation();
 
+  const isPrivileged = PRIVILEGED_ROLES.includes(user?.role as UserRole);
+
   const [name, setName] = useState(user?.name ?? '');
   const [state, setState] = useState(user?.state ?? '');
   const [district, setDistrict] = useState(user?.district ?? '');
   const [block, setBlock] = useState(user?.block ?? '');
   const [language, setLanguage] = useState(user?.languagePreference ?? 'en');
-  // Category-specific
+  // Category-specific — only used for non-privileged roles
   const [farmSize, setFarmSize] = useState((user as any)?.farmSize ?? '');
   const [primaryCrop, setPrimaryCrop] = useState((user as any)?.cropType ?? '');
   const [courseName, setCourseName] = useState((user as any)?.courseName ?? '');
@@ -77,11 +81,21 @@ export function EditProfileScreen({ navigation }: Props) {
   const handleMemberRoleChange = useCallback((text: string) => setMemberRole(text), []);
 
   function validate() {
+    if (isPrivileged) {
+      // Privileged roles only need name + location
+      const errs: Record<string, string> = {};
+      if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
+      if (!state) errs.state = t('editProfile.selectState');
+      if (!district.trim()) errs.district = t('editProfile.districtRequired');
+      setErrors(errs);
+      return Object.keys(errs).length === 0;
+    }
+
+    // Normal user validation (includes category-specific rules)
     const errs: Record<string, string> = {};
     if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
     if (!state) errs.state = t('editProfile.selectState');
     if (!district.trim()) errs.district = t('editProfile.districtRequired');
-    // farmSize is optional — no validation required
     if (user?.category === UserCategory.STUDENT) {
       if (!courseName.trim()) errs.courseName = t('editProfile.courseNameRequired');
       if (!universityName.trim()) errs.universityName = t('editProfile.universityNameRequired');
@@ -105,15 +119,18 @@ export function EditProfileScreen({ navigation }: Props) {
         block: block.trim() || undefined,
         languagePreference: language,
       };
-      if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
-        if (farmSize.trim()) payload.farmSize = farmSize.trim();
-        if (primaryCrop.trim()) payload.cropType = primaryCrop.trim();
-      } else if (user?.category === UserCategory.STUDENT) {
-        payload.courseName = courseName.trim();
-        payload.universityName = universityName.trim();
-      } else {
-        payload.organisationName = organisationName.trim();
-        payload.memberRole = memberRole.trim();
+      // Category-specific fields only for non-privileged users
+      if (!isPrivileged) {
+        if (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) {
+          if (farmSize.trim()) payload.farmSize = farmSize.trim();
+          if (primaryCrop.trim()) payload.cropType = primaryCrop.trim();
+        } else if (user?.category === UserCategory.STUDENT) {
+          payload.courseName = courseName.trim();
+          payload.universityName = universityName.trim();
+        } else {
+          payload.organisationName = organisationName.trim();
+          payload.memberRole = memberRole.trim();
+        }
       }
       await userApi.updateProfile(payload);
       await refreshProfile();
@@ -142,7 +159,9 @@ export function EditProfileScreen({ navigation }: Props) {
           <View style={[styles.header, { borderBottomColor: c.borderSubtle }]}>
             <Text style={[styles.title, { color: c.text }]}>{t('editProfile.title')}</Text>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              {t('editProfile.subtitle')}
+              {isPrivileged
+                ? 'Update your admin profile'
+                : t('editProfile.subtitle')}
             </Text>
           </View>
 
@@ -191,8 +210,8 @@ export function EditProfileScreen({ navigation }: Props) {
               </View>
             </FieldGroup>
 
-            {/* Category-specific fields */}
-            {(user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) && (
+            {/* Category-specific fields — hidden for admin/curator/super_admin */}
+            {!isPrivileged && user?.category === (UserCategory.FARMER || UserCategory.FPO) && (
               <FieldGroup icon="leaf-outline" label={t('editProfile.farmerDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                   <Input
@@ -212,7 +231,7 @@ export function EditProfileScreen({ navigation }: Props) {
               </FieldGroup>
             )}
 
-            {user?.category === UserCategory.STUDENT && (
+            {!isPrivileged && user?.category === UserCategory.STUDENT && (
               <FieldGroup icon="school-outline" label={t('editProfile.studentDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                   <Input
@@ -233,7 +252,7 @@ export function EditProfileScreen({ navigation }: Props) {
               </FieldGroup>
             )}
 
-            {[UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory) && (
+            {!isPrivileged && [UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory) && (
               <FieldGroup icon="business-outline" label={t('editProfile.organisationDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                   <Input
