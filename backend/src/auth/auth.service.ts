@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserAccountLockedException } from '../common/exceptions/user-status.exception';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -85,7 +86,27 @@ export class AuthService {
   async requestOtp(dto: RequestOtpDto): Promise<{ message: string }> {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     const rateLimitKey = `otp_rl:${mobileNumber}`;
-    console.log(`[DEBUG requestOtp] received mobile=${mobileNumber} (len=${mobileNumber.length})`);
+    console.log(`[DEBUG requestOtp] received mobile=${mobileNumber} (len=${mobileNumber.length}) client=${dto.client}`);
+
+    // Web clients are restricted to registered admin/curator accounts only
+    if (dto.client === 'web') {
+      const user = await this.userRepo.findOne({ where: { mobileNumber } });
+      if (!user) {
+        throw new ForbiddenException(
+          'This number is not registered on the platform. Please use the mobile app to sign up.',
+        );
+      }
+      if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.CURATOR) {
+        throw new ForbiddenException(
+          'Only admin and curator accounts can access the web portal. Please use the mobile app.',
+        );
+      }
+      if (user.verificationStatus !== VerificationStatus.VERIFIED) {
+        throw new ForbiddenException(
+          'Your account is not yet verified. Please complete mobile app verification first.',
+        );
+      }
+    }
 
     // Rate-limit check via Redis — skip in dev when OTP_RATE_LIMIT=false
     const otpRateLimitEnabled = this.configService.get<boolean>('app.otpRateLimit') ?? true;

@@ -90,7 +90,7 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      await authApi.requestOtp(cleaned)
+      await authApi.requestOtp(cleaned, true)
       setSent(true)
       setStep(2)
       countdown.start()
@@ -141,7 +141,7 @@ export function LoginPage() {
     setOtp('')
     setLoading(true)
     try {
-      await authApi.requestOtp(mobile)
+      await authApi.requestOtp(mobile, true)
       countdown.start()
       toast.success('New OTP sent')
     } catch (err) {

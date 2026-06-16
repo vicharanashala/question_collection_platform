@@ -189,10 +189,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
 //   me            → { user: PublicUser }
 
 export const authApi = {
-  requestOtp: (mobileNumber: string) =>
+  requestOtp: (mobileNumber: string, isWeb = false) =>
     request<{ message: string }>('/auth/request-otp', {
       method: 'POST',
-      body: JSON.stringify({ mobileNumber }),
+      body: JSON.stringify({ mobileNumber, ...(isWeb ? { client: 'web' } : {}) }),
     }, false),
 
   verifyOtp: (mobileNumber: string, otp: string) =>

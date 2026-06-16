@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
+import { SettingsSkeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -80,11 +81,7 @@ export function SettingsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-      </div>
-    )
+    return <SettingsSkeleton />
   }
 
   return (

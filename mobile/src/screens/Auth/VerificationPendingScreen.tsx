@@ -14,11 +14,21 @@ import { useTheme } from '../../hooks/useTheme';
 import { tokens } from '../../utils/theme';
 import { Button } from '../../components/Button';
 import { config } from '../../config';
+import { useAuth } from '../../hooks/useAuth';
+import { VerificationStatus } from '../../types';
 
 export function VerificationPendingScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { t } = useTranslation();
+  const { refreshProfile, user } = useAuth();
+
+  async function handleCheckVerification() {
+    await refreshProfile();
+    if (user?.verificationStatus === VerificationStatus.VERIFIED) {
+      // Navigate to main app — AuthProvider will pick up the updated user state
+    }
+  }
 
   function handleLogout() {
     const { clearAuth } = require('../../api/client');
@@ -51,6 +61,15 @@ export function VerificationPendingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <View style={styles.headerRight}>
+        <TouchableOpacity
+          onPress={handleCheckVerification}
+          style={styles.headerBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="refresh-circle" size={26} color={c.primary} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.content}>
         {/* Icon */}
         <View style={[styles.iconWrap, { backgroundColor: c.warning + '18' }]}>
@@ -101,6 +120,15 @@ export function VerificationPendingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  headerRight: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 20,
+    right: tokens.spacing4,
+    zIndex: 1,
+  },
+  headerBtn: {
+    padding: tokens.spacing1,
+  },
   content: {
     flex: 1,
     padding: tokens.spacing6,
