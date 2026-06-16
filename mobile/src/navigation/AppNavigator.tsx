@@ -13,6 +13,8 @@ import { AuthStackParamList, MainTabParamList, RootStackParamList, AdminStackPar
 import { tokens } from '../utils/theme';
 import { UserRole, VerificationStatus } from '../types';
 
+const isNormalUser = (role: string | undefined) => role === UserRole.USER;
+
 // Auth screens
 import { LoginPhoneScreen } from '../screens/Auth/LoginPhoneScreen';
 import { OtpScreen } from '../screens/Auth/OtpScreen';
@@ -275,7 +277,7 @@ export function AppNavigator() {
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
-            {user.verificationStatus === VerificationStatus.PENDING ? (
+            {user.verificationStatus === VerificationStatus.PENDING && isNormalUser(user.role) ? (
               <RootStack.Screen name="Auth" component={PendingNavigator} />
             ) : (
               <>

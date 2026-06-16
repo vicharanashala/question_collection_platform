@@ -13,6 +13,9 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
+import { UserRole } from '../../types';
+
+const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 import { tokens } from '../../utils/theme';
 
 type Props = {
@@ -56,9 +59,19 @@ export function OtpScreen({ navigation, route }: Props) {
     setLoading(true);
     setError('');
     try {
-      const result = await verifyOtp(mobileNumber, otp) as { requiresRegistration: boolean; user?: unknown };
+      const result = await verifyOtp(mobileNumber, otp) as {
+        requiresRegistration?: boolean;
+        role?: string;
+        user?: unknown;
+      };
 
       if (result.requiresRegistration) {
+        // Admin/curator roles skip Terms & Consent screens
+        if (result.role && ADMIN_ROLES.includes(result.role as UserRole)) {
+          // Redirect to login to proceed directly to the app
+          await login(mobileNumber);
+          return;
+        }
         navigation.replace('Terms', { mobileNumber });
       }
     } catch (err: unknown) {

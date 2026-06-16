@@ -137,7 +137,7 @@ export class AuthService {
    * On first verification of a new user → return a registration token
    * On subsequent verification of an existing user → return access + refresh tokens
    */
-  async verifyOtp(mobileNumber: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string }> {
+  async verifyOtp(mobileNumber: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string; role: UserRole }> {
     console.log(`[DEBUG verifyOtp] mobile=${mobileNumber} (len=${mobileNumber.length}) dto=${JSON.stringify(dto)}`);
     const user = await this.userRepo.findOne({ where: { mobileNumber } });
 
@@ -174,7 +174,7 @@ export class AuthService {
         { sub: user.id, mobileNumber, type: 'registration' },
         { expiresIn: '15m' },
       );
-      return { requiresRegistration: true, tempToken };
+      return { requiresRegistration: true, tempToken, role: user.role };
     }
 
     // Returning user — issue full auth tokens
