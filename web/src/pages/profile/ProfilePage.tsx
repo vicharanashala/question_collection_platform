@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useTheme } from '@/context/ThemeContext'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { cn, getInitials } from '@/lib/utils'
-import { Sun, Moon, Monitor, Phone, Shield, MapPin, Calendar, Globe } from 'lucide-react'
+import { getInitials } from '@/lib/utils'
+import { Phone, Shield, MapPin, Calendar, Globe } from 'lucide-react'
 import { toast } from 'sonner'
 import { authApi, getErrorMessage } from '@/api/client'
 
@@ -23,9 +22,7 @@ const LANGUAGES = [
 
 export function ProfilePage() {
   const { user, updateUser } = useAuth()
-  const { theme, setTheme } = useTheme()
   const [savingLang, setSavingLang] = useState(false)
-  const savedTheme = localStorage.getItem('theme_preference') as 'light' | 'dark' | null
 
   if (!user) return null
 
@@ -45,12 +42,9 @@ export function ProfilePage() {
     }
   }
 
-  function handleThemeSelect(t: 'light' | 'dark') {
-    setTheme(t)
+  function savePreference(locale: string) {
+    localStorage.setItem('locale_preference', locale)
   }
-
-  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const effectiveTheme = savedTheme ?? (systemPrefersDark ? 'dark' : 'light')
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -118,59 +112,6 @@ export function ProfilePage() {
                 <option key={l.value} value={l.value}>{l.label}</option>
               ))}
             </select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Appearance */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">Appearance</CardTitle>
-          <CardDescription>Choose how Question Platform looks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            <button
-              onClick={() => handleThemeSelect('light')}
-              className={cn(
-                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-focus',
-                effectiveTheme === 'light'
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border-subtle hover:border-primary/40 text-text-secondary hover:text-text',
-              )}
-            >
-              <Sun className="h-5 w-5" />
-              <span className="text-xs font-medium">Light</span>
-            </button>
-
-            <button
-              onClick={() => handleThemeSelect('dark')}
-              className={cn(
-                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-focus',
-                effectiveTheme === 'dark'
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border-subtle hover:border-primary/40 text-text-secondary hover:text-text',
-              )}
-            >
-              <Moon className="h-5 w-5" />
-              <span className="text-xs font-medium">Dark</span>
-            </button>
-
-            <button
-              onClick={() => {
-                const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-                setTheme(sys)
-              }}
-              className={cn(
-                'flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all focus:outline-none focus:ring-2 focus:ring-focus',
-                !savedTheme
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border-subtle hover:border-primary/40 text-text-secondary hover:text-text',
-              )}
-            >
-              <Monitor className="h-5 w-5" />
-              <span className="text-xs font-medium">System</span>
-            </button>
           </div>
         </CardContent>
       </Card>

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { useTheme } from '@/context/ThemeContext'
-import { Sun, Moon, LogOut, User, Menu } from 'lucide-react'
+import { LogOut, User, Menu } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -25,7 +24,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -104,24 +102,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                   <User className="h-4 w-4 text-text-tertiary" />
                   Profile
                 </Link>
-
-                {/* Theme toggle */}
-                <button
-                  onClick={() => { toggleTheme(); setProfileOpen(false) }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
-                >
-                  {theme === 'dark' ? (
-                    <>
-                      <Sun className="h-4 w-4 text-text-tertiary" />
-                      Light Mode
-                    </>
-                  ) : (
-                    <>
-                      <Moon className="h-4 w-4 text-text-tertiary" />
-                      Dark Mode
-                    </>
-                  )}
-                </button>
               </div>
 
               <div className="border-t border-border-subtle py-1">
