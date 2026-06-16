@@ -21,6 +21,7 @@ const mockUserRepo = () => ({
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
+  count: jest.fn(),
 });
 
 const mockWalletRepo = () => ({
@@ -175,7 +176,7 @@ describe('AuthService', () => {
       expect(result).toEqual({ message: 'OTP sent successfully' });
       expect(userRepo.create).toHaveBeenCalled();
       expect(smsService.sendOtp).toHaveBeenCalledWith(
-        '+919876543210',
+        '9876543210',
         expect.stringMatching(/^\d{6}$/),
       );
     });
@@ -203,9 +204,9 @@ describe('AuthService', () => {
 
       await service.requestOtp(dto);
 
-      expect(redisService.incr).toHaveBeenCalledWith('otp_rl:+919876543210');
+      expect(redisService.incr).toHaveBeenCalledWith('otp_rl:9876543210');
       expect(redisService.expire).toHaveBeenCalledWith(
-        'otp_rl:+919876543210',
+        'otp_rl:9876543210',
         15 * 60,
       );
     });
@@ -277,7 +278,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('requiresRegistration', true);
       expect(result).toHaveProperty('tempToken');
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: newUser.id, mobileNumber: '+919876543210', type: 'registration' },
+        { sub: newUser.id, mobileNumber: '9876543210', type: 'registration' },
         { expiresIn: '15m' },
       );
     });

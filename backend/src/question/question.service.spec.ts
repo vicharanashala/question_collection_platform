@@ -37,10 +37,20 @@ const mockAdminService = () => ({
   getConfigValues: jest.fn(),
 });
 
+import { VerificationStatus } from '../common/enums';
+
 // UserService is injected to look up languagePreference when client omits `language`
-const mockUserService = () => ({
-  getProfile: jest.fn().mockResolvedValue({ languagePreference: 'hi' }),
-});
+const mockUserService = () => {
+  const verifiedUser = {
+    id: '11111111-1111-1111-1111-111111111111',
+    verificationStatus: VerificationStatus.VERIFIED,
+    languagePreference: 'hi',
+  };
+  return {
+    getProfile: jest.fn().mockResolvedValue(verifiedUser),
+    findOne: jest.fn().mockResolvedValue(verifiedUser),
+  };
+};
 
 describe('QuestionService', () => {
   let service: QuestionService;
@@ -69,7 +79,6 @@ describe('QuestionService', () => {
         { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
         { provide: UserService, useFactory: mockUserService },
-        { provide: 'UserService', useFactory: mockUserService },
       ],
     }).compile();
 

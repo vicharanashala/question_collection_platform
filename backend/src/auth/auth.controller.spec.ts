@@ -18,6 +18,7 @@ const mockAuthService = () => ({
   refreshTokens: jest.fn(),
   getProfile: jest.fn(),
   findUserByMobile: jest.fn(),
+  normalizePhone: jest.fn((n: string) => n.replace(/^\+91/, '')),
 });
 
 describe('AuthController', () => {
