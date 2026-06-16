@@ -285,36 +285,63 @@ export function AdminDashboardScreen() {
           />
         }
       >
-
         {/* ── Header ────────────────────────────────────────────────────── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={[styles.greeting, { color: c.textSecondary }]}>
-              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
             </Text>
-            <Text style={[styles.adminName, { color: c.text }]}>{user?.name ?? 'Admin'}</Text>
+            <Text style={[styles.adminName, { color: c.text }]}>
+              {user?.name ?? "Admin"}
+            </Text>
           </View>
           <TouchableOpacity
-            style={[styles.avatarCircle, { backgroundColor: c.primary + '15' }]}
-            onPress={() => navigation.navigate('AdminProfile')}
-            activeOpacity={0.7}
+            style={[styles.avatarCircle, { backgroundColor: c.primary }]}
+            onPress={() => navigation.navigate("AdminProfile")}
+            activeOpacity={0.8}
           >
-            <Text style={[styles.avatarText, { color: c.primary }]}>
-              {(user?.name ?? 'A').charAt(0).toUpperCase()}
+            <Text style={styles.avatarText}>
+              {(user?.name ?? "A").charAt(0).toUpperCase()}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* ── Alert strip ───────────────────────────────────────────────── */}
         {pendingCount > 0 || (rewards?.pendingWithdrawals ?? 0) > 0 ? (
-          <View style={[styles.alertStrip, { backgroundColor: c.warning + '15' }]}>
-            <Ionicons name="warning-outline" size={14} color={c.warning} />
+          <View
+            style={[
+              styles.alertStrip,
+              {
+                backgroundColor: c.warning + "15",
+                borderColor: c.warning + "30",
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.alertIconWrap,
+                { backgroundColor: c.warning + "20" },
+              ]}
+            >
+              <Ionicons name="warning" size={13} color={c.warning} />
+            </View>
             <Text style={[styles.alertText, { color: c.warning }]}>
               {[
-                pendingCount > 0 ? `${pendingCount} questions need review` : null,
-                rewards?.pendingWithdrawals ? `${rewards.pendingWithdrawals} payouts pending` : null,
-              ].filter(Boolean).join('  ·  ')}
+                pendingCount > 0
+                  ? `${pendingCount} question${pendingCount > 1 ? "s" : ""} need review`
+                  : null,
+                rewards?.pendingWithdrawals
+                  ? `${rewards.pendingWithdrawals} payout${rewards.pendingWithdrawals > 1 ? "s" : ""} pending`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("   ·   ")}
             </Text>
+            <Ionicons name="chevron-forward" size={14} color={c.warning} />
           </View>
         ) : null}
 
@@ -323,15 +350,15 @@ export function AdminDashboardScreen() {
         <View style={styles.statsGrid}>
           <StatCard
             title="Total"
-            value={(s?.totalQuestions ?? 0).toLocaleString('en-IN')}
+            value={(s?.totalQuestions ?? 0).toLocaleString("en-IN")}
             icon="chatbubbles"
             accentColor="#0891B2"
             bgColor={c.surface}
-            onPress={() => navigation.navigate('AdminQuestions')}
+            onPress={() => navigation.navigate("AdminQuestions")}
           />
           <StatCard
             title="Approved"
-            value={(s?.approvedQuestions ?? 0).toLocaleString('en-IN')}
+            value={(s?.approvedQuestions ?? 0).toLocaleString("en-IN")}
             subtitle={`${approvalRate}% acceptance`}
             icon="checkmark-circle"
             accentColor="#059669"
@@ -342,15 +369,15 @@ export function AdminDashboardScreen() {
           <StatCard
             title="Pending Review"
             value={String(pendingCount)}
-            subtitle={pendingCount > 10 ? 'High load' : 'Under control'}
+            subtitle={pendingCount > 10 ? "High load" : "Under control"}
             icon="time"
-            accentColor={pendingCount > 10 ? '#D97706' : '#7C3AED'}
+            accentColor={pendingCount > 10 ? "#D97706" : "#7C3AED"}
             bgColor={c.surface}
-            onPress={() => navigation.navigate('AdminQuestions')}
+            onPress={() => navigation.navigate("AdminQuestions")}
           />
           <StatCard
             title="Rejected"
-            value={(s?.rejectedQuestions ?? 0).toLocaleString('en-IN')}
+            value={(s?.rejectedQuestions ?? 0).toLocaleString("en-IN")}
             icon="close-circle"
             accentColor="#DC2626"
             bgColor={c.surface}
@@ -361,13 +388,15 @@ export function AdminDashboardScreen() {
         <View style={[styles.statsGrid, { marginTop: tokens.spacing5 }]}>
           <StatCard
             title="Total Users"
-            value={s && s.totalUsers > 999
-              ? `${(s.totalUsers / 1000).toFixed(1)}k`
-              : String(s?.totalUsers ?? '—')}
+            value={
+              s && s.totalUsers > 999
+                ? `${(s.totalUsers / 1000).toFixed(1)}k`
+                : String(s?.totalUsers ?? "—")
+            }
             icon="people"
             accentColor={c.primary}
             bgColor={c.surface}
-            onPress={() => navigation.navigate('AdminUsers')}
+            onPress={() => navigation.navigate("AdminUsers")}
           />
           <StatCard
             title="Flagged"
@@ -380,8 +409,9 @@ export function AdminDashboardScreen() {
 
         {/* ── Rewards summary ───────────────────────────────────────────── */}
         {rewards && (
-          <>
-            <View style={[styles.statsGrid, { marginTop: tokens.spacing5 }]}>
+          <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
+            <SectionLabel>Rewards</SectionLabel>
+            <View style={styles.statsGrid}>
               <StatCard
                 title="Total Rewarded"
                 value={formatINR(rewards.totalRewarded)}
@@ -410,68 +440,150 @@ export function AdminDashboardScreen() {
                 title="Pending Payouts"
                 value={String(rewards.pendingWithdrawals)}
                 icon="hourglass"
-                accentColor={rewards.pendingWithdrawals > 0 ? c.warning : '#9CA3AF'}
+                accentColor={
+                  rewards.pendingWithdrawals > 0 ? c.warning : "#9CA3AF"
+                }
                 bgColor={c.surface}
-                onPress={rewards.pendingWithdrawals > 0
-                  ? () => navigation.navigate('AdminWithdrawals')
-                  : undefined}
+                onPress={
+                  rewards.pendingWithdrawals > 0
+                    ? () => navigation.navigate("AdminWithdrawals")
+                    : undefined
+                }
               />
             </View>
-          </>
+          </View>
         )}
 
         {/* ── Review queue ──────────────────────────────────────────────── */}
         {queue.length > 0 && (
           <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
             <View style={styles.sectionHead}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Needs Review</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('AdminQuestions')}>
-                <Text style={[styles.seeAll, { color: c.primary }]}>View all</Text>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>
+                Needs Review
+              </Text>
+              <TouchableOpacity
+                style={styles.seeAllBtn}
+                onPress={() => navigation.navigate("AdminQuestions")}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.seeAll, { color: c.primary }]}>
+                  View all
+                </Text>
+                <Ionicons name="chevron-forward" size={13} color={c.primary} />
               </TouchableOpacity>
             </View>
 
             {queue.map((q) => {
-              const meta = STATUS_META[q.status] ?? { label: q.status, color: c.textSecondary, bg: c.surfaceVariant };
+              const meta = STATUS_META[q.status] ?? {
+                label: q.status,
+                color: c.textSecondary,
+                bg: c.surfaceVariant,
+              };
+              const isLoading = actionLoading === q.id;
               return (
-                <View key={q.id} style={[queueStyles.card, { backgroundColor: c.surface }]}>
+                <View
+                  key={q.id}
+                  style={[
+                    queueStyles.card,
+                    { backgroundColor: c.surface, borderColor: c.border },
+                  ]}
+                >
                   <View style={queueStyles.cardTop}>
-                    <View style={[queueStyles.pill, { backgroundColor: meta.bg }]}>
-                      <Text style={[queueStyles.pillText, { color: meta.color }]}>{meta.label}</Text>
+                    <View
+                      style={[queueStyles.pill, { backgroundColor: meta.bg }]}
+                    >
+                      <View
+                        style={[
+                          queueStyles.pillDot,
+                          { backgroundColor: meta.color },
+                        ]}
+                      />
+                      <Text
+                        style={[queueStyles.pillText, { color: meta.color }]}
+                      >
+                        {meta.label}
+                      </Text>
                     </View>
-                    <Text style={[queueStyles.time, { color: c.textTertiary }]}>{formatDate(q.submittedAt)}</Text>
-                  </View>
-                  <Text style={[queueStyles.question, { color: c.text }]} numberOfLines={2}>{q.questionText}</Text>
-                  <View style={queueStyles.cardBot}>
-                    <Text style={[queueStyles.meta, { color: c.textTertiary }]}>
-                      {q.state}
-                      {q.user?.mobileNumber
-                        ? `  ·  ${q.user.mobileNumber.slice(-4).padStart(q.user.mobileNumber.length, '*')}`
-                        : ''}
+                    <Text style={[queueStyles.time, { color: c.textTertiary }]}>
+                      {formatDate(q.submittedAt)}
                     </Text>
+                  </View>
+
+                  <Text
+                    style={[queueStyles.question, { color: c.text }]}
+                    numberOfLines={2}
+                  >
+                    {q.questionText}
+                  </Text>
+
+                  <View style={queueStyles.cardBot}>
+                    <View style={queueStyles.metaWrap}>
+                      <Ionicons
+                        name="location-outline"
+                        size={11}
+                        color={c.textTertiary}
+                      />
+                      <Text
+                        style={[queueStyles.meta, { color: c.textTertiary }]}
+                      >
+                        {q.state}
+                        {q.user?.mobileNumber
+                          ? `  ·  ${q.user.mobileNumber.slice(-4).padStart(q.user.mobileNumber.length, "*")}`
+                          : ""}
+                      </Text>
+                    </View>
                     <View style={queueStyles.actions}>
                       <TouchableOpacity
-                        style={[queueStyles.actionBtn, { backgroundColor: '#05966918' }]}
+                        style={[
+                          queueStyles.actionBtn,
+                          { backgroundColor: "#05966915" },
+                        ]}
                         onPress={() => quickApprove(q.id)}
-                        disabled={actionLoading === q.id}
+                        disabled={isLoading}
+                        activeOpacity={0.7}
                       >
-                        {actionLoading === q.id
-                          ? <ActivityIndicator size={12} color="#059669" />
-                          : <Ionicons name="checkmark" size={14} color="#059669" />}
+                        {isLoading ? (
+                          <ActivityIndicator size={12} color="#059669" />
+                        ) : (
+                          <Ionicons
+                            name="checkmark"
+                            size={15}
+                            color="#059669"
+                          />
+                        )}
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[queueStyles.actionBtn, { backgroundColor: '#DC262618' }]}
+                        style={[
+                          queueStyles.actionBtn,
+                          { backgroundColor: "#DC262615" },
+                        ]}
                         onPress={() => quickReject(q.id)}
-                        disabled={actionLoading === q.id}
+                        disabled={isLoading}
+                        activeOpacity={0.7}
                       >
-                        {actionLoading === q.id
-                          ? <ActivityIndicator size={12} color="#DC2626" />
-                          : <Ionicons name="close" size={14} color="#DC2626" />}
+                        {isLoading ? (
+                          <ActivityIndicator size={12} color="#DC2626" />
+                        ) : (
+                          <Ionicons name="close" size={15} color="#DC2626" />
+                        )}
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[queueStyles.actionBtn, { backgroundColor: c.primary + '18' }]}
-                        onPress={() => navigation.navigate('AdminQuestionDetail', { questionId: q.id })}
+                        style={[
+                          queueStyles.actionBtn,
+                          { backgroundColor: c.primary + "15" },
+                        ]}
+                        onPress={() =>
+                          navigation.navigate("AdminQuestionDetail", {
+                            questionId: q.id,
+                          })
+                        }
+                        activeOpacity={0.7}
                       >
-                        <Ionicons name="chevron-forward" size={14} color={c.primary} />
+                        <Ionicons
+                          name="chevron-forward"
+                          size={15}
+                          color={c.primary}
+                        />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -486,32 +598,75 @@ export function AdminDashboardScreen() {
           <SectionLabel>Quick Access</SectionLabel>
           <View style={navStyles.grid}>
             {[
-              { label: 'Users',       sub: 'Manage & moderate',     icon: 'people',         screen: 'AdminUsers',       accent: '#0891B2' },
-              { label: 'Questions',   sub: 'Review & moderate',      icon: 'document-text',  screen: 'AdminQuestions',   accent: c.primary },
-              { label: 'Withdrawals', sub: 'Approve payouts',         icon: 'card',           screen: 'AdminWithdrawals', accent: '#D97706' },
-              { label: 'Config',      sub: 'System settings',         icon: 'settings',       screen: 'AdminConfig',      accent: '#6B7280' },
+              {
+                label: "Users",
+                sub: "Manage & moderate",
+                icon: "people",
+                screen: "AdminUsers",
+                accent: "#0891B2",
+              },
+              {
+                label: "Questions",
+                sub: "Review & moderate",
+                icon: "document-text",
+                screen: "AdminQuestions",
+                accent: c.primary,
+              },
+              {
+                label: "Withdrawals",
+                sub: "Approve payouts",
+                icon: "card",
+                screen: "AdminWithdrawals",
+                accent: "#D97706",
+              },
+              {
+                label: "Config",
+                sub: "System settings",
+                icon: "settings",
+                screen: "AdminConfig",
+                accent: "#6B7280",
+              },
             ].map((item) => (
               <TouchableOpacity
                 key={item.screen}
-                style={[navStyles.card, { backgroundColor: c.surface }]}
+                style={[
+                  navStyles.card,
+                  { backgroundColor: c.surface, borderColor: c.border },
+                ]}
                 onPress={() => navigation.navigate(item.screen as any)}
                 activeOpacity={0.7}
               >
-                <View style={[navStyles.iconWrap, { backgroundColor: item.accent + '18' }]}>
-                  <Ionicons name={item.icon as any} size={22} color={item.accent} />
+                <View
+                  style={[
+                    navStyles.iconWrap,
+                    { backgroundColor: item.accent + "18" },
+                  ]}
+                >
+                  <Ionicons
+                    name={item.icon as any}
+                    size={20}
+                    color={item.accent}
+                  />
                 </View>
                 <View style={navStyles.textWrap}>
-                  <Text style={[navStyles.label, { color: c.text }]}>{item.label}</Text>
-                  <Text style={[navStyles.sub, { color: c.textTertiary }]}>{item.sub}</Text>
+                  <Text style={[navStyles.label, { color: c.text }]}>
+                    {item.label}
+                  </Text>
+                  <Text style={[navStyles.sub, { color: c.textTertiary }]}>
+                    {item.sub}
+                  </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={c.textTertiary}
+                />
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
         <View style={{ height: tokens.spacing10 }} />
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -524,6 +679,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { padding: tokens.spacing5 },
 
+  
   // Header
   header: {
     flexDirection: 'row',
@@ -539,20 +695,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     marginLeft: tokens.spacing4,
   },
-  avatarText: { fontSize: 22, fontWeight: '800' },
+  avatarText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 
   // Alert
   alertStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: tokens.radiusMd,
-    paddingVertical: 10,
-    paddingHorizontal: tokens.spacing3,
-    marginBottom: tokens.spacing5,
     gap: 8,
-    ...tokens.shadowXs,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: tokens.spacing3,
+    marginBottom: tokens.spacing5,
   },
-  alertText: { fontSize: 13, fontWeight: '600', flex: 1 },
+  alertText: { flex: 1, fontSize: 12.5, fontWeight: '600' },
+  alertIconWrap: {
+    width: 22, height: 22, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   // Stats grid
   statsGrid: {
@@ -570,12 +731,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
   seeAll: { fontSize: 13, fontWeight: '600' },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
 });
 
 // Queue card styles
 const queueStyles = StyleSheet.create({
   card: {
-    borderRadius: tokens.radiusMd,
+    borderRadius: 14,
+    borderWidth: 1,
     padding: tokens.spacing4,
     marginBottom: tokens.spacing2,
     ...tokens.shadowSm,
@@ -587,10 +750,14 @@ const queueStyles = StyleSheet.create({
     marginBottom: 8,
   },
   pill: {
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
+  pillDot: { width: 5, height: 5, borderRadius: 2.5 },
   pillText: { fontSize: 11, fontWeight: '700' },
   time: { fontSize: 11 },
   question: { fontSize: 13.5, lineHeight: 20, marginBottom: 10 },
@@ -600,6 +767,7 @@ const queueStyles = StyleSheet.create({
     alignItems: 'center',
   },
   meta: { fontSize: 12 },
+  metaWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   actions: { flexDirection: 'row', gap: 8 },
   actionBtn: {
     width: 32, height: 32, borderRadius: 9,
@@ -614,6 +782,7 @@ const navStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: tokens.radiusMd,
+    borderWidth: 1,
     padding: tokens.spacing4,
     gap: tokens.spacing3,
     ...tokens.shadowSm,
