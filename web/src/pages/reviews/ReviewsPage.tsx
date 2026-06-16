@@ -241,6 +241,7 @@ export function ReviewsPage() {
 
   const [approveQuestionId, setApproveQuestionId] = useState<string | null>(null)
   const [approveOpen, setApproveOpen] = useState(false)
+  const [approveReason, setApproveReason] = useState('')
 
   useEffect(() => {
     setLoading(true)
@@ -252,9 +253,10 @@ export function ReviewsPage() {
 
   async function confirmApprove() {
     if (!approveQuestionId) return
+    if (!approveReason.trim()) { toast.error('Approval reason is required'); return }
     setActionLoading(approveQuestionId)
     try {
-      const result = await curatorApi.reviewQuestion(approveQuestionId, { action: 'approve' })
+      const result = await curatorApi.reviewQuestion(approveQuestionId, { action: 'approve', reason: approveReason.trim() })
       toast.success(
         result?.rewardCredited != null
           ? `Approved — ₹${result.rewardCredited} credited to farmer`
@@ -262,6 +264,7 @@ export function ReviewsPage() {
       )
       setApproveOpen(false)
       setApproveQuestionId(null)
+      setApproveReason('')
       setQuestions((qs) => qs.filter((q) => q.id !== approveQuestionId))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to approve'))
@@ -393,7 +396,7 @@ export function ReviewsPage() {
               key={q.id}
               q={q}
               onOpen={(qq) => { setDetailQuestion(qq); setDetailOpen(true) }}
-              onApprove={(id) => { setApproveQuestionId(id); setApproveOpen(true) }}
+              onApprove={(id) => { setApproveQuestionId(id); setApproveReason(''); setApproveOpen(true) }}
               onHold={(id) => { setHoldQuestionId(id); setHoldReason(''); setHoldOpen(true) }}
               onReject={(id) => { setRejectQuestionId(id); setRejectReason(''); setRejectOpen(true) }}
               actionLoading={actionLoading}
@@ -439,9 +442,23 @@ export function ReviewsPage() {
               Reward will be credited to the farmer upon approval.
             </p>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="approve-reason">Approval Reason <span className="text-destructive">*</span></Label>
+            <Input
+              id="approve-reason"
+              placeholder="e.g., Clear, detailed, actionable question..."
+              value={approveReason}
+              onChange={(e) => setApproveReason(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && confirmApprove()}
+            />
+          </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setApproveOpen(false)}>Cancel</Button>
-            <Button className="bg-success hover:bg-success/90" onClick={confirmApprove} disabled={!!actionLoading}>
+            <Button
+              className="bg-success hover:bg-success/90"
+              onClick={confirmApprove}
+              disabled={!!actionLoading || !approveReason.trim()}
+            >
               <CheckCircle className="h-4 w-4" /> Approve
             </Button>
           </DialogFooter>
@@ -597,7 +614,7 @@ export function ReviewsPage() {
               <div className="flex items-center gap-2 ml-auto">
                 <Button
                   className="bg-success hover:bg-success/90"
-                  onClick={() => { setDetailOpen(false); setApproveQuestionId(detailQuestion.id); setApproveOpen(true) }}
+                  onClick={() => { setDetailOpen(false); setApproveQuestionId(detailQuestion.id); setApproveReason(''); setApproveOpen(true) }}
                 >
                   <CheckCircle className="h-4 w-4" /> Approve
                 </Button>

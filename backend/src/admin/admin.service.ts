@@ -537,6 +537,7 @@ export class AdminService implements OnModuleInit {
         status: QuestionStatus.APPROVED,
         reviewerId: reviewerId,
         reviewedAt: new Date(),
+        approvalReason: dto.reason ?? null,
       });
 
       // Credit reward to user wallet

@@ -8,6 +8,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
+import { useToast } from '../../components/Toast';
+import { ReasonModal } from '../../components/ReasonModal';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
@@ -204,6 +206,7 @@ export function AdminDashboardScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigation = useNavigation<Nav>();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -212,6 +215,8 @@ export function AdminDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [reasonAction, setReasonAction] = useState<'approve' | 'reject' | 'hold' | null>(null);
+  const [reasonId, setReasonId] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     try {
@@ -246,27 +251,30 @@ export function AdminDashboardScreen() {
     await fetch();
   }
 
-  async function quickApprove(questionId: string) {
-    setActionLoading(questionId);
-    try {
-      await adminApi.reviewQuestion(questionId, { action: 'approve' });
-      setQueue((prev) => prev.filter((q) => q.id !== questionId));
-    } catch (e) {
-      console.warn('[AdminDashboard] quick approve error:', getErrorMessage(e, ''));
-    } finally {
-      setActionLoading(null);
-    }
+  function openReasonModal(questionId: string, action: 'approve' | 'reject' | 'hold') {
+    setReasonId(questionId);
+    setReasonAction(action);
   }
 
-  async function quickReject(questionId: string) {
-    setActionLoading(questionId);
+  async function handleReasonConfirm(value: string) {
+    if (!value.trim() || !reasonAction || !reasonId) return;
+    setActionLoading(reasonId);
     try {
-      await adminApi.reviewQuestion(questionId, { action: 'reject' });
-      setQueue((prev) => prev.filter((q) => q.id !== questionId));
+      const body: Parameters<typeof adminApi.reviewQuestion>[1] = { action: reasonAction };
+      if (reasonAction === 'hold') {
+        body.heldReason = value;
+      } else {
+        body.reason = value;
+      }
+      await adminApi.reviewQuestion(reasonId, body);
+      setQueue((prev) => prev.filter((q) => q.id !== reasonId));
+      showToast(`Question ${reasonAction === 'approve' ? 'approved' : reasonAction === 'reject' ? 'rejected' : 'placed on hold'}`, 'success');
     } catch (e) {
-      console.warn('[AdminDashboard] quick reject error:', getErrorMessage(e, ''));
+      showToast(getErrorMessage(e, `Failed to ${reasonAction} question`), 'error');
     } finally {
       setActionLoading(null);
+      setReasonAction(null);
+      setReasonId(null);
     }
   }
 
@@ -439,7 +447,7 @@ export function AdminDashboardScreen() {
                     <View style={queueStyles.actions}>
                       <TouchableOpacity
                         style={[queueStyles.btn, { backgroundColor: '#05966915' }]}
-                        onPress={() => quickApprove(q.id)}
+                        onPress={() => openReasonModal(q.id, 'approve')}
                         disabled={isLoading}
                         activeOpacity={0.7}
                       >
@@ -448,8 +456,16 @@ export function AdminDashboardScreen() {
                           : <Ionicons name="checkmark" size={15} color="#059669" />}
                       </TouchableOpacity>
                       <TouchableOpacity
+                        style={[queueStyles.btn, { backgroundColor: '#D9770615' }]}
+                        onPress={() => openReasonModal(q.id, 'hold')}
+                        disabled={isLoading}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="pause" size={15} color="#D97706" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={[queueStyles.btn, { backgroundColor: '#DC262615' }]}
-                        onPress={() => quickReject(q.id)}
+                        onPress={() => openReasonModal(q.id, 'reject')}
                         disabled={isLoading}
                         activeOpacity={0.7}
                       >
@@ -544,6 +560,28 @@ export function AdminDashboardScreen() {
         <View style={{ height: tokens.spacing8 }} />
 
       </ScrollView>
+
+      <ReasonModal
+        visible={reasonAction !== null}
+        title={
+          reasonAction === 'approve' ? 'Approve Question' :
+          reasonAction === 'reject' ? 'Reject Question' :
+          'Hold Question'
+        }
+        message={
+          reasonAction === 'approve' ? 'Enter reason for approval:' :
+          reasonAction === 'reject' ? 'Enter reason for rejection:' :
+          'Enter reason for holding:'
+        }
+        confirmLabel={
+          reasonAction === 'approve' ? 'Approve' :
+          reasonAction === 'reject' ? 'Reject' :
+          'Hold'
+        }
+        loading={actionLoading !== null}
+        onConfirm={handleReasonConfirm}
+        onClose={() => { setReasonAction(null); setReasonId(null); }}
+      />
     </SafeAreaView>
   );
 }

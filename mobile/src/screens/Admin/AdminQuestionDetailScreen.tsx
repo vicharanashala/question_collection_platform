@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
-  ActivityIndicator, TouchableOpacity, Alert,
+  ActivityIndicator, TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../components/Toast';
+import { ReasonModal } from '../../components/ReasonModal';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
@@ -24,6 +25,7 @@ export function AdminQuestionDetailScreen() {
   const [q, setQ] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [reasonAction, setReasonAction] = useState<'approve' | 'reject' | 'hold' | null>(null);
 
   useEffect(() => {
     adminApi.getQuestion(questionId)
@@ -32,11 +34,17 @@ export function AdminQuestionDetailScreen() {
       .finally(() => setLoading(false));
   }, [questionId]);
 
-  async function doAction(action: 'approve' | 'reject' | 'request_info', reason?: string) {
+  async function doAction(action: 'approve' | 'reject' | 'hold', reason: string) {
     setActionLoading(action);
     try {
-      await adminApi.reviewQuestion(questionId, { action, reason });
-      showToast(`Question ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'info requested'}`, 'success');
+      const body: Parameters<typeof adminApi.reviewQuestion>[1] = { action };
+      if (action === 'hold') {
+        body.heldReason = reason;
+      } else {
+        body.reason = reason;
+      }
+      await adminApi.reviewQuestion(questionId, body);
+      showToast(`Question ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'placed on hold'}`, 'success');
       nav.goBack();
     } catch (e) {
       showToast(getErrorMessage(e, 'Action failed'), 'error');
@@ -45,8 +53,14 @@ export function AdminQuestionDetailScreen() {
     }
   }
 
-  function handleReject() {
-    Alert.prompt('Reject', 'Reason (optional):', (r) => doAction('reject', r ?? undefined), 'plain-text');
+  function openReasonModal(action: 'approve' | 'reject' | 'hold') {
+    setReasonAction(action);
+  }
+
+  async function handleReasonConfirm(value: string) {
+    if (!value.trim() || !reasonAction) return;
+    await doAction(reasonAction, value);
+    setReasonAction(null);
   }
 
   if (loading) {
@@ -126,25 +140,58 @@ export function AdminQuestionDetailScreen() {
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.btnApprove, { opacity: actionLoading ? 0.6 : 1 }]}
-              onPress={() => doAction('approve')}
+              onPress={() => openReasonModal('approve')}
               disabled={!!actionLoading}
             >
               {actionLoading === 'approve'
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={styles.btnText}>✓ Approve</Text>}
+                : <><Ionicons name="checkmark-circle" size={15} color="#fff" /><Text style={styles.btnText}> Approve</Text></>}
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btnReject, { opacity: actionLoading ? 0.6 : 1 }]}
-              onPress={handleReject}
-              disabled={!!actionLoading}
-            >
-              {actionLoading === 'reject'
-                ? <ActivityIndicator size="small" color="#ef4444" />
-                : <Text style={styles.btnTextReject}>✗ Reject</Text>}
-            </TouchableOpacity>
+            <View style={styles.secondRow}>
+              <TouchableOpacity
+                style={[styles.btnHold, { opacity: actionLoading ? 0.6 : 1 }]}
+                onPress={() => openReasonModal('hold')}
+                disabled={!!actionLoading}
+              >
+                {actionLoading === 'hold'
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <><Ionicons name="pause-circle" size={15} color="#fff" /><Text style={styles.btnTextHold}> Hold</Text></>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnReject, { opacity: actionLoading ? 0.6 : 1 }]}
+                onPress={() => openReasonModal('reject')}
+                disabled={!!actionLoading}
+              >
+                {actionLoading === 'reject'
+                  ? <ActivityIndicator size="small" color="#ef4444" />
+                  : <><Ionicons name="close-circle" size={15} color="#ef4444" /><Text style={styles.btnTextReject}> Reject</Text></>}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </ScrollView>
+
+      <ReasonModal
+        visible={reasonAction !== null}
+        title={
+          reasonAction === 'approve' ? 'Approve Question' :
+          reasonAction === 'reject' ? 'Reject Question' :
+          'Hold Question'
+        }
+        message={
+          reasonAction === 'approve' ? 'Enter reason for approval:' :
+          reasonAction === 'reject' ? 'Enter reason for rejection:' :
+          'Enter reason for holding:'
+        }
+        confirmLabel={
+          reasonAction === 'approve' ? 'Approve' :
+          reasonAction === 'reject' ? 'Reject' :
+          'Hold'
+        }
+        loading={actionLoading !== null}
+        onConfirm={handleReasonConfirm}
+        onClose={() => setReasonAction(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -164,9 +211,12 @@ const styles = StyleSheet.create({
   metaKey: { fontSize: 13 },
   metaVal: { fontSize: 13, fontWeight: '600' },
   sub: { fontSize: 12, marginTop: 2 },
-  actions: { flexDirection: 'row', gap: tokens.spacing3, marginTop: tokens.spacing4 },
-  btnApprove: { flex: 1, backgroundColor: '#22c55e', borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing4, alignItems: 'center' },
+  actions: { gap: tokens.spacing3, marginTop: tokens.spacing4 },
+  secondRow: { flexDirection: 'row', gap: tokens.spacing3 },
+  btnApprove: { backgroundColor: '#22c55e', borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing4, alignItems: 'center' },
+  btnHold: { flex: 1, backgroundColor: '#f59e0b', borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing4, alignItems: 'center' },
   btnReject: { flex: 1, backgroundColor: '#ef444422', borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing4, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   btnTextReject: { color: '#ef4444', fontSize: 15, fontWeight: '700' },
+  btnTextHold: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

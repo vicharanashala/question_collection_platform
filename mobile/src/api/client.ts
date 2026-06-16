@@ -272,7 +272,7 @@ export const adminApi = {
     api.get('/admin/questions/queue', { params }),
   getQuestion: (id: string) =>
     api.get(`/admin/questions/${id}`),
-  reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'request_info'; reason?: string }) =>
+  reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'hold' | 'request_info'; reason?: string; heldReason?: string }) =>
     api.post(`/admin/questions/${id}/review`, body),
 
   // Config

@@ -93,6 +93,9 @@ export class Question {
   @Column({ name: 'held_reason', type: 'varchar', length: 500, nullable: true })
   heldReason: string | null;
 
+  @Column({ name: 'approval_reason', type: 'varchar', length: 500, nullable: true })
+  approvalReason: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +18,7 @@ import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
+import { ReasonModal } from '../../components/ReasonModal';
 import { INDIAN_STATES } from '../../utils/constants';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
@@ -43,6 +43,7 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'pending',      label: 'Pending' },
   { value: 'ai_review',    label: 'AI Review' },
   { value: 'human_review', label: 'Manual' },
+  { value: 'held',         label: 'Held' },
   { value: 'approved',     label: 'Approved' },
   { value: 'rejected',     label: 'Rejected' },
 ];
@@ -147,6 +148,11 @@ export function AdminQuestionsScreen() {
   const [total, setTotal] = useState(0);
   const [processing, setProcessing] = useState<string | null>(null);
   const [filterVisible, setFilterVisible] = useState(false);
+
+  // Reason modal state
+  const [reasonAction, setReasonAction] = useState<'approve' | 'reject' | 'hold' | null>(null);
+  const [reasonId, setReasonId] = useState<string | null>(null);
+  const [reasonLoading, setReasonLoading] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
 
   const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
@@ -195,25 +201,44 @@ export function AdminQuestionsScreen() {
     fetch(1, true, EMPTY_FILTERS);
   }
 
-  async function handleAction(id: string, action: 'approve' | 'reject') {
-    if (action === 'reject') {
-      Alert.prompt(
-        'Reject Question',
-        'Enter optional rejection reason:',
-        async (reason) => { await doAction(id, action, reason ?? undefined); },
-        'plain-text',
-      );
-      return;
-    }
-    await doAction(id, action, undefined);
+  function openReasonModal(id: string, action: 'approve' | 'reject' | 'hold') {
+    setReasonId(id);
+    setReasonAction(action);
   }
 
-  async function doAction(id: string, action: 'approve' | 'reject', reason?: string) {
+  function closeReasonModal() {
+    setReasonAction(null);
+    setReasonId(null);
+  }
+
+  async function handleReasonConfirm(value: string) {
+    if (!value.trim() || !reasonAction || !reasonId) return;
+    setReasonLoading(true);
+    try {
+      await doAction(reasonId, reasonAction, value);
+      closeReasonModal();
+    } finally {
+      setReasonLoading(false);
+    }
+  }
+
+  async function doAction(id: string, action: 'approve' | 'reject' | 'hold', reason?: string) {
     setProcessing(id);
     try {
-      await adminApi.reviewQuestion(id, { action, reason });
+      const body: { action: string; reason?: string; heldReason?: string } = { action };
+      if (action === 'hold') {
+        body.heldReason = reason;
+      } else {
+        body.reason = reason;
+      }
+      await adminApi.reviewQuestion(id, body as Parameters<typeof adminApi.reviewQuestion>[1]);
       setItems((prev) => prev.filter((q) => q.id !== id));
-      showToast(`Question ${action === 'approve' ? 'approved' : 'rejected'}`, 'success');
+      showToast(
+        action === 'approve' ? 'Question approved' :
+        action === 'hold' ? 'Question placed on hold' :
+        'Question rejected',
+        'success',
+      );
     } catch (e) {
       showToast(getErrorMessage(e, `Failed to ${action}`), 'error');
     } finally {
@@ -267,21 +292,28 @@ export function AdminQuestionsScreen() {
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: '#22c55e22' }]}
-            onPress={() => handleAction(item.id, 'approve')}
+            onPress={() => openReasonModal(item.id, 'approve')}
             disabled={processing === item.id}
           >
             {processing === item.id ? (
               <ActivityIndicator size="small" color="#22c55e" />
             ) : (
-              <Text style={styles.btnApprove}>✓ Approve</Text>
+              <><Ionicons name="checkmark-circle" size={14} color="#22c55e" /><Text style={styles.btnApprove}> Approve</Text></>
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.btn, { backgroundColor: '#ef444422' }]}
-            onPress={() => handleAction(item.id, 'reject')}
+            style={[styles.btn, { backgroundColor: '#f59e0b22' }]}
+            onPress={() => openReasonModal(item.id, 'hold')}
             disabled={processing === item.id}
           >
-            <Text style={styles.btnReject}>✗ Reject</Text>
+            <><Ionicons name="pause-circle" size={14} color="#f59e0b" /><Text style={styles.btnHold}> Hold</Text></>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.btn, { backgroundColor: '#ef444422' }]}
+            onPress={() => openReasonModal(item.id, 'reject')}
+            disabled={processing === item.id}
+          >
+            <><Ionicons name="close-circle" size={14} color="#ef4444" /><Text style={styles.btnReject}> Reject</Text></>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: '#8b5cf622' }]}
@@ -347,6 +379,28 @@ export function AdminQuestionsScreen() {
         onReset={handleResetFilters}
         title="Filter Questions"
       />
+
+      <ReasonModal
+        visible={reasonAction !== null}
+        title={
+          reasonAction === 'approve' ? 'Approve Question' :
+          reasonAction === 'reject' ? 'Reject Question' :
+          'Hold Question'
+        }
+        message={
+          reasonAction === 'approve' ? 'Enter reason for approval:' :
+          reasonAction === 'reject' ? 'Enter reason for rejection:' :
+          'Enter reason for holding:'
+        }
+        confirmLabel={
+          reasonAction === 'approve' ? 'Approve' :
+          reasonAction === 'reject' ? 'Reject' :
+          'Hold'
+        }
+        loading={reasonLoading}
+        onConfirm={handleReasonConfirm}
+        onClose={closeReasonModal}
+      />
     </SafeAreaView>
   );
 }
@@ -383,6 +437,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: tokens.spacing2 },
   btn: { flex: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing2, alignItems: 'center' },
   btnApprove: { color: '#22c55e', fontWeight: '700', fontSize: 13 },
+  btnHold: { color: '#f59e0b', fontWeight: '700', fontSize: 13 },
   btnReject: { color: '#ef4444', fontWeight: '700', fontSize: 13 },
   btnView: { color: '#8b5cf6', fontWeight: '700', fontSize: 13 },
   empty: { alignItems: 'center', marginTop: 60 },
