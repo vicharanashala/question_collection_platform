@@ -71,102 +71,131 @@ function formatINR(n: number) {
   return `₹${n}`;
 }
 
+function fmt(n: number) {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  pending:     { label: 'Pending',     color: '#D97706', bg: '#FEF3C7' },
-  ai_review:   { label: 'AI Review',   color: '#7C3AED', bg: '#EDE9FE' },
-  human_review:{ label: 'Manual',      color: '#0891B2', bg: '#E0F2FE' },
-  approved:    { label: 'Approved',    color: '#059669', bg: '#D1FAE5' },
-  rejected:    { label: 'Rejected',    color: '#DC2626', bg: '#FEE2E2' },
+  pending:      { label: 'Pending',     color: '#92400E', bg: '#FEF3C7' },
+  ai_review:    { label: 'AI Review',   color: '#5B21B6', bg: '#EDE9FE' },
+  human_review: { label: 'Manual',      color: '#0E7490', bg: '#E0F2FE' },
+  approved:     { label: 'Approved',    color: '#065F46', bg: '#D1FAE5' },
+  rejected:     { label: 'Rejected',    color: '#991B1B', bg: '#FEE2E2' },
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Reusable Card ────────────────────────────────────────────────────────────
 
-function StatCard({
-  title,
-  value,
-  subtitle,
-  icon,
-  accentColor,
-  bgColor,
+function Card({
+  children,
+  style,
   onPress,
 }: {
-  title: string;
-  value: string;
-  subtitle?: string;
-  icon: string;
-  accentColor: string;
-  bgColor: string;
+  children: React.ReactNode;
+  style?: any;
   onPress?: () => void;
 }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const Wrapper = onPress ? TouchableOpacity : View;
   return (
     <Wrapper
-      style={[statStyles.card, { backgroundColor: bgColor }]}
+      style={[
+        cardStyles.card,
+        { backgroundColor: c.card, borderColor: c.border },
+        style,
+      ]}
       onPress={onPress}
-      activeOpacity={onPress ? 0.7 : 1}
+      activeOpacity={onPress ? 0.6 : 1}
     >
-      <View style={[statStyles.iconWrap, { backgroundColor: accentColor + '20' }]}>
-        <Ionicons name={icon as any} size={20} color={accentColor} />
-      </View>
-      <Text style={[statStyles.value, { color: accentColor }]}>{value}</Text>
-      <Text style={statStyles.title}>{title}</Text>
-      {subtitle && <Text style={statStyles.subtitle}>{subtitle}</Text>}
+      {children}
     </Wrapper>
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+// ─── Section header ───────────────────────────────────────────────────────────
+
+function SectionHeader({
+  title,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   const { theme } = useTheme();
   const c = theme.colors;
   return (
-    <Text style={[sectionStyles.label, { color: c.textTertiary }]}>{children}</Text>
+    <View style={sectionHeaderStyles.row}>
+      <Text style={[sectionHeaderStyles.title, { color: c.foreground }]}>{title}</Text>
+      {actionLabel && onAction && (
+        <TouchableOpacity style={sectionHeaderStyles.action} onPress={onAction} activeOpacity={0.6}>
+          <Text style={[sectionHeaderStyles.actionText, { color: c.primary }]}>{actionLabel}</Text>
+          <Ionicons name="chevron-forward" size={12} color={c.primary} />
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
-// ─── Styles for sub-components ────────────────────────────────────────────────
+// ─── Stat chip ────────────────────────────────────────────────────────────────
 
-const statStyles = StyleSheet.create({
+function StatChip({
+  label,
+  value,
+  color,
+  sub,
+}: {
+  label: string;
+  value: string;
+  color: string;
+  sub?: string;
+}) {
+  return (
+    <View style={[chipStyles.chip, { borderColor: color + '40' }]}>
+      <Text style={[chipStyles.value, { color }]}>{value}</Text>
+      <Text style={chipStyles.label}>{label}</Text>
+      {sub && <Text style={[chipStyles.sub, { color: color + '99' }]}>{sub}</Text>}
+    </View>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const cardStyles = StyleSheet.create({
   card: {
-    borderRadius: tokens.radiusLg,
-    padding: tokens.spacing4,
-    flex: 1,
-    gap: 6,
-    ...tokens.shadowSm,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 32,
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  subtitle: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginTop: 1,
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1,
+    ...tokens.shadowXs,
   },
 });
 
-const sectionStyles = StyleSheet.create({
-  label: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+const sectionHeaderStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: tokens.spacing3,
-    marginLeft: 2,
   },
+  title: { fontSize: 15, fontWeight: '700' },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  actionText: { fontSize: 13, fontWeight: '600' },
+});
+
+const chipStyles = StyleSheet.create({
+  chip: {
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing4,
+    flex: 1,
+    gap: 3,
+  },
+  value: { fontSize: 22, fontWeight: '800', lineHeight: 26 },
+  label: { fontSize: 11.5, fontWeight: '600', color: '#6B7280' },
+  sub: { fontSize: 10.5, fontWeight: '500' },
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -222,16 +251,6 @@ export function AdminDashboardScreen() {
     try {
       await adminApi.reviewQuestion(questionId, { action: 'approve' });
       setQueue((prev) => prev.filter((q) => q.id !== questionId));
-      setStats((prev) => prev ? {
-        ...prev,
-        summary: {
-          ...prev.summary,
-          totalQuestions: prev.summary.totalQuestions + 1,
-          approvedQuestions: prev.summary.approvedQuestions + 1,
-          pendingQuestions: Math.max(0, prev.summary.pendingQuestions - 1),
-          approvalRate: Math.round(((prev.summary.approvedQuestions + 1) / (prev.summary.totalQuestions + 1)) * 100),
-        },
-      } : prev);
     } catch (e) {
       console.warn('[AdminDashboard] quick approve error:', getErrorMessage(e, ''));
     } finally {
@@ -244,22 +263,12 @@ export function AdminDashboardScreen() {
     try {
       await adminApi.reviewQuestion(questionId, { action: 'reject' });
       setQueue((prev) => prev.filter((q) => q.id !== questionId));
-      setStats((prev) => prev ? {
-        ...prev,
-        summary: {
-          ...prev.summary,
-          rejectedQuestions: prev.summary.rejectedQuestions + 1,
-          pendingQuestions: Math.max(0, prev.summary.pendingQuestions - 1),
-        },
-      } : prev);
     } catch (e) {
       console.warn('[AdminDashboard] quick reject error:', getErrorMessage(e, ''));
     } finally {
       setActionLoading(null);
     }
   }
-
-  const s = stats?.summary ?? null;
 
   if (loading) {
     return (
@@ -269,8 +278,12 @@ export function AdminDashboardScreen() {
     );
   }
 
+  const s = stats?.summary;
   const pendingCount = s?.pendingQuestions ?? 0;
   const approvalRate = s?.approvalRate ?? 0;
+  const today = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
@@ -278,472 +291,280 @@ export function AdminDashboardScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={c.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />
         }
       >
-        {/* ── Header ────────────────────────────────────────────────────── */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: c.textSecondary }]}>
-              {new Date().toLocaleDateString("en-IN", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
-            </Text>
-            <Text style={[styles.adminName, { color: c.text }]}>
-              {user?.name ?? "Admin"}
-            </Text>
+
+        {/* ── Greeting header ───────────────────────────────────────────── */}
+        <View style={[styles.heroCard, { backgroundColor: c.primary }]}>
+          <View style={styles.heroLeft}>
+            <Text style={styles.heroDate}>{today}</Text>
+            <Text style={styles.heroName}>{user?.name ?? 'Admin'}</Text>
+            {pendingCount > 0 && (
+              <View style={styles.heroBadge}>
+                <Ionicons name="alert-circle" size={12} color="#fff" />
+                <Text style={styles.heroBadgeText}>
+                  {pendingCount} question{pendingCount > 1 ? 's' : ''} need review
+                </Text>
+              </View>
+            )}
           </View>
           <TouchableOpacity
-            style={[styles.avatarCircle, { backgroundColor: c.primary }]}
-            onPress={() => navigation.navigate("AdminProfile")}
-            activeOpacity={0.8}
+            style={styles.heroAvatar}
+            onPress={() => navigation.navigate('AdminProfile')}
+            activeOpacity={0.7}
           >
-            <Text style={styles.avatarText}>
-              {(user?.name ?? "A").charAt(0).toUpperCase()}
+            <Text style={styles.heroAvatarText}>
+              {(user?.name ?? 'A').charAt(0).toUpperCase()}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── Alert strip ───────────────────────────────────────────────── */}
-        {pendingCount > 0 || (rewards?.pendingWithdrawals ?? 0) > 0 ? (
-          <View
-            style={[
-              styles.alertStrip,
-              {
-                backgroundColor: c.warning + "15",
-                borderColor: c.warning + "30",
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.alertIconWrap,
-                { backgroundColor: c.warning + "20" },
-              ]}
-            >
-              <Ionicons name="warning" size={13} color={c.warning} />
-            </View>
-            <Text style={[styles.alertText, { color: c.warning }]}>
-              {[
-                pendingCount > 0
-                  ? `${pendingCount} question${pendingCount > 1 ? "s" : ""} need review`
-                  : null,
-                rewards?.pendingWithdrawals
-                  ? `${rewards.pendingWithdrawals} payout${rewards.pendingWithdrawals > 1 ? "s" : ""} pending`
-                  : null,
-              ]
-                .filter(Boolean)
-                .join("   ·   ")}
-            </Text>
-            <Ionicons name="chevron-forward" size={14} color={c.warning} />
+        {/* ── Question KPIs ─────────────────────────────────────────────── */}
+        <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
+          <SectionHeader
+            title="Questions"
+            actionLabel="View all"
+            onAction={() => navigation.navigate('AdminQuestions')}
+          />
+          <View style={styles.chipRow}>
+            <StatChip
+              label="Total"
+              value={fmt(s?.totalQuestions ?? 0)}
+              color="#0D9488"
+            />
+            <StatChip
+              label="Approved"
+              value={fmt(s?.approvedQuestions ?? 0)}
+              color="#059669"
+              sub={`${approvalRate}%`}
+            />
           </View>
-        ) : null}
-
-        {/* ── Question Stats ────────────────────────────────────────────── */}
-        <SectionLabel>Question Overview</SectionLabel>
-        <View style={styles.statsGrid}>
-          <StatCard
-            title="Total"
-            value={(s?.totalQuestions ?? 0).toLocaleString("en-IN")}
-            icon="chatbubbles"
-            accentColor="#0891B2"
-            bgColor={c.surface}
-            onPress={() => navigation.navigate("AdminQuestions")}
-          />
-          <StatCard
-            title="Approved"
-            value={(s?.approvedQuestions ?? 0).toLocaleString("en-IN")}
-            subtitle={`${approvalRate}% acceptance`}
-            icon="checkmark-circle"
-            accentColor="#059669"
-            bgColor={c.surface}
-          />
-        </View>
-        <View style={[styles.statsGrid, { marginTop: tokens.spacing3 }]}>
-          <StatCard
-            title="Pending Review"
-            value={String(pendingCount)}
-            subtitle={pendingCount > 10 ? "High load" : "Under control"}
-            icon="time"
-            accentColor={pendingCount > 10 ? "#D97706" : "#7C3AED"}
-            bgColor={c.surface}
-            onPress={() => navigation.navigate("AdminQuestions")}
-          />
-          <StatCard
-            title="Rejected"
-            value={(s?.rejectedQuestions ?? 0).toLocaleString("en-IN")}
-            icon="close-circle"
-            accentColor="#DC2626"
-            bgColor={c.surface}
-          />
-        </View>
-
-        {/* ── User Stats ────────────────────────────────────────────────── */}
-        <View style={[styles.statsGrid, { marginTop: tokens.spacing5 }]}>
-          <StatCard
-            title="Total Users"
-            value={
-              s && s.totalUsers > 999
-                ? `${(s.totalUsers / 1000).toFixed(1)}k`
-                : String(s?.totalUsers ?? "—")
-            }
-            icon="people"
-            accentColor={c.primary}
-            bgColor={c.surface}
-            onPress={() => navigation.navigate("AdminUsers")}
-          />
-          <StatCard
-            title="Flagged"
-            value={String(s?.flaggedQuestions ?? 0)}
-            icon="flag"
-            accentColor="#DC2626"
-            bgColor={c.surface}
-          />
-        </View>
-
-        {/* ── Rewards summary ───────────────────────────────────────────── */}
-        {rewards && (
-          <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
-            <SectionLabel>Rewards</SectionLabel>
-            <View style={styles.statsGrid}>
-              <StatCard
-                title="Total Rewarded"
-                value={formatINR(rewards.totalRewarded)}
-                icon="wallet"
-                accentColor="#059669"
-                bgColor={c.surface}
-              />
-              <StatCard
-                title="Avg. Reward"
-                value={formatINR(Math.round(rewards.avgReward))}
-                icon="trending-up"
-                accentColor="#7C3AED"
-                bgColor={c.surface}
-              />
-            </View>
-            <View style={[styles.statsGrid, { marginTop: tokens.spacing3 }]}>
-              <StatCard
-                title="Withdrawals"
-                value={formatINR(rewards.totalWithdrawn)}
-                subtitle={`${rewards.withdrawalCount} transactions`}
-                icon="cash"
-                accentColor="#D97706"
-                bgColor={c.surface}
-              />
-              <StatCard
-                title="Pending Payouts"
-                value={String(rewards.pendingWithdrawals)}
-                icon="hourglass"
-                accentColor={
-                  rewards.pendingWithdrawals > 0 ? c.warning : "#9CA3AF"
-                }
-                bgColor={c.surface}
-                onPress={
-                  rewards.pendingWithdrawals > 0
-                    ? () => navigation.navigate("AdminWithdrawals")
-                    : undefined
-                }
-              />
-            </View>
+          <View style={[styles.chipRow, { marginTop: tokens.spacing2 }]}>
+            <StatChip
+              label="Pending"
+              value={String(pendingCount)}
+              color={pendingCount > 0 ? '#D97706' : '#9CA3AF'}
+              sub={pendingCount > 10 ? 'High load' : pendingCount > 0 ? 'Needs attention' : 'All clear'}
+            />
+            <StatChip
+              label="Rejected"
+              value={fmt(s?.rejectedQuestions ?? 0)}
+              color="#DC2626"
+            />
           </View>
-        )}
+          {s && s.flaggedQuestions > 0 && (
+            <View style={[styles.chipRow, { marginTop: tokens.spacing2 }]}>
+              <StatChip
+                label="Flagged"
+                value={String(s.flaggedQuestions)}
+                color="#B45309"
+                sub="Needs investigation"
+              />
+              <View style={{ flex: 1 }} />
+            </View>
+          )}
+        </View>
+
+        {/* ── User stats ────────────────────────────────────────────────── */}
+        <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
+          <SectionHeader
+            title="Users"
+            actionLabel="Manage"
+            onAction={() => navigation.navigate('AdminUsers')}
+          />
+          <Card>
+            <View style={userStatsStyles.row}>
+              <View style={userStatsStyles.item}>
+                <Ionicons name="people" size={20} color={c.primary} />
+                <Text style={[userStatsStyles.num, { color: c.foreground }]}>
+                  {fmt(s?.totalUsers ?? 0)}
+                </Text>
+                <Text style={[userStatsStyles.lbl, { color: c.mutedForeground }]}>Total Users</Text>
+              </View>
+              <View style={[userStatsStyles.divider, { backgroundColor: c.border }]} />
+              <View style={userStatsStyles.item}>
+                <Ionicons name="shield-checkmark" size={20} color="#059669" />
+                <Text style={[userStatsStyles.num, { color: c.foreground }]}>
+                  {fmt(s?.totalUsers ?? 0)}
+                </Text>
+                <Text style={[userStatsStyles.lbl, { color: c.mutedForeground }]}>Verified</Text>
+              </View>
+              <View style={[userStatsStyles.divider, { backgroundColor: c.border }]} />
+              <View style={userStatsStyles.item}>
+                <Ionicons name="flag" size={20} color="#DC2626" />
+                <Text style={[userStatsStyles.num, { color: c.foreground }]}>
+                  {String(s?.flaggedQuestions ?? 0)}
+                </Text>
+                <Text style={[userStatsStyles.lbl, { color: c.mutedForeground }]}>Flagged</Text>
+              </View>
+            </View>
+          </Card>
+        </View>
 
         {/* ── Review queue ──────────────────────────────────────────────── */}
         {queue.length > 0 && (
-          <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
-            <View style={styles.sectionHead}>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>
-                Needs Review
-              </Text>
-              <TouchableOpacity
-                style={styles.seeAllBtn}
-                onPress={() => navigation.navigate("AdminQuestions")}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.seeAll, { color: c.primary }]}>
-                  View all
-                </Text>
-                <Ionicons name="chevron-forward" size={13} color={c.primary} />
-              </TouchableOpacity>
-            </View>
-
+          <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
+            <SectionHeader
+              title="Needs Review"
+              actionLabel="View all"
+              onAction={() => navigation.navigate('AdminQuestions')}
+            />
             {queue.map((q) => {
               const meta = STATUS_META[q.status] ?? {
                 label: q.status,
-                color: c.textSecondary,
-                bg: c.surfaceVariant,
+                color: c.mutedForeground ?? '#6B7280',
+                bg: c.muted ?? '#F3F4F6',
               };
               const isLoading = actionLoading === q.id;
               return (
-                <View
-                  key={q.id}
-                  style={[
-                    queueStyles.card,
-                    { backgroundColor: c.surface, borderColor: c.border },
-                  ]}
-                >
-                  <View style={queueStyles.cardTop}>
-                    <View
-                      style={[queueStyles.pill, { backgroundColor: meta.bg }]}
-                    >
-                      <View
-                        style={[
-                          queueStyles.pillDot,
-                          { backgroundColor: meta.color },
-                        ]}
-                      />
-                      <Text
-                        style={[queueStyles.pillText, { color: meta.color }]}
-                      >
-                        {meta.label}
-                      </Text>
+                <Card key={q.id} style={{ marginBottom: tokens.spacing2 }}>
+                  <View style={queueStyles.header}>
+                    <View style={[queueStyles.pill, { backgroundColor: meta.bg }]}>
+                      <View style={[queueStyles.dot, { backgroundColor: meta.color }]} />
+                      <Text style={[queueStyles.pillText, { color: meta.color }]}>{meta.label}</Text>
                     </View>
-                    <Text style={[queueStyles.time, { color: c.textTertiary }]}>
+                    <Text style={[queueStyles.time, { color: c.mutedForeground }]}>
                       {formatDate(q.submittedAt)}
                     </Text>
                   </View>
-
-                  <Text
-                    style={[queueStyles.question, { color: c.text }]}
-                    numberOfLines={2}
-                  >
+                  <Text style={[queueStyles.question, { color: c.foreground }]} numberOfLines={2}>
                     {q.questionText}
                   </Text>
-
-                  <View style={queueStyles.cardBot}>
-                    <View style={queueStyles.metaWrap}>
-                      <Ionicons
-                        name="location-outline"
-                        size={11}
-                        color={c.textTertiary}
-                      />
-                      <Text
-                        style={[queueStyles.meta, { color: c.textTertiary }]}
-                      >
-                        {q.state}
-                        {q.user?.mobileNumber
-                          ? `  ·  ${q.user.mobileNumber.slice(-4).padStart(q.user.mobileNumber.length, "*")}`
-                          : ""}
-                      </Text>
+                  <View style={queueStyles.footer}>
+                    <View style={queueStyles.metaRow}>
+                      <Ionicons name="location-outline" size={11} color={c.mutedForeground} />
+                      <Text style={[queueStyles.metaText, { color: c.mutedForeground }]}>{q.state}</Text>
                     </View>
                     <View style={queueStyles.actions}>
                       <TouchableOpacity
-                        style={[
-                          queueStyles.actionBtn,
-                          { backgroundColor: "#05966915" },
-                        ]}
+                        style={[queueStyles.btn, { backgroundColor: '#05966915' }]}
                         onPress={() => quickApprove(q.id)}
                         disabled={isLoading}
                         activeOpacity={0.7}
                       >
-                        {isLoading ? (
-                          <ActivityIndicator size={12} color="#059669" />
-                        ) : (
-                          <Ionicons
-                            name="checkmark"
-                            size={15}
-                            color="#059669"
-                          />
-                        )}
+                        {isLoading
+                          ? <ActivityIndicator size={12} color="#059669" />
+                          : <Ionicons name="checkmark" size={15} color="#059669" />}
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[
-                          queueStyles.actionBtn,
-                          { backgroundColor: "#DC262615" },
-                        ]}
+                        style={[queueStyles.btn, { backgroundColor: '#DC262615' }]}
                         onPress={() => quickReject(q.id)}
                         disabled={isLoading}
                         activeOpacity={0.7}
                       >
-                        {isLoading ? (
-                          <ActivityIndicator size={12} color="#DC2626" />
-                        ) : (
-                          <Ionicons name="close" size={15} color="#DC2626" />
-                        )}
+                        {isLoading
+                          ? <ActivityIndicator size={12} color="#DC2626" />
+                          : <Ionicons name="close" size={15} color="#DC2626" />}
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[
-                          queueStyles.actionBtn,
-                          { backgroundColor: c.primary + "15" },
-                        ]}
-                        onPress={() =>
-                          navigation.navigate("AdminQuestionDetail", {
-                            questionId: q.id,
-                          })
-                        }
+                        style={[queueStyles.btn, { backgroundColor: c.primary + '15' }]}
+                        onPress={() => navigation.navigate('AdminQuestionDetail', { questionId: q.id })}
                         activeOpacity={0.7}
                       >
-                        <Ionicons
-                          name="chevron-forward"
-                          size={15}
-                          color={c.primary}
-                        />
+                        <Ionicons name="chevron-forward" size={15} color={c.primary} />
                       </TouchableOpacity>
                     </View>
                   </View>
-                </View>
+                </Card>
               );
             })}
           </View>
         )}
 
-        {/* ── Quick-nav cards ───────────────────────────────────────────── */}
-        <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
-          <SectionLabel>Quick Access</SectionLabel>
-          <View style={navStyles.grid}>
-            {[
-              {
-                label: "Users",
-                sub: "Manage & moderate",
-                icon: "people",
-                screen: "AdminUsers",
-                accent: "#0891B2",
-              },
-              {
-                label: "Questions",
-                sub: "Review & moderate",
-                icon: "document-text",
-                screen: "AdminQuestions",
-                accent: c.primary,
-              },
-              {
-                label: "Withdrawals",
-                sub: "Approve payouts",
-                icon: "card",
-                screen: "AdminWithdrawals",
-                accent: "#D97706",
-              },
-              {
-                label: "Config",
-                sub: "System settings",
-                icon: "settings",
-                screen: "AdminConfig",
-                accent: "#6B7280",
-              },
-            ].map((item) => (
+        {/* ── Rewards ───────────────────────────────────────────────────── */}
+        {rewards && (
+          <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
+            <SectionHeader title="Rewards & Payouts" />
+            <View style={styles.chipRow}>
+              <StatChip
+                label="Total Rewarded"
+                value={formatINR(rewards.totalRewarded)}
+                color="#059669"
+                sub={`${rewards.rewardCount} rewards`}
+              />
+              <StatChip
+                label="Avg. Reward"
+                value={formatINR(Math.round(rewards.avgReward))}
+                color="#7C3AED"
+              />
+            </View>
+            <View style={[styles.chipRow, { marginTop: tokens.spacing2 }]}>
+              <StatChip
+                label="Withdrawn"
+                value={formatINR(rewards.totalWithdrawn)}
+                color="#D97706"
+                sub={`${rewards.withdrawalCount} txns`}
+              />
               <TouchableOpacity
-                key={item.screen}
                 style={[
-                  navStyles.card,
-                  { backgroundColor: c.surface, borderColor: c.border },
+                  chipStyles.chip,
+                  { flex: 1, borderColor: rewards.pendingWithdrawals > 0 ? c.warning + '50' : c.border + '50' },
                 ]}
-                onPress={() => navigation.navigate(item.screen as any)}
-                activeOpacity={0.7}
+                onPress={() => rewards.pendingWithdrawals > 0 && navigation.navigate('AdminWithdrawals')}
+                activeOpacity={rewards.pendingWithdrawals > 0 ? 0.6 : 1}
               >
-                <View
-                  style={[
-                    navStyles.iconWrap,
-                    { backgroundColor: item.accent + "18" },
-                  ]}
-                >
-                  <Ionicons
-                    name={item.icon as any}
-                    size={20}
-                    color={item.accent}
-                  />
-                </View>
-                <View style={navStyles.textWrap}>
-                  <Text style={[navStyles.label, { color: c.text }]}>
-                    {item.label}
-                  </Text>
-                  <Text style={[navStyles.sub, { color: c.textTertiary }]}>
-                    {item.sub}
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={16}
-                  color={c.textTertiary}
-                />
+                <Text style={[chipStyles.value, { color: rewards.pendingWithdrawals > 0 ? c.warning : '#9CA3AF' }]}>
+                  {String(rewards.pendingWithdrawals)}
+                </Text>
+                <Text style={chipStyles.label}>Pending Payouts</Text>
+                {rewards.pendingWithdrawals > 0 && (
+                  <Text style={[chipStyles.sub, { color: c.warning + 'bb' }]}>Tap to review</Text>
+                )}
               </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* ── Quick nav ─────────────────────────────────────────────────── */}
+        <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
+          <SectionHeader title="Quick Access" />
+          <View style={styles.navGrid}>
+            {[
+              { label: 'Users',       sub: 'Manage accounts',      icon: 'people',         screen: 'AdminUsers'       as any, color: '#0891B2' },
+              { label: 'Questions',   sub: 'Review & moderate',     icon: 'document-text',  screen: 'AdminQuestions'   as any, color: c.primary },
+              { label: 'Withdrawals', sub: 'Approve payouts',        icon: 'card',           screen: 'AdminWithdrawals' as any, color: '#D97706' },
+              { label: 'Config',      sub: 'System settings',        icon: 'settings',       screen: 'AdminConfig'      as any, color: '#6B7280' },
+            ].map((item) => (
+              <Card
+                key={item.screen}
+                style={styles.navCard}
+                onPress={() => navigation.navigate(item.screen)}
+              >
+                <View style={[navIconStyles.wrap, { backgroundColor: item.color + '18' }]}>
+                  <Ionicons name={item.icon as any} size={22} color={item.color} />
+                </View>
+                <Text style={[navIconStyles.label, { color: c.foreground }]}>{item.label}</Text>
+                <Text style={[navIconStyles.sub, { color: c.mutedForeground }]}>{item.sub}</Text>
+              </Card>
             ))}
           </View>
         </View>
 
-        <View style={{ height: tokens.spacing10 }} />
+        <View style={{ height: tokens.spacing8 }} />
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── Component-level styles ───────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { padding: tokens.spacing5 },
-
-  
-  // Header
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing4,
-  },
-  headerLeft: { flex: 1 },
-  greeting: { fontSize: 12, fontWeight: '500', marginBottom: 2 },
-  adminName: { fontSize: 26, fontWeight: '800', lineHeight: 30 },
-  avatarCircle: {
-    width: 50, height: 50, borderRadius: 9999,
-    justifyContent: 'center', alignItems: 'center',
-    marginLeft: tokens.spacing4,
-  },
-  avatarText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
-
-  // Alert
-  alertStrip: {
+const userStatsStyles = StyleSheet.create({
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginTop: tokens.spacing3,
-    marginBottom: tokens.spacing5,
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing4,
   },
-  alertText: { flex: 1, fontSize: 12.5, fontWeight: '600' },
-  alertIconWrap: {
-    width: 22, height: 22, borderRadius: 11,
-    alignItems: 'center', justifyContent: 'center',
-  },
-
-  // Stats grid
-  statsGrid: {
-    flexDirection: 'row',
-    gap: tokens.spacing3,
-  },
-
-  // Sections
-  section: {},
-  sectionHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: tokens.spacing3,
-  },
-  sectionTitle: { fontSize: 16, fontWeight: '700' },
-  seeAll: { fontSize: 13, fontWeight: '600' },
-  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  item: { flex: 1, alignItems: 'center', gap: 4 },
+  divider: { width: 1, height: 36 },
+  num: { fontSize: 18, fontWeight: '800' },
+  lbl: { fontSize: 10.5, fontWeight: '500' },
 });
 
-// Queue card styles
 const queueStyles = StyleSheet.create({
-  card: {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: tokens.spacing4,
-    marginBottom: tokens.spacing2,
-    ...tokens.shadowSm,
-  },
-  cardTop: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -754,44 +575,84 @@ const queueStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 8,
   },
-  pillDot: { width: 5, height: 5, borderRadius: 2.5 },
+  dot: { width: 5, height: 5, borderRadius: 2.5 },
   pillText: { fontSize: 11, fontWeight: '700' },
   time: { fontSize: 11 },
   question: { fontSize: 13.5, lineHeight: 20, marginBottom: 10 },
-  cardBot: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  meta: { fontSize: 12 },
-  metaWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  actions: { flexDirection: 'row', gap: 8 },
-  actionBtn: {
-    width: 32, height: 32, borderRadius: 9,
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  metaText: { fontSize: 11.5 },
+  actions: { flexDirection: 'row', gap: 6 },
+  btn: {
+    width: 30, height: 30, borderRadius: 8,
     justifyContent: 'center', alignItems: 'center',
   },
 });
 
-// Quick nav styles
-const navStyles = StyleSheet.create({
-  grid: { gap: tokens.spacing3 },
-  card: {
+const navIconStyles = StyleSheet.create({
+  wrap: {
+    width: 44, height: 44, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: tokens.spacing2,
+  },
+  label: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  sub: { fontSize: 11 },
+});
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  scroll: { padding: tokens.spacing5 },
+  section: {},
+  chipRow: { flexDirection: 'row', gap: tokens.spacing2 },
+
+  // Hero card
+  heroCard: {
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroLeft: { flex: 1 },
+  heroDate: { fontSize: 11.5, fontWeight: '500', color: '#ffffff99', marginBottom: 3 },
+  heroName: { fontSize: 24, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
+  heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: tokens.radiusMd,
-    borderWidth: 1,
-    padding: tokens.spacing4,
-    gap: tokens.spacing3,
-    ...tokens.shadowSm,
+    gap: 5,
+    backgroundColor: '#ffffff25',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
   },
-  iconWrap: {
-    width: 44, height: 44, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center', flexShrink: 0,
+  heroBadgeText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF' },
+  heroAvatar: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: '#ffffff30',
+    justifyContent: 'center', alignItems: 'center',
+    marginLeft: tokens.spacing4,
   },
-  textWrap: { flex: 1 },
-  label: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  sub: { fontSize: 12 },
+  heroAvatarText: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
+
+  // Nav grid
+  navGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.spacing2,
+  },
+  navCard: {
+    width: '48%',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing4,
+    paddingHorizontal: tokens.spacing3,
+  },
 });
