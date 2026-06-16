@@ -25,6 +25,7 @@ import {
   ListWithdrawalsDto,
   ProcessWithdrawalDto,
   CreateUserDto,
+  SuspendUserDto,
 } from './dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -71,10 +72,23 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   async suspendUser(
     @Param('id') id: string,
-    @Body() body: { action: 'suspend' | 'ban'; reason?: string },
+    @Body() body: SuspendUserDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.adminService.suspendOrBanUser(req.user.id, id, body.action, body.reason);
+    return this.adminService.suspendOrBanUser(
+      req.user.id,
+      id,
+      body.action,
+      body.reason,
+      body.suspendedUntil,
+    );
+  }
+
+  @Post('users/:id/unsuspend')
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async unsuspendUser(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.adminService.unsuspendOrUnbanUser(req.user.id, id);
   }
 
   @Post('users/:id/verify')
@@ -157,6 +171,13 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
+  }
+
+  /** Full stats for the admin dashboard — curator allowed */
+  @Get('stats')
+  @HttpCode(HttpStatus.OK)
+  async getStats(@Query() dto: AnalyticsQueryDto) {
+    return this.adminService.getStats(dto);
   }
 
   @Get('analytics/rewards')

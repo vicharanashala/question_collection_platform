@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities';
+import { VerificationStatus } from '../enums';
+import { UserAccountLockedException } from '../exceptions/user-status.exception';
 
 export interface JwtPayload {
   sub: string;
@@ -50,10 +52,34 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session expired. Please login again.');
     }
 
+    // Auto-reinstate: suspension period has expired
+    if (
+      user.verificationStatus === VerificationStatus.SUSPENDED &&
+      user.suspendedUntil &&
+      new Date() > new Date(user.suspendedUntil)
+    ) {
+      await this.userRepo.update(user.id, {
+        verificationStatus: VerificationStatus.VERIFIED,
+        suspendedAt: null,
+        suspendedUntil: null,
+        suspendedReason: null,
+      });
+      user.verificationStatus = VerificationStatus.VERIFIED;
+    }
+
+    // Return user object including verificationStatus. Do NOT throw lock exceptions
+    // here — passport-jwt would intercept them as 401. Instead, throw them from
+    // JwtAuthGuard.handleRequest where NestJS controls the HTTP status code.
     return {
       id: payload.sub,
       mobileNumber: payload.mobileNumber,
       role: payload.role,
+      verificationStatus: user.verificationStatus,
+      suspendedReason: user.suspendedReason,
+      suspendedAt: user.suspendedAt,
+      suspendedUntil: user.suspendedUntil,
+      bannedReason: user.bannedReason,
+      bannedAt: user.bannedAt,
     };
   }
 }

@@ -65,6 +65,21 @@ export class User {
   @Index('idx_users_verification_status')
   verificationStatus: VerificationStatus;
 
+  @Column({ name: 'suspended_at', type: 'timestamp', nullable: true })
+  suspendedAt: Date | null;
+
+  @Column({ name: 'suspended_until', type: 'timestamp', nullable: true })
+  suspendedUntil: Date | null;
+
+  @Column({ name: 'suspended_reason', type: 'varchar', length: 500, nullable: true })
+  suspendedReason: string | null;
+
+  @Column({ name: 'banned_at', type: 'timestamp', nullable: true })
+  bannedAt: Date | null;
+
+  @Column({ name: 'banned_reason', type: 'varchar', length: 500, nullable: true })
+  bannedReason: string | null;
+
   @Column({ name: 'profile_data', type: 'jsonb', nullable: true })
   profileData: Record<string, unknown> | null;
 

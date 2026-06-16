@@ -13,8 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { tokens } from '../../utils/theme';
 import { Button } from '../../components/Button';
-
-const SUPPORT_WHATSAPP_NUMBER = '919876543210'; // Replace with actual admin/support number
+import { config } from '../../config';
 
 export function VerificationPendingScreen() {
   const { theme } = useTheme();
@@ -36,16 +35,16 @@ export function VerificationPendingScreen() {
       `Hello, I have registered on the Farmer Question Platform and my account is pending verification. Please verify my account.\n\nThank you.`,
     );
     const whatsappUrl = Platform.select({
-      ios: `whatsapp://send?phone=${SUPPORT_WHATSAPP_NUMBER}&text=${message}`,
-      android: `whatsapp://send?phone=${SUPPORT_WHATSAPP_NUMBER}&text=${message}`,
-    }) ?? `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${message}`;
+      ios: `whatsapp://send?phone=${config.support.whatsapp}&text=${message}`,
+      android: `whatsapp://send?phone=${config.support.whatsapp}&text=${message}`,
+    }) ?? `https://wa.me/${config.support.whatsapp}?text=${message}`;
 
     Linking.canOpenURL(whatsappUrl).then((supported) => {
       if (supported) {
         Linking.openURL(whatsappUrl);
       } else {
         // Fallback to web WhatsApp
-        Linking.openURL(`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${message}`);
+        Linking.openURL(`https://wa.me/${config.support.whatsapp}?text=${message}`);
       }
     });
   }

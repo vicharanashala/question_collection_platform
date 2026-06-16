@@ -499,7 +499,7 @@ export function AdminDashboardScreen() {
               <TouchableOpacity
                 style={[
                   chipStyles.chip,
-                  { flex: 1, borderColor: rewards.pendingWithdrawals > 0 ? c.warning + '50' : c.border + '50' },
+                  { flex: 1, borderColor: rewards.pendingWithdrawals > 0 ? c.warning + '50' : c.borderSubtle },
                 ]}
                 onPress={() => rewards.pendingWithdrawals > 0 && navigation.navigate('AdminWithdrawals')}
                 activeOpacity={rewards.pendingWithdrawals > 0 ? 0.6 : 1}

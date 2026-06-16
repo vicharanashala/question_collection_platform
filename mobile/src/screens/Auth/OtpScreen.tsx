@@ -14,9 +14,10 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
 import { UserRole } from '../../types';
+import { tokens } from '../../utils/theme';
+import { parseAccountLocked, AccountLockedInfo } from '../../api/client';
 
 const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
-import { tokens } from '../../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Otp'>;
@@ -33,6 +34,7 @@ export function OtpScreen({ navigation, route }: Props) {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lockedInfo, setLockedInfo] = useState<AccountLockedInfo | null>(null);
   const [countdown, setCountdown] = useState(60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const verifyInFlight = useRef(false);
@@ -66,9 +68,7 @@ export function OtpScreen({ navigation, route }: Props) {
       };
 
       if (result.requiresRegistration) {
-        // Admin/curator roles skip Terms & Consent screens
         if (result.role && ADMIN_ROLES.includes(result.role as UserRole)) {
-          // Redirect to login to proceed directly to the app
           await login(mobileNumber);
           return;
         }
@@ -76,9 +76,16 @@ export function OtpScreen({ navigation, route }: Props) {
       }
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
-      const msg = getErrorMessage(err, 'Enter a valid OTP');
-      setError(msg);
-      setOtp('');
+      const locked = parseAccountLocked(err);
+      if (locked) {
+        setLockedInfo(locked);
+        setError('');
+        setOtp('');
+      } else {
+        const msg = getErrorMessage(err, 'Enter a valid OTP');
+        setError(msg);
+        setOtp('');
+      }
     } finally {
       setLoading(false);
       verifyInFlight.current = false;
@@ -102,6 +109,13 @@ export function OtpScreen({ navigation, route }: Props) {
 
   const masked = mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1 ···· ··$3');
 
+  const formatDate = (iso: string | null) => {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch { return null; }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
@@ -121,8 +135,46 @@ export function OtpScreen({ navigation, route }: Props) {
           </Text>
         </View>
 
-        {/* Card */}
+        {/* Account status banner — shown to suspended/banned users */}
+        {lockedInfo && (
+          <View style={[
+            styles.lockedBanner,
+            { backgroundColor: lockedInfo.status === 'banned' ? colors.error + '14' : colors.warning + '14' },
+          ]}>
+            <View style={styles.lockedBannerIconRow}>
+              <Text style={styles.lockedBannerIcon}>
+                {lockedInfo.status === 'banned' ? '🚫' : '⏸'}
+              </Text>
+              <Text style={[
+                styles.lockedBannerTitle,
+                { color: lockedInfo.status === 'banned' ? colors.error : colors.warning },
+              ]}>
+                {lockedInfo.status === 'banned' ? 'Account Permanently Banned' : 'Account Suspended'}
+              </Text>
+            </View>
+            {lockedInfo.reason && (
+              <Text style={[styles.lockedBannerReason, { color: colors.text }]}>
+                Reason: {lockedInfo.reason}
+              </Text>
+            )}
+            {(lockedInfo.suspendedAt ?? lockedInfo.bannedAt) && (
+              <Text style={[styles.lockedBannerDate, { color: colors.textSecondary }]}>
+                Since: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
+              </Text>
+            )}
+            <Text style={[styles.lockedBannerHelp, { color: colors.textSecondary }]}>
+              Contact support for more information.
+            </Text>
+          </View>
+        )}
+
+        {/* OTP Card */}
         <View style={[styles.card, { backgroundColor: colors.surface, ...tokens.shadowMd }]}>
+          {lockedInfo && (
+            <Text style={[styles.lockedCardLabel, { color: colors.textSecondary }]}>
+              You cannot log in while your account is {lockedInfo.status}.
+            </Text>
+          )}
           <Text style={[styles.label, { color: colors.textSecondary }]}>Enter OTP</Text>
           <OtpInput value={otp} onChange={setOtp} error={error} />
 
@@ -157,29 +209,42 @@ const styles = StyleSheet.create({
   backText: { fontSize: 15, fontWeight: '600' },
   header: { alignItems: 'center', marginBottom: tokens.spacing8 },
   iconBadge: {
-    width: 72,
-    height: 72,
+    width: 72, height: 72,
     borderRadius: tokens.radiusFull,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: tokens.spacing4,
   },
   icon: { fontSize: 32 },
   title: { fontSize: 26, fontWeight: '800', marginBottom: tokens.spacing2 },
   subtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  lockedBanner: {
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+    marginBottom: tokens.spacing4,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  lockedBannerIconRow: { flexDirection: 'row', alignItems: 'center', marginBottom: tokens.spacing2 },
+  lockedBannerIcon: { fontSize: 18, marginRight: tokens.spacing2 },
+  lockedBannerTitle: { fontSize: 15, fontWeight: '800' },
+  lockedBannerReason: { fontSize: 13, marginTop: 2 },
+  lockedBannerDate: { fontSize: 12, marginTop: 2 },
+  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing2 },
+  lockedCardLabel: { fontSize: 12, textAlign: 'center', marginBottom: tokens.spacing3 },
   card: {
     borderRadius: tokens.radiusXl,
     padding: tokens.spacing6,
   },
-  label: { fontSize: 13, fontWeight: '600', letterSpacing: 0.01 * 13, textAlign: 'center', marginBottom: tokens.spacing3 },
+  label: {
+    fontSize: 13, fontWeight: '600',
+    letterSpacing: 0.01 * 13, textAlign: 'center',
+    marginBottom: tokens.spacing3,
+  },
   expiryRow: { alignItems: 'center', marginBottom: tokens.spacing5, marginTop: tokens.spacing1 },
   expiryText: { fontSize: 12, letterSpacing: 0.01 * 12 },
   resendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: tokens.spacing5,
-    gap: tokens.spacing1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    marginTop: tokens.spacing5, gap: tokens.spacing1,
   },
   resendPrompt: { fontSize: 13 },
   resendLink: { fontSize: 13, fontWeight: '700' },

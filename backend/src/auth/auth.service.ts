@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import { UserAccountLockedException } from '../common/exceptions/user-status.exception';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -118,6 +119,41 @@ export class AuthService {
         otpExpiresAt: expiresAt,
       });
     } else {
+      // Auto-reinstate: suspension period has expired
+      if (
+        user.verificationStatus === VerificationStatus.SUSPENDED &&
+        user.suspendedUntil &&
+        new Date() > new Date(user.suspendedUntil)
+      ) {
+        await this.userRepo.update(user.id, {
+          verificationStatus: VerificationStatus.VERIFIED,
+          suspendedAt: null,
+          suspendedUntil: null,
+          suspendedReason: null,
+        });
+        user.verificationStatus = VerificationStatus.VERIFIED;
+      }
+
+      // Reject suspended/banned users before incrementing rate-limit counter
+      if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+        throw new UserAccountLockedException({
+          status: VerificationStatus.SUSPENDED,
+          reason: user.suspendedReason,
+          suspendedAt: user.suspendedAt,
+          suspendedUntil: user.suspendedUntil,
+          bannedAt: null,
+        });
+      }
+      if (user.verificationStatus === VerificationStatus.BANNED) {
+        throw new UserAccountLockedException({
+          status: VerificationStatus.BANNED,
+          reason: user.bannedReason,
+          suspendedAt: null,
+          suspendedUntil: null,
+          bannedAt: user.bannedAt,
+        });
+      }
+
       user.otpHash = otpHash;
       user.otpExpiresAt = expiresAt;
     }
@@ -151,6 +187,41 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    // Auto-reinstate: suspension period has expired
+    if (
+      user.verificationStatus === VerificationStatus.SUSPENDED &&
+      user.suspendedUntil &&
+      new Date() > new Date(user.suspendedUntil)
+    ) {
+      await this.userRepo.update(user.id, {
+        verificationStatus: VerificationStatus.VERIFIED,
+        suspendedAt: null,
+        suspendedUntil: null,
+        suspendedReason: null,
+      });
+      user.verificationStatus = VerificationStatus.VERIFIED;
+    }
+
+    // Block suspended or banned users from logging in
+    if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.SUSPENDED,
+        reason: user.suspendedReason,
+        suspendedAt: user.suspendedAt,
+        suspendedUntil: user.suspendedUntil,
+        bannedAt: null,
+      });
+    }
+    if (user.verificationStatus === VerificationStatus.BANNED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.BANNED,
+        reason: user.bannedReason,
+        suspendedAt: null,
+        suspendedUntil: null,
+        bannedAt: user.bannedAt,
+      });
     }
 
     if (!user.otpHash || !user.otpExpiresAt) {
@@ -308,6 +379,41 @@ export class AuthService {
 
       if (user.tokenVersion !== payload.tokenVersion) {
         throw new UnauthorizedException('Session expired. Please login again.');
+      }
+
+      // Auto-reinstate: suspension period has expired
+      if (
+        user.verificationStatus === VerificationStatus.SUSPENDED &&
+        user.suspendedUntil &&
+        new Date() > new Date(user.suspendedUntil)
+      ) {
+        await this.userRepo.update(user.id, {
+          verificationStatus: VerificationStatus.VERIFIED,
+          suspendedAt: null,
+          suspendedUntil: null,
+          suspendedReason: null,
+        });
+        user.verificationStatus = VerificationStatus.VERIFIED;
+      }
+
+      // Block suspended or banned users from refreshing a session
+      if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+        throw new UserAccountLockedException({
+          status: VerificationStatus.SUSPENDED,
+          reason: user.suspendedReason,
+          suspendedAt: user.suspendedAt,
+          suspendedUntil: user.suspendedUntil,
+          bannedAt: null,
+        });
+      }
+      if (user.verificationStatus === VerificationStatus.BANNED) {
+        throw new UserAccountLockedException({
+          status: VerificationStatus.BANNED,
+          reason: user.bannedReason,
+          suspendedAt: null,
+          suspendedUntil: null,
+          bannedAt: user.bannedAt,
+        });
       }
 
       return this.issueTokens(user);

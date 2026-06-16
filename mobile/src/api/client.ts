@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { accountLockedEmitter } from '../events/accountLockedEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -92,6 +93,16 @@ api.interceptors.response.use(
       }
     }
 
+    // 423 Locked — user was suspended/banned mid-session (token refresh path).
+    // For unauthenticated requests (e.g. /auth/otp sign-in) the caller handles
+    // the 423 inline; skip the modal emitter to avoid double-display.
+    if (error.response?.status === 423 && originalRequest._retry) {
+      const locked = parseAccountLocked(error);
+      if (locked) {
+        accountLockedEmitter.emit(locked);
+      }
+    }
+
     return Promise.reject(error);
   },
 );
@@ -100,11 +111,44 @@ api.interceptors.response.use(
 
 export function getErrorMessage(err: unknown, fallback: string): string {
   if (err && typeof err === 'object' && !Array.isArray(err)) {
-    const e = err as { response?: { data?: { message?: string } }; message?: string };
+    // Axios AxiosError: err.response.status = HTTP status, err.response.data = body
+    const e = err as { response?: { data?: { message?: string; error?: string }; message?: string; error?: string }; message?: string };
+    if (e.response?.data?.error === 'ACCOUNT_LOCKED') return e.response?.data?.message ?? fallback;
     if (e.response?.data?.message) return e.response.data.message;
+    if (e.response?.message) return e.response.message;
+    if (e.response?.error) return e.response.error;
     if (e.message) return e.message;
   }
   return fallback;
+}
+
+export interface AccountLockedInfo {
+  status: 'suspended' | 'banned';
+  reason: string | null;
+  suspendedAt: string | null;
+  bannedAt: string | null;
+  suspendedUntil: string | null;
+}
+
+export function parseAccountLocked(err: unknown): AccountLockedInfo | null {
+  if (err && typeof err === 'object' && !Array.isArray(err)) {
+    // Axios AxiosError structure:
+    //   err.response.status  = HTTP status code (e.g. 423)
+    //   err.response.data    = NestJS HttpException body
+    const e = err as { response?: { status: number; data?: { status?: string; reason?: string; suspendedAt?: string; bannedAt?: string; suspendedUntil?: string } } };
+    if (e.response?.status === 423 && e.response.data) {
+      const body = e.response.data;
+      const rawStatus = String(body.status ?? '');
+      return {
+        status: rawStatus === 'banned' ? 'banned' : 'suspended',
+        reason: typeof body.reason === 'string' ? body.reason : null,
+        suspendedAt: typeof body.suspendedAt === 'string' ? body.suspendedAt : null,
+        bannedAt: typeof body.bannedAt === 'string' ? body.bannedAt : null,
+        suspendedUntil: typeof body.suspendedUntil === 'string' ? body.suspendedUntil : null,
+      };
+    }
+  }
+  return null;
 }
 
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
@@ -212,8 +256,13 @@ export const adminApi = {
     api.get('/admin/users', { params }),
   getUserDetail: (id: string) =>
     api.get(`/admin/users/${id}`),
-  suspendUser: (id: string, body: { action: 'suspend' | 'ban'; reason?: string }) =>
+  createUser: (data: Record<string, unknown>) =>
+    api.post('/admin/users', data),
+  suspendUser: (id: string, body: { action: 'suspend' | 'ban'; reason?: string; suspendedUntil?: string }) =>
     api.post(`/admin/users/${id}/suspend`, body),
+
+  unsuspendUser: (id: string) =>
+    api.post(`/admin/users/${id}/unsuspend`, {}),
 
   verifyUser: (id: string) =>
     api.post(`/admin/users/${id}/verify`, {}),

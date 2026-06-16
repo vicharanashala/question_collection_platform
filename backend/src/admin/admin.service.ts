@@ -186,6 +186,13 @@ export class AdminService {
     const user = await this.userRepo.findOne({
       where: { id: userId },
       relations: ['wallet'],
+      select: [
+        'id', 'mobileNumber', 'name', 'role', 'verificationStatus',
+        'category', 'district', 'state', 'languagePreference',
+        'createdAt', 'lastLoginAt',
+        'suspendedAt', 'suspendedUntil', 'suspendedReason',
+        'bannedAt', 'bannedReason',
+      ],
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -207,7 +214,13 @@ export class AdminService {
     return { user, questions };
   }
 
-  async suspendOrBanUser(adminId: string, userId: string, action: 'suspend' | 'ban', reason?: string) {
+  async suspendOrBanUser(
+    adminId: string,
+    userId: string,
+    action: 'suspend' | 'ban',
+    reason?: string,
+    suspendedUntil?: string,
+  ) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -220,8 +233,26 @@ export class AdminService {
 
     const newStatus = action === 'ban' ? VerificationStatus.BANNED : VerificationStatus.SUSPENDED;
     const oldStatus = user.verificationStatus;
+    const now = new Date();
 
-    await this.userRepo.update(userId, { verificationStatus: newStatus });
+    await this.userRepo.update(userId, {
+      verificationStatus: newStatus,
+      ...(action === 'ban'
+        ? {
+            bannedAt: now,
+            bannedReason: reason ?? null,
+            suspendedAt: null,
+            suspendedReason: null,
+            suspendedUntil: null,
+          }
+        : {
+            suspendedAt: now,
+            suspendedUntil: suspendedUntil ? new Date(suspendedUntil) : null,
+            suspendedReason: reason ?? null,
+            bannedAt: null,
+            bannedReason: null,
+          }),
+    });
 
     await this.logAudit({
       actorType: ActorType.ADMIN,
@@ -230,10 +261,47 @@ export class AdminService {
       entityType: 'user',
       entityId: userId,
       oldValue: { verificationStatus: oldStatus },
-      newValue: { verificationStatus: newStatus, reason },
+      newValue: { verificationStatus: newStatus, reason, suspendedUntil: suspendedUntil ?? null },
     });
 
     return { success: true, userId, newStatus };
+  }
+
+  async unsuspendOrUnbanUser(adminId: string, userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const isSuperAdmin = await this.isSuperAdmin(adminId);
+    if (!isSuperAdmin) throw new ForbiddenException('Only super admins can unsuspend or unban users');
+
+    if (
+      user.verificationStatus !== VerificationStatus.SUSPENDED &&
+      user.verificationStatus !== VerificationStatus.BANNED
+    ) {
+      throw new BadRequestException('User is not suspended or banned');
+    }
+
+    const oldStatus = user.verificationStatus;
+    await this.userRepo.update(userId, {
+      verificationStatus: VerificationStatus.VERIFIED,
+      suspendedAt: null,
+      suspendedUntil: null,
+      suspendedReason: null,
+      bannedAt: null,
+      bannedReason: null,
+    });
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: oldStatus === VerificationStatus.BANNED ? AuditAction.USER_UNBANNED : AuditAction.USER_UNSUSPENDED,
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { verificationStatus: oldStatus },
+      newValue: { verificationStatus: VerificationStatus.VERIFIED },
+    });
+
+    return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
   }
 
   async verifyUser(adminId: string, userId: string) {
@@ -570,6 +638,131 @@ export class AdminService {
       categoryBreakdown: categoryBreakdownRaw.map((r) => ({ category: r.category, count: Number(r.count) })),
       dailyVolume: dailyVolumeRaw.map((r) => ({ date: r.date, total: Number(r.total), approved: Number(r.approved) })),
     };
+  }
+
+  /**
+   * Full stats payload matching web/src/types/AdminStats.
+   * GET /admin/stats
+   */
+  async getStats(_query: AnalyticsQueryDto) {
+    const [
+      totalUsers,
+      verifiedUsers,
+      pendingUsers,
+      suspendedUsers,
+      bannedUsers,
+      totalQuestions,
+      approvedQuestions,
+      rejectedQuestions,
+      pendingQuestions,
+      usersThisWeek,
+      questionsThisWeek,
+      roleDist,
+      categoryDist,
+      historical,
+    ] = await Promise.all([
+      this.userRepo.count(),
+      this.userRepo.count({ where: { verificationStatus: VerificationStatus.VERIFIED } }),
+      this.userRepo.count({ where: { verificationStatus: VerificationStatus.PENDING } }),
+      this.userRepo.count({ where: { verificationStatus: VerificationStatus.SUSPENDED } }),
+      this.userRepo.count({ where: { verificationStatus: VerificationStatus.BANNED } }),
+      this.questionRepo.count(),
+      this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } }),
+      this.questionRepo.count({ where: { status: QuestionStatus.REJECTED } }),
+      this.questionRepo.count({
+        where: { status: In([QuestionStatus.PENDING, QuestionStatus.AI_REVIEW, QuestionStatus.HUMAN_REVIEW]) },
+      }),
+      // Users registered in last 7 days
+      this.userRepo.count({
+        where: { createdAt: Between(
+          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          new Date(),
+        ) },
+      }),
+      // Questions submitted in last 7 days
+      this.questionRepo.count({
+        where: { submittedAt: Between(
+          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          new Date(),
+        ) },
+      }),
+      // Role distribution
+      this.userRepo
+        .createQueryBuilder('u')
+        .select('u.role', 'role')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('u.role')
+        .getRawMany<{ role: string; count: string }>(),
+      // Category distribution
+      this.userRepo
+        .createQueryBuilder('u')
+        .select('u.category', 'category')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('u.category')
+        .getRawMany<{ category: string; count: string }>(),
+      // 90-day daily history (users, questions, signups, approved, rejected)
+      this.questionRepo
+        .createQueryBuilder('q')
+        .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+        .addSelect('COUNT(DISTINCT q.userId)', 'users')
+        .addSelect('COUNT(*)', 'questions')
+        .addSelect(`COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`, 'approved')
+        .addSelect(`COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)`, 'rejected')
+        .where('q.submittedAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
+        .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+        .orderBy('date', 'ASC')
+        .getRawMany<{ date: string; users: string; questions: string; approved: string; rejected: string }>(),
+    ])
+
+    // Signups per day from user registrations
+    const signupRaw = await this.userRepo
+      .createQueryBuilder('u')
+      .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(*)', 'signups')
+      .where('u.createdAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
+      .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC')
+      .getRawMany<{ date: string; signups: string }>()
+
+    const signupMap = new Map(signupRaw.map((r) => [r.date, Number(r.signups)]))
+
+    const historicalDays: Array<{
+      date: string
+      users: number
+      questions: number
+      signups: number
+      approved: number
+      rejected: number
+    }> = historical.map((h) => ({
+      date: h.date,
+      users: Number(h.users),
+      questions: Number(h.questions),
+      signups: signupMap.get(h.date) ?? 0,
+      approved: Number(h.approved),
+      rejected: Number(h.rejected),
+    }))
+
+    return {
+      dashboard: {
+        totalUsers,
+        verifiedUsers,
+        pendingUsers,
+        suspendedUsers,
+        bannedUsers,
+        totalQuestions,
+        approvedQuestions,
+        rejectedQuestions,
+        pendingQuestions,
+        questionsThisWeek,
+        usersThisWeek,
+      },
+      recentActivity: [],
+      roleDistribution: roleDist.map((r) => ({ role: r.role as UserRole, count: Number(r.count) })),
+      categoryDistribution: categoryDist
+        .filter((c) => c.category != null)
+        .map((c) => ({ category: c.category as UserCategory, count: Number(c.count) })),
+      historical: historicalDays,
+    }
   }
 
   async getRewardSummary(query: AnalyticsQueryDto) {

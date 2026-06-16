@@ -19,8 +19,18 @@ import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
 import { useTranslation } from 'react-i18next';
+import { parseAccountLocked, AccountLockedInfo } from '../../api/client';
 
 type Props = { navigation: NativeStackNavigationProp<AuthStackParamList, 'LoginPhone'> };
+
+function formatDate(iso: string | null) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
+  } catch { return null; }
+}
 
 export function LoginPhoneScreen({ navigation }: Props) {
   const { theme } = useTheme();
@@ -32,6 +42,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lockedInfo, setLockedInfo] = useState<AccountLockedInfo | null>(null);
 
   const validMobile = /^[6-9]\d{9}$/.test(mobile);
 
@@ -51,8 +62,14 @@ export function LoginPhoneScreen({ navigation }: Props) {
       await login(`+91${mobile}`);
       navigation.navigate('Otp', { mobileNumber: `+91${mobile}` });
     } catch (err: unknown) {
-      const { getErrorMessage } = await import('../../api/client');
-      showToast(getErrorMessage(err, 'Unable to send OTP. Please try again.'), 'error');
+      const locked = parseAccountLocked(err);
+      if (locked) {
+        setLockedInfo(locked);
+        setError('');
+      } else {
+        const { getErrorMessage } = await import('../../api/client');
+        showToast(getErrorMessage(err, 'Unable to send OTP. Please try again.'), 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -87,6 +104,41 @@ export function LoginPhoneScreen({ navigation }: Props) {
                 Enter your mobile number to continue
               </Text>
             </View>
+
+            {/* Suspended / Banned inline banner */}
+            {lockedInfo && (
+              <View style={[
+                styles.lockedBanner,
+                { backgroundColor: lockedInfo.status === 'banned' ? c.error + '18' : c.warning + '18' },
+              ]}>
+                <View style={styles.lockedBannerHeader}>
+                  <Ionicons
+                    name={lockedInfo.status === 'banned' ? 'ban' : 'pause-circle'}
+                    size={20}
+                    color={lockedInfo.status === 'banned' ? c.error : c.warning}
+                  />
+                  <Text style={[
+                    styles.lockedBannerTitle,
+                    { color: lockedInfo.status === 'banned' ? c.error : c.warning },
+                  ]}>
+                    {lockedInfo.status === 'banned' ? 'Account Permanently Banned' : 'Account Suspended'}
+                  </Text>
+                </View>
+                {lockedInfo.reason && (
+                  <Text style={[styles.lockedBannerReason, { color: c.text }]}>
+                    Reason: {lockedInfo.reason}
+                  </Text>
+                )}
+                {(lockedInfo.suspendedAt ?? lockedInfo.bannedAt) && (
+                  <Text style={[styles.lockedBannerDate, { color: c.textSecondary }]}>
+                    Since: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
+                  </Text>
+                )}
+                <Text style={[styles.lockedBannerHelp, { color: c.textSecondary }]}>
+                  Contact support to resolve this issue.
+                </Text>
+              </View>
+            )}
 
             <Input
               label="Mobile Number"
@@ -189,6 +241,19 @@ const styles = StyleSheet.create({
   cardHeader: { marginBottom: tokens.spacing5 },
   cardTitle: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
   cardSubtitle: { fontSize: 14, lineHeight: 20 },
+
+  // Locked banner
+  lockedBanner: {
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing4,
+    marginBottom: tokens.spacing4,
+  },
+  lockedBannerHeader: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing2 },
+  lockedBannerTitle: { fontSize: 15, fontWeight: '800' },
+  lockedBannerReason: { fontSize: 13, marginBottom: 2 },
+  lockedBannerDate: { fontSize: 12, marginBottom: tokens.spacing1 },
+  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing1 },
+
   countryCode: {
     flexDirection: 'row',
     alignItems: 'center',

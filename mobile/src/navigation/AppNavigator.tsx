@@ -40,6 +40,7 @@ import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
 import { AdminQuestionsScreen } from '../screens/Admin/AdminQuestionsScreen';
 import { AdminQuestionDetailScreen } from '../screens/Admin/AdminQuestionDetailScreen';
 import { AdminUsersScreen } from '../screens/Admin/AdminUsersScreen';
+import { AdminCreateUserScreen } from '../screens/Admin/AdminCreateUserScreen';
 import { AdminUserDetailScreen } from '../screens/Admin/AdminUserDetailScreen';
 import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
 import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
@@ -140,6 +141,11 @@ function AdminNavigator() {
       <AdminStackNav.Screen
         name="AdminUsers"
         component={AdminUsersScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminCreateUser"
+        component={AdminCreateUserScreen}
         options={{ headerShown: false }}
       />
       <AdminStackNav.Screen

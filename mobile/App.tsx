@@ -6,6 +6,8 @@ import { ThemeProvider } from './src/hooks/useTheme';
 import { AuthProvider } from './src/hooks/useAuth';
 import { LanguageProvider } from './src/hooks/useLanguage';
 import { ToastProvider } from './src/components/Toast';
+import { AccountLockedProvider } from './src/context/AccountLockedContext';
+import { AccountLockedModal } from './src/components/AccountLockedModal';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import './src/i18n';
 
@@ -33,7 +35,11 @@ export default function App() {
         <AuthProvider>
           <LanguageProvider>
             <ToastProvider>
-              <AppNavigator />
+              <AccountLockedProvider>
+                <AppNavigator />
+                {/* Renders as a Modal on top of the entire app when locked */}
+                <AccountLockedModal />
+              </AccountLockedProvider>
             </ToastProvider>
           </LanguageProvider>
         </AuthProvider>

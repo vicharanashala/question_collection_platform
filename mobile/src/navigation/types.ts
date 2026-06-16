@@ -24,6 +24,7 @@ export type AdminStackParamList = {
   AdminDashboard: undefined;
   AdminUsers: undefined;
   AdminUserDetail: { userId: string };
+  AdminCreateUser: undefined;
   AdminQuestions: undefined;
   AdminQuestionDetail: { questionId: string };
   AdminConfig: undefined;

@@ -10,6 +10,7 @@ This is your birth certificate. Follow it, then delete it once you understand th
 - **Always ask before modifying or removing data from the database.** Get confirmation first, then execute.
 - **Do not push directly to `main` or `develop`.** All changes go through a feature branch and PR, or wait for explicit instruction to push a specific branch.
 - **Package manager: use `npm` only.** Do not use `pnpm`, `yarn`, or other package managers.
+- **No emojis.** Use icons only (e.g. Ionicons). If a situation genuinely calls for an emoji, ask the user for explicit permission before using it.
 - **When adding new strings to `mobile/public/locales/`:**
   - Add all new keys to **every** locale file (including `en/`), not just the English one.
   - Always append new keys at the **end** of the `common.json` file in each locale — never insert in the middle.

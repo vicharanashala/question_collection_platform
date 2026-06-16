@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Light theme — matches mobile/React Native tokens */
+    --background: 0 0% 98%;           /* #FAFAFA */
+    --foreground: 222 47% 11%;        /* #111827 */
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 173 58% 39%;           /* #0D9488 teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;         /* #DC2626 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 210 40% 96%;
+    --ring: 173 58% 39%;
+    --success: 160 84% 39%;           /* #059669 */
+    --success-foreground: 0 0% 100%;
+    --warning: 33 93% 54%;            /* #D97706 */
+    --warning-foreground: 0 0% 100%;
+    /* Charts */
+    --chart-1: 173 58% 39%;
+    --chart-2: 199 89% 48%;
+    --chart-3: 263 70% 50%;
+    --chart-4: 33 93% 54%;
+    --chart-5: 160 84% 39%;
+    --info: 199 89% 48%;
+    /* Sidebar */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 217 21% 22%;
+    --sidebar-primary: 173 58% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 173 58% 39%;
+
+    /* Radius */
+    --radius-sm: 0.25rem;   /* 4px */
+    --radius: 0.5rem;       /* 8px */
+    --radius-md: 0.75rem;   /* 12px */
+    --radius-lg: 1rem;      /* 16px */
+    --radius-xl: 1.25rem;   /* 20px */
+  }
+
+  .dark {
+    --font-sans: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Dark theme */
+    --background: 222 47% 8%;          /* #0F172A */
+    --foreground: 210 40% 98%;
+    --card: 216 50% 14%;               /* #1E293B */
+    --card-foreground: 210 40% 98%;
+    --popover: 216 50% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 166 76% 55%;            /* #2DD4BF teal light */
+    --primary-foreground: 173 58% 39%;
+    --secondary: 216 50% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 216 50% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 28% 25%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 65%;
+    --destructive-foreground: 0 62% 7%;
+    --border: 215 28% 25%;
+    --input: 216 50% 14%;
+    --ring: 166 76% 55%;
+    --success: 160 84% 52%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 93% 56%;
+    --warning-foreground: 0 0% 100%;
+    /* Charts */
+    --chart-1: 166 76% 55%;
+    --chart-2: 199 89% 60%;
+    --chart-3: 263 70% 70%;
+    --chart-4: 40 93% 56%;
+    --chart-5: 160 84% 58%;
+    --info: 199 89% 60%;
+    /* Sidebar */
+    --sidebar: 222 47% 8%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 166 76% 55%;
+    --sidebar-primary-foreground: 173 58% 39%;
+    --sidebar-accent: 216 50% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 28% 25%;
+    --sidebar-ring: 166 76% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+
+  /* Dark-mode safe selects */
+  select {
+    @apply bg-background dark:bg-card;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+/* Text balance utility */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Sidebar active nav — dark mode safe */
+.sidebar-nav-active {
+  @apply bg-sidebar-accent text-sidebar-accent-foreground;
+}
+.sidebar-nav-inactive {
+  @apply text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+}
+
+/* Stat card icon containers */
+.stat-icon {
+  @apply rounded-xl p-3;
+}
+.stat-icon-primary {
+  background-color: hsl(var(--primary));
+  @apply text-primary-foreground;
+}
+.stat-icon-success {
+  background-color: hsl(var(--success));
+  @apply text-white;
+}
+.stat-icon-warning {
+  background-color: hsl(var(--warning));
+  @apply text-white;
+}
+.stat-icon-danger {
+  background-color: hsl(var(--destructive));
+  @apply text-white;
+}
+.stat-icon-info {
+  background-color: hsl(var(--info));
+  @apply text-white;
+}

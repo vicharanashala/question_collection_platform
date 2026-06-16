@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
+import { config } from '../../config';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'PrivacyPolicy'>;
@@ -70,7 +71,7 @@ const SECTIONS = [
     id: '9',
     title: 'Contact & Data Requests',
     icon: 'mail-outline',
-    body: 'For questions about this Privacy Policy, to access or delete your data, or to withdraw consent, please contact our support team at privacy@kisandekho.com.',
+    body: `For questions about this Privacy Policy, to access or delete your data, or to withdraw consent, please contact our support team at ${config.support.email}.`,
   },
 ];
 

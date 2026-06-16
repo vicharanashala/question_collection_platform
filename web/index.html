@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0D9488" />
+    <title>Question Platform — Admin</title>
+
+    <!-- Preconnect to backend API (reduces DNS + TLS handshake on first request) -->
+    <link rel="preconnect" href="http://localhost:3000" />
+
+    <!-- Critical CSS inlined to avoid render-blocking stylesheet -->
+    <style>
+      /* Prevent FOUC during JS load */
+      *, *::before, *::after { box-sizing: border-box; }
+      body { margin: 0; background: hsl(var(--background)); }
+    </style>
+
+    <!-- Preload the main entry bundle for fastest possible parse -->
+    <link
+      rel="modulepreload"
+      href="/src/main.tsx"
+      as="script"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
+import { config } from '../../config';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'TermsOfService'>;
@@ -71,7 +72,7 @@ const SECTIONS = [
   {
     id: '11',
     title: 'Contact',
-    body: 'For questions about these Terms of Service, please contact our support team at support@kisandekho.com.',
+    body: `For questions about these Terms of Service, please contact our support team at ${config.support.email}.`,
   },
 ];
 

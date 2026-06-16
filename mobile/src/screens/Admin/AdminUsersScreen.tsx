@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
@@ -129,6 +130,7 @@ export function AdminUsersScreen() {
   const c = theme.colors;
   const nav = useNavigation<Nav>();
   const { showToast } = useToast();
+  const { user: currentUser } = useAuth();
 
   const [items, setItems] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,9 +146,11 @@ export function AdminUsersScreen() {
       const params = buildQueryParams(filters, pageNum);
       const res = await adminApi.listUsers(params);
       const data = res.data;
-      const newItems: UserItem[] = data.items ?? [];
+      const newItems: UserItem[] = (data.items ?? []).filter(
+        (u: UserItem) => u.id !== currentUser?.id,
+      );
       setItems((prev) => (refresh ? newItems : [...prev, ...newItems]));
-      setTotal(data.total ?? 0);
+      setTotal(Math.max(0, (data.total ?? 0) - (newItems.length < (data.items ?? []).length ? 1 : 0)));
       setHasMore(newItems.length === 20);
       setPage(pageNum);
     } catch (e) {
@@ -203,21 +207,21 @@ export function AdminUsersScreen() {
         <View style={styles.cardTop}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.userName, { color: c.text }]}>
-              {item.name || item.mobileNumber}
+              {(item.name || item.mobileNumber) ?? 'Unknown user'}
             </Text>
             <Text style={[styles.userMeta, { color: c.textSecondary }]}>
-              {item.mobileNumber} · {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
+              {item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorised'}
             </Text>
           </View>
           <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>
             <Text style={[styles.badgeText, { color: statusColor }]}>
-              {item.verificationStatus.replace('_', ' ')}
+              {(item.verificationStatus ?? 'unknown').replace('_', ' ')}
             </Text>
           </View>
         </View>
         <View style={styles.cardBottom}>
           <Text style={[styles.location, { color: c.textTertiary }]}>
-            {item.district}, {item.state}
+            {item.district ?? 'Unknown'}, {item.state ?? ''}
           </Text>
           <Text style={[styles.role, { color: item.role === 'admin' || item.role === 'super_admin' ? c.primary : c.textTertiary }]}>
             {item.role}
@@ -237,6 +241,13 @@ export function AdminUsersScreen() {
         </TouchableOpacity>
         <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Users</Text>
         <Text style={[styles.count, { color: c.textSecondary }]}>{total} total</Text>
+        <TouchableOpacity
+          style={[styles.addBtn, { backgroundColor: c.primary + '18' }]}
+          onPress={() => nav.navigate('AdminCreateUser')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="add" size={20} color={c.primary} />
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterBtn, { backgroundColor: countBadge > 0 ? c.primary + '18' : c.surfaceVariant }]}
           onPress={() => setFilterVisible(true)}
@@ -291,7 +302,11 @@ const styles = StyleSheet.create({
   count: { fontSize: 13 },
   filterBtn: {
     width: 38, height: 38, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center', marginLeft: tokens.spacing1,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  addBtn: {
+    width: 38, height: 38, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center',
   },
   filterBadge: {
     position: 'absolute', top: -4, right: -4,
