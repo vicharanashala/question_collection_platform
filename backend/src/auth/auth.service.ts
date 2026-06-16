@@ -65,6 +65,13 @@ export class AuthService {
     private readonly redisService: RedisService,
   ) {}
 
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  /** Strip country code prefix so +91 / 91 / 0 are not stored in DB */
+  private normalizePhone(mobile: string): string {
+    return mobile.replace(/^\+?91 ?/, '').replace(/^0/, '');
+  }
+
   // ─── OTP Flow ───────────────────────────────────────────────────────────────
 
   /**
@@ -72,7 +79,7 @@ export class AuthService {
    * Rate-limited to 3 requests per 15-minute window per mobile number.
    */
   async requestOtp(dto: RequestOtpDto): Promise<{ message: string }> {
-    const { mobileNumber } = dto;
+    const mobileNumber = this.normalizePhone(dto.mobileNumber);
     const rateLimitKey = `otp_rl:${mobileNumber}`;
     console.log(`[DEBUG requestOtp] received mobile=${mobileNumber} (len=${mobileNumber.length})`);
 
@@ -137,7 +144,8 @@ export class AuthService {
    * On first verification of a new user → return a registration token
    * On subsequent verification of an existing user → return access + refresh tokens
    */
-  async verifyOtp(mobileNumber: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string; role: UserRole }> {
+  async verifyOtp(rawMobile: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string; role: UserRole }> {
+    const mobileNumber = this.normalizePhone(rawMobile);
     console.log(`[DEBUG verifyOtp] mobile=${mobileNumber} (len=${mobileNumber.length}) dto=${JSON.stringify(dto)}`);
     const user = await this.userRepo.findOne({ where: { mobileNumber } });
 

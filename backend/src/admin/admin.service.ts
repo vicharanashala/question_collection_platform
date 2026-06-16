@@ -98,15 +98,18 @@ export class AdminService {
       throw new ForbiddenException('Super admin role cannot be assigned via this endpoint.');
     }
 
+    // Normalize: strip +91/91/0 prefix so numbers are stored consistently
+    const mobile = dto.mobileNumber.replace(/^\+?91 ?/, '').replace(/^0/, '');
+
     // Check for duplicate mobile number
-    const existing = await this.userRepo.findOne({ where: { mobileNumber: dto.mobileNumber } });
+    const existing = await this.userRepo.findOne({ where: { mobileNumber: mobile } });
     if (existing) {
       throw new BadRequestException('A user with this mobile number already exists.');
     }
 
     const user = this.userRepo.create({
       name: dto.name.trim(),
-      mobileNumber: dto.mobileNumber,
+      mobileNumber: mobile,
       role: dto.role,
       category: dto.category as any,
       state: dto.state,
