@@ -30,9 +30,9 @@ export class User {
   @Index('idx_users_role')
   role: UserRole;
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   @Index('idx_users_category')
-  category: UserCategory;
+  category: UserCategory | null;
 
   @Column({ type: 'varchar', length: 100 })
   @Index('idx_users_state')

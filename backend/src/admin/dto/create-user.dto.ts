@@ -16,9 +16,11 @@ export class CreateUserDto {
   @IsIn([UserRole.USER, UserRole.ADMIN, UserRole.CURATOR])
   role: UserRole;
 
+  // Category is required only for USER role — admin/curator don't need it
+  @IsOptional()
   @IsString()
   @IsIn(['farmer', 'fpo', 'student', 'volunteer', 'ngo'])
-  category: UserCategory;
+  category?: UserCategory;
 
   @IsString()
   @IsNotEmpty()

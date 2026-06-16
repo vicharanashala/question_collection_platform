@@ -19,6 +19,7 @@ import {
   VerificationStatus,
   QuestionStatus,
   UserRole,
+  UserCategory,
   AuditAction,
   ActorType,
   TransactionSource,
@@ -81,7 +82,7 @@ export class AdminService {
       name: string;
       mobileNumber: string;
       role: UserRole;
-      category: string;
+      category?: string;
       state: string;
       district: string;
       block?: string;
@@ -107,11 +108,14 @@ export class AdminService {
       throw new BadRequestException('A user with this mobile number already exists.');
     }
 
+    const isPrivilegedRole = dto.role === UserRole.ADMIN || dto.role === UserRole.CURATOR;
+
     const user = this.userRepo.create({
       name: dto.name.trim(),
       mobileNumber: mobile,
       role: dto.role,
-      category: dto.category as any,
+      // Admins/curators don't have a category
+      category: (isPrivilegedRole ? null : dto.category) as UserCategory | null,
       state: dto.state,
       district: dto.district,
       block: dto.block ?? null,

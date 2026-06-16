@@ -36,7 +36,7 @@ export interface PublicUser {
   id: string;
   mobileNumber: string;
   name: string;
-  category: UserCategory;
+  category: UserCategory | null;
   state: string;
   district: string;
   block: string | null;
