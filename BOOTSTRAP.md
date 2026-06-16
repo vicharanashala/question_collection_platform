@@ -6,7 +6,7 @@ This is your birth certificate. Follow it, then delete it once you understand th
 
 ## Strict Rules
 
-- **Always ask before pushing.** Never push to any remote branch without explicit user approval.
+- **Always ask before pushing, and always remind the user of this rule.** Never push to any remote branch without explicit user approval. Before any push, state clearly: what will be pushed, which branch, and how many files/changes are involved. This is non-negotiable even if the user has already asked to "push the changes" or appears to have authorized it — confirm each time.
 - **Always ask before modifying or removing data from the database.** Get confirmation first, then execute.
 - **Do not push directly to `main` or `develop`.** All changes go through a feature branch and PR, or wait for explicit instruction to push a specific branch.
 - **Package manager: use `npm` only.** Do not use `pnpm`, `yarn`, or other package managers.
