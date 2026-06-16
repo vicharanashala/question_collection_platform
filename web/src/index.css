@@ -58,45 +58,45 @@
   .dark {
     --font-sans: 'system-ui', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    /* Dark theme */
-    --background: 222 47% 8%;          /* #0F172A */
-    --foreground: 210 40% 98%;
-    --card: 216 50% 14%;               /* #1E293B */
-    --card-foreground: 210 40% 98%;
-    --popover: 216 50% 14%;
-    --popover-foreground: 210 40% 98%;
+    /* Dark theme — dark surfaces with white text */
+    --background: 222 47% 5%;          /* #060D18 */
+    --foreground: 0 0% 100%;           /* white text */
+    --card: 222 47% 9%;                /* #0F172A */
+    --card-foreground: 0 0% 100%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 0 0% 100%;
     --primary: 166 76% 55%;            /* #2DD4BF teal light */
-    --primary-foreground: 173 58% 39%;
-    --secondary: 216 50% 14%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 216 50% 14%;
+    --primary-foreground: 0 0% 0%;     /* black text on teal */
+    --secondary: 222 47% 12%;          /* #111D2E */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 222 47% 12%;
     --muted-foreground: 215 20% 65%;
-    --accent: 215 28% 25%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 72% 65%;
-    --destructive-foreground: 0 62% 7%;
-    --border: 215 28% 25%;
-    --input: 216 50% 14%;
+    --accent: 215 28% 20%;             /* #1A2538 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 28% 18%;
+    --input: 222 47% 12%;
     --ring: 166 76% 55%;
-    --success: 160 84% 52%;
+    --success: 160 84% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 40 93% 56%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
     /* Charts */
     --chart-1: 166 76% 55%;
     --chart-2: 199 89% 60%;
-    --chart-3: 263 70% 70%;
-    --chart-4: 40 93% 56%;
-    --chart-5: 160 84% 58%;
-    --info: 199 89% 60%;
+    --chart-3: 263 70% 60%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 160 84% 50%;
+    --info: 199 89% 55%;
     /* Sidebar */
-    --sidebar: 222 47% 8%;
+    --sidebar: 222 47% 6%;             /* #07101F */
     --sidebar-foreground: 215 20% 65%;
     --sidebar-primary: 166 76% 55%;
-    --sidebar-primary-foreground: 173 58% 39%;
-    --sidebar-accent: 216 50% 14%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 28% 25%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 215 28% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 28% 16%;
     --sidebar-ring: 166 76% 55%;
   }
 }
