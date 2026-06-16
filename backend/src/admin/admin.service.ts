@@ -167,8 +167,8 @@ export class AdminService implements OnModuleInit {
       throw new ForbiddenException('Super admin role cannot be assigned via this endpoint.');
     }
 
-    // Normalize: strip +91/91/0 prefix so numbers are stored consistently
-    const mobile = dto.mobileNumber.replace(/^\+?91 ?/, '').replace(/^0/, '');
+    // Normalize: strip +91 or 0 prefix so numbers are stored consistently
+    const mobile = dto.mobileNumber.replace(/^\+91 ?/, '').replace(/^0/, '');
 
     // Check for duplicate mobile number
     const existing = await this.userRepo.findOne({ where: { mobileNumber: mobile } });

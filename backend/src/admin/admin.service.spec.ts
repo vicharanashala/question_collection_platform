@@ -32,9 +32,10 @@ import {
 
 const mockUserRepo = () => ({
   findOne: jest.fn(),
-  save: jest.fn(),
+  save: jest.fn().mockImplementation((data) => ({ id: 'generated-id', ...(data ?? {}) })),
   update: jest.fn(),
-  count: jest.fn(),
+  count: jest.fn().mockResolvedValue(0),
+  create: jest.fn().mockImplementation((data) => ({ id: undefined, ...data })),
   createQueryBuilder: jest.fn(),
 });
 
@@ -68,7 +69,7 @@ const mockAuditRepo = () => ({
 });
 
 const mockConfigRepo = () => ({
-  find: jest.fn(),
+  find: jest.fn().mockResolvedValue([]),
   findOne: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
@@ -761,8 +762,8 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(60)  // approvedQuestions
         .mockResolvedValueOnce(10)  // rejectedQuestions
         .mockResolvedValueOnce(30)  // pendingQuestions
-        .mockResolvedValueOnce(500) // totalUsers
         .mockResolvedValueOnce(5);  // flaggedQuestions
+      userRepo.count.mockResolvedValueOnce(500); // totalUsers
 
       questionRepo.createQueryBuilder.mockReturnValue(mockQb());
       userRepo.createQueryBuilder.mockReturnValue(mockQb());
