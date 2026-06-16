@@ -55,7 +55,7 @@ i18n
   .init({
     fallbackLng: 'en',
     debug: __DEV__,
-    ns: ['common', 'auth', 'home', 'question', 'wallet', 'profile', 'admin'],
+    ns: ['common'],
     defaultNS: 'common',
     fallbackNS: 'common',
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),

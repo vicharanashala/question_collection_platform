@@ -8,6 +8,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
+import { tokens } from '../utils/theme';
 
 interface ButtonProps {
   title: string;
@@ -93,8 +94,6 @@ export function Button({
     </TouchableOpacity>
   );
 }
-
-import { tokens } from '../utils/theme';
 
 const styles = StyleSheet.create({
   text: { fontWeight: '600', letterSpacing: 0.025 * 16 },

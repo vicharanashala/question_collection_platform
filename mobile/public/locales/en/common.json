@@ -331,6 +331,7 @@
   "question.enterCrop": "Enter the crop type",
   "question.enterQuestion": "Enter your question or attach media",
   "question.limitReached": "You have reached your limit of {limit} questions today. Please try again tomorrow.",
+  "question.textTooLong": "Your question exceeds the {max} character limit. Please shorten it.",
   "question.mediaUploadFailed": "Failed to upload media. Please try again.",
   "question.submitFailed": "Failed to submit. Please try again.",
   "question.updateFailed": "Could not load question to edit.",

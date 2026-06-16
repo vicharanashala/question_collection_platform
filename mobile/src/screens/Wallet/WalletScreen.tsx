@@ -147,7 +147,7 @@ export function WalletScreen() {
         {!showWithdraw ? (
           <View style={styles.withdrawSection}>
             <Button
-              title={`${t('wallet.withdraw')}  ·  ${t('wallet.minWithdrawal', { amount: minWithdrawal })}`}
+              title={`Withdraw  ·  Min Rs.${minWithdrawal}`}
               onPress={() => setShowWithdraw(true)}
               disabled={(balance ?? 0) < minWithdrawal}
               variant="outline"

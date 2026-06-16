@@ -98,10 +98,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
       };
 
       await questionApi.submit(payload);
-
-      // Navigate to Submissions tab after successful submission
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (navigation as any).navigate('Main', { screen: 'Submissions' });
+      showToast(t('question.submitSuccess'), 'success');
+      navigation.goBack();
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
       showToast(getErrorMessage(err, t('question.submitFailed')), 'error');

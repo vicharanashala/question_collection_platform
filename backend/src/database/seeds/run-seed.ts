@@ -45,6 +45,11 @@ const DEFAULT_CONFIG = [
     value: 10,
     description: 'Maximum allowed video file size in megabytes',
   },
+  {
+    key: 'max_question_chars',
+    value: 1000,
+    description: 'Maximum allowed characters in a question text',
+  },
 ];
 
 async function seed() {

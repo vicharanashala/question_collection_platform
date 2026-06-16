@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RouteProp, useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import {
@@ -19,7 +19,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { questionApi } from '../../api/client';
 import { useTranslation } from 'react-i18next';
-import { DAILY_QUESTION_LIMIT } from '../../utils/constants';
+import { DAILY_QUESTION_LIMIT, MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList, RootStackParamList } from '../../navigation/types';
 
@@ -39,6 +39,20 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
   const editingQuestionId = route?.params?.questionId;
   const isEditMode = Boolean(editingQuestionId);
+  const isFocused = useIsFocused();
+
+  // Every time the screen becomes visible (e.g. after returning from preview),
+  // clear the input AND refresh the remaining-submissions count.
+  useEffect(() => {
+    if (isFocused && !isEditMode) {
+      setQuestionText('');
+      questionApi.getStats().then((res) => {
+        const data = res.data as { remainingToday: number; maxQuestionChars?: number };
+        setRemainingToday(data.remainingToday);
+        if (data.maxQuestionChars) setMaxChars(data.maxQuestionChars);
+      });
+    }
+  }, [isFocused, isEditMode]);
 
   // Form state
   const [questionText, setQuestionText] = useState('');
@@ -46,6 +60,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [remainingToday, setRemainingToday] = useState(DAILY_QUESTION_LIMIT);
+  const [maxChars, setMaxChars] = useState(MAX_QUESTION_CHARS_FALLBACK);
 
   // Load stats on mount; fetch question if editing
   useEffect(() => {
@@ -60,8 +75,9 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       });
     } else {
       questionApi.getStats().then((res) => {
-        const data = res.data as { remainingToday: number };
+        const data = res.data as { remainingToday: number; maxQuestionChars?: number };
         setRemainingToday(data.remainingToday);
+        if (data.maxQuestionChars) setMaxChars(data.maxQuestionChars);
       });
     }
   }, [isEditMode, editingQuestionId]);
@@ -81,6 +97,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
   async function handlePreview() {
     if (!validate()) return;
+
+    if (questionText.trim().length > maxChars) {
+      showToast(t('question.textTooLong', { max: maxChars }), 'warning');
+      return;
+    }
 
     if (!isEditMode && remainingToday <= 0) {
       showToast(t('question.limitReached', { limit: DAILY_QUESTION_LIMIT }), 'warning');
@@ -193,7 +214,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               placeholder={t('question.questionPlaceholder')}
               value={questionText}
               onChangeText={(v) => { setQuestionText(v); setErrors({}); }}
-              error={errors.questionText}
+              error={
+                errors.questionText
+                  ? errors.questionText
+                  : questionText.length > maxChars
+                  ? `Maximum ${maxChars.toLocaleString()} characters allowed`
+                  : undefined
+              }
               multiline
               numberOfLines={8}
               style={{
@@ -206,11 +233,23 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               }}
             />
 
-            {/* Character / line hint */}
+            {/* Character count hint */}
             <View style={styles.hintRow}>
-              <Text style={[styles.hintText, { color: c.textSecondary }]}>
+              <Text
+                style={[
+                  styles.hintText,
+                  {
+                    color:
+                      questionText.length > maxChars
+                        ? c.error
+                        : questionText.length > maxChars * 0.9
+                        ? '#E88B00'
+                        : c.textSecondary,
+                  },
+                ]}
+              >
                 {questionText.trim().length > 0
-                  ? `${questionText.trim().length} characters`
+                  ? `${questionText.trim().length} / ${maxChars}`
                   : 'Be specific — more detail to get better rewards'}
               </Text>
             </View>

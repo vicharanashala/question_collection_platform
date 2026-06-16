@@ -12,6 +12,10 @@ async function bootstrap() {
     rawBody: true,
   });
 
+  // Expose app reference globally so class-validator constraints
+  // (which are instantiated outside DI) can access NestJS services
+  globalThis.nestApp = app;
+
   // Global validation pipe — transforms and validates all DTOs
   app.useGlobalPipes(
     new ValidationPipe({

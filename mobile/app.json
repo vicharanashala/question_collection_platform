@@ -5,28 +5,69 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D9488"
+    },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kisanMitra.kisanDekho",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "This app needs photo library access to attach images or videos to your questions."
-      },
-      "bundleIdentifier": "com.kisanMitra.kisanDekho"
+        "NSPhotoLibraryUsageDescription": "KisanDekho needs photo library access to attach images or videos to your questions.",
+        "NSCameraUsageDescription": "KisanDekho needs camera access to capture photos and videos for your questions.",
+        "NSMicrophoneUsageDescription": "KisanDekho needs microphone access to record audio for your questions.",
+        "NSLocationWhenInUseUsageDescription": "KisanDekho uses your location to tag questions with the correct district and block.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.kisanMitra.kisanDekho",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0D9488",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-localization"
-    ]
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "KisanDekho needs photo library access to attach images or videos to your questions.",
+          "cameraPermission": "KisanDekho needs camera access to capture photos and videos for your questions."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "KisanDekho needs photo library access to save and attach images or videos.",
+          "savePhotosPermission": "KisanDekho needs permission to save captured photos and videos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "question-collection-platform"
+      }
+    }
   }
 }

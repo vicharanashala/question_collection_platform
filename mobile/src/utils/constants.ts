@@ -123,3 +123,4 @@ export const MIN_WITHDRAWAL = 50;
 export const EDIT_WINDOW_SEC = 30;
 export const AI_CONFIDENCE_THRESHOLD = 90;
 export const SIMILARITY_THRESHOLD = 0.9;
+export const MAX_QUESTION_CHARS_FALLBACK = 500;

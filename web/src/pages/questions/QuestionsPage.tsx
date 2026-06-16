@@ -6,10 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
 import {
   Search, ChevronLeft, ChevronRight, CheckCircle, XCircle,
-  MessageSquare, Clock, User,
+  MessageSquare, Clock, User, Eye, Star,
+  MapPin, Wheat, CloudRain, Globe, Film,
+  Hash, AlertTriangle, PauseCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
@@ -18,8 +24,27 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning text-white',
   ai_review: 'bg-ai_review text-white',
   human_review: 'bg-human_review text-white',
+  held: 'bg-[hsl(38,92%,50%)] text-white',
   approved: 'bg-success text-white',
   rejected: 'bg-destructive text-white',
+}
+
+const SEASON_LABEL: Record<string, string> = {
+  kharif: 'Kharif',
+  rabi: 'Rabi',
+  zaid: 'Zaid',
+  year_round: 'Year Round',
+}
+
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: React.ReactNode }) {
+  if (value == null || value === '') return null
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+      <span className="text-sm text-muted-foreground min-w-[110px]">{label}</span>
+      <span className="text-sm text-foreground font-medium">{value}</span>
+    </div>
+  )
 }
 
 export function QuestionsPage() {
@@ -33,6 +58,11 @@ export function QuestionsPage() {
   const [loading, setLoading] = useState(false)
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
+
+  // Question detail dialog
+  const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
+  // Separate open state so closing the dialog (onOpenChange) clears detailQuestion cleanly
+  const [detailOpen, setDetailOpen] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -72,6 +102,7 @@ export function QuestionsPage() {
             <option value="pending">Pending</option>
             <option value="ai_review">AI Review</option>
             <option value="human_review">Human Review</option>
+            <option value="held">Held</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
@@ -94,7 +125,11 @@ export function QuestionsPage() {
           </div>
         ) : (
           questions.map((q) => (
-            <Card key={q.id} className="overflow-hidden">
+            <Card
+              key={q.id}
+              className="overflow-hidden hover:border-primary/40 transition-colors cursor-pointer"
+              onClick={() => { setDetailQuestion(q); setDetailOpen(true) }}
+            >
               <div className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -138,33 +173,45 @@ export function QuestionsPage() {
                   </div>
 
                   {/* Quick status actions — only for moderators */}
-                  {canModerate && q.status === 'pending' && (
-                    <div className="flex flex-col gap-2 shrink-0">
+                  {canModerate && (
+                    <div className="flex flex-col gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-success border border-success/50 hover:bg-success/10"
-                        onClick={() => questionApi.approveQuestion(q.id).then(() => {
-                          setQuestions((qs) => qs.map((qq) => qq.id === q.id ? { ...qq, status: 'approved' as const } : qq))
-                          toast.success('Question approved')
-                        }).catch((e) => toast.error(getErrorMessage(e, 'Failed to approve')))}
+                        className="text-primary border-primary/50 hover:bg-primary/10"
+                        onClick={(e) => { e.stopPropagation(); setDetailQuestion(q); setDetailOpen(true) }}
                       >
-                        <CheckCircle className="h-4 w-4 mr-1" /> Approve
+                        <Eye className="h-4 w-4 mr-1" /> View
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive border border-destructive/50 hover:bg-destructive/10"
-                        onClick={() => {
-                          const reason = window.prompt('Rejection reason (optional):')
-                          questionApi.rejectQuestion(q.id, reason ?? undefined).then(() => {
-                            setQuestions((qs) => qs.map((qq) => qq.id === q.id ? { ...qq, status: 'rejected' as const } : qq))
-                            toast.success('Question rejected')
-                          }).catch((e) => toast.error(getErrorMessage(e, 'Failed to reject')))
-                        }}
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Reject
-                      </Button>
+                      {q.status === 'pending' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-success border border-success/50 hover:bg-success/10"
+                            onClick={() => questionApi.approveQuestion(q.id).then(() => {
+                              setQuestions((qs) => qs.map((qq) => qq.id === q.id ? { ...qq, status: 'approved' as const } : qq))
+                              toast.success('Question approved')
+                            }).catch((e) => toast.error(getErrorMessage(e, 'Failed to approve')))}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" /> Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive border border-destructive/50 hover:bg-destructive/10"
+                            onClick={() => {
+                              const reason = window.prompt('Rejection reason (optional):')
+                              questionApi.rejectQuestion(q.id, reason ?? undefined).then(() => {
+                                setQuestions((qs) => qs.map((qq) => qq.id === q.id ? { ...qq, status: 'rejected' as const } : qq))
+                                toast.success('Question rejected')
+                              }).catch((e) => toast.error(getErrorMessage(e, 'Failed to reject')))
+                            }}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" /> Reject
+                          </Button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -190,6 +237,102 @@ export function QuestionsPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* ─── Question Detail Dialog ─── */}
+      {detailQuestion && (
+        <Dialog open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetailQuestion(null) } }}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-4 w-4" /> Question Details
+              </DialogTitle>
+              <DialogDescription>
+                Full information for the selected question.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Status & badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={cn('capitalize', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
+                  {detailQuestion.status.replace('_', ' ')}
+                </Badge>
+                <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domainCategory}</span>
+                {detailQuestion.aiConfidenceScore != null && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Star className="h-3 w-3" /> AI confidence: {detailQuestion.aiConfidenceScore}%
+                  </span>
+                )}
+                {detailQuestion.duplicateFlag && (
+                  <Badge variant="destructive" className="text-xs">
+                    <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
+                  </Badge>
+                )}
+              </div>
+
+              {/* Question text */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {detailQuestion.questionText}
+                </p>
+              </div>
+
+              {/* Metadata grid */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                <InfoRow icon={Hash} label="Question ID" value={<span className="font-mono text-xs">{detailQuestion.id.slice(0, 8)}…</span>} />
+                <InfoRow icon={Globe} label="Language" value={detailQuestion.language?.toUpperCase()} />
+                <InfoRow icon={Wheat} label="Crop Type" value={detailQuestion.cropType} />
+                <InfoRow icon={CloudRain} label="Season" value={SEASON_LABEL[detailQuestion.season] ?? detailQuestion.season} />
+                <InfoRow icon={MapPin} label="State" value={detailQuestion.state} />
+                <InfoRow icon={MapPin} label="District" value={detailQuestion.district} />
+                {detailQuestion.block && <InfoRow icon={MapPin} label="Block" value={detailQuestion.block} />}
+                <InfoRow icon={User} label="Submitted" value={formatDate(detailQuestion.submittedAt)} />
+                {detailQuestion.reviewedAt && <InfoRow icon={Clock} label="Reviewed" value={formatDate(detailQuestion.reviewedAt)} />}
+                {detailQuestion.reviewerId && (
+                  <InfoRow icon={User} label="Reviewer ID" value={<span className="font-mono text-xs">{detailQuestion.reviewerId.slice(0, 8)}…</span>} />
+                )}
+                {detailQuestion.rejectionReason && (
+                  <div className="col-span-2 mt-1">
+                    <InfoRow icon={XCircle} label="Rejection Reason" value={detailQuestion.rejectionReason} />
+                  </div>
+                )}
+                {detailQuestion.heldReason && (
+                  <div className="col-span-2 mt-1">
+                    <InfoRow icon={PauseCircle} label="Hold Reason" value={detailQuestion.heldReason} />
+                  </div>
+                )}
+              </div>
+
+              {/* Media */}
+              {detailQuestion.mediaUrls && detailQuestion.mediaUrls.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2 text-sm text-muted-foreground">
+                    <Film className="h-4 w-4" />
+                    Media ({detailQuestion.mediaUrls.length})
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {detailQuestion.mediaUrls.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={url}
+                          alt={`media-${i}`}
+                          className="rounded-md border w-full h-24 object-cover hover:opacity-80 transition-opacity"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setDetailOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )

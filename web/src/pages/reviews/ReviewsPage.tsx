@@ -14,6 +14,8 @@ import {
   CheckCircle, XCircle, PauseCircle,
   ChevronLeft, ChevronRight,
   Clock, User, Star, IndianRupee,
+  MapPin, Wheat, CloudRain, Globe, Film,
+  Eye, Hash, AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
@@ -28,6 +30,24 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const REVIEWABLE_STATUSES = ['pending', 'ai_review', 'human_review', 'held']
+
+const SEASON_LABEL: Record<string, string> = {
+  kharif: 'Kharif',
+  rabi: 'Rabi',
+  zaid: 'Zaid',
+  year_round: 'Year Round',
+}
+
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: React.ReactNode }) {
+  if (value == null || value === '') return null
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+      <span className="text-sm text-muted-foreground min-w-[110px]">{label}</span>
+      <span className="text-sm text-foreground font-medium">{value}</span>
+    </div>
+  )
+}
 
 export function ReviewsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
@@ -47,6 +67,10 @@ export function ReviewsPage() {
   const [holdOpen, setHoldOpen] = useState(false)
   const [holdReason, setHoldReason] = useState('')
   const [holdQuestionId, setHoldQuestionId] = useState<string | null>(null)
+
+  // Question detail dialog
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
 
   // Approve dialog (shows reward info)
   const [approveOpen, setApproveOpen] = useState(false)
@@ -207,7 +231,11 @@ export function ReviewsPage() {
           </div>
         ) : (
           questions.map((q) => (
-            <Card key={q.id} className="overflow-hidden">
+            <Card
+              key={q.id}
+              className="overflow-hidden hover:border-primary/40 transition-colors cursor-pointer"
+              onClick={() => { setDetailQuestion(q); setDetailOpen(true) }}
+            >
             <div className="p-5">
               <div className="flex items-start gap-4">
                 <div className="flex-1 min-w-0">
@@ -254,7 +282,7 @@ export function ReviewsPage() {
 
                 {/* Action buttons — only for reviewable questions */}
                 {REVIEWABLE_STATUSES.includes(q.status) && (
-                  <div className="flex flex-col gap-2 shrink-0">
+                  <div className="flex flex-col gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <Button
                       size="sm"
                       className="bg-success hover:bg-success/90"
@@ -358,6 +386,99 @@ export function ReviewsPage() {
             <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={confirmReject} disabled={!!actionLoading}>
               <XCircle className="h-4 w-4 mr-1" /> Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Question Detail Dialog ─── */}
+      <Dialog open={detailOpen} onOpenChange={(o) => { if (!o) { setDetailOpen(false); setDetailQuestion(null) } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Question Details
+            </DialogTitle>
+            <DialogDescription>
+              Full information for the selected question.
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailQuestion && (
+            <div className="space-y-4">
+              {/* Status & badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={cn('capitalize', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
+                  {detailQuestion.status.replace('_', ' ')}
+                </Badge>
+                <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domainCategory}</span>
+                {detailQuestion.aiConfidenceScore != null && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Star className="h-3 w-3" /> AI confidence: {detailQuestion.aiConfidenceScore}%
+                  </span>
+                )}
+                {detailQuestion.duplicateFlag && (
+                  <Badge variant="destructive" className="text-xs">
+                    <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
+                  </Badge>
+                )}
+              </div>
+
+              {/* Question text */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {detailQuestion.questionText}
+                </p>
+              </div>
+
+              {/* Metadata grid */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                <InfoRow icon={Hash} label="Question ID" value={<span className="font-mono text-xs">{detailQuestion.id.slice(0, 8)}…</span>} />
+                <InfoRow icon={Globe} label="Language" value={detailQuestion.language?.toUpperCase()} />
+                <InfoRow icon={Wheat} label="Crop Type" value={detailQuestion.cropType} />
+                <InfoRow icon={CloudRain} label="Season" value={SEASON_LABEL[detailQuestion.season] ?? detailQuestion.season} />
+                <InfoRow icon={MapPin} label="State" value={detailQuestion.state} />
+                <InfoRow icon={MapPin} label="District" value={detailQuestion.district} />
+                {detailQuestion.block && <InfoRow icon={MapPin} label="Block" value={detailQuestion.block} />}
+                <InfoRow icon={User} label="Submitted" value={formatDate(detailQuestion.submittedAt)} />
+                {detailQuestion.reviewedAt && <InfoRow icon={Clock} label="Reviewed" value={formatDate(detailQuestion.reviewedAt)} />}
+                {detailQuestion.rejectionReason && (
+                  <div className="col-span-2 mt-1">
+                    <InfoRow icon={XCircle} label="Rejection Reason" value={detailQuestion.rejectionReason} />
+                  </div>
+                )}
+                {detailQuestion.heldReason && (
+                  <div className="col-span-2 mt-1">
+                    <InfoRow icon={PauseCircle} label="Hold Reason" value={detailQuestion.heldReason} />
+                  </div>
+                )}
+              </div>
+
+              {/* Media */}
+              {detailQuestion.mediaUrls && detailQuestion.mediaUrls.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2 text-sm text-muted-foreground">
+                    <Film className="h-4 w-4" />
+                    Media ({detailQuestion.mediaUrls.length})
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {detailQuestion.mediaUrls.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={url}
+                          alt={`media-${i}`}
+                          className="rounded-md border w-full h-24 object-cover hover:opacity-80 transition-opacity"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setDetailOpen(false); setDetailQuestion(null) }}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

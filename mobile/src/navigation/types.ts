@@ -14,7 +14,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   HomeTab: undefined;
   Submissions: undefined;
-  AskQuestion: { questionId?: string } | undefined;
+  AskQuestion: { questionId?: string; resetForm?: boolean } | undefined;
   Wallet: undefined;
   Profile: undefined;
   AdminHome: undefined;
@@ -53,6 +53,8 @@ export type RootStackParamList = {
     suggestedBlocks: string[];
     remainingToday: number;
     dailyLimit: number;
+    /** Set to true after a successful submission so the ask screen clears the input */
+    resetForm?: boolean;
   };
 };
 

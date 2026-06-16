@@ -53,6 +53,7 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   duplicate_similarity_threshold: { value: 0.9, description: 'Semantic similarity threshold for duplicate detection' },
   video_max_duration_seconds: { value: 10, description: 'Maximum video duration (seconds)' },
   video_max_size_mb: { value: 10, description: 'Maximum video file size (MB)' },
+  max_question_chars: { value: 1000, description: 'Maximum characters allowed in a question' },
 };
 
 @Injectable()

@@ -654,7 +654,7 @@ export function SubmissionsScreen() {
             </View>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {questions.length > 0
-                ? t('submissions.subtitle', { count: questions.length, s: questions.length !== 1 ? 's' : '' })
+                ? `${questions.length} submission${questions.length !== 1 ? 's' : ''}`
                 : t('submissions.noSubmissions')}
             </Text>
           </View>

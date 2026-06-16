@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -187,14 +188,15 @@ function AdminNavigator() {
 function MainNavigator() {
   const { theme } = useTheme();
   const c = theme.colors;
+  const insets = useSafeAreaInsets();
 
   return (
     <MainTab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          height: 72,
-          paddingBottom: 10,
+          height: 72 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
           paddingTop: 10,
           backgroundColor: c.surface,
           borderTopWidth: 1,
@@ -276,7 +278,8 @@ export function AppNavigator() {
       bold: { fontFamily: 'System', fontWeight: '700' as const },
       heavy: { fontFamily: 'System', fontWeight: '900' as const },
     },
-  };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
 
   return (
     <NavigationContainer theme={navTheme}>

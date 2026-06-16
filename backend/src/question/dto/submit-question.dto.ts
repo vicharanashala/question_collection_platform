@@ -9,6 +9,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Season } from '../../common/enums';
+import { MaxQuestionChars } from '../../common/validators/max-question-chars.validator';
 
 export class SubmitQuestionDto {
   /**
@@ -36,7 +37,7 @@ export class SubmitQuestionDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
+  @MaxQuestionChars()
   questionText: string;
 
   @IsString()
@@ -85,7 +86,7 @@ export class SubmitQuestionResponseDto {
 export class PreviewQuestionDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(5000)
+  @MaxQuestionChars()
   questionText: string;
 
   @IsOptional()

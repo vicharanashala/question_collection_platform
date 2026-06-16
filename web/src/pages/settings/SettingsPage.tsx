@@ -14,12 +14,13 @@ import { Settings2, RefreshCw, Lock } from 'lucide-react'
 import type { ConfigItem } from '@/types'
 
 const CONFIG_META: Record<string, { label: string; suffix: string }> = {
-  max_users_per_state:            { label: 'Max Users per State',      suffix: '' },
-  min_withdrawal_amount:          { label: 'Min Withdrawal Amount',    suffix: ' ₹' },
-  question_edit_window_seconds:   { label: 'Edit Window',               suffix: 's' },
-  daily_question_limit:           { label: 'Daily Question Limit',      suffix: '/day' },
-  ai_confidence_threshold:        { label: 'AI Confidence Threshold',   suffix: '%' },
-  duplicate_similarity_threshold: { label: 'Duplicate Similarity',      suffix: '' },
+  max_users_per_state:            { label: 'Max Users per State',       suffix: '' },
+  min_withdrawal_amount:          { label: 'Min Withdrawal Amount',     suffix: ' \u20b9' },
+  question_edit_window_seconds:   { label: 'Edit Window',                suffix: 's' },
+  daily_question_limit:           { label: 'Daily Question Limit',       suffix: '/day' },
+  ai_confidence_threshold:        { label: 'AI Confidence Threshold',    suffix: '%' },
+  duplicate_similarity_threshold: { label: 'Duplicate Similarity',       suffix: '' },
+  max_question_chars:             { label: 'Max Question Characters',   suffix: '' },
 }
 
 const HIDDEN_CONFIG_KEYS = new Set(['video_max_duration_seconds', 'video_max_size_mb'])
