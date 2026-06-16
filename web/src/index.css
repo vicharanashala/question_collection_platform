@@ -54,7 +54,7 @@
     --hero-fg:          0 0% 100%;   /* white — hero card foreground */
     --text:             222 47% 11%; /* #111827 — primary readable text */
     --text-secondary:   220 9% 46%;  /* #6B7280 — muted/secondary text */
-    --text-tertiary:    214 32% 91%; /* #D1D5DB — placeholder, disabled */
+    --text-tertiary:    215 19% 65%; /* #9CA3AF — placeholder, disabled, matches mobile lightTheme */
     --border-subtle:    220 13% 91%; /* #E5E7EB — dividers, input borders */
     --focus:            173 58% 39%; /* #0D9488 — focus ring */
 
