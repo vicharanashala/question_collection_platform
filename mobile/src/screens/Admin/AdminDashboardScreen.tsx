@@ -296,25 +296,25 @@ export function AdminDashboardScreen() {
       >
 
         {/* ── Greeting header ───────────────────────────────────────────── */}
-        <View style={[styles.heroCard, { backgroundColor: c.primary }]}>
+        <View style={[styles.heroCard, { backgroundColor: c.heroBg ?? c.primaryBg ?? c.primary }]}>
           <View style={styles.heroLeft}>
-            <Text style={styles.heroDate}>{today}</Text>
-            <Text style={styles.heroName}>{user?.name ?? 'Admin'}</Text>
+            <Text style={[styles.heroDate, { color: (c.heroFg ?? c.primaryForeground) + '99' }]}>{today}</Text>
+            <Text style={[styles.heroName, { color: c.heroFg ?? c.primaryForeground }]}>{user?.name ?? 'Admin'}</Text>
             {pendingCount > 0 && (
-              <View style={styles.heroBadge}>
-                <Ionicons name="alert-circle" size={12} color="#fff" />
-                <Text style={styles.heroBadgeText}>
+              <View style={[styles.heroBadge, { backgroundColor: (c.heroFg ?? c.primaryForeground) + '20' }]}>
+                <Ionicons name="alert-circle" size={12} color={c.heroFg ?? c.primaryForeground} />
+                <Text style={[styles.heroBadgeText, { color: c.heroFg ?? c.primaryForeground }]}>
                   {pendingCount} question{pendingCount > 1 ? 's' : ''} need review
                 </Text>
               </View>
             )}
           </View>
           <TouchableOpacity
-            style={styles.heroAvatar}
+            style={[styles.heroAvatar, { backgroundColor: (c.heroFg ?? c.primaryForeground) + '25' }]}
             onPress={() => navigation.navigate('AdminProfile')}
             activeOpacity={0.7}
           >
-            <Text style={styles.heroAvatarText}>
+            <Text style={[styles.heroAvatarText, { color: c.heroFg ?? c.primaryForeground }]}>
               {(user?.name ?? 'A').charAt(0).toUpperCase()}
             </Text>
           </TouchableOpacity>
