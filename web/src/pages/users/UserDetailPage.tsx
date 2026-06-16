@@ -271,7 +271,7 @@ export function UserDetailPage() {
   const avatarBg = isBanned ? 'bg-destructive' : isSuspended ? 'bg-warning' : 'bg-primary'
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
       {/* Back navigation */}
       <button
         onClick={() => navigate('/users')}
