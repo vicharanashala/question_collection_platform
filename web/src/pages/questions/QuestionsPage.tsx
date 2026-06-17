@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
+import { TranslatableText } from '@/components/TranslatableText'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ function ReasonStrip({ status, reason, reviewerName }: { status: string; reason:
 
 // ─── Question card ────────────────────────────────────────────────────────────
 
-function QuestionCard({ q, onOpen }: { q: Question; onOpen: (q: Question) => void }) {
+function QuestionCard({ q, onOpen, selectedLang, onLangChange }: { q: Question; onOpen: (q: Question) => void; selectedLang: string; onLangChange: (lang: string) => void })
   return (
     <Card
       className="group overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
@@ -121,9 +122,13 @@ function QuestionCard({ q, onOpen }: { q: Question; onOpen: (q: Question) => voi
 
         {/* Question text */}
         <div className="px-4 pb-3">
-          <p className="text-sm text-foreground leading-relaxed line-clamp-2">
-            {q.questionText}
-          </p>
+          <TranslatableText
+            text={q.questionText}
+            selectedLang={selectedLang}
+            onLangChange={onLangChange}
+            sourceLanguage={q.language ?? 'en'}
+            className="!space-y-1"
+          />
         </div>
 
         {/* Footer: crop / season / location / media */}
@@ -206,6 +211,7 @@ export function QuestionsPage() {
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [apiTotal, setApiTotal] = useState(0)
+  const [selectedLang, setSelectedLang] = useState('')
 
   // Reset to page 1 whenever search or status filter changes
   useEffect(() => { setPage(1) }, [debouncedSearch, statusFilter])
@@ -302,7 +308,13 @@ export function QuestionsPage() {
           </Card>
         ) : (
           questions.map((q) => (
-            <QuestionCard key={q.id} q={q} onOpen={(qq) => { setDetailQuestion(qq); setDetailOpen(true) }} />
+            <QuestionCard
+              key={q.id}
+              q={q}
+              onOpen={(qq) => { setDetailQuestion(qq); setDetailOpen(true) }}
+              selectedLang={selectedLang}
+              onLangChange={setSelectedLang}
+            />
           ))
         )}
       </div>
@@ -361,9 +373,13 @@ export function QuestionsPage() {
 
               {/* Question text */}
               <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {detailQuestion.questionText}
-                </p>
+                <TranslatableText
+                  text={detailQuestion.questionText}
+                  selectedLang={selectedLang}
+                  onLangChange={setSelectedLang}
+                  sourceLanguage={detailQuestion.language ?? 'en'}
+                  inline
+                />
               </div>
 
               {/* Metadata grid */}

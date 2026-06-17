@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question, QuestionStatus } from '@/types'
+import { TranslatableText } from '@/components/TranslatableText'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -183,11 +184,15 @@ function QuestionCard({
   q,
   selected,
   onSelect,
+  selectedLang,
+  onLangChange,
 }: {
   q: Question
   selected: boolean
   onSelect: (q: Question) => void
-}) {
+  selectedLang: string
+  onLangChange: (lang: string) => void
+})
   return (
     <div
       className={cn(
@@ -229,9 +234,15 @@ function QuestionCard({
         </div>
 
         {/* Question text */}
-        <p className="text-sm text-foreground leading-relaxed line-clamp-2 mb-2">
-          {q.questionText}
-        </p>
+        <div className="mb-2">
+          <TranslatableText
+            text={q.questionText}
+            selectedLang={selectedLang}
+            onLangChange={onLangChange}
+            sourceLanguage={q.language ?? 'en'}
+            className="!space-y-1"
+          />
+        </div>
 
         {/* Footer meta */}
         <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
@@ -279,11 +290,15 @@ function DetailPanel({
   q,
   actionLoading,
   onAction,
+  selectedLang,
+  onLangChange,
 }: {
   q: Question | null
   actionLoading: boolean
   onAction: (action: ReviewAction, questionText: string) => void
-}) {
+  selectedLang: string
+  onLangChange: (lang: string) => void
+})
   const [modalAction, setModalAction] = useState<ReviewAction | null>(null)
 
   if (!q) {
@@ -328,7 +343,13 @@ function DetailPanel({
             {/* Question text — prominent */}
             <div className="bg-muted/60 rounded-xl p-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{q.questionText}</p>
+              <TranslatableText
+                text={q.questionText}
+                selectedLang={selectedLang}
+                onLangChange={onLangChange}
+                sourceLanguage={q.language ?? 'en'}
+                inline
+              />
             </div>
 
             {/* AI Confidence — large and visible */}
@@ -551,6 +572,7 @@ export function ReviewsPage() {
   const [loading, setLoading]     = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [pendingAction, setPendingAction] = useState<{ action: ReviewAction; questionText: string } | null>(null)
+  const [selectedLang, setSelectedLang] = useState('')
   const limit = 15
   const debouncedSearch = useDebouncedValue(search, 400)
 
@@ -712,6 +734,8 @@ export function ReviewsPage() {
                   q={q}
                   selected={selectedQuestion?.id === q.id}
                   onSelect={setSelectedQuestion}
+                  selectedLang={selectedLang}
+                  onLangChange={setSelectedLang}
                 />
               ))}
             </div>
@@ -744,6 +768,8 @@ export function ReviewsPage() {
             q={selectedQuestion}
             actionLoading={actionLoading}
             onAction={openActionModal}
+            selectedLang={selectedLang}
+            onLangChange={setSelectedLang}
           />
         </div>
       </div>
