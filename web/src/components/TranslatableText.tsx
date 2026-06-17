@@ -65,9 +65,10 @@ export function TranslatableText({
   const [displayedLang, setDisplayedLang] = useState(sourceLanguage)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
-  // Keeps selectedLang fresh inside async callbacks
+  // Keeps selectedLang fresh inside async callbacks without stale-closure issues.
+  // Synced via useEffect to avoid "cannot update ref during render" warning.
   const selectedLangRef = useRef(selectedLang)
-  selectedLangRef.current = selectedLang
+  useEffect(() => { selectedLangRef.current = selectedLang }, [selectedLang])
 
   const langLabel = LANG_LABELS[selectedLang] ?? selectedLang.toUpperCase()
   const isSameLang = displayedLang === selectedLang
@@ -88,6 +89,7 @@ export function TranslatableText({
   // currently displayed text as source, enabling correct chain translations.
   useEffect(() => {
     if (selectedLang) {
+      // Reset translation state when user picks a new language.
       setTranslated(null)
       setExpanded(false)
       setDisplayedLang((prev) => (prev === selectedLang ? sourceLanguage : prev))
@@ -117,10 +119,7 @@ export function TranslatableText({
     } finally {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, translated, displayedLang, loading])
-  // NOTE: selectedLang is NOT a dep — it's read via ref so the callback always
-  // uses the current value at call time, not at creation time.
 
   function handleLangSelect(code: string) {
     setShowDropdown(false)
@@ -129,19 +128,19 @@ export function TranslatableText({
   }
 
   // Re-translate when selectedLang changes (e.g. parent re-mounts with a pre-set lang)
+  // Re-translate when selectedLang changes (e.g. parent re-mounts with a pre-set lang)
   useEffect(() => {
     if (selectedLang && selectedLang !== sourceLanguage && !translated && !loading) {
       doTranslate()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLang])
 
+  // Mount-time auto-translate for inline mode
   // Mount-time auto-translate for inline mode
   useEffect(() => {
     if (inline && selectedLang && selectedLang !== sourceLanguage && !translated && !loading) {
       doTranslate()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inline])
 
   return (

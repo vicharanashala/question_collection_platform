@@ -200,7 +200,6 @@ function QuestionCardSkeleton() {
 
 export function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
-  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -222,7 +221,6 @@ export function QuestionsPage() {
       .then((res) => {
         const visible = (res.items as Question[]).filter((q) => !NON_LISTED_STATUSES.includes(q.status))
         setQuestions(visible)
-        setTotal(res.total)
         setApiTotal(res.total)
       })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load questions')))
