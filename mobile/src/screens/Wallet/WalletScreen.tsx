@@ -20,6 +20,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import { walletApi, questionApi, getErrorMessage } from '../../api/client';
+import { TranslatableTextReadOnly } from '../../components/TranslatableTextReadOnly';
 import { tokens } from '../../utils/theme';
 import { Transaction } from '../../types';
 
@@ -46,6 +47,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
   const [question, setQuestion] = useState<Record<string, unknown> | null>(null);
   const [loadingQ, setLoadingQ] = useState(false);
   const [revoking, setRevoking] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('');
 
   useEffect(() => {
     if (!tx || !visible) { setQuestion(null); return; }
@@ -148,21 +150,75 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                   <ActivityIndicator size="small" color={c.primary} style={{ marginVertical: tokens.spacing3 }} />
                 ) : question ? (
                   <View style={txModalStyles.questionGrid}>
-                    {[
-                      [t('wallet.questionText'), String(question.questionText ?? '—')],
-                      [t('wallet.questionLanguage'), String(question.language ?? '—')],
-                      [t('wallet.questionCrop'), String(question.cropType ?? '—')],
-                      [t('wallet.questionSeason'), String(question.season ?? '—')],
-                      [t('wallet.questionState'), String(question.state ?? '—')],
-                      [t('wallet.approvalReason'), String((question as Record<string, unknown>).approvalReason ?? '—')],
-                    ].map(([label, value]) =>
-                      value && value !== '—' ? (
-                        <View key={label as string} style={txModalStyles.questionRow}>
-                          <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>{label as string}</Text>
-                          <Text style={[txModalStyles.questionValue, { color: c.text }]} numberOfLines={3}>{value as string}</Text>
-                        </View>
-                      ) : null
-                    )}
+                    {/* questionText — translatable */}
+                    {question.questionText ? (
+                      <View style={txModalStyles.questionRow}>
+                        <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>
+                          {t('wallet.questionText')}
+                        </Text>
+                        <TranslatableTextReadOnly
+                          text={question.questionText as string}
+                          selectedLang={selectedLang}
+                          onLangChange={setSelectedLang}
+                        />
+                      </View>
+                    ) : null}
+
+                    {/* Static fields */}
+                    {question.language ? (
+                      <View style={txModalStyles.questionRow}>
+                        <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>
+                          {t('wallet.questionLanguage')}
+                        </Text>
+                        <Text style={[txModalStyles.questionValue, { color: c.text }]} numberOfLines={1}>
+                          {question.language as string}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {question.cropType ? (
+                      <View style={txModalStyles.questionRow}>
+                        <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>
+                          {t('wallet.questionCrop')}
+                        </Text>
+                        <Text style={[txModalStyles.questionValue, { color: c.text }]} numberOfLines={1}>
+                          {question.cropType as string}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {question.season ? (
+                      <View style={txModalStyles.questionRow}>
+                        <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>
+                          {t('wallet.questionSeason')}
+                        </Text>
+                        <Text style={[txModalStyles.questionValue, { color: c.text }]} numberOfLines={1}>
+                          {question.season as string}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {question.state ? (
+                      <View style={txModalStyles.questionRow}>
+                        <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>
+                          {t('wallet.questionState')}
+                        </Text>
+                        <Text style={[txModalStyles.questionValue, { color: c.text }]} numberOfLines={1}>
+                          {question.state as string}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {/* approvalReason — translatable */}
+                    {(question as Record<string, unknown>).approvalReason ? (
+                      <View style={txModalStyles.questionRow}>
+                        <Text style={[txModalStyles.questionLabel, { color: c.textTertiary }]}>
+                          {t('wallet.approvalReason')}
+                        </Text>
+                        <TranslatableTextReadOnly
+                          text={(question as Record<string, unknown>).approvalReason as string}
+                          selectedLang={selectedLang}
+                          onLangChange={setSelectedLang}
+                        />
+                      </View>
+                    ) : null}
                   </View>
                 ) : (
                   <Text style={[txModalStyles.questionNA, { color: c.textTertiary }]}>
