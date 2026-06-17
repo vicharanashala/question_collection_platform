@@ -451,13 +451,18 @@ export class AdminService implements OnModuleInit {
         'q.district',
         'u.name',
         'u.mobileNumber',
+        'r.name',
       ])
       .skip((page - 1) * limit)
       .take(limit);
 
     // Status filter
-    if (status) {
-      qb.andWhere('q.status = :status', { status });
+    if (status && status.length > 0) {
+      if (status.length === 1) {
+        qb.andWhere('q.status = :status', { status: status[0] });
+      } else {
+        qb.andWhere('q.status IN (:...statuses)', { statuses: status });
+      }
     } else {
       // Default: show all reviewable statuses (pending + queues)
       const defaultStatuses = queueType === 'ai_review'
@@ -482,7 +487,11 @@ export class AdminService implements OnModuleInit {
     if (toDate) qb.andWhere('q.submittedAt <= :toDate', { toDate: new Date(toDate) });
 
     // Sorting
-    const sortColumn = sortBy === 'aiConfidenceScore' ? 'q.aiConfidenceScore' : sortBy === 'state' ? 'q.state' : 'q.submittedAt';
+    const sortColumn =
+      sortBy === 'aiConfidenceScore' ? 'q.aiConfidenceScore'
+      : sortBy === 'state' ? 'q.state'
+      : sortBy === 'reviewedAt' ? 'q.reviewedAt'
+      : 'q.submittedAt';
     qb.orderBy(sortColumn, sortOrder);
 
     const [items, total] = await qb.getManyAndCount();

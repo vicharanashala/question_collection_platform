@@ -136,7 +136,28 @@ export function AdminQuestionDetailScreen() {
           </View>
         )}
 
-        {['pending', 'ai_review', 'human_review'].includes(String(q.status)) && (
+        {!!q.heldReason && (
+          <View style={[styles.section, { backgroundColor: '#f59e0b11' }]}>
+            <Text style={[styles.label, { color: '#b45309' }]}>Hold Reason</Text>
+            <Text style={[styles.value, { color: '#92400e' }]}>{String(q.heldReason)}</Text>
+          </View>
+        )}
+
+        {!!q.approvalReason && (
+          <View style={[styles.section, { backgroundColor: '#22c55e11' }]}>
+            <Text style={[styles.label, { color: '#15803d' }]}>Approval Reason</Text>
+            <Text style={[styles.value, { color: '#166534' }]}>{String(q.approvalReason)}</Text>
+          </View>
+        )}
+
+        {!!q.reviewedByName && (
+          <View style={[styles.section, { backgroundColor: c.surface }]}>
+            <Text style={[styles.label, { color: c.textSecondary }]}>Reviewed By</Text>
+            <Text style={[styles.value, { color: c.text }]}>{String(q.reviewedByName)}</Text>
+          </View>
+        )}
+
+        {['pending', 'ai_review', 'human_review', 'held'].includes(String(q.status)) && (
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.btnApprove, { opacity: actionLoading ? 0.6 : 1 }]}

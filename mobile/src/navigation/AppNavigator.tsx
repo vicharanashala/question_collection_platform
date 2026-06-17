@@ -39,6 +39,7 @@ import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
 import { AdminQuestionsScreen } from '../screens/Admin/AdminQuestionsScreen';
+import { AdminProcessedQuestionsScreen } from '../screens/Admin/AdminProcessedQuestionsScreen';
 import { AdminQuestionDetailScreen } from '../screens/Admin/AdminQuestionDetailScreen';
 import { AdminUsersScreen } from '../screens/Admin/AdminUsersScreen';
 import { AdminCreateUserScreen } from '../screens/Admin/AdminCreateUserScreen';
@@ -162,6 +163,11 @@ function AdminNavigator() {
       <AdminStackNav.Screen
         name="AdminQuestionDetail"
         component={AdminQuestionDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminProcessedQuestions"
+        component={AdminProcessedQuestionsScreen}
         options={{ headerShown: false }}
       />
       <AdminStackNav.Screen

@@ -24,6 +24,10 @@ const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
+  paramsSerializer: (params) =>
+    Object.entries(params)
+      .flatMap(([k, v]) => (Array.isArray(v) ? v.map((i) => `${encodeURIComponent(k)}=${encodeURIComponent(i)}`) : `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`))
+      .join('&'),
 });
 
 // TEMP DEBUG: log all outgoing requests

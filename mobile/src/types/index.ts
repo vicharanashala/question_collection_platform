@@ -101,12 +101,15 @@ export interface Question {
   questionText: string;
   mediaType: 'none' | 'image' | 'video' | 'audio';
   mediaUrls: string[] | null;
-  status: 'pending' | 'ai_review' | 'human_review' | 'approved' | 'rejected';
+  status: 'pending' | 'ai_review' | 'human_review' | 'held' | 'approved' | 'rejected';
   aiConfidenceScore: number | null;
   duplicateFlag: boolean;
   submittedAt: string;
   reviewedAt: string | null;
   rejectionReason: string | null;
+  heldReason: string | null;
+  approvalReason: string | null;
+  reviewedByName: string | null;
 }
 
 export interface CropDetail {
