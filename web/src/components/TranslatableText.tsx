@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Languages, ChevronDown, ChevronUp, Loader } from 'lucide-react'
 import { speechApi } from '@/api/speech'
 import { cn } from '@/lib/utils'
@@ -59,6 +59,10 @@ export function TranslatableText({
   const [displayedLang, setDisplayedLang] = useState(sourceLanguage)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Ref to avoid stale-closure bugs with selectedLang in async handlers
+  const selectedLangRef = useRef(selectedLang)
+  selectedLangRef.current = selectedLang
+
   const langLabel = LANG_LABELS[selectedLang] ?? selectedLang.toUpperCase()
   const isSameLang = displayedLang === selectedLang
 
@@ -73,41 +77,50 @@ export function TranslatableText({
     return () => document.removeEventListener('mousedown', handler)
   }, [showDropdown])
 
-  // When the user picks a new target language, reset and use the currently
-  // displayed language as the source for the next translation
+  // When the user picks a new target language, reset the translated state.
+  // We do NOT call handleTranslate here — handleLangSelect triggers it directly.
   useEffect(() => {
-    setTranslated(null)
-    setExpanded(false)
-    setDisplayedLang((prev) => (prev === selectedLang ? sourceLanguage : prev))
-  }, [selectedLang])
+    if (selectedLang) {
+      setTranslated(null)
+      setExpanded(false)
+      setDisplayedLang((prev) => (prev === selectedLang ? sourceLanguage : prev))
+    }
+  }, [selectedLang, sourceLanguage])
 
-  // Auto-fetch when selectedLang is set in inline mode
+  // Auto-translate when the component mounts and a lang is already selected (inline mode)
   useEffect(() => {
     if (inline && selectedLang && text && !translated && !loading && !isSameLang) {
-      handleTranslate()
+      doTranslate(selectedLang, displayedLang)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, selectedLang, inline, isSameLang])
+  }, [inline]) // only on mount — prevents double-calling when parent re-renders
 
-  async function handleTranslate() {
+  const doTranslate = useCallback(async (target: string, source: string) => {
     if (!text.trim() || loading) return
     setLoading(true)
     setError(null)
     try {
-      // Translate from whatever language is currently displayed, not the original
-      const result = await speechApi.translate(text.trim(), selectedLang, displayedLang)
+      // Use refs to avoid stale closures in async callbacks
+      const result = await speechApi.translate(
+        text.trim(),
+        selectedLangRef.current,
+        displayedLang,
+      )
       setTranslated(result.translatedText)
-      setDisplayedLang(selectedLang)
+      setDisplayedLang(selectedLangRef.current)
     } catch {
       setError('Translation unavailable')
     } finally {
       setLoading(false)
     }
-  }
+  }, [text, displayedLang, loading]) // displayedLang is stable; selectedLang read via ref
 
   function handleLangSelect(code: string) {
     setShowDropdown(false)
     onLangChange(code)
+    // Trigger translation immediately without waiting for parent's re-render.
+    // Use the currently displayed text as source so chain translations work.
+    doTranslate(code, displayedLang)
   }
 
   return (
@@ -172,7 +185,7 @@ export function TranslatableText({
           ) : (
             <button
               type="button"
-              onClick={handleTranslate}
+              onClick={() => doTranslate(selectedLangRef.current, displayedLang)}
               disabled={loading || !text.trim()}
               className="flex items-center gap-1.5 text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline font-medium"
             >
