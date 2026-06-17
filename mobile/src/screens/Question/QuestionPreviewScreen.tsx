@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import {
   SEASONS,
   DOMAIN_CATEGORIES,
+  CROP_OPTIONS,
 } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
@@ -58,7 +59,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [block, setBlock] = useState(preview.block ?? '');
   const [domainCategory, setDomainCategory] = useState(preview.domainCategory);
   const [season, setSeason] = useState(preview.season);
-  const [cropType, setCropType] = useState(preview.cropType || 'Rice');
+  const [cropType, setCropType] = useState(preview.cropType ?? '');
   const [questionText, setQuestionText] = useState(preview.questionText);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -71,7 +72,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     if (!district.trim()) errs.district = t('question.districtPlaceholder');
     if (!domainCategory) errs.domainCategory = t('question.selectDomain');
     if (!season) errs.season = t('question.selectSeason');
-    if (!cropType.trim()) errs.cropType = t('question.enterCrop');
+    if (!cropType) errs.cropType = t('question.enterCrop');
     if (!questionText.trim()) errs.questionText = t('question.enterQuestion');
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -90,7 +91,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         block: block.trim() || null,
         domainCategory,
         season,
-        cropType: cropType.trim(),
+        cropType,
         questionText: questionText.trim(),
         agroClimaticZone: preview.agroClimaticZone,
         mediaType: preview.mediaType,
@@ -187,12 +188,14 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               error={errors.season}
             />
 
-            <Input
+            <Select
               label={t('question.cropType')}
               placeholder={t('question.cropTypePlaceholder')}
               value={cropType}
-              onChangeText={(t) => { setCropType(t); setErrors({}); }}
+              options={CROP_OPTIONS}
+              onChange={(v) => { setCropType(v); setErrors({}); }}
               error={errors.cropType}
+              searchable
             />
 
             <View style={styles.divider} />
