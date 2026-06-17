@@ -26,6 +26,7 @@ import {
   AuditAction,
   ActorType,
   TransactionSource,
+  TransactionStatus,
   WithdrawalStatus,
 } from '../common/enums';
 import {
@@ -1045,6 +1046,10 @@ export class AdminService implements OnModuleInit {
         status: WithdrawalStatus.PROCESSING,
         processedAt: new Date(),
       });
+      await this.transactionRepo.update(
+        { referenceId: withdrawalId },
+        { status: TransactionStatus.COMPLETED },
+      );
       await this.logAudit({
         actorType: ActorType.ADMIN,
         actorId: adminId,
@@ -1062,6 +1067,11 @@ export class AdminService implements OnModuleInit {
         processedAt: new Date(),
         failureReason: dto.failureReason ?? 'Rejected by admin',
       });
+      // Mark the original debit transaction as reversed so user sees correct status in history
+      await this.transactionRepo.update(
+        { referenceId: withdrawalId },
+        { status: TransactionStatus.REVERSED },
+      );
       await this.logAudit({
         actorType: ActorType.ADMIN,
         actorId: adminId,

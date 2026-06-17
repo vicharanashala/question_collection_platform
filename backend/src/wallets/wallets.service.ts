@@ -123,6 +123,11 @@ export class WalletsService {
     return { reward: currentTier.reward, maxApproved: currentTier.maxApproved, nextTier };
   }
 
+  async getWalletConfig(): Promise<{ minWithdrawalAmount: number }> {
+    const minWithdrawalAmount = await this.adminService.getConfigValue('min_withdrawal_amount');
+    return { minWithdrawalAmount };
+  }
+
   async getBalance(userId: string): Promise<{ balance: number; currency: string }> {
     const wallet = await this.walletRepo.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
@@ -231,6 +236,76 @@ export class WalletsService {
 
       await queryRunner.commitTransaction();
       return saved;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Cancel a pending withdrawal and refund the amount to the wallet.
+   * Only the withdrawal owner can cancel, and only while status is PENDING.
+   */
+  async cancelWithdrawal(
+    userId: string,
+    withdrawalId: string,
+  ): Promise<WithdrawalRequest> {
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id: withdrawalId },
+    });
+
+    if (!withdrawal) {
+      throw new NotFoundException('Withdrawal request not found.');
+    }
+    if (withdrawal.userId !== userId) {
+      throw new NotFoundException('Withdrawal request not found.');
+    }
+    if (withdrawal.status !== WithdrawalStatus.PENDING) {
+      throw new BadRequestException(
+        'Only a pending withdrawal can be cancelled.',
+      );
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Mark withdrawal as cancelled
+      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
+        status: WithdrawalStatus.CANCELLED,
+        cancelledAt: new Date(),
+      });
+
+      // Refund balance to wallet
+      const wallet = await queryRunner.manager.findOne(Wallet, {
+        where: { id: withdrawal.walletId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!wallet) throw new NotFoundException('Wallet not found.');
+
+      const newBalance = Number(wallet.balance) + Number(withdrawal.amount);
+      await queryRunner.manager.update(Wallet, wallet.id, {
+        balance: newBalance,
+      });
+
+      // Update the original debit transaction to reversed status
+      await queryRunner.manager.update(
+        Transaction,
+        { referenceId: withdrawalId },
+        { status: TransactionStatus.REVERSED },
+      );
+
+      await queryRunner.commitTransaction();
+
+      // Reload to return updated entity
+      const cancelled = await this.withdrawalRepo.findOne({
+        where: { id: withdrawalId },
+      });
+      if (!cancelled) throw new NotFoundException('Withdrawal request not found.');
+      return cancelled;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;

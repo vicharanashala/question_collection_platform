@@ -2,7 +2,9 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
+  Param,
   Query,
   UseGuards,
   Req,
@@ -42,6 +44,13 @@ export class WalletsController {
     return this.walletsService.getRewardTier(count);
   }
 
+  /** Returns wallet configuration values needed by the client. */
+  @Get('me/config')
+  @HttpCode(HttpStatus.OK)
+  async getWalletConfig(@Req() req: AuthenticatedRequest) {
+    return this.walletsService.getWalletConfig();
+  }
+
   @Get('me/transactions')
   @HttpCode(HttpStatus.OK)
   async getTransactions(
@@ -59,5 +68,11 @@ export class WalletsController {
   @HttpCode(HttpStatus.CREATED)
   async withdraw(@Req() req: AuthenticatedRequest, @Body() dto: WithdrawDto) {
     return this.walletsService.withdraw(req.user.id, dto);
+  }
+
+  @Delete('withdrawals/:id')
+  @HttpCode(HttpStatus.OK)
+  async cancelWithdrawal(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.walletsService.cancelWithdrawal(req.user.id, id);
   }
 }

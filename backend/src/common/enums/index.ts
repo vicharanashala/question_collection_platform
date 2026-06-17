@@ -81,6 +81,7 @@ export enum WithdrawalStatus {
   PROCESSING = 'processing',
   COMPLETED = 'completed',
   FAILED = 'failed',
+  CANCELLED = 'cancelled',
 }
 
 export enum ViolationType {

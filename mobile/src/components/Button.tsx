@@ -6,20 +6,24 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { tokens } from '../utils/theme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   disabled?: boolean;
   loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   size?: 'sm' | 'md' | 'lg';
   testID?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  iconPosition?: 'left' | 'right';
 }
 
 export function Button({
@@ -32,6 +36,8 @@ export function Button({
   textStyle,
   size = 'md',
   testID,
+  icon,
+  iconPosition = 'left',
 }: ButtonProps) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -61,6 +67,7 @@ export function Button({
       borderColor: isDisabled ? c.borderSubtle : c.primary,
     },
     ghost: { backgroundColor: 'transparent' },
+    destructive: { backgroundColor: isDisabled ? c.muted : c.destructive },
   };
 
   const textColors: Record<string, string> = {
@@ -68,6 +75,7 @@ export function Button({
     secondary: c.secondaryForeground,
     outline: isDisabled ? c.mutedForeground : c.primary,
     ghost: isDisabled ? c.mutedForeground : c.primary,
+    destructive: c.destructiveForeground,
   };
 
   return (
@@ -81,15 +89,23 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={textColors[variant]} size="small" />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            { color: textColors[variant], fontSize: fontSizeMap[size], lineHeight: fontSizeMap[size] + 4 },
-            textStyle,
-          ]}
-        >
-          {title}
-        </Text>
+        <>
+          {icon && iconPosition === 'left' && (
+            <Ionicons name={icon} size={fontSizeMap[size] + 2} color={textColors[variant]} />
+          )}
+          <Text
+            style={[
+              styles.text,
+              { color: textColors[variant], fontSize: fontSizeMap[size], lineHeight: fontSizeMap[size] + 4 },
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+          {icon && iconPosition === 'right' && (
+            <Ionicons name={icon} size={fontSizeMap[size] + 2} color={textColors[variant]} />
+          )}
+        </>
       )}
     </TouchableOpacity>
   );

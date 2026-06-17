@@ -80,10 +80,12 @@ export interface WalletBalance {
 
 export interface Transaction {
   id: string;
+  walletId: string;
   type: 'credit' | 'debit';
   source: 'reward' | 'withdrawal' | 'refund' | 'adjustment';
-  amount: number;
-  balanceAfter: number;
+  amount: number | string;
+  balanceAfter: number | string;
+  referenceId: string | null;
   description: string | null;
   status: 'pending' | 'completed' | 'failed' | 'reversed';
   createdAt: string;

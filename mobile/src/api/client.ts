@@ -244,9 +244,13 @@ export const walletApi = {
   getTransactions: (params?: Record<string, string | number>) =>
     api.get('/wallets/me/transactions', { params }),
 
+  getWalletConfig: () => api.get('/wallets/me/config'),
+
   withdraw: (data: Record<string, unknown>) =>
     api.post('/wallets/withdraw', data),
-};
+
+  cancelWithdrawal: (withdrawalId: string) =>
+    api.delete(`/wallets/withdrawals/${withdrawalId}`),};
 
 export const adminApi = {
   // Dashboard
