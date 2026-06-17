@@ -26,6 +26,10 @@ import {
   ProcessWithdrawalDto,
   CreateUserDto,
   SuspendUserDto,
+  ListAllWalletsDto,
+  ListUserTransactionsDto,
+  ListUserWithdrawalsDto,
+  AdjustWalletDto,
 } from './dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -206,7 +210,60 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 6: Withdrawals — curator blocked
+  // Section 6: Wallets — curator blocked
+  // ─────────────────────────────────────────────────────────────
+
+  /** List all wallets with user info, filterable by search/state/sort */
+  @Get('wallets')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async listAllWallets(@Query() dto: ListAllWalletsDto) {
+    return this.adminService.listAllWallets(dto);
+  }
+
+  /** Get a single user's wallet + user details */
+  @Get('wallets/user/:userId')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async getUserWallet(@Param('userId') userId: string) {
+    return this.adminService.getUserWallet(userId);
+  }
+
+  /** Full transaction history for a specific user */
+  @Get('wallets/user/:userId/transactions')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async listUserTransactions(
+    @Param('userId') userId: string,
+    @Query() dto: ListUserTransactionsDto,
+  ) {
+    return this.adminService.listUserTransactions(userId, dto);
+  }
+
+  /** Withdrawal history for a specific user */
+  @Get('wallets/user/:userId/withdrawals')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async listUserWithdrawals(
+    @Param('userId') userId: string,
+    @Query() dto: ListUserWithdrawalsDto,
+  ) {
+    return this.adminService.listUserWithdrawals(userId, dto);
+  }
+
+  /** Super admin: manually credit or debit a user's wallet */
+  @Post('wallets/adjust')
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async adjustWalletBalance(
+    @Body() dto: AdjustWalletDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.adminService.adjustWalletBalance(req.user.id, dto);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 6b: Withdrawals — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('withdrawals')
@@ -228,7 +285,7 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 7: Export — curator blocked
+  // Section 7: Withdrawals (global list) — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('export')

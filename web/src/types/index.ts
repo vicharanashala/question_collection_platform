@@ -149,6 +149,36 @@ export interface Withdrawal {
   user: WithdrawalUser | null
 }
 
+export interface WalletSummary {
+  id: string
+  userId: string
+  balance: number
+  totalEarned: number
+  totalWithdrawn: number
+  user: {
+    id: string
+    name: string
+    mobileNumber: string
+    state: string
+    category: string
+    role: string
+    verificationStatus: string
+    createdAt: string
+  }
+}
+
+export interface Transaction {
+  id: string
+  amount: number
+  type: 'credit' | 'debit'
+  source: 'reward' | 'withdrawal' | 'refund' | 'adjustment'
+  description: string | null
+  status: 'pending' | 'completed' | 'failed' | 'reversed'
+  referenceId: string | null
+  balanceAfter: number | null
+  createdAt: string
+}
+
 export interface PaginatedResponse<T> {
   items: T[]
   total: number

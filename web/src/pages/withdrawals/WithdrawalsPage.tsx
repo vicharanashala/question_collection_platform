@@ -10,9 +10,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
+import { WalletDetailModal } from '@/components/WalletDetailModal'
 import {
   CreditCard, ChevronLeft, ChevronRight, Search,
-  CheckCircle, XCircle, RefreshCw, Filter, X,
+  CheckCircle, XCircle, RefreshCw, Filter, X, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
@@ -75,6 +76,8 @@ export function WithdrawalsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [viewWallet, setViewWallet] = useState<{ walletId: string; userId: string } | null>(null)
+  const [walletOpen, setWalletOpen] = useState(false)
 
   // Filters
   const [filterOpen, setFilterOpen] = useState(false)
@@ -228,6 +231,7 @@ export function WithdrawalsPage() {
                 <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Status</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Processed</th>
+                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Wallet</th>}
                 {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Actions</th>}
               </tr>
             </thead>
@@ -235,14 +239,14 @@ export function WithdrawalsPage() {
               {loading && items.length === 0 ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b">
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: isSuperAdmin ? 8 : 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3"><div className="h-4 bg-muted rounded animate-pulse w-24" /></td>
                     ))}
                   </tr>
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                  <td colSpan={isSuperAdmin ? 8 : 7} className="text-center py-12 text-muted-foreground">
                     No withdrawals match your filters
                   </td>
                 </tr>
@@ -274,6 +278,32 @@ export function WithdrawalsPage() {
                         ? (formatDate(w.processedAt) ?? new Date(w.processedAt).toLocaleDateString('en-IN'))
                         : '—'}
                     </td>
+                    {isSuperAdmin && (
+                      <td className="px-4 py-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-primary hover:text-primary"
+                          onClick={async () => {
+                            if (!w.user?.id) return
+                            try {
+                              const res = await adminApi.getWallets({ userId: w.user.id, limit: 1 })
+                              if (res.items.length > 0) {
+                                setViewWallet({ walletId: res.items[0].id, userId: w.user.id })
+                                setWalletOpen(true)
+                              } else {
+                                toast.error('No wallet found for this user')
+                              }
+                            } catch (e) {
+                              toast.error(getErrorMessage(e, 'Failed to load wallet'))
+                            }
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </td>
+                    )}
                     {isSuperAdmin && (
                       <td className="px-4 py-3">
                         {w.status === 'pending' ? (
@@ -428,6 +458,16 @@ export function WithdrawalsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Wallet detail modal — admins can check full history before acting on a withdrawal */}
+      {viewWallet && (
+        <WalletDetailModal
+          walletId={viewWallet.walletId}
+          userId={viewWallet.userId}
+          open={walletOpen}
+          onClose={() => { setWalletOpen(false); setViewWallet(null) }}
+        />
+      )}
     </div>
   )
 }

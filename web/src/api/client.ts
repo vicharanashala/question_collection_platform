@@ -293,6 +293,39 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify(body),
     }, false).finally(() => invalidateCache('/api/admin')),
+
+  // ─── Wallet management ──────────────────────────────────────────────────────
+  getWallets: (params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(p).toString()
+    return request<import('@/types').PaginatedResponse<import('@/types').WalletSummary>>(
+      `/admin/wallets${qs ? `?${qs}` : ''}`,
+    )
+  },
+
+  getUserTransactions: (userId: string, params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(p).toString()
+    return request<{
+      items: import('@/types').Transaction[]
+      total: number
+      summary: { totalTransactions: number; totalCredits: number; totalDebits: number }
+    }>(`/admin/wallets/user/${userId}/transactions${qs ? `?${qs}` : ''}`)
+  },
+
+  getUserWithdrawals: (userId: string, params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(p).toString()
+    return request<import('@/types').PaginatedResponse<import('@/types').Withdrawal>>(
+      `/admin/wallets/user/${userId}/withdrawals${qs ? `?${qs}` : ''}`,
+    )
+  },
+
+  adjustWallet: (userId: string, body: { amount: number; reason: string; description?: string }) =>
+    request<{ message: string; newBalance: number }>(`/admin/wallets/adjust`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, ...body }),
+    }, false).finally(() => invalidateCache('/api/admin')),
 }
 
 // ─── Questions API ─────────────────────────────────────────────────────────

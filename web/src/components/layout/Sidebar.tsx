@@ -10,6 +10,7 @@ import {
   Settings2,
   CreditCard,
   LogOut,
+  Wallet,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -22,6 +23,7 @@ const navItems = [
   { to: '/questions', label: 'Questions',     icon: MessageSquare, roles: ['user', 'curator', 'admin', 'super_admin'] },
   { to: '/reviews',   label: 'Review Queue',  icon: CheckSquare,   roles: ['curator', 'admin', 'super_admin'] },
   { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,   roles: ['admin', 'super_admin'] },
+  { to: '/wallets',   label: 'Wallets',       icon: Wallet,        roles: ['admin', 'super_admin'] },
   { to: '/settings',  label: 'Settings',      icon: Settings2,    roles: ['admin', 'super_admin'] },
 ]
 

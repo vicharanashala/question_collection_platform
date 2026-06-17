@@ -27,6 +27,7 @@ import {
   ActorType,
   TransactionSource,
   TransactionStatus,
+  TransactionType,
   WithdrawalStatus,
 } from '../common/enums';
 import {
@@ -40,6 +41,10 @@ import {
   ListWithdrawalsDto,
   ProcessWithdrawalDto,
   FraudQueryDto,
+  ListUserTransactionsDto,
+  ListUserWithdrawalsDto,
+  AdjustWalletDto,
+  ListAllWalletsDto,
 } from './dto';
 import { ConfigService } from '@nestjs/config';
 import { WalletsService } from '../wallets/wallets.service';
@@ -1464,6 +1469,280 @@ export class AdminService implements OnModuleInit {
       })),
       avgAiConfidence: avgConfidence?.avg ? parseFloat(Number(avgConfidence.avg).toFixed(2)) : null,
       avgReviewTurnaroundMinutes: avgTurnaroundMinutes || null,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 8b: Wallet Management (super_admin only for adjustments)
+  // ─────────────────────────────────────────────────────────────
+
+  async getUserWallet(userId: string) {
+    const wallet = await this.walletRepo.findOne({
+      where: { userId },
+      relations: ['user'],
+      select: ['id', 'balance', 'createdAt', 'updatedAt'],
+    });
+    if (!wallet) throw new NotFoundException('Wallet not found for this user');
+    return {
+      wallet: {
+        id: wallet.id,
+        balance: Number(wallet.balance),
+        createdAt: wallet.createdAt,
+        updatedAt: wallet.updatedAt,
+      },
+      user: wallet.user
+        ? {
+            id: wallet.user.id,
+            name: wallet.user.name,
+            mobileNumber: wallet.user.mobileNumber,
+            state: wallet.user.state,
+            district: wallet.user.district,
+            category: wallet.user.category,
+            role: wallet.user.role,
+          }
+        : null,
+    };
+  }
+
+  async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
+    const {
+      page = 1, limit = 50,
+      type, status, source,
+      fromDate, toDate,
+      sortBy = 'createdAt', sortOrder = 'DESC',
+    } = dto;
+
+    // Verify user/wallet exists
+    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found for this user');
+
+    const qb = this.transactionRepo
+      .createQueryBuilder('tx')
+      .where('tx.walletId = :walletId', { walletId: wallet.id })
+      .select([
+        'tx.id',
+        'tx.amount',
+        'tx.type',
+        'tx.source',
+        'tx.description',
+        'tx.status',
+        'tx.referenceId',
+        'tx.balanceAfter',
+        'tx.createdAt',
+      ])
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (type && type !== 'all') qb.andWhere('tx.type = :type', { type });
+    if (status && status !== 'all') qb.andWhere('tx.status = :status', { status });
+    if (source && source !== 'all') qb.andWhere('tx.source = :source', { source });
+    if (fromDate) qb.andWhere('tx.createdAt >= :fromDate', { fromDate: new Date(fromDate) });
+    if (toDate) qb.andWhere('tx.createdAt <= :toDate', { toDate: new Date(toDate) });
+
+    const sortCol = sortBy === 'amount' ? 'tx.amount' : 'tx.createdAt';
+    qb.orderBy(sortCol, sortOrder);
+
+    const [items, total] = await qb.getManyAndCount();
+
+    // Compute summary
+    const summary = await this.transactionRepo
+      .createQueryBuilder('tx')
+      .where('tx.walletId = :walletId', { walletId: wallet.id })
+      .select(
+        `
+        COUNT(*) as "totalCount",
+        SUM(CASE WHEN tx.type = 'credit' THEN tx.amount ELSE 0 END) as "totalCredits",
+        SUM(CASE WHEN tx.type = 'debit' THEN tx.amount ELSE 0 END) as "totalDebits",
+        SUM(CASE WHEN tx.status = 'completed' AND tx.type = 'credit' THEN tx.amount ELSE 0 END) as "completedCredits",
+        SUM(CASE WHEN tx.status = 'completed' AND tx.type = 'debit' THEN tx.amount ELSE 0 END) as "completedDebits"
+      `,
+      )
+      .getRawOne();
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+      summary: {
+        totalTransactions: Number(summary.totalCount) || 0,
+        totalCredits: Number(summary.totalCredits) || 0,
+        totalDebits: Number(summary.totalDebits) || 0,
+        completedCredits: Number(summary.completedCredits) || 0,
+        completedDebits: Number(summary.completedDebits) || 0,
+      },
+    };
+  }
+
+  async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
+    const { page = 1, limit = 20, status, fromDate, toDate } = dto;
+
+    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found for this user');
+
+    const qb = this.withdrawalRepo
+      .createQueryBuilder('wr')
+      .where('wr.walletId = :walletId', { walletId: wallet.id })
+      .select([
+        'wr.id',
+        'wr.amount',
+        'wr.payoutMethod',
+        'wr.payoutDetails',
+        'wr.status',
+        'wr.failureReason',
+        'wr.processedAt',
+        'wr.createdAt',
+      ])
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (status) qb.andWhere('wr.status = :status', { status });
+    if (fromDate) qb.andWhere('wr.createdAt >= :fromDate', { fromDate: new Date(fromDate) });
+    if (toDate) qb.andWhere('wr.createdAt <= :toDate', { toDate: new Date(toDate) });
+
+    qb.orderBy('wr.createdAt', 'DESC');
+
+    const [items, total] = await qb.getManyAndCount();
+    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  }
+
+  async adjustWalletBalance(adminId: string, dto: AdjustWalletDto) {
+    const isSuperAdmin = await this.isSuperAdmin(adminId);
+    if (!isSuperAdmin) throw new ForbiddenException('Only super admins can manually adjust wallet balances');
+
+    const wallet = await this.walletRepo.findOne({ where: { userId: dto.userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found for this user');
+
+    const amount = Number(dto.amount);
+    if (amount === 0) throw new BadRequestException('Adjustment amount cannot be zero');
+
+    if (amount > 0) {
+      await this.walletRepo.increment({ id: wallet.id }, 'balance', amount);
+      await this.transactionRepo.save({
+        walletId: wallet.id,
+        amount,
+        type: TransactionType.CREDIT,
+        source: TransactionSource.ADJUSTMENT,
+        status: TransactionStatus.COMPLETED,
+        description: dto.description ?? `Manual adjustment: ${dto.reason}`,
+        balanceAfter: Number(wallet.balance) + amount,
+      });
+    } else {
+      const debit = Math.abs(amount);
+      if (Number(wallet.balance) < debit) {
+        throw new BadRequestException('Insufficient balance for this debit adjustment');
+      }
+      await this.walletRepo.decrement({ id: wallet.id }, 'balance', debit);
+      await this.transactionRepo.save({
+        walletId: wallet.id,
+        amount: debit,
+        type: TransactionType.DEBIT,
+        source: TransactionSource.ADJUSTMENT,
+        status: TransactionStatus.COMPLETED,
+        description: dto.description ?? `Manual adjustment: ${dto.reason}`,
+        balanceAfter: Number(wallet.balance) - debit,
+      });
+    }
+
+    const updatedWallet = await this.walletRepo.findOne({ where: { id: wallet.id } });
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: 'wallet_balance_adjusted',
+      entityType: 'wallet',
+      entityId: wallet.id,
+      oldValue: { balance: Number(wallet.balance) },
+      newValue: { balance: Number(updatedWallet!.balance) },
+      metadata: { reason: dto.reason, adjustmentAmount: amount },
+    });
+
+    return {
+      success: true,
+      userId: dto.userId,
+      walletId: wallet.id,
+      previousBalance: Number(wallet.balance),
+      newBalance: Number(updatedWallet!.balance),
+      adjustment: amount,
+      reason: dto.reason,
+    };
+  }
+
+  async listAllWallets(dto: ListAllWalletsDto) {
+    const {
+      page = 1, limit = 50, userId, search, state,
+      sortBy = 'createdAt', sortOrder = 'DESC',
+    } = dto;
+
+    const qb = this.walletRepo
+      .createQueryBuilder('w')
+      .innerJoinAndSelect('w.user', 'u')
+      .leftJoin('w.transactions', 'tx')
+      .select([
+        'w.id',
+        'w.balance',
+        'w.createdAt',
+        'w.updatedAt',
+        'u.id',
+        'u.name',
+        'u.mobileNumber',
+        'u.state',
+        'u.district',
+        'u.category',
+        'u.role',
+        'u.verificationStatus',
+        'u.createdAt',
+      ])
+      .addSelect(
+        "COALESCE(SUM(CASE WHEN tx.type = 'CREDIT' AND tx.source = 'REWARD' AND tx.status = 'COMPLETED' THEN tx.amount ELSE 0 END), 0)",
+        'totalEarned',
+      )
+      .addSelect(
+        "COALESCE(SUM(CASE WHEN tx.type = 'DEBIT' AND tx.source = 'WITHDRAWAL' AND tx.status = 'COMPLETED' THEN tx.amount ELSE 0 END), 0)",
+        'totalWithdrawn',
+      )
+      .groupBy('w.id')
+      .addGroupBy('u.id')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (userId) qb.andWhere('u.id = :userId', { userId });
+    if (search) {
+      qb.andWhere(
+        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+    if (state) qb.andWhere('u.state = :state', { state });
+
+    const sortCol = sortBy === 'balance' ? 'w.balance' : 'w.createdAt';
+    qb.orderBy(sortCol, sortOrder);
+
+    const [items, total] = await qb.getManyAndCount();
+    return {
+      items: items.map((w) => ({
+        id: w.id,
+        userId: w.user.id,
+        balance: Number(w.balance),
+        totalEarned: Number((w as unknown as { totalEarned: string }).totalEarned ?? 0),
+        totalWithdrawn: Number((w as unknown as { totalWithdrawn: string }).totalWithdrawn ?? 0),
+        user: {
+          id: w.user.id,
+          name: w.user.name,
+          mobileNumber: w.user.mobileNumber,
+          state: w.user.state,
+          district: w.user.district,
+          category: w.user.category,
+          role: w.user.role,
+          verificationStatus: (w.user as { verificationStatus: string }).verificationStatus,
+          createdAt: w.user.createdAt,
+        },
+      })),
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
     };
   }
 
