@@ -84,7 +84,7 @@ function ReasonStrip({ status, reason, reviewerName }: { status: string; reason:
 
 // ─── Question card ────────────────────────────────────────────────────────────
 
-function QuestionCard({ q, onOpen, selectedLang, onLangChange }: { q: Question; onOpen: (q: Question) => void; selectedLang: string; onLangChange: (lang: string) => void })
+function QuestionCard({ q, onOpen, selectedLang, onLangChange }: { q: Question; onOpen: (q: Question) => void; selectedLang: string; onLangChange: (lang: string) => void }) {
   return (
     <Card
       className="group overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
