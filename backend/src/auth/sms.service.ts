@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 /**
  * SMS Gateway abstraction supporting multiple providers.
@@ -48,63 +49,39 @@ export class SmsService {
 
   private async sendViaFast2Sms(mobileNumber: string, otp: string): Promise<void> {
     const apiKey = this.configService.get<string>('sms.apiKey');
-    const senderId = this.configService.get<string>('sms.senderId') ?? 'AGRIAPP';
 
     if (!apiKey) {
-      throw new Error('Fast2SMS API key not configured. Set SMS_API_KEY in environment.');
+      throw new Error('Fast2SMS API key not configured. Set FAST2SMS_API_KEY in environment.');
     }
 
     const cleanNumber = mobileNumber.replace(/^\+?91 ?/, '').replace(/^0/, '');
-    const message = `Your verification code is ${otp}. It is valid for 5 minutes. Do not share it.`;
+    const text = `Your verification code is ${otp}. It is valid for 5 minutes. Do not share it.`;
+    const route = this.configService.get<string>('sms.route') ?? 'q';
 
-    const maxRetries = 3;
-    let attempt = 0;
-
-    while (++attempt <= maxRetries) {
-      try {
-        const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-          method: 'POST',
+    try {
+      const response = await axios.post(
+        'https://www.fast2sms.com/dev/bulkV2',
+        {
+          route,
+          message: text,
+          language: 'english',
+          flash: 0,
+          numbers: cleanNumber,
+          sms_details: 1,
+        },
+        {
           headers: {
             authorization: apiKey,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            route: this.configService.get<string>('sms.route') ?? 'otp',
-            variables: '{BB}',
-            variables_values: otp,
-            numbers: cleanNumber,
-            flash: 0,
-          }),
-        });
+        },
+      );
 
-        const data = await response.json() as { status_code?: number; message?: string | string[] };
-
-        if (response.ok && (data.status_code === 200 || data.status_code === 200)) {
-          this.logger.log(`[Fast2SMS] OTP sent to ${cleanNumber}`);
-          return;
-        }
-
-        // Retry on rate-limit (429) or server errors (5xx)
-        if (!response.ok && response.status >= 500 && attempt < maxRetries) {
-          const backoffMs = Math.pow(2, attempt) * 500;
-          this.logger.warn(
-            `[Fast2SMS] Attempt ${attempt} failed with ${response.status}. Retrying in ${backoffMs}ms...`,
-          );
-          await this.sleep(backoffMs);
-          continue;
-        }
-
-        const errorMsg = Array.isArray(data.message) ? data.message.join(', ') : (data.message ?? `HTTP ${response.status}`);
-        throw new Error(`Fast2SMS API error: ${errorMsg}`);
-      } catch (err) {
-        if (attempt === maxRetries) {
-          this.logger.error(`[Fast2SMS] All ${maxRetries} attempts failed for ${cleanNumber}: ${(err as Error).message}`);
-          throw err;
-        }
-        const backoffMs = Math.pow(2, attempt) * 500;
-        this.logger.warn(`[Fast2SMS] Attempt ${attempt} error: ${(err as Error).message}. Retrying in ${backoffMs}ms...`);
-        await this.sleep(backoffMs);
-      }
+      this.logger.log(`[Fast2SMS] OTP sent to ${cleanNumber}: ${JSON.stringify(response.data)}`);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: unknown }; message?: string };
+      this.logger.error(`[Fast2SMS] Failed to send OTP to ${cleanNumber}: ${JSON.stringify(error.response?.data) || error.message}`);
+      throw new Error(`Fast2SMS API error: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`);
     }
   }
 
@@ -190,11 +167,5 @@ export class SmsService {
     // });
 
     this.logger.warn('[Gupshup] OTP sending not wired — add SMS_API_KEY and SMS_API_SECRET to .env to enable');
-  }
-
-  // ─── Helpers ───────────────────────────────────────────────────────────────
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
