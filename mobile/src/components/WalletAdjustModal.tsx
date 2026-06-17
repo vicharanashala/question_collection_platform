@@ -96,6 +96,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
     }
   }
 
+  console.log('[WalletAdjustModal] rendering', { visible, userId, userName });
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <KeyboardAvoidingView

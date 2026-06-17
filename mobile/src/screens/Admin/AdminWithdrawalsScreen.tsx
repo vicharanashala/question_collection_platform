@@ -358,7 +358,7 @@ export function AdminWithdrawalsScreen() {
           visible={!!walletModal}
           onClose={() => setWalletModal(null)}
           isSuperAdmin={isSuperAdmin}
-          onAdjustPress={() => setWalletAdjustVisible(true)}
+          onAdjustPress={() => { console.log('[DEBUG] Adjust pressed', walletModal); setWalletAdjustVisible(true); }}
         />
       )}
 
