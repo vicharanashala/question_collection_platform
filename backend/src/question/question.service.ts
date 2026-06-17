@@ -84,31 +84,17 @@ export class QuestionService {
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + editWindowSec * 1000);
 
-    // 2. Reject exact-duplicate submissions immediately
+    // 3. Check for exact-duplicate question
     const existingDuplicate = await this.questionRepo.findOne({
       where: { questionText: dto.questionText },
       select: ['id'],
     });
-    if (existingDuplicate) {
-      await this.notifRepo.save(
-        this.notifRepo.create({
-          userId,
-          type: NotificationType.DUPLICATE_QUESTION,
-          title: 'Duplicate Question Not Accepted',
-          body: 'Your question was not accepted because an identical question already exists in our system. Please check your previously submitted questions.',
-          data: { duplicateOf: existingDuplicate.id },
-          triggerType: NotificationTriggerType.QUESTION,
-        }),
-      );
-      throw new BadRequestException(
-        'Your question was not accepted because an identical question already exists in our system.',
-      );
-    }
+    const isDuplicate = !!existingDuplicate;
 
-    // 3. Derive agro-climatic zone from state when not provided
+    // 4. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
 
-    // 4. Persist question in a transaction
+    // 5. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
       domainCategory: dto.domainCategory,
@@ -122,7 +108,7 @@ export class QuestionService {
       mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
       mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
       deviceInfo: dto.deviceInfo ?? null,
-      status: QuestionStatus.PENDING,
+      status: isDuplicate ? QuestionStatus.REJECTED : QuestionStatus.PENDING,
       editWindowClosesAt,
       submittedAt: now,
     });
@@ -132,7 +118,7 @@ export class QuestionService {
       return repo.save(question) as Promise<Question>;
     });
 
-    // 5. Audit log
+    // 6. Audit log
     await this.auditRepo.save({
       actorType: ActorType.USER,
       actorId: userId,
@@ -143,11 +129,25 @@ export class QuestionService {
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
+    // 7. Send duplicate notification after saving
+    if (isDuplicate) {
+      await this.notifRepo.save(
+        this.notifRepo.create({
+          userId,
+          type: NotificationType.DUPLICATE_QUESTION,
+          title: 'Duplicate Question Rejected',
+          body: `Your question "${dto.questionText.slice(0, 80)}" was rejected because an identical question already exists in our system.`,
+          data: { questionId: saved.id, duplicateOf: existingDuplicate?.id },
+          triggerType: NotificationTriggerType.QUESTION,
+        }),
+      );
+    }
+
     return {
       id: saved.id,
       status: saved.status,
       editWindowClosesAt: editWindowClosesAt.toISOString(),
-      message: 'Question submitted successfully',
+      message: isDuplicate ? 'Duplicate question rejected' : 'Question submitted successfully',
     };
   }
 
