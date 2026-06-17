@@ -192,7 +192,7 @@ function QuestionCard({
   onSelect: (q: Question) => void
   selectedLang: string
   onLangChange: (lang: string) => void
-})
+}) {
   return (
     <div
       className={cn(
