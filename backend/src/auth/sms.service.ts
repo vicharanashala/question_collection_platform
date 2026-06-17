@@ -55,7 +55,7 @@ export class SmsService {
     }
 
     const cleanNumber = mobileNumber.replace(/^\+?91 ?/, '').replace(/^0/, '');
-    const text = `Your verification code is ${otp}. It is valid for 5 minutes. Do not share it.`;
+    const text = `Your verification code is ${otp}. It is valid for 1 minute. To verify your number for Question Collection Application by Annam AI.`;
     const route = this.configService.get<string>('sms.route') ?? 'q';
 
     try {
