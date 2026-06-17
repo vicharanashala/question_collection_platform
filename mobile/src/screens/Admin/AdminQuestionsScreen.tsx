@@ -23,7 +23,7 @@ import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
-import { INDIAN_STATES } from '../../utils/constants';
+import { INDIAN_STATES, CROP_OPTIONS } from '../../utils/constants';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -89,6 +89,7 @@ interface QueueItem {
 const FILTERS: FilterOption[] = [
   { key: 'search',    label: 'Search',    type: 'text',     placeholder: 'Question or mobile number…' },
   { key: 'status',    label: 'Status',    type: 'select',   options: STATUS_OPTIONS },
+  { key: 'crop',      label: 'Crop',      type: 'select',   options: CROP_OPTIONS },
   { key: 'state',     label: 'State',     type: 'select',   options: STATE_OPTIONS },
   { key: 'sortBy',    label: 'Sort By',   type: 'select',   options: SORT_OPTIONS },
   { key: 'fromDate',  label: 'From Date', type: 'date',     placeholder: 'YYYY-MM-DD' },
@@ -96,7 +97,7 @@ const FILTERS: FilterOption[] = [
 ];
 
 const EMPTY_FILTERS: ActiveFilters = {
-  search: '', status: '', state: '',
+  search: '', status: '', crop: '', state: '',
   sortBy: 'submittedAt:DESC', fromDate: '', toDate: '',
 };
 
@@ -105,6 +106,7 @@ function buildQueryParams(active: ActiveFilters, page: number): Record<string, s
   if (active.search) params.search = active.search;
   if (active.state) params.state = active.state;
   if (active.status) params.status = active.status;
+  if (active.crop) params.crop = active.crop;
   if (active.fromDate) params.fromDate = active.fromDate;
   if (active.toDate) params.toDate = active.toDate;
   const sortBy = active.sortBy?.split(':')[0];

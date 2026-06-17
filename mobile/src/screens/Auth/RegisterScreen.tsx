@@ -19,7 +19,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
-import { INDIAN_STATES, LANGUAGES } from '../../utils/constants';
+import { INDIAN_STATES, LANGUAGES, CROP_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
 import { useTranslation } from 'react-i18next';
@@ -88,7 +88,7 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
       if (category === UserCategory.FARMER) {
-        if (!cropType.trim()) errs.cropType = t('cropTypeRequired');
+        if (!cropType) errs.cropType = t('cropTypeRequired');
       }
       if (category === UserCategory.STUDENT) {
         if (!courseName.trim()) errs.courseName = t('courseNameRequired');
@@ -306,12 +306,14 @@ export function RegisterScreen({ navigation, route }: Props) {
                       value={farmSize}
                       onChangeText={setFarmSize}
                     />
-                    <Input
+                    <Select
                       label={t('primaryCropType')}
                       placeholder={t('cropTypePlaceholder')}
                       value={cropType}
-                      onChangeText={(txt) => { setCropType(txt); setErrors({}); }}
+                      options={CROP_OPTIONS}
+                      onChange={(v) => { setCropType(v); setErrors({}); }}
                       error={errors.cropType}
+                      searchable
                     />
                   </>
                 )}

@@ -21,7 +21,7 @@ import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { userApi } from '../../api/client';
-import { SEASONS } from '../../utils/constants';
+import { SEASONS, CROP_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import type { CropDetail } from '../../types';
 
@@ -69,7 +69,7 @@ export function CropManagementScreen() {
   }
 
   function validate(): boolean {
-    if (!form.cropName.trim()) {
+    if (!form.cropName) {
       setFormError(t('crops.cropNamePlaceholder'));
       return false;
     }
@@ -81,8 +81,8 @@ export function CropManagementScreen() {
     setSaving(true);
     try {
       const updated = editingId
-        ? crops.map((cr) => cr.id === editingId ? { ...cr, cropName: form.cropName.trim(), season: form.season || null } : cr)
-        : [...crops, { id: `new-${Date.now()}`, cropName: form.cropName.trim(), season: form.season || null }];
+        ? crops.map((cr) => cr.id === editingId ? { ...cr, cropName: form.cropName, season: form.season || null } : cr)
+        : [...crops, { id: `new-${Date.now()}`, cropName: form.cropName, season: form.season || null }];
 
       await userApi.updateCrops(updated.map((c) => ({ cropName: c.cropName, season: c.season || undefined })));
       setCrops(updated);
@@ -194,13 +194,14 @@ export function CropManagementScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={styles.modalBody} keyboardShouldPersistTaps="handled">
-              <Input
+              <Select
                 label={t('crops.cropName')}
                 placeholder={t('crops.cropNamePlaceholder')}
                 value={form.cropName}
-                onChangeText={(text) => { setForm((f) => ({ ...f, cropName: text })); setFormError(null); }}
+                options={CROP_OPTIONS}
+                onChange={(v) => { setForm((f) => ({ ...f, cropName: v })); setFormError(null); }}
                 error={formError ?? undefined}
-                autoCapitalize="words"
+                searchable
               />
               <Select
                 label={t('crops.season')}

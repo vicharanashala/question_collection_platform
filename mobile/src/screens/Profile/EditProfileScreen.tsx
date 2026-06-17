@@ -19,7 +19,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../api/client';
-import { INDIAN_STATES, LANGUAGES } from '../../utils/constants';
+import { INDIAN_STATES, LANGUAGES, CROP_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory, UserRole } from '../../types';
 
@@ -222,11 +222,13 @@ export function EditProfileScreen({ navigation }: Props) {
                     onChangeText={handleFarmSizeChange}
                     error={undefined}
                   />
-                  <Input
+                  <Select
                     label={t('editProfile.primaryCrop')}
                     placeholder={t('editProfile.primaryCropPlaceholder')}
                     value={primaryCrop}
-                    onChangeText={handlePrimaryCropChange}
+                    options={CROP_OPTIONS}
+                    onChange={(v) => { setPrimaryCrop(v); setErrors({}); }}
+                    searchable
                   />
                   <Button
                     title="Manage My Crops"
