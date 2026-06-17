@@ -158,11 +158,12 @@ export interface RegisterFormData {
 
 export interface WalletSummary {
   id: string;
-  userId: string;
   balance: number;
   totalEarned: number;
   totalWithdrawn: number;
   currency: string;
+  createdAt: string;
+  updatedAt: string;
   user: {
     id: string;
     name: string;
@@ -172,8 +173,7 @@ export interface WalletSummary {
     verificationStatus: string;
     state: string;
     district?: string;
-    createdAt: string;
-  };
+  } | null;
 }
 
 export interface WithdrawalFormData {

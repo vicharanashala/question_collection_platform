@@ -1483,13 +1483,37 @@ export class AdminService implements OnModuleInit {
       select: ['id', 'balance', 'createdAt', 'updatedAt'],
     });
     if (!wallet) throw new NotFoundException('Wallet not found for this user');
+
+    // Aggregate total earned (completed credits from rewards + refunds)
+    const earnedAgg = await this.transactionRepo
+      .createQueryBuilder('tx')
+      .where('tx.walletId = :walletId', { walletId: wallet.id })
+      .andWhere('tx.status = :status', { status: TransactionStatus.COMPLETED })
+      .andWhere('tx.type = :type', { type: TransactionType.CREDIT })
+      .andWhere('tx.source IN (:...sources)', {
+        sources: [TransactionSource.REWARD, TransactionSource.REFUND],
+      })
+      .select('COALESCE(SUM(tx.amount), 0)', 'total')
+      .getRawOne();
+
+    // Aggregate total withdrawn (completed debits from withdrawals)
+    const withdrawnAgg = await this.transactionRepo
+      .createQueryBuilder('tx')
+      .where('tx.walletId = :walletId', { walletId: wallet.id })
+      .andWhere('tx.status = :status', { status: TransactionStatus.COMPLETED })
+      .andWhere('tx.type = :type', { type: TransactionType.DEBIT })
+      .andWhere('tx.source = :source', { source: TransactionSource.WITHDRAWAL })
+      .select('COALESCE(SUM(tx.amount), 0)', 'total')
+      .getRawOne();
+
     return {
-      wallet: {
-        id: wallet.id,
-        balance: Number(wallet.balance),
-        createdAt: wallet.createdAt,
-        updatedAt: wallet.updatedAt,
-      },
+      id: wallet.id,
+      balance: Number(wallet.balance),
+      totalEarned: Number(earnedAgg?.total ?? 0),
+      totalWithdrawn: Number(withdrawnAgg?.total ?? 0),
+      currency: 'INR',
+      createdAt: wallet.createdAt,
+      updatedAt: wallet.updatedAt,
       user: wallet.user
         ? {
             id: wallet.user.id,
@@ -1499,6 +1523,7 @@ export class AdminService implements OnModuleInit {
             district: wallet.user.district,
             category: wallet.user.category,
             role: wallet.user.role,
+            verificationStatus: wallet.user.verificationStatus,
           }
         : null,
     };

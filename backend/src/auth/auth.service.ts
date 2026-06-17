@@ -284,6 +284,14 @@ export class AuthService {
     user.lastLoginAt = new Date();
     await this.userRepo.save(user);
 
+    // Ensure wallet exists (handles edge case of user created without wallet)
+    const walletExists = await this.walletRepo.count({ where: { userId: user.id } });
+    if (walletExists === 0) {
+      await this.walletRepo.save(
+        this.walletRepo.create({ userId: user.id, balance: 0, currency: 'INR' }),
+      );
+    }
+
     const tokens = await this.issueTokens(user);
     return { tokens, user: this.toPublicUser(user) };
   }
@@ -339,13 +347,16 @@ export class AuthService {
 
       await queryRunner.manager.save(user);
 
-      // Create wallet
-      const wallet = queryRunner.manager.create(Wallet, {
-        userId: user.id,
-        balance: 0,
-        currency: 'INR',
-      });
-      await queryRunner.manager.save(wallet);
+      // Create wallet (guard against duplicate if registration was partially completed before)
+      const existingWallet = await queryRunner.manager.count(Wallet, { where: { userId: user.id } });
+      if (existingWallet === 0) {
+        const wallet = queryRunner.manager.create(Wallet, {
+          userId: user.id,
+          balance: 0,
+          currency: 'INR',
+        });
+        await queryRunner.manager.save(wallet);
+      }
 
       await queryRunner.commitTransaction();
 

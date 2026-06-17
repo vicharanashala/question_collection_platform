@@ -431,9 +431,11 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
+    flex: 1,
     borderTopLeftRadius: tokens.radiusXl,
     borderTopRightRadius: tokens.radiusXl,
     maxHeight: '92%',
+    marginTop: '4%',
   },
   handleBar: {
     width: 36, height: 4, borderRadius: 2, alignSelf: 'center',
@@ -444,7 +446,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing5, paddingBottom: tokens.spacing3,
   },
   headerTitle: { fontSize: 18, fontWeight: '700' },
-  body: { flex: 1 },
+  body: { flex: 1, minHeight: 0 },
   bodyContent: { padding: tokens.spacing5, paddingTop: 0, gap: tokens.spacing4 },
 
   // Hero
