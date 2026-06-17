@@ -28,7 +28,7 @@ export class ListReviewQueueDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(['pending', 'ai_review', 'human_review', 'approved', 'rejected'])
+  @IsIn(['pending', 'ai_review', 'human_review', 'held', 'approved', 'rejected'])
   status?: string;
 
   @IsOptional()

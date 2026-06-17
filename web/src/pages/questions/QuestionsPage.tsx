@@ -200,12 +200,15 @@ export function QuestionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(false)
-  const limit = 20
+  const limit = 10
   const debouncedSearch = useDebouncedValue(search, 400)
 
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [apiTotal, setApiTotal] = useState(0)
+
+  // Reset to page 1 whenever search or status filter changes
+  useEffect(() => { setPage(1) }, [debouncedSearch, statusFilter])
 
   useEffect(() => {
     setLoading(true)
@@ -213,17 +216,14 @@ export function QuestionsPage() {
       .then((res) => {
         const visible = (res.items as Question[]).filter((q) => !NON_LISTED_STATUSES.includes(q.status))
         setQuestions(visible)
-        setTotal(visible.length)
+        setTotal(res.total)
         setApiTotal(res.total)
-        if (visible.length === 0 && res.items.length > 0 && page > 1) {
-          setPage((p) => Math.max(1, p - 1))
-        }
       })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load questions')))
       .finally(() => setLoading(false))
   }, [page, debouncedSearch, statusFilter])
 
-  const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.ceil(apiTotal / limit)
   const isEmpty = !loading && questions.length === 0
 
   return (
@@ -240,7 +240,7 @@ export function QuestionsPage() {
           {apiTotal > 0 && (
             <span className="text-xs text-muted-foreground">{apiTotal.toLocaleString()} total</span>
           )}
-          <Badge variant="secondary" className="text-xs">{total.toLocaleString()} shown</Badge>
+          <Badge variant="secondary" className="text-xs">{apiTotal.toLocaleString()} total</Badge>
         </div>
       </div>
 
@@ -311,7 +311,7 @@ export function QuestionsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+            {(page - 1) * limit + 1}–{Math.min(page * limit, apiTotal)} of {apiTotal.toLocaleString()}
           </p>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>

@@ -1,640 +1,634 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { curatorApi, getErrorMessage } from '@/api/client'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn, formatDate } from '@/lib/utils'
 import {
   CheckCircle, XCircle, PauseCircle,
   ChevronLeft, ChevronRight, Search,
-  Clock, User, Star, IndianRupee,
-  MapPin, Wheat, CloudRain, Globe, Film,
-  Eye, Hash, AlertTriangle, ChevronDown,
-  MessageSquare, InboxIcon,
+  Clock, Star, IndianRupee,
+  MapPin, Wheat, Film,
+  Eye, Hash, ChevronDown,
+  InboxIcon, RotateCcw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-warning text-white',
-  ai_review: 'bg-ai_review text-white',
-  human_review: 'bg-human_review text-white',
-  held: 'bg-[hsl(38,92%,50%)] text-white',
-  approved: 'bg-success text-white',
-  rejected: 'bg-destructive text-white',
+  pending:     'bg-warning text-white',
+  ai_review:   'bg-ai_review text-white',
+  human_review:'bg-human_review text-white',
+  held:        'bg-[hsl(38,92%,50%)] text-white',
+  approved:    'bg-success text-white',
+  rejected:    'bg-destructive text-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  ai_review: 'AI Review',
-  human_review: 'Human Review',
-  held: 'Held',
+  pending:     'Pending',
+  ai_review:   'AI Review',
+  human_review:'Human Review',
+  held:        'Held',
 }
 
 const REVIEWABLE_STATUSES = ['pending', 'ai_review', 'human_review', 'held']
 
 const SEASON_LABEL: Record<string, string> = {
-  kharif: 'Kharif',
-  rabi: 'Rabi',
-  zaid: 'Zaid',
-  year_round: 'Year Round',
+  kharif: 'Kharif', rabi: 'Rabi', zaid: 'Zaid', year_round: 'Year Round',
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: React.ReactNode }) {
-  if (value == null || value === '') return null
+// ─── Review reason inline input ──────────────────────────────────────────────
+
+interface ReasonInputProps {
+  placeholder: string
+  value: string
+  onChange: (v: string) => void
+  onConfirm: () => void
+  onCancel: () => void
+  confirmLabel: string
+  confirmClass: string
+  loading: boolean
+}
+function ReasonInput({ placeholder, value, onChange, onConfirm, onCancel, confirmLabel, confirmClass, loading }: ReasonInputProps) {
   return (
-    <div className="flex items-start gap-2.5">
-      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-      <span className="text-sm text-muted-foreground min-w-[110px]">{label}</span>
-      <span className="text-sm text-foreground font-medium">{value}</span>
+    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+      <Input
+        autoFocus
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onConfirm()
+          if (e.key === 'Escape') onCancel()
+        }}
+      />
+      <div className="flex gap-2">
+        <Button size="sm" className={confirmClass} onClick={onConfirm} disabled={loading || !value.trim()}>
+          {confirmLabel}
+        </Button>
+        <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
+      </div>
     </div>
   )
 }
 
-function ActionButton({
-  icon: Icon,
-  label,
-  className,
-  onClick,
-  disabled,
-  title,
-}: {
-  icon: React.ElementType
-  label: string
-  className: string
-  onClick: () => void
-  disabled?: boolean
-  title?: string
-}) {
-  return (
-    <button
-      onClick={(e) => { e.stopPropagation(); onClick() }}
-      disabled={disabled}
-      title={title ?? label}
-      className={cn(
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-150',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
-        className,
-      )}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      <span>{label}</span>
-    </button>
-  )
-}
+// ─── Question list card ───────────────────────────────────────────────────────
 
-function ReviewCard({ q, onOpen, onApprove, onHold, onReject, actionLoading }: {
+function QuestionCard({
+  q,
+  selected,
+  actionLoading,
+  onSelect,
+  onApprove,
+  onHold,
+  onReject,
+}: {
   q: Question
-  onOpen: (q: Question) => void
+  selected: boolean
+  actionLoading: string | null
+  onSelect: (q: Question) => void
   onApprove: (id: string) => void
   onHold: (id: string) => void
   onReject: (id: string) => void
-  actionLoading: string | null
 }) {
   const disabled = actionLoading === q.id
   return (
-    <Card
-      className="group overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
-      onClick={() => onOpen(q)}
+    <div
+      className={cn(
+        'group relative rounded-xl border cursor-pointer transition-all duration-150',
+        selected
+          ? 'border-primary bg-primary/[0.04] shadow-sm ring-1 ring-primary/20'
+          : 'border-border-subtle bg-surface hover:border-primary/30 hover:shadow-sm',
+        disabled && 'opacity-60 pointer-events-none',
+      )}
+      onClick={() => onSelect(q)}
     >
-      <CardContent className="p-0">
-        {/* Top: status + domain + meta + user */}
-        <div className="flex items-start justify-between gap-3 p-4 pb-0">
-          <div className="flex flex-col gap-1.5 min-w-0">
-            {/* User identity */}
-            <span className="text-xs font-semibold text-foreground truncate">
-              {q.user?.name ?? q.userName ?? q.user?.mobileNumber ?? q.userMobileNumber ?? 'Unknown'}
-            </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
-                {STATUS_LABELS[q.status] ?? q.status}
-              </Badge>
-              {q.aiConfidenceScore != null && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 text-warning" />
-                  <span className="font-medium">{q.aiConfidenceScore}%</span>
-                </span>
-              )}
-              {q.domainCategory && (
-                <span className="text-xs font-medium text-info bg-info/10 px-2 py-0.5 rounded-full capitalize">
-                  {q.domainCategory}
-                </span>
-              )}
-              {q.cropType && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Wheat className="h-3 w-3" /> {q.cropType}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" /> {formatDate(q.submittedAt)}
-            </span>
-          </div>
-        </div>
+      {/* Left accent bar */}
+      <div className={cn('absolute left-0 top-0 bottom-0 w-1 rounded-l-xl', STATUS_COLORS[q.status] ?? 'bg-muted')} />
 
-        {/* Question text */}
-        <div className="px-4 pt-3">
-          <p className="text-sm font-medium text-foreground leading-relaxed line-clamp-2">
-            {q.questionText}
-          </p>
-        </div>
-
-        {/* Media thumbnails */}
-        {q.mediaUrls && q.mediaUrls.length > 0 && (
-          <div className="px-4 pt-3 flex gap-1.5">
-            {q.mediaUrls.slice(0, 4).map((url, i) => (
-              <img
-                key={i}
-                src={url}
-                alt={`media-${i}`}
-                className="h-16 w-16 object-cover rounded-md border bg-muted"
-              />
-            ))}
-            {q.mediaUrls.length > 4 && (
-              <div className="h-16 w-16 rounded-md border bg-muted flex items-center justify-center text-xs text-muted-foreground">
-                +{q.mediaUrls.length - 4}
-              </div>
+      <div className="pl-4 pr-4 pt-4 pb-3">
+        {/* Top row: status badge + meta */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+              {STATUS_LABELS[q.status] ?? q.status}
+            </Badge>
+            {q.aiConfidenceScore != null && (
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                <Star className="h-3 w-3 text-warning" />
+                <span className="font-medium">{q.aiConfidenceScore}%</span>
+              </span>
             )}
-          </div>
-        )}
-
-        {/* Bottom: location + actions */}
-        <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-4">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            {q.state && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> {q.state}{q.district ? `, ${q.district}` : ''}
+            {q.domainCategory && (
+              <span className="text-xs font-medium text-info bg-info/10 px-2 py-0.5 rounded-full capitalize">
+                {q.domainCategory}
               </span>
             )}
           </div>
-          <Eye className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <span className="text-xs text-muted-foreground shrink-0">{formatDate(q.submittedAt)}</span>
         </div>
 
-        {/* Action bar — stops propagation so card click opens detail, not actions */}
+        {/* Question text */}
+        <p className="text-sm text-foreground leading-relaxed line-clamp-2 mb-2">
+          {q.questionText}
+        </p>
+
+        {/* Footer meta */}
+        <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
+          {q.cropType && (
+            <span className="flex items-center gap-1"><Wheat className="h-3 w-3" /> {q.cropType}</span>
+          )}
+          {q.state && (
+            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {q.state}{q.district ? `, ${q.district}` : ''}</span>
+          )}
+          {q.mediaUrls && q.mediaUrls.length > 0 && (
+            <span className="flex items-center gap-1"><Film className="h-3 w-3" /> {q.mediaUrls.length} media</span>
+          )}
+        </div>
+
+        {/* Held reason — shown when held and has reason */}
+        {q.status === 'held' && q.heldReason && (
+          <div className="mt-2 text-xs text-warning/80 italic border-t border-warning/20 pt-2">
+            "{q.heldReason}"
+          </div>
+        )}
+
+        {/* Quick actions — visible on hover or when selected */}
         {REVIEWABLE_STATUSES.includes(q.status) && (
           <div
-            className="border-t border-border-subtle bg-muted/30 px-4 py-3 flex flex-wrap items-center gap-2 min-w-0"
+            className={cn(
+              'flex items-center gap-2 mt-3 pt-3 border-t border-border-subtle',
+              'transition-opacity duration-150',
+              selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+            )}
             onClick={(e) => e.stopPropagation()}
           >
-            <ActionButton
-              icon={CheckCircle}
-              label="Approve"
-              className="bg-success/10 text-success hover:bg-success/20 border border-success/20"
-              onClick={() => onApprove(q.id)}
-              disabled={disabled}
-            />
-            <ActionButton
-              icon={PauseCircle}
-              label="Hold"
-              className="bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20"
-              onClick={() => onHold(q.id)}
-              disabled={disabled}
-            />
-            <ActionButton
-              icon={XCircle}
-              label="Reject"
-              className="bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20"
-              onClick={() => onReject(q.id)}
-              disabled={disabled}
-            />
             <button
-              onClick={(e) => { e.stopPropagation(); onOpen(q) }}
-              className="ml-auto text-muted-foreground hover:text-foreground transition-colors p-1.5"
-              title="View details"
+              onClick={(e) => { e.stopPropagation(); onApprove(q.id) }}
+              disabled={disabled}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-success/10 text-success hover:bg-success/20 border border-success/20 transition-colors disabled:opacity-50"
             >
-              <Eye className="h-4 w-4" />
+              <CheckCircle className="h-3.5 w-3.5" /> Approve
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onHold(q.id) }}
+              disabled={disabled}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20 transition-colors disabled:opacity-50"
+            >
+              <PauseCircle className="h-3.5 w-3.5" /> Hold
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onReject(q.id) }}
+              disabled={disabled}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-colors disabled:opacity-50"
+            >
+              <XCircle className="h-3.5 w-3.5" /> Reject
             </button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
+
+// ─── Detail panel ─────────────────────────────────────────────────────────────
+
+function DetailPanel({
+  q,
+  actionLoading,
+  onApprove,
+  onHold,
+  onReject,
+  selectedId,
+  onClear,
+}: {
+  q: Question | null
+  actionLoading: string | null
+  onApprove: (id: string, reason: string) => void
+  onHold: (id: string, reason: string) => void
+  onReject: (id: string, reason: string) => void
+  selectedId: string | null
+  onClear: () => void
+}) {
+  const [mode, setMode] = useState<'idle' | 'approve' | 'hold' | 'reject'>('idle')
+  const [reason, setReason] = useState('')
+
+  useEffect(() => { setMode('idle'); setReason('') }, [q?.id])
+
+  if (!q) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-4 text-center">
+        <div className="rounded-full bg-muted p-5">
+          <Eye className="h-10 w-10 text-muted-foreground/40" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground">No question selected</p>
+          <p className="text-xs text-muted-foreground mt-1">Select a question from the list to review</p>
+        </div>
+      </div>
+    )
+  }
+
+  function confirm() {
+    if (!reason.trim()) { toast.error('Reason is required'); return }
+    if (mode === 'approve') onApprove(q.id, reason.trim())
+    else if (mode === 'reject') onReject(q.id, reason.trim())
+    else if (mode === 'hold') onHold(q.id, reason.trim())
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle shrink-0">
+        <div className="flex items-center gap-2">
+          <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+            {STATUS_LABELS[q.status] ?? q.status}
+          </Badge>
+          <span className="text-xs text-muted-foreground font-mono">{q.id.slice(0, 8)}…</span>
+        </div>
+        {q.mediaUrls && q.mediaUrls.length > 0 && (
+          <span className="text-xs text-muted-foreground">{q.mediaUrls.length} media</span>
+        )}
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-5 space-y-5">
+          {/* Question text */}
+          <div className="bg-muted/60 rounded-xl p-4">
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{q.questionText}</p>
+          </div>
+
+          {/* Held reason */}
+          {q.status === 'held' && q.heldReason && (
+            <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+              <p className="text-xs font-semibold text-warning uppercase tracking-wide mb-1">Hold Reason</p>
+              <p className="text-sm text-foreground leading-relaxed">{q.heldReason}</p>
+            </div>
+          )}
+
+          {/* Metadata */}
+          <div className="grid grid-cols-2 gap-3">
+            <MetaItem icon={Wheat} label="Crop" value={q.cropType} />
+            <MetaItem icon={MapPin} label="State" value={q.state} />
+            <MetaItem icon={MapPin} label="District" value={q.district} />
+            <MetaItem icon={Clock} label="Submitted" value={formatDate(q.submittedAt)} />
+            <MetaItem icon={Star} label="AI Confidence" value={q.aiConfidenceScore != null ? `${q.aiConfidenceScore}%` : null} />
+            <MetaItem icon={Hash} label="Language" value={q.language?.toUpperCase()} />
+          </div>
+
+          {/* Media */}
+          {q.mediaUrls && q.mediaUrls.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Media</p>
+              <div className="grid grid-cols-3 gap-2">
+                {q.mediaUrls.map((url, i) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                    <img src={url} alt={`media-${i}`} className="rounded-lg border w-full h-20 object-cover hover:opacity-80 transition-opacity" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sticky action footer */}
+      {REVIEWABLE_STATUSES.includes(q.status) && (
+        <div className="shrink-0 border-t border-border-subtle p-4 space-y-3 bg-surface">
+          {mode === 'idle' ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="flex-1 bg-success hover:bg-success/90"
+                onClick={() => setMode('approve')}
+                disabled={!!actionLoading}
+              >
+                <CheckCircle className="h-4 w-4" /> Approve
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 bg-warning hover:bg-warning/90 text-white"
+                onClick={() => setMode('hold')}
+                disabled={!!actionLoading}
+              >
+                <PauseCircle className="h-4 w-4" /> Hold
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="flex-1"
+                onClick={() => setMode('reject')}
+                disabled={!!actionLoading}
+              >
+                <XCircle className="h-4 w-4" /> Reject
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium">
+                {mode === 'approve' && 'Provide a reason for approval'}
+                {mode === 'reject' && 'Provide a reason for rejection (visible to farmer)'}
+                {mode === 'hold' && 'Provide a reason for holding this question'}
+              </p>
+              <Input
+                autoFocus
+                placeholder={
+                  mode === 'approve' ? 'e.g., Clear and actionable question...' :
+                  mode === 'reject' ? 'e.g., Off-topic, duplicate, insufficient detail...' :
+                  'e.g., Awaiting expert review...'
+                }
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') confirm()
+                  if (e.key === 'Escape') { setMode('idle'); setReason('') }
+                }}
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className={cn(
+                    mode === 'approve' ? 'bg-success hover:bg-success/90' :
+                    mode === 'reject' ? '' : 'bg-warning hover:bg-warning/90 text-white',
+                    mode === 'reject' && 'bg-destructive hover:bg-destructive/90',
+                  )}
+                  onClick={confirm}
+                  disabled={!!actionLoading || !reason.trim()}
+                >
+                  Confirm {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { setMode('idle'); setReason('') }}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MetaItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
+  if (!value) return null
+  return (
+    <div className="flex items-start gap-2">
+      <Icon className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-foreground">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Stats bar ────────────────────────────────────────────────────────────────
+
+function StatsBar({ counts, activeFilter, onFilter }: {
+  counts: Record<string, number>
+  activeFilter: string
+  onFilter: (f: string) => void
+}) {
+  const items = [
+    { key: '', label: 'All', color: 'bg-muted' },
+    { key: 'pending', label: 'Pending', color: STATUS_COLORS.pending },
+    { key: 'ai_review', label: 'AI Review', color: STATUS_COLORS.ai_review },
+    { key: 'human_review', label: 'Human Review', color: STATUS_COLORS.human_review },
+    { key: 'held', label: 'Held', color: STATUS_COLORS.held },
+  ]
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {items.map(({ key, label, color }) => {
+        const count = key ? counts[key] ?? 0 : total
+        const active = activeFilter === key
+        return (
+          <button
+            key={key}
+            onClick={() => onFilter(key)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 border',
+              active
+                ? 'border-primary bg-primary/[0.08] text-primary'
+                : 'border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground',
+              count === 0 && 'opacity-40',
+            )}
+          >
+            <span className={cn('h-1.5 w-1.5 rounded-full', color)} />
+            {label}
+            {count > 0 && <span className="text-[10px] tabular-nums">{count}</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const limit = 20
+  const limit = 10
+  const debouncedSearch = useDebouncedValue(search, 400)
 
-  const [rejectOpen, setRejectOpen] = useState(false)
-  const [rejectReason, setRejectReason] = useState('')
-  const [rejectQuestionId, setRejectQuestionId] = useState<string | null>(null)
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
+  const didExplicitlyDeselect = useRef(false)
 
-  const [holdOpen, setHoldOpen] = useState(false)
-  const [holdReason, setHoldReason] = useState('')
-  const [holdQuestionId, setHoldQuestionId] = useState<string | null>(null)
-
-  const [detailOpen, setDetailOpen] = useState(false)
-  const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
-
-  const [approveQuestionId, setApproveQuestionId] = useState<string | null>(null)
-  const [approveOpen, setApproveOpen] = useState(false)
-  const [approveReason, setApproveReason] = useState('')
+  // Reset to page 1 whenever search or status filter changes
+  useEffect(() => {
+    didExplicitlyDeselect.current = false
+    setPage(1)
+    setSelectedQuestion(null)
+  }, [debouncedSearch, statusFilter])
 
   useEffect(() => {
     setLoading(true)
-    curatorApi.getReviewQueue({ page, limit, status: statusFilter || undefined })
-      .then((res) => { setQuestions(res.items as Question[]); setTotal(res.total) })
+    curatorApi.getReviewQueue({ page, limit, status: statusFilter || undefined, search: debouncedSearch || undefined })
+      .then((res) => {
+        setQuestions(res.items as Question[])
+        setTotal(res.total)
+        // If selected question is no longer in list, deselect it; otherwise auto-select first if nothing was explicitly deselected
+        if (selectedQuestion && !res.items.find((q: Question) => q.id === selectedQuestion.id)) {
+          didExplicitlyDeselect.current = true
+          setSelectedQuestion(null)
+        } else if (!didExplicitlyDeselect.current && res.items.length > 0) {
+          setSelectedQuestion(res.items[0] as Question)
+        }
+      })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load review queue')))
       .finally(() => setLoading(false))
-  }, [page, statusFilter])
+  }, [page, debouncedSearch, statusFilter])
 
-  async function confirmApprove() {
-    if (!approveQuestionId) return
-    if (!approveReason.trim()) { toast.error('Approval reason is required'); return }
-    setActionLoading(approveQuestionId)
-    try {
-      const result = await curatorApi.reviewQuestion(approveQuestionId, { action: 'approve', reason: approveReason.trim() })
-      toast.success(
-        result?.rewardCredited != null
-          ? `Approved — ₹${result.rewardCredited} credited to farmer`
-          : 'Question approved',
-      )
-      setApproveOpen(false)
-      setApproveQuestionId(null)
-      setApproveReason('')
-      setQuestions((qs) => qs.filter((q) => q.id !== approveQuestionId))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to approve'))
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  async function confirmReject() {
-    if (!rejectQuestionId) return
-    if (!rejectReason.trim()) { toast.error('Rejection reason is required'); return }
-    setActionLoading(rejectQuestionId)
-    try {
-      await curatorApi.reviewQuestion(rejectQuestionId, { action: 'reject', reason: rejectReason.trim() })
-      toast.success('Question rejected')
-      setRejectOpen(false); setRejectQuestionId(null); setRejectReason('')
-      setQuestions((qs) => qs.filter((q) => q.id !== rejectQuestionId))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to reject'))
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  async function confirmHold() {
-    if (!holdQuestionId) return
-    if (!holdReason.trim()) { toast.error('Hold reason is required'); return }
-    setActionLoading(holdQuestionId)
-    try {
-      await curatorApi.reviewQuestion(holdQuestionId, { action: 'hold', reason: holdReason.trim(), heldReason: holdReason.trim() })
-      toast.success('Question put on hold')
-      setHoldOpen(false); setHoldQuestionId(null); setHoldReason('')
-      setQuestions((qs) => qs.filter((q) => q.id !== holdQuestionId))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to hold question'))
-    } finally {
-      setActionLoading(null)
-    }
+  function doAction(id: string, action: 'approve' | 'hold' | 'reject', reason: string) {
+    setActionLoading(id)
+    curatorApi.reviewQuestion(id, {
+      action,
+      reason,
+      ...(action === 'hold' ? { heldReason: reason } : {}),
+    })
+      .then((result) => {
+        if (action === 'approve') {
+          toast.success(result?.rewardCredited != null ? `Approved — ₹${result.rewardCredited} credited` : 'Approved')
+        } else if (action === 'reject') {
+          toast.success('Rejected')
+        } else {
+          toast.success('Put on hold')
+        }
+        setQuestions((qs) => qs.filter((q) => q.id !== id))
+        setSelectedQuestion(null)
+      })
+      .catch((e) => toast.error(getErrorMessage(e, `Failed to ${action}`)))
+      .finally(() => setActionLoading(null))
   }
 
   const totalPages = Math.ceil(total / limit)
 
-  const isEmpty = !loading && questions.length === 0
+  // Compute stats from current list (approximation — backend could provide exact counts)
+  const statsCounts: Record<string, number> = {}
+  questions.forEach((q) => {
+    statsCounts[q.status] = (statsCounts[q.status] ?? 0) + 1
+  })
 
   return (
-    <div className="space-y-5">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
+      {/* ─── Page header ─── */}
+      <div className="flex items-start justify-between gap-4 mb-4">
         <div>
           <h2 className="text-xl font-bold text-foreground">Review Queue</h2>
-          <p className="text-sm text-muted-foreground">
-            {total > 0 ? `${total} question${total === 1 ? '' : 's'} awaiting review` : 'No questions pending'}
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {total > 0 ? `${total} question${total === 1 ? '' : 's'} total` : 'No questions pending'}
           </p>
         </div>
-        {total > 0 && (
-          <Badge variant="destructive" className="text-sm px-3 py-1">{total}</Badge>
-        )}
       </div>
 
-      {/* Status legend + filter */}
-      <Card>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4">
-          {/* Status dots legend */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-            {Object.entries(STATUS_LABELS).map(([key, label]) => (
-              <span key={key} className="flex items-center gap-1.5">
-                <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[key])} />
-                {label}
-              </span>
-            ))}
-          </div>
-          {/* Status filter */}
-          <div className="relative sm:ml-auto">
-            <select
-              className="h-9 rounded-md border border-border-subtle bg-surface px-3 pl-3 pr-8 text-sm text-text appearance-none cursor-pointer"
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
-            >
-              <option value="">All Queues</option>
-              <option value="pending">Pending</option>
-              <option value="ai_review">AI Review</option>
-              <option value="human_review">Human Review</option>
-              <option value="held">Held</option>
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          </div>
-        </div>
-      </Card>
+      {/* ─── Search bar ─── */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search crop, location, keyword..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
 
-      {/* Questions list */}
-      <div className="space-y-3">
-        {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex gap-2">
-                  <div className="h-5 w-20 rounded bg-muted animate-pulse" />
-                  <div className="h-5 w-24 rounded bg-muted animate-pulse" />
-                </div>
-                <div className="h-4 w-full rounded bg-muted animate-pulse" />
-                <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-                <div className="flex gap-1.5">
-                  <div className="h-16 w-16 rounded bg-muted animate-pulse" />
-                  <div className="h-16 w-16 rounded bg-muted animate-pulse" />
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : isEmpty ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-20 gap-4">
+      {/* ─── Stats filter bar ─── */}
+      <div className="mb-4">
+        <StatsBar counts={statsCounts} activeFilter={statusFilter} onFilter={(f) => { setStatusFilter(f); setPage(1) }} />
+      </div>
+
+      {/* ─── Split panel ─── */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+        {/* Left: question list */}
+        <div className="flex flex-col min-h-0">
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex gap-2">
+                      <div className="h-5 w-20 rounded bg-muted animate-pulse" />
+                      <div className="h-5 w-16 rounded bg-muted animate-pulse" />
+                    </div>
+                    <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                    <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+                    <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : questions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
               <div className="rounded-full bg-success/10 p-5">
                 <InboxIcon className="h-10 w-10 text-success" />
               </div>
-              <div className="text-center">
+              <div>
                 <p className="text-base font-semibold text-foreground">All caught up!</p>
-                <p className="text-sm text-muted-foreground mt-1">No questions awaiting review right now.</p>
+                <p className="text-sm text-muted-foreground mt-1">No questions in this queue.</p>
               </div>
-              {statusFilter && (
-                <Button variant="outline" size="sm" onClick={() => setStatusFilter('')}>
-                  Clear filter
+              {(search || statusFilter) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" /> Clear filters
                 </Button>
               )}
-            </CardContent>
-          </Card>
-        ) : (
-          questions.map((q) => (
-            <ReviewCard
-              key={q.id}
-              q={q}
-              onOpen={(qq) => { setDetailQuestion(qq); setDetailOpen(true) }}
-              onApprove={(id) => { setApproveQuestionId(id); setApproveReason(''); setApproveOpen(true) }}
-              onHold={(id) => { setHoldQuestionId(id); setHoldReason(''); setHoldOpen(true) }}
-              onReject={(id) => { setRejectQuestionId(id); setRejectReason(''); setRejectOpen(true) }}
-              actionLoading={actionLoading}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
-          </p>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs text-muted-foreground px-2 min-w-[80px] text-center">
-              {page} / {totalPages}
-            </span>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Approve Dialog ─── */}
-      <Dialog open={approveOpen} onOpenChange={(o) => { if (!o) { setApproveOpen(false); setApproveQuestionId(null) } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-success" /> Approve Question
-            </DialogTitle>
-            <DialogDescription>
-              This will approve the question and credit the reward to the farmer's wallet.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="bg-success/10 border border-success/20 rounded-lg p-3 flex items-center gap-2.5">
-            <IndianRupee className="h-4 w-4 text-success shrink-0" />
-            <p className="text-sm text-success font-medium">
-              Reward will be credited to the farmer upon approval.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="approve-reason">Approval Reason <span className="text-destructive">*</span></Label>
-            <Input
-              id="approve-reason"
-              placeholder="e.g., Clear, detailed, actionable question..."
-              value={approveReason}
-              onChange={(e) => setApproveReason(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && confirmApprove()}
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setApproveOpen(false)}>Cancel</Button>
-            <Button
-              className="bg-success hover:bg-success/90"
-              onClick={confirmApprove}
-              disabled={!!actionLoading || !approveReason.trim()}
-            >
-              <CheckCircle className="h-4 w-4" /> Approve
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ─── Reject Dialog ─── */}
-      <Dialog open={rejectOpen} onOpenChange={(o) => { if (!o) { setRejectOpen(false); setRejectQuestionId(null) } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-destructive" /> Reject Question
-            </DialogTitle>
-            <DialogDescription>
-              Provide a clear reason — this is visible to the farmer.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="reject-reason">Rejection Reason <span className="text-destructive">*</span></Label>
-            <Input
-              id="reject-reason"
-              placeholder="e.g., Off-topic, duplicate, insufficient detail..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && confirmReject()}
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmReject} disabled={!!actionLoading}>
-              <XCircle className="h-4 w-4" /> Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ─── Hold Dialog ─── */}
-      <Dialog open={holdOpen} onOpenChange={(o) => { if (!o) { setHoldOpen(false); setHoldQuestionId(null) } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <PauseCircle className="h-4 w-4 text-warning" /> Hold Question
-            </DialogTitle>
-            <DialogDescription>
-              Put on hold if you need more context, expert input, or a later decision.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="hold-reason">Hold Reason <span className="text-destructive">*</span></Label>
-            <Input
-              id="hold-reason"
-              placeholder="e.g., Awaiting expert review, needs AI model update..."
-              value={holdReason}
-              onChange={(e) => setHoldReason(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && confirmHold()}
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setHoldOpen(false)}>Cancel</Button>
-            <Button className="bg-warning hover:bg-warning/90 text-white" onClick={confirmHold} disabled={!!actionLoading}>
-              <PauseCircle className="h-4 w-4" /> Hold
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ─── Question Detail Dialog ─── */}
-      <Dialog open={detailOpen} onOpenChange={(o) => { if (!o) { setDetailOpen(false); setDetailQuestion(null) } }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-4 w-4" /> Question Details
-            </DialogTitle>
-            <DialogDescription>
-              Full information for the selected question.
-            </DialogDescription>
-          </DialogHeader>
-
-          {detailQuestion && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
-                  {STATUS_LABELS[detailQuestion.status] ?? detailQuestion.status}
-                </Badge>
-                <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domainCategory}</span>
-                {detailQuestion.aiConfidenceScore != null && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star className="h-3 w-3 text-warning" /> AI confidence: {detailQuestion.aiConfidenceScore}%
-                  </span>
-                )}
-                {detailQuestion.duplicateFlag && (
-                  <Badge variant="destructive" className="text-xs">
-                    <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
-                  </Badge>
-                )}
-              </div>
-
-              <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {detailQuestion.questionText}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                <InfoRow icon={Hash} label="Question ID" value={<span className="font-mono text-xs">{detailQuestion.id.slice(0, 8)}…</span>} />
-                <InfoRow icon={Globe} label="Language" value={detailQuestion.language?.toUpperCase()} />
-                <InfoRow icon={Wheat} label="Crop Type" value={detailQuestion.cropType} />
-                <InfoRow icon={CloudRain} label="Season" value={SEASON_LABEL[detailQuestion.season] ?? detailQuestion.season} />
-                <InfoRow icon={MapPin} label="State" value={detailQuestion.state} />
-                <InfoRow icon={MapPin} label="District" value={detailQuestion.district} />
-                {detailQuestion.block && <InfoRow icon={MapPin} label="Block" value={detailQuestion.block} />}
-                <InfoRow icon={User} label="Submitted" value={formatDate(detailQuestion.submittedAt)} />
-                {detailQuestion.reviewedAt && <InfoRow icon={Clock} label="Reviewed" value={formatDate(detailQuestion.reviewedAt)} />}
-                {detailQuestion.rejectionReason && (
-                  <div className="col-span-2">
-                    <InfoRow icon={XCircle} label="Rejection Reason" value={detailQuestion.rejectionReason} />
-                  </div>
-                )}
-                {detailQuestion.heldReason && (
-                  <div className="col-span-2">
-                    <InfoRow icon={PauseCircle} label="Hold Reason" value={detailQuestion.heldReason} />
-                  </div>
-                )}
-              </div>
-
-              {detailQuestion.mediaUrls && detailQuestion.mediaUrls.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2 text-sm text-muted-foreground">
-                    <Film className="h-4 w-4" />
-                    Media ({detailQuestion.mediaUrls.length})
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {detailQuestion.mediaUrls.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                        <img
-                          src={url}
-                          alt={`media-${i}`}
-                          className="rounded-md border w-full h-24 object-cover hover:opacity-80 transition-opacity"
-                        />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
+            </div>
+          ) : (
+            <div className="space-y-2 overflow-y-auto flex-1 pr-1">
+              {questions.map((q) => (
+                <QuestionCard
+                  key={q.id}
+                  q={q}
+                  selected={selectedQuestion?.id === q.id}
+                  actionLoading={actionLoading}
+                  onSelect={setSelectedQuestion}
+                  onApprove={(id) => {
+                    setSelectedQuestion(q)
+                    doAction(id, 'approve', 'Approved')
+                  }}
+                  onHold={(id) => {
+                    setSelectedQuestion(q)
+                    doAction(id, 'hold', 'Put on hold for review')
+                  }}
+                  onReject={(id) => {
+                    setSelectedQuestion(q)
+                    doAction(id, 'reject', 'Rejected')
+                  }}
+                />
+              ))}
             </div>
           )}
 
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setDetailOpen(false); setDetailQuestion(null) }}>
-              Close
-            </Button>
-            {detailQuestion && REVIEWABLE_STATUSES.includes(detailQuestion.status) && (
-              <div className="flex items-center gap-2 ml-auto">
-                <Button
-                  className="bg-success hover:bg-success/90"
-                  onClick={() => { setDetailOpen(false); setApproveQuestionId(detailQuestion.id); setApproveReason(''); setApproveOpen(true) }}
-                >
-                  <CheckCircle className="h-4 w-4" /> Approve
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-subtle shrink-0">
+              <p className="text-xs text-muted-foreground">
+                {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total.toLocaleString()}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button
-                  className="bg-warning hover:bg-warning/90 text-white"
-                  onClick={() => { setDetailOpen(false); setHoldQuestionId(detailQuestion.id); setHoldReason(''); setHoldOpen(true) }}
-                >
-                  <PauseCircle className="h-4 w-4" /> Hold
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => { setDetailOpen(false); setRejectQuestionId(detailQuestion.id); setRejectReason(''); setRejectOpen(true) }}
-                >
-                  <XCircle className="h-4 w-4" /> Reject
+                <span className="text-xs text-muted-foreground px-2 min-w-[80px] text-center tabular-nums">
+                  {page} / {totalPages}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </div>
+
+        {/* Right: detail panel (hidden on mobile, shown on lg+) */}
+        <div className="hidden lg:flex flex-col border border-border-subtle rounded-xl bg-surface overflow-hidden">
+          <DetailPanel
+            q={selectedQuestion}
+            actionLoading={actionLoading}
+            onApprove={(id, reason) => doAction(id, 'approve', reason)}
+            onHold={(id, reason) => doAction(id, 'hold', reason)}
+            onReject={(id, reason) => doAction(id, 'reject', reason)}
+            selectedId={selectedQuestion?.id ?? null}
+            onClear={() => setSelectedQuestion(null)}
+          />
+        </div>
+      </div>
     </div>
   )
 }
