@@ -21,15 +21,15 @@ export interface TranslationResult {
 }
 
 export const speechApi = {
-  /** Translate English text to a target language. */
-  translate(text: string, targetLanguage: string): Promise<TranslationResult> {
+  /** Translate text from a source language to a target language. */
+  translate(text: string, targetLanguage: string, sourceLanguage = 'en'): Promise<TranslationResult> {
     return request<TranslationResult>('/speech/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
         targetLanguage: toSarvamLang(targetLanguage),
-        sourceLanguage: 'en-IN',
+        sourceLanguage: toSarvamLang(sourceLanguage),
       }),
     })
   },

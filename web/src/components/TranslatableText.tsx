@@ -96,13 +96,17 @@ export function TranslatableText({
   }, [inline]) // only on mount — prevents double-calling when parent re-renders
 
   const doTranslate = useCallback(async (target: string, source: string) => {
-    if (!text.trim() || loading) return
+    // Always translate from the currently displayed text, not the original.
+    // This enables correct chain translations: en→hi→te uses the Hindi result as
+    // input for the Telugu step, not the original English text.
+    const currentText = translated ?? text
+    if (!currentText.trim() || loading) return
     setLoading(true)
     setError(null)
     try {
       // Use refs to avoid stale closures in async callbacks
       const result = await speechApi.translate(
-        text.trim(),
+        currentText.trim(),
         selectedLangRef.current,
         displayedLang,
       )
@@ -113,7 +117,7 @@ export function TranslatableText({
     } finally {
       setLoading(false)
     }
-  }, [text, displayedLang, loading]) // displayedLang is stable; selectedLang read via ref
+  }, [text, translated, displayedLang, loading])
 
   function handleLangSelect(code: string) {
     setShowDropdown(false)
