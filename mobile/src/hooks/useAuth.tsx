@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isReady: false,
   });
 
-  // Restore session on app start
+  // Restore session on app start and sync with server
   useEffect(() => {
     (async () => {
       try {
@@ -34,7 +34,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAuthenticated(),
         ]);
         if (stored && hasToken) {
+          // Show stored user immediately to avoid flicker
           setState({ user: stored as PublicUser, isLoading: false, isReady: true });
+          // Then refresh from server to get latest verificationStatus, profileData etc.
+          try {
+            const { data } = await authApi.me();
+            setState((prev) => ({ ...prev, user: data.user }));
+          } catch {
+            // Use stored snapshot if server unreachable
+          }
         } else {
           setState({ user: null, isLoading: false, isReady: true });
         }
