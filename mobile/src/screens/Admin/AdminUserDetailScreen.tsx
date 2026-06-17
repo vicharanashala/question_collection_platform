@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { SuspendBanModal } from '../../components/SuspendBanModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { WalletAdjustModal } from '../../components/WalletAdjustModal';
 import { adminApi, getErrorMessage, AccountLockedInfo } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
@@ -41,6 +42,9 @@ export function AdminUserDetailScreen() {
   const [suspendModalAction, setSuspendModalAction] = useState<'suspend' | 'ban'>('suspend');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmModalAction, setConfirmModalAction] = useState<'unsuspend' | 'unban'>('unsuspend');
+  const [walletAdjustVisible, setWalletAdjustVisible] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletLoading, setWalletLoading] = useState(false);
   useEffect(() => {
     adminApi.getUserDetail(userId)
       .then((r) => setData(r.data))
@@ -48,7 +52,17 @@ export function AdminUserDetailScreen() {
       .finally(() => setLoading(false));
   }, [userId]);
 
-  const user = data?.user;
+  const user = data?.user as Record<string, unknown> | undefined;
+
+  // Fetch wallet balance for super admin on non-privileged users
+  useEffect(() => {
+    if (!isSuperAdmin || PRIVILEGED_ROLES.includes(user?.role as UserRole)) return;
+    setWalletLoading(true);
+    adminApi.getUserWallet(userId)
+      .then((r) => setWalletBalance((r.data as { balance?: number }).balance ?? 0))
+      .catch(() => setWalletBalance(0))
+      .finally(() => setWalletLoading(false));
+  }, [userId, user?.role, isSuperAdmin]);
   const verificationStatus = String(user?.verificationStatus ?? '');
   const isSuspended = verificationStatus === 'suspended';
   const isBanned = verificationStatus === 'banned';
@@ -311,6 +325,31 @@ export function AdminUserDetailScreen() {
           </View>
         </View>
 
+        {/* Wallet card — super admin only, for non-privileged users */}
+        {isSuperAdmin && !PRIVILEGED_ROLES.includes(user.role as UserRole) && (
+          <View style={[styles.card, { backgroundColor: c.surface }]}>
+            <View style={styles.walletRow}>
+              <View style={styles.walletInfo}>
+                <Text style={[styles.walletLabel, { color: c.textTertiary }]}>Current Balance</Text>
+                {walletLoading ? (
+                  <ActivityIndicator size="small" color={c.primary} />
+                ) : (
+                  <Text style={[styles.walletBalance, { color: c.primary }]}>
+                    ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                style={[styles.adjustWalletBtn, { backgroundColor: c.primary + '18' }]}
+                onPress={() => setWalletAdjustVisible(true)}
+              >
+                <Ionicons name="swap-vertical" size={15} color={c.primary} />
+                <Text style={[styles.adjustWalletBtnText, { color: c.primary }]}>Adjust</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Action cards */}
         {isSuperAdmin && user.role !== 'super_admin' && !isLocked && (
           <View style={[styles.card, { backgroundColor: c.surface }]}>
@@ -458,6 +497,18 @@ export function AdminUserDetailScreen() {
         onClose={() => setConfirmModalVisible(false)}
       />
 
+      <WalletAdjustModal
+        visible={walletAdjustVisible}
+        userId={userId}
+        userName={userName}
+        onClose={() => setWalletAdjustVisible(false)}
+        onAdjusted={() => {
+          setWalletAdjustVisible(false);
+          adminApi.getUserWallet(userId)
+            .then((r) => setWalletBalance((r.data as { balance?: number }).balance ?? 0))
+            .catch(() => null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -618,4 +669,23 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   rejectionText: { fontSize: 11, fontWeight: '600' },
+
+  // Wallet
+  walletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  walletInfo: { flex: 1, gap: 4 },
+  walletLabel: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: '600' },
+  walletBalance: { fontSize: 24, fontWeight: '800' },
+  adjustWalletBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    borderRadius: tokens.radiusMd,
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: tokens.spacing3,
+  },
+  adjustWalletBtnText: { fontSize: 13, fontWeight: '700' },
 });
