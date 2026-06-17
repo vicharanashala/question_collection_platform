@@ -12,6 +12,7 @@ import {
   appConfig,
   questionConfig,
 } from './config/configuration';
+import { sarvamConfig } from './config/sarvam.config';
 import {
   User,
   Wallet,
@@ -28,6 +29,7 @@ import { UserModule } from './user/user.module';
 import { QuestionModule } from './question/question.module';
 import { AdminModule } from './admin/admin.module';
 import { WalletsModule } from './wallets/wallets.module';
+import { SpeechModule } from './speech/speech.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 
@@ -36,7 +38,7 @@ import { HealthController } from './health/health.controller';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig],
+      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, sarvamConfig],
       envFilePath: ['.env'],
     }),
 
@@ -91,6 +93,7 @@ import { HealthController } from './health/health.controller';
     QuestionModule,
     AdminModule,
     WalletsModule,
+    SpeechModule,
   ],
   controllers: [HealthController],
   providers: [
