@@ -19,7 +19,6 @@ import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { WalletDetailModal } from '../../components/WalletDetailModal';
-import { WalletAdjustModal } from '../../components/WalletAdjustModal';
 import { INDIAN_STATES } from '../../utils/constants';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -137,7 +136,6 @@ export function AdminWithdrawalsScreen() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
   const [walletModal, setWalletModal] = useState<{ userId: string; userName: string } | null>(null);
-  const [walletAdjustVisible, setWalletAdjustVisible] = useState(false);
 
   const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
@@ -357,18 +355,8 @@ export function AdminWithdrawalsScreen() {
           userName={walletModal.userName}
           visible={!!walletModal}
           onClose={() => setWalletModal(null)}
-          isSuperAdmin={isSuperAdmin}
-          onAdjustPress={() => setWalletAdjustVisible(true)}
         />
       )}
-
-      <WalletAdjustModal
-        visible={walletAdjustVisible && !!walletModal}
-        userId={walletModal?.userId ?? ''}
-        userName={walletModal?.userName ?? ''}
-        onClose={() => setWalletAdjustVisible(false)}
-        onAdjusted={() => setWalletAdjustVisible(false)}
-      />
     </SafeAreaView>
   );
 }
