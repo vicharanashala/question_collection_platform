@@ -48,6 +48,7 @@ export interface PublicUser {
   verificationStatus: VerificationStatus;
   role: UserRole;
   createdAt: Date;
+  profileData?: Record<string, unknown>;
 }
 
 @Injectable()
@@ -532,6 +533,7 @@ export class AuthService {
       verificationStatus: user.verificationStatus,
       role: user.role,
       createdAt: user.createdAt,
+      profileData: user.profileData ?? undefined,
     };
   }
 

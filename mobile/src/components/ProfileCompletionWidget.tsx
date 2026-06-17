@@ -37,7 +37,7 @@ function buildStatus(
   const check = (key: string, value: unknown) => ({
     field: key,
     label: fieldLabel(key, t),
-    completed: !!value,
+    completed: value !== undefined && value !== null && value !== '',
   });
 
   const baseFields = [
@@ -49,16 +49,17 @@ function buildStatus(
     check('language', user.languagePreference),
   ];
 
+  const profileData = user.profileData ?? {};
   const catFields: ReturnType<typeof check>[] = [];
   if (user.category === UserCategory.FARMER || user.category === UserCategory.FPO) {
-    catFields.push(check('farmSize', (user as any).farmSize));
-    catFields.push(check('cropType', (user as any).cropType));
+    catFields.push(check('farmSize', profileData.farmSize));
+    catFields.push(check('cropType', profileData.cropType));
   } else if (user.category === UserCategory.STUDENT) {
-    catFields.push(check('courseName', (user as any).courseName));
-    catFields.push(check('universityName', (user as any).universityName));
+    catFields.push(check('courseName', profileData.courseName));
+    catFields.push(check('universityName', profileData.universityName));
   } else {
-    catFields.push(check('organisationName', (user as any).organisationName));
-    catFields.push(check('role', (user as any).memberRole));
+    catFields.push(check('organisationName', profileData.organisationName));
+    catFields.push(check('role', profileData.memberRole));
   }
 
   const allFields = [...baseFields, ...catFields, check('crops', hasCrops)];

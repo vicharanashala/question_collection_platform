@@ -55,18 +55,20 @@ export function EditProfileScreen({ navigation }: Props) {
 
   const isPrivileged = PRIVILEGED_ROLES.includes(user?.role as UserRole);
 
+  const profileData = (user as any)?.profileData ?? {};
+
   const [name, setName] = useState(user?.name ?? '');
   const [state, setState] = useState(user?.state ?? '');
   const [district, setDistrict] = useState(user?.district ?? '');
   const [block, setBlock] = useState(user?.block ?? '');
   const [language, setLanguage] = useState(user?.languagePreference ?? 'en');
   // Category-specific — only used for non-privileged roles
-  const [farmSize, setFarmSize] = useState((user as any)?.farmSize ?? '');
-  const [primaryCrop, setPrimaryCrop] = useState((user as any)?.cropType ?? '');
-  const [courseName, setCourseName] = useState((user as any)?.courseName ?? '');
-  const [universityName, setUniversityName] = useState((user as any)?.universityName ?? '');
-  const [organisationName, setOrganisationName] = useState((user as any)?.organisationName ?? '');
-  const [memberRole, setMemberRole] = useState((user as any)?.memberRole ?? '');
+  const [farmSize, setFarmSize] = useState(profileData?.farmSize ?? '');
+  const [primaryCrop, setPrimaryCrop] = useState(profileData?.cropType ?? '');
+  const [courseName, setCourseName] = useState(profileData?.courseName ?? '');
+  const [universityName, setUniversityName] = useState(profileData?.universityName ?? '');
+  const [organisationName, setOrganisationName] = useState(profileData?.organisationName ?? '');
+  const [memberRole, setMemberRole] = useState(profileData?.memberRole ?? '');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -210,7 +212,7 @@ export function EditProfileScreen({ navigation }: Props) {
             </FieldGroup>
 
             {/* Category-specific fields — hidden for admin/curator/super_admin */}
-            {!isPrivileged && user?.category === (UserCategory.FARMER || UserCategory.FPO) && (
+            {!isPrivileged && (user?.category === UserCategory.FARMER || user?.category === UserCategory.FPO) && (
               <FieldGroup icon="leaf-outline" label={t('editProfile.farmerDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                   <Input
@@ -225,6 +227,12 @@ export function EditProfileScreen({ navigation }: Props) {
                     placeholder={t('editProfile.primaryCropPlaceholder')}
                     value={primaryCrop}
                     onChangeText={handlePrimaryCropChange}
+                  />
+                  <Button
+                    title="Manage My Crops"
+                    variant="secondary"
+                    onPress={() => navigation.navigate('CropManagement')}
+                    style={styles.manageCropsButton}
                   />
                 </View>
               </FieldGroup>
@@ -329,5 +337,8 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: tokens.spacing2,
     marginBottom: tokens.spacing4,
+  },
+  manageCropsButton: {
+    marginTop: tokens.spacing2,
   },
 });

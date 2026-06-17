@@ -50,15 +50,8 @@ export interface PublicUser {
   verificationStatus: VerificationStatus;
   role: UserRole;
   createdAt: string;
-  // Farmer / FPO
-  farmSize?: string;
-  cropType?: string;
-  // Student
-  courseName?: string;
-  universityName?: string;
-  // FPO / Volunteer / NGO
-  organisationName?: string;
-  memberRole?: string;
+  // Category-specific fields — stored in profileData JSONB on backend
+  profileData?: Record<string, string>;
   // Crop details (populated from /users/me)
   crops?: CropDetail[];
 }

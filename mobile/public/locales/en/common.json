@@ -518,6 +518,7 @@
     "organisationNamePlaceholder": "Enter organisation name",
     "role": "Your Role",
     "rolePlaceholder": "e.g., Coordinator, Field Officer",
+    "manageCrops": "Manage My Crops",
     "farmSizeRequired": "Farm size is required for farmers",
     "courseNameRequired": "Course name is required for students",
     "universityNameRequired": "University name is required for students",
@@ -534,6 +535,10 @@
   },
   "registrationSuccess": "Registration complete! Awaiting admin verification.",
   "profile": {
+    "myCrops": "My Crops",
+    "manageCrops": "Manage Crops",
+    "noCropsTitle": "No crops added yet",
+    "noCropsHint": "Add crops to get relevant questions",
     "notifications": "Notifications",
     "pushNotifications": "Push Notifications",
     "notifEnabledDesc": "You'll be notified when your questions are approved or need changes",

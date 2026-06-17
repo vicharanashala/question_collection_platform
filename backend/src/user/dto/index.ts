@@ -33,6 +33,35 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   languagePreference?: string;
+
+  /**
+   * Arbitrary profile fields stored in the user.profileData JSONB column.
+   * Accepted keys: farmSize, cropType, courseName, universityName,
+   * organisationName, memberRole, and any future category-specific fields.
+   */
+  @IsOptional()
+  @IsString()
+  farmSize?: string;
+
+  @IsOptional()
+  @IsString()
+  cropType?: string;
+
+  @IsOptional()
+  @IsString()
+  courseName?: string;
+
+  @IsOptional()
+  @IsString()
+  universityName?: string;
+
+  @IsOptional()
+  @IsString()
+  organisationName?: string;
+
+  @IsOptional()
+  @IsString()
+  memberRole?: string;
 }
 
 export class CropDetailDto {
