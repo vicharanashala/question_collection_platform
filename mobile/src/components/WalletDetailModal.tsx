@@ -57,6 +57,8 @@ interface WalletDetailModalProps {
   userName?: string;
   visible: boolean;
   onClose: () => void;
+  isSuperAdmin?: boolean;
+  onAdjustPress?: () => void;
 }
 
 interface TxPage {
@@ -83,7 +85,7 @@ interface WithdrawalItem {
   failureReason: string | null;
 }
 
-export function WalletDetailModal({ walletId, userId, userName, visible, onClose }: WalletDetailModalProps) {
+export function WalletDetailModal({ walletId, userId, userName, visible, onClose, isSuperAdmin, onAdjustPress }: WalletDetailModalProps) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
@@ -306,6 +308,15 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
                   <Text style={[styles.balanceAmount, { color: c.primary }]}>
                     ₹{Number(balance).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </Text>
+                  {isSuperAdmin && (
+                    <TouchableOpacity
+                      style={[styles.adjustBtn, { backgroundColor: c.primary + '18' }]}
+                      onPress={onAdjustPress}
+                    >
+                      <Ionicons name="swap-vertical" size={13} color={c.primary} />
+                      <Text style={[styles.adjustBtnText, { color: c.primary }]}>Adjust</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
 
@@ -470,6 +481,16 @@ const styles = StyleSheet.create({
   balanceBlock: { alignItems: 'flex-end' },
   balanceLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 0.08, marginBottom: 2 },
   balanceAmount: { fontSize: 22, fontWeight: '800' },
+  adjustBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: tokens.radiusMd,
+    paddingHorizontal: tokens.spacing2,
+    paddingVertical: tokens.spacing1,
+    marginTop: tokens.spacing1,
+  },
+  adjustBtnText: { fontSize: 11, fontWeight: '700' },
   statsRow: {
     flexDirection: 'row', marginTop: tokens.spacing4, paddingTop: tokens.spacing3,
     borderTopWidth: StyleSheet.hairlineWidth,

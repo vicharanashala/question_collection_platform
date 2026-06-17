@@ -10,7 +10,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { SuspendBanModal } from '../../components/SuspendBanModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { WalletAdjustModal } from '../../components/WalletAdjustModal';
 import { adminApi, getErrorMessage, AccountLockedInfo } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
@@ -42,17 +41,11 @@ export function AdminUserDetailScreen() {
   const [suspendModalAction, setSuspendModalAction] = useState<'suspend' | 'ban'>('suspend');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmModalAction, setConfirmModalAction] = useState<'unsuspend' | 'unban'>('unsuspend');
-  const [walletAdjustVisible, setWalletAdjustVisible] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0);
-
   useEffect(() => {
     adminApi.getUserDetail(userId)
       .then((r) => setData(r.data))
       .catch((e) => showToast(getErrorMessage(e, 'Failed to load user'), 'error'))
       .finally(() => setLoading(false));
-    adminApi.getUserWallet(userId)
-      .then((r) => setWalletBalance((r.data as { balance?: number }).balance ?? 0))
-      .catch(() => null);
   }, [userId]);
 
   const user = data?.user;
@@ -284,30 +277,6 @@ export function AdminUserDetailScreen() {
           </View>
         )}
 
-        {/* Wallet balance card — super admin only, for non-privileged users */}
-        {isSuperAdmin && !PRIVILEGED_ROLES.includes(user.role as UserRole) && (
-          <>
-            <Text style={[styles.sectionHeading, { color: c.text }]}>Wallet</Text>
-            <View style={[styles.card, { backgroundColor: c.surface }]}>
-              <View style={styles.walletRow}>
-                <View style={styles.walletInfo}>
-                  <Text style={[styles.walletLabel, { color: c.textTertiary }]}>Current Balance</Text>
-                  <Text style={[styles.walletBalance, { color: c.primary }]}>
-                    ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.adjustWalletBtn, { backgroundColor: c.primary + '18' }]}
-                  onPress={() => setWalletAdjustVisible(true)}
-                >
-                  <Ionicons name="swap-vertical" size={16} color={c.primary} />
-                  <Text style={[styles.adjustWalletBtnText, { color: c.primary }]}>Adjust</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
-        )}
-
         {/* Account info grid */}
         <Text style={[styles.sectionHeading, { color: c.text }]}>Account Info</Text>
         <View style={[styles.card, { backgroundColor: c.surface }]}>
@@ -489,21 +458,6 @@ export function AdminUserDetailScreen() {
         onClose={() => setConfirmModalVisible(false)}
       />
 
-      <WalletAdjustModal
-        visible={walletAdjustVisible}
-        userId={userId}
-        userName={userName}
-        onClose={() => setWalletAdjustVisible(false)}
-        onAdjusted={() => {
-          setWalletAdjustVisible(false);
-          adminApi.getUserDetail(userId)
-            .then((r) => setData(r.data))
-            .catch(() => null);
-          adminApi.getUserWallet(userId)
-            .then((r) => setWalletBalance((r.data as { balance?: number }).balance ?? 0))
-            .catch(() => null);
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -664,23 +618,4 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   rejectionText: { fontSize: 11, fontWeight: '600' },
-
-  // Wallet
-  walletRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  walletInfo: { gap: 4 },
-  walletLabel: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: '600' },
-  walletBalance: { fontSize: 24, fontWeight: '800' },
-  adjustWalletBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing1,
-    borderRadius: tokens.radiusMd,
-    paddingHorizontal: tokens.spacing3,
-    paddingVertical: tokens.spacing2,
-  },
-  adjustWalletBtnText: { fontSize: 13, fontWeight: '700' },
 });
