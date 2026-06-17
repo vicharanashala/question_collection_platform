@@ -156,7 +156,7 @@ export function TranslatableText({
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
-            onClick={() => setShowDropdown((v) => !v)}
+            onClick={(e) => { e.stopPropagation(); setShowDropdown((v) => !v) }}
             className="flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-border-subtle bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           >
             <Languages className="h-3 w-3" />
@@ -169,7 +169,7 @@ export function TranslatableText({
                 <button
                   key={code}
                   type="button"
-                  onClick={() => handleLangSelect(code)}
+                  onClick={(e) => { e.stopPropagation(); handleLangSelect(code) }}
                   className={cn(
                     'w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors',
                     selectedLang === code ? 'text-primary font-semibold bg-primary/5' : 'text-foreground',
@@ -186,7 +186,7 @@ export function TranslatableText({
         {!isSameLang && !translated && !loading && selectedLang && (
           <button
             type="button"
-            onClick={doTranslate}
+            onClick={(e) => { e.stopPropagation(); doTranslate() }}
             disabled={!text.trim()}
             className="flex items-center gap-1.5 text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline font-medium"
           >
@@ -198,7 +198,7 @@ export function TranslatableText({
         {!isSameLang && translated && !loading && (
           <button
             type="button"
-            onClick={() => setExpanded(true)}
+            onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
             className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
           >
             <Languages className="h-3 w-3" />
@@ -216,7 +216,7 @@ export function TranslatableText({
         {expanded && translated && (
           <button
             type="button"
-            onClick={() => setExpanded(false)}
+            onClick={(e) => { e.stopPropagation(); setExpanded(false) }}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ChevronUp className="h-3 w-3" />
@@ -227,7 +227,7 @@ export function TranslatableText({
         {isSameLang && translated && (
           <button
             type="button"
-            onClick={() => { setTranslated(null); setExpanded(false) }}
+            onClick={(e) => { e.stopPropagation(); setTranslated(null); setExpanded(false) }}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ChevronUp className="h-3 w-3" />

@@ -185,6 +185,10 @@ const resources = {
       "primaryCropType": "Primary Crop Type",
       "privacyConsent": "Privacy & Consent",
       "profile": {
+        "myCrops": "My Crops",
+        "manageCrops": "Manage Crops",
+        "noCropsTitle": "No crops added yet",
+        "noCropsHint": "Add crops to get relevant questions",
         "notifications": "Notifications",
         "pushNotifications": "Push Notifications",
         "notifEnabledDesc": "You'll be notified when your questions are approved or need changes",
@@ -230,7 +234,8 @@ const resources = {
         "submitted": "Question submitted!",
         "rewardEarned": "You earned Rs. {{amount}}!",
         "error": "Submission failed. Try again.",
-        "validationError": "Please add a question."
+        "validationError": "Please add a question.",
+        "audioLabel": "Tap to speak your question"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -524,6 +529,7 @@ const resources = {
         "organisationNamePlaceholder": "Enter organisation name",
         "role": "Your Role",
         "rolePlaceholder": "e.g., Coordinator, Field Officer",
+        "manageCrops": "Manage My Crops",
         "farmSizeRequired": "Farm size is required for farmers",
         "courseNameRequired": "Course name is required for students",
         "universityNameRequired": "University name is required for students",

@@ -1,4 +1,4 @@
-import api from './client';
+import api, { uploadAudioFile } from './client';
 
 /**
  * Maps our 2-letter app language code to Sarvam's locale suffix.
@@ -48,30 +48,42 @@ export interface TranslationResult {
 
 export const speechApi = {
   /**
-   * Transcribe an audio file (hosted at audioUrl) to text.
-   * @param audioUrl  Public URL to the recorded audio file
+   * Upload a local audio file then transcribe it to text via Sarvam.
+   *
+   * Step 1 — POST /speech/upload (multipart) → { audioUrl: string }
+   * Step 2 — POST /speech/transcribe (JSON)  → { text, confidence, languageCode }
+   *
+   * @param audioUri  Local URI of the recorded audio file (from expo-audio)
    * @param languageCode  Our 2-letter language code (e.g. 'hi', 'ta')
    */
-  transcribe(audioUrl: string, languageCode: string): Promise<TranscriptionResult> {
-    return api
-      .post<TranscriptionResult>('/speech/transcribe', {
-        audioUrl,
-        languageCode: toSarvamLang(languageCode),
-      })
-      .then((r) => r.data);
+  async transcribe(audioUri: string, languageCode: string): Promise<TranscriptionResult> {
+    // Step 1: Upload the file and get a publicly accessible URL
+    const { audioUrl } = await uploadAudioFile(audioUri, 'recording.m4a');
+
+    // Step 2: Send the URL to the transcription endpoint
+    const result = await api.post<TranscriptionResult>('/speech/transcribe', {
+      audioUrl,
+      languageCode: toSarvamLang(languageCode),
+    });
+    return result.data;
   },
 
   /**
-   * Translate English text to a target language.
-   * @param text  English source text
+   * Translate text from one language to another.
+   * @param text  Source text
    * @param targetLanguage  Our 2-letter target language code
+   * @param sourceLanguage  Our 2-letter source language code (defaults to 'en')
    */
-  translate(text: string, targetLanguage: string): Promise<TranslationResult> {
+  translate(
+    text: string,
+    targetLanguage: string,
+    sourceLanguage = 'en',
+  ): Promise<TranslationResult> {
     return api
       .post<TranslationResult>('/speech/translate', {
         text,
         targetLanguage: toSarvamLang(targetLanguage),
-        sourceLanguage: 'en-IN',
+        sourceLanguage: toSarvamLang(sourceLanguage),
       })
       .then((r) => r.data);
   },

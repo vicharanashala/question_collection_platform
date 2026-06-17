@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import {
   View,
@@ -10,10 +9,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
 } from 'react-native';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { AudioRecorder } from '../../components/AudioRecorder';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -176,27 +175,15 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             )}
           </View>
 
-          {/* Voice Hero Card */}
+          {/* Voice Input Card */}
           <View style={[styles.voiceCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            {/* Animated pulse rings — visual feedback that audio is "ready" */}
-            <View style={styles.pulseWrap}>
-              <View style={[styles.pulseRing, styles.pulseRing1, { borderColor: c.primary + '30' }]} />
-              <View style={[styles.pulseRing, styles.pulseRing2, { borderColor: c.primary + '20' }]} />
-              <TouchableOpacity
-                style={[styles.voiceBtn, { backgroundColor: c.primary }]}
-                disabled={true}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="mic" size={32} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={[styles.voiceTitle, { color: c.text }]}>
-              {t('question.audio') ?? 'Speak your question'}
-            </Text>
-            <Text style={[styles.voiceSubtitle, { color: c.textSecondary }]}>
-              Voice input coming soon
-            </Text>
+            <AudioRecorder
+              onTranscribed={(text) => {
+                setQuestionText(text);
+                setErrors({});
+              }}
+              label={t('question.audioLabel') ?? 'Tap to speak your question'}
+            />
           </View>
 
           {/* Divider with "or" text */}
@@ -324,62 +311,9 @@ const styles = StyleSheet.create({
   // ── Voice Card ──────────────────────────────────────────────────────────────
   voiceCard: {
     borderRadius: tokens.radiusXl,
-    padding: tokens.spacing6,
+    padding: tokens.spacing4,
     alignItems: 'center',
     marginBottom: tokens.spacing4,
-  },
-
-  pulseWrap: {
-    width: 96,
-    height: 96,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: tokens.spacing4,
-    position: 'relative',
-  },
-
-  pulseRing: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 1.5,
-  },
-
-  pulseRing1: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-  },
-
-  pulseRing2: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
-
-  voiceBtn: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    zIndex: 1,
-  },
-
-  voiceTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-
-  voiceSubtitle: {
-    fontSize: 13,
   },
 
   // ── Divider ─────────────────────────────────────────────────────────────────

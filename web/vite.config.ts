@@ -37,6 +37,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api\/questions/, '/questions'),
       },
+      '/api/speech': {
+        target: 'http://localhost:3000/api/v1',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/speech/, '/speech'),
+      },
     },
   },
 

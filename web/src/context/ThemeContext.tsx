@@ -97,7 +97,9 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'light',
   colors: lightColors,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   toggleTheme: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setTheme: () => {},
 })
 
@@ -118,7 +120,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const applyTheme = useCallback((t: Theme) => {
     document.documentElement.classList.toggle('dark', t === 'dark')
-    try { localStorage.setItem(STORAGE_KEY, t) } catch {}
+    try { localStorage.setItem(STORAGE_KEY, t) } catch { /* storage unavailable */ }
   }, [])
 
   useEffect(() => {

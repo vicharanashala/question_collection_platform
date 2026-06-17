@@ -11,7 +11,9 @@ interface PrefetchContextValue {
 }
 
 const PrefetchContext = createContext<PrefetchContextValue>({
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   prefetch: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   cancel: () => {},
 })
 

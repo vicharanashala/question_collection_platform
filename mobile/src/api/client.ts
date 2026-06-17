@@ -187,6 +187,51 @@ export async function isAuthenticated(): Promise<boolean> {
   return !!token;
 }
 
+// ─── File Upload Helper ───────────────────────────────────────────────────────
+
+const uploadApi = axios.create({
+  baseURL: BASE_URL,
+  timeout: 60_000, // Audio uploads can be large
+  // No default Content-Type — let axios set multipart boundary automatically
+});
+
+// Attach JWT to upload requests
+uploadApi.interceptors.request.use(
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch {
+      // AsyncStorage unavailable — proceed without token
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+export async function uploadAudioFile(
+  uri: string,          // Local file URI from expo-audio
+  filename: string,     // e.g. 'recording.m4a'
+): Promise<{ audioUrl: string }> {
+  const formData = new (globalThis.FormData)();
+  formData.append('audio', {
+    uri,
+    name: filename,
+    type: 'audio/mp4',
+  } as unknown as string);
+
+  const { data } = await uploadApi.post<{ audioUrl: string }>(
+    '/speech/upload',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
+  return data;
+}
+
 // ─── API Methods ──────────────────────────────────────────────────────────────
 
 export const authApi = {

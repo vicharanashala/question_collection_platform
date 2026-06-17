@@ -16,6 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../components/Toast';
+import { Trnscber } from '../../components/Trnscber';
 import { questionApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { RootStackParamList } from '../../navigation/types';
@@ -144,9 +145,11 @@ export function QuestionDetailScreen() {
           <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
             {t('notifications.yourQuestion', 'Your Question')}
           </Text>
-          <Text style={[styles.questionText, { color: c.text }]}>
-            {q.questionText}
-          </Text>
+          <Trnscber
+            text={q.questionText}
+            sourceLanguage={q.language ?? 'en'}
+            style={[styles.questionText, { color: c.text }]}
+          />
         </View>
 
         {/* Media */}

@@ -36,8 +36,7 @@ export function SettingsPage() {
   const [editValue, setEditValue] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { fetch() }, [])
-  async function fetch() {
+  async function loadConfigs() {
     try {
       const res = await adminApi.getConfig()
       setConfigs(res.items ?? [])
@@ -49,9 +48,11 @@ export function SettingsPage() {
     }
   }
 
+  useEffect(() => { void loadConfigs() }, [])
+
   async function onRefresh() {
     setRefreshing(true)
-    await fetch()
+    await loadConfigs()
   }
 
   function openEdit(cfg: ConfigItem) {

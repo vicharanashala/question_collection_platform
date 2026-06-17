@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -6,116 +6,316 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
-import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+import {
+  AudioModule,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  AudioQuality,
+  IOSOutputFormat,
+} from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../hooks/useLanguage';
-import { speechApi } from '../api/speech';
 import { useTheme } from '../hooks/useTheme';
 import { tokens } from '../utils/theme';
 import { useToast } from './Toast';
 import { useTranslation } from 'react-i18next';
+import api from '../api/client';
 
-type RecordingState = 'idle' | 'recording' | 'uploading' | 'done';
+const CHUNK_INTERVAL_MS = 5_000;
+const MAX_RECORDING_SECONDS = 60;
+
+type RecorderState = 'idle' | 'recording' | 'uploading' | 'done';
 
 interface AudioRecorderProps {
-  /**
-   * Called with the transcribed text when recording succeeds.
-   * The parent is responsible for filling it into the question text field.
-   */
+  /** Called with the transcribed text as it arrives (appended progressively). */
   onTranscribed: (text: string) => void;
-
   /** Show a label below the button */
   label?: string;
   /** Disable the recorder */
   disabled?: boolean;
 }
 
-export function AudioRecorder({ onTranscribed, label, disabled }: AudioRecorderProps) {
+interface ChunkResult {
+  sequenceNumber: number;
+  text: string;
+  error: string | null;
+}
+
+interface PendingChunk {
+  sequenceNumber: number;
+  resolve: (text: string) => void;
+  reject: (err: Error) => void;
+}
+
+export function AudioRecorder({
+  onTranscribed,
+  label,
+  disabled,
+}: AudioRecorderProps) {
   const { language } = useLanguage();
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
   const { t } = useTranslation();
 
-  const [state, setState] = useState<RecordingState>('idle');
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const uploadAbortRef = useRef<AbortController | null>(null);
+  const [state, setState] = useState<RecorderState>('idle');
+  const [transcriptSoFar, setTranscriptSoFar] = useState('');
 
-  // Cleanup on unmount
+  // Active recorder instance
+  const recorderRef = useRef<InstanceType<typeof AudioModule.AudioRecorder> | null>(null);
+  // 5-second chunk timer
+  const chunkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Auto-stop timer
+  const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Pending chunk uploads (promise resolvers)
+  const pendingChunksRef = useRef<PendingChunk[]>([]);
+  // Sequence number counter
+  const sequenceRef = useRef(0);
+  // Whether a stop is in progress (prevents new chunks)
+  const stoppingRef = useRef(false);
+
+  const languageCode = language; // e.g. 'hi', 'ta', 'en'
+
+  // ── Language code → Sarvam locale ────────────────────────────────────────
+  const toSarvamLang = (code: string) => {
+    const map: Record<string, string> = {
+      as: 'as-IN', bn: 'bn-IN', brx: 'brx-IN', doi: 'doi-IN',
+      gu: 'gu-IN', hi: 'hi-IN', kn: 'kn-IN', ks: 'ks-IN',
+      kok: 'kok-IN', mai: 'mai-IN', ml: 'ml-IN', mni: 'mni-IN',
+      mr: 'mr-IN', ne: 'ne-IN', or: 'or-IN', pa: 'pa-IN',
+      sa: 'sa-IN', sat: 'sat-IN', sd: 'sd-IN', ta: 'ta-IN',
+      te: 'te-IN', ur: 'ur-IN', en: 'en-IN',
+    };
+    return map[code] ?? `${code}-IN`;
+  };
+
+  // ── Upload a single chunk and resolve the pending promise ─────────────────
+  const uploadChunk = useCallback(
+    async (uri: string, seq: number) => {
+      try {
+        const formData = new (globalThis.FormData)();
+        formData.append('audio', {
+          uri,
+          name: `chunk-${seq}.m4a`,
+          type: 'audio/mp4',
+        } as unknown as string);
+        formData.append('languageCode', toSarvamLang(languageCode));
+        formData.append('sequenceNumber', String(seq));
+
+        const { data } = await api.post<ChunkResult>(
+          '/speech/transcribe-chunk',
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+
+        // Resolve the pending promise for this sequence
+        const pending = pendingChunksRef.current.find((p) => p.sequenceNumber === seq);
+        if (pending) {
+          pending.resolve(data.text ?? '');
+          pendingChunksRef.current = pendingChunksRef.current.filter(
+            (p) => p.sequenceNumber !== seq,
+          );
+        }
+
+        // Append transcript in order
+        if (data.text) {
+          setTranscriptSoFar((prev) => {
+            const next = prev ? `${prev} ${data.text}` : data.text;
+            onTranscribed(next);
+            return next;
+          });
+        }
+      } catch (err) {
+        console.warn(`[AudioRecorder] chunk ${seq} failed:`, err);
+        const pending = pendingChunksRef.current.find((p) => p.sequenceNumber === seq);
+        if (pending) {
+          pending.reject(err as Error);
+          pendingChunksRef.current = pendingChunksRef.current.filter(
+            (p) => p.sequenceNumber !== seq,
+          );
+        }
+      }
+    },
+    [languageCode, onTranscribed],
+  );
+
+  // ── Stop current chunk, upload it, start a new recording ─────────────────
+  const cutChunkAndRestart = useCallback(async () => {
+    const recorder = recorderRef.current;
+    if (!recorder || stoppingRef.current) return;
+
+    // Stop this chunk
+    await recorder.stop();
+    const uri = recorder.uri;
+    if (!uri) {
+      // Restart without uploading
+      try {
+        recorder.record();
+      } catch { /* ignore */ }
+      return;
+    }
+
+    // Assign sequence number and upload
+    const seq = sequenceRef.current++;
+    const pending: PendingChunk = {
+      sequenceNumber: seq,
+      resolve: () => {},
+      reject: () => {},
+    };
+    // Create a deferred promise
+    pendingChunksRef.current.push(pending);
+    uploadChunk(uri, seq);
+
+    // Start next chunk immediately
+    try {
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+    } catch (err) {
+      console.error('[AudioRecorder] failed to restart after chunk:', err);
+    }
+  }, [uploadChunk]);
+
+  // ── Cleanup on unmount ────────────────────────────────────────────────────
   useEffect(() => {
     return () => {
-      if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+      if (chunkTimerRef.current) clearInterval(chunkTimerRef.current);
+      if (autoStopRef.current) clearTimeout(autoStopRef.current);
+      if (recorderRef.current) {
+        recorderRef.current.stop().catch(() => {});
       }
     };
   }, []);
 
+  // ── Start continuous recording ────────────────────────────────────────────
   async function startRecording() {
     try {
-      const perm = await Audio.requestPermissionsAsync();
-      if (!perm.granted) {
-        showToast(t('audio.permissionDenied') ?? 'Microphone permission required', 'error');
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
+        showToast(
+          t('audio.permissionDenied') ?? 'Microphone permission required',
+          'error',
+        );
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      recordingRef.current = recording;
+      const recorder = new AudioModule.AudioRecorder({
+        extension: '.m4a',
+        sampleRate: 44100,
+        numberOfChannels: 2,
+        bitRate: 128000,
+        ios: {
+          outputFormat: IOSOutputFormat.MPEG4AAC,
+          audioQuality: AudioQuality.MAX,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        android: {
+          outputFormat: 'mpeg4',
+          audioEncoder: 'aac',
+        },
+        web: {
+          mimeType: 'audio/webm',
+          bitsPerSecond: 128000,
+        },
+      });
+
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+      recorderRef.current = recorder;
+      stoppingRef.current = false;
+      sequenceRef.current = 0;
+      pendingChunksRef.current = [];
+      setTranscriptSoFar('');
       setState('recording');
+
+      // Cut and upload a chunk every 5 seconds
+      chunkTimerRef.current = setInterval(() => {
+        cutChunkAndRestart();
+      }, CHUNK_INTERVAL_MS);
+
+      // Hard auto-stop after MAX_RECORDING_SECONDS
+      autoStopRef.current = setTimeout(() => {
+        stopRecording();
+      }, MAX_RECORDING_SECONDS * 1000);
     } catch (err) {
       console.error('[AudioRecorder] startRecording error:', err);
-      showToast(t('audio.startError') ?? 'Failed to start recording', 'error');
+      showToast(
+        t('audio.startError') ?? 'Failed to start recording',
+        'error',
+      );
     }
   }
 
-  async function stopAndUpload() {
-    const recording = recordingRef.current;
-    if (!recording) return;
-    recordingRef.current = null;
+  // ── Stop recording: cancel timer, upload remaining audio, resolve all ─────
+  async function stopRecording() {
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
+
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+
+    if (chunkTimerRef.current) clearInterval(chunkTimerRef.current);
+    chunkTimerRef.current = null;
+    if (autoStopRef.current) clearTimeout(autoStopRef.current);
+    autoStopRef.current = null;
 
     setState('uploading');
 
     try {
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      if (!uri) throw new Error('No recording URI');
+      // Stop and upload the final chunk
+      await recorder.stop();
+      const uri = recorder.uri;
 
-      // Read file as base64
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      if (uri) {
+        // Upload final chunk with a high sequence number
+        const seq = sequenceRef.current++;
+        const formData = new (globalThis.FormData)();
+        formData.append('audio', {
+          uri,
+          name: `final-${seq}.m4a`,
+          type: 'audio/mp4',
+        } as unknown as string);
+        formData.append('languageCode', toSarvamLang(languageCode));
+        formData.append('sequenceNumber', String(seq));
 
-      // Upload to backend which will forward to cloud storage (or use a signed upload endpoint)
-      // For now we use a simple multipart upload via the speech endpoint with a data URI.
-      // The real implementation should upload the file first to cloud storage and pass the URL.
-      // Placeholder: construct a data URL (not recommended for large files in production)
-      const audioDataUrl = `data:audio/mp4;base64,${base64}`;
+        const { data } = await api.post<ChunkResult>(
+          '/speech/transcribe-final',
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
 
-      // Upload audio file — the backend will handle storage + transcription
-      const result = await speechApi.transcribe(audioDataUrl, language);
+        if (data.text) {
+          setTranscriptSoFar((prev) => {
+            const next = prev ? `${prev} ${data.text}` : data.text;
+            onTranscribed(next);
+            return next;
+          });
+        } else if (data.error) {
+          showToast(t('audio.transcribeError') ?? 'Transcription failed', 'error');
+        }
+      }
 
       setState('done');
-      onTranscribed(result.text);
-
-      // Reset to idle after a short delay
       setTimeout(() => setState('idle'), 2000);
     } catch (err: unknown) {
-      console.error('[AudioRecorder] upload error:', err);
-      const msg =
-        (err as { response?: { data?: { message?: string }; message?: string } })
-          ?.response?.data?.message ??
+      console.error('[AudioRecorder] stopRecording error:', err);
+      showToast(
         (err as Error)?.message ??
-        t('audio.transcribeError') ??
-        'Transcription failed. Please try again or type your question.';
-      showToast(msg, 'error');
+          t('audio.transcribeError') ??
+          'Transcription failed. Please try again.',
+        'error',
+      );
       setState('idle');
+    } finally {
+      recorderRef.current = null;
+      pendingChunksRef.current = [];
     }
   }
 
@@ -124,9 +324,9 @@ export function AudioRecorder({ onTranscribed, label, disabled }: AudioRecorderP
     if (state === 'idle' || state === 'done') {
       startRecording();
     } else if (state === 'recording') {
-      stopAndUpload();
+      stopRecording();
     }
-    // uploading state — button is disabled, ignore
+    // uploading — button disabled
   }
 
   const isRecording = state === 'recording';
@@ -137,7 +337,6 @@ export function AudioRecorder({ onTranscribed, label, disabled }: AudioRecorderP
   return (
     <View style={styles.container}>
       <View style={styles.pulseWrap}>
-        {/* Static pulse rings while recording */}
         {isRecording && (
           <View
             style={[
@@ -156,7 +355,6 @@ export function AudioRecorder({ onTranscribed, label, disabled }: AudioRecorderP
             ]}
           />
         )}
-        {/* Main button */}
         <TouchableOpacity
           style={[
             styles.voiceBtn,

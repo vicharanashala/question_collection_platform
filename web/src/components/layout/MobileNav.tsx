@@ -32,7 +32,6 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
   // Close on route change
   useEffect(() => {
     if (open) onClose()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
 
   // Trap scroll

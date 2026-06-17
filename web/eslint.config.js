@@ -17,7 +17,7 @@ const customPlugin = {
 }
 
 export default tseslint.config(
-  { ignores: ['node_modules/', 'dist/'] },
+  { ignores: ['node_modules/', 'dist/', 'vite.config.ts'] },
 
   // Base JS recommended
   js.configs.recommended,
@@ -71,6 +71,7 @@ export default tseslint.config(
       parserOptions: {
         project: './tsconfig.app.json',
         tsconfigRootDir: rootDir,
+        excludeFiles: ['vite.config.ts'],
       },
     },
     rules: {

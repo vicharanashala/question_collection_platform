@@ -164,12 +164,14 @@
   "ngoPartner": "NGO Partner",
   "ngoPartnerDesc": "Non-governmental organisation",
   "notifications": {
-    "questionApproved": "Your question was approved!",
-    "questionRejected": "Your question was rejected.",
-    "questionDuplicate": "Duplicate found.",
-    "rewardReceived": "Reward received: Rs. {{amount}}",
-    "withdrawalSuccess": "Withdrawal successful: Rs. {{amount}}",
-    "newQuestion": "New question submitted!"
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "unreadCount": "{{count}} unread",
+    "emptyTitle": "No notifications yet",
+    "emptySub": "You'll see updates about your questions here",
+    "approvedTitle": "Question Approved",
+    "rejectedTitle": "Question Not Approved",
+    "heldTitle": "Question Under Review"
   },
   "organisationName": "Organisation Name",
   "organisationNamePlaceholder": "Enter organisation name",
@@ -178,30 +180,33 @@
   "primaryCropType": "Primary Crop Type",
   "privacyConsent": "Privacy & Consent",
   "profile": {
+    "myCrops": "My Crops",
     "manageCrops": "Manage Crops",
-    "noCrops": "No crops added yet",
-    "addCrop": "Add Crop",
+    "noCropsTitle": "No crops added yet",
+    "noCropsHint": "Add crops to get relevant questions",
+    "notifications": "Notifications",
+    "pushNotifications": "Push Notifications",
+    "notifEnabledDesc": "You'll be notified when your questions are approved or need changes",
+    "notifDisabledDesc": "You won't receive push notifications",
     "completion": {
-      "title": "Profile Completion",
-      "complete": "Profile Complete",
-      "incomplete": "{{percent}}% complete — finish your profile to unlock all features",
-      "fieldName": "Name",
+      "title": "Complete Your Profile",
+      "fieldsComplete": "fields complete",
+      "stillMissing": "Still missing",
+      "fieldName": "Full Name",
       "fieldState": "State",
       "fieldDistrict": "District",
       "fieldBlock": "Block",
       "fieldCategory": "Category",
-      "fieldLanguage": "Language",
+      "fieldLanguage": "Preferred Language",
       "fieldFarmSize": "Farm Size",
-      "fieldCropType": "Primary Crop",
+      "fieldCropType": "Crop Type",
       "fieldCourseName": "Course Name",
-      "fieldUniversityName": "University Name",
-      "fieldOrganisationName": "Organisation Name",
+      "fieldUniversityName": "University",
+      "fieldOrganisationName": "Organisation",
       "fieldRole": "Role",
-      "fieldCrops": "Crop Details",
-      "missing": "Missing: {{fields}}"
+      "fieldCrops": "Crops"
     },
-    "edit": "Edit",
-    "editProfile": "Edit Profile"
+    "edit": "Edit"
   },
   "profileLanguage": "App Language",
   "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -211,7 +216,14 @@
     "text": "Text",
     "image": "Photo",
     "video": "Video",
-    "audio": "Audio",
+    "audio": {
+    "permissionDenied": "Microphone permission required",
+    "startError": "Failed to start recording",
+    "transcribeError": "Transcription failed. Please try again.",
+    "transcribing": "Transcribing…",
+    "recording": "Recording — tap to stop",
+    "record": "Tap to record"
+  },
     "textPlaceholder": "Write your agriculture-related question...",
     "addMedia": "Add Media",
     "addPhoto": "Add Photo",
@@ -224,7 +236,8 @@
     "submitted": "Question submitted!",
     "rewardEarned": "You earned Rs. {{amount}}!",
     "error": "Submission failed. Try again.",
-    "validationError": "Please add a question."
+    "validationError": "Please add a question.",
+    "audioLabel": "Tap to speak your question"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -533,44 +546,5 @@
     "contactAdmin": "Contact Admin",
     "logout": "Log out and sign in with a different account"
   },
-  "registrationSuccess": "Registration complete! Awaiting admin verification.",
-  "profile": {
-    "myCrops": "My Crops",
-    "manageCrops": "Manage Crops",
-    "noCropsTitle": "No crops added yet",
-    "noCropsHint": "Add crops to get relevant questions",
-    "notifications": "Notifications",
-    "pushNotifications": "Push Notifications",
-    "notifEnabledDesc": "You'll be notified when your questions are approved or need changes",
-    "notifDisabledDesc": "You won't receive push notifications",
-    "completion": {
-      "title": "Complete Your Profile",
-      "fieldsComplete": "fields complete",
-      "stillMissing": "Still missing",
-      "fieldName": "Full Name",
-      "fieldState": "State",
-      "fieldDistrict": "District",
-      "fieldBlock": "Block",
-      "fieldCategory": "Category",
-      "fieldLanguage": "Preferred Language",
-      "fieldFarmSize": "Farm Size",
-      "fieldCropType": "Crop Type",
-      "fieldCourseName": "Course Name",
-      "fieldUniversityName": "University",
-      "fieldOrganisationName": "Organisation",
-      "fieldRole": "Role",
-      "fieldCrops": "Crops"
-    },
-    "edit": "Edit"
-  },
-  "notifications": {
-    "title": "Notifications",
-    "markAllRead": "Mark all read",
-    "unreadCount": "{{count}} unread",
-    "emptyTitle": "No notifications yet",
-    "emptySub": "You'll see updates about your questions here",
-    "approvedTitle": "Question Approved",
-    "rejectedTitle": "Question Not Approved",
-    "heldTitle": "Question Under Review"
-  }
+  "registrationSuccess": "Registration complete! Awaiting admin verification."
 }

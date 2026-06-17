@@ -1,0 +1,16 @@
+.git
+.gitignore
+*.md
+node_modules
+dist
+.env
+.env.*
+*.log
+*.tmp
+.DS_Store
+coverage
+.nest-cli.json
+tsconfig*.json
+jest.config.*
+*.spec.ts
+uploads

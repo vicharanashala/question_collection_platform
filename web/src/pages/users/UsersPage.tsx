@@ -100,7 +100,7 @@ export function UsersPage() {
       setPage(1)
       adminApi.getUsers({ page: 1, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
         .then((res) => { setUsers(res.items); setTotal(res.total) })
-        .catch(() => {})
+        .catch(() => { /* error handled elsewhere */ })
     } catch (err) {
       setFormError(getErrorMessage(err, 'Failed to create user'))
     } finally {

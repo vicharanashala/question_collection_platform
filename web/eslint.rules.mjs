@@ -27,8 +27,6 @@ export default {
     },
   },
   create(context) {
-    const sourceCode = context.sourceCode ?? context.getSourceCode()
-
     return {
       ReturnStatement(node) {
         // Walk up the tree to find the containing function / arrow / method
