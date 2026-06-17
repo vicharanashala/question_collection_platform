@@ -274,7 +274,7 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingBottom: tokens.spacing8 },
+  scroll: { paddingBottom: tokens.spacing8 + 40 },
 
   // Hero
   hero: { margin: tokens.spacing4, borderRadius: tokens.radiusXl, padding: tokens.spacing5 },
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   languageValue: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 
   // Crops
-  cropsCard: { borderRadius: tokens.radiusMd, padding: tokens.spacing4 },
+  cropsCard: { borderRadius: tokens.radiusMd, padding: tokens.spacing4, marginBottom: tokens.spacing2 },
   cropTags: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
   cropTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: tokens.spacing3, paddingVertical: tokens.spacing1 + 2, borderRadius: tokens.radiusFull },
   cropTagText: { fontSize: 13, fontWeight: '600' },
