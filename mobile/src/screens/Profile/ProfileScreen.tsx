@@ -120,7 +120,7 @@ export function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Profile Completion ───────────────────────────── */}
-        <View style={{ marginBottom: tokens.spacing4 }}>
+        <View style={{ marginTop: tokens.spacing4 }}>
           <ProfileCompletionWidget onEdit={() => navigation.navigate('EditProfile')} hasCrops={crops.length > 0} />
         </View>
 
