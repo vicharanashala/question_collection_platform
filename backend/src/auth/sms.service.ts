@@ -69,7 +69,7 @@ export class SmsService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            route: 'otp',
+            route: this.configService.get<string>('sms.route') ?? 'otp',
             variables: '{BB}',
             variables_values: otp,
             numbers: cleanNumber,

@@ -21,9 +21,12 @@ export const redisConfig = registerAs('redis', () => ({
 
 export const smsConfig = registerAs('sms', () => ({
   provider: process.env.SMS_PROVIDER || 'mock',
-  apiKey: process.env.SMS_API_KEY || '',
+  // Fast2SMS
+  apiKey: process.env.FAST2SMS_API_KEY || process.env.SMS_API_KEY || '',
+  senderId: process.env.FAST2SMS_SENDER_ID || process.env.SMS_SENDER_ID || 'AGRIAPP',
+  route: process.env.FAST2SMS_ROUTE || 'otp',
+  // Shared / other providers
   apiSecret: process.env.SMS_API_SECRET || '',
-  senderId: process.env.SMS_SENDER_ID || 'AGRIAPP',
 }));
 
 export const appConfig = registerAs('app', () => ({
