@@ -59,6 +59,8 @@ export function TranslatableText({
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
+  const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // displayedLang: the language code of the text currently shown in the card.
@@ -66,6 +68,7 @@ export function TranslatableText({
   const [displayedLang, setDisplayedLang] = useState(sourceLanguage)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const portalRef = useRef<HTMLDivElement>(null)
   // Keeps selectedLang fresh inside async callbacks without stale-closure issues.
   // Synced via useEffect to avoid "cannot update ref during render" warning.
   const selectedLangRef = useRef(selectedLang)
@@ -77,13 +80,15 @@ export function TranslatableText({
   // Close dropdown on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const inButton = dropdownRef.current?.contains(e.target as Node)
+      const inPortal = portalEl?.contains(e.target as Node)
+      if (!inButton && !inPortal) {
         setShowDropdown(false)
       }
     }
     if (showDropdown) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [showDropdown])
+  }, [showDropdown, portalEl])
 
   // When the user picks a new target language, reset the translation state.
   // The next doTranslate call (triggered by handleLangSelect) will use the
@@ -157,20 +162,29 @@ export function TranslatableText({
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setShowDropdown((v) => !v) }}
+            onClick={(e) => {
+              e.stopPropagation()
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+              setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
+              setShowDropdown(true)
+            }}
             className="flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-border-subtle bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           >
             <Languages className="h-3 w-3" />
             {selectedLang ? langLabel : 'Language'}
             <ChevronDown className={cn('h-3 w-3 transition-transform', showDropdown && 'rotate-180')} />
           </button>
-          {showDropdown && createPortal((
+          {showDropdown && dropdownPos && createPortal((
             <div
+              ref={(el) => { setPortalEl(el) }}
               style={{
-                position: 'absolute', left: 0, top: '100%', marginTop: 4,
+                position: 'absolute',
+                top: dropdownPos.top,
+                left: dropdownPos.left,
                 zIndex: 9999,
               }}
               className="bg-surface border border-border-subtle rounded-lg shadow-lg w-40 max-h-60 overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
             >
               {SUPPORTED_LANGS.map((code) => (
                 <button
