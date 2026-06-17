@@ -7,9 +7,24 @@
  * - Exponential backoff retry
  * - Error normalization
  */
-import type { AuthUser } from '@/types'
+import type {
+  AuthUser,
+  AdminStats,
+  User,
+  Question,
+  ConfigItem,
+  Withdrawal,
+  WalletSummary,
+  Transaction,
+  PaginatedResponse,
+  AnalyticsDashboard,
+  UserAnalytics,
+  QuestionAnalytics,
+  RewardAnalytics,
+  ExportParams,
+} from '@/types'
 
-const BASE = '/api'
+const BASE = '/api/v1'
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
 
@@ -47,7 +62,7 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<unknown>>()
 
-function getCache<T>(key: string, maxAgeMs: number): T | null {
+function getCache<T>(key: string, _maxAgeMs: number): T | null {
   const entry = memoryCache.get(key) as CacheEntry<T> | undefined
   if (!entry) return null
   if (Date.now() > entry.expiresAt) { memoryCache.delete(key); return null }
@@ -82,7 +97,7 @@ window.addEventListener('online', () => {
   isOnline = true
   const queue = offlineQueue.splice(0)
   queue.forEach((r) =>
-    request(r.path, r.options, false).then(r.resolve).catch(r.reject)
+    request(r.path, r.options, false).then((v: unknown) => r.resolve(v)).catch(r.reject)
   )
 })
 window.addEventListener('offline', () => { isOnline = false })
@@ -126,7 +141,7 @@ export async function request<T>(
 
   const doFetch = () =>
     withRetry(() =>
-      fetch(`${BASE}${path}`, { ...options, headers } as HeadersInit).then(async (res) => {
+      fetch(`${BASE}${path}`, { ...options, headers }).then(async (res) => {
         if (res.status === 401) {
           const refresh = getRefreshToken()
           if (refresh) {
@@ -140,7 +155,7 @@ export async function request<T>(
                 setTokens(refreshed.accessToken, refreshed.refreshToken ?? refresh)
                 const retryRes = await fetch(`${BASE}${path}`, {
                   ...options,
-                  headers: { ...headers, Authorization: `Bearer ${refreshed.accessToken}` } as HeadersInit,
+                  headers: { ...headers, Authorization: `Bearer ${refreshed.accessToken}` },
                 })
                 return handleResponse(retryRes)
               }
@@ -161,7 +176,14 @@ export async function request<T>(
   }
 
   if (!isOnline) {
-    return new Promise((resolve, reject) => { offlineQueue.push({ path, options, resolve, reject }) })
+    return new Promise((resolve, reject) => {
+      offlineQueue.push({
+        path,
+        options,
+        resolve: resolve as (v: unknown) => void,
+        reject,
+      })
+    })
   }
 
   return doFetch() as Promise<T>
@@ -198,7 +220,7 @@ export const authApi = {
   verifyOtp: (mobileNumber: string, otp: string) =>
     request<{
       tokens?: { accessToken: string; refreshToken: string; expiresIn: number }
-      user?: import('@/types').AuthUser
+      user?: AuthUser
       requiresRegistration?: boolean
       tempToken?: string
       role?: string
@@ -214,10 +236,10 @@ export const authApi = {
     }, false),
 
   me: () =>
-    request<{ user: import('@/types').AuthUser }>('/auth/me', {}, true),
+    request<{ user: AuthUser }>('/auth/me', {}, true),
 
   updateMe: (body: { name?: string; languagePreference?: string }) =>
-    request<{ user: import('@/types').AuthUser }>('/auth/me', {
+    request<{ user: AuthUser }>('/auth/me', {
       method: 'PATCH',
       body: JSON.stringify(body),
     }, false),
@@ -227,18 +249,18 @@ export const authApi = {
 
 export const adminApi = {
   getStats: () =>
-    request<import('@/types').AdminStats>('/admin/stats', {}, true),
+    request<AdminStats>('/admin/stats', {}, true),
 
   getUsers: (params = {} as Record<string, string | number | undefined>) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    return request<import('@/types').PaginatedResponse<import('@/types').User>>(
+    return request<PaginatedResponse<User>>(
       `/admin/users${qs ? `?${qs}` : ''}`,
     )
   },
 
   getUserDetail: (userId: string) =>
-    request<{ user: import('@/types').User; questions: import('@/types').Question[] }>(
+    request<{ user: User; questions: Question[] }>(
       `/admin/users/${userId}`,
       {}, false,
     ),
@@ -267,23 +289,23 @@ export const adminApi = {
     block?: string
     languagePreference?: string
   }) =>
-    request<{ message: string; user: import('@/types').User }>(
+    request<{ message: string; user: User }>(
       '/admin/users',
       { method: 'POST', body: JSON.stringify(body) },
       false,
     ).finally(() => invalidateCache('/api/admin')),
 
   getConfig: () =>
-    request<{ items: import('@/types').ConfigItem[] }>('/admin/config'),
+    request<{ items: ConfigItem[] }>('/admin/config'),
 
   updateConfig: (body: { key: string; value: number }) =>
     request<{ message: string }>('/admin/config', { method: 'PATCH', body: JSON.stringify(body) }, false)
       .finally(() => invalidateCache('/api/admin')),
 
   listWithdrawals: (params: Record<string, string | number | undefined> = {}) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    return request<import('@/types').PaginatedResponse<import('@/types').Withdrawal>>(
+    return request<PaginatedResponse<Withdrawal>>(
       `/admin/withdrawals${qs ? `?${qs}` : ''}`,
     )
   },
@@ -296,27 +318,27 @@ export const adminApi = {
 
   // ─── Wallet management ──────────────────────────────────────────────────────
   getWallets: (params: Record<string, string | number | undefined> = {}) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    return request<import('@/types').PaginatedResponse<import('@/types').WalletSummary>>(
+    return request<PaginatedResponse<WalletSummary>>(
       `/admin/wallets${qs ? `?${qs}` : ''}`,
     )
   },
 
   getUserTransactions: (userId: string, params: Record<string, string | number | undefined> = {}) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
     return request<{
-      items: import('@/types').Transaction[]
+      items: Transaction[]
       total: number
       summary: { totalTransactions: number; totalCredits: number; totalDebits: number }
     }>(`/admin/wallets/user/${userId}/transactions${qs ? `?${qs}` : ''}`)
   },
 
   getUserWithdrawals: (userId: string, params: Record<string, string | number | undefined> = {}) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    return request<import('@/types').PaginatedResponse<import('@/types').Withdrawal>>(
+    return request<PaginatedResponse<Withdrawal>>(
       `/admin/wallets/user/${userId}/withdrawals${qs ? `?${qs}` : ''}`,
     )
   },
@@ -328,19 +350,84 @@ export const adminApi = {
     }, false).finally(() => invalidateCache('/api/admin')),
 }
 
+// ─── Analytics API (Task 11) ───────────────────────────────────────────────────
+
+function buildQS(p: Record<string, string | number | undefined>): string {
+  const sp = new URLSearchParams()
+  for (const [k, v] of Object.entries(p)) {
+    if (v !== undefined) sp.set(k, String(v))
+  }
+  return sp.toString()
+}
+
+export const analyticsApi = {
+  getDashboard: (params: Record<string, string | number | undefined> = {}) => {
+    const qs = buildQS(params)
+    return request<AnalyticsDashboard>(`/analytics/dashboard${qs ? `?${qs}` : ''}`)
+  },
+
+  getUserAnalytics: (params: Record<string, string | number | undefined> = {}) => {
+    const qs = buildQS(params)
+    return request<UserAnalytics>(`/analytics/users${qs ? `?${qs}` : ''}`)
+  },
+
+  getQuestionAnalytics: (params: Record<string, string | number | undefined> = {}) => {
+    const qs = buildQS(params)
+    return request<QuestionAnalytics>(`/analytics/questions${qs ? `?${qs}` : ''}`)
+  },
+
+  getRewardAnalytics: (params: Record<string, string | number | undefined> = {}) => {
+    const qs = buildQS(params)
+    return request<RewardAnalytics>(`/analytics/rewards${qs ? `?${qs}` : ''}`)
+  },
+
+  /** Fetch a file blob with auth and trigger browser download */
+  _download: async (path: string, filename: string) => {
+    const token = getAccessToken()
+    const res = await fetch(`${BASE}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  },
+
+  downloadCSV: (params: ExportParams) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    const filename = `export_${Date.now()}.csv`
+    return analyticsApi._download(`/export/csv${qs ? `?${qs}` : ''}`, filename)
+  },
+
+  downloadExcel: (params: ExportParams) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    const filename = `export_${Date.now()}.xlsx`
+    return analyticsApi._download(`/export/excel${qs ? `?${qs}` : ''}`, filename)
+  },
+}
+
 // ─── Questions API ─────────────────────────────────────────────────────────
 
 export const questionApi = {
   getQuestions: (params = {} as Record<string, string | number | undefined>) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    return request<import('@/types').PaginatedResponse<import('@/types').Question>>(
+    return request<PaginatedResponse<Question>>(
       `/questions${qs ? `?${qs}` : ''}`,
     )
   },
 
   getQuestion: (id: string) =>
-    request<import('@/types').Question>(`/questions/${id}`),
+    request<Question>(`/questions/${id}`),
 
   approveQuestion: (id: string) =>
     request<{ message: string }>(`/questions/${id}/approve`, { method: 'POST' }, false)
@@ -369,13 +456,13 @@ export const curatorApi = {
       }
     }
     const qs = sp.toString()
-    return request<import('@/types').PaginatedResponse<import('@/types').Question>>(
+    return request<PaginatedResponse<Question>>(
       `/admin/questions/queue${qs ? `?${qs}` : ''}`,
     )
   },
 
   getQuestion: (id: string) =>
-    request<import('@/types').Question>(`/admin/questions/${id}`),
+    request<Question>(`/admin/questions/${id}`),
 
   reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'hold'; reason?: string; heldReason?: string }) =>
     request<{

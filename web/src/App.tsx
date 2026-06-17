@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { lazy } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PrefetchProvider } from '@/context/PrefetchContext'

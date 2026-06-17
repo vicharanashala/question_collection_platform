@@ -1245,178 +1245,6 @@ export class AdminService implements OnModuleInit {
     };
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Section 7: Data Export
-  // ─────────────────────────────────────────────────────────────
-
-  async exportData(dto: ExportQueryDto) {
-    const { fromDate, toDate, state, cropType, dataType = 'questions', format = 'csv' } = dto;
-    const from = fromDate ? new Date(fromDate) : new Date(0);
-    const to = toDate ? new Date(toDate) : new Date();
-
-    if (dataType === 'questions') {
-      return this.exportQuestions(from, to, state, cropType, format);
-    }
-    if (dataType === 'users') {
-      return this.exportUsers(from, to, state, format);
-    }
-    if (dataType === 'rewards') {
-      return this.exportRewards(from, to, state, format);
-    }
-    if (dataType === 'withdrawals') {
-      return this.exportWithdrawals(from, to, state, format);
-    }
-    throw new BadRequestException('Invalid data type');
-  }
-
-  private async exportQuestions(from: Date, to: Date, state?: string, cropType?: string, format = 'csv') {
-    const qb = this.questionRepo
-      .createQueryBuilder('q')
-      .leftJoinAndSelect('q.user', 'u')
-      .select([
-        'q.id',
-        'u.mobileNumber',
-        'u.name',
-        'q.questionText',
-        'q.language',
-        'q.domainCategory',
-        'q.cropType',
-        'q.season',
-        'q.state',
-        'q.district',
-        'q.mediaType',
-        'q.status',
-        'q.aiConfidenceScore',
-        'q.submittedAt',
-        'q.reviewedAt',
-        'q.rejectionReason',
-      ])
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .orderBy('q.submittedAt', 'DESC');
-
-    if (state) qb.andWhere('q.state = :state', { state });
-    if (cropType) qb.andWhere('q.cropType = :cropType', { cropType });
-
-    const rows = await qb.getMany();
-
-    if (format === 'csv') {
-      return { format: 'csv', data: this.toCSV(rows as unknown as Record<string, unknown>[], [
-        'id', 'mobileNumber', 'name', 'questionText', 'language',
-        'domainCategory', 'cropType', 'season', 'state', 'district',
-        'mediaType', 'status', 'aiConfidenceScore', 'submittedAt', 'reviewedAt', 'rejectionReason',
-      ])};
-    }
-    return { format: 'excel', data: rows };
-  }
-
-  private async exportUsers(from: Date, to: Date, state?: string, format = 'csv') {
-    const qb = this.userRepo
-      .createQueryBuilder('u')
-      .select([
-        'u.id',
-        'u.mobileNumber',
-        'u.name',
-        'u.category',
-        'u.state',
-        'u.district',
-        'u.verificationStatus',
-        'u.role',
-        'u.createdAt',
-        'u.lastLoginAt',
-      ])
-      .where('u.createdAt BETWEEN :from AND :to', { from, to })
-      .orderBy('u.createdAt', 'DESC');
-
-    if (state) qb.andWhere('u.state = :state', { state });
-
-    const rows = await qb.getMany();
-
-    if (format === 'csv') {
-      return { format: 'csv', data: this.toCSV(rows as unknown as Record<string, unknown>[], [
-        'id', 'mobileNumber', 'name', 'category', 'state', 'district',
-        'verificationStatus', 'role', 'createdAt', 'lastLoginAt',
-      ])};
-    }
-    return { format: 'excel', data: rows };
-  }
-
-  private async exportRewards(from: Date, to: Date, state?: string, format = 'csv') {
-    const qb = this.transactionRepo
-      .createQueryBuilder('tx')
-      .innerJoin('tx.wallet', 'w')
-      .innerJoin('w.user', 'u')
-      .select([
-        'tx.id',
-        'u.mobileNumber',
-        'u.name',
-        'tx.amount',
-        'tx.type',
-        'tx.source',
-        'tx.description',
-        'tx.status',
-        'tx.referenceId',
-        'tx.createdAt',
-      ])
-      .where('tx.source = :source', { source: TransactionSource.REWARD })
-      .andWhere('tx.createdAt BETWEEN :from AND :to', { from, to })
-      .orderBy('tx.createdAt', 'DESC');
-
-    if (state) qb.andWhere('u.state = :state', { state });
-
-    const rows = await qb.getMany();
-
-    if (format === 'csv') {
-      return { format: 'csv', data: this.toCSV(rows as unknown as Record<string, unknown>[], [
-        'id', 'mobileNumber', 'name', 'amount', 'type', 'source', 'description', 'status', 'referenceId', 'createdAt',
-      ])};
-    }
-    return { format: 'excel', data: rows };
-  }
-
-  private async exportWithdrawals(from: Date, to: Date, state?: string, format = 'csv') {
-    const qb = this.withdrawalRepo
-      .createQueryBuilder('wr')
-      .leftJoin('wr.user', 'u')
-      .select([
-        'wr.id',
-        'u.mobileNumber',
-        'u.name',
-        'wr.amount',
-        'wr.payoutMethod',
-        'wr.status',
-        'wr.createdAt',
-        'wr.processedAt',
-        'wr.failureReason',
-      ])
-      .where('wr.createdAt BETWEEN :from AND :to', { from, to })
-      .orderBy('wr.createdAt', 'DESC');
-
-    if (state) qb.andWhere('u.state = :state', { state });
-
-    const rows = await qb.getMany();
-
-    if (format === 'csv') {
-      return { format: 'csv', data: this.toCSV(rows as unknown as Record<string, unknown>[], [
-        'id', 'mobileNumber', 'name', 'amount', 'payoutMethod', 'status', 'createdAt', 'processedAt', 'failureReason',
-      ])};
-    }
-    return { format: 'excel', data: rows };
-  }
-
-  private toCSV(rows: Record<string, unknown>[], columns: string[]): string {
-    const header = columns.join(',');
-    const lines = rows.map((row) =>
-      columns.map((col) => {
-        const val = row[col];
-        if (val === null || val === undefined) return '';
-        const str = String(val);
-        return str.includes(',') || str.includes('"') || str.includes('\n')
-          ? `"${str.replace(/"/g, '""')}"`
-          : str;
-      }).join(','),
-    );
-    return [header, ...lines].join('\n');
-  }
 
   // ─────────────────────────────────────────────────────────────
   // Section 8: Question Metrics (curator read-only)
@@ -1536,6 +1364,513 @@ export class AdminService implements OnModuleInit {
       avgAiConfidence: avgConfidence?.avg ? parseFloat(Number(avgConfidence.avg).toFixed(2)) : null,
       avgReviewTurnaroundMinutes: avgTurnaroundMinutes || null,
     };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 8c: Analytics (Task 11 — dedicated analytics endpoints)
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * All analytics dashboard data in a single call.
+   * GET /analytics/dashboard  →  getAnalyticsDashboard
+   */
+  async getAnalyticsDashboard(query: AnalyticsQueryDto) {
+    const [userAnalytics, questionAnalytics, rewardAnalytics] = await Promise.all([
+      this.getUserAnalytics(query),
+      this.getQuestionAnalytics(query),
+      this.getRewardAnalytics(query),
+    ]);
+
+    // Dataset growth rate: approved questions this month vs last month
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const [thisMonthApproved, lastMonthApproved] = await Promise.all([
+      this.questionRepo.count({
+        where: {
+          status: QuestionStatus.APPROVED,
+          submittedAt: Between(thisMonthStart, now),
+        },
+      }),
+      this.questionRepo.count({
+        where: {
+          status: QuestionStatus.APPROVED,
+          submittedAt: Between(lastMonthStart, lastMonthEnd),
+        },
+      }),
+    ]);
+
+    const growthRate = lastMonthApproved > 0
+      ? Math.round(((thisMonthApproved - lastMonthApproved) / lastMonthApproved) * 100)
+      : thisMonthApproved > 0 ? 100 : 0;
+
+    // Cost per approved question (total rewards paid / approved questions)
+    const totalRewarded = rewardAnalytics.totalRewarded;
+    const totalApproved = questionAnalytics.summary.approved;
+    const costPerApproved = totalApproved > 0
+      ? parseFloat((totalRewarded / totalApproved).toFixed(2))
+      : 0;
+
+    // State participation rate (states with at least 1 submission / total states)
+    const statesWithSubmissions = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('COUNT(DISTINCT q.state)', 'count')
+      .getRawOne<{ count: string }>();
+
+    // Indian states count reference (29 states + 8 UTs)
+    const totalPossibleStates = 37;
+    const participationRate = Math.round(
+      (Number(statesWithSubmissions?.count ?? 0) / totalPossibleStates) * 100,
+    );
+
+    return {
+      // Success metric cards
+      totalRegisteredUsers: userAnalytics.totalUsers,
+      monthlyActiveUsers: userAnalytics.mau,
+      totalApprovedQuestions: questionAnalytics.summary.approved,
+      totalRewarded: rewardAnalytics.totalRewarded,
+      datasetGrowthRate: growthRate,
+      costPerApprovedQuestion: costPerApproved,
+      stateParticipationRate: participationRate,
+      avgQuestionQualityScore: questionAnalytics.avgAiConfidence,
+      // Sub-analytics (for charts)
+      users: userAnalytics,
+      questions: questionAnalytics,
+      rewards: rewardAnalytics,
+    };
+  }
+
+  /**
+   * User engagement: DAU, MAU, new signups, retention.
+   * GET /analytics/users  →  getUserAnalytics
+   */
+  async getUserAnalytics(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state } = query;
+    const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const totalUsers = await this.userRepo.count();
+
+    // MAU — distinct users who logged in (lastLoginAt) in last 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const mauRaw = await this.userRepo
+      .createQueryBuilder('u')
+      .select('COUNT(DISTINCT u.id)', 'count')
+      .where('u.lastLoginAt >= :thirtyDaysAgo', { thirtyDaysAgo })
+      .getRawOne<{ count: string }>();
+    const mau = Number(mauRaw?.count ?? 0);
+
+    // DAU — distinct users active today (lastLoginAt = today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const dauRaw = await this.userRepo
+      .createQueryBuilder('u')
+      .select('COUNT(DISTINCT u.id)', 'count')
+      .where('u.lastLoginAt >= :todayStart', { todayStart })
+      .getRawOne<{ count: string }>();
+    const dau = Number(dauRaw?.count ?? 0);
+
+    // Daily signups for chart (last 30 days)
+    const signupRaw: Array<{ date: string; signups: string }> = await this.userRepo
+      .createQueryBuilder('u')
+      .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(*)', 'signups')
+      .where('u.createdAt >= :from', { from })
+      .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    // DAU per day for chart (users who logged in each day)
+    const dauRawDaily: Array<{ date: string; dau: string }> = await this.userRepo
+      .createQueryBuilder('u')
+      .select("TO_CHAR(u.lastLoginAt, 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(DISTINCT u.id)', 'dau')
+      .where('u.lastLoginAt >= :from', { from })
+      .groupBy("TO_CHAR(u.lastLoginAt, 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    const dauMap = new Map(dauRawDaily.map((r) => [r.date, Number(r.dau)]));
+
+    const signupTrend = signupRaw.map((r) => ({
+      date: r.date,
+      signups: Number(r.signups),
+      dau: dauMap.get(r.date) ?? 0,
+    }));
+
+    // New signups in current period vs prior period (for growth delta)
+    const periodDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)));
+    const priorFrom = new Date(from.getTime() - periodDays * 24 * 60 * 60 * 1000);
+    const priorTo = new Date(from.getTime() - 1);
+    const priorSignupsRaw = await this.userRepo
+      .createQueryBuilder('u')
+      .select('COUNT(*)', 'count')
+      .where('u.createdAt BETWEEN :priorFrom AND :priorTo', { priorFrom, priorTo })
+      .getRawOne<{ count: string }>();
+    const priorSignups = Number(priorSignupsRaw?.count ?? 0);
+    const currSignups = signupRaw.reduce((s, r) => s + Number(r.signups), 0);
+    const signupGrowth = priorSignups > 0
+      ? Math.round(((currSignups - priorSignups) / priorSignups) * 100)
+      : currSignups > 0 ? 100 : 0;
+
+    // State breakdown
+    let stateQb = this.userRepo.createQueryBuilder('u').select('u.state', 'state').addSelect('COUNT(*)', 'count').groupBy('u.state').orderBy('count', 'DESC');
+    if (state) stateQb = stateQb.andWhere('u.state = :state', { state });
+    const stateBreakdown: Array<{ state: string; count: number }> = (await stateQb.getRawMany()).map((r) => ({ state: r.state, count: Number(r.count) }));
+
+    // Category breakdown
+    const categoryBreakdownRaw = await this.userRepo
+      .createQueryBuilder('u')
+      .select('u.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('u.category')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+    const categoryBreakdown = categoryBreakdownRaw.filter((r) => r.category != null).map((r) => ({ category: r.category as UserCategory, count: Number(r.count) }));
+
+    // Role distribution
+    const roleDistributionRaw = await this.userRepo
+      .createQueryBuilder('u')
+      .select('u.role', 'role')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('u.role')
+      .getRawMany();
+    const roleDistribution = roleDistributionRaw.map((r) => ({ role: r.role as UserRole, count: Number(r.count) }));
+
+    return {
+      totalUsers,
+      mau,
+      dau,
+      signupGrowth,
+      signupTrend,
+      stateBreakdown,
+      categoryBreakdown,
+      roleDistribution,
+    };
+  }
+
+  /**
+   * Question volume + breakdown by state, crop, domain.
+   * GET /analytics/questions  →  getQuestionAnalytics
+   */
+  async getQuestionAnalytics(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state, cropType } = query;
+    const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const baseWhere: Record<string, unknown> = { submittedAt: Between(from, to) };
+    if (state) baseWhere['state'] = state;
+    if (cropType) baseWhere['cropType'] = cropType;
+
+    const [total, approved, rejected, pending] = await Promise.all([
+      this.questionRepo.count({ where: { ...baseWhere } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
+      this.questionRepo.count({ where: { status: In([QuestionStatus.PENDING, QuestionStatus.AI_REVIEW, QuestionStatus.HUMAN_REVIEW]) } }),
+    ]);
+
+    // Daily volume: submitted, approved, rejected per day
+    const dailyRaw: Array<{ date: string; submitted: string; approved: string; rejected: string }> = await this.questionRepo
+      .createQueryBuilder('q')
+      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(*)', 'submitted')
+      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+      .addSelect("COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)", 'rejected')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    const dailyVolume = dailyRaw.map((r) => ({
+      date: r.date,
+      submitted: Number(r.submitted),
+      approved: Number(r.approved),
+      rejected: Number(r.rejected),
+    }));
+
+    // State breakdown (top 20)
+    let stateQb = this.questionRepo
+      .createQueryBuilder('q')
+      .select('q.state', 'state')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy('q.state')
+      .orderBy('count', 'DESC')
+      .limit(20);
+    if (state) stateQb = stateQb.andWhere('q.state = :state', { state });
+    const stateBreakdown: Array<{ state: string; count: number; approved: number }> = (
+      await stateQb.getRawMany()
+    ).map((r) => ({ state: r.state, count: Number(r.count), approved: Number(r.approved) }));
+
+    // Crop-type breakdown (top 15)
+    let cropQb = this.questionRepo
+      .createQueryBuilder('q')
+      .select('q.cropType', 'cropType')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy('q.cropType')
+      .orderBy('count', 'DESC')
+      .limit(15);
+    if (cropType) cropQb = cropQb.andWhere('q.cropType = :cropType', { cropType });
+    const cropBreakdown: Array<{ cropType: string; count: number; approved: number }> = (
+      await cropQb.getRawMany()
+    ).map((r) => ({ cropType: r.cropType, count: Number(r.count), approved: Number(r.approved) }));
+
+    // Domain category breakdown
+    const domainBreakdownRaw = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('q.domainCategory', 'domainCategory')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy('q.domainCategory')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+    const domainBreakdown = domainBreakdownRaw.map((r) => ({
+      domain: r.domainCategory,
+      count: Number(r.count),
+      approved: Number(r.approved),
+    }));
+
+    // Average AI confidence score (quality proxy)
+    const avgConfidenceRaw = await this.questionRepo
+      .createQueryBuilder('q')
+      .select('AVG(q.aiConfidenceScore)', 'avg')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .andWhere('q.aiConfidenceScore IS NOT NULL')
+      .getRawOne<{ avg: string | null }>();
+    const avgAiConfidence = avgConfidenceRaw?.avg ? parseFloat(Number(avgConfidenceRaw.avg).toFixed(2)) : null;
+
+    // Approval rate
+    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+    // Month-over-month growth
+    const periodDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)));
+    const priorFrom = new Date(from.getTime() - periodDays * 24 * 60 * 60 * 1000);
+    const priorTo = new Date(from.getTime() - 1);
+    const priorApproved = await this.questionRepo.count({
+      where: { status: QuestionStatus.APPROVED, submittedAt: Between(priorFrom, priorTo) },
+    });
+    const growthRate = priorApproved > 0
+      ? Math.round(((approved - priorApproved) / priorApproved) * 100)
+      : approved > 0 ? 100 : 0;
+
+    return {
+      summary: {
+        total,
+        approved,
+        rejected,
+        pending,
+        approvalRate,
+        growthRate,
+      },
+      avgAiConfidence,
+      dailyVolume,
+      stateBreakdown,
+      cropBreakdown,
+      domainBreakdown,
+    };
+  }
+
+  /**
+   * Reward and payout analytics.
+   * GET /analytics/rewards  →  getRewardAnalytics
+   */
+  async getRewardAnalytics(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state } = query;
+    const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const txWhere: Record<string, unknown> = {
+      source: TransactionSource.REWARD,
+      status: 'completed',
+      createdAt: Between(from, to),
+    };
+
+    let txQb = this.transactionRepo
+      .createQueryBuilder('tx')
+      .innerJoin('tx.wallet', 'w')
+      .innerJoinAndSelect('w.user', 'u')
+      .select([
+        'SUM(tx.amount) as total_rewarded',
+        'COUNT(tx.id) as reward_count',
+        'AVG(tx.amount) as avg_reward',
+        "TO_CHAR(tx.createdAt, 'YYYY-MM-DD') as date",
+      ])
+      .where('tx.source = :source', { source: TransactionSource.REWARD })
+      .andWhere('tx.status = :status', { status: 'completed' })
+      .andWhere('tx.createdAt BETWEEN :from AND :to', { from, to })
+      .groupBy("TO_CHAR(tx.createdAt, 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC');
+
+    if (state) txQb = txQb.andWhere('u.state = :state', { state });
+
+    const rewardTxsRaw = await txQb.getRawMany<{ total_rewarded: string; reward_count: string; avg_reward: string; date: string }>();
+
+    const totalRewarded = rewardTxsRaw.reduce((s, r) => s + Number(r.total_rewarded), 0);
+    const rewardCount = rewardTxsRaw.reduce((s, r) => s + Number(r.reward_count), 0);
+    const avgReward = rewardCount > 0 ? parseFloat((totalRewarded / rewardCount).toFixed(2)) : 0;
+
+    // Daily reward trend
+    const dailyRewardTrend = rewardTxsRaw.map((r) => ({
+      date: r.date,
+      amount: Number(r.total_rewarded),
+      count: Number(r.reward_count),
+    }));
+
+    // Withdrawal stats
+    const withdrawalStats = await this.withdrawalRepo
+      .createQueryBuilder('wr')
+      .select([
+        'COALESCE(SUM(wr.amount), 0) as total_withdrawn',
+        'COUNT(wr.id) as withdrawal_count',
+        "COUNT(CASE WHEN wr.status = 'pending' THEN 1 END) as pending_count",
+        "COUNT(CASE WHEN wr.status = 'completed' THEN 1 END) as completed_count",
+        "COUNT(CASE WHEN wr.status = 'failed' THEN 1 END) as failed_count",
+      ])
+      .where('wr.createdAt BETWEEN :from AND :to', { from, to })
+      .getRawOne();
+
+    // Total pool (all-time rewards)
+    const totalPoolRaw = await this.transactionRepo
+      .createQueryBuilder('tx')
+      .select('COALESCE(SUM(tx.amount), 0)', 'total')
+      .where('tx.source = :source', { source: TransactionSource.REWARD })
+      .andWhere('tx.status = :status', { status: 'completed' })
+      .getRawOne<{ total: string }>();
+    const totalPool = Number(totalPoolRaw?.total ?? 0);
+
+    return {
+      totalRewarded: parseFloat(totalRewarded.toFixed(2)),
+      rewardCount,
+      avgReward,
+      totalPool,
+      dailyRewardTrend,
+      withdrawals: {
+        totalWithdrawn: Number(withdrawalStats?.total_withdrawn ?? 0),
+        withdrawalCount: Number(withdrawalStats?.withdrawal_count ?? 0),
+        pending: Number(withdrawalStats?.pending_count ?? 0),
+        completed: Number(withdrawalStats?.completed_count ?? 0),
+        failed: Number(withdrawalStats?.failed_count ?? 0),
+      },
+    };
+  }
+
+  private toCSV(rows: Record<string, unknown>[], columns: string[]): string {
+    const header = columns.join(',');
+    const lines = rows.map((row) =>
+      columns.map((col) => {
+        const val = row[col];
+        if (val === null || val === undefined) return '';
+        const str = String(val);
+        return str.includes(',') || str.includes('"') || str.includes('\n')
+          ? `"${str.replace(/"/g, '""')}"`
+          : str;
+      }).join(','),
+    );
+    return [header, ...lines].join('\n');
+  }
+
+  /**
+   * Export with true Excel support (json2xls).
+   * Returns { format, data: string } for CSV, { format, xls: Buffer } for Excel.
+   */
+  async exportData(dto: ExportQueryDto) {
+    const { fromDate, toDate, state, cropType, format = 'csv', dataType = 'questions' } = dto;
+    const from = fromDate ? new Date(fromDate) : new Date(0);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    let rows: Record<string, unknown>[];
+    let columns: string[];
+
+    if (dataType === 'questions') {
+      const qb = this.questionRepo
+        .createQueryBuilder('q')
+        .leftJoinAndSelect('q.user', 'u')
+        .select([
+          'q.id',
+          'u.mobileNumber',
+          'u.name',
+          'q.questionText',
+          'q.language',
+          'q.domainCategory',
+          'q.cropType',
+          'q.season',
+          'q.state',
+          'q.district',
+          'q.mediaType',
+          'q.status',
+          'q.aiConfidenceScore',
+          'q.submittedAt',
+          'q.reviewedAt',
+          'q.rejectionReason',
+        ])
+        .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+        .orderBy('q.submittedAt', 'DESC');
+      if (state) qb.andWhere('q.state = :state', { state });
+      if (cropType) qb.andWhere('q.cropType = :cropType', { cropType });
+      rows = await qb.getMany() as unknown as Record<string, unknown>[];
+      columns = [
+        'id', 'mobileNumber', 'name', 'questionText', 'language',
+        'domainCategory', 'cropType', 'season', 'state', 'district',
+        'mediaType', 'status', 'aiConfidenceScore', 'submittedAt', 'reviewedAt', 'rejectionReason',
+      ];
+    } else if (dataType === 'users') {
+      const qb = this.userRepo
+        .createQueryBuilder('u')
+        .select([
+          'u.id', 'u.mobileNumber', 'u.name', 'u.category', 'u.state',
+          'u.district', 'u.verificationStatus', 'u.role', 'u.createdAt', 'u.lastLoginAt',
+        ])
+        .where('u.createdAt BETWEEN :from AND :to', { from, to })
+        .orderBy('u.createdAt', 'DESC');
+      if (state) qb.andWhere('u.state = :state', { state });
+      rows = await qb.getMany() as unknown as Record<string, unknown>[];
+      columns = ['id', 'mobileNumber', 'name', 'category', 'state', 'district', 'verificationStatus', 'role', 'createdAt', 'lastLoginAt'];
+    } else if (dataType === 'rewards') {
+      const qb = this.transactionRepo
+        .createQueryBuilder('tx')
+        .innerJoin('tx.wallet', 'w')
+        .innerJoinAndSelect('w.user', 'u')
+        .select([
+          'tx.id', 'u.mobileNumber', 'u.name', 'tx.amount',
+          'tx.type', 'tx.source', 'tx.description', 'tx.status', 'tx.referenceId', 'tx.createdAt',
+        ])
+        .where('tx.source = :source', { source: TransactionSource.REWARD })
+        .andWhere('tx.createdAt BETWEEN :from AND :to', { from, to })
+        .orderBy('tx.createdAt', 'DESC');
+      if (state) qb.andWhere('u.state = :state', { state });
+      rows = await qb.getMany() as unknown as Record<string, unknown>[];
+      columns = ['id', 'mobileNumber', 'name', 'amount', 'type', 'source', 'description', 'status', 'referenceId', 'createdAt'];
+    } else {
+      const qb = this.withdrawalRepo
+        .createQueryBuilder('wr')
+        .leftJoinAndSelect('wr.user', 'u')
+        .select([
+          'wr.id', 'u.mobileNumber', 'u.name', 'wr.amount',
+          'wr.payoutMethod', 'wr.status', 'wr.createdAt', 'wr.processedAt', 'wr.failureReason',
+        ])
+        .where('wr.createdAt BETWEEN :from AND :to', { from, to })
+        .orderBy('wr.createdAt', 'DESC');
+      if (state) qb.andWhere('u.state = :state', { state });
+      rows = await qb.getMany() as unknown as Record<string, unknown>[];
+      columns = ['id', 'mobileNumber', 'name', 'amount', 'payoutMethod', 'status', 'createdAt', 'processedAt', 'failureReason'];
+    }
+
+    if (format === 'csv') {
+      return { format: 'csv', data: this.toCSV(rows, columns) };
+    }
+
+    // Excel via json2xls
+    const json2xls = (await import('json2xls')).default;
+    const xls = json2xls(rows, {
+      fields: columns.reduce((acc, col) => ({ ...acc, [col]: col }), {} as Record<string, string>),
+    });
+    return { format: 'excel', xls };
   }
 
   // ─────────────────────────────────────────────────────────────

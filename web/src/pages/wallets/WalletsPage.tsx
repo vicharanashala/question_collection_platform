@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn, formatDate } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { WalletDetailModal } from '@/components/WalletDetailModal'
 import {
   Wallet, Search, RefreshCw, X, TrendingUp,

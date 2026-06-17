@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  TooltipProps,
 } from 'recharts'
 import { format, parseISO } from 'date-fns'
 
@@ -24,18 +23,17 @@ interface AreaChartComponentProps {
   showGrid?: boolean
   showAxis?: boolean
   valueFormatter?: (v: number) => string
-  labelFormatter?: (d: string) => string
+  labelFormatter?: (l: string) => string
 }
 
-function CustomTooltip({ active, payload, label, valueFormatter, labelFormatter }: TooltipProps<number, string> & {
-  valueFormatter?: (v: number) => string
-  labelFormatter?: (d: string) => string
-}) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, label, valueFormatter, labelFormatter }: { active?: boolean; payload?: any[]; label?: string; valueFormatter?: (v: number) => string; labelFormatter?: (l: string) => string }) {
   if (!active || !payload?.length) return null
   const value = payload[0]?.value as number
+  const displayLabel = labelFormatter ? labelFormatter(label ?? '') : String(label ?? '')
   return (
     <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
-      <p className="text-xs text-text-secondary">{labelFormatter ? labelFormatter(label) : label}</p>
+      <p className="text-xs text-text-secondary">{displayLabel}</p>
       <p className="mt-0.5 text-sm font-bold text-text">
         {valueFormatter ? valueFormatter(value) : value?.toLocaleString()}
       </p>
@@ -54,7 +52,6 @@ export function AreaChartComponent({
   valueFormatter,
   labelFormatter,
 }: AreaChartComponentProps) {
-  const cssColor = `var(--primary)`
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsArea data={data} margin={{ top: 4, right: 4, left: showAxis ? 0 : -28, bottom: 0 }}>

@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatDate } from '@/lib/utils'
 import {
-  Wallet, ArrowUpRight, ArrowDownRight, CheckCircle,
+  Wallet, ArrowUpRight, ArrowDownRight,
   RefreshCw, TrendingUp, TrendingDown, Clock, Hash,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -67,7 +67,7 @@ interface WalletDetailModalProps {
   summary?: Pick<WalletSummary, 'id' | 'userId' | 'balance' | 'totalEarned' | 'totalWithdrawn' | 'user'>
 }
 
-export function WalletDetailModal({ walletId, userId, open, onClose, summary }: WalletDetailModalProps) {
+export function WalletDetailModal({ userId, open, onClose, summary }: WalletDetailModalProps) {
   const { user: currentUser } = useAuth()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
@@ -209,7 +209,7 @@ export function WalletDetailModal({ walletId, userId, open, onClose, summary }: 
 
               {user?.state && (
                 <p className="text-xs text-text-tertiary">
-                  {user.state}{user?.district ? ` · ${user.district}` : ''}
+                  {user.state}
                 </p>
               )}
               {user?.createdAt && (

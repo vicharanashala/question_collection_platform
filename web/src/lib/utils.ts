@@ -74,3 +74,10 @@ export function calcChange(current: number, previous: number): { value: number; 
   const sign = pct >= 0 ? '+' : ''
   return { value: pct, label: `${sign}${pct}%` }
 }
+
+export function formatINR(n: number): string {
+  if (n >= 1_00_00_000) return `${(n / 1_00_00_000).toFixed(1)}Cr`
+  if (n >= 1_00_000) return `${(n / 1_00_000).toFixed(1)}L`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+  return n.toLocaleString('en-IN')
+}

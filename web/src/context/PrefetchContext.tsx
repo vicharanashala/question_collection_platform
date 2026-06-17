@@ -1,10 +1,5 @@
 import { createContext, useContext, useCallback, type ReactNode } from 'react'
 
-interface PrefetchEntry {
-  key: string
-  fetcher: () => Promise<unknown>
-}
-
 interface PrefetchContextValue {
   prefetch: (key: string, fetcher: () => Promise<unknown>) => void
   cancel: (key: string) => void
@@ -51,9 +46,9 @@ export function usePrefetch() {
  * Use it inside React components — pages or features.
  */
 export function useApi<T>(
-  key: string | null,
-  fetcher: (() => Promise<T>) | null,
-  options: { enabled?: boolean; ttl?: number } = {},
+  _key: string | null,
+  _fetcher: (() => Promise<T>) | null,
+  _options: { enabled?: boolean; ttl?: number } = {},
 ) {
   // This is intentionally left minimal — the actual loading lives
   // in the individual page components which own the loading state.

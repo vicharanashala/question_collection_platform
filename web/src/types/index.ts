@@ -142,6 +142,7 @@ export interface Withdrawal {
   id: string
   amount: number
   payoutMethod: string
+  payoutDetails: Record<string, unknown> | null
   status: 'pending' | 'processing' | 'completed' | 'failed'
   createdAt: string
   processedAt: string | null
@@ -185,4 +186,82 @@ export interface PaginatedResponse<T> {
   page: number
   limit: number
   pages: number
+}
+
+// ─── Analytics (Task 11) ────────────────────────────────────────────────────────
+
+export interface SignupTrendPoint {
+  date: string
+  signups: number
+  dau: number
+}
+
+export interface UserAnalytics {
+  totalUsers: number
+  mau: number
+  dau: number
+  signupGrowth: number
+  signupTrend: SignupTrendPoint[]
+  stateBreakdown: { state: string; count: number }[]
+  categoryBreakdown: { category: UserCategory; count: number }[]
+  roleDistribution: { role: UserRole; count: number }[]
+}
+
+export interface QuestionSummary {
+  total: number
+  approved: number
+  rejected: number
+  pending: number
+  approvalRate: number
+  growthRate: number
+}
+
+export interface QuestionAnalytics {
+  summary: QuestionSummary
+  avgAiConfidence: number | null
+  dailyVolume: { date: string; submitted: number; approved: number; rejected: number }[]
+  stateBreakdown: { state: string; count: number; approved: number }[]
+  cropBreakdown: { cropType: string; count: number; approved: number }[]
+  domainBreakdown: { domain: string; count: number; approved: number }[]
+}
+
+export interface RewardAnalytics {
+  totalRewarded: number
+  rewardCount: number
+  avgReward: number
+  totalPool: number
+  dailyRewardTrend: { date: string; amount: number; count: number }[]
+  withdrawals: {
+    totalWithdrawn: number
+    withdrawalCount: number
+    pending: number
+    completed: number
+    failed: number
+  }
+}
+
+export interface AnalyticsDashboard {
+  // Key metric cards
+  totalRegisteredUsers: number
+  monthlyActiveUsers: number
+  totalApprovedQuestions: number
+  totalRewarded: number
+  datasetGrowthRate: number
+  costPerApprovedQuestion: number
+  stateParticipationRate: number
+  avgQuestionQualityScore: number | null
+  // Sub-sections
+  users: UserAnalytics
+  questions: QuestionAnalytics
+  rewards: RewardAnalytics
+}
+
+export interface ExportParams {
+  fromDate?: string
+  toDate?: string
+  state?: string
+  cropType?: string
+  domainCategory?: string
+  dataType?: 'questions' | 'users' | 'rewards' | 'withdrawals'
+  format?: 'csv' | 'excel'
 }

@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
 import {
-  Search, ChevronLeft, ChevronRight, ShieldCheck, Plus,
-  PauseCircle, Ban, Clock, CheckCircle, User,
+  Search, ChevronLeft, ChevronRight, Plus,
+  PauseCircle, Ban, Clock, CheckCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User as UserType } from '@/types'

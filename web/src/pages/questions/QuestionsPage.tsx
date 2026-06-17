@@ -166,11 +166,11 @@ function QuestionCard({ q, onOpen, selectedLang, onLangChange }: { q: Question; 
             <ReasonStrip
               status={q.status}
               reason={
-                q.status === 'rejected' ? q.rejectionReason! :
-                q.status === 'held'     ? q.heldReason! :
-                                          q.approvalReason!
+                (q.status === 'rejected' ? q.rejectionReason :
+                 q.status === 'held'     ? q.heldReason :
+                                          q.approvalReason) || ''
               }
-              reviewerName={q.reviewedByName}
+              reviewerName={q.reviewedByName ?? undefined}
             />
           )}
       </CardContent>

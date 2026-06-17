@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AnalyticsController, ExportController } from './analytics.controller';
 import {
   User,
   Question,
@@ -29,7 +30,7 @@ import { WalletsModule } from '../wallets/wallets.module';
     ]),
     forwardRef(() => WalletsModule),
   ],
-  controllers: [AdminController],
+  controllers: [AdminController, AnalyticsController, ExportController],
   providers: [AdminService],
   exports: [AdminService],
 })

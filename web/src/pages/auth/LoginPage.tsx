@@ -73,7 +73,7 @@ export function LoginPage() {
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [_sent, setSent] = useState(false)
   const countdown = useCountdown()
 
   const otpRef = useRef<HTMLInputElement>(null)

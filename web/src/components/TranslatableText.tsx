@@ -68,7 +68,6 @@ export function TranslatableText({
   const [displayedLang, setDisplayedLang] = useState(sourceLanguage)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const portalRef = useRef<HTMLDivElement>(null)
   // Keeps selectedLang fresh inside async callbacks without stale-closure issues.
   // Synced via useEffect to avoid "cannot update ref during render" warning.
   const selectedLangRef = useRef(selectedLang)

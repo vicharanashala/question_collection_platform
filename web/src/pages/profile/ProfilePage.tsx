@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { getInitials } from '@/lib/utils'
 import { Phone, Shield, MapPin, Calendar, Globe } from 'lucide-react'
@@ -42,9 +42,6 @@ export function ProfilePage() {
     }
   }
 
-  function savePreference(locale: string) {
-    localStorage.setItem('locale_preference', locale)
-  }
 
   return (
     <div className="space-y-6 max-w-2xl">

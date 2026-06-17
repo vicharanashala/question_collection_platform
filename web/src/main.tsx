@@ -6,7 +6,6 @@ import { AuthProvider } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
-import { SkeletonPage } from '@/components/ui/skeleton'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

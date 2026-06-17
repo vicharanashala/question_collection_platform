@@ -4,7 +4,6 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
-  TooltipProps,
 } from 'recharts'
 import { cn } from '@/lib/utils'
 
@@ -36,9 +35,9 @@ const DEFAULT_COLORS = [
   'hsl(var(--chart-4))',
 ]
 
-function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number }> }) {
   if (!active || !payload?.length) return null
-  const { name, value } = payload[0] as DonutSegment
+  const { name, value } = payload[0]
   return (
     <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
       <p className="text-xs text-text-secondary">{name}</p>
@@ -56,7 +55,6 @@ export function DonutChartComponent({
   height = 220,
   innerRadius = 60,
   outerRadius = 90,
-  valueFormatter,
 }: DonutChartComponentProps) {
   const total = data.reduce((s, d) => s + d.value, 0)
 

@@ -10,11 +10,10 @@ import { cn, formatDate } from '@/lib/utils'
 import {
   CheckCircle, XCircle, PauseCircle,
   ChevronLeft, ChevronRight, Search,
-  Clock, Star, IndianRupee,
+  Clock, Star,
   MapPin, Wheat, Film,
   Eye, Hash, InboxIcon, RotateCcw,
-  User, MessageSquare, Zap, Filter,
-  AlertCircle, ThumbsUp, Ban,
+  User, Zap, ThumbsUp, Ban,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question, QuestionStatus } from '@/types'

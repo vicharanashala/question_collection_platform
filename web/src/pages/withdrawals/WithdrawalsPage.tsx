@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
 import { WalletDetailModal } from '@/components/WalletDetailModal'
 import {
-  CreditCard, ChevronLeft, ChevronRight, Search,
+  CreditCard, ChevronLeft, ChevronRight,
   CheckCircle, XCircle, RefreshCw, Filter, X, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
