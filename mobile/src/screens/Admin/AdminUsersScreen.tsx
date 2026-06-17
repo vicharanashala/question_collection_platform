@@ -312,7 +312,7 @@ export function AdminUsersScreen() {
           visible={!!walletModal}
           onClose={() => setWalletModal(null)}
           isSuperAdmin={currentUser?.role === 'super_admin'}
-          onAdjustPress={() => { console.log('[DEBUG] Adjust pressed', walletModal); setWalletAdjustVisible(true); }}
+          onAdjustPress={() => setWalletAdjustVisible(true)}
         />
       )}
 

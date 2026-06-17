@@ -6,7 +6,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useToast } from '../components/Toast';
-import { useTranslation } from 'react-i18next';
 import { adminApi, getErrorMessage } from '../api/client';
 import { tokens } from '../utils/theme';
 import type { WalletSummary } from '../types';
@@ -23,7 +22,6 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
-  const { t } = useTranslation();
 
   const [wallet, setWallet] = useState<WalletSummary | null>(null);
   const [type, setType] = useState<'credit' | 'debit'>('credit');
@@ -36,6 +34,20 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
   const currentBalance = wallet?.balance ?? 0;
   const accentColor = type === 'credit' ? c.success : c.error;
 
+  // Reset form whenever modal opens
+  useEffect(() => {
+    if (visible) {
+      setType('credit');
+      setAmount('');
+      setReason('');
+      setAmountError('');
+      setReasonError('');
+      setLoading(false);
+      setWallet(null);
+    }
+  }, [visible]);
+
+  // Load wallet balance when modal opens
   useEffect(() => {
     if (visible && userId) {
       adminApi.getUserWallet(userId)
@@ -44,29 +56,18 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
     }
   }, [visible, userId]);
 
-  function reset() {
-    setType('credit');
-    setAmount('');
-    setReason('');
-    setAmountError('');
-    setReasonError('');
-    setLoading(false);
-  }
-
   function handleClose() {
-    reset();
     onClose();
   }
 
   async function handleConfirm() {
-    // Validate
     const numAmount = parseFloat(amount);
     if (!amount.trim() || isNaN(numAmount) || numAmount <= 0) {
       setAmountError('Enter a valid positive amount');
       return;
     }
     if (!reason.trim()) {
-      setReasonError('Reason is required for audit');
+      setReasonError('Reason is required for audit trail');
       return;
     }
     if (type === 'debit' && numAmount > currentBalance) {
@@ -78,8 +79,6 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
     setAmountError('');
     setReasonError('');
     try {
-      // Backend expects positive amount; debit flag is determined by amount sign or separate field
-      // Using sign: positive = credit, negative = debit
       const payloadAmount = type === 'credit' ? numAmount : -numAmount;
       await adminApi.adjustWallet(userId, { amount: payloadAmount, reason: reason.trim() });
       showToast(
@@ -87,7 +86,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
         'success',
       );
       onAdjusted();
-      handleClose();
+      onClose();
     } catch (e: unknown) {
       const msg = getErrorMessage(e, 'Failed to adjust wallet balance');
       showToast(msg, 'error');
@@ -96,16 +95,22 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
     }
   }
 
-  console.log('[WalletAdjustModal] rendering', { visible, userId, userName });
+  const previewAmount = amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0
+    ? (type === 'credit' ? currentBalance + parseFloat(amount) : currentBalance - parseFloat(amount))
+    : null;
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.overlay}
       >
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
         <View style={[styles.sheet, { backgroundColor: c.surface, ...tokens.shadowXl }]}>
-
           {/* Header */}
           <View style={styles.header}>
             <View style={[styles.iconWrap, { backgroundColor: c.primary + '18' }]}>
@@ -119,13 +124,15 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
             </View>
           </View>
 
-          {/* Current balance indicator */}
+          {/* Current balance */}
           <View style={[styles.balanceChip, { backgroundColor: c.surfaceVariant }]}>
             <Ionicons name="wallet-outline" size={14} color={c.textSecondary} />
             <Text style={[styles.balanceChipText, { color: c.textSecondary }]}>
               Current balance:{' '}
               <Text style={{ fontWeight: '700', color: c.primary }}>
-                ₹{currentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                {currentBalance === 0 && !wallet
+                  ? '...'
+                  : `₹${currentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
               </Text>
             </Text>
           </View>
@@ -224,15 +231,11 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
           </View>
 
           {/* Preview */}
-          {amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && (
+          {previewAmount !== null && (
             <View style={[styles.previewRow, { backgroundColor: (type === 'credit' ? c.success : c.error) + '12' }]}>
               <Text style={[styles.previewLabel, { color: c.textSecondary }]}>New balance:</Text>
               <Text style={[styles.previewValue, { color: type === 'credit' ? c.success : c.error }]}>
-                ₹
-                {(type === 'credit'
-                  ? currentBalance + parseFloat(amount)
-                  : currentBalance - parseFloat(amount)
-                ).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                ₹{previewAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </Text>
             </View>
           )}
@@ -275,99 +278,117 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: tokens.spacing6,
   },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.45)' },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   sheet: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 420,
     borderRadius: tokens.radiusXl,
     padding: tokens.spacing6,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: tokens.spacing4,
+    alignItems: 'center',
+    marginBottom: tokens.spacing5,
     gap: tokens.spacing3,
   },
   iconWrap: {
-    width: 44, height: 44,
-    borderRadius: tokens.radiusMd,
-    alignItems: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: 'center',
-    flexShrink: 0,
+    alignItems: 'center',
   },
   headerText: { flex: 1 },
-  title: { fontSize: 17, fontWeight: '800', marginBottom: 4 },
-  subtitle: { fontSize: 13, lineHeight: 18 },
+  title: { fontSize: 17, fontWeight: '700' },
+  subtitle: { fontSize: 13, marginTop: 2 },
   balanceChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: tokens.spacing2,
     borderRadius: tokens.radiusMd,
     paddingHorizontal: tokens.spacing3,
     paddingVertical: tokens.spacing2,
-    marginBottom: tokens.spacing4,
-    alignSelf: 'flex-start',
+    marginBottom: tokens.spacing5,
   },
-  balanceChipText: { fontSize: 12 },
-  field: { marginBottom: tokens.spacing4 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing2 },
-  toggleRow: { flexDirection: 'row', gap: tokens.spacing2 },
+  balanceChipText: { fontSize: 13 },
+  field: {
+    marginBottom: tokens.spacing4,
+    gap: tokens.spacing2,
+  },
+  fieldLabel: { fontSize: 13, fontWeight: '600' },
+  toggleRow: {
+    flexDirection: 'row',
+    gap: tokens.spacing3,
+  },
   toggleBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.spacing1,
-    paddingVertical: tokens.spacing2,
+    gap: tokens.spacing2,
+    paddingVertical: tokens.spacing3,
     borderRadius: tokens.radiusMd,
     borderWidth: 1.5,
   },
-  toggleBtnText: { fontSize: 13, fontWeight: '700' },
+  toggleBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
   amountInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderRadius: tokens.radiusMd,
     paddingHorizontal: tokens.spacing3,
-    backgroundColor: 'transparent',
   },
-  currencySymbol: { fontSize: 18, fontWeight: '600' },
+  currencySymbol: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginRight: tokens.spacing2,
+  },
   amountInput: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     paddingVertical: tokens.spacing3,
-    paddingLeft: tokens.spacing2,
   },
+  fieldError: { fontSize: 12 },
   input: {
     borderWidth: 1.5,
     borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: tokens.spacing3,
     fontSize: 14,
     minHeight: 80,
   },
-  fieldError: { fontSize: 12, marginTop: tokens.spacing1 },
   previewRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     borderRadius: tokens.radiusMd,
-    paddingHorizontal: tokens.spacing3,
-    paddingVertical: tokens.spacing2,
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: tokens.spacing3,
     marginBottom: tokens.spacing4,
   },
   previewLabel: { fontSize: 13 },
   previewValue: { fontSize: 15, fontWeight: '800' },
-  actions: { flexDirection: 'row', gap: tokens.spacing3, marginTop: tokens.spacing2 },
+  actions: {
+    flexDirection: 'row',
+    gap: tokens.spacing3,
+  },
   btn: {
     flex: 1,
-    height: 46,
+    paddingVertical: tokens.spacing4,
     borderRadius: tokens.radiusMd,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  btnCancel: { borderWidth: 1.5 },
+  btnCancel: {
+    borderWidth: 1.5,
+  },
   btnCancelText: { fontSize: 14, fontWeight: '700' },
-  btnConfirm: { flexDirection: 'row' },
-  btnConfirmText: { fontSize: 14, fontWeight: '800', color: '#fff' },
+  btnConfirm: {},
+  btnConfirmText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
