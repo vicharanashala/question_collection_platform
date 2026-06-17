@@ -294,7 +294,7 @@ export function ReviewsPage() {
     if (!holdReason.trim()) { toast.error('Hold reason is required'); return }
     setActionLoading(holdQuestionId)
     try {
-      await curatorApi.reviewQuestion(holdQuestionId, { action: 'hold', heldReason: holdReason.trim() })
+      await curatorApi.reviewQuestion(holdQuestionId, { action: 'hold', reason: holdReason.trim(), heldReason: holdReason.trim() })
       toast.success('Question put on hold')
       setHoldOpen(false); setHoldQuestionId(null); setHoldReason('')
       setQuestions((qs) => qs.filter((q) => q.id !== holdQuestionId))

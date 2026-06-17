@@ -41,9 +41,12 @@ export interface Question {
   duplicateFlag: boolean;
   submittedAt: string;
   reviewedAt: string | null;
+  reviewedBy?: string | null;
+  reviewedByName?: string | null;
   rejectionReason?: string | null;
-  reviewerId?: string | null;
+  approvalReason?: string | null;
   heldReason?: string | null;
+  reviewerId?: string | null;
   /** Populated user info returned by backend */
   user?: {
     id: string;

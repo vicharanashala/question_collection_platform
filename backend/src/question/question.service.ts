@@ -223,30 +223,38 @@ export class QuestionService {
 
     const [items, total] = await this.questionRepo.findAndCount({
       where,
-      relations: ['user'],
+      relations: { user: true, reviewer: true },
       order: { submittedAt: 'DESC' },
       skip,
       take: limit,
       select: [
         'id', 'domainCategory', 'season', 'cropType', 'questionText',
         'mediaType', 'mediaUrls', 'status', 'aiConfidenceScore', 'duplicateFlag',
-        'submittedAt', 'reviewedAt', 'rejectionReason', 'state', 'district', 'block',
+        'submittedAt', 'reviewedAt', 'rejectionReason', 'heldReason', 'approvalReason',
+        'state', 'district', 'block', 'language',
         'editWindowClosesAt', 'createdAt',
       ],
     });
 
-    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+    return {
+      items: items.map((q) => ({
+        ...q,
+        reviewedByName: (q as any).reviewer?.name ?? null,
+      })),
+      total, page, limit, pages: Math.ceil(total / limit),
+    };
   }
 
   // ─── Admin: approve / reject ────────────────────────────────────────────────
 
-  async approve(questionId: string, reviewerId: string): Promise<Question> {
+  async approve(questionId: string, reviewerId: string, reason?: string): Promise<Question> {
     const question = await this.questionRepo.findOne({ where: { id: questionId } });
     if (!question) throw new NotFoundException('Question not found');
 
     question.status = QuestionStatus.APPROVED;
     question.reviewedAt = new Date();
     question.reviewerId = reviewerId;
+    question.approvalReason = reason ?? null;
 
     const saved = await this.questionRepo.save(question);
 

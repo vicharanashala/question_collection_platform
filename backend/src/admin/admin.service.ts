@@ -430,6 +430,7 @@ export class AdminService implements OnModuleInit {
     const qb = this.questionRepo
       .createQueryBuilder('q')
       .leftJoinAndSelect('q.user', 'u')
+      .leftJoinAndSelect('q.reviewer', 'r')
       .select([
         'q.id',
         'q.userId',
@@ -439,6 +440,10 @@ export class AdminService implements OnModuleInit {
         'q.status',
         'q.aiConfidenceScore',
         'q.submittedAt',
+        'q.reviewedAt',
+        'q.rejectionReason',
+        'q.heldReason',
+        'q.approvalReason',
         'q.language',
         'q.domainCategory',
         'q.cropType',
@@ -485,6 +490,7 @@ export class AdminService implements OnModuleInit {
       items: items.map((q) => ({
         ...q,
         user: q.user ? { id: q.user.id, name: q.user.name, mobileNumber: q.user.mobileNumber } : null,
+        reviewedByName: (q as any).reviewer?.name ?? null,
       })),
       total,
       page,
@@ -496,7 +502,7 @@ export class AdminService implements OnModuleInit {
   async getQuestionForReview(questionId: string) {
     const question = await this.questionRepo.findOne({
       where: { id: questionId },
-      relations: ['user'],
+      relations: ['user', 'reviewer'],
     });
     if (!question) throw new NotFoundException('Question not found');
     return {
@@ -504,6 +510,7 @@ export class AdminService implements OnModuleInit {
       user: question.user
         ? { id: question.user.id, name: question.user.name, mobileNumber: question.user.mobileNumber, state: question.user.state }
         : null,
+      reviewedByName: question.reviewer?.name ?? null,
     };
   }
 

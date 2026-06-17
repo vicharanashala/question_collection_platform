@@ -183,14 +183,24 @@ describe('QuestionController', () => {
   // ─── POST /questions/:id/approve ────────────────────────────────────────────
 
   describe('POST /questions/:id/approve', () => {
-    it('should call approve on the service', async () => {
+    it('should call approve on the service with reason', async () => {
       const approved = { id: 'q-1', status: QuestionStatus.APPROVED };
       service.approve.mockResolvedValue(approved);
 
-      const result = await controller.approve('q-1', adminReq as any);
+      const result = await controller.approve('q-1', 'Looks good', adminReq as any);
 
       expect(result).toEqual(approved);
-      expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1');
+      expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1', 'Looks good');
+    });
+
+    it('should allow approve without reason', async () => {
+      const approved = { id: 'q-1', status: QuestionStatus.APPROVED };
+      service.approve.mockResolvedValue(approved);
+
+      const result = await controller.approve('q-1', undefined, adminReq as any);
+
+      expect(result).toEqual(approved);
+      expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1', undefined);
     });
   });
 

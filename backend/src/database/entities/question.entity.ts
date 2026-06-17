@@ -105,4 +105,8 @@ export class Question {
   @ManyToOne(() => User, (user) => user.questions)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'reviewer_id' })
+  reviewer: User | null;
 }

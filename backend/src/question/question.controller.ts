@@ -101,9 +101,10 @@ export class QuestionController {
   @HttpCode(HttpStatus.OK)
   async approve(
     @Param('id', new ParseUUIDPipe()) id: string,
+    @Body('reason') reason: string | undefined,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.questionService.approve(id, req.user.id);
+    return this.questionService.approve(id, req.user.id, reason);
   }
 
   @Post(':id/reject')
