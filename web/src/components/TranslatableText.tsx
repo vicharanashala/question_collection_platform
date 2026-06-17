@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Languages, ChevronDown, ChevronUp, Loader } from 'lucide-react'
 import { speechApi } from '@/api/speech'
 import { cn } from '@/lib/utils'
@@ -163,8 +164,14 @@ export function TranslatableText({
             {selectedLang ? langLabel : 'Language'}
             <ChevronDown className={cn('h-3 w-3 transition-transform', showDropdown && 'rotate-180')} />
           </button>
-          {showDropdown && (
-            <div className="absolute left-0 top-full mt-1 z-50 bg-surface border border-border-subtle rounded-lg shadow-lg w-40 max-h-60 overflow-y-auto">
+          {showDropdown && createPortal((
+            <div
+              style={{
+                position: 'absolute', left: 0, top: '100%', marginTop: 4,
+                zIndex: 9999,
+              }}
+              className="bg-surface border border-border-subtle rounded-lg shadow-lg w-40 max-h-60 overflow-y-auto"
+            >
               {SUPPORTED_LANGS.map((code) => (
                 <button
                   key={code}
@@ -179,7 +186,7 @@ export function TranslatableText({
                 </button>
               ))}
             </div>
-          )}
+          ), document.body)}
         </div>
 
         {/* Translate / show / hide / reset button */}
