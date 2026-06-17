@@ -20,6 +20,7 @@ Each task file represents a deliverable to be completed. Task files use the form
 | 13 | Light & Dark Mode (Theme Persistence) | UI | Completed |
 | 14 | Web Admin UI (React+Tailwind) | Web | In Progress |
 | 15 | Push Notifications for Question Status Changes | Notification | Pending |
+| 16 | Sarvam Audio-to-Text Integration | AI/Transcription | Pending |
 
 ## Progress
 
