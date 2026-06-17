@@ -37,7 +37,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
   const accentColor = type === 'credit' ? c.success : c.error;
 
   useEffect(() => {
-    if (visible) {
+    if (visible && userId) {
       adminApi.getUserWallet(userId)
         .then((r) => setWallet(r.data as WalletSummary))
         .catch(() => setWallet(null));

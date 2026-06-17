@@ -317,7 +317,7 @@ export function AdminUsersScreen() {
       )}
 
       <WalletAdjustModal
-        visible={walletAdjustVisible}
+        visible={walletAdjustVisible && !!walletModal}
         userId={walletModal?.userId ?? ''}
         userName={walletModal?.userName ?? ''}
         onClose={() => setWalletAdjustVisible(false)}
