@@ -39,6 +39,7 @@ import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
 import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
 import { NotificationScreen } from '../screens/Notification/NotificationScreen';
 import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
+import { QuestionDetailScreen } from '../screens/Question/QuestionDetailScreen';
 
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
@@ -211,6 +212,14 @@ function MainNavigator() {
       }).catch(() => {});
     }, []),
   );
+
+  // Also fetch on mount so the badge is visible immediately on app launch
+  useEffect(() => {
+    userApi.getNotifications({ limit: 1 }).then((r) => {
+      console.log('[NOTIF BADGE] mount fetch -> unread:', r.data.unread, 'raw:', JSON.stringify(r.data));
+      setUnreadNotifs(r.data.unread ?? 0);
+    }).catch(() => {});
+  }, []);
 
   return (
     <>
@@ -431,6 +440,11 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="QuestionPreview"
                   component={QuestionPreviewScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="QuestionDetail"
+                  component={QuestionDetailScreen}
                   options={{ presentation: 'modal' }}
                 />
               </>

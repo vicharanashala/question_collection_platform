@@ -21,6 +21,13 @@ export enum NotificationType {
   ACCOUNT_BANNED = 'account_banned',
 }
 
+export enum NotificationTriggerType {
+  /** Notification triggered by a question action (submit, approve, reject, hold, etc.) */
+  QUESTION = 'question',
+  /** Notification triggered by a withdrawal request action */
+  WITHDRAW = 'withdraw',
+}
+
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
@@ -33,6 +40,16 @@ export class Notification {
   @Column({ type: 'varchar', length: 50 })
   @Index('idx_notifications_type')
   type: NotificationType;
+
+  /** Broad category of what triggered this notification — 'question' or 'withdraw'. */
+  @Column({
+    name: 'trigger_type',
+    type: 'varchar',
+    length: 20,
+    default: NotificationTriggerType.QUESTION,
+  })
+  @Index('idx_notifications_trigger_type')
+  triggerType: NotificationTriggerType;
 
   @Column({ type: 'varchar', length: 255 })
   title: string;

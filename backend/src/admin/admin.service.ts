@@ -19,6 +19,7 @@ import {
   AdminConfig,
   Notification,
   NotificationType,
+  NotificationTriggerType,
 } from '../database/entities';
 import {
   VerificationStatus,
@@ -590,6 +591,7 @@ export class AdminService implements OnModuleInit {
           title: 'Question Approved',
           body: `Your question "${question.questionText.slice(0, 80)}..." has been approved. Rs. ${rewardResult.transaction.amount} has been credited to your wallet.`,
           data: { questionId, status: 'approved' },
+          triggerType: NotificationTriggerType.QUESTION,
         }),
       );
 
@@ -629,6 +631,7 @@ export class AdminService implements OnModuleInit {
           title: 'Question Not Approved',
           body: `Your question "${question.questionText.slice(0, 80)}..." was not approved. Reason: ${dto.reason}`,
           data: { questionId, status: 'rejected' },
+          triggerType: NotificationTriggerType.QUESTION,
         }),
       );
       return { success: true, action: 'rejected', questionId, rejectionReason: dto.reason };
@@ -662,6 +665,7 @@ export class AdminService implements OnModuleInit {
           title: 'Question Under Review',
           body: `Your question "${question.questionText.slice(0, 80)}..." has been placed under review. Reason: ${dto.heldReason}`,
           data: { questionId, status: 'held' },
+          triggerType: NotificationTriggerType.QUESTION,
         }),
       );
       return { success: true, action: 'held', questionId, heldReason: dto.heldReason };
@@ -687,6 +691,7 @@ export class AdminService implements OnModuleInit {
         title: 'More Information Needed',
         body: `Your question "${question.questionText.slice(0, 80)}..." requires additional information.`,
         data: { questionId, status: 'human_review' },
+          triggerType: NotificationTriggerType.QUESTION,
       }),
     );
     return { success: true, action: 'request_info', questionId };
@@ -1111,6 +1116,7 @@ export class AdminService implements OnModuleInit {
           title: 'Withdrawal Approved',
           body: `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
           data: { withdrawalId, status: 'processing' },
+          triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
       return { success: true, action: 'approved', withdrawalId, status: WithdrawalStatus.PROCESSING };
@@ -1143,6 +1149,7 @@ export class AdminService implements OnModuleInit {
           title: 'Withdrawal Rejected',
           body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected. The amount has been credited back to your wallet.`,
           data: { withdrawalId, status: 'failed' },
+          triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
       return { success: true, action: 'rejected', withdrawalId, status: WithdrawalStatus.FAILED };

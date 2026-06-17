@@ -39,6 +39,10 @@ export type RootStackParamList = {
   EditProfile: undefined;
   CropManagement: undefined;
   NotificationScreen: undefined;
+  QuestionDetail: {
+    /** ID of the question to display */
+    questionId: string;
+  };
   QuestionPreview: {
     // Fields returned from the preview endpoint (and originally submitted by the user)
     state: string;

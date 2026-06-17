@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { userApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
-import { AppNotification, NotificationsResponse, NotificationType } from '../../types';
+import { AppNotification, NotificationsResponse, NotificationType, NotificationTriggerType } from '../../types';
 import { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -52,6 +52,7 @@ function notifIcon(type: NotificationType): { name: keyof typeof Ionicons.glyphM
 // ─── Item ─────────────────────────────────────────────────────────────────────
 
 function NotificationItem({ item, onPress }: { item: AppNotification; onPress: () => void }) {
+  const navigation = useNavigation<Nav>();
   const { theme } = useTheme();
   const c = theme.colors;
   const icon = notifIcon(item.notificationType);
@@ -148,7 +149,13 @@ export function NotificationScreen() {
     <NotificationItem
       item={item}
       onPress={async () => {
-        if (item.isRead) return;
+        if (item.isRead) {
+          // Already read — still navigate if applicable
+          if (item.triggerType === NotificationTriggerType.QUESTION && item.data?.questionId) {
+            navigation.navigate('QuestionDetail', { questionId: String(item.data.questionId) });
+          }
+          return;
+        }
         try {
           await userApi.markNotificationRead(item.id);
           setData((prev) =>
@@ -162,6 +169,10 @@ export function NotificationScreen() {
                 }
               : prev,
           );
+          // After marking read, navigate if applicable
+          if (item.triggerType === NotificationTriggerType.QUESTION && item.data?.questionId) {
+            navigation.navigate('QuestionDetail', { questionId: String(item.data.questionId) });
+          }
         } catch {}
       }}
     />

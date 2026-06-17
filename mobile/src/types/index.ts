@@ -201,10 +201,17 @@ export enum NotificationType {
   ACCOUNT_BANNED = 'account_banned',
 }
 
+export enum NotificationTriggerType {
+  QUESTION = 'question',
+  WITHDRAW = 'withdraw',
+}
+
 export interface AppNotification {
   id: string;
   userId: string;
   notificationType: NotificationType;
+  /** 'question' | 'withdraw' — which feature area triggered this notification */
+  triggerType: NotificationTriggerType;
   title: string;
   body: string;
   data: Record<string, unknown> | null;
