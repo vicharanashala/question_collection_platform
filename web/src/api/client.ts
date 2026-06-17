@@ -358,18 +358,17 @@ export const questionApi = {
 export const curatorApi = {
   getReviewQueue: (params = {} as Record<string, string | string[] | number | undefined>) => {
     // Backend expects status as an array: ?status[]=pending&status[]=ai_review
-    const p: Record<string, string> = {}
+    const sp = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
       if (v === undefined) continue
+      const key = k
       if (Array.isArray(v)) {
-        v.forEach((val) => {
-          if (val !== undefined) p[k === 'status' ? 'status[]' : k] = val
-        })
+        v.forEach((val) => { if (val !== undefined) sp.append(key, val) })
       } else {
-        p[k] = String(v)
+        sp.set(key, String(v))
       }
     }
-    const qs = new URLSearchParams(p).toString()
+    const qs = sp.toString()
     return request<import('@/types').PaginatedResponse<import('@/types').Question>>(
       `/admin/questions/queue${qs ? `?${qs}` : ''}`,
     )

@@ -29,12 +29,12 @@ export class ListReviewQueueDto {
 
   @IsOptional()
   @Transform(({ value }) => {
-    if (typeof value === 'string' && value.includes(',')) return value.split(',').map((s: string) => s.trim());
-    if (Array.isArray(value)) return value.map((s: string) => s.trim());
+    if (typeof value === 'string') {
+      return value.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+    if (Array.isArray(value)) return value.map((s: string) => s.trim()).filter(Boolean);
     return value;
   })
-  @IsArray()
-  @IsString({ each: true })
   @IsIn(['pending', 'ai_review', 'human_review', 'held', 'approved', 'rejected'], { each: true })
   status?: string[];
 

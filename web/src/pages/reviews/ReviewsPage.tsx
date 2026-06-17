@@ -595,8 +595,11 @@ export function ReviewsPage() {
         } else {
           toast.success('Question put on hold')
         }
-        setQuestions((qs) => qs.filter((q) => q.id !== id))
-        setSelectedQuestion(null)
+        setQuestions((qs) => {
+          const remaining = qs.filter((q) => q.id !== id)
+          setSelectedQuestion(remaining[0] ?? null)
+          return remaining
+        })
       })
       .catch((e) => toast.error(getErrorMessage(e, `Failed to ${action}`)))
       .finally(() => setActionLoading(false))
