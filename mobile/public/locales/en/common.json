@@ -410,6 +410,7 @@
   "submissions.editWindowRemaining": "{time} remaining",
   "submissions.editWindowClosedAt": "Closed {date}",
   "submissions.rejectionReason": "Rejection Reason",
+  "submissions.approvalReason": "Approval Reason",
   "submissions.editQuestion": "Edit Question",
   "submissions.editWindowNote": "Edit window: {time}",
   "submissions.editWindowExpiredNote": "Edit window closed",
@@ -531,5 +532,40 @@
     "contactAdmin": "Contact Admin",
     "logout": "Log out and sign in with a different account"
   },
-  "registrationSuccess": "Registration complete! Awaiting admin verification."
+  "registrationSuccess": "Registration complete! Awaiting admin verification.",
+  "profile": {
+    "notifications": "Notifications",
+    "pushNotifications": "Push Notifications",
+    "notifEnabledDesc": "You'll be notified when your questions are approved or need changes",
+    "notifDisabledDesc": "You won't receive push notifications",
+    "completion": {
+      "title": "Complete Your Profile",
+      "fieldsComplete": "fields complete",
+      "stillMissing": "Still missing",
+      "fieldName": "Full Name",
+      "fieldState": "State",
+      "fieldDistrict": "District",
+      "fieldBlock": "Block",
+      "fieldCategory": "Category",
+      "fieldLanguage": "Preferred Language",
+      "fieldFarmSize": "Farm Size",
+      "fieldCropType": "Crop Type",
+      "fieldCourseName": "Course Name",
+      "fieldUniversityName": "University",
+      "fieldOrganisationName": "Organisation",
+      "fieldRole": "Role",
+      "fieldCrops": "Crops"
+    },
+    "edit": "Edit"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "unreadCount": "{{count}} unread",
+    "emptyTitle": "No notifications yet",
+    "emptySub": "You'll see updates about your questions here",
+    "approvedTitle": "Question Approved",
+    "rejectedTitle": "Question Not Approved",
+    "heldTitle": "Question Under Review"
+  }
 }
