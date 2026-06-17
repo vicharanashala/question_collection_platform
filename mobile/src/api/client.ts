@@ -294,6 +294,16 @@ export const adminApi = {
   processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; failureReason?: string }) =>
     api.post(`/admin/withdrawals/${id}/process`, body),
 
+  // Wallet detail (user wallet + transactions + withdrawals)
+  getUserWallet: (userId: string) =>
+    api.get(`/admin/wallets/user/${userId}`),
+  getUserTransactions: (userId: string, params?: Record<string, string | number>) =>
+    api.get(`/admin/wallets/user/${userId}/transactions`, { params }),
+  getUserWithdrawals: (userId: string, params?: Record<string, string | number>) =>
+    api.get(`/admin/wallets/user/${userId}/withdrawals`, { params }),
+  adjustWallet: (userId: string, body: { amount: number; reason: string }) =>
+    api.post(`/wallets/${userId}/adjust`, body),
+
   // Reward logs
   getRewardLogs: (params?: Record<string, string | number>) =>
     api.get('/admin/analytics/reward-logs', { params }),

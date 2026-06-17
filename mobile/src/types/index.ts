@@ -156,6 +156,26 @@ export interface RegisterFormData {
   role?: string;
 }
 
+export interface WalletSummary {
+  id: string;
+  userId: string;
+  balance: number;
+  totalEarned: number;
+  totalWithdrawn: number;
+  currency: string;
+  user: {
+    id: string;
+    name: string;
+    mobileNumber: string;
+    category: string;
+    role: string;
+    verificationStatus: string;
+    state: string;
+    district?: string;
+    createdAt: string;
+  };
+}
+
 export interface WithdrawalFormData {
   amount: number;
   payoutMethod: 'upi' | 'bank_transfer';

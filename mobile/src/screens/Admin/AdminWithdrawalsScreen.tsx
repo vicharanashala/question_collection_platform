@@ -18,6 +18,7 @@ import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
+import { WalletDetailModal } from '../../components/WalletDetailModal';
 import { INDIAN_STATES } from '../../utils/constants';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -134,6 +135,7 @@ export function AdminWithdrawalsScreen() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
+  const [walletModal, setWalletModal] = useState<{ userId: string; userName: string } | null>(null);
 
   const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
@@ -278,6 +280,16 @@ export function AdminWithdrawalsScreen() {
             Reason: {item.failureReason}
           </Text>
         )}
+
+        {item.user?.id && (
+          <TouchableOpacity
+            style={[styles.walletBtn, { borderColor: c.border }]}
+            onPress={() => setWalletModal({ userId: item.user!.id, userName: item.user!.name ?? item.user!.mobileNumber ?? '' })}
+          >
+            <Ionicons name="wallet-outline" size={14} color={c.primary} />
+            <Text style={[styles.walletBtnText, { color: c.primary }]}>View Wallet</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -335,6 +347,16 @@ export function AdminWithdrawalsScreen() {
         onReset={handleResetFilters}
         title="Filter Withdrawals"
       />
+
+      {walletModal && (
+        <WalletDetailModal
+          walletId=""
+          userId={walletModal.userId}
+          userName={walletModal.userName}
+          visible={!!walletModal}
+          onClose={() => setWalletModal(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -372,6 +394,12 @@ const styles = StyleSheet.create({
   btnApprove: { color: '#22c55e', fontWeight: '700', fontSize: 13 },
   btnReject: { color: '#ef4444', fontWeight: '700', fontSize: 13 },
   failureReason: { fontSize: 12, marginTop: tokens.spacing2 },
+  walletBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing2,
+    marginTop: tokens.spacing2, gap: 4,
+  },
+  walletBtnText: { fontSize: 13, fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
   emptyMsg: { fontSize: 14, marginTop: 4 },

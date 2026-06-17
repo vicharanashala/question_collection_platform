@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
@@ -19,6 +20,7 @@ import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
+import { WalletDetailModal } from '../../components/WalletDetailModal';
 import { INDIAN_STATES } from '../../utils/constants';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
@@ -140,6 +142,7 @@ export function AdminUsersScreen() {
   const [total, setTotal] = useState(0);
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
+  const [walletModal, setWalletModal] = useState<{ userId: string; userName: string } | null>(null);
 
   const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
@@ -198,36 +201,43 @@ export function AdminUsersScreen() {
 
   function renderItem({ item }: { item: UserItem }) {
     const statusColor = STATUS_COLORS[item.verificationStatus] ?? c.textTertiary;
+    const displayName = item.name || item.mobileNumber || 'Unknown user';
+
     return (
-      <TouchableOpacity
-        style={[styles.card, { backgroundColor: c.surface }]}
-        onPress={() => nav.navigate('AdminUserDetail', { userId: item.id })}
-        activeOpacity={0.7}
-      >
-        <View style={styles.cardTop}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.userName, { color: c.text }]}>
-              {(item.name || item.mobileNumber) ?? 'Unknown user'}
+      <View style={[styles.card, { backgroundColor: c.surface }]}>
+        <Pressable onPress={() => nav.navigate('AdminUserDetail', { userId: item.id })} style={{ flex: 1 }}>
+          <View style={styles.cardTop}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.userName, { color: c.text }]}>
+                {displayName}
+              </Text>
+              <Text style={[styles.userMeta, { color: c.textSecondary }]}>
+                {item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorised'}
+              </Text>
+            </View>
+            <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>
+              <Text style={[styles.badgeText, { color: statusColor }]}>
+                {(item.verificationStatus ?? 'unknown').replace('_', ' ')}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.cardBottom}>
+            <Text style={[styles.location, { color: c.textTertiary }]}>
+              {item.district ?? 'Unknown'}, {item.state ?? ''}
             </Text>
-            <Text style={[styles.userMeta, { color: c.textSecondary }]}>
-              {item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorised'}
+            <Text style={[styles.role, { color: item.role === 'admin' || item.role === 'super_admin' ? c.primary : c.textTertiary }]}>
+              {item.role}
             </Text>
           </View>
-          <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>
-            <Text style={[styles.badgeText, { color: statusColor }]}>
-              {(item.verificationStatus ?? 'unknown').replace('_', ' ')}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.cardBottom}>
-          <Text style={[styles.location, { color: c.textTertiary }]}>
-            {item.district ?? 'Unknown'}, {item.state ?? ''}
-          </Text>
-          <Text style={[styles.role, { color: item.role === 'admin' || item.role === 'super_admin' ? c.primary : c.textTertiary }]}>
-            {item.role}
-          </Text>
-        </View>
-      </TouchableOpacity>
+        </Pressable>
+        <TouchableOpacity
+          style={[styles.walletBtn, { borderColor: c.border }]}
+          onPress={() => setWalletModal({ userId: item.id, userName: displayName })}
+        >
+          <Ionicons name="wallet-outline" size={13} color={c.primary} />
+          <Text style={[styles.walletBtnText, { color: c.primary }]}>View Wallet</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
@@ -291,6 +301,16 @@ export function AdminUsersScreen() {
         onReset={handleResetFilters}
         title="Filter Users"
       />
+
+      {walletModal && (
+        <WalletDetailModal
+          walletId=""
+          userId={walletModal.userId}
+          userName={walletModal.userName}
+          visible={!!walletModal}
+          onClose={() => setWalletModal(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -324,6 +344,12 @@ const styles = StyleSheet.create({
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', marginTop: tokens.spacing3 },
   location: { fontSize: 12 },
   role: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  walletBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing2,
+    marginTop: tokens.spacing2, gap: 4,
+  },
+  walletBtnText: { fontSize: 12, fontWeight: '600' },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '700' },
   emptyMsg: { fontSize: 14, marginTop: 4 },
