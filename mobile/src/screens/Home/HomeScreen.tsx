@@ -35,12 +35,12 @@ const categoryLabels: Record<string, string> = {
   ngo: 'NGO Partner',
 };
 
-const categoryEmoji: Record<string, string> = {
-  farmer: '🌾',
-  fpo: '🤝',
-  student: '🎓',
-  volunteer: '🙋',
-  ngo: '🏢',
+const categoryIcons: Record<string, string> = {
+  farmer: 'leaf-outline',
+  fpo: 'people-outline',
+  student: 'school-outline',
+  volunteer: 'hand-right-outline',
+  ngo: 'business-outline',
 };
 
 export function HomeScreen() {
@@ -128,9 +128,11 @@ export function HomeScreen() {
               <Text style={[styles.heroGreeting, { color: c.heroFg + 'cc' }]}>{greeting},</Text>
               <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
               <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
-                <Text style={styles.categoryEmoji}>
-                  {user?.category ? categoryEmoji[user.category] : '🌱'}
-                </Text>
+                <Ionicons
+                  name={(user?.category ? categoryIcons[user.category] : 'leaf-outline') as keyof typeof Ionicons.glyphMap}
+                  size={14}
+                  color={c.heroFg}
+                />
                 <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
                   {user?.category ? categoryLabels[user.category] : 'Farmer'}
                 </Text>

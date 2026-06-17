@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity, SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAccountLocked } from '../context/AccountLockedContext';
 import { useAuth } from '../hooks/useAuth';
@@ -41,7 +42,7 @@ export function AccountLockedModal() {
         <View style={styles.content}>
           {/* Icon */}
           <View style={[styles.iconBadge, { backgroundColor: accentColor + '22' }]}>
-            <Text style={styles.icon}>{isBan ? '🚫' : '⏸'}</Text>
+            <Ionicons name={isBan ? 'ban-outline' : 'pause-circle-outline'} size={28} color={accentColor} />
           </View>
 
           {/* Title */}

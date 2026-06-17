@@ -32,12 +32,12 @@ const categoryLabels: Record<string, string> = {
   ngo: 'NGO Partner',
 };
 
-const categoryEmoji: Record<string, string> = {
-  farmer: '🌾',
-  fpo: '🤝',
-  student: '🎓',
-  volunteer: '🙋',
-  ngo: '🏢',
+const categoryIcons: Record<string, string> = {
+  farmer: 'leaf-outline',
+  fpo: 'people-outline',
+  student: 'school-outline',
+  volunteer: 'hand-right-outline',
+  ngo: 'business-outline',
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
@@ -129,9 +129,11 @@ export function ProfileScreen() {
               <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
               {!PRIVILEGED_ROLES.includes(user?.role as UserRole) && user?.category && (
                 <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
-                  <Text style={styles.categoryEmoji}>
-                    {categoryEmoji[user.category] ?? '🌱'}
-                  </Text>
+                  <Ionicons
+                    name={(categoryIcons[user.category] ?? 'leaf-outline') as keyof typeof Ionicons.glyphMap}
+                    size={14}
+                    color={c.heroFg}
+                  />
                   <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
                     {categoryLabels[user.category] ?? ''}
                   </Text>
@@ -220,7 +222,8 @@ export function ProfileScreen() {
               <View style={styles.cropTags}>
                 {crops.map((crop) => (
                   <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.primary + '18' }]}>
-                    <Text style={[styles.cropTagText, { color: c.primary }]}>🌱 {crop.cropName}</Text>
+                    <Ionicons name="leaf-outline" size={12} color={c.primary} />
+                    <Text style={[styles.cropTagText, { color: c.primary }]}>{crop.cropName}</Text>
                     {crop.season && (
                       <Text style={[styles.cropSeason, { color: c.textSecondary }]}> ({seasonLabel(crop.season)})</Text>
                     )}

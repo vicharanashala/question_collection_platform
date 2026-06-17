@@ -78,31 +78,31 @@ export const USER_CATEGORIES = [
     value: UserCategory.FARMER,
     label: 'Farmer',
     description: 'Individual farmer or FPO member',
-    icon: '🌾',
+    icon: 'leaf-outline',
   },
   {
     value: UserCategory.FPO,
     label: 'FPO Member',
     description: 'Farmer Producer Organization',
-    icon: '🤝',
+    icon: 'people-outline',
   },
   {
     value: UserCategory.STUDENT,
     label: 'Student',
     description: 'Agriculture university student',
-    icon: '🎓',
+    icon: 'school-outline',
   },
   {
     value: UserCategory.VOLUNTEER,
     label: 'Volunteer',
     description: 'Agriculture volunteer',
-    icon: '🙋',
+    icon: 'hand-right-outline',
   },
   {
     value: UserCategory.NGO,
     label: 'NGO Partner',
     description: 'Non-governmental organization',
-    icon: '🏢',
+    icon: 'business-outline',
   },
 ] as const;
 

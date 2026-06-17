@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Button } from '../../components/Button';
@@ -59,7 +60,7 @@ export function ConsentScreen({ navigation, route }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <View style={[styles.iconBadge, { backgroundColor: c.primary + '18' }]}>
-            <Text style={styles.icon}>📜</Text>
+            <Ionicons name="document-text-outline" size={28} color={c.primary} />
           </View>
           <Text style={[styles.title, { color: c.text }]}>{t('privacyConsent')}</Text>
         </View>

@@ -150,7 +150,7 @@ export function CropManagementScreen() {
               <View key={crop.id} style={[styles.cropCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                 <View style={styles.cropLeft}>
                   <View style={[styles.cropIconWrap, { backgroundColor: c.primary + '18' }]}>
-                    <Text style={styles.cropIcon}>🌱</Text>
+                    <Ionicons name="leaf-outline" size={16} color={c.primary} />
                   </View>
                   <View style={styles.cropInfo}>
                     <Text style={[styles.cropName, { color: c.text }]}>{crop.cropName}</Text>

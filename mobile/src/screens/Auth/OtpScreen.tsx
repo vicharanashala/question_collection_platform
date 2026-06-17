@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { OtpInput } from '../../components/Input';
@@ -127,7 +128,7 @@ export function OtpScreen({ navigation, route }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <View style={[styles.iconBadge, { backgroundColor: colors.primary + '18' }]}>
-            <Text style={styles.icon}>🔐</Text>
+            <Ionicons name="lock-closed-outline" size={28} color={colors.primary} />
           </View>
           <Text style={[styles.title, { color: colors.text }]}>Verify OTP</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -142,9 +143,12 @@ export function OtpScreen({ navigation, route }: Props) {
             { backgroundColor: lockedInfo.status === 'banned' ? colors.error + '14' : colors.warning + '14' },
           ]}>
             <View style={styles.lockedBannerIconRow}>
-              <Text style={styles.lockedBannerIcon}>
-                {lockedInfo.status === 'banned' ? '🚫' : '⏸'}
-              </Text>
+              <Ionicons
+                name={lockedInfo.status === 'banned' ? 'ban-outline' : 'pause-circle-outline'}
+                size={20}
+                color={lockedInfo.status === 'banned' ? colors.error : colors.warning}
+                style={styles.lockedBannerIcon}
+              />
               <Text style={[
                 styles.lockedBannerTitle,
                 { color: lockedInfo.status === 'banned' ? colors.error : colors.warning },

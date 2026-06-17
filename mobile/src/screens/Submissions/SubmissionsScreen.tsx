@@ -278,7 +278,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
     hour: '2-digit', minute: '2-digit',
   });
   const mediaLabel: Record<string, string> = {
-    none: 'No media', image: '📷 Photo', video: '🎥 Video', audio: '🎙️ Audio',
+    none: 'No media', image: 'Photo', video: 'Video', audio: 'Audio',
   };
 
   function DetailRow({
@@ -319,6 +319,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
                 <Text style={[styles.statusBadgeText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
               </View>
               <View style={[styles.mediaBadge, { backgroundColor: c.input }]}>
+                <Ionicons name={{ none: 'film-outline', image: 'image-outline', video: 'videocam-outline', audio: 'mic-outline' }[question.mediaType] as keyof typeof Ionicons.glyphMap ?? 'film-outline'} size={12} color={c.textSecondary} />
                 <Text style={[styles.mediaBadgeText, { color: c.textSecondary }]}>
                   {mediaLabel[question.mediaType] ?? question.mediaType}
                 </Text>
