@@ -102,11 +102,17 @@ export function AdminCreateUserScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Ionicons name="chevron-back" size={26} color={c.text} />
+        </TouchableOpacity>
+        <Text style={[styles.screenTitle, { color: c.text }]}>Create User</Text>
+        <View style={{ width: 26 }} />
+      </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: c.text }]}>Create User</Text>
+          <View style={styles.pageHeader}>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               Add a new user account manually
             </Text>
@@ -212,9 +218,16 @@ export function AdminCreateUserScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
-  scroll: { flexGrow: 1, padding: tokens.spacing6 },
-  header: { marginBottom: tokens.spacing5 },
-  title: { fontSize: 26, fontWeight: '800' },
+  scroll: { flexGrow: 1, paddingHorizontal: tokens.spacing6, paddingBottom: tokens.spacing6, paddingTop: tokens.spacing2 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing5,
+    paddingVertical: tokens.spacing3,
+  },
+  screenTitle: { fontSize: 18, fontWeight: '700' },
+  pageHeader: { marginBottom: tokens.spacing5 },
   subtitle: { fontSize: 13, marginTop: 4 },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6 },
   fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing2, marginTop: tokens.spacing3 },
