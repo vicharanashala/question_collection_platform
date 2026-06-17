@@ -299,8 +299,6 @@ function DetailPanel({
   selectedLang: string
   onLangChange: (lang: string) => void
 }) {
-  const [modalAction, setModalAction] = useState<ReviewAction | null>(null)
-
   if (!q) {
     return (
       <div className="flex flex-col items-center justify-center h-full py-20 gap-4 text-center">
@@ -485,22 +483,6 @@ function DetailPanel({
         )}
       </div>
 
-      {/* Review reason modal */}
-      {modalAction && (
-        <ReviewModal
-          action={modalAction}
-          questionId={q.id}
-          questionText={q.questionText}
-          onConfirm={(id, action, reason) => {
-            // Parent handles the API call; close modal
-            setModalAction(null)
-            // Trigger parent via onAction — but we need the modal's local state
-            // Use a ref or lift state. Simpler: pass a callback that the parent wires up.
-          }}
-          onCancel={() => setModalAction(null)}
-          loading={actionLoading}
-        />
-      )}
     </>
   )
 }
@@ -572,12 +554,18 @@ export function ReviewsPage() {
   const [loading, setLoading]     = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [pendingAction, setPendingAction] = useState<{ action: ReviewAction; questionText: string } | null>(null)
-  const [selectedLang, setSelectedLang] = useState('')
+  // Per-question language state so changing one card's language doesn't re-render all cards.
+  const [langByQuestionId, setLangByQuestionId] = useState<Record<string, string>>({})
   const limit = 15
   const debouncedSearch = useDebouncedValue(search, 400)
 
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
   const didExplicitlyDeselect = useRef(false)
+
+  // Per-question language helpers — keeps each card's language independent.
+  const getLang  = (id: string) => langByQuestionId[id] ?? ''
+  const setLang  = (id: string, lang: string) =>
+    setLangByQuestionId((prev) => ({ ...prev, [id]: lang }))
 
   useEffect(() => {
     didExplicitlyDeselect.current = false
@@ -631,11 +619,6 @@ export function ReviewsPage() {
     setPendingAction({ action, questionText })
   }
 
-  function handleModalConfirm(reason: string) {
-    if (!pendingAction || !selectedQuestion) return
-    doAction(selectedQuestion.id, pendingAction.action, reason)
-    setPendingAction(null)
-  }
 
   const totalPages = Math.ceil(total / limit)
 
@@ -734,8 +717,8 @@ export function ReviewsPage() {
                   q={q}
                   selected={selectedQuestion?.id === q.id}
                   onSelect={setSelectedQuestion}
-                  selectedLang={selectedLang}
-                  onLangChange={setSelectedLang}
+                  selectedLang={getLang(q.id)}
+                  onLangChange={(lang) => setLang(q.id, lang)}
                 />
               ))}
             </div>
@@ -768,8 +751,8 @@ export function ReviewsPage() {
             q={selectedQuestion}
             actionLoading={actionLoading}
             onAction={openActionModal}
-            selectedLang={selectedLang}
-            onLangChange={setSelectedLang}
+            selectedLang={getLang(selectedQuestion?.id ?? '')}
+            onLangChange={(lang) => selectedQuestion && setLang(selectedQuestion.id, lang)}
           />
         </div>
       </div>

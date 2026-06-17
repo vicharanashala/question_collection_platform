@@ -210,7 +210,13 @@ export function QuestionsPage() {
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [apiTotal, setApiTotal] = useState(0)
-  const [selectedLang, setSelectedLang] = useState('')
+  // Per-question language state — each card translates independently.
+  const [langByQuestionId, setLangByQuestionId] = useState<Record<string, string>>({})
+
+  // Per-question language helpers.
+  const getLang = (id: string) => langByQuestionId[id] ?? ''
+  const setLang = (id: string, lang: string) =>
+    setLangByQuestionId((prev) => ({ ...prev, [id]: lang }))
 
   // Reset to page 1 whenever search or status filter changes
   useEffect(() => { setPage(1) }, [debouncedSearch, statusFilter])
@@ -310,8 +316,8 @@ export function QuestionsPage() {
               key={q.id}
               q={q}
               onOpen={(qq) => { setDetailQuestion(qq); setDetailOpen(true) }}
-              selectedLang={selectedLang}
-              onLangChange={setSelectedLang}
+              selectedLang={getLang(q.id)}
+              onLangChange={(lang) => setLang(q.id, lang)}
             />
           ))
         )}
@@ -373,8 +379,8 @@ export function QuestionsPage() {
               <div className="bg-muted/50 rounded-lg p-4">
                 <TranslatableText
                   text={detailQuestion.questionText}
-                  selectedLang={selectedLang}
-                  onLangChange={setSelectedLang}
+                  selectedLang={getLang(detailQuestion.id)}
+                  onLangChange={(lang) => setLang(detailQuestion.id, lang)}
                   sourceLanguage={detailQuestion.language ?? 'en'}
                   inline
                 />
