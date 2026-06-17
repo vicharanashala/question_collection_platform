@@ -17,18 +17,22 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import { useToast } from '../../components/Toast';
+import { Trnscber } from '../../components/Trnscber';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import { questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
 import { SEASONS, DOMAIN_CATEGORIES, INDIAN_STATES } from '../../utils/constants';
+import { speechApi } from '../../api/speech';
+import { SUPPORTED_LANGUAGES } from '../../i18n';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Question {
   id: string;
   questionText: string;
+  language?: string;
   domainCategory: string;
   season: string;
   cropType: string;
@@ -327,7 +331,11 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
             </View>
 
             {/* Full question text */}
-            <Text style={[styles.viewQuestionText, { color: c.text }]}>{question.questionText}</Text>
+            <Trnscber
+              text={question.questionText}
+              sourceLanguage={question.language ?? 'en'}
+              style={[styles.viewQuestionText, { color: c.text }]}
+            />
 
             {/* Details list */}
             <View style={[styles.detailsCard, { backgroundColor: c.input, borderColor: c.borderSubtle }]}>
@@ -441,6 +449,11 @@ export function SubmissionsScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  // Per-card language selection
+  const [selectedLang, setSelectedLang] = useState<Record<string, string>>({});
+  // Per-card translation: questionId -> { text, loading, displayedLang }
+  // displayedLang tracks the language currently shown so chain translations (en->hi->en) work correctly
+  const [translationStates, setTranslationStates] = useState<Record<string, { text: string; loading: boolean; displayedLang: string }>>({});
   const [filters, setFilters] = useState<FilterState>({
     status: '',
     season: '',
@@ -527,6 +540,61 @@ export function SubmissionsScreen() {
     setFilters({ status: '', season: '', domainCategory: '', search: '' });
   }
 
+  // ─── Language Picker Modal state ──────────────────────────────────────────
+  const [langPickerVisible, setLangPickerVisible] = useState(false);
+  const [langPickerForQuestion, setLangPickerForQuestion] = useState<Question | null>(null);
+
+  function openLangPicker(q: Question) {
+    setLangPickerForQuestion(q);
+    setLangPickerVisible(true);
+  }
+
+  function handleLangSelect(code: string) {
+    if (!langPickerForQuestion) return;
+    setSelectedLang((prev) => ({ ...prev, [langPickerForQuestion.id]: code }));
+    const transState = translationStates[langPickerForQuestion.id];
+    // Use the currently displayed language as source so chain translations work:
+    // e.g. original (en) -> translated to Hindi (hi) -> now translate to English uses hi as source
+    const currentSourceLang = transState?.displayedLang ?? langPickerForQuestion.language ?? 'en';
+    const textToTranslate = transState?.text || langPickerForQuestion.questionText;
+    fetchTranslation(langPickerForQuestion.id, textToTranslate, code, currentSourceLang);
+    setLangPickerVisible(false);
+  }
+
+  function clearTranslation(questionId: string) {
+    setSelectedLang((prev) => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
+    setTranslationStates((prev) => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
+  }
+
+  function fetchTranslation(questionId: string, text: string, targetLang: string, sourceLang: string) {
+    setTranslationStates((prev) => ({
+      ...prev,
+      [questionId]: { text: prev[questionId]?.text ?? '', loading: true, displayedLang: sourceLang },
+    }));
+    speechApi
+      .translate(text, targetLang, sourceLang)
+      .then((r) =>
+        setTranslationStates((prev) => ({
+          ...prev,
+          [questionId]: { text: r.translatedText, loading: false, displayedLang: targetLang },
+        }))
+      )
+      .catch(() =>
+        setTranslationStates((prev) => ({
+          ...prev,
+          [questionId]: { text: prev[questionId]?.text ?? '', loading: false, displayedLang: prev[questionId]?.displayedLang ?? sourceLang },
+        }))
+      );
+  }
+
   // ─── List Item ──────────────────────────────────────────────────────────────
 
   function renderItem({ item: q }: { item: Question }) {
@@ -538,6 +606,10 @@ export function SubmissionsScreen() {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
+
+    const currentLang = selectedLang[q.id] ?? '';
+    const transState = translationStates[q.id];
+    const displayQuestion = transState?.text || q.questionText;
 
     return (
       <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
@@ -573,8 +645,38 @@ export function SubmissionsScreen() {
         <Pressable onPress={() => setSelectedQuestion(q)} style={styles.cardBody}>
           {/* Question text */}
           <Text style={[styles.questionText, { color: c.text }]} numberOfLines={3}>
-            {q.questionText}
+            {displayQuestion}
           </Text>
+
+          {/* Translation row: language picker trigger + clear / loading button */}
+          <View style={styles.translationRow}>
+            <TouchableOpacity
+              style={[styles.langPickerBtn, { borderColor: c.border }]}
+              onPress={() => openLangPicker(q)}
+            >
+              {transState?.loading ? (
+                <ActivityIndicator size="small" color={c.primary} />
+              ) : (
+                <>
+                  <Ionicons name="language-outline" size={12} color={c.primary} />
+                  <Text style={[styles.langPickerText, { color: c.primary }]}>
+                    {currentLang
+                      ? `${SUPPORTED_LANGUAGES.find((l) => l.code === currentLang)?.nativeName ?? ''}`
+                      : 'Translate'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            {currentLang && !transState?.loading && (
+              <TouchableOpacity
+                style={[styles.showOriginalBtn, { borderColor: c.borderSubtle }]}
+                onPress={() => clearTranslation(q.id)}
+              >
+                <Ionicons name="eye-off-outline" size={12} color={c.textTertiary} />
+                <Text style={[styles.showOriginalText, { color: c.textTertiary }]}>Original</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Meta row */}
           <View style={styles.metaRow}>
@@ -710,6 +812,46 @@ export function SubmissionsScreen() {
         onEdit={handleEdit}
         now={now}
       />
+
+      {/* Language picker modal for card translations */}
+      <Modal
+        visible={langPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLangPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={langStyles.overlay}
+          activeOpacity={1}
+          onPress={() => setLangPickerVisible(false)}
+        >
+          <View style={[langStyles.sheet, { backgroundColor: c.surface }]}>
+            <View style={[langStyles.sheetHeader, { borderBottomColor: c.border }]}>
+              <Text style={[langStyles.sheetTitle, { color: c.text }]}>Translate to</Text>
+              <TouchableOpacity onPress={() => setLangPickerVisible(false)}>
+                <Text style={[langStyles.closeBtn, { color: c.textSecondary }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={langStyles.scroll} showsVerticalScrollIndicator={false}>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[
+                    langStyles.langRow,
+                    selectedLang[langPickerForQuestion?.id ?? ''] === lang.code && {
+                      backgroundColor: c.primary + '14',
+                    },
+                  ]}
+                  onPress={() => handleLangSelect(lang.code)}
+                >
+                  <Text style={[langStyles.langNative, { color: c.text }]}>{lang.nativeName}</Text>
+                  <Text style={[langStyles.langEn, { color: c.textSecondary }]}>{lang.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -757,7 +899,22 @@ const styles = StyleSheet.create({
   editTimer: { fontSize: 11, fontWeight: '500' },
   editBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusMd, paddingHorizontal: tokens.spacing3, paddingVertical: 5, gap: 4 },
   editBtnText: { fontSize: 12, fontWeight: '600' },
-  questionText: { fontSize: 14, lineHeight: 20, fontWeight: '500', marginBottom: tokens.spacing3 },
+  questionText: { fontSize: 14, lineHeight: 20, fontWeight: '500', marginBottom: tokens.spacing2 },
+  translationRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing3 },
+  langPickerBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderWidth: 1, borderRadius: tokens.radius,
+    paddingHorizontal: tokens.spacing2 + 2,
+    paddingVertical: tokens.spacing1 + 1,
+  },
+  langPickerText: { fontSize: 11, fontWeight: '600' },
+  showOriginalBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderWidth: 1, borderRadius: tokens.radius,
+    paddingHorizontal: tokens.spacing2 + 2,
+    paddingVertical: tokens.spacing1 + 1,
+  },
+  showOriginalText: { fontSize: 11, fontWeight: '500' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing1, marginBottom: tokens.spacing1 },
   metaChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaChipText: { fontSize: 12 },
@@ -853,6 +1010,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+});
+
+const langStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingBottom: 34,
+  },
+  sheetHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: tokens.spacing4,
+    borderBottomWidth: 1,
+  },
+  sheetTitle: { fontSize: 16, fontWeight: '700' },
+  closeBtn: { fontSize: 15 },
+  scroll: { paddingTop: tokens.spacing2 },
+  langRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: tokens.spacing3 + 2,
+    gap: tokens.spacing2,
+  },
+  langNative: { fontSize: 15, fontWeight: '600', flex: 1 },
+  langEn: { fontSize: 13 },
 });
 
 // ─── Consts outside component ─────────────────────────────────────────────────
