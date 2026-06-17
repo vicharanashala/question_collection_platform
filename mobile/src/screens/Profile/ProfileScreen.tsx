@@ -120,7 +120,9 @@ export function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Profile Completion ───────────────────────────── */}
-        <ProfileCompletionWidget onEdit={() => navigation.navigate('EditProfile')} hasCrops={crops.length > 0} />
+        <View style={{ marginBottom: tokens.spacing4 }}>
+          <ProfileCompletionWidget onEdit={() => navigation.navigate('EditProfile')} hasCrops={crops.length > 0} />
+        </View>
 
         {/* ── Hero ─────────────────────────────────────────── */}
         <View style={[styles.hero, { backgroundColor: c.heroBg }]}>
