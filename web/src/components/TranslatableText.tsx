@@ -16,30 +16,34 @@ const LANG_LABELS: Record<string, string> = {
 export const SUPPORTED_LANGS = Object.keys(LANG_LABELS)
 
 interface TranslatableTextProps {
-  /** The question text to display (typically in English). */
+  /** The question text (always the original, untranslated text). */
   text: string
   /** Currently selected target language code. */
   selectedLang: string
-  /** Callback fired when the user picks a language from the dropdown. */
+  /** Callback fired when the user picks a language. */
   onLangChange: (lang: string) => void
   /** 2-letter source language of `text`. Defaults to 'en'. */
   sourceLanguage?: string
   /** Optional CSS class for the container. */
   className?: string
-  /** Whether the translated text is always shown inline (no expand toggle). */
+  /** Whether translated text is always shown inline (no expand toggle). */
   inline?: boolean
 }
 
 /**
- * Displays `text` and provides a lazy translation via the Sarvam API.
+ * Displays `text` and provides lazy translation via the Sarvam API.
  *
- * - Shows the original text first (or the currently translated text once
- *   a translation is loaded — subsequent translations use that as source,
- *   enabling chain translations like en→hi→te correctly).
- * - A language picker lets the user pick any supported language.
- * - A translate button fetches the translation from the backend.
- * - Once fetched, the translated text is shown inline or behind an expand toggle.
- * - Does NOT modify or manage `text` — the parent owns the value.
+ * Chain translations are handled correctly: if the user translates en→hi and
+ * then selects ta, the API is called with the *Hindi* text and source=hi-IN,
+ * producing a Hindi→Tamil translation rather than re-translating the original
+ * English from Tamil.
+ *
+ * State machine (displayedLang drives which language the UI is showing):
+ *
+ *   Start:          displayedLang = sourceLanguage, translated = null
+ *   After en→hi:    displayedLang = 'hi',          translated = Hindi text
+ *   After hi→ta:    displayedLang = 'ta',          translated = Tamil text
+ *   After ta→en:    displayedLang = sourceLanguage, translated = null (reset)
  */
 export function TranslatableText({
   text,
@@ -49,17 +53,19 @@ export function TranslatableText({
   className,
   inline = false,
 }: TranslatableTextProps) {
+  // translated: the currently displayed translated text (null = showing original)
   const [translated, setTranslated] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // displayedLang tracks the language of the text currently shown so
-  // chain translations work: en → hi → te uses hi as source, not en
-  const [displayedLang, setDisplayedLang] = useState(sourceLanguage)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Ref to avoid stale-closure bugs with selectedLang in async handlers
+  // displayedLang: the language code of the text currently shown in the card.
+  // This is the source for the NEXT translation call.
+  const [displayedLang, setDisplayedLang] = useState(sourceLanguage)
+
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  // Keeps selectedLang fresh inside async callbacks
   const selectedLangRef = useRef(selectedLang)
   selectedLangRef.current = selectedLang
 
@@ -77,8 +83,9 @@ export function TranslatableText({
     return () => document.removeEventListener('mousedown', handler)
   }, [showDropdown])
 
-  // When the user picks a new target language, reset the translated state.
-  // We do NOT call handleTranslate here — handleLangSelect triggers it directly.
+  // When the user picks a new target language, reset the translation state.
+  // The next doTranslate call (triggered by handleLangSelect) will use the
+  // currently displayed text as source, enabling correct chain translations.
   useEffect(() => {
     if (selectedLang) {
       setTranslated(null)
@@ -87,54 +94,66 @@ export function TranslatableText({
     }
   }, [selectedLang, sourceLanguage])
 
-  // Auto-translate when the component mounts and a lang is already selected (inline mode)
-  useEffect(() => {
-    if (inline && selectedLang && text && !translated && !loading && !isSameLang) {
-      doTranslate(selectedLang, displayedLang)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inline]) // only on mount — prevents double-calling when parent re-renders
+  const doTranslate = useCallback(async () => {
+    if (!selectedLangRef.current || loading) return
 
-  const doTranslate = useCallback(async (target: string, source: string) => {
     // Always translate from the currently displayed text, not the original.
-    // This enables correct chain translations: en→hi→te uses the Hindi result as
-    // input for the Telugu step, not the original English text.
+    // This is the key to correct chain translations.
     const currentText = translated ?? text
-    if (!currentText.trim() || loading) return
+    if (!currentText.trim()) return
+
     setLoading(true)
     setError(null)
     try {
-      // Use refs to avoid stale closures in async callbacks
       const result = await speechApi.translate(
         currentText.trim(),
-        selectedLangRef.current,
-        displayedLang,
+        selectedLangRef.current, // target
+        displayedLang,           // source (language of currentText)
       )
       setTranslated(result.translatedText)
       setDisplayedLang(selectedLangRef.current)
-    } catch {
-      setError('Translation unavailable')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Translation unavailable')
     } finally {
       setLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, translated, displayedLang, loading])
+  // NOTE: selectedLang is NOT a dep — it's read via ref so the callback always
+  // uses the current value at call time, not at creation time.
 
   function handleLangSelect(code: string) {
     setShowDropdown(false)
     onLangChange(code)
-    // Trigger translation immediately without waiting for parent's re-render.
-    // Use the currently displayed text as source so chain translations work.
-    doTranslate(code, displayedLang)
+    doTranslate() // uses refs + current state to determine source + target
   }
+
+  // Re-translate when selectedLang changes (e.g. parent re-mounts with a pre-set lang)
+  useEffect(() => {
+    if (selectedLang && selectedLang !== sourceLanguage && !translated && !loading) {
+      doTranslate()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLang])
+
+  // Mount-time auto-translate for inline mode
+  useEffect(() => {
+    if (inline && selectedLang && selectedLang !== sourceLanguage && !translated && !loading) {
+      doTranslate()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inline])
 
   return (
     <div className={cn('space-y-2', className)}>
-      {/* Original / currently displayed text */}
-      <div className="text-sm text-text leading-relaxed whitespace-pre-wrap">{translated ?? text}</div>
+      {/* Currently displayed text (original or translated) */}
+      <div className="text-sm text-text leading-relaxed whitespace-pre-wrap">
+        {translated ?? text}
+      </div>
 
-      {/* Controls row: lang picker + translate button */}
+      {/* Controls: language picker + translate button */}
       <div className="flex items-center gap-2">
-        {/* Language picker dropdown */}
+        {/* Language picker */}
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
@@ -164,44 +183,48 @@ export function TranslatableText({
           )}
         </div>
 
-        {/* Translate / hide button */}
-        {!isSameLang && (
-          translated ? (
-            expanded ? (
-              <button
-                type="button"
-                onClick={() => setExpanded(false)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <ChevronUp className="h-3 w-3" />
-                Hide {langLabel}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setExpanded(true)}
-                className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
-              >
-                <Languages className="h-3 w-3" />
-                Show {langLabel}
-              </button>
-            )
-          ) : (
-            <button
-              type="button"
-              onClick={() => doTranslate(selectedLangRef.current, displayedLang)}
-              disabled={loading || !text.trim()}
-              className="flex items-center gap-1.5 text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline font-medium"
-            >
-              {loading ? (
-                <Loader className="h-3 w-3 animate-spin" />
-              ) : (
-                <Languages className="h-3 w-3" />
-              )}
-              {loading ? 'Translating…' : `Translate to ${langLabel}`}
-            </button>
-          )
+        {/* Translate / show / hide / reset button */}
+        {!isSameLang && !translated && !loading && selectedLang && (
+          <button
+            type="button"
+            onClick={doTranslate}
+            disabled={!text.trim()}
+            className="flex items-center gap-1.5 text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline font-medium"
+          >
+            <Languages className="h-3 w-3" />
+            Translate to {langLabel}
+          </button>
         )}
+
+        {!isSameLang && translated && !loading && (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+          >
+            <Languages className="h-3 w-3" />
+            Show {langLabel}
+          </button>
+        )}
+
+        {!isSameLang && loading && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Loader className="h-3 w-3 animate-spin" />
+            Translating…
+          </span>
+        )}
+
+        {expanded && translated && (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ChevronUp className="h-3 w-3" />
+            Hide {langLabel}
+          </button>
+        )}
+
         {isSameLang && translated && (
           <button
             type="button"
@@ -214,7 +237,7 @@ export function TranslatableText({
         )}
       </div>
 
-      {/* Inline translated text */}
+      {/* Inline / expanded translated text */}
       {(inline || expanded) && translated && (
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
