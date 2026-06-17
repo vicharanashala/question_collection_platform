@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
@@ -300,97 +301,10 @@ const filterStyles = StyleSheet.create({
 
 // ─── Shimmer Withdraw Card ────────────────────────────────────────────────────
 
-function ShimmerWithdrawCard({
-  c,
-  minWithdrawal,
-  onWithdraw,
-  withdrawingMin,
-  t,
-}: {
-  c: ReturnType<typeof useTheme>['theme']['colors'];
-  minWithdrawal: number;
-  onWithdraw: () => void;
-  withdrawingMin: boolean;
-  t: ReturnType<typeof useTranslation>['t'];
-}) {
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmerAnim, {
-          toValue: 1,
-          duration: 1400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shimmerAnim, {
-          toValue: 0,
-          duration: 1400,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [shimmerAnim]);
-
-  const shimmerStyle = {
-    opacity: shimmerAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.4, 1],
-    }) as Animated.AnimatedInterpolation<string>,
-  };
-
-  return (
-    <View style={[styles.withdrawCard, { backgroundColor: c.primary + '12', borderColor: c.primary + '30' }]}>
-      {/* Shine overlay */}
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          styles.shimmerOverlay,
-          {
-            backgroundColor: c.primary + '08',
-            transform: [
-              {
-                translateX: shimmerAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-200, 400],
-                }),
-              },
-            ],
-          },
-        ]}
-      />
-      <View style={styles.withdrawCardTop}>
-        <View style={[styles.withdrawIconWrap, { backgroundColor: c.primary + '20' }]}>
-          <Ionicons name="arrow-up-circle" size={24} color={c.primary} />
-        </View>
-        <View style={styles.withdrawCardInfo}>
-          <Text style={[styles.withdrawCardTitle, { color: c.text }]}>{t('wallet.withdraw')}</Text>
-          <Text style={[styles.withdrawCardSub, { color: c.textSecondary }]}>
-            Min. ₹{minWithdrawal.toLocaleString('en-IN')} per request
-          </Text>
-        </View>
-        <Animated.View style={{ alignSelf: 'center' }}>
-          <Button
-            title={t('wallet.withdraw')}
-            onPress={onWithdraw}
-            variant="primary"
-            loading={withdrawingMin}
-            icon="arrow-up-outline"
-            iconPosition="right"
-            style={styles.withdrawBtn}
-          />
-        </Animated.View>
-      </View>
-    </View>
-  );
-}
-
 // ─── Main WalletScreen ────────────────────────────────────────────────────────
 
 export function WalletScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
   const { t } = useTranslation();
@@ -492,60 +406,119 @@ export function WalletScreen() {
 
   if (loading) return null;
 
+  // Quick stats
+  const totalEarned = allTransactions
+    .filter((tx) => tx.type === 'credit' && tx.status === 'completed')
+    .reduce((sum, tx) => sum + Number(tx.amount), 0);
+  const totalWithdrawn = allTransactions
+    .filter((tx) => tx.source === 'withdrawal' && tx.status === 'completed')
+    .reduce((sum, tx) => sum + Number(tx.amount), 0);
+  const pendingCount = allTransactions.filter((tx) => tx.status === 'pending').length;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Text style={[styles.title, { color: c.text }]}>{t('wallet.title')}</Text>
+          <TouchableOpacity onPress={onRefresh} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="refresh-outline" size={20} color={c.textSecondary} />
+          </TouchableOpacity>
         </View>
 
-        {/* Balance Card */}
-        <View style={[styles.balanceCard, { backgroundColor: c.heroBg }]}>
-          <Text style={[styles.balanceLabel, { color: c.heroFg }]}>{t('wallet.availableBalance')}</Text>
-          <Text style={[styles.balanceAmount, { color: c.heroFg }]}>
-            ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </Text>
-          <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>INR</Text>
-        </View>
-
-        {/* Withdraw */}
-        <View style={styles.withdrawSection}>
-          {(balance ?? 0) >= minWithdrawal ? (
-            <ShimmerWithdrawCard
-              c={c}
-              minWithdrawal={minWithdrawal}
-              onWithdraw={handleWithdrawMin}
-              withdrawingMin={withdrawingMin}
-              t={t}
-            />
-          ) : (
-            <View style={[styles.withdrawCard, { backgroundColor: c.warning + '10', borderColor: c.warning + '30' }]}>
-              <View style={styles.withdrawCardTop}>
-                <View style={[styles.withdrawIconWrap, { backgroundColor: c.warning + '20' }]}>
-                  <Ionicons name="information-circle" size={22} color={c.warning} />
+        {/* ── Balance hero card ─────────────────────────────── */}
+        <LinearGradient
+          colors={isDark ? [c.heroBg, '#0A3733'] : [c.primary, '#0A7A74']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.balanceGradientCard}
+        >
+          <View style={styles.balanceCardInner}>
+            <View style={styles.balanceLeft}>
+              <View style={styles.balanceLabelRow}>
+                <Ionicons name="wallet" size={13} color={c.heroFg} style={{ opacity: 0.8 }} />
+                <Text style={[styles.balanceLabel, { color: c.heroFg }]}>{t('wallet.availableBalance')}</Text>
+              </View>
+              <Text style={[styles.balanceAmount, { color: c.heroFg }]}>
+                ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </Text>
+              <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>Indian Rupees</Text>
+            </View>
+            <View style={styles.balanceRight}>
+              {(balance ?? 0) >= minWithdrawal ? (
+                <View
+                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.12)' }]}
+                >
+                  <Ionicons name="arrow-up-outline" size={17} color="rgba(255,255,255,0.4)" />
+                  <Text style={[styles.withdrawCtaText, { color: 'rgba(255,255,255,0.4)' }]}>{t('wallet.withdraw')}</Text>
                 </View>
-                <View style={styles.withdrawCardInfo}>
-                  <Text style={[styles.withdrawCardTitle, { color: c.text }]}>Withdraw</Text>
-                  <Text style={[styles.withdrawCardSub, { color: c.textSecondary }]}>
-                    Min. ₹{minWithdrawal.toLocaleString('en-IN')} required
+              ) : (
+                <View style={[styles.balanceMinAlert, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+                  <Ionicons name="information-circle" size={15} color="rgba(255,255,255,0.85)" />
+                  <Text style={styles.balanceMinAlertText}>
+                    Min ₹{minWithdrawal.toLocaleString('en-IN')} to withdraw
                   </Text>
                 </View>
-              </View>
-              <Text style={[styles.withdrawCardBalance, { color: c.textTertiary, borderTopColor: c.border }]}>
-                You need{' '}
-                <Text style={{ color: c.warning, fontWeight: '700' }}>
-                  ₹{(minWithdrawal - (balance ?? 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </Text>{' '}
-                more to withdraw
-              </Text>
+              )}
             </View>
-          )}
+          </View>
+        </LinearGradient>
+
+        {/* ── Quick stats row ────────────────────────────────── */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={[styles.statIconWrap, { backgroundColor: c.success + '15' }]}>
+              <Ionicons name="trending-up-outline" size={17} color={c.success} />
+            </View>
+            <View>
+              <Text style={[styles.statValue, { color: c.success }]}>
+                ₹{totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+              </Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Total Earned</Text>
+            </View>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={[styles.statIconWrap, { backgroundColor: c.primary + '15' }]}>
+              <Ionicons name="arrow-up-outline" size={17} color={c.primary} />
+            </View>
+            <View>
+              <Text style={[styles.statValue, { color: c.primary }]}>
+                ₹{totalWithdrawn.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+              </Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Withdrawn</Text>
+            </View>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={[styles.statIconWrap, { backgroundColor: pendingCount > 0 ? c.warning + '15' : c.textTertiary + '15' }]}>
+              <Ionicons name="time-outline" size={17} color={pendingCount > 0 ? c.warning : c.textTertiary} />
+            </View>
+            <View>
+              <Text style={[styles.statValue, { color: c.text }]}>{pendingCount}</Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Pending</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Transaction History */}
+        {/* ── Withdraw info note (when balance < min) ────────── */}
+        {(balance ?? 0) < minWithdrawal && (
+          <View style={[styles.infoNote, { backgroundColor: c.warning + '10', borderColor: c.warning + '30' }]}>
+            <Ionicons name="lock-closed-outline" size={15} color={c.warning} />
+            <Text style={[styles.infoNoteText, { color: c.textSecondary }]}>
+              Earn{' '}
+              <Text style={{ color: c.warning, fontWeight: '700' }}>
+                ₹{(minWithdrawal - (balance ?? 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </Text>{' '}
+              more to unlock withdrawals
+            </Text>
+          </View>
+        )}
+
+        {/* ── Transaction History ────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={[styles.sectionTitle, { color: c.text }]}>
@@ -566,7 +539,7 @@ export function WalletScreen() {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <View style={[styles.filterToggleBtn, { backgroundColor: showFilters || hasActiveFilters ? c.primary + '18' : 'transparent' }]}>
-                  <Ionicons name="filter" size={18} color={showFilters || hasActiveFilters ? c.primary : c.textTertiary} />
+                  <Ionicons name="filter" size={17} color={showFilters || hasActiveFilters ? c.primary : c.textTertiary} />
                   {hasActiveFilters && <View style={[styles.filterBadge, { backgroundColor: c.primary }]} />}
                 </View>
               </TouchableOpacity>
@@ -576,7 +549,6 @@ export function WalletScreen() {
           {/* Filter panel */}
           {showFilters && (
             <View style={[styles.filterPanel, { backgroundColor: c.surface, borderColor: c.border }]}>
-              {/* Type filter */}
               <Text style={[styles.filterGroupLabel, { color: c.textSecondary }]}>{t('wallet.filterByType')}</Text>
               <View style={styles.filterPills}>
                 {(['all', 'credit', 'debit'] as TxType[]).map((f) => (
@@ -590,7 +562,6 @@ export function WalletScreen() {
                 ))}
               </View>
 
-              {/* Source filter */}
               <Text style={[styles.filterGroupLabel, { color: c.textSecondary, marginTop: tokens.spacing3 }]}>{t('wallet.filterBySource')}</Text>
               <View style={styles.filterPills}>
                 {(['all', 'reward', 'withdrawal', 'refund'] as TxSource[]).map((f) => (
@@ -604,7 +575,6 @@ export function WalletScreen() {
                 ))}
               </View>
 
-              {/* Status filter */}
               <Text style={[styles.filterGroupLabel, { color: c.textSecondary, marginTop: tokens.spacing3 }]}>{t('wallet.filterByStatus')}</Text>
               <View style={styles.filterPills}>
                 {(['all', 'completed', 'pending', 'failed', 'reversed'] as TxStatus[]).map((f) => (
@@ -635,33 +605,39 @@ export function WalletScreen() {
                 onPress={() => setSelectedTx(tx)}
                 style={[styles.txRow, { backgroundColor: c.surface, ...tokens.shadowXs }]}
               >
+                <View style={[styles.txIconWrap, { backgroundColor: (tx.type === 'credit' ? c.success : c.error) + '14' }]}>
+                  <Ionicons
+                    name={
+                      tx.source === 'reward'
+                        ? 'chatbubble-ellipses-outline'
+                        : tx.source === 'withdrawal'
+                        ? 'arrow-up-outline'
+                        : tx.source === 'refund'
+                        ? 'return-down-back-outline'
+                        : 'swap-horizontal-outline'
+                    }
+                    size={17}
+                    color={tx.type === 'credit' ? c.success : c.error}
+                  />
+                </View>
                 <View style={styles.txLeft}>
-                  <View style={styles.txSourceRow}>
-                    <Text style={[styles.txSource, { color: c.text }]}>
-                      {tx.source.charAt(0).toUpperCase() + tx.source.slice(1).replace(/_/g, ' ')}
-                    </Text>
-                    {tx.status === 'pending' && (
-                      <View style={[styles.pendingDot, { backgroundColor: c.warning }]} />
-                    )}
-                  </View>
+                  <Text style={[styles.txSource, { color: c.text }]}>
+                    {tx.source.charAt(0).toUpperCase() + tx.source.slice(1).replace(/_/g, ' ')}
+                  </Text>
                   <Text style={[styles.txDate, { color: c.textTertiary }]}>
                     {new Date(tx.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    {tx.status === 'pending' && ' · Pending'}
                   </Text>
                 </View>
                 <View style={styles.txRight}>
-                  <Text
-                    style={[
-                      styles.txAmount,
-                      { color: tx.type === 'credit' ? c.success : c.error },
-                    ]}
-                  >
+                  <Text style={[styles.txAmount, { color: tx.type === 'credit' ? c.success : c.error }]}>
                     {tx.type === 'credit' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </Text>
                   <Text style={[styles.txStatus, { color: statusColors[tx.status] ?? c.textTertiary }]}>
                     {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color={c.textTertiary} style={{ marginLeft: tokens.spacing2 }} />
+                <Ionicons name="chevron-forward" size={15} color={c.textTertiary} style={{ marginLeft: tokens.spacing2 }} />
               </TouchableOpacity>
             ))
           )}
@@ -683,49 +659,81 @@ export function WalletScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { padding: tokens.spacing6 },
-  header: { marginBottom: tokens.spacing4 },
+  scroll: { padding: tokens.spacing5, paddingBottom: tokens.spacing8 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: tokens.spacing4 },
   title: { fontSize: 26, fontWeight: '800' },
-  balanceCard: {
+
+  // Balance hero card
+  balanceGradientCard: {
     borderRadius: tokens.radiusLg,
-    padding: tokens.spacing6,
-    alignItems: 'center',
     marginBottom: tokens.spacing4,
-  },
-  balanceLabel: { fontSize: 13, opacity: 0.8, letterSpacing: 0.01 * 13 },
-  balanceAmount: { fontSize: 40, fontWeight: '800', marginVertical: tokens.spacing2 },
-  balanceCurrency: { fontSize: 13, opacity: 0.7 },
-  withdrawSection: { marginBottom: tokens.spacing5 },
-  withdrawCard: {
-    borderRadius: tokens.radiusLg,
-    borderWidth: 1,
-    padding: tokens.spacing4,
     overflow: 'hidden',
   },
-  withdrawCardTop: {
+  balanceCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.spacing3,
+    justifyContent: 'space-between',
+    padding: tokens.spacing5,
   },
-  withdrawIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: 'center',
+  balanceLeft: { flex: 1 },
+  balanceRight: { alignItems: 'flex-end' },
+  balanceLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: tokens.spacing2 },
+  balanceLabel: { fontSize: 12, fontWeight: '600', opacity: 0.85 },
+  balanceAmount: { fontSize: 36, fontWeight: '800', letterSpacing: -0.5, marginBottom: 2 },
+  balanceCurrency: { fontSize: 11, opacity: 0.65 },
+  withdrawCtaBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: 10,
+    borderRadius: 22,
+  },
+  withdrawCtaText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  balanceMinAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  balanceMinAlertText: { color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: '600' },
+
+  // Quick stats
+  statsRow: { flexDirection: 'row', gap: tokens.spacing2, marginBottom: tokens.spacing4 },
+  statCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3,
+    gap: tokens.spacing2,
+  },
+  statIconWrap: {
+    width: 32, height: 32,
+    borderRadius: tokens.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
   },
-  withdrawCardInfo: { flex: 1 },
-  withdrawCardTitle: { fontSize: 15, fontWeight: '700' },
-  withdrawCardSub: { fontSize: 12, marginTop: 2 },
-  withdrawCardBalance: { fontSize: 12, marginTop: tokens.spacing3, paddingTop: tokens.spacing3, borderTopWidth: StyleSheet.hairlineWidth },
-  shimmerOverlay: {
-    width: 120,
-    height: '200%',
-    transform: [{ skewX: '-20deg' }],
+  statValue: { fontSize: 13, fontWeight: '800' },
+  statLabel: { fontSize: 10, marginTop: 1 },
+
+  // Info note
+  infoNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1,
+    padding: tokens.spacing3,
+    marginBottom: tokens.spacing4,
   },
-  withdrawBtn: { alignSelf: 'center' },
-  section: { marginTop: tokens.spacing2 },
+  infoNoteText: { fontSize: 12, flex: 1 },
+
+  // Transactions
+  section: { marginTop: tokens.spacing1 },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing3, flexWrap: 'wrap' },
   sectionTitle: { fontSize: 17, fontWeight: '700', flex: 1 },
   filterToggleBtn: {
@@ -741,22 +749,30 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderRadius: tokens.radiusLg,
     padding: tokens.spacing4, marginBottom: tokens.spacing3,
   },
-  filterGroupLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.05 * 11, textTransform: 'uppercase', marginBottom: tokens.spacing2 },
+  filterGroupLabel: {
+    fontSize: 11, fontWeight: '700', letterSpacing: 0.05 * 11,
+    textTransform: 'uppercase', marginBottom: tokens.spacing2,
+  },
   filterPills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
   txRow: {
     borderRadius: tokens.radiusMd,
-    padding: tokens.spacing4,
+    padding: tokens.spacing3,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: tokens.spacing2,
+    gap: tokens.spacing3,
+  },
+  txIconWrap: {
+    width: 36, height: 36,
+    borderRadius: tokens.radius,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   txLeft: { flex: 1 },
-  txSourceRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
   txSource: { fontSize: 14, fontWeight: '600' },
-  txDate: { fontSize: 11, marginTop: 2, letterSpacing: 0.01 * 11 },
-  pendingDot: { width: 7, height: 7, borderRadius: 3.5 },
+  txDate: { fontSize: 11, marginTop: 2 },
   txRight: { alignItems: 'flex-end' },
-  txAmount: { fontSize: 15, fontWeight: '700' },
+  txAmount: { fontSize: 14, fontWeight: '700' },
   txStatus: { fontSize: 11, marginTop: 2 },
 });

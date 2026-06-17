@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
@@ -10,9 +11,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingScreen } from '../components/Loading';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { AuthStackParamList, MainTabParamList, RootStackParamList, AdminStackParamList } from './types';
 import { tokens } from '../utils/theme';
 import { UserRole, VerificationStatus } from '../types';
+import { userApi } from '../api/client';
 
 const isNormalUser = (role: string | undefined) => role === UserRole.USER;
 
@@ -34,6 +37,7 @@ import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
 import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
+import { NotificationScreen } from '../screens/Notification/NotificationScreen';
 import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
 
 // Admin screens
@@ -195,9 +199,70 @@ function MainNavigator() {
   const { theme } = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [langModalVisible, setLangModalVisible] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const { toggleTheme, isDark } = useTheme();
+
+  useFocusEffect(
+    useCallback(() => {
+      userApi.getNotifications({ limit: 1 }).then((r) => {
+        setUnreadNotifs(r.data.unread ?? 0);
+      }).catch(() => {});
+    }, []),
+  );
 
   return (
-    <MainTab.Navigator
+    <>
+      {/* ── Custom header bar ─────────────────────────────── */}
+      <View style={{ paddingTop: insets.top, backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.borderSubtle }}>
+        <View style={mainStyles.headerBar}>
+          {/* App logo + name */}
+          <View style={mainStyles.brand}>
+            <Image source={require('../../assets/icon.png')} style={mainStyles.logo} />
+            <View style={mainStyles.brandText}>
+              <Text style={[mainStyles.appName, { color: c.text }]} numberOfLines={1}>KisanDekho</Text>
+              <Text style={[mainStyles.tagline, { color: c.textSecondary }]} numberOfLines={1}>Empowering Farmers</Text>
+            </View>
+          </View>
+
+          {/* Action icons */}
+          <View style={mainStyles.headerRight}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('NotificationScreen')}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+              style={mainStyles.headerIcon}
+            >
+              <Ionicons name="notifications-outline" size={22} color={c.text} />
+              {unreadNotifs > 0 && (
+                <View style={[mainStyles.badge, { backgroundColor: c.error }]}>
+                  <Text style={mainStyles.badgeText}>{unreadNotifs > 99 ? '99+' : unreadNotifs}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setLangModalVisible(true)}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+              style={mainStyles.headerIcon}
+            >
+              <Ionicons name="language-outline" size={22} color={c.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => toggleTheme()}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+              style={mainStyles.headerIcon}
+            >
+              <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={21} color={c.text} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <LanguageSwitcher visible={langModalVisible} onClose={() => setLangModalVisible(false)} />
+
+      <MainTab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -241,8 +306,56 @@ function MainNavigator() {
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="person" label="Profile" focused={focused} /> }}
       />
     </MainTab.Navigator>
+    </>
   );
 }
+
+const mainStyles = StyleSheet.create({
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing4,
+    height: 56,
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    flex: 1,
+  },
+  logo: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+  },
+  brandText: {
+    gap: 1,
+  },
+  appName: {
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  tagline: {
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  headerIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  badge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    minWidth: 17,
+    height: 17,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+});
 
 // ─── Pending Verification Navigator ─────────────────────────────────────────
 
@@ -308,6 +421,11 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="CropManagement"
                   component={CropManagementScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="NotificationScreen"
+                  component={NotificationScreen}
                   options={{ presentation: 'modal' }}
                 />
                 <RootStack.Screen

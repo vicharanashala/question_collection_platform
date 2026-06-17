@@ -40,6 +40,7 @@ interface Question {
   submittedAt: string;
   editWindowClosesAt: string | null;
   rejectionReason?: string;
+  approvalReason?: string;
 }
 
 interface QuestionsResponse {
@@ -371,6 +372,17 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
                 <View style={styles.viewRejectionContent}>
                   <Text style={[styles.viewRejectionLabel, { color: c.error }]}>{t('submissions.rejectionReason')}</Text>
                   <Text style={[styles.viewRejectionText, { color: c.error }]}>{question.rejectionReason}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Approval reason — for approved questions only */}
+            {question.status === 'approved' && question.approvalReason && (
+              <View style={[styles.viewApprovalBox, { backgroundColor: c.success + '12', borderColor: c.success + '30' }]}>
+                <Ionicons name="checkmark-circle" size={16} color={c.success} />
+                <View style={styles.viewRejectionContent}>
+                  <Text style={[styles.viewRejectionLabel, { color: c.success }]}>{t('submissions.approvalReason')}</Text>
+                  <Text style={[styles.viewRejectionText, { color: c.text }]}>{question.approvalReason}</Text>
                 </View>
               </View>
             )}
@@ -776,6 +788,11 @@ const styles = StyleSheet.create({
   detailValue: { fontSize: 13, flex: 1, fontWeight: '500' },
   detailDivider: { height: 1 },
   viewRejectionBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing3,
+    borderWidth: 1, borderRadius: tokens.radiusLg, padding: tokens.spacing4,
+    marginBottom: tokens.spacing5,
+  },
+  viewApprovalBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing3,
     borderWidth: 1, borderRadius: tokens.radiusLg, padding: tokens.spacing4,
     marginBottom: tokens.spacing5,

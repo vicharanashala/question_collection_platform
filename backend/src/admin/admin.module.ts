@@ -11,6 +11,7 @@ import {
   WithdrawalRequest,
   AuditLog,
   AdminConfig,
+  Notification,
 } from '../database/entities';
 import { WalletsModule } from '../wallets/wallets.module';
 
@@ -24,6 +25,7 @@ import { WalletsModule } from '../wallets/wallets.module';
       WithdrawalRequest,
       AuditLog,
       AdminConfig,
+      Notification,
     ]),
     forwardRef(() => WalletsModule),
   ],

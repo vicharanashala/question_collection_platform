@@ -38,6 +38,7 @@ export type RootStackParamList = {
   Main: { screen?: keyof MainTabParamList; params?: unknown } | undefined;
   EditProfile: undefined;
   CropManagement: undefined;
+  NotificationScreen: undefined;
   QuestionPreview: {
     // Fields returned from the preview endpoint (and originally submitted by the user)
     state: string;

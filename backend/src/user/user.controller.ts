@@ -2,11 +2,13 @@ import {
   Controller,
   Get,
   Patch,
+  Query,
   Body,
   UseGuards,
   HttpCode,
   HttpStatus,
   Req,
+  Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateProfileDto, UpdateCropDetailsDto } from './dto';
@@ -65,6 +67,52 @@ export class UserController {
   ) {
     const user = await this.userService.updateProfile(req.user.id, dto);
     return { user };
+  }
+
+  /**
+   * GET /users/me/notifications
+   * Paginated notification list with unread count.
+   */
+  @Get('me/notifications')
+  @HttpCode(HttpStatus.OK)
+  async getNotifications(
+    @Req() req: AuthenticatedRequest,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.userService.getNotifications(req.user.id, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+  }
+
+  /**
+   * PATCH /users/me/notifications/read-all
+   * Mark all unread notifications as read.
+   */
+  /**
+   * PATCH /users/me/notifications/:id/read
+   * Mark a single notification as read.
+   */
+  @Patch('me/notifications/:id/read')
+  @HttpCode(HttpStatus.OK)
+  async markAsRead(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    await this.userService.markAsRead(req.user.id, id);
+    return { success: true };
+  }
+
+  /**
+   * PATCH /users/me/notifications/read-all
+   * Mark all unread notifications as read.
+   */
+  @Patch('me/notifications/read-all')
+  @HttpCode(HttpStatus.OK)
+  async markAllRead(@Req() req: AuthenticatedRequest) {
+    await this.userService.markAllNotificationsRead(req.user.id);
+    return { success: true };
   }
 
   /**

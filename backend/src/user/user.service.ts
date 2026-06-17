@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { User, UserCropDetail, AuditLog } from '../database/entities';
+import { User, UserCropDetail, AuditLog, Notification } from '../database/entities';
 import { AuditAction, ActorType } from '../common/enums';
 import { UpdateProfileDto, UpdateCropDetailsDto } from './dto';
 
@@ -14,6 +14,8 @@ export class UserService {
     private readonly cropRepo: Repository<UserCropDetail>,
     @InjectRepository(AuditLog)
     private readonly auditRepo: Repository<AuditLog>,
+    @InjectRepository(Notification)
+    private readonly notifRepo: Repository<Notification>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -103,6 +105,59 @@ export class UserService {
 
   async getCropDetails(userId: string): Promise<UserCropDetail[]> {
     return this.cropRepo.find({ where: { userId }, order: { createdAt: 'ASC' } });
+  }
+
+  // ─── Notifications ───────────────────────────────────────────────────────
+
+  async getNotifications(
+    userId: string,
+    options: { page?: number; limit?: number } = {},
+  ): Promise<{ notifications: Notification[]; unread: number; total: number }> {
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(50, Math.max(1, options.limit ?? 20));
+    const skip = (page - 1) * limit;
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      this.notifRepo.find({
+        where: { userId },
+        order: { createdAt: 'DESC' },
+        skip,
+        take: limit,
+      }),
+      this.notifRepo.count({ where: { userId } }),
+      this.notifRepo.count({ where: { userId, isRead: false } }),
+    ]);
+
+    return {
+      notifications,
+      unread: unreadCount,
+      total,
+    };
+  }
+
+  async markAsRead(userId: string, notificationId: string): Promise<void> {
+    await this.notifRepo.update({ id: notificationId, userId }, { isRead: true });
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    await this.notifRepo.update({ userId, isRead: false }, { isRead: true });
+  }
+
+  async createNotification(params: {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    data?: Record<string, unknown>;
+  }): Promise<Notification> {
+    const notif = this.notifRepo.create({
+      userId: params.userId,
+      type: params.type as any,
+      title: params.title,
+      body: params.body,
+      data: params.data ?? null,
+    });
+    return this.notifRepo.save(notif);
   }
 
   private async logAudit(

@@ -213,6 +213,15 @@ export const userApi = {
 
   updateCrops: (crops: Array<{ cropName: string; season?: string }>) =>
     api.patch('/users/me/crops', { crops }),
+
+  getNotifications: (params?: { page?: number; limit?: number }) =>
+    api.get('/users/me/notifications', { params }),
+
+  markNotificationRead: (id: string) =>
+    api.patch(`/users/me/notifications/${id}/read`, {}),
+
+  markAllNotificationsRead: () =>
+    api.patch('/users/me/notifications/read-all', {}),
 };
 
 export const questionApi = {

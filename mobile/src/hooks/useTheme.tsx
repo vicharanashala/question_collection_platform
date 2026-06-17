@@ -11,6 +11,7 @@ interface ThemeContextValue {
   isDark: boolean;
   preference: ThemePreference;
   setPreference: (p: ThemePreference) => void;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -56,9 +57,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Provide placeholder until AsyncStorage loads to avoid flash
   if (!loaded) return null;
 
+  const dark = resolved === 'dark';
   return (
     <ThemeContext.Provider
-      value={{ theme, resolved, isDark: resolved === 'dark', preference, setPreference }}
+      value={{ theme, resolved, isDark: dark, preference, setPreference, toggleTheme: () => setPreference(dark ? 'light' : 'dark') }}
     >
       {children}
     </ThemeContext.Provider>

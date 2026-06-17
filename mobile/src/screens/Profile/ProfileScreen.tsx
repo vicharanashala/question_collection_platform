@@ -13,10 +13,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { TooltipIcon } from '../../components/TooltipIcon';
-import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { useLanguage } from '../../hooks/useLanguage';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { VerificationStatus, UserCategory, UserRole } from '../../types';
@@ -25,7 +23,6 @@ const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR
 import { ProfileCompletionWidget } from '../../components/ProfileCompletionWidget';
 import { getLanguageName } from '../../utils/languageDetection';
 import type { CropDetail, WalletBalance } from '../../types';
-import type { SupportedLanguageCode } from '../../i18n';
 
 const categoryLabels: Record<string, string> = {
   farmer: 'Farmer',
@@ -54,18 +51,16 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 type ProfileStats = { totalQuestions: number };
 
 export function ProfileScreen() {
-  const { theme, preference, setPreference } = useTheme();
+  const { theme } = useTheme();
   const c = theme.colors;
   const { user, logout } = useAuth();
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
-  const { language } = useLanguage();
 
   const [crops, setCrops] = useState<CropDetail[]>([]);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
   const [loadingData, setLoadingData] = useState(false);
-  const [langModalVisible, setLangModalVisible] = useState(false);
 
   const seasonLabels: Record<string, string> = {
     kharif: t('season.kharif'),
@@ -210,28 +205,6 @@ export function ProfileScreen() {
           </View>
         </View>
 
-        {/* ── Language shortcut ──────────────────────────────── */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={[styles.actionRow, { backgroundColor: c.surface, ...tokens.shadowSm }]}
-            activeOpacity={0.75}
-            onPress={() => setLangModalVisible(true)}
-          >
-            <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
-              <Ionicons name="language-outline" size={17} color={c.primary} />
-            </View>
-            <View style={styles.actionTextCol}>
-              <Text style={[styles.actionTitle, { color: c.text }]}>
-                {t('auth.selectLanguage')}
-              </Text>
-              <Text style={[styles.actionSub, { color: c.textSecondary }]}>
-                {getLanguageName(language as SupportedLanguageCode)}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
-          </TouchableOpacity>
-        </View>
-
         {/* ── Crops ─────────────────────────────────────────── */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
@@ -263,41 +236,6 @@ export function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ── Appearance ────────────────────────────────────── */}
-        <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.appearance')}</Text>
-            <TooltipIcon description={t("profile.themeSystemDesc")} />
-          </View>
-          <View style={[styles.themeCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            {(['light', 'dark', 'system'] as const).map((mode) => (
-              <TouchableOpacity
-                key={mode}
-                style={[styles.themeOption, { borderBottomColor: c.borderSubtle, borderBottomWidth: mode !== 'system' ? 1 : 0 }]}
-                activeOpacity={0.7}
-                onPress={() => setPreference(mode)}
-              >
-                <View style={[styles.themeOptionIcon, { backgroundColor: mode === preference ? c.primary + '18' : c.surfaceVariant }]}>
-                  <Ionicons
-                    name={mode === 'light' ? 'sunny-outline' : mode === 'dark' ? 'moon-outline' : 'phone-portrait-outline'}
-                    size={15}
-                    color={mode === preference ? c.primary : c.textSecondary}
-                  />
-                </View>
-                <View style={styles.themeOptionText}>
-                  <Text style={[styles.themeOptionLabel, { color: c.text }]}>
-                    {mode === 'light' ? 'Light' : mode === 'dark' ? 'Dark' : 'System'}
-                  </Text>
-                  <Text style={[styles.themeOptionSub, { color: c.textSecondary }]}>
-                    {mode === 'light' ? 'Always light theme' : mode === 'dark' ? 'Always dark theme' : 'Follow device settings'}
-                  </Text>
-                </View>
-                {mode === preference && <Ionicons name="checkmark-circle" size={18} color={c.primary} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         {/* ── Actions ───────────────────────────────────────── */}
         <View style={styles.section}>
           <TouchableOpacity
@@ -325,10 +263,6 @@ export function ProfileScreen() {
         </View>
       </ScrollView>
 
-      <LanguageSwitcher
-        visible={langModalVisible}
-        onClose={() => setLangModalVisible(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -386,15 +320,5 @@ const styles = StyleSheet.create({
   // Actions
   actionRow: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusMd, padding: tokens.spacing4, marginBottom: tokens.spacing2, gap: tokens.spacing3 },
   actionIconWrap: { width: 36, height: 36, borderRadius: tokens.radius, alignItems: 'center', justifyContent: 'center' },
-  actionTextCol: { flex: 1 },
   actionTitle: { fontSize: 15, fontWeight: '600' },
-  actionSub: { fontSize: 12, marginTop: 1 },
-
-  // Theme
-  themeCard: { borderRadius: tokens.radiusMd, overflow: 'hidden' },
-  themeOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: tokens.spacing3 + 2, paddingHorizontal: tokens.spacing4, gap: tokens.spacing3 },
-  themeOptionIcon: { width: 30, height: 30, borderRadius: tokens.radius, alignItems: 'center', justifyContent: 'center' },
-  themeOptionText: { flex: 1 },
-  themeOptionLabel: { fontSize: 14, fontWeight: '600' },
-  themeOptionSub: { fontSize: 11, marginTop: 1 },
 });

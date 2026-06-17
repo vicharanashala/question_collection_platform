@@ -13,6 +13,7 @@ import { Wallet } from './wallet.entity';
 import { Question } from './question.entity';
 import { UserCropDetail } from './user-crop-detail.entity';
 import { WithdrawalRequest } from './withdrawal-request.entity';
+import { Notification } from './notification.entity';
 
 @Entity('users')
 export class User {
@@ -109,4 +110,7 @@ export class User {
 
   @OneToMany(() => WithdrawalRequest, (wr) => wr.user)
   withdrawalRequests: WithdrawalRequest[];
+
+  @OneToMany(() => Notification, (n) => n.user)
+  notifications: Notification[];
 }

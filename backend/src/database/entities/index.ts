@@ -6,3 +6,4 @@ export * from './withdrawal-request.entity';
 export * from './question.entity';
 export * from './audit-log.entity';
 export * from './admin-config.entity';
+export * from './notification.entity';

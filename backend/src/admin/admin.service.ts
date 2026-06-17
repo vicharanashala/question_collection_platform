@@ -17,6 +17,8 @@ import {
   WithdrawalRequest,
   AuditLog,
   AdminConfig,
+  Notification,
+  NotificationType,
 } from '../database/entities';
 import {
   VerificationStatus,
@@ -146,6 +148,8 @@ export class AdminService implements OnModuleInit {
     private readonly auditRepo: Repository<AuditLog>,
     @InjectRepository(AdminConfig)
     private readonly configRepo: Repository<AdminConfig>,
+    @InjectRepository(Notification)
+    private readonly notificationRepo: Repository<Notification>,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WalletsService))
     private readonly walletsService: WalletsService,
@@ -579,6 +583,16 @@ export class AdminService implements OnModuleInit {
         newValue: { status: QuestionStatus.APPROVED, reward: rewardResult.transaction.amount },
       });
 
+      await this.notificationRepo.save(
+        this.notificationRepo.create({
+          userId: question.userId,
+          type: NotificationType.QUESTION_APPROVED,
+          title: 'Question Approved',
+          body: `Your question "${question.questionText.slice(0, 80)}..." has been approved. Rs. ${rewardResult.transaction.amount} has been credited to your wallet.`,
+          data: { questionId, status: 'approved' },
+        }),
+      );
+
       return {
         success: true,
         action: 'approved',
@@ -608,6 +622,15 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: oldStatus },
         newValue: { status: QuestionStatus.REJECTED, reason: dto.reason },
       });
+      await this.notificationRepo.save(
+        this.notificationRepo.create({
+          userId: question.userId,
+          type: NotificationType.QUESTION_REJECTED,
+          title: 'Question Not Approved',
+          body: `Your question "${question.questionText.slice(0, 80)}..." was not approved. Reason: ${dto.reason}`,
+          data: { questionId, status: 'rejected' },
+        }),
+      );
       return { success: true, action: 'rejected', questionId, rejectionReason: dto.reason };
     }
 
@@ -632,6 +655,15 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: oldStatus },
         newValue: { status: QuestionStatus.HELD, reason: dto.heldReason },
       });
+      await this.notificationRepo.save(
+        this.notificationRepo.create({
+          userId: question.userId,
+          type: NotificationType.QUESTION_HELD,
+          title: 'Question Under Review',
+          body: `Your question "${question.questionText.slice(0, 80)}..." has been placed under review. Reason: ${dto.heldReason}`,
+          data: { questionId, status: 'held' },
+        }),
+      );
       return { success: true, action: 'held', questionId, heldReason: dto.heldReason };
     }
 
@@ -648,6 +680,15 @@ export class AdminService implements OnModuleInit {
       oldValue: { status: oldStatus },
       newValue: { status: QuestionStatus.HUMAN_REVIEW },
     });
+    await this.notificationRepo.save(
+      this.notificationRepo.create({
+        userId: question.userId,
+        type: NotificationType.QUESTION_INFO_REQUESTED,
+        title: 'More Information Needed',
+        body: `Your question "${question.questionText.slice(0, 80)}..." requires additional information.`,
+        data: { questionId, status: 'human_review' },
+      }),
+    );
     return { success: true, action: 'request_info', questionId };
   }
 
@@ -1063,6 +1104,15 @@ export class AdminService implements OnModuleInit {
         entityId: withdrawalId,
         newValue: { status: WithdrawalStatus.PROCESSING },
       });
+      await this.notificationRepo.save(
+        this.notificationRepo.create({
+          userId: withdrawal.userId,
+          type: NotificationType.WITHDRAWAL_APPROVED,
+          title: 'Withdrawal Approved',
+          body: `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
+          data: { withdrawalId, status: 'processing' },
+        }),
+      );
       return { success: true, action: 'approved', withdrawalId, status: WithdrawalStatus.PROCESSING };
     } else {
       // Refund wallet balance
@@ -1086,6 +1136,15 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: WithdrawalStatus.PENDING },
         newValue: { status: WithdrawalStatus.FAILED, reason: dto.failureReason },
       });
+      await this.notificationRepo.save(
+        this.notificationRepo.create({
+          userId: withdrawal.userId,
+          type: NotificationType.WITHDRAWAL_REJECTED,
+          title: 'Withdrawal Rejected',
+          body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected. The amount has been credited back to your wallet.`,
+          data: { withdrawalId, status: 'failed' },
+        }),
+      );
       return { success: true, action: 'rejected', withdrawalId, status: WithdrawalStatus.FAILED };
     }
   }

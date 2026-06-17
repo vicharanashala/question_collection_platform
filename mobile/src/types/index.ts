@@ -186,3 +186,34 @@ export interface WithdrawalFormData {
     ifscCode?: string;
   };
 }
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export enum NotificationType {
+  QUESTION_APPROVED = 'question_approved',
+  QUESTION_REJECTED = 'question_rejected',
+  QUESTION_HELD = 'question_held',
+  QUESTION_INFO_REQUESTED = 'question_info_requested',
+  REWARD_CREDITED = 'reward_credited',
+  WITHDRAWAL_APPROVED = 'withdrawal_approved',
+  WITHDRAWAL_REJECTED = 'withdrawal_rejected',
+  ACCOUNT_SUSPENDED = 'account_suspended',
+  ACCOUNT_BANNED = 'account_banned',
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  notificationType: NotificationType;
+  title: string;
+  body: string;
+  data: Record<string, unknown> | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  notifications: AppNotification[];
+  unread: number;
+  total: number;
+}
