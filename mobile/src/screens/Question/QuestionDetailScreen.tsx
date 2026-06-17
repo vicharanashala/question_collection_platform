@@ -16,7 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../components/Toast';
-import { Trnscber } from '../../components/Trnscber';
+import { TranslatableTextReadOnly } from '../../components/TranslatableTextReadOnly';
 import { questionApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { RootStackParamList } from '../../navigation/types';
@@ -52,6 +52,7 @@ export function QuestionDetailScreen() {
   const [q, setQ] = useState<Question | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLang, setSelectedLang] = useState('');
 
   useEffect(() => {
     questionApi.get(questionId)
@@ -145,10 +146,12 @@ export function QuestionDetailScreen() {
           <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
             {t('notifications.yourQuestion', 'Your Question')}
           </Text>
-          <Trnscber
+          <TranslatableTextReadOnly
             text={q.questionText}
+            selectedLang={selectedLang}
+            onLangChange={setSelectedLang}
             sourceLanguage={q.language ?? 'en'}
-            style={[styles.questionText, { color: c.text }]}
+            style={styles.questionText}
           />
         </View>
 
@@ -293,9 +296,12 @@ export function QuestionDetailScreen() {
                 {t('notifications.approvedNote', 'Approval Note')}
               </Text>
             </View>
-            <Text style={[styles.reasonBody, { color: '#166534' }]}>
-              {q.approvalReason}
-            </Text>
+            <TranslatableTextReadOnly
+              text={q.approvalReason}
+              selectedLang={selectedLang}
+              onLangChange={setSelectedLang}
+              style={styles.reasonBody}
+            />
           </View>
         )}
 
