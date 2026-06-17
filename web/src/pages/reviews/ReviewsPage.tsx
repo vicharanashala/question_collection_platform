@@ -298,7 +298,7 @@ function DetailPanel({
   onAction: (action: ReviewAction, questionText: string) => void
   selectedLang: string
   onLangChange: (lang: string) => void
-})
+}) {
   const [modalAction, setModalAction] = useState<ReviewAction | null>(null)
 
   if (!q) {
