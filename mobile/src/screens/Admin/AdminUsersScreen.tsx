@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '800' },
   list: { padding: tokens.spacing5, paddingTop: 0, gap: tokens.spacing2 },
-  card: { borderRadius: tokens.radiusMd, padding: tokens.spacing4 },
+  card: { borderRadius: tokens.radiusMd, padding: tokens.spacing4, ...tokens.shadowSm },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   userName: { fontSize: 15, fontWeight: '700' },
   userMeta: { fontSize: 12, marginTop: 2 },

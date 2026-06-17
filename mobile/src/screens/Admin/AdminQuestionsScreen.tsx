@@ -598,6 +598,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radiusMd,
     padding: tokens.spacing3,
     marginBottom: 2,
+    ...tokens.shadowSm,
   },
   listCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.spacing2 },
   listCardMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, marginRight: tokens.spacing2 },
