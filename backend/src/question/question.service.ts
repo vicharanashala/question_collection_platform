@@ -7,8 +7,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
-import { Question, AuditLog } from '../database/entities';
+import { Question, AuditLog, Notification } from '../database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../common/enums';
+import { NotificationType, NotificationTriggerType } from '../database/entities/notification.entity';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
@@ -22,6 +23,8 @@ export class QuestionService {
     private readonly questionRepo: Repository<Question>,
     @InjectRepository(AuditLog)
     private readonly auditRepo: Repository<AuditLog>,
+    @InjectRepository(Notification)
+    private readonly notifRepo: Repository<Notification>,
     private readonly dataSource: DataSource,
     private readonly adminService: AdminService,
     private readonly userService: UserService,
@@ -81,10 +84,31 @@ export class QuestionService {
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + editWindowSec * 1000);
 
-    // 2. Derive agro-climatic zone from state when not provided
+    // 2. Reject exact-duplicate submissions immediately
+    const existingDuplicate = await this.questionRepo.findOne({
+      where: { questionText: dto.questionText },
+      select: ['id'],
+    });
+    if (existingDuplicate) {
+      await this.notifRepo.save(
+        this.notifRepo.create({
+          userId,
+          type: NotificationType.DUPLICATE_QUESTION,
+          title: 'Duplicate Question Not Accepted',
+          body: 'Your question was not accepted because an identical question already exists in our system. Please check your previously submitted questions.',
+          data: { duplicateOf: existingDuplicate.id },
+          triggerType: NotificationTriggerType.QUESTION,
+        }),
+      );
+      throw new BadRequestException(
+        'Your question was not accepted because an identical question already exists in our system.',
+      );
+    }
+
+    // 3. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
 
-    // 3. Persist question in a transaction
+    // 4. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
       domainCategory: dto.domainCategory,
@@ -108,7 +132,7 @@ export class QuestionService {
       return repo.save(question) as Promise<Question>;
     });
 
-    // 3. Audit log
+    // 5. Audit log
     await this.auditRepo.save({
       actorType: ActorType.USER,
       actorId: userId,

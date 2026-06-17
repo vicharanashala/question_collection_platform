@@ -14,6 +14,7 @@ export enum NotificationType {
   QUESTION_REJECTED = 'question_rejected',
   QUESTION_HELD = 'question_held',
   QUESTION_INFO_REQUESTED = 'question_info_requested',
+  DUPLICATE_QUESTION = 'duplicate_question',
   REWARD_CREDITED = 'reward_credited',
   WITHDRAWAL_APPROVED = 'withdrawal_approved',
   WITHDRAWAL_REJECTED = 'withdrawal_rejected',
