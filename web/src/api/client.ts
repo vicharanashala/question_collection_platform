@@ -107,7 +107,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 
 // ─── Core request ──────────────────────────────────────────────────────────
 
-async function request<T>(
+export async function request<T>(
   path: string,
   options: RequestInit = {},
   useCache = true,
