@@ -11,24 +11,28 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  DataTable, CardView,
+  ViewToggle, type ColumnDef,
+} from '@/components/DataTable'
 import { cn, formatDate, formatDateTime, getInitials } from '@/lib/utils'
 import {
   ArrowLeft, Ban, PauseCircle, PlayCircle, CheckCircle,
   ShieldCheck, MapPin, Phone, Calendar, MessageSquare,
-  Clock, FileText, Image, BarChart2, ChevronRight,
+  Clock, FileText, Image, ChevronDown,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { User, Question, QuestionStatus } from '@/types'
+import type { User as UserType, Question, QuestionStatus } from '@/types'
 
 // ─── Status badge helpers ──────────────────────────────────────────────────────
 
 function VerificationBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    verified:      { label: 'Verified',      cls: 'bg-success text-white' },
-    pending:       { label: 'Pending Review', cls: 'bg-warning text-white' },
-    manual_review: { label: 'Manual Review', cls: 'bg-chart2 text-white' },
-    suspended:     { label: 'Suspended',     cls: 'bg-warning text-white' },
-    banned:        { label: 'Banned',        cls: 'bg-destructive text-white' },
+    verified:      { label: 'Verified',      cls: 'bg-emerald-500 text-white' },
+    pending:       { label: 'Pending Review', cls: 'bg-amber-500 text-white' },
+    manual_review: { label: 'Manual Review', cls: 'bg-blue-500 text-white' },
+    suspended:     { label: 'Suspended',     cls: 'bg-amber-500 text-white' },
+    banned:        { label: 'Banned',        cls: 'bg-red-600 text-white' },
   }
   const { label, cls } = map[status] ?? { label: status, cls: 'bg-muted' }
   return <span className={cn('inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize', cls)}>{label}</span>
@@ -36,104 +40,19 @@ function VerificationBadge({ status }: { status: string }) {
 
 function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
   const map: Record<QuestionStatus, { label: string; dot: string; cls: string }> = {
-    pending:      { label: 'Pending',      dot: 'bg-warning',  cls: 'border-warning/40 text-warning' },
-    ai_review:    { label: 'AI Review',    dot: 'bg-chart2',   cls: 'border-chart2/40 text-chart2' },
-    human_review: { label: 'Human Review', dot: 'bg-primary',  cls: 'border-primary/40 text-primary' },
-    held:         { label: 'Held',          dot: 'bg-[hsl(38,92%,50%)]', cls: 'border-[hsl(38,92%,50%)]/40 text-[hsl(38,92%,50%)]' },
-    approved:     { label: 'Approved',     dot: 'bg-success',  cls: 'border-success/40 text-success' },
-    rejected:     { label: 'Rejected',     dot: 'bg-destructive', cls: 'border-destructive/40 text-destructive' },
+    pending:      { label: 'Pending',      dot: 'bg-amber-500',  cls: 'text-amber-600' },
+    ai_review:    { label: 'AI Review',    dot: 'bg-blue-500',   cls: 'text-blue-600' },
+    human_review: { label: 'Human Review', dot: 'bg-purple-500', cls: 'text-purple-600' },
+    held:         { label: 'Held',          dot: 'bg-orange-400', cls: 'text-orange-500' },
+    approved:     { label: 'Approved',     dot: 'bg-emerald-500',  cls: 'text-emerald-600' },
+    rejected:     { label: 'Rejected',     dot: 'bg-red-600', cls: 'text-red-600' },
   }
-  const { label, dot } = map[status] ?? { label: status, dot: 'bg-muted' }
+  const { label, dot, cls } = map[status] ?? { label: status, dot: 'bg-muted', cls: 'text-muted-foreground' }
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+    <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium', cls)}>
       <span className={cn('h-1.5 w-1.5 rounded-full', dot)} />
       {label}
     </span>
-  )
-}
-
-// ─── Question card ─────────────────────────────────────────────────────────────
-
-function QuestionCard({ q }: { q: Question }) {
-  const [expanded, setExpanded] = useState(false)
-
-  return (
-    <div className="rounded-lg border bg-card">
-      <button
-        className="w-full text-left p-4 flex items-start gap-3 hover:bg-accent/50 transition-colors"
-        onClick={() => setExpanded((e) => !e)}
-      >
-        <div className={cn('mt-2 h-2 w-2 shrink-0 rounded-full',
-          q.status === 'approved' ? 'bg-success' :
-          q.status === 'rejected'  ? 'bg-destructive' :
-          'bg-warning'
-        )} />
-        <div className="min-w-0 flex-1">
-          <p className={cn(
-            'text-sm text-foreground leading-relaxed',
-            !expanded && 'line-clamp-2'
-          )}>{q.questionText}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <QuestionStatusBadge status={q.status} />
-            {q.domainCategory && (
-              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {q.domainCategory}
-              </span>
-            )}
-            {q.cropType && (
-              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {q.cropType}
-              </span>
-            )}
-            {q.aiConfidenceScore != null && (
-              <span className="text-xs text-muted-foreground">
-                AI {Math.round(q.aiConfidenceScore * 100)}%
-              </span>
-            )}
-            <span className="text-xs text-muted-foreground ml-auto">
-              {formatDate(q.submittedAt) ?? '—'}
-            </span>
-          </div>
-        </div>
-        <ChevronRight className={cn('h-4 w-4 shrink-0 mt-1 text-muted-foreground transition-transform', expanded && 'rotate-90')} />
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-4 border-t pt-3 space-y-3">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            {[
-              ['Language', q.language],
-              ['State', q.state],
-              ['District', q.district],
-              ['Block', q.block ?? '—'],
-              ['Media', q.mediaType || '—'],
-              ['Duplicate flag', q.duplicateFlag ? 'Yes' : 'No'],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-4">
-                <span className="text-muted-foreground text-xs">{k}</span>
-                <span className="text-foreground text-xs font-medium capitalize">{v}</span>
-              </div>
-            ))}
-          </div>
-          {q.mediaUrls && q.mediaUrls.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {q.mediaUrls.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-primary hover:underline">
-                  <Image className="h-3.5 w-3.5" /> Attachment {i + 1}
-                </a>
-              ))}
-            </div>
-          )}
-          {q.rejectionReason && (
-            <div className="rounded-md border border-destructive/20 bg-destructive/5 p-2.5">
-              <p className="text-xs text-destructive font-medium mb-0.5">Rejection reason</p>
-              <p className="text-xs text-muted-foreground">{q.rejectionReason}</p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -147,22 +66,208 @@ function StatsStrip({ questions }: { questions: Question[] }) {
     pending: questions.filter((q) => ['pending', 'ai_review', 'human_review'].includes(q.status)).length,
   }), [questions])
 
+  const items = [
+    { label: 'Total Questions', value: counts.total, icon: FileText, bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-600 dark:text-blue-400' },
+    { label: 'Approved', value: counts.approved, icon: CheckCircle, bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'Pending', value: counts.pending, icon: Clock, bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-600 dark:text-amber-400' },
+    { label: 'Rejected', value: counts.rejected, icon: Ban, bg: 'bg-red-50 dark:bg-red-950/40', text: 'text-red-600 dark:text-red-400' },
+  ]
+
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {[
-        { label: 'Total', value: counts.total, bg: 'bg-primary/10', iconCls: 'text-primary' },
-        { label: 'Approved', value: counts.approved, bg: 'bg-success/10', iconCls: 'text-success' },
-        { label: 'Pending', value: counts.pending, bg: 'bg-warning/10', iconCls: 'text-warning' },
-        { label: 'Rejected', value: counts.rejected, bg: 'bg-destructive/10', iconCls: 'text-destructive' },
-      ].map(({ label, value, bg, iconCls }) => (
-        <div key={label} className={cn('flex items-center justify-between rounded-lg border p-3', bg)}>
-          <div>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="mt-0.5 text-2xl font-extrabold text-foreground">{value}</p>
-          </div>
-          <BarChart2 className={cn('h-5 w-5 opacity-60', iconCls)} />
-        </div>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {items.map(({ label, value, icon: Icon, bg, text }) => (
+        <Card key={label} className={cn('border-0', bg)}>
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">{label}</p>
+              <p className={cn('mt-1 text-2xl font-extrabold', text)}>{value}</p>
+            </div>
+            <Icon className={cn('h-6 w-6 opacity-60', text)} />
+          </CardContent>
+        </Card>
       ))}
+    </div>
+  )
+}
+
+// ─── Questions table columns ───────────────────────────────────────────────────
+
+function buildQuestionColumns(): ColumnDef<Question>[] {
+  return [
+    {
+      key: 'questionText',
+      header: 'Question',
+      width: '280px',
+      sortable: true,
+      render: (q) => (
+        <span className="text-sm text-foreground line-clamp-2 leading-relaxed">{q.questionText}</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '120px',
+      sortable: true,
+      render: (q) => <QuestionStatusBadge status={q.status} />,
+    },
+    {
+      key: 'domainCategory',
+      header: 'Category',
+      width: '110px',
+      sortable: true,
+      filterable: true,
+      filterOptions: [],  // derived from data
+      render: (q) => (
+        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
+          {q.domainCategory || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'domain',
+      header: 'Domain',
+      width: '130px',
+      sortable: true,
+      filterable: true,
+      filterOptions: [],
+      render: (q) => (
+        <span className="text-xs text-muted-foreground capitalize">{q.domain || '—'}</span>
+      ),
+    },
+    {
+      key: 'season',
+      header: 'Season',
+      width: '90px',
+      sortable: true,
+      filterable: true,
+      filterOptions: [],
+      render: (q) => (
+        <span className="text-xs text-muted-foreground capitalize">{q.season || '—'}</span>
+      ),
+    },
+    {
+      key: 'cropType',
+      header: 'Crop',
+      width: '100px',
+      sortable: true,
+      render: (q) => (
+        <span className="text-xs text-muted-foreground capitalize">{q.cropType || '—'}</span>
+      ),
+    },
+    {
+      key: 'aiConfidenceScore',
+      header: 'AI Score',
+      width: '80px',
+      sortable: true,
+      render: (q) => (
+        <span className="text-xs font-medium text-muted-foreground">
+          {q.aiConfidenceScore != null ? `${Math.round(q.aiConfidenceScore * 100)}%` : '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'submittedAt',
+      header: 'Submitted',
+      width: '110px',
+      sortable: true,
+      render: (q) => (
+        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '—'}</span>
+      ),
+    },
+    {
+      key: 'mediaUrls',
+      header: 'Media',
+      width: '80px',
+      render: (q) =>
+        q.mediaUrls && q.mediaUrls.length > 0 ? (
+          <a
+            href={q.mediaUrls[0]}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image className="h-3 w-3" />
+            {q.mediaUrls.length > 1 ? `${q.mediaUrls.length}` : ''}
+          </a>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
+    },
+  ]
+}
+
+function buildQuestionCardColumns(): ColumnDef<Question>[] {
+  return [
+    {
+      key: 'questionText',
+      header: 'Question',
+      render: (q) => (
+        <span className="text-sm font-medium text-foreground line-clamp-2">{q.questionText}</span>
+      ),
+    },
+    {
+      key: 'submittedAt',
+      header: 'Submitted',
+      render: (q) => (
+        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '—'}</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (q) => <QuestionStatusBadge status={q.status} />,
+    },
+    {
+      key: 'domainCategory',
+      header: 'Category',
+      render: (q) => (
+        <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded capitalize">
+          {q.domainCategory || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'domain',
+      header: 'Domain',
+      render: (q) => (
+        <span className="text-xs text-muted-foreground capitalize">{q.domain || '—'}</span>
+      ),
+    },
+    {
+      key: 'season',
+      header: 'Season',
+      render: (q) => (
+        <span className="text-xs text-muted-foreground capitalize">{q.season || '—'}</span>
+      ),
+    },
+    {
+      key: 'cropType',
+      header: 'Crop',
+      render: (q) => <span className="text-xs text-muted-foreground capitalize">{q.cropType || '—'}</span>,
+    },
+    {
+      key: 'aiConfidenceScore',
+      header: 'AI Score',
+      render: (q) => (
+        <span className="text-xs text-muted-foreground">
+          {q.aiConfidenceScore != null ? `${Math.round(q.aiConfidenceScore * 100)}%` : '—'}
+        </span>
+      ),
+    },
+  ]
+}
+
+// ─── Account detail rows ───────────────────────────────────────────────────────
+
+interface DetailRowProps { label: string; value: React.ReactNode }
+function DetailRow({ label, value }: DetailRowProps) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-border/60 last:border-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs font-medium text-foreground text-right max-w-[180px] truncate capitalize">
+        {value}
+      </span>
     </div>
   )
 }
@@ -175,11 +280,12 @@ export function UserDetailPage() {
   const { user: currentUser } = useAuth()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserType | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
 
+  const [accountCollapsed, setAccountCollapsed] = useState(true)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false)
   const [suspendAction, setSuspendAction] = useState<'suspend' | 'ban'>('suspend')
   const [suspendReason, setSuspendReason] = useState('')
@@ -188,14 +294,44 @@ export function UserDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<'unsuspend' | 'unban'>('unsuspend')
 
+  // Questions view state
+  const [qView, setQView] = useState<'table' | 'card'>('table')
+  const [qSearch, setQSearch] = useState('')
+  const [qPage, setQPage] = useState(1)
+  const Q_PAGE_SIZE = 10
+
+  const tableColumns = useMemo(() => buildQuestionColumns(), [])
+  const cardColumns = useMemo(() => buildQuestionCardColumns(), [])
+
+  // Filtered + paginated questions
+  const filteredQuestions = useMemo(() => {
+    if (!qSearch.trim()) return questions
+    const term = qSearch.toLowerCase()
+    return questions.filter((q) =>
+      q.questionText.toLowerCase().includes(term) ||
+      q.domainCategory.toLowerCase().includes(term) ||
+      q.cropType.toLowerCase().includes(term) ||
+      q.status.includes(term)
+    )
+  }, [questions, qSearch])
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / Q_PAGE_SIZE))
+  const paginatedQuestions = useMemo(
+    () => filteredQuestions.slice((qPage - 1) * Q_PAGE_SIZE, qPage * Q_PAGE_SIZE),
+    [filteredQuestions, qPage, Q_PAGE_SIZE]
+  )
+
   useEffect(() => {
     if (!userId) return
     setLoading(true)
     adminApi.getUserDetail(userId)
-      .then((res) => { setUser(res.user as User); setQuestions(res.questions as Question[]) })
+      .then((res) => { setUser(res.user as UserType); setQuestions(res.questions as Question[]) })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user')))
       .finally(() => setLoading(false))
   }, [userId])
+
+  // Reset page when search changes
+  useEffect(() => { setQPage(1) }, [qSearch])
 
   const isSuspended = user?.verificationStatus === 'suspended'
   const isBanned = user?.verificationStatus === 'banned'
@@ -209,7 +345,7 @@ export function UserDetailPage() {
       await adminApi.verifyUser(userId)
       toast.success('User verified')
       const r = await adminApi.getUserDetail(userId)
-      setUser(r.user as User)
+      setUser(r.user as UserType)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to verify user'))
     } finally {
@@ -225,7 +361,7 @@ export function UserDetailPage() {
       toast.success(suspendAction === 'ban' ? 'User banned' : 'User suspended')
       setSuspendModalOpen(false)
       const r = await adminApi.getUserDetail(userId)
-      setUser(r.user as User)
+      setUser(r.user as UserType)
     } catch (e) {
       toast.error(getErrorMessage(e, `Failed to ${suspendAction}`))
     } finally {
@@ -241,7 +377,7 @@ export function UserDetailPage() {
       toast.success(isBanned ? 'User unbanned' : 'Suspension lifted')
       setConfirmOpen(false)
       const r = await adminApi.getUserDetail(userId)
-      setUser(r.user as User)
+      setUser(r.user as UserType)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to reinstate'))
     } finally {
@@ -265,7 +401,7 @@ export function UserDetailPage() {
   }
 
   const initials = getInitials(user.name || '', user.mobileNumber)
-  const avatarBg = isBanned ? 'bg-destructive' : isSuspended ? 'bg-warning' : 'bg-primary'
+  const avatarBg = isBanned ? 'bg-red-600' : isSuspended ? 'bg-amber-500' : 'bg-blue-600'
 
   return (
     <div className="space-y-5">
@@ -278,7 +414,7 @@ export function UserDetailPage() {
       </button>
 
       {/* Hero card */}
-      <Card>
+      <Card className="border-0 shadow-sm overflow-hidden">
         <CardContent className="p-6">
           <div className="flex items-start gap-5">
             {/* Avatar */}
@@ -304,25 +440,25 @@ export function UserDetailPage() {
                 {isSuperAdmin && user.role !== 'super_admin' && (
                   <div className="flex flex-wrap gap-2">
                     {isPending && (
-                      <Button size="sm" className="bg-success hover:bg-success/90 gap-1.5" onClick={handleVerify} disabled={actionLoading}>
+                      <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 gap-1.5 text-white" onClick={handleVerify} disabled={actionLoading}>
                         <CheckCircle className="h-4 w-4" /> Verify
                       </Button>
                     )}
                     {!isLocked && (
                       <>
-                        <Button size="sm" variant="outline" className="gap-1.5 text-warning border-warning/50 hover:bg-warning/10"
+                        <Button size="sm" variant="outline" className="gap-1.5 text-amber-600 border-amber-300 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/40"
                           onClick={() => { setSuspendAction('suspend'); setSuspendModalOpen(true) }}>
                           <PauseCircle className="h-4 w-4" /> Suspend
                         </Button>
-                        <Button size="sm" variant="outline" className="gap-1.5 text-destructive border-destructive/50 hover:bg-destructive/10"
+                        <Button size="sm" variant="outline" className="gap-1.5 text-red-600 border-red-300 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/40"
                           onClick={() => { setSuspendAction('ban'); setSuspendModalOpen(true) }}>
                           <Ban className="h-4 w-4" /> Ban
                         </Button>
                       </>
                     )}
                     {isLocked && (
-                      <Button size="sm" className="gap-1.5"
-                        style={isBanned ? { backgroundColor: 'hsl(var(--destructive))' } : { backgroundColor: 'hsl(33,93%,54%)' }}
+                      <Button size="sm" className="gap-1.5 text-white"
+                        style={isBanned ? { backgroundColor: '#16a34a' } : { backgroundColor: '#d97706' }}
                         onClick={() => { setConfirmAction(isBanned ? 'unban' : 'unsuspend'); setConfirmOpen(true) }}>
                         <PlayCircle className="h-4 w-4" /> {isBanned ? 'Unban' : 'Lift Suspension'}
                       </Button>
@@ -356,16 +492,16 @@ export function UserDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Lock alert */}
+      {/* Lock alert card */}
       {isLocked && (
         <Card className={cn(
           'border-2',
-          isBanned ? 'border-destructive/40 bg-destructive/5' : 'border-warning/40 bg-warning/5'
+          isBanned ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30' : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'
         )}>
           <CardContent className="p-4 flex items-start gap-3">
             {isBanned
-              ? <Ban className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-              : <PauseCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />}
+              ? <Ban className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+              : <PauseCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />}
             <div className="flex-1">
               <p className="font-semibold text-foreground">
                 {isBanned ? 'Permanently Banned' : 'Account Suspended'}
@@ -388,57 +524,104 @@ export function UserDetailPage() {
         </Card>
       )}
 
-      {/* Question stats strip */}
+      {/* Stats strip — only show when there are questions */}
       {questions.length > 0 && <StatsStrip questions={questions} />}
 
-      {/* Account + Questions */}
-      <div className="grid gap-4 lg:grid-cols-5">
-        {/* Account details */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Account Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            {[
-              { label: 'Language', value: user.languagePreference || '—' },
-              { label: 'Category', value: user.category ?? '—' },
-              { label: 'State', value: user.state || '—' },
-              { label: 'District', value: user.district || '—' },
-              { label: 'Block', value: user.block ?? '—' },
-              { label: 'Joined', value: formatDate(user.createdAt) ?? '—' },
-              { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never' },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between py-2 border-b border-border last:border-0 text-sm">
-                <span className="text-muted-foreground text-xs">{label}</span>
-                <span className="font-medium text-foreground text-xs capitalize text-right max-w-[160px] truncate">
-                  {String(value).replace('_', ' ')}
-                </span>
+      {/* Account + Questions — stacked vertically */}
+      <div className="flex flex-col gap-4">
+
+        {/* Account details card */}
+        <Card>
+          <CardHeader className="p-0">
+            <button
+              className={cn(
+                'flex items-center justify-center w-full cursor-pointer transition-all duration-200 py-3',
+                !accountCollapsed && 'justify-between px-2',
+              )}
+              onClick={() => setAccountCollapsed((c) => !c)}
+              aria-expanded={!accountCollapsed}
+            >
+              <div className={cn('flex items-center gap-2', accountCollapsed ? '' : '')}>
+                {!accountCollapsed ? (
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
+                )}
+                <CardTitle className="text-sm font-semibold">Account Details</CardTitle>
               </div>
-            ))}
-          </CardContent>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200',
+                  accountCollapsed ? '-rotate-90' : '',
+                )}
+              />
+            </button>
+          </CardHeader>
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-200',
+              accountCollapsed ? 'max-h-0 opacity-0' : 'max-h-[600px] opacity-100',
+            )}
+          >
+            <CardContent className="pt-4">
+              <DetailRow label="Language" value={user.languagePreference || '—'} />
+              <DetailRow label="Category" value={user.category ?? '—'} />
+              <DetailRow label="State" value={user.state || '—'} />
+              <DetailRow label="District" value={user.district || '—'} />
+              <DetailRow label="Block" value={user.block ?? '—'} />
+              <DetailRow label="Joined" value={formatDate(user.createdAt) ?? '—'} />
+              <DetailRow label="Last Login" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'} />
+              <DetailRow label="Role" value={user.role.replace('_', ' ')} />
+              <DetailRow label="Status" value={<VerificationBadge status={user.verificationStatus} />} />
+            </CardContent>
+          </div>
         </Card>
 
-        {/* Questions */}
-        <Card className="lg:col-span-3">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" />
-              Questions
-              <Badge variant="secondary" className="ml-1 text-xs">{questions.length}</Badge>
-            </CardTitle>
+        {/* Questions card */}
+        <Card>
+          <CardHeader className="pb-0">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <CardTitle className="text-sm font-semibold">Questions</CardTitle>
+                <Badge variant="secondary" className="text-xs">{questions.length}</Badge>
+              </div>
+              {questions.length > 0 && (
+                <ViewToggle view={qView} onChange={(v) => { setQView(v); setQPage(1) }} />
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {questions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <MessageSquare className="h-8 w-8 text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground">No questions submitted yet</p>
+              <div className="flex flex-col items-center justify-center py-14 gap-3 border border-dashed border-border rounded-xl">
+                <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">No questions submitted yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Questions from this user will appear here</p>
+                </div>
               </div>
+            ) : qView === 'table' ? (
+              <DataTable
+                data={paginatedQuestions}
+                columns={tableColumns}
+                loading={false}
+                page={qPage}
+                totalPages={totalPages}
+                totalCount={filteredQuestions.length}
+                searchValue={qSearch}
+                onSearchChange={setQSearch}
+                onPageChange={setQPage}
+                SkeletonRows={Q_PAGE_SIZE}
+                emptyMessage="No questions match your filter"
+              />
             ) : (
-              <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
-                {questions.map((q) => <QuestionCard key={q.id} q={q} />)}
-              </div>
+              <CardView
+                data={paginatedQuestions}
+                columns={cardColumns}
+                loading={false}
+                SkeletonRows={Q_PAGE_SIZE}
+                emptyMessage="No questions match your filter"
+              />
             )}
           </CardContent>
         </Card>
@@ -480,7 +663,7 @@ export function UserDetailPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setSuspendModalOpen(false)}>Cancel</Button>
             <Button
-              style={suspendAction === 'ban' ? { backgroundColor: 'hsl(var(--destructive))' } : { backgroundColor: 'hsl(33,93%,54%)' }}
+              style={suspendModalOpen === false ? {} : suspendAction === 'ban' ? { backgroundColor: '#dc2626' } : { backgroundColor: '#d97706' }}
               onClick={handleSuspendBan}
               disabled={actionLoading || !suspendReason.trim()}
             >

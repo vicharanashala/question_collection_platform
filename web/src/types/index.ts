@@ -29,6 +29,7 @@ export interface Question {
   questionText: string;
   status: QuestionStatus;
   domainCategory: string;
+  domain: string;
   season: string;
   cropType: string;
   state: string;
@@ -43,9 +44,12 @@ export interface Question {
   reviewedAt: string | null;
   reviewedBy?: string | null;
   reviewedByName?: string | null;
-  rejectionReason?: string | null;
-  approvalReason?: string | null;
-  heldReason?: string | null;
+  /** Reason provided when the question was rejected — required for rejection */
+  rejectionReason: string | null;
+  /** Reason provided when the question was approved — required for approval */
+  approvalReason: string | null;
+  /** Reason provided when the question was put on hold — required for hold */
+  heldReason: string | null;
   reviewerId?: string | null;
   /** Populated user info returned by backend */
   user?: {
