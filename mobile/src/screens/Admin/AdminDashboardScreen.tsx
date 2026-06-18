@@ -537,23 +537,31 @@ export function AdminDashboardScreen() {
           <SectionHeader title="Quick Access" />
           <View style={styles.navGrid}>
             {[
-              { label: 'Users',       sub: 'Manage accounts',      icon: 'people',         screen: 'AdminUsers'       as any, color: '#0891B2' },
-              { label: 'Analytics',   sub: 'Platform insights',      icon: 'stats-chart',    screen: 'AdminAnalytics'   as any, color: '#7c3aed' },
-              { label: 'Questions',   sub: 'Review & moderate',      icon: 'document-text',  screen: 'AdminQuestions'   as any, color: c.primary },
-              { label: 'Withdrawals', sub: 'Approve payouts',        icon: 'card',           screen: 'AdminWithdrawals' as any, color: '#D97706' },
-              { label: 'Config',      sub: 'System settings',        icon: 'settings',       screen: 'AdminConfig'      as any, color: '#6B7280' },
+              { label: 'Users',       sub: 'Manage accounts',      icon: 'people',        screen: 'AdminUsers'       as any, color: '#0891B2', badge: 0 },
+              { label: 'Questions',   sub: 'Review & moderate',      icon: 'document-text',  screen: 'AdminQuestions'   as any, color: c.primary,  badge: pendingCount },
+              { label: 'Withdrawals', sub: 'Approve payouts',        icon: 'card',           screen: 'AdminWithdrawals' as any, color: '#D97706', badge: 0 },
+              { label: 'Config',      sub: 'System settings',        icon: 'settings',       screen: 'AdminConfig'      as any, color: '#6B7280', badge: 0 },
             ].map((item) => (
-              <Card
+              <TouchableOpacity
                 key={item.screen}
-                style={styles.navCard}
+                style={[styles.navCard, { backgroundColor: c.card, borderColor: c.border }]}
                 onPress={() => navigation.navigate(item.screen)}
+                activeOpacity={0.6}
               >
-                <View style={[navIconStyles.wrap, { backgroundColor: item.color + '18' }]}>
-                  <Ionicons name={item.icon as any} size={22} color={item.color} />
+                <View style={[styles.navIconWrap, { backgroundColor: item.color + '18' }]}>
+                  <Ionicons name={item.icon as any} size={20} color={item.color} />
                 </View>
-                <Text style={[navIconStyles.label, { color: c.foreground }]}>{item.label}</Text>
-                <Text style={[navIconStyles.sub, { color: c.mutedForeground }]}>{item.sub}</Text>
-              </Card>
+                <View style={styles.navTextWrap}>
+                  <Text style={[styles.navLabel, { color: c.foreground }]}>{item.label}</Text>
+                  <Text style={[styles.navSub, { color: c.mutedForeground }]}>{item.sub}</Text>
+                </View>
+                {item.badge > 0 && (
+                  <View style={[styles.navBadge, { backgroundColor: item.color }]}>
+                    <Text style={styles.navBadgeText}>{item.badge > 99 ? '99+' : item.badge}</Text>
+                  </View>
+                )}
+                <Ionicons name="chevron-forward" size={16} color={c.mutedForeground} />
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -635,16 +643,6 @@ const queueStyles = StyleSheet.create({
   },
 });
 
-const navIconStyles = StyleSheet.create({
-  wrap: {
-    width: 44, height: 44, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center',
-    marginBottom: tokens.spacing2,
-  },
-  label: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  sub: { fontSize: 11 },
-});
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -684,14 +682,37 @@ const styles = StyleSheet.create({
 
   // Nav grid
   navGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: tokens.spacing2,
   },
   navCard: {
-    width: '31%',
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: tokens.spacing4,
-    paddingHorizontal: tokens.spacing3,
+    gap: tokens.spacing3,
+    paddingVertical: tokens.spacing3 + 2,
+    paddingHorizontal: tokens.spacing4,
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1,
+    position: 'relative',
+    ...tokens.shadowXs,
   },
+  navIconWrap: {
+    width: 42, height: 42, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center',
+    flexShrink: 0,
+  },
+  navTextWrap: { flex: 1 },
+  navLabel: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  navSub: { fontSize: 11.5 },
+  navBadge: {
+    position: 'absolute',
+    top: -6,
+    right: tokens.spacing4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  navBadgeText: { fontSize: 10, fontWeight: '800', color: '#fff' },
 });
