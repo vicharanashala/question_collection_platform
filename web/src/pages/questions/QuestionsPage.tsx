@@ -28,18 +28,22 @@ import {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  held:     'bg-[hsl(38,92%,50%)] text-white',
-  approved: 'bg-success text-white',
-  rejected: 'bg-destructive text-white',
+  pending:      'bg-warning text-white',
+  ai_review:    'bg-blue-500 text-white',
+  human_review: 'bg-purple-500 text-white',
+  held:         'bg-[hsl(38,92%,50%)] text-white',
+  approved:     'bg-success text-white',
+  rejected:     'bg-destructive text-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  held:     'Held',
-  approved: 'Approved',
-  rejected: 'Rejected',
+  pending:      'Pending',
+  ai_review:    'AI Review',
+  human_review: 'Human Review',
+  held:         'Held',
+  approved:     'Approved',
+  rejected:     'Rejected',
 }
-
-const NON_LISTED_STATUSES = ['pending', 'ai_review', 'human_review']
 
 const SEASON_LABEL: Record<string, string> = {
   kharif: 'Kharif',
@@ -69,8 +73,7 @@ export function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  // Default to reviewed-only statuses so res.total is always correct for pagination
-  const [statusFilter, setStatusFilter] = useState<'held' | 'approved' | 'rejected'>('approved')
+  const [statusFilter, setStatusFilter] = useState<'held' | 'approved' | 'rejected' | 'pending' | 'ai_review' | 'human_review' | ''>('')
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'table' | 'card'>('table')
   const limit = 10
@@ -99,9 +102,7 @@ export function QuestionsPage() {
     const activeLimit = view === 'card' ? cardLimit : limit
     questionApi.getQuestions({ page, limit: activeLimit, search: debouncedSearch || undefined, status: statusFilter || undefined })
       .then((res) => {
-        const allItems = res.items as Question[]
-        const visible = allItems.filter((q) => !NON_LISTED_STATUSES.includes(q.status))
-        setQuestions(visible)
+        setQuestions(res.items as Question[])
         setApiTotal(res.total)
       })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load questions')))
@@ -192,7 +193,7 @@ export function QuestionsPage() {
     },
   ]
 
-  const emptyMessage = search || statusFilter ? 'No questions match your filters' : 'No reviewed questions yet'
+  const emptyMessage = search || statusFilter ? 'No questions match your filters' : 'No questions yet'
 
   // ─── Card view ─────────────────────────────────────────────────────────────
   const tableComponent = (
@@ -234,10 +235,14 @@ export function QuestionsPage() {
   )
 
   // ─── Status filter chips ───────────────────────────────────────────────────
-  const statusOptions: { value: 'held' | 'approved' | 'rejected'; label: string }[] = [
-    { value: 'approved', label: 'Approved' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'held',     label: 'Held' },
+  const statusOptions: { value: 'held' | 'approved' | 'rejected' | 'pending' | 'ai_review' | 'human_review' | ''; label: string }[] = [
+    { value: '',             label: 'All' },
+    { value: 'pending',      label: 'Pending' },
+    { value: 'ai_review',    label: 'AI Review' },
+    { value: 'human_review', label: 'Human Review' },
+    { value: 'held',         label: 'Held' },
+    { value: 'approved',     label: 'Approved' },
+    { value: 'rejected',     label: 'Rejected' },
   ]
 
   return (
@@ -245,9 +250,9 @@ export function QuestionsPage() {
       {/* ─── Page header ─── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Reviewed Questions</h2>
+          <h2 className="text-xl font-bold text-foreground">Questions</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Questions that have been approved, rejected, or held
+            All submitted questions
           </p>
         </div>
         <div className="flex items-center gap-3">

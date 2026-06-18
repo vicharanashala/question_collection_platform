@@ -586,6 +586,10 @@ export function ReviewsPage() {
       data={questions}
       columns={columns}
       loading={loading}
+      page={page}
+      totalPages={totalPages}
+      totalCount={total}
+      onPageChange={setPage}
       SkeletonRows={6}
       emptyMessage={emptyMessage}
       onRowClick={(row) => setSelectedQuestion(row as Question)}

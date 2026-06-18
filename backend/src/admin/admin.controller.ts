@@ -120,7 +120,7 @@ export class AdminController {
   }
 
   @Post('questions/:id/review')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   async reviewQuestion(
     @Param('id') id: string,
@@ -174,7 +174,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('analytics/dashboard')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
@@ -182,21 +182,21 @@ export class AdminController {
 
   /** Full stats for the admin dashboard */
   @Get('stats')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   async getStats(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getStats(dto);
   }
 
   @Get('analytics/rewards')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getRewardSummary(dto);
   }
 
   @Get('analytics/reward-logs')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.listRewardLogs(dto);

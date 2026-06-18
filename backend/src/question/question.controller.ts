@@ -57,7 +57,7 @@ export class QuestionController {
     @Query() dto: ListQuestionsDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<{ items: unknown[]; total: number; page: number; limit: number; pages: number }> {
-    return this.questionService.list(req.user.id, dto, req.user.role === 'admin' || req.user.role === 'super_admin');
+    return this.questionService.list(req.user.id, dto, req.user.role === 'admin' || req.user.role === 'super_admin' || req.user.role === 'curator');
   }
 
   // GET /questions/:id — Get single question

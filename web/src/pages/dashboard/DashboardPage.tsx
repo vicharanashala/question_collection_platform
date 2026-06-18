@@ -287,7 +287,7 @@ export function DashboardPage() {
               </Button>
             ))}
           </div>
-          <ExportPanel />
+          {user?.role !== 'curator' && <ExportPanel />}
         </div>
       </div>
 

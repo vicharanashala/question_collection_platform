@@ -384,7 +384,7 @@ export function AppNavigator() {
   const { theme, isDark } = useTheme();
   const { user, isLoading, isReady } = useAuth();
 
-  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
+  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN || user?.role === UserRole.CURATOR;
 
   if (!isReady || isLoading) {
     return <LoadingScreen message="Starting app…" />;

@@ -703,7 +703,7 @@ export function AdminDashboardScreen() {
         </View>
 
         {/* ── Rewards summary ───────────────────────────────────────────── */}
-        {rewards && (
+        {rewards && user?.role !== 'curator' && (
           <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
             <SectionHeader
               title="Rewards & Payouts"
@@ -798,22 +798,26 @@ export function AdminDashboardScreen() {
             onPress={() => navigation.navigate('AdminQuestions')}
             themeColors={c}
           />
-          <QuickCard
-            label="Withdrawals"
-            sub="Approve payouts"
-            icon="card"
-            color="#D97706"
-            onPress={() => navigation.navigate('AdminWithdrawals')}
-            themeColors={c}
-          />
-          <QuickCard
-            label="Config"
-            sub="System settings"
-            icon="settings"
-            color="#6B7280"
-            onPress={() => navigation.navigate('AdminConfig')}
-            themeColors={c}
-          />
+          {user?.role !== 'curator' && (
+            <QuickCard
+              label="Withdrawals"
+              sub="Approve payouts"
+              icon="card"
+              color="#D97706"
+              onPress={() => navigation.navigate('AdminWithdrawals')}
+              themeColors={c}
+            />
+          )}
+          {user?.role === 'super_admin' && (
+            <QuickCard
+              label="Config"
+              sub="System settings"
+              icon="settings"
+              color="#6B7280"
+              onPress={() => navigation.navigate('AdminConfig')}
+              themeColors={c}
+            />
+          )}
         </View>
 
         <View style={{ height: tokens.spacing8 }} />

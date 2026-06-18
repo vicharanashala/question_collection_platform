@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
@@ -307,7 +308,15 @@ export function AdminQuestionsScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation<Nav>();
+  const { user } = useAuth();
   const { showToast } = useToast();
+
+  // Admins skip the pending queue and go straight to processed questions
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      nav.replace('AdminProcessedQuestions');
+    }
+  }, [user?.role, nav]);
 
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -466,12 +475,14 @@ export function AdminQuestionsScreen() {
         <Text style={[styles.headerTitle, { color: c.text }]}>Question Review</Text>
         <View style={{ flex: 1 }} />
         <Text style={[styles.headerCount, { color: c.textSecondary }]}>{total}</Text>
-        <TouchableOpacity
-          onPress={() => nav.navigate('AdminProcessedQuestions')}
-          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-        >
-          <Text style={[styles.headerProcessed, { color: c.primary }]}>Processed</Text>
-        </TouchableOpacity>
+        {(user?.role === 'admin' || user?.role === 'curator') && (
+          <TouchableOpacity
+            onPress={() => nav.navigate('AdminProcessedQuestions')}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+          >
+            <Text style={[styles.headerProcessed, { color: c.primary }]}>Processed</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={[styles.headerFilter, { backgroundColor: activeCount > 0 ? c.primary + '18' : c.surfaceVariant }]}
           onPress={() => setFilterVisible(true)}
