@@ -48,6 +48,10 @@ interface CardViewProps<T extends { id: string }> {
   data: T[]
   columns: ColumnDef<T>[]
   loading?: boolean
+  page: number
+  totalPages: number
+  totalCount: number
+  onPageChange: (p: number) => void
   SkeletonRows?: number
   emptyMessage?: string
   onRowClick?: (row: T) => void
@@ -485,6 +489,10 @@ export function CardView<T extends { id: string }>({
   data,
   columns,
   loading,
+  page,
+  totalPages,
+  totalCount,
+  onPageChange,
   SkeletonRows = 4,
   emptyMessage = 'No records found',
   onRowClick,
@@ -503,6 +511,7 @@ export function CardView<T extends { id: string }>({
   }
 
   return (
+    <>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {data.map((row) => {
         const labelCol = columns[0]
@@ -551,6 +560,26 @@ export function CardView<T extends { id: string }>({
         )
       })}
     </div>
+
+    {totalPages > 1 && (
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-xs text-muted-foreground">
+          {(page - 1) * data.length + 1}–{Math.min(page * data.length, totalCount)} of {totalCount.toLocaleString()}
+        </p>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground px-2 min-w-[80px] text-center tabular-nums">
+            {page} / {totalPages}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    )}
+  </>
   )
 }
 

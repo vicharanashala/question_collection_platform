@@ -22,9 +22,9 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   users:        ['admin', 'super_admin'],
   userDetail:   ['admin', 'super_admin'],
   questions:    ['user', 'curator', 'admin', 'super_admin'],
-  reviews:      ['curator', 'admin', 'super_admin'],
+  reviews:      ['curator', 'super_admin'],
   profile:      ['user', 'curator', 'admin', 'super_admin'],
-  settings:     ['admin', 'super_admin'],
+  settings:     ['super_admin'],
   withdrawals:  ['admin', 'super_admin'],
   wallets:      ['admin', 'super_admin'],
 }

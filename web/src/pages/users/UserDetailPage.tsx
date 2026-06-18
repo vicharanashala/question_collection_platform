@@ -299,6 +299,7 @@ export function UserDetailPage() {
   const [qSearch, setQSearch] = useState('')
   const [qPage, setQPage] = useState(1)
   const Q_PAGE_SIZE = 10
+  const Q_CARD_PAGE_SIZE = 9
 
   const tableColumns = useMemo(() => buildQuestionColumns(), [])
   const cardColumns = useMemo(() => buildQuestionCardColumns(), [])
@@ -315,10 +316,11 @@ export function UserDetailPage() {
     )
   }, [questions, qSearch])
 
-  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / Q_PAGE_SIZE))
+  const activePageSize = qView === 'card' ? Q_CARD_PAGE_SIZE : Q_PAGE_SIZE
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / activePageSize))
   const paginatedQuestions = useMemo(
-    () => filteredQuestions.slice((qPage - 1) * Q_PAGE_SIZE, qPage * Q_PAGE_SIZE),
-    [filteredQuestions, qPage, Q_PAGE_SIZE]
+    () => filteredQuestions.slice((qPage - 1) * activePageSize, qPage * activePageSize),
+    [filteredQuestions, qPage, activePageSize]
   )
 
   useEffect(() => {
@@ -619,7 +621,11 @@ export function UserDetailPage() {
                 data={paginatedQuestions}
                 columns={cardColumns}
                 loading={false}
-                SkeletonRows={Q_PAGE_SIZE}
+                page={qPage}
+                totalPages={totalPages}
+                totalCount={filteredQuestions.length}
+                onPageChange={setQPage}
+                SkeletonRows={Q_CARD_PAGE_SIZE}
                 emptyMessage="No questions match your filter"
               />
             )}

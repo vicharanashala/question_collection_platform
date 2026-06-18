@@ -103,7 +103,7 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 2: Question Review — curator allowed
+  // Section 2: Question Review — curator read-only (queue + metrics only)
   // ─────────────────────────────────────────────────────────────
 
   @Get('questions/queue')
@@ -113,12 +113,14 @@ export class AdminController {
   }
 
   @Get('questions/:id')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getQuestion(@Param('id') id: string) {
     return this.adminService.getQuestionForReview(id);
   }
 
   @Post('questions/:id/review')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async reviewQuestion(
     @Param('id') id: string,
@@ -172,13 +174,15 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('analytics/dashboard')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
   }
 
-  /** Full stats for the admin dashboard — curator allowed */
+  /** Full stats for the admin dashboard */
   @Get('stats')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getStats(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getStats(dto);

@@ -74,6 +74,7 @@ export function QuestionsPage() {
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'table' | 'card'>('table')
   const limit = 10
+  const cardLimit = 9
   const debouncedSearch = useDebouncedValue(search, 400)
 
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null)
@@ -95,7 +96,8 @@ export function QuestionsPage() {
 
   useEffect(() => {
     setLoading(true)
-    questionApi.getQuestions({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined })
+    const activeLimit = view === 'card' ? cardLimit : limit
+    questionApi.getQuestions({ page, limit: activeLimit, search: debouncedSearch || undefined, status: statusFilter || undefined })
       .then((res) => {
         const allItems = res.items as Question[]
         const visible = allItems.filter((q) => !NON_LISTED_STATUSES.includes(q.status))
@@ -104,9 +106,9 @@ export function QuestionsPage() {
       })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load questions')))
       .finally(() => setLoading(false))
-  }, [page, debouncedSearch, statusFilter])
+  }, [page, debouncedSearch, statusFilter, view])
 
-  const totalPages = Math.max(1, Math.ceil(apiTotal / limit))
+  const totalPages = Math.max(1, Math.ceil(apiTotal / (view === 'card' ? cardLimit : limit)))
 
   // ─── Table columns ─────────────────────────────────────────────────────────
   const columns: ColumnDef<Question>[] = [
@@ -218,6 +220,10 @@ export function QuestionsPage() {
       data={sortedQuestions}
       columns={columns}
       loading={loading}
+      page={page}
+      totalPages={totalPages}
+      totalCount={apiTotal}
+      onPageChange={setPage}
       SkeletonRows={6}
       emptyMessage={emptyMessage}
       onRowClick={(row) => {
