@@ -13,7 +13,7 @@ import { NotificationType, NotificationTriggerType } from '../database/entities/
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
-import { DOMAINS } from './constants/domains';
+import { DOMAINS, inferDomains } from './constants/domains';
 import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
 
@@ -386,28 +386,26 @@ export class QuestionService {
    *   them in on the preview screen before final submission.
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
+    const inferredDomains = inferDomains(dto.questionText);
+
     return {
-      // Always return dummy data — mobile app fills these in on the preview screen
       state: 'Maharashtra',
       district: 'Pune',
       block: 'Haveli',
 
-      // Empty domains — user will select one or more on the preview screen
-      domains: [],
+      // Pre-filled with backend-inferred domains; user can modify on the preview screen
+      domains: inferredDomains,
       season: Season.KHARIF,
       cropType: '',
 
-      // Echo what the user actually submitted
       questionText: dto.questionText,
       mediaType: dto.mediaType ?? 'none',
       mediaUrls: dto.mediaUrls ?? [],
 
-      // Enriched
       agroClimaticZone: this.deriveAgroClimaticZone('Maharashtra'),
       suggestedDistricts: dummyDistrictsFor('Maharashtra'),
       suggestedBlocks: dummyBlocksFor('Pune'),
 
-      // Counts
       remainingToday: Math.max(0, (await this.adminService.getConfigValue('daily_question_limit')) - (await this.getDailyCount(userId))),
       dailyLimit: await this.adminService.getConfigValue('daily_question_limit'),
     };

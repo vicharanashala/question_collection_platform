@@ -48,6 +48,7 @@ export type RootStackParamList = {
     state: string;
     district: string;
     block: string | null;
+    /** Domains selected / inferred by the backend; user can replace or add more */
     domains: string[];
     season: string;
     cropType: string;

@@ -35,3 +35,58 @@ export const DOMAINS = [
 ] as const;
 
 export type Domain = (typeof DOMAINS)[number];
+
+// ─── Domain Inference ─────────────────────────────────────────────────────────
+// Keyword → domain mapping. Order matters: first matching keyword wins.
+// Multiple domains may be matched for a single question.
+
+const DOMAIN_KEYWORDS: [Domain, RegExp][] = [
+  ['Insect–Pest Management',       /\b(pest|insect|bug|borer|hopper|thrips|aphid|mite|termite|whitefly|mealybug|armyworm|locust|bollworm|weevil|caterpillar)\b/i],
+  ['Disease Management',            /\b(disease|blight|rot|mildew|rust|spot|wilt|gangrene|cancer|anthracnose|powdery|downy|leaf\s*curl|mosaic|fusarium|phytophthora)\b/i],
+  ['Weed Management',              /\b(weed|weeding|herbicide|parasitic\s*weed|striga|lantana|water\s*hyacinth)\b/i],
+  ['Water Management',             /\b(water|irrigation|drip|sprinkler|flood|flooding|drought|rainfed|rainfall|monsoon|groundwater|canal|pond|well|borewell|tubewell|moisture)\b/i],
+  ['Nutrient Management',          /\b(nutrient|fertilizer|npk|manure|compost|urea|daap|dap|zinc|iron|boron|potash|organic\s*matter|micronutrient|macro\s*nutrient)\b/i],
+  ['Fertilizer Use and Availability', /\b(fertilizer|urea|daap|npk|dap|SSP|gypsum|mop|potassium|sulfate)\b/i],
+  ['Seed and Variety Selection',   /\b(seed|variety|cultivar|hybrid|OPV|breed|sowing|germination|seedling)\b/i],
+  ['Sowing Time and Weather',      /\b(sowing|weather|monsoon|rain|climate|rainfall|climate\s*change|temperature|heat\s*wave|cold\s*wave|frost)\b/i],
+  ['Climate, Weather & Stress Management', /\b(weather|climate|drought|flood|heat|cold|frost|stress|el\s*nino|la\s*nina|cyclone|humidity)\b/i],
+  ['Market Prices, MSP & Marketing', /\b(market|price|MSP|mandi|procurement|selling|buying|export|contract\s*farming|marketing)\b/i],
+  ['Crop Insurance',               /\b(insurance|crop\s*insurance|PMFBY|weather\s*based|loss\s*claim|damage\s*claim)\b/i],
+  ['Credit, Loan & Insurance',     /\b(loan|credit|crop\s*loan|Kisan\s*Credit|kcc|debt|mortgage|interest\s*rate|bank\s*loan)\b/i],
+  ['Agricultural Schemes & Subsidies', /\b(scheme|subsidy|government|PM\s*KISAN|grant|assistance|benefit|eligibility|certificate)\b/i],
+  ['Agriculture Mechanization',    /\b(tractor|harvester|combine|mechanization|mechanical|power\s*tiller|rotavator|thresher|baler|drone\s*spray)\b/i],
+  ['Farm Tools & Mechanisation',   /\b(tool|machine|equipment|mechanisation|drone|laser|plough|plow|cultivator|seed\s*drill)\b/i],
+  ['Irrigation and Water Management', /\b(drip|sprinkler|basin|ridge|drip\s*irrigation|micro\s*irrigation|water\s*harvesting|rainwater|check\s*dam)\b/i],
+  ['Soil Testing',                 /\b(soil\s*test|soil\s*health|ph\s*value|EC\s*value|organic\s*carbon|salinity|alkaline|acidic)\b/i],
+  ['Soil Health Card',             /\b(soil\s*health\s*card|SHC|nutrient\s*deficiency|soil\s*report)\b/i],
+  ['Post-Harvest Management & Storage', /\b(post\s*harvest|storage|silo|warehouse|cold\s*storage|grading|drying|processing|value\s*addition|threshing|milling)\b/i],
+  ['Organic Farming',              /\b(organic|natural\s*farming|organic\s*certification|vermicompost)\b/i],
+  ['Bio-Pesticides and Bio-Fertilizers', /\b(bio\s*pesticide|bio\s*fertilizer|trichoderma|bacillus|pseudomonas|azolla|mycorrhiza|neem\s*oil)\b/i],
+  ['Cultural Practices',           /\b(intercrop|mixed\s*crop|rotation|cropping\s*system|relay\s*cropping|double\s*crop|cultivation\s*practice)\b/i],
+  ['Cultural and Crop Management Practices', /\b(crop\s*management|practice|cultivation|field\s*prep|land\s*prep|nursery|transplanting|pruning|canopy)\b/i],
+  ['Field Preparation',            /\b(field\s*prep|land\s*prep|ploughing|plowing|tilting|ridge|furrow|bed\s*forming|laser\s*leveler)\b/i],
+  ['Plant Protection',             /\b(plant\s*protection|spray|pesticide|insecticide|fungicide|herbicide|shade\s*net|windbreak)\b/i],
+  ['Seeds',                        /\b(seed\s*rate|seed\s*treatment|seed\s*bank|quality\s*seed|certified\s*seed|foundation\s*seed|truthful\s*seed)\b/i],
+  ['Varieties',                    /\b(variety|varieties|improved\s*variety|high\s*yield|drought\s*tolerant|short\s*duration|early\s*variety)\b/i],
+  ['Storage',                      /\b(storage|warehouse|silo|granary|cold\s*storage|hermetic|gunny\s*bag|godown)\b/i],
+  ['Market Information',           /\b(market\s*information|price\s*forecast|trends|demand\s*supply|commodity\s*price)\b/i],
+];
+
+/**
+ * Infers agriculture domains from a question text.
+ * Returns up to 3 matching domains (ordered by DOMAIN_KEYWORDS precedence),
+ * plus 'Others' as a fallback if nothing matched.
+ */
+export function inferDomains(questionText: string): Domain[] {
+  const matched = new Set<Domain>();
+  for (const [domain, pattern] of DOMAIN_KEYWORDS) {
+    if (pattern.test(questionText)) {
+      matched.add(domain);
+      if (matched.size >= 3) break;
+    }
+  }
+  if (matched.size === 0) {
+    matched.add('Others');
+  }
+  return Array.from(matched);
+}

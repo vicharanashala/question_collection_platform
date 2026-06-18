@@ -19,12 +19,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { questionApi } from '../../api/client';
 import { useTranslation } from 'react-i18next';
-import {
-  SEASONS,
-  DOMAIN_OPTIONS,
-  CROP_OPTIONS,
-  DOMAINS,
-} from '../../utils/constants';
+import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
 import { RootStackParamList } from '../../navigation/types';
@@ -53,7 +48,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
   const preview = route.params;
 
-  // Editable form state (pre-populated from preview data)
+  // Editable form state — domains pre-filled from backend inference
   const [state, setState] = useState(preview.state);
   const [district, setDistrict] = useState(preview.district);
   const [block, setBlock] = useState(preview.block ?? '');
@@ -118,6 +113,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         style={styles.flex}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: theme.colors.text }]}>
@@ -130,7 +126,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
           {/* Edit card */}
           <View style={[styles.card, { backgroundColor: theme.colors.surface, ...tokens.shadowMd }]}>
-            {/* State — Select has its own label */}
+
+            {/* State */}
             <Select
               label={t('question.state')}
               value={state}
@@ -167,16 +164,15 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               </View>
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
-            {/* Crop details — Select has its own labels */}
-            {/* Multi-select domains */}
+            {/* Domains — all listed, backend-returned ones pre-selected */}
             <View style={styles.domainSection}>
               <Text style={[styles.domainLabel, { color: theme.colors.text }]}>
                 {t('question.domain') ?? 'Agriculture Domain'}
               </Text>
               <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>
-                Select one or more domains
+                Select one or more
               </Text>
               <View style={styles.domainPills}>
                 {DOMAINS.map((d) => {
@@ -187,8 +183,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                       style={[
                         styles.domainPill,
                         {
-                          backgroundColor: selected ? theme.colors.primary + '22' : theme.colors.input,
-                          borderColor: selected ? theme.colors.primary : theme.colors.borderSubtle,
+                          backgroundColor: selected
+                            ? theme.colors.primary + '22'
+                            : theme.colors.input,
+                          borderColor: selected
+                            ? theme.colors.primary
+                            : theme.colors.borderSubtle,
                         },
                       ]}
                       onPress={() => {
@@ -199,11 +199,20 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                       }}
                       activeOpacity={0.7}
                     >
+                      {selected && (
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={13}
+                          color={theme.colors.primary}
+                          style={styles.pillIcon}
+                        />
+                      )}
                       <Text
                         style={[
                           styles.domainPillText,
                           { color: selected ? theme.colors.primary : theme.colors.text },
                         ]}
+                        numberOfLines={2}
                       >
                         {d}
                       </Text>
@@ -218,6 +227,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               )}
             </View>
 
+            <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
+
+            {/* Season */}
             <Select
               label={t('question.season')}
               placeholder={t('question.seasonPlaceholder')}
@@ -227,6 +239,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               error={errors.season}
             />
 
+            {/* Crop */}
             <Select
               label={t('question.cropType')}
               placeholder={t('question.cropTypePlaceholder')}
@@ -237,8 +250,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               searchable
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
+            {/* Question text */}
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
               {t('question.yourQuestion') ?? 'Your Question'}
             </Text>
@@ -267,7 +281,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               </View>
             )}
 
-            {/* Audio indicator (non-functional) */}
+            {/* Audio indicator */}
             {preview.mediaType === 'audio' && (
               <View style={[styles.audioIndicator, { backgroundColor: theme.colors.muted }]}>
                 <Ionicons name="mic" size={24} color={theme.colors.text} />
@@ -277,7 +291,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               </View>
             )}
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
             {/* Submission stats */}
             <View style={[styles.statsRow, { backgroundColor: theme.colors.muted }]}>
@@ -302,6 +316,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               disabled={loading}
             />
           </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -317,18 +332,9 @@ const styles = StyleSheet.create({
   header: { marginBottom: tokens.spacing4 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1, lineHeight: 18 },
-  infoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
-    marginBottom: tokens.spacing4,
-  },
-  infoBannerText: { fontSize: 13, fontWeight: '500', flex: 1 },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6, marginBottom: tokens.spacing4 },
   sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: tokens.spacing3 },
-  divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: tokens.spacing4 },
+  divider: { height: 1, marginVertical: tokens.spacing4 },
   zoneBadgeWrap: { marginBottom: tokens.spacing4 },
   zoneLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
   zoneBadge: {
@@ -338,6 +344,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing3,
   },
   zoneBadgeText: { fontSize: 13, fontWeight: '600' },
+  domainSection: { marginBottom: tokens.spacing4 },
+  domainLabel: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing1 },
+  domainSublabel: { fontSize: 12, marginBottom: tokens.spacing3 },
+  domainPills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
+  domainPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing2,
+    paddingHorizontal: tokens.spacing3 + 2,
+    minHeight: 36,
+  },
+  pillIcon: { marginRight: 4 },
+  domainPillText: { fontSize: 13, fontWeight: '500', flexShrink: 1 },
+  domainError: { fontSize: 12, marginTop: tokens.spacing2 },
   mediaPreviewWrap: { marginBottom: tokens.spacing4 },
   previewImage: { width: '100%', height: 160, borderRadius: tokens.radiusMd, marginTop: tokens.spacing2 },
   audioIndicator: {
@@ -349,19 +371,13 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing4,
   },
   audioIndicatorText: { fontSize: 13, fontWeight: '500' },
-  statsRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, borderRadius: tokens.radiusMd, padding: tokens.spacing3 },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3,
+  },
   statsText: { fontSize: 13 },
   actions: { gap: tokens.spacing3, marginBottom: tokens.spacing6 },
-  domainSection: { marginBottom: tokens.spacing4 },
-  domainLabel: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing1, letterSpacing: 0.01 * 13 },
-  domainSublabel: { fontSize: 12, marginBottom: tokens.spacing3 },
-  domainPills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
-  domainPill: {
-    borderWidth: 1,
-    borderRadius: tokens.radiusMd,
-    paddingVertical: tokens.spacing2,
-    paddingHorizontal: tokens.spacing3 + 2,
-  },
-  domainPillText: { fontSize: 13, fontWeight: '500' },
-  domainError: { fontSize: 12, marginTop: tokens.spacing2 },
 });
