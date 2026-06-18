@@ -54,7 +54,7 @@ interface QueueItem {
   id: string;
   questionText: string;
   language: string;
-  domainCategory: string;
+  domains: string[];
   cropType: string;
   state: string;
   district: string;

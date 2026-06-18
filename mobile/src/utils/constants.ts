@@ -152,22 +152,45 @@ export const SEASONS = [
   { value: 'year_round', label: 'Year Round' },
 ] as const;
 
-// ─── Agriculture Domain Categories ─────────────────────────────────────────────
+// ─── Agriculture Domains ───────────────────────────────────────────────────────
 
-export const DOMAIN_CATEGORIES = [
-  { value: 'crop_protection',  label: 'Crop Protection' },
-  { value: 'spray',            label: 'Spray / Pesticide' },
-  { value: 'irrigation',       label: 'Irrigation' },
-  { value: 'fertilizer',       label: 'Fertilizer' },
-  { value: 'soil_health',      label: 'Soil Health' },
-  { value: 'seed',             label: 'Seed Management' },
-  { value: 'harvest',          label: 'Harvesting' },
-  { value: 'post_harvest',     label: 'Post-Harvest' },
-  { value: 'weather',          label: 'Weather / Climate' },
-  { value: 'market',           label: 'Market / Prices' },
-  { value: 'livestock',        label: 'Livestock' },
-  { value: 'other',            label: 'Other' },
+export const DOMAINS = [
+  'Agriculture Mechanization',
+  'Agricultural Schemes & Subsidies',
+  'Bio-Pesticides and Bio-Fertilizers',
+  'Crop Insurance',
+  'Cultural Practices',
+  'Cultural and Crop Management Practices',
+  'Climate, Weather & Stress Management',
+  'Credit, Loan & Insurance',
+  'Disease Management',
+  'Fertilizer Use and Availability',
+  'Field Preparation',
+  'Farm Tools & Mechanisation',
+  'Irrigation and Water Management',
+  'Insect–Pest Management',
+  'Market Prices, MSP & Marketing',
+  'Nutrient Management',
+  'Organic Farming',
+  'Organic and Natural Farming',
+  'Plant Protection',
+  'Post Harvest Preservation',
+  'Post-Harvest Management & Storage',
+  'Seeds',
+  'Seed and Variety Selection',
+  'Soil Health Card',
+  'Soil Testing',
+  'Soil Health and Nutrient Management',
+  'Sowing Time and Weather',
+  'Storage',
+  'Varieties',
+  'Water Management',
+  'Weed Management',
+  'Market Information',
+  'Others',
 ] as const;
+
+export const DOMAIN_OPTIONS = DOMAINS.map((d) => ({ value: d, label: d }));
 
 // ─── User Categories ───────────────────────────────────────────────────────────
 

@@ -24,9 +24,9 @@ export class Question {
   @Index('idx_questions_language')
   language: string;
 
-  @Column({ name: 'domain_category', type: 'varchar', length: 100 })
-  @Index('idx_questions_domain_category')
-  domainCategory: string;
+  @Column({ type: 'text', array: true, default: '{}' })
+  @Index('idx_questions_domains')
+  domains: string[];
 
   @Column({ type: 'varchar', length: 50 })
   season: Season;

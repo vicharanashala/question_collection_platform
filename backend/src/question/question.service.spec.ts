@@ -61,7 +61,7 @@ describe('QuestionService', () => {
   const questionId = '22222222-2222-2222-2222-222222222222';
 
   const baseDto = {
-    domainCategory: 'crop_protection',
+    domains: ['Insect–Pest Management', 'Disease Management'],
     season: Season.KHARIF,
     cropType: 'Rice',
     questionText: 'What is the best pesticide for brown planthopper?',
@@ -147,7 +147,7 @@ describe('QuestionService', () => {
         id: questionId,
         userId,
         questionText: 'Original text',
-        domainCategory: 'crop_protection',
+        domains: ['Insect–Pest Management'],
         season: 'kharif',
         cropType: 'Rice',
         mediaType: MediaType.NONE,

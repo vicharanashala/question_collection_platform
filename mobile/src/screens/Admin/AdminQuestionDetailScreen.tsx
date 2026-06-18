@@ -106,7 +106,7 @@ export function AdminQuestionDetailScreen() {
           <View style={styles.metaGrid}>
             {[
               ['Language', String(q.language)],
-              ['Category', String(q.domainCategory)],
+              ['Category', ((q.domains as string[]) ?? []).join(', ') || '—'],
               ['Crop', String(q.cropType)],
               ['Season', String(q.season)],
               ['State', String(q.state)],

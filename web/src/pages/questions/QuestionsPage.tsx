@@ -136,17 +136,11 @@ export function QuestionsPage() {
       ),
     },
     {
-      key: 'domainCategory', header: 'Category', width: '110px', sortable: true,
+      key: 'domains', header: 'Category', width: '180px', sortable: true,
       render: (q) => (
         <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
-          {q.domainCategory || '—'}
+          {(q.domains ?? []).join(', ') || '—'}
         </span>
-      ),
-    },
-    {
-      key: 'domain', header: 'Domain', width: '110px', sortable: true,
-      render: (q) => (
-        <span className="text-xs capitalize">{q.domain || '—'}</span>
       ),
     },
     {
@@ -322,14 +316,9 @@ export function QuestionsPage() {
                 <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
                   {STATUS_LABELS[detailQuestion.status] ?? detailQuestion.status}
                 </Badge>
-                {detailQuestion.domainCategory && (
-                  <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domainCategory}</span>
-                )}
-                {detailQuestion.domain && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Tag className="h-3 w-3" />{detailQuestion.domain}
-                  </span>
-                )}
+                {detailQuestion.domains?.length ? (
+                  <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domains.join(', ')}</span>
+                ) : null}
                 {detailQuestion.aiConfidenceScore != null && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 text-warning" /> AI confidence: {detailQuestion.aiConfidenceScore}%
@@ -353,8 +342,7 @@ export function QuestionsPage() {
               <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                 <InfoRow icon={Hash} label="Question ID" value={<span className="font-mono text-xs">{detailQuestion.id.slice(0, 8)}…</span>} />
                 <InfoRow icon={Globe} label="Language" value={detailQuestion.language?.toUpperCase()} />
-                <InfoRow icon={Info} label="Category" value={detailQuestion.domainCategory} />
-                <InfoRow icon={Tag} label="Domain" value={detailQuestion.domain} />
+                <InfoRow icon={Info} label="Category" value={(detailQuestion.domains ?? []).join(', ') || '—'} />
                 <InfoRow icon={Wheat} label="Crop Type" value={detailQuestion.cropType} />
                 <InfoRow icon={CloudRain} label="Season" value={SEASON_LABEL[detailQuestion.season] ?? detailQuestion.season} />
                 <InfoRow icon={MapPin} label="State" value={detailQuestion.state} />

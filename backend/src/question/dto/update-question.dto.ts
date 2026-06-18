@@ -1,10 +1,11 @@
 import {
   IsString,
   IsOptional,
+  IsArray,
   IsIn,
   MaxLength,
+  ArrayMinSize,
 } from 'class-validator';
-import { IsInArray } from '../../common/validators/is-in-array.validator';
 
 export class UpdateQuestionDto {
   @IsString()
@@ -12,10 +13,11 @@ export class UpdateQuestionDto {
   @MaxLength(5000)
   questionText?: string;
 
-  @IsString()
   @IsOptional()
-  @IsIn(['crop_protection', 'spray', 'irrigation', 'fertilizer', 'soil_health', 'seed', 'harvest', 'post_harvest', 'weather', 'market', 'livestock', 'other'])
-  domainCategory?: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  domains?: string[];
 
   @IsString()
   @IsOptional()

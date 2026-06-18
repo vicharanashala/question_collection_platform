@@ -72,7 +72,7 @@ interface QueueItem {
   id: string;
   questionText: string;
   language: string;
-  domainCategory: string;
+  domains: string[];
   cropType: string;
   state: string;
   district: string;
@@ -212,7 +212,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
         <View style={[styles.metaGrid, { backgroundColor: c.surfaceVariant }]}>
           {[
             ['Language', item.language],
-            ['Category', item.domainCategory],
+            ['Category', item.domains?.join(', ') ?? '—'],
             ['Crop', item.cropType],
             ['Season', (item as any).season ?? '—'],
             ['State', item.state],

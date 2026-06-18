@@ -23,7 +23,13 @@ async function main() {
   console.log('Found user:', user.id, user.name);
 
   const districts = ['Pune', 'Nagpur', 'Nashik', 'Mumbai', 'Aurangabad'];
-  const categories = ['Crops', 'Weather', 'Pest', 'Soil', 'Market'];
+  const domainSets = [
+    ['Crop Insurance'],
+    ['Weather Information', 'Climate, Weather & Stress Management'],
+    ['Insect–Pest Management', 'Disease Management'],
+    ['Soil Health Card', 'Soil Testing'],
+    ['Market Prices, MSP & Marketing'],
+  ];
   const crops = ['Wheat', 'Rice', 'Cotton', 'Sugarcane', 'Soybean'];
   const topics = ['irrigation', 'fertilizer application', 'pest control', 'harvesting', 'storage'];
   const seasons: Season[] = [Season.RABI, Season.KHARIF];
@@ -33,7 +39,7 @@ async function main() {
   for (let i = 1; i <= 100; i++) {
     const district = districts[i % 5];
     const crop = crops[i % 5];
-    const category = categories[i % 5];
+    const domains = domainSets[i % 5];
     const topic = topics[i % 5];
     const season = seasons[i % 2];
 
@@ -42,7 +48,7 @@ async function main() {
       state: 'Maharashtra',
       district,
       block: `Block-${(i % 3) + 1}`,
-      domainCategory: category,
+      domains,
       season,
       cropType: crop,
       questionText: `Question ${i}: What is the best practice for ${topic} for ${crop} in ${district} district during ${season} season? Please provide detailed guidance.`,

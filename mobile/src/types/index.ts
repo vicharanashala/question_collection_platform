@@ -87,7 +87,7 @@ export interface Transaction {
 export interface Question {
   id: string;
   language: string;
-  domainCategory: string;
+  domains: string[];
   season: string;
   cropType: string;
   state: string;

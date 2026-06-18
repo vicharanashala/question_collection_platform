@@ -196,7 +196,7 @@ export function QuestionDetailScreen() {
           </Text>
           <View style={styles.metaGrid}>
             {[
-              [t('question.domain') ?? 'Category', q.domainCategory],
+              [t('question.domain') ?? 'Category', (q.domains ?? []).join(', ') || '—'],
               [t('question.season') ?? 'Season',    q.season],
               [t('question.cropType') ?? 'Crop',    q.cropType],
               [t('question.state') ?? 'State',      q.state],

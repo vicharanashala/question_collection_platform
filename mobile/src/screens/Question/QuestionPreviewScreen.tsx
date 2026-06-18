@@ -21,8 +21,9 @@ import { questionApi } from '../../api/client';
 import { useTranslation } from 'react-i18next';
 import {
   SEASONS,
-  DOMAIN_CATEGORIES,
+  DOMAIN_OPTIONS,
   CROP_OPTIONS,
+  DOMAINS,
 } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
@@ -31,7 +32,6 @@ import { RootStackParamList } from '../../navigation/types';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
-const domainOptions = DOMAIN_CATEGORIES.map((d) => ({ value: d.value, label: d.label }));
 const stateOptions = [
   'Maharashtra', 'Uttar Pradesh', 'Bihar', 'Rajasthan', 'Gujarat',
   'Karnataka', 'Tamil Nadu', 'West Bengal', 'Punjab', 'Haryana',
@@ -57,7 +57,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [state, setState] = useState(preview.state);
   const [district, setDistrict] = useState(preview.district);
   const [block, setBlock] = useState(preview.block ?? '');
-  const [domainCategory, setDomainCategory] = useState(preview.domainCategory);
+  const [domains, setDomains] = useState<string[]>(preview.domains ?? []);
   const [season, setSeason] = useState(preview.season);
   const [cropType, setCropType] = useState(preview.cropType ?? '');
   const [questionText, setQuestionText] = useState(preview.questionText);
@@ -70,7 +70,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     const errs: Record<string, string> = {};
     if (!state) errs.state = t('question.selectState');
     if (!district.trim()) errs.district = t('question.districtPlaceholder');
-    if (!domainCategory) errs.domainCategory = t('question.selectDomain');
+    if (!domains.length) errs.domains = t('question.selectDomain');
     if (!season) errs.season = t('question.selectSeason');
     if (!cropType) errs.cropType = t('question.enterCrop');
     if (!questionText.trim()) errs.questionText = t('question.enterQuestion');
@@ -89,7 +89,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         state,
         district: district.trim(),
         block: block.trim() || null,
-        domainCategory,
+        domains,
         season,
         cropType,
         questionText: questionText.trim(),
@@ -170,14 +170,53 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             <View style={styles.divider} />
 
             {/* Crop details — Select has its own labels */}
-            <Select
-              label={t('question.domain')}
-              placeholder={t('question.domainPlaceholder')}
-              value={domainCategory}
-              options={domainOptions}
-              onChange={(v) => { setDomainCategory(v); setErrors({}); }}
-              error={errors.domainCategory}
-            />
+            {/* Multi-select domains */}
+            <View style={styles.domainSection}>
+              <Text style={[styles.domainLabel, { color: theme.colors.text }]}>
+                {t('question.domain') ?? 'Agriculture Domain'}
+              </Text>
+              <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>
+                Select one or more domains
+              </Text>
+              <View style={styles.domainPills}>
+                {DOMAINS.map((d) => {
+                  const selected = domains.includes(d);
+                  return (
+                    <TouchableOpacity
+                      key={d}
+                      style={[
+                        styles.domainPill,
+                        {
+                          backgroundColor: selected ? theme.colors.primary + '22' : theme.colors.input,
+                          borderColor: selected ? theme.colors.primary : theme.colors.borderSubtle,
+                        },
+                      ]}
+                      onPress={() => {
+                        setDomains((prev) =>
+                          selected ? prev.filter((x) => x !== d) : [...prev, d],
+                        );
+                        setErrors({});
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.domainPillText,
+                          { color: selected ? theme.colors.primary : theme.colors.text },
+                        ]}
+                      >
+                        {d}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {errors.domains && (
+                <Text style={[styles.domainError, { color: theme.colors.error }]}>
+                  {errors.domains}
+                </Text>
+              )}
+            </View>
 
             <Select
               label={t('question.season')}
@@ -313,4 +352,16 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, borderRadius: tokens.radiusMd, padding: tokens.spacing3 },
   statsText: { fontSize: 13 },
   actions: { gap: tokens.spacing3, marginBottom: tokens.spacing6 },
+  domainSection: { marginBottom: tokens.spacing4 },
+  domainLabel: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing1, letterSpacing: 0.01 * 13 },
+  domainSublabel: { fontSize: 12, marginBottom: tokens.spacing3 },
+  domainPills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
+  domainPill: {
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing2,
+    paddingHorizontal: tokens.spacing3 + 2,
+  },
+  domainPillText: { fontSize: 13, fontWeight: '500' },
+  domainError: { fontSize: 12, marginTop: tokens.spacing2 },
 });

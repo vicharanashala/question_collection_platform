@@ -28,8 +28,7 @@ export interface Question {
   userId: string;
   questionText: string;
   status: QuestionStatus;
-  domainCategory: string;
-  domain: string;
+  domains: string[];
   season: string;
   cropType: string;
   state: string;
@@ -265,7 +264,7 @@ export interface ExportParams {
   toDate?: string
   state?: string
   cropType?: string
-  domainCategory?: string
+  domains?: string[]
   dataType?: 'questions' | 'users' | 'rewards' | 'withdrawals'
   format?: 'csv' | 'excel'
 }

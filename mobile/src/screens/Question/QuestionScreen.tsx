@@ -120,7 +120,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         state: res.data.state ?? user?.state ?? '',
         district: res.data.district ?? user?.district ?? '',
         block: res.data.block ?? user?.block ?? null,
-        domainCategory: res.data.domainCategory ?? '',
+        domains: res.data.domains ?? [],
         season: res.data.season ?? '',
         cropType: res.data.cropType ?? '',
         questionText: questionText.trim(),

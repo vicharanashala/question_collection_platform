@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
-import { SEASONS, DOMAIN_CATEGORIES, INDIAN_STATES } from '../../utils/constants';
+import { SEASONS, DOMAIN_OPTIONS, DOMAINS, INDIAN_STATES } from '../../utils/constants';
 import { speechApi } from '../../api/speech';
 import { SUPPORTED_LANGUAGES } from '../../i18n';
 
@@ -33,7 +33,7 @@ interface Question {
   id: string;
   questionText: string;
   language?: string;
-  domainCategory: string;
+  domains: string[];
   season: string;
   cropType: string;
   state: string;
@@ -58,7 +58,7 @@ interface QuestionsResponse {
 interface FilterState {
   status: string;
   season: string;
-  domainCategory: string;
+  domains: string;
   search: string;
 }
 
@@ -84,7 +84,7 @@ const SEASON_OPTIONS = [
 
 const CATEGORY_OPTIONS = [
   { value: '', label: 'All Categories' },
-  ...DOMAIN_CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+  ...DOMAIN_OPTIONS.map((d) => ({ value: d.value, label: d.label })),
 ];
 
 const STATE_OPTIONS = [
@@ -236,8 +236,8 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
               <Text style={[styles.filterLabel, { color: c.text }]}>{t('submissions.category')}</Text>
               <ChipGroup
                 options={CATEGORY_OPTIONS}
-                value={filters.domainCategory}
-                onChange={(v) => onChange({ ...filters, domainCategory: v })}
+                value={filters.domains}
+                onChange={(v) => onChange({ ...filters, domains: v })}
               />
             </View>
           </ScrollView>
@@ -344,7 +344,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
               <DetailRow
                 icon="grid-outline"
                 label="Category"
-                value={CATEGORY_LABELS[question.domainCategory] ?? question.domainCategory}
+                value={getDomainSummary(question.domains)}
               />
               <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
               <DetailRow icon="calendar-outline" label="Season" value={SEASON_LABELS[question.season] ?? question.season} />
@@ -457,11 +457,11 @@ export function SubmissionsScreen() {
   const [filters, setFilters] = useState<FilterState>({
     status: '',
     season: '',
-    domainCategory: '',
+    domains: '',
     search: '',
   });
 
-  const activeFilterCount = [filters.status, filters.season, filters.domainCategory, filters.search].filter(
+  const activeFilterCount = [filters.status, filters.season, filters.domains, filters.search].filter(
     Boolean,
   ).length;
 
@@ -475,7 +475,7 @@ export function SubmissionsScreen() {
         const params: Record<string, string | number> = { page: pageNum, limit: 20 };
         if (f.status) params.status = f.status;
         if (f.season) params.season = f.season;
-        if (f.domainCategory) params.domainCategory = f.domainCategory;
+        if (f.domains) params.domains = f.domains;
         if (f.search.trim()) params.search = f.search.trim();
 
         const res = await questionApi.getMyQuestions(params);
@@ -537,7 +537,7 @@ export function SubmissionsScreen() {
   }
 
   function handleFilterReset() {
-    setFilters({ status: '', season: '', domainCategory: '', search: '' });
+    setFilters({ status: '', season: '', domains: '', search: '' });
   }
 
   // ─── Language Picker Modal state ──────────────────────────────────────────
@@ -687,7 +687,7 @@ export function SubmissionsScreen() {
             <View style={styles.metaChip}>
               <Ionicons name="grid" size={12} color={c.textTertiary} />
               <Text style={[styles.metaChipText, { color: c.textSecondary }]}>
-                {CATEGORY_LABELS[q.domainCategory] ?? q.domainCategory}
+                {getDomainSummary(q.domains)}
               </Text>
             </View>
             <View style={styles.metaChip}>
@@ -1041,24 +1041,17 @@ const langStyles = StyleSheet.create({
 
 // ─── Consts outside component ─────────────────────────────────────────────────
 
-const CATEGORY_LABELS: Record<string, string> = {
-  crop_protection: 'Crop Protection',
-  spray: 'Spray',
-  irrigation: 'Irrigation',
-  fertilizer: 'Fertilizer',
-  soil_health: 'Soil Health',
-  seed: 'Seed',
-  harvest: 'Harvest',
-  post_harvest: 'Post Harvest',
-  weather: 'Weather',
-  market: 'Market',
-  livestock: 'Livestock',
-  other: 'Other',
-};
-
 const SEASON_LABELS: Record<string, string> = {
   kharif: 'Kharif',
   rabi: 'Rabi',
   zaid: 'Zaid',
   year_round: 'Year Round',
+};
+
+const MAX_VISIBLE_DOMAINS = 2;
+const getDomainSummary = (domains: string[] | undefined): string => {
+  if (!domains?.length) return '—';
+  if (domains.length <= MAX_VISIBLE_DOMAINS) return domains.join(', ');
+  const visible = domains.slice(0, MAX_VISIBLE_DOMAINS).join(', ');
+  return `${visible} +${domains.length - MAX_VISIBLE_DOMAINS} more`;
 };

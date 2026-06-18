@@ -331,8 +331,7 @@ function DetailPanel({
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Details</p>
             <div className="grid grid-cols-2 gap-3">
-              <MetaItem icon={Star}    label="Category" value={q.domainCategory} />
-              <MetaItem icon={Tag}     label="Domain"   value={q.domain} />
+              <MetaItem icon={Star}    label="Category" value={(q.domains ?? []).join(', ') || '—'} />
               <MetaItem icon={Wheat}   label="Crop"     value={q.cropType} />
               <MetaItem icon={Hash}    label="Season"   value={q.season} />
               <MetaItem icon={MapPin}  label="State"    value={q.state} />

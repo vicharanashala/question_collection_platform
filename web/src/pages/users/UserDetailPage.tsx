@@ -111,27 +111,16 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       render: (q) => <QuestionStatusBadge status={q.status} />,
     },
     {
-      key: 'domainCategory',
+      key: 'domains',
       header: 'Category',
-      width: '110px',
+      width: '180px',
       sortable: true,
       filterable: true,
       filterOptions: [],  // derived from data
       render: (q) => (
         <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
-          {q.domainCategory || '—'}
+          {(q.domains ?? []).join(', ') || '—'}
         </span>
-      ),
-    },
-    {
-      key: 'domain',
-      header: 'Domain',
-      width: '130px',
-      sortable: true,
-      filterable: true,
-      filterOptions: [],
-      render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.domain || '—'}</span>
       ),
     },
     {
@@ -219,21 +208,15 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       render: (q) => <QuestionStatusBadge status={q.status} />,
     },
     {
-      key: 'domainCategory',
+      key: 'domains',
       header: 'Category',
       render: (q) => (
         <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded capitalize">
-          {q.domainCategory || '—'}
+          {(q.domains ?? []).join(', ') || '—'}
         </span>
       ),
     },
-    {
-      key: 'domain',
-      header: 'Domain',
-      render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.domain || '—'}</span>
-      ),
-    },
+
     {
       key: 'season',
       header: 'Season',
@@ -310,7 +293,7 @@ export function UserDetailPage() {
     const term = qSearch.toLowerCase()
     return questions.filter((q) =>
       q.questionText.toLowerCase().includes(term) ||
-      q.domainCategory.toLowerCase().includes(term) ||
+      (q.domains ?? []).join(' ').toLowerCase().includes(term) ||
       q.cropType.toLowerCase().includes(term) ||
       q.status.includes(term)
     )

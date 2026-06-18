@@ -2,14 +2,16 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  IsArray,
   IsIn,
   IsObject,
-  IsArray,
   MaxLength,
   ValidateIf,
+  ArrayMinSize,
 } from 'class-validator';
 import { Season } from '../../common/enums';
 import { MaxQuestionChars } from '../../common/validators/max-question-chars.validator';
+import { DOMAINS } from '../constants/domains';
 
 export class SubmitQuestionDto {
   /**
@@ -21,10 +23,10 @@ export class SubmitQuestionDto {
   @MaxLength(50)
   language?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(['crop_protection', 'spray', 'irrigation', 'fertilizer', 'soil_health', 'seed', 'harvest', 'post_harvest', 'weather', 'market', 'livestock', 'other'])
-  domainCategory: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  domains: string[];
 
   @IsString()
   @IsIn([Season.KHARIF, Season.RABI, Season.ZAID, Season.YEAR_ROUND])
@@ -90,7 +92,7 @@ export class PreviewQuestionDto {
   questionText: string;
 
   @IsOptional()
-  @IsIn(['none', 'image', 'video', 'audio'])
+  @IsString()
   mediaType?: 'none' | 'image' | 'video' | 'audio';
 
   @IsOptional()

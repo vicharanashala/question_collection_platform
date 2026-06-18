@@ -6,13 +6,14 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
+import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
 import { Question, AuditLog, Notification } from '../database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../common/enums';
 import { NotificationType, NotificationTriggerType } from '../database/entities/notification.entity';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
+import { DOMAINS } from './constants/domains';
 import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
 
@@ -94,10 +95,16 @@ export class QuestionService {
     // 4. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
 
-    // 5. Persist question in a transaction
+    // 5. Validate domains against allowed list
+    const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));
+    if (invalidDomains.length > 0) {
+      throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
+    }
+
+    // 6. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
-      domainCategory: dto.domainCategory,
+      domains: dto.domains,
       season: dto.season as Season,
       cropType: dto.cropType,
       agroClimaticZone,
@@ -118,18 +125,18 @@ export class QuestionService {
       return repo.save(question) as Promise<Question>;
     });
 
-    // 6. Audit log
+    // 7. Audit log
     await this.auditRepo.save({
       actorType: ActorType.USER,
       actorId: userId,
       action: AuditAction.QUESTION_SUBMITTED,
       entityType: 'question',
       entityId: saved.id,
-      newValue: { status: saved.status, domainCategory: saved.domainCategory },
+      newValue: { status: saved.status, domains: saved.domains },
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
-    // 7. Send duplicate notification after saving
+    // 8. Send duplicate notification after saving
     if (isDuplicate) {
       await this.notifRepo.save(
         this.notifRepo.create({
@@ -164,7 +171,7 @@ export class QuestionService {
 
     const oldValue = {
       questionText: question.questionText,
-      domainCategory: question.domainCategory,
+      domains: question.domains,
       season: question.season,
       cropType: question.cropType,
       mediaType: question.mediaType,
@@ -173,7 +180,13 @@ export class QuestionService {
 
     // Apply updates
     if (dto.questionText !== undefined) question.questionText = dto.questionText;
-    if (dto.domainCategory !== undefined) question.domainCategory = dto.domainCategory;
+    if (dto.domains !== undefined) {
+      const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));
+      if (invalidDomains.length > 0) {
+        throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
+      }
+      question.domains = dto.domains;
+    }
     if (dto.season !== undefined) question.season = dto.season as Season;
     if (dto.cropType !== undefined) question.cropType = dto.cropType;
     if (dto.mediaType !== undefined) question.mediaType = dto.mediaType as MediaType;
@@ -190,7 +203,7 @@ export class QuestionService {
       oldValue,
       newValue: {
         questionText: saved.questionText,
-        domainCategory: saved.domainCategory,
+        domains: saved.domains,
         season: saved.season,
         cropType: saved.cropType,
         mediaType: saved.mediaType,
@@ -216,7 +229,7 @@ export class QuestionService {
   // ─── List ───────────────────────────────────────────────────────────────────
 
   async list(userId: string, dto: ListQuestionsDto, isAdmin = false) {
-    const { page = 1, limit = 20, status, domainCategory, cropType, season, state, search, fromDate, toDate } = dto;
+    const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate } = dto;
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -231,7 +244,8 @@ export class QuestionService {
       if (status) where.status = status;
     }
 
-    if (domainCategory) where.domainCategory = domainCategory;
+    // Filter by a single domain string — matches any question that has that domain in its array
+    if (domains) where.domains = ArrayContains([domains]);
     if (search) where.cropType = Like(`%${search}%`);
     else if (cropType) where.cropType = Like(`%${cropType}%`);
     if (season) where.season = season;
@@ -252,7 +266,7 @@ export class QuestionService {
       skip,
       take: limit,
       select: [
-        'id', 'domainCategory', 'season', 'cropType', 'questionText',
+        'id', 'domains', 'season', 'cropType', 'questionText',
         'mediaType', 'mediaUrls', 'status', 'aiConfidenceScore', 'duplicateFlag',
         'submittedAt', 'reviewedAt', 'rejectionReason', 'heldReason', 'approvalReason',
         'state', 'district', 'block', 'language',
@@ -368,7 +382,7 @@ export class QuestionService {
    * Does NOT write anything to the database.
    *
    * - Location (state, district, block) comes from the user's profile.
-   * - domainCategory / season / cropType get placeholder defaults — user fills
+   * - domains / season / cropType get placeholder defaults — user fills
    *   them in on the preview screen before final submission.
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
@@ -378,8 +392,8 @@ export class QuestionService {
       district: 'Pune',
       block: 'Haveli',
 
-      // Defaults — user will edit these on the preview screen
-      domainCategory: 'crop_protection',
+      // Empty domains — user will select one or more on the preview screen
+      domains: [],
       season: Season.KHARIF,
       cropType: '',
 

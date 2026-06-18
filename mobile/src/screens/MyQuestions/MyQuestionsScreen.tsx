@@ -24,7 +24,7 @@ import { MainTabParamList } from '../../navigation/types';
 interface Question {
   id: string;
   questionText: string;
-  domainCategory: string;
+  domains: string[];
   season: string;
   cropType: string;
   state: string;
@@ -52,26 +52,19 @@ const STATUS_META: Record<string, { label: string; color: string; icon: string }
   rejected:  { label: 'Rejected',  color: '#DC2626', icon: 'close-circle' },
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  crop_protection: 'Crop Protection',
-  spray: 'Spray',
-  irrigation: 'Irrigation',
-  fertilizer: 'Fertilizer',
-  soil_health: 'Soil Health',
-  seed: 'Seed',
-  harvest: 'Harvest',
-  post_harvest: 'Post Harvest',
-  weather: 'Weather',
-  market: 'Market',
-  livestock: 'Livestock',
-  other: 'Other',
-};
-
 const SEASON_LABELS: Record<string, string> = {
   kharif: 'Kharif',
   rabi: 'Rabi',
   zaid: 'Zaid',
   year_round: 'Year Round',
+};
+
+const MAX_VISIBLE_DOMAINS = 2;
+const getDomainSummary = (domains: string[] | undefined): string => {
+  if (!domains?.length) return '—';
+  if (domains.length <= MAX_VISIBLE_DOMAINS) return domains.join(', ');
+  const visible = domains.slice(0, MAX_VISIBLE_DOMAINS).join(', ');
+  return `${visible} +${domains.length - MAX_VISIBLE_DOMAINS} more`;
 };
 
 function isWithinEditWindow(q: Question): boolean {
@@ -141,7 +134,7 @@ export function MyQuestionsScreen() {
   function renderItem({ item: q }: { item: Question }) {
     const statusMeta = STATUS_META[q.status] ?? STATUS_META.pending;
     const withinEditWindow = isWithinEditWindow(q);
-    const catLabel = CATEGORY_LABELS[q.domainCategory] ?? q.domainCategory;
+    const catLabel = getDomainSummary(q.domains);
     const seasonLabel = SEASON_LABELS[q.season] ?? q.season;
 
     return (

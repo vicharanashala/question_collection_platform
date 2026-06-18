@@ -19,7 +19,7 @@ export class ExportQueryDto {
 
   @IsOptional()
   @IsString()
-  domainCategory?: string;
+  domains?: string;
 
   @IsOptional()
   @IsIn(['csv', 'excel'])

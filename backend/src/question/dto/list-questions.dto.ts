@@ -21,7 +21,7 @@ export class ListQuestionsDto {
 
   @IsOptional()
   @IsString()
-  domainCategory?: string;
+  domains?: string;
 
   @IsOptional()
   @IsString()

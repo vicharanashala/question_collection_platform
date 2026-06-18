@@ -25,7 +25,7 @@ describe('QuestionController', () => {
   const adminReq = { user: { id: 'admin-1', role: UserRole.ADMIN } };
 
   const submitDto = {
-    domainCategory: 'crop_protection',
+    domains: ['Insect–Pest Management', 'Disease Management'],
     season: Season.KHARIF,
     cropType: 'Rice',
     questionText: 'What is the best pesticide for brown planthopper?',
@@ -85,7 +85,7 @@ describe('QuestionController', () => {
         state: 'Maharashtra',
         district: 'Pune',
         block: 'Haveli',
-        domainCategory: 'crop_protection',
+        domains: [],
         season: Season.KHARIF,
         cropType: '',
         questionText: 'Test question',

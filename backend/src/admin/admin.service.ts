@@ -456,7 +456,7 @@ export class AdminService implements OnModuleInit {
         'q.heldReason',
         'q.approvalReason',
         'q.language',
-        'q.domainCategory',
+        'q.domains',
         'q.cropType',
         'q.state',
         'q.district',
@@ -1623,15 +1623,15 @@ export class AdminService implements OnModuleInit {
     // Domain category breakdown
     const domainBreakdownRaw = await this.questionRepo
       .createQueryBuilder('q')
-      .select('q.domainCategory', 'domainCategory')
+      .select('unnest(q.domains)', 'domain')
       .addSelect('COUNT(*)', 'count')
       .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
       .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .groupBy('q.domainCategory')
+      .groupBy('unnest(q.domains)')
       .orderBy('count', 'DESC')
       .getRawMany();
     const domainBreakdown = domainBreakdownRaw.map((r) => ({
-      domain: r.domainCategory,
+      domain: r.domain,
       count: Number(r.count),
       approved: Number(r.approved),
     }));
@@ -1797,7 +1797,7 @@ export class AdminService implements OnModuleInit {
           'u.name',
           'q.questionText',
           'q.language',
-          'q.domainCategory',
+          'q.domains',
           'q.cropType',
           'q.season',
           'q.state',
@@ -1818,7 +1818,7 @@ export class AdminService implements OnModuleInit {
       rows = await qb.getMany() as unknown as Record<string, unknown>[];
       columns = [
         'id', 'mobileNumber', 'name', 'questionText', 'language',
-        'domainCategory', 'cropType', 'season', 'state', 'district',
+        'domains', 'cropType', 'season', 'state', 'district',
         'mediaType', 'status', 'aiConfidenceScore', 'submittedAt', 'reviewedAt',
         'rejectionReason', 'heldReason', 'approvalReason',
       ];

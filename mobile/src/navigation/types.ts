@@ -48,7 +48,7 @@ export type RootStackParamList = {
     state: string;
     district: string;
     block: string | null;
-    domainCategory: string;
+    domains: string[];
     season: string;
     cropType: string;
     questionText: string;
