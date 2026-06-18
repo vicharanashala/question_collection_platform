@@ -149,11 +149,9 @@ export function AdminUsersScreen() {
       const params = buildQueryParams(filters, pageNum);
       const res = await adminApi.listUsers(params);
       const data = res.data;
-      const newItems: UserItem[] = (data.items ?? []).filter(
-        (u: UserItem) => u.id !== currentUser?.id,
-      );
+      const newItems: UserItem[] = data.items ?? [];
       setItems((prev) => (refresh ? newItems : [...prev, ...newItems]));
-      setTotal(Math.max(0, (data.total ?? 0) - (newItems.length < (data.items ?? []).length ? 1 : 0)));
+      setTotal(data.total ?? 0);
       setHasMore(newItems.length === 20);
       setPage(pageNum);
     } catch (e) {
@@ -202,10 +200,19 @@ export function AdminUsersScreen() {
   function renderItem({ item }: { item: UserItem }) {
     const statusColor = STATUS_COLORS[item.verificationStatus] ?? c.textTertiary;
     const displayName = item.name || item.mobileNumber || 'Unknown user';
+    const isCurrentUser = item.id === currentUser?.id;
 
     return (
-      <View style={[styles.card, { backgroundColor: c.surface }]}>
-        <Pressable onPress={() => nav.navigate('AdminUserDetail', { userId: item.id })} style={{ flex: 1 }}>
+      <View style={[
+        styles.card,
+        { backgroundColor: c.surface },
+        isCurrentUser && { opacity: 0.55 },
+      ]}>
+        <Pressable
+          onPress={() => !isCurrentUser && nav.navigate('AdminUserDetail', { userId: item.id })}
+          style={{ flex: 1 }}
+          disabled={isCurrentUser}
+        >
           <View style={styles.cardTop}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.userName, { color: c.text }]}>
@@ -220,6 +227,11 @@ export function AdminUsersScreen() {
                 {(item.verificationStatus ?? 'unknown').replace('_', ' ')}
               </Text>
             </View>
+            {isCurrentUser && (
+              <View style={[styles.badge, { backgroundColor: c.primary + '22', marginLeft: 4 }]}>
+                <Text style={[styles.badgeText, { color: c.primary }]}>This is you</Text>
+              </View>
+            )}
           </View>
           <View style={styles.cardBottom}>
             <Text style={[styles.location, { color: c.textTertiary }]}>
@@ -232,7 +244,8 @@ export function AdminUsersScreen() {
         </Pressable>
         <TouchableOpacity
           style={[styles.walletBtn, { borderColor: c.border }]}
-          onPress={() => setWalletModal({ userId: item.id, userName: displayName })}
+          onPress={() => !isCurrentUser && setWalletModal({ userId: item.id, userName: displayName })}
+          disabled={isCurrentUser}
         >
           <Ionicons name="wallet-outline" size={13} color={c.primary} />
           <Text style={[styles.walletBtnText, { color: c.primary }]}>View Wallet</Text>
