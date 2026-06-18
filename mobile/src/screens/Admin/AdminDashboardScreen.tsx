@@ -538,7 +538,8 @@ export function AdminDashboardScreen() {
           <View style={styles.navGrid}>
             {[
               { label: 'Users',       sub: 'Manage accounts',      icon: 'people',         screen: 'AdminUsers'       as any, color: '#0891B2' },
-              { label: 'Questions',   sub: 'Review & moderate',     icon: 'document-text',  screen: 'AdminQuestions'   as any, color: c.primary },
+              { label: 'Analytics',   sub: 'Platform insights',      icon: 'stats-chart',    screen: 'AdminAnalytics'   as any, color: '#7c3aed' },
+              { label: 'Questions',   sub: 'Review & moderate',      icon: 'document-text',  screen: 'AdminQuestions'   as any, color: c.primary },
               { label: 'Withdrawals', sub: 'Approve payouts',        icon: 'card',           screen: 'AdminWithdrawals' as any, color: '#D97706' },
               { label: 'Config',      sub: 'System settings',        icon: 'settings',       screen: 'AdminConfig'      as any, color: '#6B7280' },
             ].map((item) => (
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
     gap: tokens.spacing2,
   },
   navCard: {
-    width: '48%',
+    width: '31%',
     alignItems: 'center',
     paddingVertical: tokens.spacing4,
     paddingHorizontal: tokens.spacing3,

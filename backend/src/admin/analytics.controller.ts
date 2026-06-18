@@ -92,7 +92,8 @@ export class ExportController {
   async exportExcel(@Query() dto: ExportQueryDto, @Res() res: Response) {
     dto.format = 'excel';
     const result = await this.adminService.exportData(dto);
-    const xlsBuffer = (result as { xls: Buffer }).xls;
+    // json2xls returns a string (UTF-8 encoded XLSX binary), not a Buffer
+    const xlsString = (result as { xls: string }).xls;
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -101,6 +102,6 @@ export class ExportController {
       'Content-Disposition',
       `attachment; filename="${dto.dataType ?? 'export'}_${Date.now()}.xlsx"`,
     );
-    return res.end(xlsBuffer);
+    return res.send(xlsString);
   }
 }

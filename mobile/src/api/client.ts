@@ -371,4 +371,22 @@ export const adminApi = {
     api.get('/admin/export', { params, responseType: 'blob' }),
 };
 
+export const analyticsApi = {
+  /** All dashboard metrics + chart data in one call */
+  getDashboard: (params?: Record<string, string | number>) =>
+    api.get('/analytics/dashboard', { params }),
+
+  /** User engagement: DAU, MAU, retention, signups */
+  getUserAnalytics: (params?: Record<string, string | number>) =>
+    api.get('/analytics/users', { params }),
+
+  /** Question volume + breakdown by state, crop, domain */
+  getQuestionAnalytics: (params?: Record<string, string | number>) =>
+    api.get('/analytics/questions', { params }),
+
+  /** Reward and payout totals */
+  getRewardAnalytics: (params?: Record<string, string | number>) =>
+    api.get('/analytics/rewards', { params }),
+};
+
 export default api;

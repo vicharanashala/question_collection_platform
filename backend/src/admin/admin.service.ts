@@ -1808,6 +1808,8 @@ export class AdminService implements OnModuleInit {
           'q.submittedAt',
           'q.reviewedAt',
           'q.rejectionReason',
+          'q.heldReason',
+          'q.approvalReason',
         ])
         .where('q.submittedAt BETWEEN :from AND :to', { from, to })
         .orderBy('q.submittedAt', 'DESC');
@@ -1817,7 +1819,8 @@ export class AdminService implements OnModuleInit {
       columns = [
         'id', 'mobileNumber', 'name', 'questionText', 'language',
         'domainCategory', 'cropType', 'season', 'state', 'district',
-        'mediaType', 'status', 'aiConfidenceScore', 'submittedAt', 'reviewedAt', 'rejectionReason',
+        'mediaType', 'status', 'aiConfidenceScore', 'submittedAt', 'reviewedAt',
+        'rejectionReason', 'heldReason', 'approvalReason',
       ];
     } else if (dataType === 'users') {
       const qb = this.userRepo
@@ -1866,11 +1869,11 @@ export class AdminService implements OnModuleInit {
     }
 
     // Excel via json2xls
-    const json2xls = (await import('json2xls')).default;
+    const json2xls = require('json2xls');
     const xls = json2xls(rows, {
       fields: columns.reduce((acc, col) => ({ ...acc, [col]: col }), {} as Record<string, string>),
     });
-    return { format: 'excel', xls };
+    return { format: 'excel', xls: xls as unknown as string };
   }
 
   // ─────────────────────────────────────────────────────────────

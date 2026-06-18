@@ -16,31 +16,12 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Backend setGlobalPrefix('api/v1'), so /api/x → /api/v1/x
-      '/api/auth': {
-        target: 'http://localhost:3000/api/v1',
+      // The client uses BASE = '/api/v1'. Catch-all: forward every /api/v1/*
+      // request to the NestJS backend as-is (no path rewrite needed — NestJS
+      // also has setGlobalPrefix('api/v1') so the full path is preserved).
+      '/api/v1': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/auth/, '/auth'),
-      },
-      '/api/admin': {
-        target: 'http://localhost:3000/api/v1',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/admin/, '/admin'),
-      },
-      '/api/curator': {
-        target: 'http://localhost:3000/api/v1',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/curator/, '/admin'),
-      },
-      '/api/questions': {
-        target: 'http://localhost:3000/api/v1',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/questions/, '/questions'),
-      },
-      '/api/speech': {
-        target: 'http://localhost:3000/api/v1',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/speech/, '/speech'),
       },
     },
   },

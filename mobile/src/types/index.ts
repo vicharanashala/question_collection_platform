@@ -217,3 +217,71 @@ export interface NotificationsResponse {
   unread: number;
   total: number;
 }
+
+// ─── Analytics (Task 11) ──────────────────────────────────────────────────────
+
+export type TimeRange = '7d' | '30d' | '90d';
+
+export interface SignupTrendPoint {
+  date: string;
+  signups: number;
+  dau: number;
+}
+
+export interface UserAnalytics {
+  totalUsers: number;
+  mau: number;
+  dau: number;
+  signupGrowth: number;
+  signupTrend: SignupTrendPoint[];
+  stateBreakdown: { state: string; count: number }[];
+  categoryBreakdown: { category: string; count: number }[];
+  roleDistribution: { role: string; count: number }[];
+}
+
+export interface QuestionSummary {
+  total: number;
+  approved: number;
+  rejected: number;
+  pending: number;
+  approvalRate: number;
+  growthRate: number;
+}
+
+export interface QuestionAnalytics {
+  summary: QuestionSummary;
+  avgAiConfidence: number | null;
+  dailyVolume: { date: string; submitted: number; approved: number; rejected: number }[];
+  stateBreakdown: { state: string; count: number; approved: number }[];
+  cropBreakdown: { cropType: string; count: number; approved: number }[];
+  domainBreakdown: { domain: string; count: number; approved: number }[];
+}
+
+export interface RewardAnalytics {
+  totalRewarded: number;
+  rewardCount: number;
+  avgReward: number;
+  totalPool: number;
+  dailyRewardTrend: { date: string; amount: number; count: number }[];
+  withdrawals: {
+    totalWithdrawn: number;
+    withdrawalCount: number;
+    pending: number;
+    completed: number;
+    failed: number;
+  };
+}
+
+export interface AnalyticsDashboard {
+  totalRegisteredUsers: number;
+  monthlyActiveUsers: number;
+  totalApprovedQuestions: number;
+  totalRewarded: number;
+  datasetGrowthRate: number;
+  costPerApprovedQuestion: number;
+  stateParticipationRate: number;
+  avgQuestionQualityScore: number | null;
+  users: UserAnalytics;
+  questions: QuestionAnalytics;
+  rewards: RewardAnalytics;
+}
