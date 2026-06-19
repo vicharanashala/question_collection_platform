@@ -10,9 +10,11 @@ import {
 } from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
 import { WalletDetailModal } from '@/components/WalletDetailModal'
+import { WithdrawalDetailModal } from '@/components/WithdrawalDetailModal'
+import { ReasonDialog } from '@/components/ReasonDialog'
 import {
   CreditCard, ChevronLeft, ChevronRight,
-  CheckCircle, XCircle, RefreshCw, Filter, X, Eye,
+  RefreshCw, Filter, X, Eye
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
@@ -21,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
   processing: 'bg-ai_review text-white',
   completed:  'bg-success text-white',
-  failed:     'bg-destructive text-white',
+  rejected:   'bg-destructive text-white',
 }
 
 const STATUS_OPTIONS = [
@@ -29,7 +31,7 @@ const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
   { value: 'processing', label: 'Processing' },
   { value: 'completed', label: 'Completed' },
-  { value: 'failed', label: 'Failed' },
+  { value: 'rejected', label: 'Rejected' },
 ]
 
 const SORT_OPTIONS = [
@@ -75,8 +77,17 @@ export function WithdrawalsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const [viewWallet, setViewWallet] = useState<{ walletId: string; userId: string } | null>(null)
+  const [viewWallet, setViewWallet] = useState<{ userId: string } | null>(null)
   const [walletOpen, setWalletOpen] = useState(false)
+  const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [reasonDialog, setReasonDialog] = useState<{
+    open: boolean
+    withdrawalId: string
+    mode: 'approve' | 'reject'
+    amount: number
+    userName: string
+  } | null>(null)
 
   // Filters
   const [filterOpen, setFilterOpen] = useState(false)
@@ -140,10 +151,22 @@ export function WithdrawalsPage() {
     setFilterOpen(false)
   }
 
-  async function handleAction(id: string, action: 'approve' | 'reject', reason?: string) {
+  async function handleAction(id: string, action: 'approve' | 'reject' | 'reject_open', reason?: string) {
+    if (processingId !== null) return  // guard: prevent double-call
+    if (action === 'reject_open') {
+      const w = items.find((q) => q.id === id)
+      setReasonDialog({
+        open: true,
+        withdrawalId: id,
+        mode: 'reject',
+        amount: w?.amount ?? 0,
+        userName: w?.user?.name ?? w?.user?.mobileNumber ?? '',
+      })
+      return
+    }
     setProcessingId(id)
     try {
-      await adminApi.processWithdrawal(id, { action, failureReason: reason })
+      await adminApi.processWithdrawal(id, { action, rejectionReason: reason })
       setItems((prev) => prev.filter((w) => w.id !== id))
       toast.success(`Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`)
     } catch (e) {
@@ -231,7 +254,7 @@ export function WithdrawalsPage() {
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Processed</th>
                 {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Wallet</th>}
-                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Actions</th>}
+                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Details</th>}
               </tr>
             </thead>
             <tbody>
@@ -285,16 +308,12 @@ export function WithdrawalsPage() {
                           className="h-7 px-2 text-primary hover:text-primary"
                           onClick={async () => {
                             if (!w.user?.id) return
+                            console.log('[View] click', { userId: w.user.id, walletOpen, viewWallet })
                             try {
-                              const res = await adminApi.getWallets({ userId: w.user.id, limit: 1 })
-                              if (res.items.length > 0) {
-                                setViewWallet({ walletId: res.items[0].id, userId: w.user.id })
-                                setWalletOpen(true)
-                              } else {
-                                toast.error('No wallet found for this user')
-                              }
+                              setViewWallet({ userId: w.user.id })
+                              setWalletOpen(true)
                             } catch (e) {
-                              toast.error(getErrorMessage(e, 'Failed to load wallet'))
+                              toast.error(getErrorMessage(e, 'Failed to open wallet'))
                             }
                           }}
                         >
@@ -304,38 +323,22 @@ export function WithdrawalsPage() {
                       </td>
                     )}
                     {isSuperAdmin && (
-                      <td className="px-4 py-3">
-                        {w.status === 'pending' ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2 text-success hover:text-success hover:bg-success/10"
-                              onClick={() => handleAction(w.id, 'approve')}
-                              disabled={processingId === w.id}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                const reason = window.prompt('Rejection reason (optional):')
-                                handleAction(w.id, 'reject', reason ?? undefined)
-                              }}
-                              disabled={processingId === w.id}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                        {w.failureReason && (
-                          <p className="text-xs text-destructive mt-1">{w.failureReason}</p>
+                      <td className="px-4 py-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-primary hover:text-primary"
+                          onClick={() => {
+                            setDetailTarget(w)
+                            setDetailOpen(true)
+                          }}
+                          disabled={processingId === w.id}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Details
+                        </Button>
+                        {w.rejectionReason && (
+                          <p className="text-xs text-destructive mt-1">{w.rejectionReason}</p>
                         )}
                       </td>
                     )}
@@ -458,13 +461,39 @@ export function WithdrawalsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Wallet detail modal — admins can check full history before acting on a withdrawal */}
+      {/* Wallet detail modal */}
       {viewWallet && (
         <WalletDetailModal
-          walletId={viewWallet.walletId}
+          key={viewWallet.userId}
           userId={viewWallet.userId}
           open={walletOpen}
           onClose={() => { setWalletOpen(false); setViewWallet(null) }}
+        />
+      )}
+
+      {/* Withdrawal detail modal */}
+      {detailTarget && (
+        <WithdrawalDetailModal
+          withdrawal={detailTarget}
+          open={detailOpen}
+          onClose={() => { setDetailOpen(false); setDetailTarget(null) }}
+          onActioned={(id) => {
+            setItems((prev) => prev.filter((w) => w.id !== id))
+            setDetailOpen(false)
+            setDetailTarget(null)
+          }}
+        />
+      )}
+
+      {/* Reason dialog for withdrawal rejection (table-level) */}
+      {reasonDialog && (
+        <ReasonDialog
+          open={reasonDialog.open}
+          onOpenChange={(open) => setReasonDialog((prev) => prev ? { ...prev, open } : null)}
+          mode={reasonDialog.mode}
+          amount={reasonDialog.amount}
+          userName={reasonDialog.userName}
+          onConfirm={(reason) => handleAction(reasonDialog.withdrawalId, 'reject', reason)}
         />
       )}
     </div>

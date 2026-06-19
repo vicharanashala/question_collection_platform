@@ -64,6 +64,19 @@ export class WalletsController {
     });
   }
 
+  @Get('me/withdrawals')
+  @HttpCode(HttpStatus.OK)
+  async getWithdrawals(
+    @Req() req: AuthenticatedRequest,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletsService.getWithdrawals(req.user.id, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+  }
+
   @Post('withdraw')
   @HttpCode(HttpStatus.CREATED)
   async withdraw(@Req() req: AuthenticatedRequest, @Body() dto: WithdrawDto) {

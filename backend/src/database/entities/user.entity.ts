@@ -99,6 +99,9 @@ export class User {
   @Column({ name: 'last_login_at', type: 'timestamp', nullable: true })
   lastLoginAt: Date | null;
 
+  @Column({ name: 'expo_push_token', type: 'varchar', length: 255, nullable: true })
+  expoPushToken: string | null;
+
   @OneToOne(() => Wallet, (wallet) => wallet.user)
   wallet: Wallet;
 

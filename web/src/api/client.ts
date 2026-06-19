@@ -16,6 +16,7 @@ import type {
   Withdrawal,
   WalletSummary,
   Transaction,
+  Notification,
   PaginatedResponse,
   AnalyticsDashboard,
   UserAnalytics,
@@ -307,10 +308,12 @@ export const adminApi = {
     const qs = new URLSearchParams(p).toString()
     return request<PaginatedResponse<Withdrawal>>(
       `/admin/withdrawals${qs ? `?${qs}` : ''}`,
+      {},
+      false, // bypass cache — withdrawal state changes frequently and must reflect immediately
     )
   },
 
-  processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; failureReason?: string }) =>
+  processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; rejectionReason?: string }) =>
     request<{ message: string }>(`/admin/withdrawals/${id}/process`, {
       method: 'POST',
       body: JSON.stringify(body),
@@ -438,6 +441,26 @@ export const questionApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }, false).finally(() => invalidateCache('/api/questions')),
+}
+
+// ─── Notifications API ─────────────────────────────────────────────────────
+
+export const notificationApi = {
+  getNotifications: (params: { page?: number; limit?: number } = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    return request<{ items: Notification[]; unreadCount: number; total: number; page: number; pages: number }>(
+      `/users/me/notifications${qs ? `?${qs}` : ''}`,
+    )
+  },
+
+  markRead: (id: string) =>
+    request<void>(`/users/me/notifications/${id}/read`, { method: 'PATCH' }, false)
+      .finally(() => invalidateCache('/api/users/me/notifications')),
+
+  markAllRead: () =>
+    request<void>(`/users/me/notifications/read-all`, { method: 'PATCH' }, false)
+      .finally(() => invalidateCache('/api/users/me/notifications')),
 }
 
 // ─── Curator API ───────────────────────────────────────────────────────────

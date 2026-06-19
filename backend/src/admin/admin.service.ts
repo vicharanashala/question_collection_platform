@@ -51,6 +51,7 @@ import {
 } from './dto';
 import { ConfigService } from '@nestjs/config';
 import { WalletsService } from '../wallets/wallets.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
@@ -154,6 +155,7 @@ export class AdminService implements OnModuleInit {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WalletsService))
     private readonly walletsService: WalletsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────
@@ -1048,7 +1050,11 @@ export class AdminService implements OnModuleInit {
         'wr.status',
         'wr.createdAt',
         'wr.processedAt',
-        'wr.failureReason',
+        'wr.rejectionReason',
+        'u.id',
+        'u.name',
+        'u.mobileNumber',
+        'u.state',
       ])
       .skip((page - 1) * limit)
       .take(limit);
@@ -1089,7 +1095,14 @@ export class AdminService implements OnModuleInit {
     });
     if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
     if (withdrawal.status !== WithdrawalStatus.PENDING) {
-      throw new BadRequestException('Withdrawal is not in pending state');
+      // Idempotent: if already processed (approved/rejected/cancelled), return current state without error.
+      // This prevents double-call race conditions from showing an error toast to the admin.
+      return {
+        success: true,
+        action: withdrawal.status === WithdrawalStatus.PROCESSING ? 'approved' : 'rejected',
+        withdrawalId,
+        status: withdrawal.status,
+      };
     }
 
     if (dto.action === 'approve') {
@@ -1109,29 +1122,49 @@ export class AdminService implements OnModuleInit {
         entityId: withdrawalId,
         newValue: { status: WithdrawalStatus.PROCESSING },
       });
+
       await this.notificationRepo.save(
         this.notificationRepo.create({
           userId: withdrawal.userId,
           type: NotificationType.WITHDRAWAL_APPROVED,
           title: 'Withdrawal Approved',
           body: `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
-          data: { withdrawalId, status: 'processing' },
+          data: { withdrawalId, status: 'processing', userId: withdrawal.userId },
           triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
       return { success: true, action: 'approved', withdrawalId, status: WithdrawalStatus.PROCESSING };
     } else {
+      const rejectionReason = dto.rejectionReason ?? 'Rejected by admin'
       // Refund wallet balance
       await this.walletRepo.increment({ id: withdrawal.walletId }, 'balance', Number(withdrawal.amount));
+      // Re-fetch the wallet to get the updated balance for balanceAfter on the refund tx
+      const updatedWallet = await this.walletRepo.findOne({ where: { id: withdrawal.walletId } });
+      const newBalance = updatedWallet ? Number(updatedWallet.balance) : 0;
       await this.withdrawalRepo.update(withdrawalId, {
-        status: WithdrawalStatus.FAILED,
+        status: WithdrawalStatus.REJECTED,
         processedAt: new Date(),
-        failureReason: dto.failureReason ?? 'Rejected by admin',
+        rejectionReason,
       });
-      // Mark the original debit transaction as reversed so user sees correct status in history
+      // Mark the original debit transaction as rejected before creating the refund —
+      // must come before the CREDIT is saved so the update query doesn't accidentally
+      // flip the refund CREDIT (same referenceId) to REJECTED.
       await this.transactionRepo.update(
-        { referenceId: withdrawalId },
-        { status: TransactionStatus.REVERSED },
+        { referenceId: withdrawalId, status: TransactionStatus.PENDING },
+        { status: TransactionStatus.REJECTED },
+      );
+      // Create a refund credit transaction so it shows up in the user's wallet history
+      await this.transactionRepo.save(
+        this.transactionRepo.create({
+          walletId: withdrawal.walletId,
+          amount: Number(withdrawal.amount),
+          type: TransactionType.CREDIT,
+          source: TransactionSource.REFUND,
+          description: `Withdrawal rejected${rejectionReason ? ': ' + rejectionReason : ''}`,
+          status: TransactionStatus.COMPLETED,
+          referenceId: withdrawalId,
+          balanceAfter: newBalance,
+        }),
       );
       await this.logAudit({
         actorType: ActorType.ADMIN,
@@ -1140,19 +1173,32 @@ export class AdminService implements OnModuleInit {
         entityType: 'withdrawal_request',
         entityId: withdrawalId,
         oldValue: { status: WithdrawalStatus.PENDING },
-        newValue: { status: WithdrawalStatus.FAILED, reason: dto.failureReason },
+        newValue: { status: WithdrawalStatus.REJECTED, reason: rejectionReason },
       });
-      await this.notificationRepo.save(
+      // Send rejection notification outside the main DB write path so a notification
+      // failure (e.g. bad data, missing FK) cannot roll back the withdrawal state.
+
+      const notification = await this.notificationRepo.save(
         this.notificationRepo.create({
           userId: withdrawal.userId,
           type: NotificationType.WITHDRAWAL_REJECTED,
           title: 'Withdrawal Rejected',
-          body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected. The amount has been credited back to your wallet.`,
-          data: { withdrawalId, status: 'failed' },
+          body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected.${rejectionReason ? ' Reason: ' + rejectionReason + '.' : ''} Rs. ${withdrawal.amount} has been credited back to your wallet.`,
+          data: { withdrawalId, status: 'rejected', reason: rejectionReason, userId: withdrawal.userId },
           triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
-      return { success: true, action: 'rejected', withdrawalId, status: WithdrawalStatus.FAILED };
+      // Also fire the Expo push notification asynchronously — failures are non-fatal.
+      this.notificationsService.sendToUser(withdrawal.userId, {
+        title: notification.title,
+        body: notification.body,
+        data: notification.data ?? undefined,
+        sound: 'default',
+        priority: 'high',
+      }).catch((pushErr) =>
+        console.error('[AdminService] Failed to send withdrawal rejection push:', pushErr),
+      );
+      return { success: true, action: 'rejected', withdrawalId, status: WithdrawalStatus.REJECTED };
     }
   }
 
@@ -1855,13 +1901,13 @@ export class AdminService implements OnModuleInit {
         .leftJoinAndSelect('wr.user', 'u')
         .select([
           'wr.id', 'u.mobileNumber', 'u.name', 'wr.amount',
-          'wr.payoutMethod', 'wr.status', 'wr.createdAt', 'wr.processedAt', 'wr.failureReason',
+          'wr.payoutMethod', 'wr.status', 'wr.createdAt', 'wr.processedAt', 'wr.rejectionReason',
         ])
         .where('wr.createdAt BETWEEN :from AND :to', { from, to })
         .orderBy('wr.createdAt', 'DESC');
       if (state) qb.andWhere('u.state = :state', { state });
       rows = await qb.getMany() as unknown as Record<string, unknown>[];
-      columns = ['id', 'mobileNumber', 'name', 'amount', 'payoutMethod', 'status', 'createdAt', 'processedAt', 'failureReason'];
+      columns = ['id', 'mobileNumber', 'name', 'amount', 'payoutMethod', 'status', 'createdAt', 'processedAt', 'rejectionReason'];
     }
 
     if (format === 'csv') {
@@ -2019,7 +2065,7 @@ export class AdminService implements OnModuleInit {
         'wr.payoutMethod',
         'wr.payoutDetails',
         'wr.status',
-        'wr.failureReason',
+        'wr.rejectionReason',
         'wr.processedAt',
         'wr.createdAt',
       ])

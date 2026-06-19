@@ -133,9 +133,18 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
               <TxMetaRow label={t('wallet.txBalanceAfter')} value={
                 `₹${Number(tx.balanceAfter).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
               } c={c} />
-              {tx.description && (
+              {tx.status === 'rejected' && tx.description ? (
+                <View style={txModalStyles.rejectionRow}>
+                  <Text style={[txModalStyles.rejectionLabel, { color: c.error }]}>
+                    {t('wallet.rejectionReason', 'Rejection Reason')}
+                  </Text>
+                  <Text style={[txModalStyles.rejectionValue, { color: c.error }]}>
+                    {tx.description.replace(/^Withdrawal rejected: /i, '')}
+                  </Text>
+                </View>
+              ) : tx.description ? (
                 <TxMetaRow label={t('wallet.txDescription')} value={tx.description} c={c} />
-              )}
+              ) : null}
             </View>
 
             {/* Reward source — question details */}
@@ -306,6 +315,18 @@ const txModalStyles = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: '600' },
   metaSection: { marginBottom: tokens.spacing4 },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: tokens.spacing3, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
+  rejectionRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3,
+    marginTop: tokens.spacing1,
+    marginBottom: tokens.spacing2,
+  },
+  rejectionLabel: { fontSize: 12, fontWeight: '700', flex: 1 },
+  rejectionValue: { fontSize: 13, fontWeight: '500', flex: 2, textAlign: 'right' },
   metaLabel: { fontSize: 13, flex: 1, paddingRight: tokens.spacing3 },
   metaValue: { fontSize: 13, flex: 2, textAlign: 'right', fontWeight: '500' },
   questionSection: { borderWidth: 1, borderRadius: tokens.radiusLg, padding: tokens.spacing4, marginBottom: tokens.spacing4 },
@@ -471,6 +492,7 @@ export function WalletScreen() {
     pending: c.warning,
     failed: c.error,
     reversed: c.textTertiary,
+    rejected: c.error,
   };
 
   if (loading) return null;

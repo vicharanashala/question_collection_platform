@@ -146,10 +146,10 @@ export interface Withdrawal {
   amount: number
   payoutMethod: string
   payoutDetails: Record<string, unknown> | null
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: 'pending' | 'processing' | 'completed' | 'rejected'
   createdAt: string
   processedAt: string | null
-  failureReason: string | null
+  rejectionReason: string | null
   user: WithdrawalUser | null
 }
 
@@ -180,6 +180,18 @@ export interface Transaction {
   status: 'pending' | 'completed' | 'failed' | 'reversed'
   referenceId: string | null
   balanceAfter: number | null
+  createdAt: string
+}
+
+export interface Notification {
+  id: string
+  userId: string
+  type: string
+  triggerType: string
+  title: string
+  body: string
+  data: Record<string, unknown> | null
+  isRead: boolean
   createdAt: string
 }
 

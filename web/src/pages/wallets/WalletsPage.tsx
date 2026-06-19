@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,20 @@ export function WalletsPage() {
 
   const limit = 30
 
+  const location = useLocation()
+  const [pendingOpenUserId, setPendingOpenUserId] = useState<string | null>(null)
+
+  // Pick up openUserId passed from notification click
+  useEffect(() => {
+    const userId = (location.state as { openUserId?: string } | null)?.openUserId
+    if (userId) {
+      setPendingOpenUserId(userId)
+      // Clear state so a refresh doesn't re-open
+      window.history.replaceState({}, '')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const fetchWallets = useCallback(async (pageNum = 1, search = searchQuery) => {
     setLoading(true)
     try {
@@ -37,6 +52,16 @@ export function WalletsPage() {
       setWallets(pageNum === 1 ? res.items : (prev) => [...prev, ...res.items])
       setTotal(res.total)
       setPage(pageNum)
+
+      // Auto-open the wallet modal if a user was passed in from notifications
+      if (pendingOpenUserId) {
+        const target = res.items.find((w: WalletSummary) => w.userId === pendingOpenUserId)
+        if (target) {
+          setDetailWallet(target)
+          setDetailOpen(true)
+          setPendingOpenUserId(null)
+        }
+      }
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to load wallets'))
     } finally {
@@ -281,7 +306,6 @@ export function WalletsPage() {
       {/* Wallet detail modal — shared component */}
       {detailWallet && (
         <WalletDetailModal
-          walletId={detailWallet.id}
           userId={detailWallet.userId}
           open={detailOpen}
           onClose={closeDetail}

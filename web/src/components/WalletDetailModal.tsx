@@ -4,6 +4,7 @@
  * withdrawal history tabs. Super admins can also manually adjust balance.
  */
 import { useState, useEffect, useCallback } from 'react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -18,16 +19,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatDate } from '@/lib/utils'
 import {
   Wallet, ArrowUpRight, ArrowDownRight,
-  RefreshCw, TrendingUp, TrendingDown, Clock, Hash,
+  RefreshCw, TrendingUp, TrendingDown, Clock, Hash, X, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { WalletSummary, Transaction, Withdrawal } from '@/types'
+import { WithdrawalDetailModal } from '@/components/WithdrawalDetailModal'
 
 const TX_STATUS_COLORS: Record<string, string> = {
   pending:   'bg-warning text-white',
   completed: 'bg-success text-white',
   failed:    'bg-destructive text-white',
   reversed:  'bg-muted text-muted-foreground',
+  rejected:  'bg-destructive text-white',
 }
 
 const TX_SOURCE_LABELS: Record<string, string> = {
@@ -46,7 +49,7 @@ const WD_STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
   processing: 'bg-ai_review text-white',
   completed:  'bg-success text-white',
-  failed:     'bg-destructive text-white',
+  rejected:   'bg-destructive text-white',
   cancelled:  'bg-muted text-muted-foreground',
 }
 
@@ -59,7 +62,6 @@ const VERIFICATION_COLORS: Record<string, string> = {
 }
 
 interface WalletDetailModalProps {
-  walletId: string
   userId: string
   open: boolean
   onClose: () => void
@@ -85,8 +87,10 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
   const [adjusting, setAdjusting] = useState(false)
   const [adjustedBalance, setAdjustedBalance] = useState<number | null>(null)
   const [adjustError, setAdjustError] = useState('')
+  const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
 
-  const limit = 50
+  const limit = 10
 
   const fetchTransactions = useCallback(async (page = 1) => {
     setLoadingTx(true)
@@ -165,9 +169,17 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
   const user = summary?.user
   const totalTxCount = transactions.length
 
+  useEffect(() => { console.log('[WalletDetailModal] render:', { open, userId }) }, [open, userId])
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col items-center justify-center p-0 gap-0">
+    <DialogPrimitive.Root open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 dark:bg-black/70 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 flex flex-col w-full max-w-6xl translate-x-[-50%] translate-y-[-50%] gap-4 border border-border-subtle bg-surface p-6 shadow-lg rounded-lg text-text data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 overflow-hidden max-h-[90vh]">
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:pointer-events-none">
+            <X className="h-4 w-4 text-text-tertiary" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
 
         {/* ── Header ─────────────────────────────────────────────────── */}
         <DialogHeader className="w-full px-6 pt-6 pb-4 border-b border-border-subtle shrink-0">
@@ -271,7 +283,7 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
           </div>
 
           {/* ── Right panel: transaction / withdrawal history ───────── */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden p-5">
+          <div className="flex-1 min-w-0 flex flex-col min-h-0 p-5">
             <Tabs
               value={txTab}
               onValueChange={(v) => setTxTab(v as 'transactions' | 'withdrawals')}
@@ -336,6 +348,11 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
                               {TX_SOURCE_LABELS[tx.source] ?? tx.source}
                             </p>
                             <p className="text-xs text-text-secondary truncate">{tx.description ?? '—'}</p>
+                            {tx.status === 'rejected' && tx.rejectionReason && (
+                              <p className="text-xs text-destructive mt-0.5" title={tx.rejectionReason}>
+                                Reason: {tx.rejectionReason}
+                              </p>
+                            )}
                             <p className="text-xs text-text-tertiary mt-0.5">
                               {formatDate(tx.createdAt) ?? new Date(tx.createdAt).toLocaleDateString('en-IN')}
                             </p>
@@ -381,20 +398,22 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
               {/* ── Withdrawals table ─────────────────────────────── */}
               <TabsContent value="withdrawals" className="flex flex-col flex-1 min-h-0 mt-3">
                 <div className="rounded-lg border border-border overflow-hidden flex flex-col flex-1 min-h-0 h-full">
-                  <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-text-secondary uppercase tracking-wider shrink-0">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-text-secondary uppercase tracking-wider shrink-0">
                     <span>Request</span>
                     <span>Payout</span>
                     <span className="text-right">Amount</span>
                     <span>Status</span>
+                    <span className="text-center">Details</span>
                   </div>
                   <div className="overflow-y-auto flex-1">
                     {loadingWd && withdrawals.length === 0 ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center">
+                        <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center">
                           <Skeleton className="h-3 w-28" />
                           <Skeleton className="h-3 w-20" />
                           <Skeleton className="h-3 w-16 ml-auto" />
                           <Skeleton className="h-5 w-20" />
+                          <Skeleton className="h-5 w-10 mx-auto" />
                         </div>
                       ))
                     ) : withdrawals.length === 0 ? (
@@ -406,7 +425,7 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
                       withdrawals.map((wd) => (
                         <div
                           key={wd.id}
-                          className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-surface-variant/40 transition-colors"
+                          className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-surface-variant/40 transition-colors"
                         >
                           <div className="min-w-0">
                             <p className="text-xs font-mono text-text-tertiary truncate">{wd.id}</p>
@@ -437,11 +456,24 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
                             )}>
                               {wd.status}
                             </span>
-                            {wd.failureReason && (
-                              <p className="text-xs text-destructive max-w-32 truncate" title={wd.failureReason}>
-                                {wd.failureReason}
+                            {wd.rejectionReason && (
+                              <p className="text-xs text-destructive max-w-32 truncate" title={wd.rejectionReason}>
+                                {wd.rejectionReason}
                               </p>
                             )}
+                          </div>
+                          <div className="flex items-center justify-center">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-text-secondary hover:text-primary"
+                              onClick={() => {
+                                setDetailTarget(wd)
+                                setDetailOpen(true)
+                              }}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </div>
                       ))
@@ -466,7 +498,7 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
         </div>
 
         {/* ── Adjustment dialog ─────────────────────────────────────── */}
-        <Dialog open={adjustOpen} onOpenChange={(o) => !o && setAdjustOpen(false)}>
+        <Dialog open={adjustOpen} onOpenChange={(o: boolean) => !o && setAdjustOpen(false)}>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Adjust Wallet Balance</DialogTitle>
@@ -506,7 +538,18 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
           </DialogContent>
         </Dialog>
 
-      </DialogContent>
-    </Dialog>
+      {/* Withdrawal detail modal — read-only for user-side viewing */}
+      {detailTarget && (
+        <WithdrawalDetailModal
+          withdrawal={detailTarget}
+          open={detailOpen}
+          readOnly
+          onClose={() => { setDetailOpen(false); setDetailTarget(null) }}
+        />
+      )}
+
+    </DialogPrimitive.Content>
+  </DialogPrimitive.Portal>
+</DialogPrimitive.Root>
   )
 }

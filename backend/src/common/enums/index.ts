@@ -69,6 +69,7 @@ export enum TransactionStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
   REVERSED = 'reversed',
+  REJECTED = 'rejected',
 }
 
 export enum PayoutMethod {
@@ -80,7 +81,7 @@ export enum WithdrawalStatus {
   PENDING = 'pending',
   PROCESSING = 'processing',
   COMPLETED = 'completed',
-  FAILED = 'failed',
+  REJECTED = 'rejected',
   CANCELLED = 'cancelled',
 }
 

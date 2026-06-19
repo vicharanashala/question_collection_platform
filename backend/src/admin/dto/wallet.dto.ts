@@ -25,8 +25,8 @@ export class ListUserTransactionsDto {
   type?: 'all' | 'credit' | 'debit';
 
   @IsOptional()
-  @IsIn(['all', 'completed', 'pending', 'failed', 'reversed'])
-  status?: 'all' | 'completed' | 'pending' | 'failed' | 'reversed';
+  @IsIn(['all', 'completed', 'pending', 'failed', 'reversed', 'rejected'])
+  status?: 'all' | 'completed' | 'pending' | 'failed' | 'reversed' | 'rejected';
 
   @IsOptional()
   @IsIn(['all', 'reward', 'withdrawal', 'refund'])
@@ -64,7 +64,7 @@ export class ListUserWithdrawalsDto {
   limit?: number = 20;
 
   @IsOptional()
-  @IsIn(['pending', 'processing', 'completed', 'failed'])
+  @IsIn(['pending', 'processing', 'completed', 'rejected'])
   status?: string;
 
   @IsOptional()

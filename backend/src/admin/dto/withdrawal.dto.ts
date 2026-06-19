@@ -16,7 +16,7 @@ export class ListWithdrawalsDto {
   limit?: number = 20;
 
   @IsOptional()
-  @IsIn(['pending', 'processing', 'completed', 'failed'])
+  @IsIn(['pending', 'processing', 'completed', 'rejected'])
   status?: string;
 
   @IsOptional()
@@ -28,7 +28,7 @@ export class ListWithdrawalsDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(['pending', 'processing', 'completed', 'failed', 'all'])
+  @IsIn(['pending', 'processing', 'completed', 'rejected', 'all'])
   filterStatus?: string;
 
   @IsOptional()
@@ -55,5 +55,5 @@ export class ProcessWithdrawalDto {
 
   @IsOptional()
   @IsString()
-  failureReason?: string;
+  rejectionReason?: string;
 }

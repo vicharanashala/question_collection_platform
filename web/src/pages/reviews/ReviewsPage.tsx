@@ -13,7 +13,7 @@ import {
   Clock, Star,
   MapPin, Wheat, Film, Eye, Hash,
   User, Zap, ThumbsUp, Ban, ListFilter,
-  Tag, Globe,
+  Globe,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question, QuestionStatus } from '@/types'

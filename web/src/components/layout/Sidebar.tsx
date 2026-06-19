@@ -11,6 +11,7 @@ import {
   CreditCard,
   LogOut,
   Wallet,
+  Bell,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -24,6 +25,7 @@ const navItems = [
   { to: '/reviews',   label: 'Review Queue',  icon: CheckSquare,   roles: ['curator', 'super_admin'] },
   { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,   roles: ['admin', 'super_admin'] },
   { to: '/wallets',   label: 'Wallets',       icon: Wallet,        roles: ['admin', 'super_admin'] },
+  { to: '/notifications', label: 'Notifications', icon: Bell,          roles: ['user', 'curator'] },
   { to: '/settings',  label: 'Settings',      icon: Settings2,    roles: ['super_admin'] },
 ]
 

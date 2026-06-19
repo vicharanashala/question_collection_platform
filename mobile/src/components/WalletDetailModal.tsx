@@ -26,6 +26,7 @@ const TX_STATUS_COLORS: Record<string, string> = {
   completed: '#22c55e',
   failed:    '#ef4444',
   reversed:  '#9ca3af',
+  rejected:  '#ef4444',
 };
 
 const TX_SOURCE_LABELS: Record<string, string> = {

@@ -14,7 +14,7 @@ import {
   Clock, User, Eye, Star,
   MapPin, Wheat, CloudRain, Globe, Film,
   Hash, AlertTriangle, PauseCircle, CheckCircle,
-  XCircle, ListFilter, Search, Tag, Info,
+  XCircle, ListFilter, Search, Info,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'

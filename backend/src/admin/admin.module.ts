@@ -15,6 +15,7 @@ import {
   Notification,
 } from '../database/entities';
 import { WalletsModule } from '../wallets/wallets.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { WalletsModule } from '../wallets/wallets.module';
       Notification,
     ]),
     forwardRef(() => WalletsModule),
+    NotificationsModule,
   ],
   controllers: [AdminController, AnalyticsController, ExportController],
   providers: [AdminService],

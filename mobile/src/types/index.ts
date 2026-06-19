@@ -80,7 +80,7 @@ export interface Transaction {
   balanceAfter: number | string;
   referenceId: string | null;
   description: string | null;
-  status: 'pending' | 'completed' | 'failed' | 'reversed';
+  status: 'pending' | 'completed' | 'failed' | 'reversed' | 'rejected';
   createdAt: string;
 }
 

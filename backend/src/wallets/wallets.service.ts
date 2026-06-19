@@ -155,6 +155,28 @@ export class WalletsService {
     return { transactions: items, total };
   }
 
+  async getWithdrawals(
+    userId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<{ items: WithdrawalRequest[]; total: number; page: number; limit: number; pages: number }> {
+    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    const page = Math.max(1, params?.page ?? 1);
+    const limit = Math.min(50, Math.max(1, params?.limit ?? 20));
+
+    const qb = this.withdrawalRepo
+      .createQueryBuilder('wr')
+      .where('wr.walletId = :walletId', { walletId: wallet.id })
+      .select(['wr.id', 'wr.amount', 'wr.payoutMethod', 'wr.payoutDetails', 'wr.status', 'wr.rejectionReason', 'wr.processedAt', 'wr.createdAt', 'wr.cancelledAt'])
+      .orderBy('wr.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  }
+
   /**
    * Request a withdrawal.
    *
