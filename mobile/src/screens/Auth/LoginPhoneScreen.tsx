@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   Pressable,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -87,10 +88,8 @@ export function LoginPhoneScreen({ navigation }: Props) {
         >
           {/* Logo */}
           <View style={styles.logoSection}>
-            <View style={[styles.logoMark, { backgroundColor: c.primary }]}>
-              <Ionicons name="leaf" size={36} color={c.primaryForeground} />
-            </View>
-            <Text style={[styles.brand, { color: c.text }]}>{t('loginPhone.title')}</Text>
+            <Image source={require('../../../assets/logo.png')} style={styles.logoMark} />
+            <Text style={[styles.brand, { color: c.text }]}>AnnaDatha</Text>
             <Text style={[styles.tagline, { color: c.textSecondary }]}>
               {t('loginPhone.tagline')}
             </Text>
@@ -219,18 +218,15 @@ const styles = StyleSheet.create({
   },
 
   // Logo section
-  logoSection: { alignItems: 'center', marginBottom: tokens.spacing8 },
+  logoSection: { alignItems: 'center', marginBottom: tokens.spacing6 },
   logoMark: {
-    width: 72,
-    height: 72,
-    borderRadius: tokens.radiusXl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: tokens.spacing3,
+    width: 88,
+    height: 88,
+    borderRadius: 20,
+    marginBottom: tokens.spacing2,
   },
-
-  brand: { fontSize: 28, fontWeight: '800', letterSpacing: 0.3, marginBottom: 4 },
-  tagline: { fontSize: 14, letterSpacing: 0.01 * 14 },
+  brand: { fontSize: 24, fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 },
+  tagline: { fontSize: 14, letterSpacing: 0.2 },
 
   // Card
   card: {
