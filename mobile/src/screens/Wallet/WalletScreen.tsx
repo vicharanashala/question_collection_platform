@@ -138,7 +138,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                   <Text style={[txModalStyles.rejectionLabel, { color: c.error }]}>
                     {t('wallet.rejectionReason', 'Rejection Reason')}
                   </Text>
-                  <Text style={[txModalStyles.rejectionValue, { color: c.error }]}>
+                  <Text style={[txModalStyles.rejectionValue, { color: c.error }]} selectable>
                     {tx.rejectionReason}
                   </Text>
                 </View>
@@ -282,7 +282,7 @@ function TxMetaRow({ label, value, c }: { label: string; value: string; c: Retur
   return (
     <View style={txModalStyles.metaRow}>
       <Text style={[txModalStyles.metaLabel, { color: c.textTertiary }]}>{label}</Text>
-      <Text style={[txModalStyles.metaValue, { color: c.text }]} numberOfLines={2}>{value}</Text>
+      <Text style={[txModalStyles.metaValue, { color: c.text }]} selectable>{value}</Text>
     </View>
   );
 }

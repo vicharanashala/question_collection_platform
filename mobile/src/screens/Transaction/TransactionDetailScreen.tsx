@@ -210,7 +210,7 @@ export function TransactionDetailScreen() {
                 <Text style={[styles.rejectionLabel, { color: c.error }]}>
                   {t('wallet.rejectionReason', 'Rejection Reason')}
                 </Text>
-                <Text style={[styles.rejectionValue, { color: c.error }]}>
+                <Text style={[styles.rejectionValue, { color: c.error }]} selectable>
                   {displayTx.rejectionReason ?? initialReason}
                 </Text>
               </View>
@@ -259,7 +259,7 @@ function MetaRow({
           { color: c.text },
           mono && { fontFamily: 'monospace', fontSize: 12 },
         ]}
-        numberOfLines={2}
+        selectable
       >
         {value}
       </Text>
