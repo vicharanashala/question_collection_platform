@@ -350,12 +350,6 @@ const resources = {
       "question.enterQuestion": "Enter your question or attach media",
       "question.limitReached": "You have reached your limit of {limit} questions today. Please try again tomorrow.",
       "question.textTooLong": "Your question exceeds the {max} character limit. Please shorten it.",
-
-      "question.editModeLabel": "Editing your question",
-      "question.typeYourQuestion": "Type your question below",
-      "question.beSpecificHint": "Be specific — more details get better answers",
-      "question.reviewHint": "Questions are mostly reviewed within 24 hours",
-      "question.tapMicHint": "Tap the mic to speak your question",
       "question.mediaUploadFailed": "Failed to upload media. Please try again.",
       "question.submitFailed": "Failed to submit. Please try again.",
       "question.updateFailed": "Could not load question to edit.",
@@ -581,7 +575,10 @@ const resources = {
         "contactAdmin": "Contact Admin",
         "logout": "Log out and sign in with a different account"
       },
-      "registrationSuccess": "Registration complete! Awaiting admin verification."
+      "registrationSuccess": "Registration complete! Awaiting admin verification.",
+      "wallet.confirmWithdrawTitle": "Confirm Withdrawal",
+      "wallet.confirmWithdrawMsg": "You are about to withdraw Rs.{amount} to your UPI account.",
+      "wallet.confirm": "Confirm"
     }
   },
   "as": {

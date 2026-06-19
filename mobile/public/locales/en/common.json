@@ -217,13 +217,13 @@
     "image": "Photo",
     "video": "Video",
     "audio": {
-    "permissionDenied": "Microphone permission required",
-    "startError": "Failed to start recording",
-    "transcribeError": "Transcription failed. Please try again.",
-    "transcribing": "Transcribing…",
-    "recording": "Recording — tap to stop",
-    "record": "Tap to record"
-  },
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record"
+    },
     "textPlaceholder": "Write your agriculture-related question...",
     "addMedia": "Add Media",
     "addPhoto": "Add Photo",
@@ -570,5 +570,8 @@
     "contactAdmin": "Contact Admin",
     "logout": "Log out and sign in with a different account"
   },
-  "registrationSuccess": "Registration complete! Awaiting admin verification."
+  "registrationSuccess": "Registration complete! Awaiting admin verification.",
+  "wallet.confirmWithdrawTitle": "Confirm Withdrawal",
+  "wallet.confirmWithdrawMsg": "You are about to withdraw Rs.{amount} to your UPI account.",
+  "wallet.confirm": "Confirm"
 }
