@@ -681,7 +681,7 @@ export function WalletScreen() {
                   <Ionicons
                     name={
                       tx.source === 'reward'
-                        ? 'chatbubble-ellipses-outline'
+                        ? 'cash-outline'
                         : tx.source === 'withdrawal'
                         ? 'arrow-up-outline'
                         : tx.source === 'refund'
