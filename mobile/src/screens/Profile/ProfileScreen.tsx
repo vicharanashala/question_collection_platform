@@ -6,13 +6,13 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { TooltipIcon } from '../../components/TooltipIcon';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi, walletApi, questionApi } from '../../api/client';
@@ -76,6 +76,7 @@ export function ProfileScreen() {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
   const [loadingData, setLoadingData] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const seasonLabels: Record<string, string> = {
     Kharif: t('season.Kharif'),
@@ -121,11 +122,13 @@ export function ProfileScreen() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  async function handleLogout() {
-    Alert.alert(t('profile.signOut'), t('profile.signOutConfirm'), [
-      { text: t('profile.signOutCancel'), style: 'cancel' },
-      { text: t('profile.signOutAction'), style: 'destructive', onPress: logout },
-    ]);
+  function handleLogoutPress() {
+    setShowLogoutConfirm(true);
+  }
+
+  async function handleLogoutConfirm() {
+    setShowLogoutConfirm(false);
+    await logout();
   }
 
   function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
@@ -336,7 +339,21 @@ export function ProfileScreen() {
             <TouchableOpacity
               style={styles.actionRow}
               activeOpacity={0.7}
-              onPress={handleLogout}
+              onPress={() => navigation.navigate('PaymentDetails')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="wallet-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>Payment Methods</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={handleLogoutPress}
             >
               <View style={[styles.actionIconWrap, { backgroundColor: c.error + '15' }]}>
                 <Ionicons name="log-out-outline" size={16} color={c.error} />
@@ -347,6 +364,16 @@ export function ProfileScreen() {
         </View>
 
       </ScrollView>
+
+      <ConfirmModal
+        visible={showLogoutConfirm}
+        title={t('profile.signOut')}
+        message={t('profile.signOutConfirm')}
+        confirmLabel={t('profile.signOutAction')}
+        variant="danger"
+        onConfirm={handleLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+      />
     </SafeAreaView>
   );
 }

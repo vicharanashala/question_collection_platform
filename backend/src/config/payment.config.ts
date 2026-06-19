@@ -11,5 +11,8 @@ export const paymentConfig = registerAs('payment', () => ({
         ? 'https://api.pinelabs.com'
         : 'https://api.preprod.pinelabs.com',
     webhookSecret: process.env.PINELABS_WEBHOOK_SECRET ?? '',
+    // When true, verification is auto-approved immediately without calling PineLabs.
+    // Useful in dev/demo environments without live PineLabs credentials.
+    mockVerification: process.env.PINELABS_MOCK_VERIFICATION === 'true',
   },
 }));

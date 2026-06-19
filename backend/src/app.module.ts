@@ -26,6 +26,7 @@ import {
   AdminConfig,
   UserCropDetail,
   Notification,
+  UserPaymentDetail,
 } from './database/entities';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -87,6 +88,7 @@ import { HealthController } from './health/health.controller';
           AdminConfig,
           UserCropDetail,
           Notification,
+          UserPaymentDetail,
         ],
         migrations: [],
         synchronize: process.env.NODE_ENV !== 'production',

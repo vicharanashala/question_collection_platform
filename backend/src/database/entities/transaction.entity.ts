@@ -31,7 +31,7 @@ export class Transaction {
   @Column({ name: 'balance_after', type: 'decimal', precision: 12, scale: 2 })
   balanceAfter: number;
 
-  @Column({ name: 'reference_id', type: 'uuid', nullable: true })
+  @Column({ name: 'reference_id', type: 'varchar', length: 150, nullable: true })
   @Index('idx_transactions_reference_id')
   referenceId: string | null;
 

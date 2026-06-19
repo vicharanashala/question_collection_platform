@@ -314,7 +314,15 @@ export const adminApi = {
   },
 
   processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; rejectionReason?: string }) =>
-    request<{ message: string }>(`/admin/withdrawals/${id}/process`, {
+    request<{
+      success: boolean
+      action: string
+      withdrawalId: string
+      status: string
+      paymentFailed?: boolean
+      errorCode?: string
+      errorMessage?: string
+    }>(`/admin/withdrawals/${id}/process`, {
       method: 'POST',
       body: JSON.stringify(body),
     }, false).finally(() => invalidateCache('/api/admin')),

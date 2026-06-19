@@ -6,6 +6,7 @@ import {
   forwardRef,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Wallet, Transaction, WithdrawalRequest } from '../database/entities';
@@ -51,6 +52,7 @@ export class WalletsService {
     @Inject(forwardRef(() => AdminService))
     private readonly adminService: AdminService,
     private readonly pinelabsService: PinelabsService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -165,6 +167,18 @@ export class WalletsService {
     return { transactions: items, total };
   }
 
+  async getWithdrawal(userId: string, withdrawalId: string) {
+    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id: withdrawalId, walletId: wallet.id },
+    });
+    if (!withdrawal) throw new NotFoundException('Withdrawal not found');
+
+    return withdrawal;
+  }
+
   async getWithdrawals(
     userId: string,
     params?: { page?: number; limit?: number },
@@ -240,9 +254,12 @@ export class WalletsService {
     const payoutDetails: Record<string, unknown> = paymentDetail.payoutMethod === PayoutMethod.UPI
       ? { upiId: paymentDetail.upiId }
       : {
-          accountNumberEncrypted: paymentDetail.accountNumberEncrypted,
           ifsc: paymentDetail.ifsc,
           accountHolderName: paymentDetail.accountHolderName,
+          bankName: paymentDetail.bankName,
+          accountNumber: paymentDetail.accountNumberEncrypted
+            ? decrypt(paymentDetail.accountNumberEncrypted)
+            : null,
         };
 
     // Atomic: deduct balance + create withdrawal request + create transaction
@@ -452,14 +469,46 @@ export class WalletsService {
 
       await queryRunner.commitTransaction();
 
+      // Mock verification: skip PineLabs and auto-approve immediately.
+      if (this.configService.get<boolean>('payment.pinelabs.mockVerification')) {
+        await this.paymentDetailRepo.update(saved.id, {
+          status: 'verified',
+          verifiedAt: new Date(),
+        });
+        this.logger.log(`[Verification] Mock mode — auto-approved | detailId=${saved.id}`);
+        return {
+          id: saved.id,
+          status: 'verified',
+          message: 'Payment method verified successfully (demo mode).',
+        };
+      }
+
       // Fire-and-forget: send ₹1 to PineLabs (webhook will handle the result)
+      // If dispatch fails, mark the record as failed immediately so UI reflects reality.
       this.pinelabsService
         .dispatchVerificationPayout({
           orderId: verificationOrderId,
           paymentMethod: dto.payoutMethod as PayoutMethod,
           payoutDetails: this.buildPayoutDetailsForVerification(saved),
         })
-        .catch((err) => this.logger.error(`[Verification] Payout dispatch failed: ${err.message}`));
+        .then((result) => {
+          if (!result.success) {
+            this.paymentDetailRepo.update(saved.id, {
+              status: 'failed',
+              verificationFailedReason: result.errorMessage ?? 'Verification payout failed',
+            });
+            this.logger.warn(
+              `[Verification] Payout failed | orderId=${verificationOrderId} | reason=${result.errorMessage}`,
+            );
+          }
+        })
+        .catch((err) => {
+          this.paymentDetailRepo.update(saved.id, {
+            status: 'failed',
+            verificationFailedReason: 'Verification service unavailable. Please try again later.',
+          });
+          this.logger.error(`[Verification] Payout dispatch failed | orderId=${verificationOrderId} | ${err.message}`);
+        });
 
       return {
         id: saved.id,
@@ -468,11 +517,20 @@ export class WalletsService {
           'Payment detail saved. A ₹1 verification charge has been sent. ' +
           'You will be notified once it is confirmed (usually within a few minutes).',
       };
-    } catch (err) {
+    } catch (err: any) {
       await queryRunner.rollbackTransaction();
       // Clean up the payment detail record on failure
       await this.paymentDetailRepo.delete( saved.id);
-      throw err;
+
+      if (err.code === '22P02') {
+        throw new BadRequestException(
+          'Verification could not be initiated. Please try again or contact support.',
+        );
+      }
+      this.logger.error(`[addPaymentDetail] Unexpected error: ${err.message}`, err.stack);
+      throw new BadRequestException(
+        'Something went wrong while saving your payment detail. Please try again.',
+      );
     } finally {
       await queryRunner.release();
     }
@@ -632,7 +690,8 @@ export class WalletsService {
 
   /**
    * Build the payoutDetails object from a UserPaymentDetail entity.
-   * For bank accounts, uses the encrypted account number.
+   * For bank accounts, passes accountNumberEncrypted so PinelabsService.decryptPayoutBank
+   * handles decryption at payout dispatch time.
    */
   private buildPayoutDetailsForVerification(detail: UserPaymentDetail): Record<string, unknown> {
     if (detail.payoutMethod === PayoutMethod.UPI) {
@@ -642,7 +701,6 @@ export class WalletsService {
       accountNumberEncrypted: detail.accountNumberEncrypted,
       ifsc: detail.ifsc,
       accountHolderName: detail.accountHolderName,
-      accountNumber: undefined as unknown, // placeholder — not used when encrypted field is present
     };
   }
 }

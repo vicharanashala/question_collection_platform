@@ -19,6 +19,8 @@ import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { WalletDetailModal } from '../../components/WalletDetailModal';
+import { ResultModal } from '../../components/ResultModal';
+import { WithdrawalDetailModal, WithdrawalDetailData } from '../../components/WithdrawalDetailModal';
 import { INDIAN_STATES } from '../../utils/constants';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -139,6 +141,14 @@ export function AdminWithdrawalsScreen() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
   const [walletModal, setWalletModal] = useState<{ userId: string; userName: string } | null>(null);
+  const [resultModal, setResultModal] = useState<{
+    visible: boolean;
+    variant: 'success' | 'error' | 'info';
+    title: string;
+    message?: string;
+    detail?: string;
+  }>({ visible: false, variant: 'success', title: '' });
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalDetailData | null>(null);
 
   const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
@@ -202,9 +212,42 @@ export function AdminWithdrawalsScreen() {
   async function doAction(id: string, action: 'approve' | 'reject', reason?: string) {
     setProcessingId(id);
     try {
-      await adminApi.processWithdrawal(id, { action, failureReason: reason });
-      setItems((prev) => prev.filter((w) => w.id !== id));
-      showToast(`Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`, 'success');
+      const res = await adminApi.processWithdrawal(id, { action, failureReason: reason });
+      const data = res.data as {
+        success: boolean;
+        action: string;
+        status: string;
+        pinelabsTransactionId?: string;
+        paymentFailed?: boolean;
+        errorCode?: string;
+        errorMessage?: string;
+      };
+
+      if (action === 'approve') {
+        if (data.status === 'COMPLETED') {
+          setResultModal({
+            visible: true,
+            variant: 'success',
+            title: 'Approved',
+            message: 'Withdrawal has been approved and the payout is complete.',
+            detail: data.pinelabsTransactionId ? `PineLabs Txn: ${data.pinelabsTransactionId}` : undefined,
+          });
+          setItems((prev) => prev.filter((w) => w.id !== id));
+        } else {
+          // Payout dispatch failed — stays PROCESSING, surface the error
+          setResultModal({
+            visible: true,
+            variant: 'error',
+            title: 'Payout Failed',
+            message: 'PineLabs could not process the payment. The withdrawal is held in PROCESSING state for retry.',
+            detail: data.errorMessage ?? data.errorCode ?? undefined,
+          });
+          await fetch(1, true, activeFilters);
+        }
+      } else {
+        showToast('Withdrawal rejected', 'success');
+        setItems((prev) => prev.filter((w) => w.id !== id));
+      }
     } catch (e) {
       showToast(getErrorMessage(e, `Failed to ${action}`), 'error');
     } finally {
@@ -262,7 +305,11 @@ export function AdminWithdrawalsScreen() {
   function renderItem({ item }: { item: WithdrawalItem }) {
     const statusColor = STATUS_COLORS[item.status] ?? c.textTertiary;
     return (
-      <View style={[styles.card, { backgroundColor: c.surface }]}>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: c.surface }]}
+        onPress={() => setSelectedWithdrawal(item as WithdrawalDetailData)}
+        activeOpacity={0.7}
+      >
         <View style={styles.cardTop}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.userName, { color: c.text }]}>
@@ -280,7 +327,7 @@ export function AdminWithdrawalsScreen() {
         <View style={styles.amountRow}>
           <Text style={[styles.amountLabel, { color: c.textSecondary }]}>Amount</Text>
           <Text style={[styles.amountValue, { color: c.text }]}>
-            ₹{Number(item.amount).toLocaleString('en-IN')}
+            Rs.{Number(item.amount).toLocaleString('en-IN')}
           </Text>
         </View>
 
@@ -305,7 +352,7 @@ export function AdminWithdrawalsScreen() {
               {processingId === item.id ? (
                 <ActivityIndicator size="small" color="#22c55e" />
               ) : (
-                <Text style={styles.btnApprove}>✓ Approve</Text>
+                <Text style={styles.btnApprove}>Approve</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -313,12 +360,11 @@ export function AdminWithdrawalsScreen() {
               onPress={() => handleAction(item.id, 'reject')}
               disabled={processingId === item.id}
             >
-              <Text style={styles.btnReject}>✗ Reject</Text>
+              <Text style={styles.btnReject}>Reject</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Payment action buttons for PROCESSING withdrawals */}
         {item.status === 'processing' && isSuperAdmin && (
           <View style={styles.actions}>
             <TouchableOpacity
@@ -329,7 +375,7 @@ export function AdminWithdrawalsScreen() {
               {processingId === item.id ? (
                 <ActivityIndicator size="small" color={c.warning} />
               ) : (
-                <Text style={[styles.btnRetry, { color: c.warning }]}>↻ Retry Payment</Text>
+                <Text style={[styles.btnRetry, { color: c.warning }]}>Retry Payment</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -337,12 +383,11 @@ export function AdminWithdrawalsScreen() {
               onPress={() => handleMarkFailed(item.id)}
               disabled={processingId === item.id}
             >
-              <Text style={styles.btnReject}>✗ Mark Failed</Text>
+              <Text style={styles.btnReject}>Mark Failed</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Payment info for PROCESSING / COMPLETED */}
         {item.status === 'processing' && (
           <View style={[styles.paymentInfoBox, { borderColor: c.warning + '44', backgroundColor: c.warning + '0a' }]}>
             <Ionicons name="hourglass-outline" size={13} color={c.warning} />
@@ -365,7 +410,6 @@ export function AdminWithdrawalsScreen() {
           </Text>
         )}
 
-        {/* Payout details */}
         {item.payoutDetails ? (
           <View style={[styles.payoutBox, { borderColor: c.border, backgroundColor: c.surfaceVariant }]}>
             <Text style={[styles.payoutBoxLabel, { color: c.textTertiary }]}>
@@ -374,7 +418,7 @@ export function AdminWithdrawalsScreen() {
             <Text style={[styles.payoutBoxValue, { color: c.text }]}>
               {item.payoutMethod === 'upi'
                 ? String(item.payoutDetails['upiId'] ?? item.payoutDetails['upi_id'] ?? '—')
-                : `${String(item.payoutDetails['accountNumber'] ?? item.payoutDetails['account_number'] ?? '—')} (IFSC: ${String(item.payoutDetails['ifsc'] ?? item.payoutDetails['ifscCode'] ?? '—')})`
+                : String(item.payoutDetails['accountNumber'] ?? item.payoutDetails['account_number'] ?? '—')
               }
             </Text>
           </View>
@@ -389,14 +433,27 @@ export function AdminWithdrawalsScreen() {
             <Text style={[styles.walletBtnText, { color: c.primary }]}>View Wallet</Text>
           </TouchableOpacity>
         )}
-      </View>
+      </TouchableOpacity>
     );
+  }
+
+  function handleWdStatusChange(id: string, newStatus: string) {
+    setItems((prev) => prev.filter((w) => w.id !== id));
+    setTotal((t) => Math.max(0, t - 1));
   }
 
   const countBadge = activeFilterCount();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <ResultModal
+        visible={resultModal.visible}
+        variant={resultModal.variant}
+        title={resultModal.title}
+        message={resultModal.message}
+        detail={resultModal.detail}
+        onClose={() => setResultModal((p) => ({ ...p, visible: false }))}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
@@ -456,6 +513,14 @@ export function AdminWithdrawalsScreen() {
           onClose={() => setWalletModal(null)}
         />
       )}
+
+      <WithdrawalDetailModal
+        item={selectedWithdrawal}
+        visible={!!selectedWithdrawal}
+        onClose={() => setSelectedWithdrawal(null)}
+        isSuperAdmin={isSuperAdmin}
+        onStatusChange={handleWdStatusChange}
+      />
     </SafeAreaView>
   );
 }

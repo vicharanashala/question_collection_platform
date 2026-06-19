@@ -118,7 +118,10 @@ export function getErrorMessage(err: unknown, fallback: string): string {
     // Axios AxiosError: err.response.status = HTTP status, err.response.data = body
     const e = err as { response?: { data?: { message?: string; error?: string }; message?: string; error?: string }; message?: string };
     if (e.response?.data?.error === 'ACCOUNT_LOCKED') return e.response?.data?.message ?? fallback;
-    if (e.response?.data?.message) return e.response.data.message;
+    if (e.response?.data?.message) {
+      const msg = e.response.data.message;
+      return Array.isArray(msg) ? msg[0] : msg;
+    }
     if (e.response?.message) return e.response.message;
     if (e.response?.error) return e.response.error;
     if (e.message) return e.message;
@@ -302,6 +305,9 @@ export const walletApi = {
 
   withdraw: (data: { amount: number; paymentDetailId: string }) =>
     api.post('/wallets/withdraw', data),
+
+  getWithdrawal: (withdrawalId: string) =>
+    api.get(`/wallets/withdrawals/${withdrawalId}`),
 
   cancelWithdrawal: (withdrawalId: string) =>
     api.delete(`/wallets/withdrawals/${withdrawalId}`),

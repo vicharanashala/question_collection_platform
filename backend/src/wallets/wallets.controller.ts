@@ -65,6 +65,12 @@ export class WalletsController {
     });
   }
 
+  @Get('withdrawals/:id')
+  @HttpCode(HttpStatus.OK)
+  async getWithdrawal(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.walletsService.getWithdrawal(req.user.id, id);
+  }
+
   @Get('me/withdrawals')
   @HttpCode(HttpStatus.OK)
   async getWithdrawals(

@@ -50,9 +50,11 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
   const [loadingQ, setLoadingQ] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [selectedLang, setSelectedLang] = useState('');
+  const [wd, setWd] = useState<Record<string, unknown> | null>(null);
+  const [loadingWd, setLoadingWd] = useState(false);
 
   useEffect(() => {
-    if (!tx || !visible) { setQuestion(null); return; }
+    if (!tx || !visible) { setQuestion(null); setWd(null); return; }
     // For reward transactions, fetch the referenced question
     if (tx.source === 'reward' && tx.referenceId) {
       setLoadingQ(true);
@@ -62,6 +64,16 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
         .finally(() => setLoadingQ(false));
     } else {
       setQuestion(null);
+    }
+    // For withdrawal transactions, fetch full withdrawal details
+    if (tx.source === 'withdrawal' && tx.referenceId) {
+      setLoadingWd(true);
+      walletApi.getWithdrawal(tx.referenceId as string)
+        .then((res) => setWd(res.data as Record<string, unknown>))
+        .catch(() => setWd(null))
+        .finally(() => setLoadingWd(false));
+    } else {
+      setWd(null);
     }
   }, [tx, visible]);
 
@@ -239,18 +251,103 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
               </View>
             )}
 
-            {/* Withdrawal reference */}
-            {tx.source === 'withdrawal' && tx.referenceId && (
+            {/* Withdrawal payout details */}
+            {tx.source === 'withdrawal' && (
               <View style={[txModalStyles.questionSection, { borderColor: c.border }]}>
                 <View style={txModalStyles.questionSectionHeader}>
                   <Ionicons name="cash-outline" size={16} color={c.primary} />
                   <Text style={[txModalStyles.questionSectionTitle, { color: c.text }]}>
-                    {t('wallet.withdrawalRef')}
+                    Payout Details
                   </Text>
                 </View>
-                <Text style={[txModalStyles.withdrawalId, { color: c.textSecondary }]}>
-                  ID: {tx.referenceId}
-                </Text>
+                {loadingWd ? (
+                  <ActivityIndicator size="small" color={c.primary} />
+                ) : wd ? (
+                  <View style={{ gap: tokens.spacing2 }}>
+                    {/* Payout method badge */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 }}>
+                      <View style={[txModalStyles.methodBadge, { backgroundColor: c.primary + '15' }]}>
+                        <Text style={[txModalStyles.methodBadgeText, { color: c.primary }]}>
+                          {(wd['payoutMethod'] as string)?.toUpperCase()}
+                        </Text>
+                      </View>
+                      {wd['status'] && (
+                        <View style={[{ backgroundColor: (statusColors[wd['status'] as string] ?? c.textTertiary) + '20', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 }]}>
+                          <Text style={{ fontSize: 11, fontWeight: '600', color: statusColors[wd['status'] as string] ?? c.textTertiary }}>
+                            {(wd['status'] as string)?.toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* UPI or Bank details */}
+                    {(wd['payoutMethod'] === 'upi' || wd['payoutMethod'] === 'UPI') ? (
+                      <View style={txModalStyles.payoutRow}>
+                        <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>UPI ID</Text>
+                        <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
+                          {String((wd['payoutDetails'] && (wd['payoutDetails'] as Record<string,unknown>)['upiId']) ?? '—')}
+                        </Text>
+                      </View>
+                    ) : (
+                      <>
+                        <View style={txModalStyles.payoutRow}>
+                          <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Account Number</Text>
+                          <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
+                            {String((wd['payoutDetails'] as Record<string,unknown>)?.['accountNumber'] ?? (wd['payoutDetails'] as Record<string,unknown>)?.['account_number'] ?? '—')}
+                          </Text>
+                        </View>
+                        <View style={txModalStyles.payoutRow}>
+                          <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>IFSC</Text>
+                          <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
+                            {String((wd['payoutDetails'] as Record<string,unknown>)?.['ifsc'] ?? (wd['payoutDetails'] as Record<string,unknown>)?.['ifscCode'] ?? '—')}
+                          </Text>
+                        </View>
+                        {(wd['payoutDetails'] as Record<string,unknown>)?.['bankName'] && (
+                          <View style={txModalStyles.payoutRow}>
+                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Bank</Text>
+                            <Text style={[txModalStyles.payoutValue, { color: c.text }]}>
+                              {String((wd['payoutDetails'] as Record<string,unknown>)['bankName'])}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
+
+                    {/* Rejection reason */}
+                    {wd['rejectionReason'] && (
+                      <View style={[txModalStyles.payoutRow, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+                        <Text style={[txModalStyles.payoutLabel, { color: c.error }]}>Rejection Reason</Text>
+                        <Text style={[txModalStyles.payoutValue, { color: c.error }]} selectable>
+                          {String(wd['rejectionReason'])}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Processed at */}
+                    {wd['processedAt'] && (
+                      <View style={txModalStyles.payoutRow}>
+                        <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Processed</Text>
+                        <Text style={[txModalStyles.payoutValue, { color: c.text }]}>
+                          {new Date(wd['processedAt'] as string).toLocaleString('en-IN', {
+                            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                          })}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Withdrawal ID */}
+                    <View style={txModalStyles.payoutRow}>
+                      <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Withdrawal ID</Text>
+                      <Text style={[txModalStyles.payoutValue, { color: c.text, fontSize: 11 }]} selectable>
+                        {String(wd['id'] ?? tx.referenceId)}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={{ color: c.textSecondary, fontSize: 13 }}>
+                    {tx.referenceId ? `ID: ${tx.referenceId}` : '—'}
+                  </Text>
+                )}
               </View>
             )}
           </ScrollView>
@@ -339,6 +436,11 @@ const txModalStyles = StyleSheet.create({
   questionValue: { fontSize: 14 },
   questionNA: { fontSize: 13, fontStyle: 'italic' },
   withdrawalId: { fontSize: 12, fontFamily: 'monospace' },
+  payoutRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  payoutLabel: { fontSize: 12, fontWeight: '600' },
+  payoutValue: { fontSize: 13, fontWeight: '500' },
+  methodBadge: { borderRadius: tokens.radiusSm, paddingHorizontal: 8, paddingVertical: 3 },
+  methodBadgeText: { fontSize: 10, fontWeight: '700' },
   footer: { paddingHorizontal: tokens.spacing5, paddingTop: tokens.spacing4, flexDirection: 'row', gap: tokens.spacing3, paddingBottom: tokens.spacing2 },
   footerFullWidth: { flexDirection: 'column' },
 });
@@ -579,18 +681,20 @@ export function WalletScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.title, { color: c.text }]}>{t('wallet.title')}</Text>
-          <TouchableOpacity onPress={onRefresh} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="refresh-outline" size={20} color={c.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => (navigation as any).navigate('PaymentDetails')}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: c.primary + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-              <Ionicons name="card-outline" size={15} color={c.primary} />
-              <Text style={{ color: c.primary, fontSize: 13, fontWeight: '700' }}>Payment Methods</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.spacing3 }}>
+            <TouchableOpacity onPress={onRefresh} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="refresh-outline" size={20} color={c.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => (navigation as any).navigate('PaymentDetails')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: c.primary + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+                <Ionicons name="card-outline" size={15} color={c.primary} />
+                <Text style={{ color: c.primary, fontSize: 13, fontWeight: '700' }}>Payment Methods</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ── Balance hero card ─────────────────────────────── */}
@@ -1115,4 +1219,18 @@ const confirmModalStyles = StyleSheet.create({
   btnCancelText: { fontSize: 15, fontWeight: '600' },
   btnConfirm: {},
   btnConfirmText: { fontSize: 15, fontWeight: '700' },
+
+  // Payment detail selector
+  noDetailsBox: { borderWidth: 1.5, borderRadius: tokens.radiusMd, padding: tokens.spacing3, alignItems: 'center', width: '100%' , marginBottom: tokens.spacing3 },
+  noDetailsText: { fontSize: 14, fontWeight: '700' },
+  noDetailsSub: { fontSize: 12, marginTop: 2 },
+  pdList: { width: '100%', gap: tokens.spacing2, marginBottom: tokens.spacing3 },
+  pdItem: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1.5, borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3, gap: tokens.spacing2,
+  },
+  pdValue: { fontSize: 14, fontWeight: '700' },
+  pdBank: { fontSize: 11, marginTop: 1 },
+  noVerified: { fontSize: 13, textAlign: 'center', fontStyle: 'italic', marginVertical: tokens.spacing3 },
 });

@@ -7,14 +7,13 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   TextInput,
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
-import { useToast } from '../../components/Toast';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { walletApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 
@@ -40,15 +39,17 @@ const STATUS_CONFIG: Record<PaymentDetailStatus, { label: string; color: string;
 };
 
 export function PaymentDetailsScreen() {
-  const { t } = useTheme();
+  const { theme } = useTheme();
+  const c = theme.colors;
   const navigation = useNavigation();
-  const { showToast } = useToast();
+
 
   const [details, setDetails] = useState<PaymentDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingDetail, setDeletingDetail] = useState<PaymentDetail | null>(null);
 
   // Form state
   const [payoutMethod, setPayoutMethod] = useState<'upi' | 'bank_transfer'>('upi');
@@ -59,19 +60,19 @@ export function PaymentDetailsScreen() {
   const [accountHolderName, setAccountHolderName] = useState('');
   const [bankName, setBankName] = useState('');
   const [formError, setFormError] = useState('');
-
-  const c = t.colors;
+  const [apiError, setApiError] = useState('');
 
   const fetchDetails = useCallback(async () => {
     try {
       const res = await walletApi.getPaymentDetails();
       setDetails(res.data as PaymentDetail[]);
+      setApiError('');
     } catch (e) {
-      showToast(getErrorMessage(e, 'Failed to load payment details'), 'error');
+      setApiError(getErrorMessage(e, 'Failed to load payment details'));
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, []);
 
   useEffect(() => {
     fetchDetails();
@@ -132,41 +133,34 @@ export function PaymentDetailsScreen() {
           };
       const res = await walletApi.addPaymentDetail(data);
       const result = res.data as { message: string };
-      showToast(result.message ?? 'Verification started!', 'success');
+      setApiError('');
       resetForm();
       setShowForm(false);
       await fetchDetails();
     } catch (e) {
-      showToast(getErrorMessage(e, 'Failed to add payment detail'), 'error');
+      setApiError(getErrorMessage(e, 'Failed to add payment detail'));
     } finally {
       setAdding(false);
     }
   }
 
-  async function handleDelete(id: string) {
-    Alert.alert(
-      'Delete Payment Detail',
-      'Are you sure you want to delete this payment detail?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingId(id);
-            try {
-              await walletApi.deletePaymentDetail(id);
-              showToast('Deleted', 'success');
-              await fetchDetails();
-            } catch (e) {
-              showToast(getErrorMessage(e, 'Delete failed'), 'error');
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ],
-    );
+  function handleDeletePrompt(detail: PaymentDetail) {
+    setDeletingDetail(detail);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deletingDetail) return;
+    setDeletingId(deletingDetail.id);
+    setDeletingDetail(null);
+    try {
+      await walletApi.deletePaymentDetail(deletingDetail.id);
+      setApiError('');
+      await fetchDetails();
+    } catch (e) {
+      setApiError(getErrorMessage(e, 'Delete failed'));
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   function renderDetail({ item }: { item: PaymentDetail }) {
@@ -230,7 +224,7 @@ export function PaymentDetailsScreen() {
         {isDeletable && (
           <TouchableOpacity
             style={[styles.deleteBtn, { borderColor: '#ef444430' }]}
-            onPress={() => handleDelete(item.id)}
+            onPress={() => handleDeletePrompt(item)}
             disabled={deletingId === item.id}
           >
             {deletingId === item.id ? (
@@ -268,6 +262,17 @@ export function PaymentDetailsScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Error banner */}
+        {apiError ? (
+          <View style={[styles.errorBanner, { backgroundColor: c.error + '12', borderColor: c.error + '35' }]}>
+            <Ionicons name="alert-circle-outline" size={18} color={c.error} />
+            <Text style={[styles.errorBannerText, { color: c.error }]}>{apiError}</Text>
+            <TouchableOpacity onPress={() => setApiError('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="close-circle" size={18} color={c.error} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         {/* Info banner */}
         <View style={[styles.infoBanner, { backgroundColor: c.primary + '10', borderColor: c.primary + '30' }]}>
           <Ionicons name="shield-checkmark-outline" size={18} color={c.primary} />
@@ -422,6 +427,21 @@ export function PaymentDetailsScreen() {
           />
         )}
       </ScrollView>
+
+      <ConfirmModal
+        visible={deletingDetail !== null}
+        title="Remove Payment Method"
+        message={
+          deletingDetail?.payoutMethod === 'upi'
+            ? `Remove ${deletingDetail.displayValue} from your payment methods?`
+            : `Remove ${deletingDetail?.displayValue} from your payment methods?`
+        }
+        confirmLabel="Remove"
+        variant="danger"
+        loading={deletingId !== null}
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDeletingDetail(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -439,6 +459,17 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700' },
   scroll: { flex: 1 },
   scrollContent: { padding: tokens.spacing5 },
+
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    padding: tokens.spacing3,
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    marginBottom: tokens.spacing4,
+  },
+  errorBannerText: { flex: 1, fontSize: 13, fontWeight: '600', lineHeight: 18 },
 
   infoBanner: {
     flexDirection: 'row',

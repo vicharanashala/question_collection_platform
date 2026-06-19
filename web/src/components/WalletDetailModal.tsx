@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner'
 import type { Transaction, Withdrawal } from '@/types'
 import { WithdrawalDetailModal } from '@/components/WithdrawalDetailModal'
+import { WalletAdjustModal } from '@/components/WalletAdjustModal'
 
 const TX_STATUS_COLORS: Record<string, string> = {
   pending:   'bg-warning text-white',
@@ -103,15 +104,29 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
   } | null>(null)
 
   const [adjustOpen, setAdjustOpen] = useState(false)
-  const [adjustAmount, setAdjustAmount] = useState('')
-  const [adjustReason, setAdjustReason] = useState('')
-  const [adjusting, setAdjusting] = useState(false)
   const [adjustedBalance, setAdjustedBalance] = useState<number | null>(null)
-  const [adjustError, setAdjustError] = useState('')
   const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
   const limit = 15
+
+  const fetchWalletUser = useCallback(async () => {
+    try {
+      const res = await adminApi.getUserDetail(userId)
+      const u = res.user
+      setWalletUser({
+        name: u.name ?? '—',
+        mobileNumber: u.mobileNumber ?? '—',
+        state: u.state ?? '',
+        category: u.category ?? '',
+        role: u.role ?? '',
+        verificationStatus: u.verificationStatus ?? '',
+        createdAt: u.createdAt ?? '',
+      })
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to load user details'))
+    }
+  }, [userId])
 
   const fetchTransactions = useCallback(async (page = 1) => {
     setLoadingTx(true)
@@ -175,42 +190,21 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
       setTotalWithdrawn(0)
       setWalletUser(null)
       setAdjustedBalance(null)
-      setAdjustError('')
       setAdjustOpen(false)
-      setAdjustAmount('')
-      setAdjustReason('')
       setLoadingWallet(true)
 
-      // Fetch wallet summary + first page of transactions together
+      // Fetch user details + wallet summary in parallel
+      fetchWalletUser()
       fetchTransactions(1)
       fetchWithdrawals(1).finally(() => setLoadingWallet(false))
     }
-  }, [open, userId, fetchTransactions, fetchWithdrawals])
+  }, [open, userId, fetchWalletUser, fetchTransactions, fetchWithdrawals])
 
-  async function handleAdjust() {
-    if (!adjustAmount || !adjustReason.trim()) {
-      setAdjustError('Both amount and reason are required')
-      return
-    }
-    const amount = parseFloat(adjustAmount)
-    if (isNaN(amount) || amount === 0) {
-      setAdjustError('Enter a non-zero amount (positive = credit, negative = debit)')
-      return
-    }
-    setAdjusting(true)
-    setAdjustError('')
-    try {
-      const res = await adminApi.adjustWallet(userId, { amount, reason: adjustReason.trim() })
-      setAdjustedBalance(res.newBalance)
-      setBalance(res.newBalance)
-      toast.success('Wallet adjusted successfully')
-      setAdjustOpen(false)
-      setAdjustAmount('')
-      setAdjustReason('')
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to adjust wallet'))
-    } finally {
-      setAdjusting(false)
+  function handleAdjustClose(newBalance?: number) {
+    setAdjustOpen(false)
+    if (newBalance != null) {
+      setAdjustedBalance(newBalance)
+      setBalance(newBalance)
     }
   }
 
@@ -645,52 +639,14 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
             />
           )}
 
-          {/* ── Adjustment dialog ────────────────────────── */}
-          {adjustOpen && (
-            <div className="border-t border-border-subtle mt-4 pt-4">
-              <div className="space-y-4">
-                <DialogHeader>
-                  <DialogTitle className="text-base">Adjust Wallet Balance</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Current Balance</Label>
-                    <p className="text-sm font-semibold text-foreground tabular-nums">
-                      ₹{Number(displayBalance).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Amount <span className="text-destructive">*</span></Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g. 500 (credit) or -200 (debit)"
-                      value={adjustAmount}
-                      onChange={(e) => { setAdjustAmount(e.target.value); setAdjustError('') }}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Positive = credit to wallet, Negative = debit from wallet
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Reason <span className="text-destructive">*</span></Label>
-                    <Input
-                      placeholder="e.g. Correcting erroneous reward credit"
-                      value={adjustReason}
-                      onChange={(e) => { setAdjustReason(e.target.value); setAdjustError('') }}
-                    />
-                  </div>
-                  {adjustError && <p className="text-sm text-destructive">{adjustError}</p>}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" size="sm" onClick={() => setAdjustOpen(false)}>Cancel</Button>
-                  <Button size="sm" onClick={handleAdjust} disabled={adjusting}>
-                    {adjusting ? 'Applying…' : 'Apply Adjustment'}
-                  </Button>
-                </DialogFooter>
-              </div>
-            </div>
-          )}
+          {/* ── Wallet adjust modal (portal) ──────────────── */}
+          <WalletAdjustModal
+            open={adjustOpen}
+            userId={userId}
+            userName={walletUser?.name ?? 'User'}
+            currentBalance={displayBalance}
+            onClose={handleAdjustClose}
+          />
         </div>
       </DialogContent>
     </Dialog>
