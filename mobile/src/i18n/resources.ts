@@ -354,7 +354,7 @@ const resources = {
       "question.editModeLabel": "Editing your question",
       "question.typeYourQuestion": "Type your question below",
       "question.beSpecificHint": "Be specific — more details get better answers",
-      "question.reviewHint": "Questions are mostlyreviewed within 24 hours",
+      "question.reviewHint": "Questions are mostly reviewed within 24 hours",
       "question.tapMicHint": "Tap the mic to speak your question",
       "question.mediaUploadFailed": "Failed to upload media. Please try again.",
       "question.submitFailed": "Failed to submit. Please try again.",
