@@ -208,8 +208,7 @@ export function QuestionsPage() {
       page={page}
       totalPages={totalPages}
       totalCount={apiTotal}
-      searchValue={search}
-      onSearchChange={setSearch}
+      hideSearch
       onPageChange={setPage}
       SkeletonRows={5}
       emptyMessage={emptyMessage}
