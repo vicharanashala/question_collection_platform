@@ -148,7 +148,7 @@ describe('QuestionService', () => {
         userId,
         questionText: 'Original text',
         domains: ['Insect–Pest Management'],
-        season: 'kharif',
+        season: 'Kharif',
         cropType: 'Rice',
         mediaType: MediaType.NONE,
         mediaUrls: null,

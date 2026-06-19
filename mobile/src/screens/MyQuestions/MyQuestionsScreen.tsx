@@ -53,10 +53,20 @@ const STATUS_META: Record<string, { label: string; color: string; icon: string }
 };
 
 const SEASON_LABELS: Record<string, string> = {
-  kharif: 'Kharif',
-  rabi: 'Rabi',
-  zaid: 'Zaid',
-  year_round: 'Year Round',
+  Kharif: 'Kharif',
+  Rabi: 'Rabi',
+  Zaid: 'Zaid',
+  'Pre-Kharif': 'Pre-Kharif',
+  'Post-Kharif': 'Post-Kharif',
+  'Pre-Rabi': 'Pre-Rabi',
+  'Zaid Rabi': 'Zaid Rabi',
+  Spring: 'Spring',
+  Summer: 'Summer',
+  Autumn: 'Autumn',
+  Winter: 'Winter',
+  Monsoon: 'Monsoon',
+  'Dry Season': 'Dry Season',
+  'Wet Season': 'Wet Season',
 };
 
 const MAX_VISIBLE_DOMAINS = 2;

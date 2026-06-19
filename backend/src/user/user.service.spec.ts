@@ -193,14 +193,14 @@ describe('UserService', () => {
     it('should delete existing crops and insert new ones', async () => {
       userRepo.findOne.mockResolvedValue(mockUser);
       const newCrops = [
-        { cropName: 'Wheat', season: 'rabi' },
-        { cropName: 'Rice', season: 'kharif' },
+        { cropName: 'Wheat', season: 'Rabi' },
+        { cropName: 'Rice', season: 'Kharif' },
       ];
       mockQueryRunner.manager.create.mockReturnValue({ id: 'crop-1' });
       mockQueryRunner.manager.save.mockResolvedValue([{ id: 'crop-1' }]);
       cropRepo.find.mockResolvedValue([
-        { id: 'crop-1', userId: 'user-uuid-1', cropName: 'Wheat', season: 'rabi' },
-        { id: 'crop-2', userId: 'user-uuid-1', cropName: 'Rice', season: 'kharif' },
+        { id: 'crop-1', userId: 'user-uuid-1', cropName: 'Wheat', season: 'Rabi' },
+        { id: 'crop-2', userId: 'user-uuid-1', cropName: 'Rice', season: 'Kharif' },
       ]);
 
       const result = await service.updateCropDetails('user-uuid-1', { crops: newCrops });
@@ -244,8 +244,8 @@ describe('UserService', () => {
   describe('getCropDetails', () => {
     it('should return crop details ordered by createdAt', async () => {
       const crops = [
-        { id: 'crop-1', cropName: 'Wheat', season: 'rabi' },
-        { id: 'crop-2', cropName: 'Rice', season: 'kharif' },
+        { id: 'crop-1', cropName: 'Wheat', season: 'Rabi' },
+        { id: 'crop-2', cropName: 'Rice', season: 'Kharif' },
       ];
       cropRepo.find.mockResolvedValue(crops);
 

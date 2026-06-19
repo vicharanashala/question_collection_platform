@@ -21,7 +21,6 @@ export class UpdateQuestionDto {
 
   @IsString()
   @IsOptional()
-  @IsIn(['kharif', 'rabi', 'zaid', 'year_round'])
   season?: string;
 
   @IsString()

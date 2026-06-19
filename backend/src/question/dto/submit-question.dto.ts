@@ -29,7 +29,6 @@ export class SubmitQuestionDto {
   domains: string[];
 
   @IsString()
-  @IsIn([Season.KHARIF, Season.RABI, Season.ZAID, Season.YEAR_ROUND])
   season: Season;
 
   @IsString()

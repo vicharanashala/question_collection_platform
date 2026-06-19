@@ -318,6 +318,10 @@ export class AuthService {
         throw new BadRequestException('User is already registered');
       }
 
+      if (dto.consentGiven !== true) {
+        throw new BadRequestException('Consent must be accepted to register on the platform.');
+      }
+
       // Enforce max_users_per_state from system config
       const maxPerState = await this.adminService.getConfigValue('max_users_per_state');
       const stateCount = await this.userRepo.count({

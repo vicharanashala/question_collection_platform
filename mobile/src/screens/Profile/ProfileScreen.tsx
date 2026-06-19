@@ -78,10 +78,20 @@ export function ProfileScreen() {
   const [loadingData, setLoadingData] = useState(false);
 
   const seasonLabels: Record<string, string> = {
-    kharif: t('season.kharif'),
-    rabi: t('season.rabi'),
-    zaid: t('season.zaid'),
-    year_round: t('season.year_round'),
+    Kharif: t('season.Kharif'),
+    Rabi: t('season.Rabi'),
+    Zaid: t('season.Zaid'),
+    'Pre-Kharif': t('season.Pre-Kharif'),
+    'Post-Kharif': t('season.Post-Kharif'),
+    'Pre-Rabi': t('season.Pre-Rabi'),
+    'Zaid Rabi': t('season.Zaid Rabi'),
+    Spring: t('season.Spring'),
+    Summer: t('season.Summer'),
+    Autumn: t('season.Autumn'),
+    Winter: t('season.Winter'),
+    Monsoon: t('season.Monsoon'),
+    'Dry Season': t('season.Dry Season'),
+    'Wet Season': t('season.Wet Season'),
   };
 
   function seasonLabel(raw: string | null) {

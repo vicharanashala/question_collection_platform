@@ -61,7 +61,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [district, setDistrict] = useState(preview.district);
   const [block, setBlock] = useState(preview.block ?? '');
   const [domains, setDomains] = useState<string[]>(preview.domains ?? []);
-  const [season, setSeason] = useState(preview.season);
+  const [season, setSeason] = useState(preview.season || 'Kharif');
   const [cropType, setCropType] = useState(preview.cropType ?? '');
   const [questionText, setQuestionText] = useState(preview.questionText);
   const [errors, setErrors] = useState<Record<string, string>>({});

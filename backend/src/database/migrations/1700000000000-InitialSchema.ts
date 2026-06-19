@@ -43,7 +43,7 @@ export class InitialSchema1700000000000 implements MigrationInterface {
 
     await queryRunner.query(`
       DO $$ BEGIN
-        CREATE TYPE "season_enum" AS ENUM ('kharif','rabi','zaid','year_round');
+        CREATE TYPE "season_enum" AS ENUM ('Kharif','Rabi','Zaid','Pre-Kharif','Post-Kharif','Pre-Rabi','Zaid Rabi','Spring','Summer','Autumn','Winter','Monsoon','Dry Season','Wet Season');
       EXCEPTION WHEN duplicate_object THEN null;
       END $$;
     `);

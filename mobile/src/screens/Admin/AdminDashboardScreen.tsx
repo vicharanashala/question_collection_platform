@@ -710,42 +710,106 @@ export function AdminDashboardScreen() {
               icon="card"
               themeColors={c}
             />
-            <View style={styles.rewardCard}>
-              <View style={styles.rewardTopRow}>
-                <View style={styles.rewardStat}>
-                  <Text style={[styles.rewardValue, { color: '#059669' }]}>
-                    {formatINR(rewards.totalRewarded)}
-                  </Text>
-                  <Text style={[styles.rewardLabel, { color: c.mutedForeground }]}>Total Rewarded</Text>
-                  <Text style={[styles.rewardSub, { color: c.mutedForeground }]}>
-                    {rewards.rewardCount} rewards · avg {formatINR(Math.round(rewards.avgReward))}
-                  </Text>
+
+            {/* ── Stats grid ── */}
+            <View style={[styles.rewardGrid, { backgroundColor: c.card, borderColor: c.border }]}>
+              <View style={styles.rewardGridRow}>
+                {/* Total Rewarded */}
+                <View style={styles.rewardGridCell}>
+                  <View style={[styles.rewardGridIcon, { backgroundColor: '#05966918' }]}>
+                    <Ionicons name="gift" size={14} color="#059669" />
+                  </View>
+                  <View style={styles.rewardGridTexts}>
+                    <Text style={[styles.rewardGridValue, { color: '#059669' }]}>
+                      {formatINR(rewards.totalRewarded)}
+                    </Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Total Rewarded</Text>
+                  </View>
                 </View>
-                <View style={[styles.rewardVerticalDivider, { backgroundColor: c.border }]} />
-                <View style={styles.rewardStat}>
-                  <Text style={[styles.rewardValue, { color: '#D97706' }]}>
-                    {formatINR(rewards.totalWithdrawn)}
-                  </Text>
-                  <Text style={[styles.rewardLabel, { color: c.mutedForeground }]}>Withdrawn</Text>
-                  <Text style={[styles.rewardSub, { color: c.mutedForeground }]}>
-                    {rewards.withdrawalCount} transactions
-                  </Text>
+
+                {/* Reward Count */}
+                <View style={[styles.rewardGridCell, styles.rewardGridCellBorder, { borderColor: c.border }]}>
+                  <View style={[styles.rewardGridIcon, { backgroundColor: '#0891B218' }]}>
+                    <Ionicons name="layers" size={14} color="#0891B2" />
+                  </View>
+                  <View style={styles.rewardGridTexts}>
+                    <Text style={[styles.rewardGridValue, { color: '#0891B2' }]}>
+                      {rewards.rewardCount.toLocaleString()}
+                    </Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Rewards Given</Text>
+                  </View>
                 </View>
               </View>
-              {rewards.pendingWithdrawals > 0 && (
-                <TouchableOpacity
-                  style={[styles.pendingPayoutBtn, { backgroundColor: '#D9770615' }]}
-                  onPress={() => navigation.navigate('AdminWithdrawals')}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="wallet" size={16} color="#D97706" />
-                  <Text style={[styles.pendingPayoutText, { color: '#D97706' }]}>
-                    {rewards.pendingWithdrawals} pending payout{rewards.pendingWithdrawals !== 1 ? 's' : ''}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={14} color="#D97706" />
-                </TouchableOpacity>
-              )}
+
+              <View style={[styles.rewardGridDivider, { backgroundColor: c.border }]} />
+
+              <View style={styles.rewardGridRow}>
+                {/* Avg Reward */}
+                <View style={styles.rewardGridCell}>
+                  <View style={[styles.rewardGridIcon, { backgroundColor: '#7C3AED18' }]}>
+                    <Ionicons name="analytics" size={14} color="#7C3AED" />
+                  </View>
+                  <View style={styles.rewardGridTexts}>
+                    <Text style={[styles.rewardGridValue, { color: '#7C3AED' }]}>
+                      {formatINR(Math.round(rewards.avgReward))}
+                    </Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Avg per Reward</Text>
+                  </View>
+                </View>
+
+                {/* Payouts Sent */}
+                <View style={[styles.rewardGridCell, styles.rewardGridCellBorder, { borderColor: c.border }]}>
+                  <View style={[styles.rewardGridIcon, { backgroundColor: '#D9770618' }]}>
+                    <Ionicons name="send" size={14} color="#D97706" />
+                  </View>
+                  <View style={styles.rewardGridTexts}>
+                    <Text style={[styles.rewardGridValue, { color: '#D97706' }]}>
+                      {formatINR(rewards.totalWithdrawn)}
+                    </Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Payouts Sent</Text>
+                  </View>
+                </View>
+              </View>
             </View>
+
+            {/* ── Payout ratio bar ── */}
+            <View style={[styles.payoutBarCard, { backgroundColor: c.card, borderColor: c.border }]}>
+              <View style={styles.payoutBarHeader}>
+                <Text style={[styles.payoutBarTitle, { color: c.foreground }]}>Payout Pipeline</Text>
+                <Text style={[styles.payoutBarSub, { color: c.mutedForeground }]}>
+                  {rewards.withdrawalCount} transactions
+                </Text>
+              </View>
+              <View style={styles.payoutBarTrack}>
+                <View
+                  style={[
+                    styles.payoutBarFill,
+                    {
+                      width: `${Math.min((rewards.totalWithdrawn / (rewards.totalRewarded || 1)) * 100, 100)}%`,
+                      backgroundColor: '#059669',
+                    },
+                  ]}
+                />
+              </View>
+              <View style={styles.payoutBarFooter}>
+                <Text style={[styles.payoutBarLegend, { color: '#059669' }]}>
+                  {formatINR(rewards.totalWithdrawn)} sent
+                </Text>
+                <Text style={[styles.payoutBarLegend, { color: c.mutedForeground }]}>
+                  {formatINR(rewards.totalRewarded - rewards.totalWithdrawn)} remaining
+                </Text>
+              </View>
+            </View>
+
+            {/* ── Pending payouts alert ── */}
+            {rewards.pendingWithdrawals > 0 && (
+              <View style={[styles.rewardAlert, { backgroundColor: '#D9770615', borderColor: '#D9770630' }]}>
+                <Ionicons name="alert-circle" size={15} color="#D97706" />
+                <Text style={[styles.rewardAlertText, { color: '#D97706' }]}>
+                  {rewards.pendingWithdrawals} payout{rewards.pendingWithdrawals !== 1 ? 's' : ''} awaiting approval
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -798,16 +862,7 @@ export function AdminDashboardScreen() {
             onPress={() => navigation.navigate('AdminQuestions')}
             themeColors={c}
           />
-          {user?.role !== 'curator' && (
-            <QuickCard
-              label="Withdrawals"
-              sub="Approve payouts"
-              icon="card"
-              color="#D97706"
-              onPress={() => navigation.navigate('AdminWithdrawals')}
-              themeColors={c}
-            />
-          )}
+
           {user?.role === 'super_admin' && (
             <QuickCard
               label="Config"
@@ -987,7 +1042,7 @@ const styles = StyleSheet.create({
   flaggedDot: { width: 7, height: 7, borderRadius: 3.5 },
   flaggedText: { flex: 1, fontSize: 12.5, fontWeight: '600' },
 
-  // Reward card
+  // Reward card (legacy — kept for compatibility)
   rewardCard: {
     borderRadius: tokens.radiusLg,
     borderWidth: 1,
@@ -1011,4 +1066,76 @@ const styles = StyleSheet.create({
     marginTop: tokens.spacing4,
   },
   pendingPayoutText: { flex: 1, fontSize: 13, fontWeight: '700' },
+
+  // Rewards grid (2x2 stat grid)
+  rewardGrid: {
+    borderRadius: tokens.radiusLg,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...tokens.shadowSm,
+  },
+  rewardGridRow: { flexDirection: 'row' },
+  rewardGridCell: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: tokens.spacing4,
+    gap: tokens.spacing3,
+  },
+  rewardGridCellBorder: { borderLeftWidth: 1 },
+  rewardGridDivider: { height: 1 },
+  rewardGridIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  rewardGridTexts: { flex: 1, gap: 2 },
+  rewardGridValue: { fontSize: 17, fontWeight: '800' },
+  rewardGridLabel: { fontSize: 11, fontWeight: '500' },
+
+  // Payout pipeline bar
+  payoutBarCard: {
+    borderRadius: tokens.radiusLg,
+    borderWidth: 1,
+    padding: tokens.spacing4,
+    marginTop: tokens.spacing3,
+    ...tokens.shadowSm,
+  },
+  payoutBarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: tokens.spacing3,
+  },
+  payoutBarTitle: { fontSize: 13, fontWeight: '700' },
+  payoutBarSub: { fontSize: 11 },
+  payoutBarTrack: {
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#6B728040',
+    overflow: 'hidden',
+    marginBottom: tokens.spacing2,
+  },
+  payoutBarFill: { height: '100%', borderRadius: 4 },
+  payoutBarFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  payoutBarLegend: { fontSize: 11, fontWeight: '600' },
+
+  // Alert row
+  rewardAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1,
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing4,
+    marginTop: tokens.spacing3,
+  },
+  rewardAlertText: { flex: 1, fontSize: 13, fontWeight: '600' },
 });

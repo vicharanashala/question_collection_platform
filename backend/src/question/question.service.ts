@@ -105,7 +105,7 @@ export class QuestionService {
     const question = this.questionRepo.create({
       userId,
       domains: dto.domains,
-      season: dto.season as Season,
+      season: dto.season,
       cropType: dto.cropType,
       agroClimaticZone,
       questionText: dto.questionText,
@@ -187,7 +187,7 @@ export class QuestionService {
       }
       question.domains = dto.domains;
     }
-    if (dto.season !== undefined) question.season = dto.season as Season;
+    if (dto.season !== undefined) question.season = dto.season;
     if (dto.cropType !== undefined) question.cropType = dto.cropType;
     if (dto.mediaType !== undefined) question.mediaType = dto.mediaType as MediaType;
     if (dto.mediaUrls !== undefined) question.mediaUrls = dto.mediaUrls;

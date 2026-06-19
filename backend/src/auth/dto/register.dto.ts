@@ -111,7 +111,7 @@ export class RegisterDto {
   @IsString()
   languagePreference: string; // language code e.g. 'hi', 'mr', 'ta'
 
-  @IsNotEmpty()
+  /** Must be explicitly `true` — validated again in the auth service */
   @IsBoolean()
   consentGiven: boolean;
 

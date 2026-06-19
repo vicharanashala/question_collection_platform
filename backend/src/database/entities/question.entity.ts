@@ -8,7 +8,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { QuestionStatus, MediaType, Season } from '../../common/enums';
+import { QuestionStatus, MediaType } from '../../common/enums';
 import { User } from './user.entity';
 
 @Entity('questions')
@@ -29,7 +29,7 @@ export class Question {
   domains: string[];
 
   @Column({ type: 'varchar', length: 50 })
-  season: Season;
+  season: string;
 
   @Column({ name: 'crop_type', type: 'varchar', length: 255 })
   @Index('idx_questions_crop_type')

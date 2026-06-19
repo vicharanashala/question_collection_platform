@@ -46,10 +46,23 @@ export enum MediaType {
 }
 
 export enum Season {
-  KHARIF = 'kharif',
-  RABI = 'rabi',
-  ZAID = 'zaid',
-  YEAR_ROUND = 'year_round',
+  // Indian agricultural seasons
+  KHARIF = 'Kharif',
+  RABI = 'Rabi',
+  ZAID = 'Zaid',
+  // Indian sub-seasons
+  PRE_KHARIF = 'Pre-Kharif',
+  POST_KHARIF = 'Post-Kharif',
+  PRE_RABI = 'Pre-Rabi',
+  ZAID_RABI = 'Zaid Rabi',
+  // General/global seasons
+  SPRING = 'Spring',
+  SUMMER = 'Summer',
+  AUTUMN = 'Autumn',
+  WINTER = 'Winter',
+  MONSOON = 'Monsoon',
+  DRY_SEASON = 'Dry Season',
+  WET_SEASON = 'Wet Season',
 }
 
 export enum TransactionType {

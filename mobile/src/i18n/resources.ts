@@ -538,10 +538,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -1085,10 +1095,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -1619,10 +1639,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -2153,10 +2183,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -2687,10 +2727,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -3221,10 +3271,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -4289,10 +4349,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -4823,10 +4893,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -5357,10 +5437,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -5891,10 +5981,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -6425,10 +6525,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -6959,10 +7069,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -7493,10 +7613,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -8027,10 +8157,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -8561,10 +8701,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -9095,10 +9245,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -9629,10 +9789,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -10163,10 +10333,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -10697,10 +10877,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -11231,10 +11421,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -11765,10 +11965,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -12299,10 +12509,20 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "kharif": "Kharif (Monsoon)",
-        "rabi": "Rabi (Winter)",
-        "zaid": "Zaid (Summer)",
-        "year_round": "Year Round"
+        "Kharif": "Kharif",
+        "Rabi": "Rabi",
+        "Zaid": "Zaid",
+        "Pre-Kharif": "Pre-Kharif",
+        "Post-Kharif": "Post-Kharif",
+        "Pre-Rabi": "Pre-Rabi",
+        "Zaid Rabi": "Zaid Rabi",
+        "Spring": "Spring",
+        "Summer": "Summer",
+        "Autumn": "Autumn",
+        "Winter": "Winter",
+        "Monsoon": "Monsoon",
+        "Dry Season": "Dry Season",
+        "Wet Season": "Wet Season"
       },
       "editProfile": {
         "categorySection": "Category Details",

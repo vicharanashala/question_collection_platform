@@ -61,8 +61,8 @@ describe('UserController', () => {
   describe('GET /users/me', () => {
     it('should return user profile with crop details', async () => {
       const crops = [
-        { id: 'crop-1', cropName: 'Wheat', season: 'rabi' },
-        { id: 'crop-2', cropName: 'Rice', season: 'kharif' },
+        { id: 'crop-1', cropName: 'Wheat', season: 'Rabi' },
+        { id: 'crop-2', cropName: 'Rice', season: 'Kharif' },
       ];
       userService.getProfile.mockResolvedValue(mockUser);
       userService.getCropDetails.mockResolvedValue(crops);
@@ -155,8 +155,8 @@ describe('UserController', () => {
   describe('PATCH /users/me/crops', () => {
     it('should replace crop list and return updated crops', async () => {
       const newCrops = [
-        { cropName: 'Soybean', season: 'rabi' },
-        { cropName: 'Cotton', season: 'kharif' },
+        { cropName: 'Soybean', season: 'Rabi' },
+        { cropName: 'Cotton', season: 'Kharif' },
       ];
       userService.updateCropDetails.mockResolvedValue(newCrops);
 
