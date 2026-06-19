@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,11 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
-import { INDIAN_STATES, LANGUAGES, CROP_OPTIONS } from '../../utils/constants';
+import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { lgdApi } from '../../api/client';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;
@@ -31,7 +32,6 @@ type Props = {
 
 const TOTAL_STEPS = 4;
 
-const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({ value: l.code, label: `${l.label} (${l.labelEnglish})` }));
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -52,6 +52,7 @@ const CATEGORIES = [
 
 const STEP_KEYS = ['stepCategory', 'stepLocation', 'stepDetails', 'stepLanguage'] as const;
 
+
 export function RegisterScreen({ navigation, route }: Props) {
   const { mobileNumber } = route.params;
   const { theme } = useTheme();
@@ -66,14 +67,34 @@ export function RegisterScreen({ navigation, route }: Props) {
 
   const [category, setCategory] = useState<UserCategory | ''>('');
   const [name, setName] = useState('');
-  const [state, setState] = useState('');
-  const [district, setDistrict] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedStateCode, setSelectedStateCode] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
   const [block, setBlock] = useState('');
   const [language, setLanguage] = useState('en');
+
+  // LGD reference data
+  const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
+  const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [blockList, setBlockList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingBlocks, setLoadingBlocks] = useState(false);
+
+  // Load states on mount
+  useEffect(() => {
+    setLoadingStates(true);
+    lgdApi.getStates()
+      .then((res) => setStateList(res.data.states))
+      .catch(() => setStateList([]))
+      .finally(() => setLoadingStates(false));
+  }, []);
 
   const [farmSize, setFarmSize] = useState('');
   const [cropType, setCropType] = useState('');
   const [courseName, setCourseName] = useState('');
+  const [courseNameOther, setCourseNameOther] = useState('');
   const [universityName, setUniversityName] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [role, setRole] = useState('');
@@ -82,8 +103,8 @@ export function RegisterScreen({ navigation, route }: Props) {
     const errs: Record<string, string> = {};
     if (s === 1 && !category) errs.category = t('selectCategoryRequired');
     if (s === 2) {
-      if (!state) errs.state = t('stateRequired');
-      if (!district.trim()) errs.district = t('districtRequired');
+      if (!selectedState) errs.state = t('stateRequired');
+      if (!selectedDistrict.trim()) errs.district = t('districtRequired');
     }
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
@@ -91,7 +112,8 @@ export function RegisterScreen({ navigation, route }: Props) {
         if (!cropType) errs.cropType = t('cropTypeRequired');
       }
       if (category === UserCategory.STUDENT) {
-        if (!courseName.trim()) errs.courseName = t('courseNameRequired');
+        if (!courseName) errs.courseName = t('courseNameRequired');
+        else if (courseName === '__other__' && !courseNameOther.trim()) errs.courseNameOther = t('courseNameOtherRequired');
         if (!universityName.trim()) errs.universityName = t('universityNameRequired');
       }
       if (
@@ -115,15 +137,18 @@ export function RegisterScreen({ navigation, route }: Props) {
     setLoading(true);
     const profileData: Record<string, string> = {};
     if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType; }
-    else if (category === UserCategory.STUDENT) { profileData.courseName = courseName; profileData.universityName = universityName; }
+    else if (category === UserCategory.STUDENT) {
+      profileData.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
+      profileData.universityName = universityName;
+    }
     else { profileData.organizationName = organizationName; profileData.role = role; }
 
     try {
       await register({
         name: name.trim(),
         mobileNumber,
-        state,
-        district: district.trim(),
+        state: selectedState,
+        district: selectedDistrict.trim(),
         block: block.trim() || undefined,
         category,
         languagePreference: language,
@@ -263,24 +288,60 @@ export function RegisterScreen({ navigation, route }: Props) {
                 <Select
                   label={t('state')}
                   placeholder={t('selectState')}
-                  value={state}
-                  options={stateOptions}
-                  onChange={(v) => { setState(v); setErrors({}); }}
+                  value={selectedState}
+                  options={stateList.map((s) => ({ value: s.name, label: s.name }))}
+                  onChange={async (v) => {
+                    setSelectedState(v);
+                    setSelectedStateCode(stateList.find((s) => s.name === v)?.code ?? '');
+                    setSelectedDistrict('');
+                    setSelectedDistrictCode('');
+                    setBlockList([]);
+                    setBlock('');
+                    setErrors({});
+                    setLoadingDistricts(true);
+                    try {
+                      const code = stateList.find((s) => s.name === v)?.code ?? '';
+                      const res = await lgdApi.getDistricts(code);
+                      setDistrictList(res.data.districts);
+                    } catch { setDistrictList([]); }
+                    finally { setLoadingDistricts(false); }
+                  }}
                   error={errors.state}
                   searchable
+                  loading={loadingStates}
                 />
-                <Input
+                <Select
                   label={t('district')}
-                  placeholder={t('districtPlaceholder')}
-                  value={district}
-                  onChangeText={(txt) => { setDistrict(txt); setErrors({}); }}
+                  placeholder={t('selectDistrict')}
+                  value={selectedDistrict}
+                  options={districtList.map((d) => ({ value: d.name, label: d.name }))}
+                  onChange={async (v) => {
+                    setSelectedDistrict(v);
+                    setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
+                    setBlockList([]);
+                    setBlock('');
+                    setErrors({});
+                    const code = districtList.find((d) => d.name === v)?.code ?? '';
+                    if (!code) return;
+                    setLoadingBlocks(true);
+                    try {
+                      const res = await lgdApi.getSubDistricts(code);
+                      setBlockList(res.data.subdistricts);
+                    } catch { setBlockList([]); }
+                    finally { setLoadingBlocks(false); }
+                  }}
                   error={errors.district}
+                  searchable
+                  loading={loadingDistricts}
                 />
-                <Input
+                <Select
                   label={t('blockOptional')}
-                  placeholder={t('blockPlaceholder')}
+                  placeholder={t('selectBlock')}
                   value={block}
-                  onChangeText={setBlock}
+                  options={blockList.map((b) => ({ value: b.name, label: b.name }))}
+                  onChange={setBlock}
+                  searchable
+                  loading={loadingBlocks}
                 />
                 <Button title={t('continue')} onPress={next} />
               </>
@@ -319,13 +380,24 @@ export function RegisterScreen({ navigation, route }: Props) {
                 )}
                 {category === UserCategory.STUDENT && (
                   <>
-                    <Input
+                    <Select
                       label={t('courseName')}
                       placeholder={t('courseNamePlaceholder')}
                       value={courseName}
-                      onChangeText={(txt) => { setCourseName(txt); setErrors({}); }}
+                      options={COURSE_OPTIONS}
+                      onChange={(v) => { setCourseName(v); setErrors({}); }}
                       error={errors.courseName}
+                      searchable
                     />
+                    {courseName === '__other__' && (
+                      <Input
+                        label={t('courseNameOther')}
+                        placeholder={t('courseNameOtherPlaceholder')}
+                        value={courseNameOther}
+                        onChangeText={(txt) => { setCourseNameOther(txt); setErrors({}); }}
+                        error={errors.courseNameOther}
+                      />
+                    )}
                     <Input
                       label={t('university')}
                       placeholder={t('universityNamePlaceholder')}

@@ -17,7 +17,7 @@ import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
-import { questionApi } from '../../api/client';
+import { questionApi, lgdApi } from '../../api/client';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
@@ -28,13 +28,6 @@ import { adminApi } from '../../api/client';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
-const stateOptions = [
-  'Maharashtra', 'Uttar Pradesh', 'Bihar', 'Rajasthan', 'Gujarat',
-  'Karnataka', 'Tamil Nadu', 'West Bengal', 'Punjab', 'Haryana',
-  'Madhya Pradesh', 'Chhattisgarh', 'Andhra Pradesh', 'Telangana',
-  'Kerala', 'Assam', 'Other',
-].map((s) => ({ value: s, label: s }));
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface QuestionPreviewScreenProps {
@@ -57,8 +50,10 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   }, []);
 
   // Editable form state — domains pre-filled from backend inference
-  const [state, setState] = useState(preview.state);
-  const [district, setDistrict] = useState(preview.district);
+  const [selectedState, setSelectedState] = useState(preview.state);
+  const [selectedStateCode, setSelectedStateCode] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState(preview.district);
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
   const [block, setBlock] = useState(preview.block ?? '');
   const [domains, setDomains] = useState<string[]>(preview.domains ?? []);
   const [season, setSeason] = useState(preview.season || 'Kharif');
@@ -67,12 +62,55 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+  // LGD reference data
+  const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
+  const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [blockList, setBlockList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingBlocks, setLoadingBlocks] = useState(false);
+
+  // Load states; pre-fill districts/blocks from the backend's pre-filled state/district
+  useEffect(() => {
+    setLoadingStates(true);
+    lgdApi.getStates()
+      .then((res) => {
+        setStateList(res.data.states);
+        if (preview.state) {
+          const match = res.data.states.find((s) => s.name === preview.state);
+          if (match) {
+            setSelectedStateCode(match.code);
+            return lgdApi.getDistricts(match.code);
+          }
+        }
+        return null;
+      })
+      .then((res) => {
+        if (!res) return;
+        setDistrictList(res.data.districts);
+        if (preview.district) {
+          const dm = res.data.districts.find((d: any) => d.name === preview.district);
+          if (dm) {
+            setSelectedDistrictCode(dm.code);
+            return lgdApi.getSubDistricts(dm.code);
+          }
+        }
+        return null;
+      })
+      .then((res) => {
+        if (!res) return;
+        setBlockList(res.data.subdistricts);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingStates(false));
+  }, []);
+
   // ─── Validation ─────────────────────────────────────────────────────────────
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    if (!state) errs.state = t('question.selectState');
-    if (!district.trim()) errs.district = t('question.districtPlaceholder');
+    if (!selectedState) errs.state = t('question.selectState');
+    if (!selectedDistrict.trim()) errs.district = t('question.districtPlaceholder');
     if (!domains.length) errs.domains = t('question.selectDomain');
     if (!season) errs.season = t('question.selectSeason');
     if (!cropType) errs.cropType = t('question.enterCrop');
@@ -89,8 +127,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     setLoading(true);
     try {
       const payload = {
-        state,
-        district: district.trim(),
+        state: selectedState,
+        district: selectedDistrict.trim(),
         block: block.trim() || null,
         domains,
         season,
@@ -148,26 +186,62 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* State */}
             <Select
               label={t('question.state')}
-              value={state}
-              options={stateOptions}
-              onChange={(v) => { setState(v); setErrors({}); }}
+              value={selectedState}
+              options={stateList.map((s) => ({ value: s.name, label: s.name }))}
+              onChange={async (v) => {
+                setSelectedState(v);
+                setSelectedStateCode(stateList.find((s) => s.name === v)?.code ?? '');
+                setSelectedDistrict('');
+                setSelectedDistrictCode('');
+                setBlockList([]);
+                setBlock('');
+                setErrors({});
+                setLoadingDistricts(true);
+                try {
+                  const code = stateList.find((s) => s.name === v)?.code ?? '';
+                  const res = await lgdApi.getDistricts(code);
+                  setDistrictList(res.data.districts);
+                } catch { setDistrictList([]); }
+                finally { setLoadingDistricts(false); }
+              }}
               error={errors.state}
               searchable
+              loading={loadingStates}
             />
 
-            <Input
+            <Select
               label={t('question.district')}
-              placeholder={t('question.districtPlaceholder')}
-              value={district}
-              onChangeText={(t) => { setDistrict(t); setErrors({}); }}
+              placeholder={t('selectDistrict')}
+              value={selectedDistrict}
+              options={districtList.map((d) => ({ value: d.name, label: d.name }))}
+              onChange={async (v) => {
+                setSelectedDistrict(v);
+                setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
+                setBlockList([]);
+                setBlock('');
+                setErrors({});
+                const code = districtList.find((d) => d.name === v)?.code ?? '';
+                if (!code) return;
+                setLoadingBlocks(true);
+                try {
+                  const res = await lgdApi.getSubDistricts(code);
+                  setBlockList(res.data.subdistricts);
+                } catch { setBlockList([]); }
+                finally { setLoadingBlocks(false); }
+              }}
               error={errors.district}
+              searchable
+              loading={loadingDistricts}
             />
 
-            <Input
+            <Select
               label={t('question.blockOptional')}
-              placeholder={t('question.blockPlaceholder')}
+              placeholder={t('selectBlock')}
               value={block}
-              onChangeText={setBlock}
+              options={blockList.map((b) => ({ value: b.name, label: b.name }))}
+              onChange={setBlock}
+              searchable
+              loading={loadingBlocks}
             />
 
             {/* Agro-Climatic Zone (read-only) */}

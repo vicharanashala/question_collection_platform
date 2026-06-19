@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,8 +18,8 @@ import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { userApi } from '../../api/client';
-import { INDIAN_STATES, LANGUAGES, CROP_OPTIONS } from '../../utils/constants';
+import { userApi, lgdApi } from '../../api/client';
+import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory, UserRole } from '../../types';
 
@@ -40,7 +40,6 @@ function FieldGroup({ icon, label, children, accentColor }: { icon: string; labe
   );
 }
 
-const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 const languageOptions = LANGUAGES.map((l) => ({
   value: l.code,
   label: `${l.label} (${l.labelEnglish})`,
@@ -58,14 +57,61 @@ export function EditProfileScreen({ navigation }: Props) {
   const profileData = (user as any)?.profileData ?? {};
 
   const [name, setName] = useState(user?.name ?? '');
-  const [state, setState] = useState(user?.state ?? '');
-  const [district, setDistrict] = useState(user?.district ?? '');
+  const [selectedState, setSelectedState] = useState(user?.state ?? '');
+  const [selectedStateCode, setSelectedStateCode] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState(user?.district ?? '');
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
   const [block, setBlock] = useState(user?.block ?? '');
   const [language, setLanguage] = useState(user?.languagePreference ?? 'en');
+
+  // LGD reference data
+  const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
+  const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [blockList, setBlockList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingBlocks, setLoadingBlocks] = useState(false);
+
+  // Load all states; once loaded, hydrate districts for the existing user state
+  useEffect(() => {
+    setLoadingStates(true);
+    lgdApi.getStates()
+      .then((res) => {
+        setStateList(res.data.states);
+        // If user already has a state, find its code and pre-load districts
+        if (user?.state) {
+          const match = res.data.states.find((s) => s.name === user.state);
+          if (match) {
+            setSelectedStateCode(match.code);
+            return lgdApi.getDistricts(match.code);
+          }
+        }
+        return null;
+      })
+      .then((res) => {
+        if (!res) return;
+        setDistrictList(res.data.districts);
+        if (user?.district) {
+          const dm = res.data.districts.find((d: any) => d.name === user.district);
+          if (dm) {
+            setSelectedDistrictCode(dm.code);
+            return lgdApi.getSubDistricts(dm.code);
+          }
+        }
+        return null;
+      })
+      .then((res) => {
+        if (!res) return;
+        setBlockList(res.data.subdistricts);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingStates(false));
+  }, []);
   // Category-specific — only used for non-privileged roles
   const [farmSize, setFarmSize] = useState(profileData?.farmSize ?? '');
   const [primaryCrop, setPrimaryCrop] = useState(profileData?.cropType ?? '');
   const [courseName, setCourseName] = useState(profileData?.courseName ?? '');
+  const [courseNameOther, setCourseNameOther] = useState('');
   const [universityName, setUniversityName] = useState(profileData?.universityName ?? '');
   const [organisationName, setOrganisationName] = useState(profileData?.organisationName ?? '');
   const [memberRole, setMemberRole] = useState(profileData?.memberRole ?? '');
@@ -73,11 +119,8 @@ export function EditProfileScreen({ navigation }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleNameChange = useCallback((text: string) => setName(text), []);
-  const handleDistrictChange = useCallback((text: string) => setDistrict(text), []);
-  const handleBlockChange = useCallback((text: string) => setBlock(text), []);
   const handleFarmSizeChange = useCallback((text: string) => setFarmSize(text), []);
   const handlePrimaryCropChange = useCallback((text: string) => setPrimaryCrop(text), []);
-  const handleCourseNameChange = useCallback((text: string) => setCourseName(text), []);
   const handleUniversityNameChange = useCallback((text: string) => setUniversityName(text), []);
   const handleOrganisationNameChange = useCallback((text: string) => setOrganisationName(text), []);
   const handleMemberRoleChange = useCallback((text: string) => setMemberRole(text), []);
@@ -85,12 +128,13 @@ export function EditProfileScreen({ navigation }: Props) {
   function validate() {
     const errs: Record<string, string> = {};
     if (!name.trim() || name.trim().length < 2) errs.name = t('editProfile.nameMinChars');
-    if (!state) errs.state = t('editProfile.selectState');
-    if (!district.trim()) errs.district = t('editProfile.districtRequired');
+    if (!selectedState) errs.state = t('editProfile.selectState');
+    if (!selectedDistrict.trim()) errs.district = t('editProfile.districtRequired');
 
     // Category-specific validation — skipped for privileged roles (category is null for them)
     if (!isPrivileged && user?.category === UserCategory.STUDENT) {
-      if (!courseName.trim()) errs.courseName = t('editProfile.courseNameRequired');
+      if (!courseName) errs.courseName = t('editProfile.courseNameRequired');
+      else if (courseName === '__other__' && !courseNameOther.trim()) errs.courseNameOther = t('courseNameOtherRequired');
       if (!universityName.trim()) errs.universityName = t('editProfile.universityNameRequired');
     }
     if (!isPrivileged && user?.category === UserCategory.VOLUNTEER) {
@@ -112,8 +156,8 @@ export function EditProfileScreen({ navigation }: Props) {
     try {
       const payload: Record<string, unknown> = {
         name: name.trim(),
-        state,
-        district: district.trim(),
+        state: selectedState,
+        district: selectedDistrict.trim(),
         block: block.trim() || undefined,
         languagePreference: language,
       };
@@ -124,7 +168,7 @@ export function EditProfileScreen({ navigation }: Props) {
           if (farmSize.trim()) payload.farmSize = farmSize.trim();
           if (primaryCrop.trim()) payload.cropType = primaryCrop.trim();
         } else if (user?.category === UserCategory.STUDENT) {
-          payload.courseName = courseName.trim();
+          payload.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
           payload.universityName = universityName.trim();
         } else if (user?.category === UserCategory.VOLUNTEER || user?.category === UserCategory.NGO) {
           payload.organisationName = organisationName.trim();
@@ -190,23 +234,60 @@ export function EditProfileScreen({ navigation }: Props) {
               <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                 <Select
                   label={t('question.state')}
-                  value={state}
-                  options={stateOptions}
-                  onChange={(v) => { setState(v); setErrors({}); }}
+                  value={selectedState}
+                  options={stateList.map((s) => ({ value: s.name, label: s.name }))}
+                  onChange={async (v) => {
+                    setSelectedState(v);
+                    setSelectedStateCode(stateList.find((s) => s.name === v)?.code ?? '');
+                    setSelectedDistrict('');
+                    setSelectedDistrictCode('');
+                    setBlockList([]);
+                    setBlock('');
+                    setErrors({});
+                    setLoadingDistricts(true);
+                    try {
+                      const code = stateList.find((s) => s.name === v)?.code ?? '';
+                      const res = await lgdApi.getDistricts(code);
+                      setDistrictList(res.data.districts);
+                    } catch { setDistrictList([]); }
+                    finally { setLoadingDistricts(false); }
+                  }}
                   error={errors.state}
+                  searchable
+                  loading={loadingStates}
                 />
-                <Input
+                <Select
                   label={t('question.district')}
-                  placeholder={t('editProfile.districtPlaceholder')}
-                  value={district}
-                  onChangeText={handleDistrictChange}
+                  placeholder={t('selectDistrict')}
+                  value={selectedDistrict}
+                  options={districtList.map((d) => ({ value: d.name, label: d.name }))}
+                  onChange={async (v) => {
+                    setSelectedDistrict(v);
+                    setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
+                    setBlockList([]);
+                    setBlock('');
+                    setErrors({});
+                    const code = districtList.find((d) => d.name === v)?.code ?? '';
+                    if (!code) return;
+                    setLoadingBlocks(true);
+                    try {
+                      const res = await lgdApi.getSubDistricts(code);
+                      setBlockList(res.data.subdistricts);
+                    } catch { setBlockList([]); }
+                    finally { setLoadingBlocks(false); }
+                  }}
                   error={errors.district}
+                  searchable
+                  loading={loadingDistricts}
                 />
-                <Input
+                <Select
                   label={t('question.blockOptional')}
-                  placeholder={t('question.blockPlaceholder')}
+                  placeholder={t('selectBlock')}
                   value={block}
-                  onChangeText={handleBlockChange}
+                  options={blockList.map((b) => ({ value: b.name, label: b.name }))}
+                  onChange={setBlock}
+                  searchable
+                  loading={loadingBlocks}
                 />
               </View>
             </FieldGroup>
@@ -243,13 +324,24 @@ export function EditProfileScreen({ navigation }: Props) {
             {!isPrivileged && user?.category === UserCategory.STUDENT && (
               <FieldGroup icon="school-outline" label={t('editProfile.studentDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-                  <Input
+                  <Select
                     label={t('editProfile.courseName')}
                     placeholder={t('editProfile.courseNamePlaceholder')}
                     value={courseName}
-                    onChangeText={handleCourseNameChange}
+                    options={COURSE_OPTIONS}
+                    onChange={(v) => { setCourseName(v); setErrors({}); }}
                     error={errors.courseName}
+                    searchable
                   />
+                  {courseName === '__other__' && (
+                    <Input
+                      label={t('courseNameOther')}
+                      placeholder={t('courseNameOtherPlaceholder')}
+                      value={courseNameOther}
+                      onChangeText={(txt) => { setCourseNameOther(txt); setErrors({}); }}
+                      error={errors.courseNameOther}
+                    />
+                  )}
                   <Input
                     label={t('editProfile.universityName')}
                     placeholder={t('editProfile.universityNamePlaceholder')}

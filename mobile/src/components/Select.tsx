@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TextInput, StyleSheet } from 'react-native';
+import { TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ interface SelectProps {
   onChange: (value: string) => void;
   error?: string;
   searchable?: boolean;
+  loading?: boolean;
 }
 
 export const Select = React.memo(function Select({
@@ -35,6 +36,7 @@ export const Select = React.memo(function Select({
   onChange,
   error,
   searchable = false,
+  loading = false,
 }: SelectProps) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -85,7 +87,11 @@ export const Select = React.memo(function Select({
         >
           {selected?.label ?? placeholder}
         </Text>
-        <Text style={[styles.arrow, { color: c.textSecondary }]}>▼</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color={c.primary} />
+        ) : (
+          <Text style={[styles.arrow, { color: c.textSecondary }]}>▼</Text>
+        )}
       </TouchableOpacity>
       {error && (
         <Text style={[styles.error, { color: c.error }]}>{error}</Text>

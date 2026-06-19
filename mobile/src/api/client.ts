@@ -389,4 +389,22 @@ export const analyticsApi = {
     api.get('/analytics/rewards', { params }),
 };
 
+export const lgdApi = {
+  /** List all states from LGD */
+  getStates: () =>
+    api.get<{ states: { code: string; name: string }[] }>('/lgd/states'),
+
+  /** List districts for a given LGD state_code */
+  getDistricts: (stateCode: string) =>
+    api.get<{ districts: { code: string; name: string; stateCode: string }[] }>('/lgd/districts', {
+      params: { stateCode },
+    }),
+
+  /** List sub-districts (blocks) for a given LGD district_code */
+  getSubDistricts: (districtCode: string) =>
+    api.get<{ subdistricts: { code: string; name: string; districtCode: string }[] }>('/lgd/subdistricts', {
+      params: { districtCode },
+    }),
+};
+
 export default api;
