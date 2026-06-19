@@ -4,7 +4,6 @@
  * withdrawal history tabs. Super admins can also manually adjust balance.
  */
 import { useState, useEffect, useCallback } from 'react'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -19,10 +18,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatDate } from '@/lib/utils'
 import {
   Wallet, ArrowUpRight, ArrowDownRight,
-  RefreshCw, TrendingUp, TrendingDown, Clock, Hash, X, Eye,
+  RefreshCw, TrendingUp, TrendingDown, Clock, Hash, X, Eye, XCircle,
+  CreditCard, Banknote, ArrowRightLeft, User,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { WalletSummary, Transaction, Withdrawal } from '@/types'
+import type { Transaction, Withdrawal } from '@/types'
 import { WithdrawalDetailModal } from '@/components/WithdrawalDetailModal'
 
 const TX_STATUS_COLORS: Record<string, string> = {
@@ -37,7 +37,7 @@ const TX_SOURCE_LABELS: Record<string, string> = {
   reward:     'Reward',
   withdrawal: 'Withdrawal',
   refund:     'Refund',
-  adjustment: 'Adjustment',
+  adjustment: 'Manual Adjustment',
 }
 
 const TX_TYPE_COLORS: Record<string, string> = {
@@ -47,7 +47,7 @@ const TX_TYPE_COLORS: Record<string, string> = {
 
 const WD_STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
-  processing: 'bg-ai_review text-white',
+  processing: 'bg-blue-500 text-white',
   completed:  'bg-success text-white',
   rejected:   'bg-destructive text-white',
   cancelled:  'bg-muted text-muted-foreground',
@@ -65,11 +65,15 @@ interface WalletDetailModalProps {
   userId: string
   open: boolean
   onClose: () => void
-  /** Pre-load a wallet summary so the header shows immediately while data loads */
-  summary?: Pick<WalletSummary, 'id' | 'userId' | 'balance' | 'totalEarned' | 'totalWithdrawn' | 'user'>
 }
 
-export function WalletDetailModal({ userId, open, onClose, summary }: WalletDetailModalProps) {
+interface TxSummary {
+  totalTransactions: number
+  totalCredits: number
+  totalDebits: number
+}
+
+export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalProps) {
   const { user: currentUser } = useAuth()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
@@ -78,9 +82,26 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
   const [wdPage, setWdPage] = useState(1)
   const [loadingTx, setLoadingTx] = useState(false)
   const [loadingWd, setLoadingWd] = useState(false)
+  const [loadingWallet, setLoadingWallet] = useState(false)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
   const [wdTotal, setWdTotal] = useState(0)
+  const [txSummary, setTxSummary] = useState<TxSummary>({ totalTransactions: 0, totalCredits: 0, totalDebits: 0 })
+
+  // Wallet summary (fetched from first tx response — contains balance info)
+  const [balance, setBalance] = useState(0)
+  const [totalEarned, setTotalEarned] = useState(0)
+  const [totalWithdrawn, setTotalWithdrawn] = useState(0)
+  const [walletUser, setWalletUser] = useState<{
+    name: string
+    mobileNumber: string
+    state: string
+    category: string
+    role: string
+    verificationStatus: string
+    createdAt: string
+  } | null>(null)
+
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [adjustAmount, setAdjustAmount] = useState('')
   const [adjustReason, setAdjustReason] = useState('')
@@ -90,14 +111,32 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
   const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
-  const limit = 10
+  const limit = 15
 
   const fetchTransactions = useCallback(async (page = 1) => {
     setLoadingTx(true)
     try {
       const res = await adminApi.getUserTransactions(userId, { page, limit })
-      setTransactions(page === 1 ? res.items : (prev) => [...prev, ...res.items])
+      setTxSummary(res.summary)
+      if (page === 1) {
+        setTransactions(res.items)
+      } else {
+        setTransactions((prev) => [...prev, ...res.items])
+      }
       setTxPage(page)
+
+      // On first load, extract user info from the first transaction's referenceId
+      // and set balance from balanceAfter of the most recent transaction
+      if (page === 1 && res.items.length > 0) {
+        const latest = res.items.reduce(( newest, tx) =>
+          new Date(tx.createdAt) > new Date(newest.createdAt) ? tx : newest, res.items[0])
+        if (latest.balanceAfter != null) {
+          setBalance(latest.balanceAfter)
+        }
+        // Estimate earned from totalCredits — totalDebits (net)
+        setTotalEarned(res.summary.totalCredits)
+        setTotalWithdrawn(res.summary.totalDebits)
+      }
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to load transactions'))
     } finally {
@@ -109,7 +148,11 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
     setLoadingWd(true)
     try {
       const res = await adminApi.getUserWithdrawals(userId, { page, limit })
-      setWithdrawals(page === 1 ? res.items : (prev) => [...prev, ...res.items])
+      if (page === 1) {
+        setWithdrawals(res.items)
+      } else {
+        setWithdrawals((prev) => [...prev, ...res.items])
+      }
       setWdTotal(res.total)
       setWdPage(page)
     } catch (e) {
@@ -127,13 +170,20 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
       setTransactions([])
       setWithdrawals([])
       setWdTotal(0)
+      setBalance(0)
+      setTotalEarned(0)
+      setTotalWithdrawn(0)
+      setWalletUser(null)
       setAdjustedBalance(null)
       setAdjustError('')
       setAdjustOpen(false)
       setAdjustAmount('')
       setAdjustReason('')
+      setLoadingWallet(true)
+
+      // Fetch wallet summary + first page of transactions together
       fetchTransactions(1)
-      fetchWithdrawals(1)
+      fetchWithdrawals(1).finally(() => setLoadingWallet(false))
     }
   }, [open, userId, fetchTransactions, fetchWithdrawals])
 
@@ -152,6 +202,7 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
     try {
       const res = await adminApi.adjustWallet(userId, { amount, reason: adjustReason.trim() })
       setAdjustedBalance(res.newBalance)
+      setBalance(res.newBalance)
       toast.success('Wallet adjusted successfully')
       setAdjustOpen(false)
       setAdjustAmount('')
@@ -163,114 +214,186 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
     }
   }
 
-  const balance = adjustedBalance ?? summary?.balance ?? 0
-  const totalEarned = summary?.totalEarned ?? 0
-  const totalWithdrawn = summary?.totalWithdrawn ?? 0
-  const user = summary?.user
-  const totalTxCount = transactions.length
-
-  useEffect(() => { console.log('[WalletDetailModal] render:', { open, userId }) }, [open, userId])
+  const displayBalance = adjustedBalance ?? balance
+  const isLoading = loadingTx && transactions.length === 0
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 dark:bg-black/70 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 flex flex-col w-full max-w-6xl translate-x-[-50%] translate-y-[-50%] gap-4 border border-border-subtle bg-surface p-6 shadow-lg rounded-lg text-text data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 overflow-hidden max-h-[90vh]">
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus disabled:pointer-events-none">
-            <X className="h-4 w-4 text-text-tertiary" />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-
-        {/* ── Header ─────────────────────────────────────────────────── */}
-        <DialogHeader className="w-full px-6 pt-6 pb-4 border-b border-border-subtle shrink-0">
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-6xl p-0 gap-0 overflow-hidden" style={{ maxHeight: '90vh' }}>
+        <DialogHeader className="px-6 py-4 border-b border-border-subtle shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl font-bold">
               <Wallet className="h-5 w-5 text-primary" />
               Wallet Details
+              {walletUser && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  · {walletUser.name}
+                </span>
+              )}
             </DialogTitle>
           </div>
         </DialogHeader>
 
-        {/* ── Body: 2-column layout ─────────────────────────────────── */}
-        <div className="flex w-full min-h-0 flex-1">
-
-          {/* ── Left panel: user + balance summary ─────────────────── */}
-          <div className="w-72 shrink-0 border-r border-border-subtle overflow-y-auto p-5 space-y-5">
+        <div className="flex overflow-hidden" style={{ height: 'calc(90vh - 81px)' }}>
+          {/* ── Left panel ─────────────────────────────── */}
+          <div className="w-72 shrink-0 border-r border-border-subtle overflow-y-auto p-5 space-y-4 bg-muted/20">
 
             {/* User card */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold uppercase shrink-0">
-                  {user?.name ? user.name.charAt(0) : '?'}
+                  {walletUser?.name ? walletUser.name.charAt(0) : (loadingWallet ? '' : '?')}
+                  {isLoading && <Skeleton className="h-10 w-10 rounded-full" />}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-text truncate">{user?.name ?? '—'}</p>
-                  <p className="text-sm text-text-secondary">{user?.mobileNumber ?? '—'}</p>
+                  {isLoading ? (
+                    <>
+                      <Skeleton className="h-4 w-28 mb-1" />
+                      <Skeleton className="h-3 w-20" />
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-foreground truncate">{walletUser?.name ?? '—'}</p>
+                      <p className="text-sm text-muted-foreground font-mono">{walletUser?.mobileNumber ?? '—'}</p>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                {user?.category && <Badge variant="secondary" className="text-xs">{user.category}</Badge>}
-                {user?.role && <Badge variant="secondary" className="text-xs capitalize">{user.role}</Badge>}
-                {user?.verificationStatus && (
-                  <Badge className={cn('text-xs capitalize', VERIFICATION_COLORS[user.verificationStatus] ?? 'bg-muted')}>
-                    {user.verificationStatus}
-                  </Badge>
-                )}
-              </div>
+              {!isLoading && walletUser && (
+                <div className="flex flex-wrap gap-1.5">
+                  {walletUser.category && (
+                    <Badge variant="secondary" className="text-xs">{walletUser.category}</Badge>
+                  )}
+                  {walletUser.role && (
+                    <Badge variant="secondary" className="text-xs capitalize">{walletUser.role}</Badge>
+                  )}
+                  {walletUser.verificationStatus && (
+                    <Badge className={cn('text-xs capitalize', VERIFICATION_COLORS[walletUser.verificationStatus] ?? 'bg-muted')}>
+                      {walletUser.verificationStatus}
+                    </Badge>
+                  )}
+                </div>
+              )}
 
-              {user?.state && (
-                <p className="text-xs text-text-tertiary">
-                  {user.state}
+              {!isLoading && walletUser?.state && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span>{walletUser.state}</span>
                 </p>
               )}
-              {user?.createdAt && (
-                <p className="text-xs text-text-tertiary">
-                  Joined {formatDate(user.createdAt) ?? new Date(user.createdAt).toLocaleDateString('en-IN')}
+              {!isLoading && walletUser?.createdAt && (
+                <p className="text-xs text-muted-foreground">
+                  Joined {formatDate(walletUser.createdAt) ?? new Date(walletUser.createdAt).toLocaleDateString('en-IN')}
                 </p>
               )}
             </div>
 
             {/* Balance card */}
-            <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
-              <p className="text-xs text-text-secondary uppercase tracking-wider">Current Balance</p>
-              <p className="text-4xl font-extrabold text-primary tabular-nums leading-none">
-                ₹{Number(balance).toLocaleString('en-IN')}
-              </p>
-              <div className="space-y-1.5 pt-2 border-t border-border-subtle">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Balance</p>
+              {isLoading ? (
+                <Skeleton className="h-10 w-36" />
+              ) : (
+                <p className="text-4xl font-extrabold text-primary tabular-nums leading-none">
+                  ₹{Number(displayBalance).toLocaleString('en-IN')}
+                </p>
+              )}
+              <div className="space-y-2 pt-2 border-t border-border-subtle">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1 text-text-secondary">
-                    <TrendingUp className="h-3 w-3 text-success" /> Total Earned
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <ArrowDownRight className="h-3.5 w-3.5 text-success" />
+                    Total Earned
                   </span>
-                  <span className="font-semibold text-success tabular-nums">
-                    ₹{Number(totalEarned).toLocaleString('en-IN')}
-                  </span>
+                  {isLoading ? (
+                    <Skeleton className="h-3 w-16" />
+                  ) : (
+                    <span className="font-semibold text-success tabular-nums">
+                      ₹{Number(totalEarned).toLocaleString('en-IN')}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1 text-text-secondary">
-                    <TrendingDown className="h-3 w-3 text-destructive" /> Total Withdrawn
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <ArrowUpRight className="h-3.5 w-3.5 text-destructive" />
+                    Total Withdrawn
                   </span>
-                  <span className="font-semibold text-destructive tabular-nums">
-                    ₹{Number(totalWithdrawn).toLocaleString('en-IN')}
-                  </span>
+                  {isLoading ? (
+                    <Skeleton className="h-3 w-16" />
+                  ) : (
+                    <span className="font-semibold text-destructive tabular-nums">
+                      ₹{Number(totalWithdrawn).toLocaleString('en-IN')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Stats grid */}
+            {/* Stats */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-border bg-surface p-3 text-center">
-                <p className="text-xs text-text-secondary mb-1">Transactions</p>
-                <p className="text-2xl font-bold text-text">{totalTxCount}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-surface p-3 text-center">
-                <p className="text-xs text-text-secondary mb-1">Withdrawals</p>
-                <p className="text-2xl font-bold text-text">{wdTotal}</p>
-              </div>
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-16 w-full rounded-xl" />
+                  <Skeleton className="h-16 w-full rounded-xl" />
+                </>
+              ) : (
+                <>
+                  <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Transactions</p>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground tabular-nums">
+                      {txSummary.totalTransactions}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <Banknote className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Withdrawals</p>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground tabular-nums">{wdTotal}</p>
+                  </div>
+                </>
+              )}
             </div>
+
+            {/* Net summary */}
+            {!isLoading && (
+              <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Net Flow</p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <ArrowDownRight className="h-3 w-3 text-success" /> Credits
+                    </span>
+                    <span className="text-xs font-semibold text-success tabular-nums">
+                      +₹{Number(txSummary.totalCredits).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <ArrowUpRight className="h-3 w-3 text-destructive" /> Debits
+                    </span>
+                    <span className="text-xs font-semibold text-destructive tabular-nums">
+                      -₹{Number(txSummary.totalDebits).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border-subtle pt-1.5">
+                    <span className="text-xs font-medium text-foreground">Net</span>
+                    <span className={cn(
+                      'text-xs font-bold tabular-nums',
+                      txSummary.totalCredits - txSummary.totalDebits >= 0 ? 'text-success' : 'text-destructive',
+                    )}>
+                      {txSummary.totalCredits - txSummary.totalDebits >= 0 ? '+' : ''}
+                      ₹{(txSummary.totalCredits - txSummary.totalDebits).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Adjust button */}
-            {isSuperAdmin && (
+            {isSuperAdmin && !isLoading && (
               <Button
                 variant="outline"
                 onClick={() => setAdjustOpen(true)}
@@ -282,8 +405,8 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
             )}
           </div>
 
-          {/* ── Right panel: transaction / withdrawal history ───────── */}
-          <div className="flex-1 min-w-0 flex flex-col min-h-0 p-5">
+          {/* ── Right panel ────────────────────────────── */}
+          <div className="flex-1 min-w-0 flex flex-col overflow-hidden p-5">
             <Tabs
               value={txTab}
               onValueChange={(v) => setTxTab(v as 'transactions' | 'withdrawals')}
@@ -291,88 +414,106 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
             >
               <TabsList className="grid w-full grid-cols-2 shrink-0">
                 <TabsTrigger value="transactions" className="gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
+                  <ArrowRightLeft className="h-3.5 w-3.5" />
                   Transactions
-                  {transactions.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">{transactions.length}</Badge>
+                  {!isLoading && txSummary.totalTransactions > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 text-xs">
+                      {txSummary.totalTransactions}
+                    </Badge>
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="withdrawals" className="gap-1.5">
-                  <Hash className="h-3.5 w-3.5" />
+                  <Banknote className="h-3.5 w-3.5" />
                   Withdrawals
                   {wdTotal > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">{wdTotal}</Badge>
+                    <Badge variant="secondary" className="ml-1.5 text-xs">{wdTotal}</Badge>
                   )}
                 </TabsTrigger>
               </TabsList>
 
-              {/* ── Transactions table ────────────────────────────── */}
+              {/* ── Transactions tab ────────────────────── */}
               <TabsContent value="transactions" className="flex flex-col flex-1 min-h-0 mt-3">
-                <div className="rounded-lg border border-border overflow-hidden flex flex-col flex-1 min-h-0 h-full">
-                  {/* Table header */}
-                  <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-text-secondary uppercase tracking-wider shrink-0">
+                <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1 min-h-0">
+                  <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
                     <span className="w-8 text-center">#</span>
                     <span>Details</span>
                     <span>Type</span>
                     <span className="text-right">Amount</span>
                     <span>Status</span>
                   </div>
-                  {/* Table body */}
                   <div className="overflow-y-auto flex-1">
-                    {loadingTx && transactions.length === 0 ? (
+                    {isLoading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center">
+                        <div key={i} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-3.5 border-t border-border-subtle items-center">
                           <Skeleton className="h-3 w-4" />
-                          <Skeleton className="h-3 w-full max-w-32" />
-                          <Skeleton className="h-3 w-16" />
+                          <div className="space-y-1.5">
+                            <Skeleton className="h-3 w-full max-w-36" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                          <Skeleton className="h-3 w-14" />
                           <Skeleton className="h-3 w-16 ml-auto" />
                           <Skeleton className="h-5 w-20" />
                         </div>
                       ))
                     ) : transactions.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-text-tertiary">
-                        <Clock className="h-10 w-10 mb-3 opacity-30" />
-                        <p className="text-sm font-medium">No transactions yet</p>
+                      <div className="flex flex-col items-center justify-center py-20 gap-2">
+                        <ArrowRightLeft className="h-10 w-10 text-muted-foreground/30" />
+                        <p className="text-sm font-medium text-muted-foreground">No transactions yet</p>
                       </div>
                     ) : (
                       transactions.map((tx, idx) => (
                         <div
                           key={tx.id}
-                          className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-surface-variant/40 transition-colors"
+                          className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
                         >
-                          <span className="text-xs text-text-tertiary w-8 text-center tabular-nums">
+                          <span className="text-xs text-muted-foreground w-8 text-center tabular-nums">
                             {(txPage - 1) * limit + idx + 1}
                           </span>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-text truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {TX_SOURCE_LABELS[tx.source] ?? tx.source}
                             </p>
-                            <p className="text-xs text-text-secondary truncate">{tx.description ?? '—'}</p>
-                            {tx.status === 'rejected' && tx.rejectionReason && (
-                              <p className="text-xs text-destructive mt-0.5" title={tx.rejectionReason}>
-                                Reason: {tx.rejectionReason}
+                            <p className="text-xs text-muted-foreground truncate">
+                              {tx.description ?? '—'}
+                            </p>
+                            {tx.rejectionReason && (
+                              <p className="text-xs text-destructive font-medium mt-0.5 flex items-center gap-1">
+                                <XCircle className="h-3 w-3 shrink-0" />
+                                {tx.rejectionReason}
                               </p>
                             )}
-                            <p className="text-xs text-text-tertiary mt-0.5">
+                            <p className="text-xs text-muted-foreground/70 mt-0.5">
                               {formatDate(tx.createdAt) ?? new Date(tx.createdAt).toLocaleDateString('en-IN')}
                             </p>
+                            {tx.referenceId && (
+                              <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
+                                Ref: {tx.referenceId}
+                              </p>
+                            )}
                           </div>
-                          <div className={cn('flex items-center gap-1 text-xs font-semibold', TX_TYPE_COLORS[tx.type] ?? 'text-text')}>
+                          <div className={cn('flex items-center gap-1 text-xs font-semibold', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                             {tx.type === 'credit'
                               ? <ArrowDownRight className="h-3.5 w-3.5 shrink-0" />
                               : <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
                             }
                             <span className="capitalize">{tx.type}</span>
                           </div>
-                          <p className={cn('text-sm font-bold tabular-nums text-right', TX_TYPE_COLORS[tx.type] ?? 'text-text')}>
+                          <p className={cn('text-sm font-bold tabular-nums text-right', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                             {tx.type === 'credit' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
                           </p>
-                          <span className={cn(
-                            'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize shrink-0',
-                            TX_STATUS_COLORS[tx.status] ?? 'bg-muted',
-                          )}>
-                            {tx.status}
-                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className={cn(
+                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
+                              TX_STATUS_COLORS[tx.status] ?? 'bg-muted',
+                            )}>
+                              {tx.status}
+                            </span>
+                            {tx.balanceAfter != null && (
+                              <span className="text-[10px] text-muted-foreground tabular-nums">
+                                → ₹{Number(tx.balanceAfter).toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ))
                     )}
@@ -380,27 +521,29 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
                 </div>
                 {loadingTx && transactions.length > 0 && (
                   <div className="flex justify-center py-2">
-                    <RefreshCw className="h-4 w-4 animate-spin text-text-tertiary" />
+                    <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 )}
-                <div className="flex justify-end mt-2 shrink-0">
-                  <Button
-                    variant="outline" size="sm" className="text-xs"
-                    onClick={() => fetchTransactions(txPage + 1)}
-                    disabled={loadingTx}
-                  >
-                    {loadingTx ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : null}
-                    Load More
-                  </Button>
-                </div>
+                {!isLoading && transactions.length > 0 && (
+                  <div className="flex justify-end mt-2 shrink-0">
+                    <Button
+                      variant="outline" size="sm" className="text-xs"
+                      onClick={() => fetchTransactions(txPage + 1)}
+                      disabled={loadingTx}
+                    >
+                      {loadingTx ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : null}
+                      Load More
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
-              {/* ── Withdrawals table ─────────────────────────────── */}
+              {/* ── Withdrawals tab ─────────────────────── */}
               <TabsContent value="withdrawals" className="flex flex-col flex-1 min-h-0 mt-3">
-                <div className="rounded-lg border border-border overflow-hidden flex flex-col flex-1 min-h-0 h-full">
-                  <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-text-secondary uppercase tracking-wider shrink-0">
-                    <span>Request</span>
-                    <span>Payout</span>
+                <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+                    <span>Request ID</span>
+                    <span>Payout Method</span>
                     <span className="text-right">Amount</span>
                     <span>Status</span>
                     <span className="text-center">Details</span>
@@ -408,65 +551,61 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
                   <div className="overflow-y-auto flex-1">
                     {loadingWd && withdrawals.length === 0 ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center">
+                        <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3.5 border-t border-border-subtle items-center">
                           <Skeleton className="h-3 w-28" />
                           <Skeleton className="h-3 w-20" />
                           <Skeleton className="h-3 w-16 ml-auto" />
                           <Skeleton className="h-5 w-20" />
-                          <Skeleton className="h-5 w-10 mx-auto" />
+                          <Skeleton className="h-5 w-8 mx-auto" />
                         </div>
                       ))
                     ) : withdrawals.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-text-tertiary">
-                        <Hash className="h-10 w-10 mb-3 opacity-30" />
-                        <p className="text-sm font-medium">No withdrawals yet</p>
+                      <div className="flex flex-col items-center justify-center py-20 gap-2">
+                        <Banknote className="h-10 w-10 text-muted-foreground/30" />
+                        <p className="text-sm font-medium text-muted-foreground">No withdrawals yet</p>
                       </div>
                     ) : (
                       withdrawals.map((wd) => (
                         <div
                           key={wd.id}
-                          className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-surface-variant/40 transition-colors"
+                          className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-mono text-text-tertiary truncate">{wd.id}</p>
-                            <p className="text-xs text-text-tertiary mt-0.5">
+                            <p className="text-xs font-mono text-muted-foreground truncate">{wd.id}</p>
+                            <p className="text-xs text-muted-foreground/70 mt-0.5">
                               {formatDate(wd.createdAt) ?? new Date(wd.createdAt).toLocaleDateString('en-IN')}
                             </p>
                             {wd.processedAt && (
-                              <p className="text-xs text-text-tertiary">
+                              <p className="text-xs text-muted-foreground/70">
                                 Processed {formatDate(wd.processedAt)}
                               </p>
                             )}
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-text capitalize">{wd.payoutMethod}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground capitalize flex items-center gap-1.5">
+                              <CreditCard className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              {wd.payoutMethod}
+                            </p>
                             {wd.payoutDetails && typeof wd.payoutDetails === 'object' && (
-                              <p className="text-xs text-text-secondary truncate">
-                                {JSON.stringify(wd.payoutDetails)}
+                              <p className="text-xs text-muted-foreground truncate">
+                                {Object.values(wd.payoutDetails as Record<string, unknown>).filter(Boolean).join(' · ') || '—'}
                               </p>
                             )}
                           </div>
-                          <p className="text-sm font-bold text-text tabular-nums text-right">
+                          <p className="text-sm font-bold text-foreground tabular-nums text-right">
                             ₹{Number(wd.amount).toLocaleString('en-IN')}
                           </p>
-                          <div className="flex flex-col items-end gap-1">
-                            <span className={cn(
-                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize shrink-0',
-                              WD_STATUS_COLORS[wd.status] ?? 'bg-muted',
-                            )}>
-                              {wd.status}
-                            </span>
-                            {wd.rejectionReason && (
-                              <p className="text-xs text-destructive max-w-32 truncate" title={wd.rejectionReason}>
-                                {wd.rejectionReason}
-                              </p>
-                            )}
-                          </div>
+                          <span className={cn(
+                            'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize shrink-0',
+                            WD_STATUS_COLORS[wd.status] ?? 'bg-muted',
+                          )}>
+                            {wd.status}
+                          </span>
                           <div className="flex items-center justify-center">
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 px-2 text-text-secondary hover:text-primary"
+                              className="h-6 px-2 text-muted-foreground hover:text-primary"
                               onClick={() => {
                                 setDetailTarget(wd)
                                 setDetailOpen(true)
@@ -480,7 +619,7 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
                     )}
                   </div>
                 </div>
-                {wdTotal > withdrawals.length && (
+                {wdTotal > withdrawals.length && !isLoading && (
                   <div className="flex justify-end mt-2 shrink-0">
                     <Button
                       variant="outline" size="sm" className="text-xs"
@@ -495,61 +634,65 @@ export function WalletDetailModal({ userId, open, onClose, summary }: WalletDeta
               </TabsContent>
             </Tabs>
           </div>
-        </div>
 
-        {/* ── Adjustment dialog ─────────────────────────────────────── */}
-        <Dialog open={adjustOpen} onOpenChange={(o: boolean) => !o && setAdjustOpen(false)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Adjust Wallet Balance</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Current Balance</Label>
-                <p className="text-sm font-semibold text-text">₹{Number(balance).toLocaleString('en-IN')}</p>
+          {/* ── Withdrawal detail modal (portal) ──────────────────── */}
+          {detailTarget && (
+            <WithdrawalDetailModal
+              withdrawal={detailTarget}
+              open={detailOpen}
+              readOnly
+              onClose={() => { setDetailOpen(false); setDetailTarget(null) }}
+            />
+          )}
+
+          {/* ── Adjustment dialog ────────────────────────── */}
+          {adjustOpen && (
+            <div className="border-t border-border-subtle mt-4 pt-4">
+              <div className="space-y-4">
+                <DialogHeader>
+                  <DialogTitle className="text-base">Adjust Wallet Balance</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Current Balance</Label>
+                    <p className="text-sm font-semibold text-foreground tabular-nums">
+                      ₹{Number(displayBalance).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Amount <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g. 500 (credit) or -200 (debit)"
+                      value={adjustAmount}
+                      onChange={(e) => { setAdjustAmount(e.target.value); setAdjustError('') }}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Positive = credit to wallet, Negative = debit from wallet
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Reason <span className="text-destructive">*</span></Label>
+                    <Input
+                      placeholder="e.g. Correcting erroneous reward credit"
+                      value={adjustReason}
+                      onChange={(e) => { setAdjustReason(e.target.value); setAdjustError('') }}
+                    />
+                  </div>
+                  {adjustError && <p className="text-sm text-destructive">{adjustError}</p>}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" size="sm" onClick={() => setAdjustOpen(false)}>Cancel</Button>
+                  <Button size="sm" onClick={handleAdjust} disabled={adjusting}>
+                    {adjusting ? 'Applying…' : 'Apply Adjustment'}
+                  </Button>
+                </DialogFooter>
               </div>
-              <div className="space-y-1.5">
-                <Label>Amount <span className="text-destructive">*</span></Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="e.g. 500 or -200"
-                  value={adjustAmount}
-                  onChange={(e) => { setAdjustAmount(e.target.value); setAdjustError('') }}
-                />
-                <p className="text-xs text-text-tertiary">Positive = credit (add money), Negative = debit (deduct)</p>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Reason <span className="text-destructive">*</span></Label>
-                <Input
-                  placeholder="e.g. Correcting erroneous reward credit"
-                  value={adjustReason}
-                  onChange={(e) => { setAdjustReason(e.target.value); setAdjustError('') }}
-                />
-              </div>
-              {adjustError && <p className="text-sm text-destructive">{adjustError}</p>}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAdjustOpen(false)}>Cancel</Button>
-              <Button onClick={handleAdjust} disabled={adjusting}>
-                {adjusting ? 'Applying…' : 'Apply Adjustment'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-      {/* Withdrawal detail modal — read-only for user-side viewing */}
-      {detailTarget && (
-        <WithdrawalDetailModal
-          withdrawal={detailTarget}
-          open={detailOpen}
-          readOnly
-          onClose={() => { setDetailOpen(false); setDetailTarget(null) }}
-        />
-      )}
-
-    </DialogPrimitive.Content>
-  </DialogPrimitive.Portal>
-</DialogPrimitive.Root>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -1,4 +1,4 @@
-import { IsString, IsIn, IsOptional, IsInt, Min, Max, IsDateString } from 'class-validator';
+import { IsString, IsIn, IsOptional, IsInt, Min, Max, IsDateString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class ListWithdrawalsDto {
@@ -55,5 +55,6 @@ export class ProcessWithdrawalDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500, { message: 'Rejection reason must not exceed 500 characters.' })
   rejectionReason?: string;
 }

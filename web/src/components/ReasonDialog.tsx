@@ -15,6 +15,8 @@ interface ReasonDialogProps {
   onConfirm: (reason: string | undefined) => void
 }
 
+const MAX_REASON_LENGTH = 500
+
 export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onConfirm }: ReasonDialogProps) {
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
@@ -24,6 +26,10 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
       const trimmed = reason.trim()
       if (!trimmed) {
         setError('Please provide a reason for rejection.')
+        return
+      }
+      if (trimmed.length > MAX_REASON_LENGTH) {
+        setError(`Rejection reason must not exceed ${MAX_REASON_LENGTH} characters.`)
         return
       }
       onConfirm(trimmed)
@@ -73,6 +79,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
                 )}
                 placeholder="Enter reason for rejection (e.g., invalid bank details, insufficient balance, etc.)"
                 value={reason}
+                maxLength={MAX_REASON_LENGTH}
                 onChange={(e) => {
                   setReason(e.target.value)
                   if (error) setError('')
@@ -84,12 +91,21 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
                   }
                 }}
               />
-              {error && (
-                <div className="flex items-center gap-1.5 text-destructive text-xs mt-1">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  {error}
-                </div>
-              )}
+              <div className="flex justify-between items-center mt-1">
+                {error ? (
+                  <div className="flex items-center gap-1.5 text-destructive text-xs">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {error}
+                  </div>
+                ) : (
+                  <span />
+                )}
+                <span
+                  className={`text-xs ${reason.length > MAX_REASON_LENGTH ? 'text-destructive' : reason.length > MAX_REASON_LENGTH * 0.9 ? 'text-yellow-600' : 'text-muted-foreground'}`}
+                >
+                  {reason.length}/{MAX_REASON_LENGTH}
+                </span>
+              </div>
             </div>
           )}
 
@@ -103,6 +119,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
                 className="w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-sm resize-none min-h-[80px] focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus placeholder:text-muted-foreground"
                 placeholder="Add an optional note for this approval..."
                 value={reason}
+                maxLength={MAX_REASON_LENGTH}
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>

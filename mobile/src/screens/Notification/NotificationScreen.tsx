@@ -153,6 +153,12 @@ export function NotificationScreen() {
           // Already read — still navigate if applicable
           if (item.triggerType === NotificationTriggerType.QUESTION && item.data?.questionId) {
             navigation.navigate('QuestionDetail', { questionId: String(item.data.questionId) });
+          } else if (item.triggerType === NotificationTriggerType.WITHDRAW && item.data?.withdrawalId) {
+            navigation.navigate('TransactionDetail', {
+              withdrawalId: String(item.data.withdrawalId),
+              initialStatus: item.data.status as string | undefined,
+              initialReason: item.data.reason as string | undefined,
+            });
           }
           return;
         }
@@ -172,6 +178,13 @@ export function NotificationScreen() {
           // After marking read, navigate if applicable
           if (item.triggerType === NotificationTriggerType.QUESTION && item.data?.questionId) {
             navigation.navigate('QuestionDetail', { questionId: String(item.data.questionId) });
+          } else if (item.triggerType === NotificationTriggerType.WITHDRAW && item.data?.withdrawalId) {
+            // Navigate directly to the transaction detail screen for this withdrawal
+            navigation.navigate('TransactionDetail', {
+              withdrawalId: String(item.data.withdrawalId),
+              initialStatus: item.data.status as string | undefined,
+              initialReason: item.data.reason as string | undefined,
+            });
           }
         } catch {}
       }}

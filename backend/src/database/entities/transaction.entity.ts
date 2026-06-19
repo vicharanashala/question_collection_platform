@@ -38,6 +38,9 @@ export class Transaction {
   @Column({ type: 'varchar', length: 500, nullable: true })
   description: string | null;
 
+  @Column({ name: 'rejection_reason', type: 'varchar', length: 500, nullable: true })
+  rejectionReason: string | null;
+
   @Column({ type: 'varchar', length: 20 })
   @Index('idx_transactions_status')
   status: TransactionStatus;

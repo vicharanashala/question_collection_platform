@@ -1151,7 +1151,7 @@ export class AdminService implements OnModuleInit {
       // flip the refund CREDIT (same referenceId) to REJECTED.
       await this.transactionRepo.update(
         { referenceId: withdrawalId, status: TransactionStatus.PENDING },
-        { status: TransactionStatus.REJECTED },
+        { status: TransactionStatus.REJECTED, rejectionReason },
       );
       // Create a refund credit transaction so it shows up in the user's wallet history
       await this.transactionRepo.save(
@@ -1160,7 +1160,7 @@ export class AdminService implements OnModuleInit {
           amount: Number(withdrawal.amount),
           type: TransactionType.CREDIT,
           source: TransactionSource.REFUND,
-          description: `Withdrawal rejected${rejectionReason ? ': ' + rejectionReason : ''}`,
+          description: `Withdrawal refunded${rejectionReason ? ': ' + rejectionReason : ''}`,
           status: TransactionStatus.COMPLETED,
           referenceId: withdrawalId,
           balanceAfter: newBalance,

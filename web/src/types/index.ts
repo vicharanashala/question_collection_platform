@@ -177,6 +177,7 @@ export interface Transaction {
   type: 'credit' | 'debit'
   source: 'reward' | 'withdrawal' | 'refund' | 'adjustment'
   description: string | null
+  rejectionReason: string | null
   status: 'pending' | 'completed' | 'failed' | 'reversed'
   referenceId: string | null
   balanceAfter: number | null

@@ -29,7 +29,7 @@ import { Transaction } from '../../types';
 
 type TxType = 'all' | 'credit' | 'debit';
 type TxSource = 'all' | 'reward' | 'withdrawal' | 'refund';
-type TxStatus = 'all' | 'completed' | 'pending' | 'failed' | 'reversed';
+type TxStatus = 'all' | 'completed' | 'pending' | 'failed' | 'reversed' | 'rejected';
 
 
 // ─── Transaction Detail Modal ─────────────────────────────────────────────────
@@ -133,13 +133,13 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
               <TxMetaRow label={t('wallet.txBalanceAfter')} value={
                 `₹${Number(tx.balanceAfter).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
               } c={c} />
-              {tx.status === 'rejected' && tx.description ? (
+              {tx.rejectionReason ? (
                 <View style={txModalStyles.rejectionRow}>
                   <Text style={[txModalStyles.rejectionLabel, { color: c.error }]}>
                     {t('wallet.rejectionReason', 'Rejection Reason')}
                   </Text>
                   <Text style={[txModalStyles.rejectionValue, { color: c.error }]}>
-                    {tx.description.replace(/^Withdrawal rejected: /i, '')}
+                    {tx.rejectionReason}
                   </Text>
                 </View>
               ) : tx.description ? (
@@ -399,7 +399,6 @@ export function WalletScreen() {
   const [filterStatus, setFilterStatus] = useState<TxStatus>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Detail modal
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -671,7 +670,7 @@ export function WalletScreen() {
 
               <Text style={[styles.filterGroupLabel, { color: c.textSecondary, marginTop: tokens.spacing3 }]}>{t('wallet.filterByStatus')}</Text>
               <View style={styles.filterPills}>
-                {(['all', 'completed', 'pending', 'failed', 'reversed'] as TxStatus[]).map((f) => (
+                {(['all', 'completed', 'pending', 'failed', 'reversed', 'rejected'] as TxStatus[]).map((f) => (
                   <FilterPill
                     key={f}
                     label={f === 'all' ? t('wallet.filterAll') : f.charAt(0).toUpperCase() + f.slice(1)}

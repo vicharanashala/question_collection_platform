@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +30,7 @@ export function WalletsPage() {
   const limit = 30
 
   const location = useLocation()
+  const navigate = useNavigate()
   const [pendingOpenUserId, setPendingOpenUserId] = useState<string | null>(null)
 
   // Pick up openUserId passed from notification click
@@ -244,7 +245,13 @@ export function WalletsPage() {
                 wallets.map((wallet) => (
                   <tr key={wallet.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">{wallet.user.name}</p>
+                      <button
+                          type="button"
+                          className="font-medium text-primary hover:underline text-left"
+                          onClick={() => navigate(`/users/${wallet.user.id}`)}
+                        >
+                          {wallet.user.name}
+                        </button>
                       <p className="text-xs text-muted-foreground">{wallet.user.mobileNumber} · {wallet.user.state}</p>
                     </td>
                     <td className="px-4 py-3">

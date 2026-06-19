@@ -39,7 +39,7 @@ export class WithdrawalRequest {
   @Column({ name: 'processed_at', type: 'timestamp', nullable: true })
   processedAt: Date | null;
 
-  @Column({ name: 'failure_reason', type: 'varchar', length: 500, nullable: true })
+  @Column({ name: 'rejection_reason', type: 'varchar', length: 500, nullable: true })
   rejectionReason: string | null;
 
   @Column({ name: 'cancelled_at', type: 'timestamp', nullable: true })

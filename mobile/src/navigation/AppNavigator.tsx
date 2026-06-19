@@ -40,6 +40,7 @@ import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
 import { NotificationScreen } from '../screens/Notification/NotificationScreen';
 import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
 import { QuestionDetailScreen } from '../screens/Question/QuestionDetailScreen';
+import { TransactionDetailScreen } from '../screens/Transaction/TransactionDetailScreen';
 
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
@@ -435,6 +436,11 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="NotificationScreen"
                   component={NotificationScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="TransactionDetail"
+                  component={TransactionDetailScreen}
                   options={{ presentation: 'modal' }}
                 />
                 <RootStack.Screen

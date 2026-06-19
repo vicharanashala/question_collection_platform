@@ -39,6 +39,14 @@ export type RootStackParamList = {
   EditProfile: undefined;
   CropManagement: undefined;
   NotificationScreen: undefined;
+  TransactionDetail: {
+    /** ID of the withdrawal request to show transaction details for */
+    withdrawalId: string;
+    /** Fallback status when the transaction hasn't loaded yet */
+    initialStatus?: string;
+    /** Fallback rejection reason when the transaction hasn't loaded yet */
+    initialReason?: string;
+  };
   QuestionDetail: {
     /** ID of the question to display */
     questionId: string;

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -35,10 +36,11 @@ const STATUS_OPTIONS = [
 ]
 
 const SORT_OPTIONS = [
-  { value: 'createdAt:DESC', label: 'Newest First' },
-  { value: 'createdAt:ASC', label: 'Oldest First' },
-  { value: 'amount:DESC', label: 'Highest Amount' },
-  { value: 'amount:ASC', label: 'Lowest Amount' },
+  { value: '_default',         label: 'Default (Pending First)' },
+  { value: 'createdAt:DESC',   label: 'Newest First' },
+  { value: 'createdAt:ASC',    label: 'Oldest First' },
+  { value: 'amount:DESC',      label: 'Highest Amount' },
+  { value: 'amount:ASC',       label: 'Lowest Amount' },
 ]
 
 const INDIAN_STATES = [
@@ -56,19 +58,25 @@ function buildParams(
 ) {
   const params: Record<string, string | number> = { page, limit: 20 }
   if (active.search)   params.search   = active.search
-  if (active.status)   params.status   = active.status
   if (active.state)    params.state    = active.state
   if (active.fromDate) params.fromDate = active.fromDate
   if (active.toDate)   params.toDate   = active.toDate
-  const sortBy   = active.sortBy.split(':')[0]
-  const sortOrder = active.sortBy.split(':')[1]
-  if (sortBy !== 'createdAt')   params.sortBy   = sortBy
-  if (sortOrder)                params.sortOrder = sortOrder
+
+  if (active.sortBy === '_default') {
+    // No backend sort — pending-first sort is applied client-side after fetching
+  } else {
+    if (active.status)   params.status   = active.status
+    const sortBy   = active.sortBy.split(':')[0]
+    const sortOrder = active.sortBy.split(':')[1]
+    if (sortBy)   params.sortBy   = sortBy
+    if (sortOrder) params.sortOrder = sortOrder
+  }
   return params
 }
 
 export function WithdrawalsPage() {
   const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
   const [items, setItems] = useState<Withdrawal[]>([])
@@ -92,7 +100,7 @@ export function WithdrawalsPage() {
   // Filters
   const [filterOpen, setFilterOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState({
-    search: '', status: '', state: '', sortBy: 'createdAt:DESC', fromDate: '', toDate: '',
+    search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '',
   })
   const [draftFilters, setDraftFilters] = useState({ ...activeFilters })
 
@@ -103,7 +111,17 @@ export function WithdrawalsPage() {
     try {
       const params = buildParams(pageNum, filters)
       const res = await adminApi.listWithdrawals(params)
-      setItems(refresh ? res.items : (prev) => [...prev, ...res.items])
+
+      // Apply pending-first sort client-side when _default is active
+      const sortedItems = filters.sortBy === '_default'
+        ? [...res.items].sort((a, b) => {
+            if (a.status === 'pending' && b.status !== 'pending') return -1
+            if (a.status !== 'pending' && b.status === 'pending') return 1
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          })
+        : res.items
+
+      setItems(refresh ? sortedItems : (prev) => [...prev, ...sortedItems])
       setTotal(res.total)
       setPage(pageNum)
     } catch (e) {
@@ -132,16 +150,21 @@ export function WithdrawalsPage() {
   }
 
   function applyFilters() {
-    setActiveFilters(draftFilters)
+    // When default sort is selected, clear manual status to avoid conflict
+    const toApply = {
+      ...draftFilters,
+      status: draftFilters.sortBy === '_default' ? '' : draftFilters.status,
+    }
+    setActiveFilters(toApply)
     setPage(1)
     setItems([])
     setLoading(true)
-    fetch(1, true, draftFilters)
+    fetch(1, true, toApply)
     setFilterOpen(false)
   }
 
   function resetFilters() {
-    const empty = { search: '', status: '', state: '', sortBy: 'createdAt:DESC', fromDate: '', toDate: '' }
+    const empty = { search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '' }
     setDraftFilters(empty)
     setActiveFilters(empty)
     setPage(1)
@@ -178,7 +201,7 @@ export function WithdrawalsPage() {
 
   function activeFilterCount() {
     return Object.entries(activeFilters).filter(([k, v]) => {
-      if (k === 'sortBy') return v !== 'createdAt:DESC'
+      if (k === 'sortBy') return v !== '_default'
       return v && v.trim().length > 0
     }).length
   }
@@ -217,14 +240,14 @@ export function WithdrawalsPage() {
       {activeFilterCount() > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           {Object.entries(activeFilters).filter(([k, v]) => {
-            if (k === 'sortBy') return v !== 'createdAt:DESC'
+            if (k === 'sortBy') return v !== '_default'
             return v && v.trim().length > 0
           }).map(([k, v]) => (
             <Badge key={k} variant="secondary" className="flex items-center gap-1 px-2 py-1 text-xs">
               <span className="text-muted-foreground capitalize">{k}:</span> {v}
               <button
                 onClick={() => {
-                  const next = { ...activeFilters, [k]: k === 'sortBy' ? 'createdAt:DESC' : '' }
+                  const next = { ...activeFilters, [k]: k === 'sortBy' ? '_default' : '' }
                   setActiveFilters(next)
                   setPage(1); setItems([]); setLoading(true)
                   fetch(1, true, next)
@@ -276,9 +299,13 @@ export function WithdrawalsPage() {
                 items.map((w) => (
                   <tr key={w.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground">
-                        {w.user?.name ?? w.user?.mobileNumber ?? 'Unknown'}
-                      </div>
+                      <button
+                          type="button"
+                          className="font-medium text-primary hover:underline text-left"
+                          onClick={() => navigate(`/users/${w.user?.id}`)}
+                        >
+                          {w.user?.name ?? w.user?.mobileNumber ?? 'Unknown'}
+                        </button>
                       <div className="text-xs text-muted-foreground">
                         {w.user?.mobileNumber ?? ''} · {w.user?.state ?? ''}
                       </div>
