@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -23,6 +23,7 @@ import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
 import { RootStackParamList } from '../../navigation/types';
+import { adminApi } from '../../api/client';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,13 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const navigation = useNavigation();
 
   const preview = route.params;
+  const [editWindowSec, setEditWindowSec] = useState(0);
+
+  useEffect(() => {
+    adminApi.getConfig().then((res) => {
+      setEditWindowSec(res.data.question_edit_window_seconds ?? 0);
+    }).catch(() => {});
+  }, []);
 
   // Editable form state — domains pre-filled from backend inference
   const [state, setState] = useState(preview.state);
@@ -123,6 +131,16 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               {t('question.askSubtitle')}
             </Text>
           </View>
+
+          {/* Non-editable notice */}
+          {editWindowSec === 0 && (
+            <View style={[styles.notEditableNotice, { backgroundColor: '#FFF3CD' }]}>
+              <Ionicons name="information-circle" size={18} color="#B45309" />
+              <Text style={[styles.notEditableText, { color: '#B45309' }]}>
+                This question is not editable after submission
+              </Text>
+            </View>
+          )}
 
           {/* Edit card */}
           <View style={[styles.card, { backgroundColor: theme.colors.surface, ...tokens.shadowMd }]}>
@@ -333,6 +351,15 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 13, marginTop: tokens.spacing1, lineHeight: 18 },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6, marginBottom: tokens.spacing4 },
+  notEditableNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3,
+    marginBottom: tokens.spacing3,
+  },
+  notEditableText: { fontSize: 13, flex: 1 },
   sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: tokens.spacing3 },
   divider: { height: 1, marginVertical: tokens.spacing4 },
   zoneBadgeWrap: { marginBottom: tokens.spacing4 },

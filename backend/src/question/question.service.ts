@@ -396,7 +396,7 @@ export class QuestionService {
       // Pre-filled with backend-inferred domains; user can modify on the preview screen
       domains: inferredDomains,
       season: Season.KHARIF,
-      cropType: '',
+      cropType: CROPS[0],
 
       questionText: dto.questionText,
       mediaType: dto.mediaType ?? 'none',
@@ -413,6 +413,8 @@ export class QuestionService {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const CROPS = ['Wheat', 'Rice', 'Cotton', 'Sugarcane', 'Soybean', 'Maize', 'Groundnut', 'Mustard'];
 
 const AGRO_CLIMATIC_ZONE_LABELS: Record<string, string> = {
   western_himalayan: 'Western Himalayan',
