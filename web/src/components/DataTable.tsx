@@ -26,6 +26,7 @@ export interface ColumnDef<T> {
   sortable?: boolean
   filterable?: boolean
   filterOptions?: { value: string; label: string }[]
+  textAlign?: 'left' | 'center' | 'right'
   render: (row: T) => React.ReactNode
 }
 
@@ -42,6 +43,8 @@ interface DataTableProps<T> {
   SkeletonRows?: number
   emptyMessage?: string
   onRowClick?: (row: T) => void
+  /** Hides the built-in search bar and filter controls */
+  hideSearch?: boolean
 }
 
 interface CardViewProps<T extends { id: string }> {
@@ -179,6 +182,7 @@ export function DataTable<T>({
   SkeletonRows = 5,
   emptyMessage = 'No records found',
   onRowClick,
+  hideSearch,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDirection>('asc')
@@ -275,6 +279,7 @@ export function DataTable<T>({
     <div className="space-y-3">
 
       {/* ── Search + Filter controls ────────────────────── */}
+      {!hideSearch && (
       <div className="flex items-center gap-2 flex-wrap">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
@@ -349,14 +354,17 @@ export function DataTable<T>({
           </span>
         )}
       </div>
+      )}
 
       {/* ── Active filters chips ─────────────────────────── */}
+      {!hideSearch && (
       <ActiveFiltersBar
         filters={colFilters}
         columns={columns as ColumnDef<unknown>[]}
         onRemove={toggleFilter}
         onClearAll={clearAllFilters}
       />
+      )}
 
       {/* ── Table ───────────────────────────────────────── */}
       <div className="border border-border-subtle rounded-xl overflow-hidden">
@@ -384,6 +392,8 @@ export function DataTable<T>({
                   className={cn(
                     'flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide shrink-0',
                     col.sortable && 'cursor-pointer hover:text-foreground transition-colors',
+                    col.textAlign === 'center' && 'justify-center',
+                    col.textAlign === 'right' && 'justify-end',
                   )}
                   style={{ width: col.width, minWidth: col.width }}
                   onClick={() => col.sortable && toggleSort(col.key)}
@@ -407,7 +417,11 @@ export function DataTable<T>({
                 {columns.map((col) => (
                   <div
                     key={col.key}
-                    className="shrink-0 text-sm text-foreground"
+                    className={cn(
+                      'shrink-0 text-sm text-foreground flex items-center',
+                      col.textAlign === 'center' && 'justify-center',
+                      col.textAlign === 'right' && 'justify-end',
+                    )}
                     style={{ width: col.width, minWidth: col.width }}
                   >
                     {col.render(row)}

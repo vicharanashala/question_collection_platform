@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { curatorApi, getErrorMessage } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
-
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,15 +12,12 @@ import {
   Clock, Star,
   MapPin, Wheat, Film, Eye, Hash,
   User, Zap, ThumbsUp, Ban, ListFilter,
-  Globe,
+  Globe, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question, QuestionStatus } from '@/types'
 import { TranslatableText } from '@/components/TranslatableText'
-import {
-  DataTable, CardView,
-  type ColumnDef,
-} from '@/components/DataTable'
+import { DataTable, type ColumnDef } from '@/components/DataTable'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -45,13 +41,208 @@ const STATUS_LABELS: Record<string, string> = {
 
 const REVIEWABLE_STATUSES: QuestionStatus[] = ['pending', 'ai_review', 'human_review', 'held']
 
-
-
-// ─── Review Reason Modal ──────────────────────────────────────────────────────
+// ─── Review Detail Modal ──────────────────────────────────────────────────────
 
 type ReviewAction = 'approve' | 'reject' | 'hold'
 
-interface ReviewModalProps {
+interface ReviewDetailModalProps {
+  question: Question
+  onClose: () => void
+  onAction: (action: ReviewAction, questionText: string) => void
+  actionLoading: boolean
+  selectedLang: string
+  onLangChange: (lang: string) => void
+}
+
+function MetaItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
+  if (!value) return null
+  return (
+    <div className="flex items-start gap-2">
+      <Icon className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-foreground">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+function ConfidenceBar({ score }: { score: number }) {
+  const color = score >= 80 ? 'success' : score >= 50 ? 'warning' : 'destructive'
+  return (
+    <div className="flex items-end gap-2">
+      <span className={cn(
+        'text-3xl font-extrabold tabular-nums',
+        color === 'success' ? 'text-success' : color === 'warning' ? 'text-warning' : 'text-destructive',
+      )}>{score}%</span>
+      <span className="text-sm text-muted-foreground mb-1">AI confidence</span>
+    </div>
+  )
+}
+
+function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, selectedLang, onLangChange }: ReviewDetailModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-2xl bg-surface rounded-2xl shadow-2xl border border-border-subtle overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle shrink-0">
+          <div className="flex items-center gap-3">
+            <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+              {STATUS_LABELS[q.status] ?? q.status}
+            </Badge>
+            <span className="text-xs text-muted-foreground font-mono">{q.id.slice(0, 8)}…</span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {q.mediaUrls && q.mediaUrls.length > 0 && <span className="flex items-center gap-1"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>}
+              {q.aiConfidenceScore != null && <span className="flex items-center gap-1"><Zap className="h-3 w-3" />AI {q.aiConfidenceScore}%</span>}
+            </div>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+          {/* Question text */}
+          <div className="bg-muted/60 rounded-xl p-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
+            <TranslatableText
+              text={q.questionText}
+              selectedLang={selectedLang}
+              onLangChange={onLangChange}
+              sourceLanguage={q.language ?? 'en'}
+              inline
+            />
+          </div>
+
+          {/* AI confidence */}
+          {q.aiConfidenceScore != null && (
+            <div className="rounded-xl border border-border-subtle p-4">
+              <ConfidenceBar score={q.aiConfidenceScore} />
+            </div>
+          )}
+
+          {/* Status reason */}
+          {q.status === 'held' && q.heldReason && (
+            <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+              <p className="text-xs font-semibold text-warning uppercase tracking-wide mb-1">Hold Reason</p>
+              <p className="text-sm text-foreground leading-relaxed">{q.heldReason}</p>
+            </div>
+          )}
+          {q.status === 'rejected' && q.rejectionReason && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+              <p className="text-xs font-semibold text-destructive uppercase tracking-wide mb-1">Rejection Reason</p>
+              <p className="text-sm text-foreground leading-relaxed">{q.rejectionReason}</p>
+            </div>
+          )}
+          {q.status === 'approved' && q.approvalReason && (
+            <div className="rounded-xl border border-success/30 bg-success/5 p-4">
+              <p className="text-xs font-semibold text-success uppercase tracking-wide mb-1">Approval Reason</p>
+              <p className="text-sm text-foreground leading-relaxed">{q.approvalReason}</p>
+            </div>
+          )}
+
+          {/* Details grid */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Details</p>
+            <div className="grid grid-cols-2 gap-3">
+              <MetaItem icon={Star}    label="Category"  value={(q.domains ?? []).join(', ') || '—'} />
+              <MetaItem icon={Wheat}   label="Crop"      value={q.cropType} />
+              <MetaItem icon={Hash}    label="Season"    value={q.season} />
+              <MetaItem icon={MapPin}  label="State"     value={q.state} />
+              <MetaItem icon={MapPin}  label="District"  value={q.district} />
+              {q.block && <MetaItem icon={MapPin} label="Block" value={q.block} />}
+              <MetaItem icon={Globe}   label="Language"  value={q.language?.toUpperCase()} />
+              <MetaItem icon={Clock}   label="Submitted" value={formatDate(q.submittedAt)} />
+            </div>
+          </div>
+
+          {/* Submitted by */}
+          {q.user && (
+            <div className="rounded-xl border border-border-subtle p-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Submitted By</p>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2.5"><User className="h-4 w-4 text-primary" /></div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{q.user.name}</p>
+                  {q.user.mobileNumber && <p className="text-xs text-muted-foreground font-mono">{q.user.mobileNumber}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Media */}
+          {q.mediaUrls && q.mediaUrls.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Media ({q.mediaUrls.length})</p>
+              <div className="grid grid-cols-3 gap-2">
+                {q.mediaUrls.map((url, i) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                    {url.match(/\.(mp4|mov|avi|m4v)$/i) ? (
+                      <div className="rounded-lg border bg-muted flex items-center justify-center h-24 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><Film className="h-4 w-4" /> Video</span>
+                      </div>
+                    ) : (
+                      <img src={url} alt={`media-${i}`} className="rounded-lg border w-full h-24 object-cover hover:opacity-80 transition-opacity" />
+                    )}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Previous review */}
+          {q.reviewedByName && (
+            <div className="rounded-xl border border-border-subtle p-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Previous Review</p>
+              <p className="text-sm text-foreground">Reviewed by <span className="font-medium">{q.reviewedByName}</span></p>
+            </div>
+          )}
+        </div>
+
+        {/* Action footer */}
+        {REVIEWABLE_STATUSES.includes(q.status) ? (
+          <div className="shrink-0 border-t border-border-subtle px-6 py-4 space-y-3">
+            <p className="text-xs text-muted-foreground text-center">Choose an action — you will be asked to provide a reason.</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => onAction('approve', q.questionText)}
+                disabled={actionLoading}
+                className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-success/10 text-success hover:bg-success/20 border border-success/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircle className="h-5 w-5" /> Approve
+              </button>
+              <button
+                onClick={() => onAction('hold', q.questionText)}
+                disabled={actionLoading}
+                className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PauseCircle className="h-5 w-5" /> Hold
+              </button>
+              <button
+                onClick={() => onAction('reject', q.questionText)}
+                disabled={actionLoading}
+                className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <XCircle className="h-5 w-5" /> Reject
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="shrink-0 border-t border-border-subtle px-6 py-4 text-center">
+            <p className="text-xs text-muted-foreground">This question has already been reviewed.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Reason Modal ─────────────────────────────────────────────────────────────
+
+interface ReasonModalProps {
   action: ReviewAction
   questionId: string
   questionText: string
@@ -60,7 +251,7 @@ interface ReviewModalProps {
   loading: boolean
 }
 
-function ReviewModal({ action, questionId, questionText, onConfirm, onCancel, loading }: ReviewModalProps) {
+function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, loading }: ReasonModalProps) {
   const [reason, setReason] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -109,7 +300,7 @@ function ReviewModal({ action, questionId, questionText, onConfirm, onCancel, lo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative w-full max-w-lg bg-surface rounded-2xl shadow-2xl border border-border-subtle overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
@@ -157,8 +348,8 @@ function ReviewModal({ action, questionId, questionText, onConfirm, onCancel, lo
                 <div key={i} className="flex items-start gap-2">
                   <button
                     className={cn(
-                      'flex-1 text-left text-xs px-3 py-2 rounded-lg border transition-all duration-150',
-                      'hover:shadow-sm cursor-pointer text-left',
+                      'flex-1 text-left text-xs px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer',
+                      'hover:shadow-sm',
                       isApprove
                         ? 'border-success/20 bg-success/5 text-success hover:bg-success/10 hover:border-success/40'
                         : isReject
@@ -228,225 +419,38 @@ function ReviewModal({ action, questionId, questionText, onConfirm, onCancel, lo
   )
 }
 
-// ─── Confidence Card ──────────────────────────────────────────────────────────
+// ─── Table columns ────────────────────────────────────────────────────────────
 
-function ConfidenceCard({ score }: { score: number }) {
-  const color = score >= 80 ? 'success' : score >= 50 ? 'warning' : 'destructive'
-  const colorClass = color === 'success' ? 'text-success' : color === 'warning' ? 'text-warning' : 'text-destructive'
-  const bgClass    = color === 'success' ? 'border-success/30 bg-success/5' :
-                     color === 'warning' ? 'border-warning/30 bg-warning/5' :
-                                          'border-destructive/30 bg-destructive/5'
-  const barClass   = color === 'success' ? 'bg-success' : color === 'warning' ? 'bg-warning' : 'bg-destructive'
-  return (
-    <div className={cn('rounded-xl border p-4', bgClass)}>
-      <div className="flex items-end gap-2">
-        <span className={cn('text-4xl font-extrabold tabular-nums', colorClass)}>{score}%</span>
-        <span className="text-sm text-muted-foreground mb-1.5">AI confidence</span>
-      </div>
-      <div className="mt-2 h-1.5 w-full rounded-full bg-muted overflow-hidden">
-        <div className={cn('h-full rounded-full', barClass)} style={{ width: `${score}%` }} />
-      </div>
-    </div>
-  )
-}
-
-// ─── Detail Panel ─────────────────────────────────────────────────────────────
-
-function DetailPanel({
-  q,
-  actionLoading,
-  onAction,
-  selectedLang,
-  onLangChange,
-}: {
-  q: Question | null
-  actionLoading: boolean
-  onAction: (action: ReviewAction, questionText: string) => void
-  selectedLang: string
-  onLangChange: (lang: string) => void
-}) {
-  if (!q) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full py-20 gap-4 text-center">
-        <div className="rounded-full bg-muted p-5">
-          <Eye className="h-10 w-10 text-muted-foreground/40" />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-foreground">No question selected</p>
-          <p className="text-xs text-muted-foreground mt-1">Select a question from the list to review</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle shrink-0">
-        <div className="flex items-center gap-2">
-          <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
-            {STATUS_LABELS[q.status] ?? q.status}
-          </Badge>
-          <span className="text-xs text-muted-foreground font-mono">{q.id.slice(0, 8)}…</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {q.mediaUrls && q.mediaUrls.length > 0 && <span className="flex items-center gap-1"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>}
-          {q.aiConfidenceScore != null && <span className="flex items-center gap-1"><Zap className="h-3 w-3" />AI {q.aiConfidenceScore}%</span>}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-5 space-y-5">
-          <div className="bg-muted/60 rounded-xl p-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
-            <TranslatableText
-              text={q.questionText}
-              selectedLang={selectedLang}
-              onLangChange={onLangChange}
-              sourceLanguage={q.language ?? 'en'}
-              inline
-            />
-          </div>
-
-          {q.aiConfidenceScore != null && <ConfidenceCard score={q.aiConfidenceScore} />}
-
-          {q.status === 'held' && q.heldReason && (
-            <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
-              <p className="text-xs font-semibold text-warning uppercase tracking-wide mb-1">Hold Reason</p>
-              <p className="text-sm text-foreground leading-relaxed">{q.heldReason}</p>
-            </div>
-          )}
-          {q.status === 'rejected' && q.rejectionReason && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-              <p className="text-xs font-semibold text-destructive uppercase tracking-wide mb-1">Rejection Reason</p>
-              <p className="text-sm text-foreground leading-relaxed">{q.rejectionReason}</p>
-            </div>
-          )}
-          {q.status === 'approved' && q.approvalReason && (
-            <div className="rounded-xl border border-success/30 bg-success/5 p-4">
-              <p className="text-xs font-semibold text-success uppercase tracking-wide mb-1">Approval Reason</p>
-              <p className="text-sm text-foreground leading-relaxed">{q.approvalReason}</p>
-            </div>
-          )}
-
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Details</p>
-            <div className="grid grid-cols-2 gap-3">
-              <MetaItem icon={Star}    label="Category" value={(q.domains ?? []).join(', ') || '—'} />
-              <MetaItem icon={Wheat}   label="Crop"     value={q.cropType} />
-              <MetaItem icon={Hash}    label="Season"   value={q.season} />
-              <MetaItem icon={MapPin}  label="State"    value={q.state} />
-              <MetaItem icon={MapPin}  label="District" value={q.district} />
-              {q.block && <MetaItem icon={MapPin} label="Block" value={q.block} />}
-              <MetaItem icon={Globe}   label="Language" value={q.language?.toUpperCase()} />
-              <MetaItem icon={Clock}   label="Submitted" value={formatDate(q.submittedAt)} />
-            </div>
-          </div>
-
-          {q.user && (
-            <div className="rounded-xl border border-border-subtle p-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Submitted By</p>
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-primary/10 p-2.5"><User className="h-4 w-4 text-primary" /></div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{q.user.name}</p>
-                  {q.user.mobileNumber && <p className="text-xs text-muted-foreground font-mono">{q.user.mobileNumber}</p>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {q.mediaUrls && q.mediaUrls.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Media ({q.mediaUrls.length})</p>
-              <div className="grid grid-cols-2 gap-2">
-                {q.mediaUrls.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                    {url.match(/\.(mp4|mov|avi|m4v)$/i) ? (
-                      <div className="rounded-lg border bg-muted flex items-center justify-center h-28 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><Film className="h-4 w-4" /> Video</span>
-                      </div>
-                    ) : (
-                      <img src={url} alt={`media-${i}`} className="rounded-lg border w-full h-28 object-cover hover:opacity-80 transition-opacity" />
-                    )}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {q.reviewedByName && (
-            <div className="rounded-xl border border-border-subtle p-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Previous Review</p>
-              <p className="text-sm text-foreground">Reviewed by <span className="font-medium">{q.reviewedByName}</span></p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {REVIEWABLE_STATUSES.includes(q.status) && (
-        <div className="shrink-0 border-t border-border-subtle p-4 space-y-3">
-          <p className="text-xs text-muted-foreground text-center">Choose an action — you will be asked to provide a reason.</p>
-          <div className="grid grid-cols-3 gap-2">
-            <button onClick={() => onAction('approve', q.questionText)} disabled={actionLoading}
-              className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-success/10 text-success hover:bg-success/20 border border-success/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-              <CheckCircle className="h-5 w-5" /> Approve
-            </button>
-            <button onClick={() => onAction('hold', q.questionText)} disabled={actionLoading}
-              className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-              <PauseCircle className="h-5 w-5" /> Hold
-            </button>
-            <button onClick={() => onAction('reject', q.questionText)} disabled={actionLoading}
-              className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-              <XCircle className="h-5 w-5" /> Reject
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!REVIEWABLE_STATUSES.includes(q.status) && (
-        <div className="shrink-0 border-t border-border-subtle p-4 text-center">
-          <p className="text-xs text-muted-foreground">This question has already been reviewed.</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function MetaItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
-  if (!value) return null
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium text-foreground">{value}</p>
-      </div>
-    </div>
-  )
-}
-
-// ─── Question list columns (shared between table + card) ──────────────────────
-
-function buildListColumns(): ColumnDef<Question>[] {
+function buildColumns(page: number): ColumnDef<Question>[] {
   return [
     {
-      key: 'status', header: 'Status', width: '120px',
+      key: '_slno', header: '#', width: '50px', textAlign: 'center',
+      render: (q) => <span className="text-xs text-muted-foreground">{(q as Question & { _slno: number })._slno}</span>,
+    },
+    {
+      key: 'status', header: 'Status', width: '110px', sortable: true,
       render: (q) => (
-        <Badge className={cn('capitalize text-xs px-2 py-0.5 whitespace-nowrap', STATUS_COLORS[q.status] ?? 'bg-muted')}>
-          {STATUS_LABELS[q.status] ?? q.status}
-        </Badge>
+        <div className="flex justify-start">
+          <Badge className={cn('capitalize text-xs px-2 py-0.5 whitespace-nowrap', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+            {STATUS_LABELS[q.status] ?? q.status}
+          </Badge>
+        </div>
       ),
     },
     {
-      key: 'questionText', header: 'Question', width: '300px',
-      render: (q) => <span className="line-clamp-2 text-xs">{q.questionText}</span>,
+      key: 'questionText', header: 'Question', width: '280px', sortable: true,
+      render: (q) => <span className="text-xs" title={q.questionText}>{q.questionText.length > 45 ? q.questionText.slice(0, 45) + '…' : q.questionText}</span>,
     },
     {
-      key: 'cropType', header: 'Crop', width: '100px',
+      key: 'domains', header: 'Domain', width: '110px', sortable: true,
+      render: (q) => <span className="text-xs text-muted-foreground capitalize">{(q.domains ?? []).join(', ') || '—'}</span>,
+    },
+    {
+      key: 'cropType', header: 'Crop', width: '90px', sortable: true,
       render: (q) => <span className="text-xs capitalize">{q.cropType ?? '—'}</span>,
     },
     {
-      key: 'location', header: 'Location', width: '130px',
+      key: 'location', header: 'Location', width: '130px', sortable: true,
       render: (q) => (
         <span className="text-xs truncate block" title={[q.district, q.state].filter(Boolean).join(', ')}>
           {[q.district, q.state].filter(Boolean).join(', ') || '—'}
@@ -454,7 +458,7 @@ function buildListColumns(): ColumnDef<Question>[] {
       ),
     },
     {
-      key: 'aiConfidenceScore', header: 'AI Score', width: '90px',
+      key: 'aiConfidenceScore', header: 'AI Score', width: '90px', textAlign: 'right', sortable: true,
       render: (q) => q.aiConfidenceScore != null ? (
         <span className={cn('text-xs font-medium tabular-nums',
           q.aiConfidenceScore >= 80 ? 'text-success' : q.aiConfidenceScore >= 50 ? 'text-warning' : 'text-destructive'
@@ -462,13 +466,13 @@ function buildListColumns(): ColumnDef<Question>[] {
       ) : <span className="text-xs text-muted-foreground">—</span>,
     },
     {
-      key: 'submittedAt', header: 'Submitted', width: '110px',
+      key: 'submittedAt', header: 'Submitted', width: '110px', textAlign: 'left', sortable: true,
       render: (q) => <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt)}</span>,
     },
     {
-      key: 'media', header: 'Media', width: '60px',
+      key: 'media', header: 'Media', width: '60px', textAlign: 'center',
       render: (q) => q.mediaUrls && q.mediaUrls.length > 0
-        ? <span className="flex items-center gap-1 text-xs text-muted-foreground"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>
+        ? <span className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>
         : <span className="text-xs text-muted-foreground">—</span>,
     },
   ]
@@ -487,18 +491,17 @@ const STATUS_FILTER_OPTIONS = [
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
-  const [questions, setQuestions]     = useState<Question[]>([])
-  const [total, setTotal]             = useState(0)
-  const [page, setPage]               = useState(1)
+  const [questions, setQuestions]       = useState<Question[]>([])
+  const [total, setTotal]               = useState(0)
+  const [page, setPage]                 = useState(1)
   const [statusFilter, setStatusFilter] = useState('')
-  const [search, setSearch]           = useState('')
-  const [loading, setLoading]         = useState(false)
+  const [search, setSearch]             = useState('')
+  const [loading, setLoading]           = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
-  const [pendingAction, setPendingAction] = useState<{ action: ReviewAction; questionText: string } | null>(null)
-  const [view]                       = useState<'table' | 'card'>('card')
-  const [langByQuestionId, setLangByQuestionId] = useState<Record<string, string>>({})
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
-  const didExplicitlyDeselect = useRef(false)
+  const [detailOpen, setDetailOpen]     = useState(false)
+  const [pendingAction, setPendingAction] = useState<{ action: ReviewAction; questionText: string } | null>(null)
+  const [langByQuestionId, setLangByQuestionId] = useState<Record<string, string>>({})
 
   const limit = 15
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -506,24 +509,29 @@ export function ReviewsPage() {
   const getLang = (id: string) => langByQuestionId[id] ?? ''
   const setLang = (id: string, lang: string) => setLangByQuestionId((prev) => ({ ...prev, [id]: lang }))
 
+  const openDetail = (q: Question) => {
+    setSelectedQuestion(q)
+    setDetailOpen(true)
+  }
+
   useEffect(() => {
-    didExplicitlyDeselect.current = false
     setPage(1)
     setSelectedQuestion(null)
+    setDetailOpen(false)
   }, [debouncedSearch, statusFilter])
 
   useEffect(() => {
     setLoading(true)
-    curatorApi.getReviewQueue({ page, limit, status: statusFilter || undefined })
+    curatorApi.getReviewQueue({
+      page,
+      limit,
+      status: statusFilter || undefined,
+      search: debouncedSearch || undefined,
+    })
       .then((res) => {
-        setQuestions(res.items as Question[])
+        const start = (page - 1) * limit
+        setQuestions(res.items.map((q, i) => ({ ...q, _slno: start + i + 1 })) as Question[])
         setTotal(res.total)
-        if (selectedQuestion && !res.items.find((q: Question) => q.id === selectedQuestion.id)) {
-          didExplicitlyDeselect.current = true
-          setSelectedQuestion(null)
-        } else if (!didExplicitlyDeselect.current && res.items.length > 0 && !selectedQuestion) {
-          setSelectedQuestion(res.items[0] as Question)
-        }
       })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load review queue')))
       .finally(() => setLoading(false))
@@ -544,11 +552,9 @@ export function ReviewsPage() {
         } else {
           toast.success('Question put on hold')
         }
-        setQuestions((qs) => {
-          const remaining = qs.filter((q) => q.id !== id)
-          setSelectedQuestion(remaining[0] ?? null)
-          return remaining
-        })
+        setQuestions((qs) => qs.filter((q) => q.id !== id))
+        setDetailOpen(false)
+        setSelectedQuestion(null)
       })
       .catch((e) => toast.error(getErrorMessage(e, `Failed to ${action}`)))
       .finally(() => setActionLoading(false))
@@ -559,42 +565,8 @@ export function ReviewsPage() {
   }
 
   const totalPages = Math.ceil(total / limit)
-  const columns = buildListColumns()
-
+  const columns = buildColumns(page)
   const emptyMessage = search || statusFilter ? 'No questions match your filters' : 'No questions in queue'
-
-  const tableComponent = (
-    <DataTable
-      data={questions}
-      columns={columns}
-      loading={loading}
-      page={page}
-      totalPages={totalPages}
-      totalCount={total}
-      searchValue={search}
-      onSearchChange={setSearch}
-      onPageChange={setPage}
-      SkeletonRows={5}
-      emptyMessage={emptyMessage}
-      onRowClick={(row) => setSelectedQuestion(row as Question)}
-    />
-  )
-
-  const cardComponent = (
-    <CardView
-      data={questions}
-      columns={columns}
-      loading={loading}
-      page={page}
-      totalPages={totalPages}
-      totalCount={total}
-      onPageChange={setPage}
-      SkeletonRows={6}
-      emptyMessage={emptyMessage}
-      onRowClick={(row) => setSelectedQuestion(row as Question)}
-      selectedId={selectedQuestion?.id}
-    />
-  )
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
@@ -606,29 +578,15 @@ export function ReviewsPage() {
             {total > 0 ? `${total} question${total === 1 ? '' : 's'} pending review` : 'No questions pending'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {total > 0 && (
-            <div className={cn(
-              'flex items-center gap-2 rounded-full px-3 py-1.5 border text-xs font-medium',
-              total > 50 ? 'border-warning/40 bg-warning/10 text-warning' : 'border-success/40 bg-success/10 text-success',
-            )}>
-              <div className={cn('h-2 w-2 rounded-full', total > 50 ? 'bg-warning' : 'bg-success')} />
-              {total > 50 ? 'Queue is busy' : 'Queue is manageable'}
-            </div>
-          )}
-
-        </div>
-      </div>
-
-      {/* Search bar */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search crop, location, keyword..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          className="pl-9"
-        />
+        {total > 0 && (
+          <div className={cn(
+            'flex items-center gap-2 rounded-full px-3 py-1.5 border text-xs font-medium',
+            total > 50 ? 'border-warning/40 bg-warning/10 text-warning' : 'border-success/40 bg-success/10 text-success',
+          )}>
+            <div className={cn('h-2 w-2 rounded-full', total > 50 ? 'bg-warning' : 'bg-success')} />
+            {total > 50 ? 'Queue is busy' : 'Queue is manageable'}
+          </div>
+        )}
       </div>
 
       {/* Status filter chips */}
@@ -653,28 +611,39 @@ export function ReviewsPage() {
         </div>
       </div>
 
-      {/* Body: list + detail panel */}
-      <div className="flex-1 flex gap-4 min-h-0 h-full">
-        {/* Left: question list */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          {view === 'card' ? cardComponent : tableComponent}
-        </div>
-
-        {/* Right: detail panel */}
-        <div className="hidden xl:flex flex-col border-l-2 border-border rounded-xl bg-surface overflow-hidden w-80 shrink-0 h-full">
-          <DetailPanel
-            q={selectedQuestion}
-            actionLoading={actionLoading}
-            onAction={openActionModal}
-            selectedLang={getLang(selectedQuestion?.id ?? '')}
-            onLangChange={(lang) => selectedQuestion && setLang(selectedQuestion.id, lang)}
-          />
-        </div>
+      {/* Table */}
+      <div className="flex-1 min-h-0">
+        <DataTable
+          data={questions}
+          columns={columns}
+          loading={loading}
+          page={page}
+          totalPages={totalPages}
+          totalCount={total}
+          searchValue={search}
+          onSearchChange={setSearch}
+          onPageChange={setPage}
+          SkeletonRows={5}
+          emptyMessage={emptyMessage}
+          onRowClick={(row) => openDetail(row as Question)}
+        />
       </div>
+
+      {/* Review detail modal */}
+      {selectedQuestion && detailOpen && (
+        <ReviewDetailModal
+          question={selectedQuestion}
+          onClose={() => { setDetailOpen(false); setSelectedQuestion(null) }}
+          onAction={openActionModal}
+          actionLoading={actionLoading}
+          selectedLang={getLang(selectedQuestion.id)}
+          onLangChange={(lang) => setLang(selectedQuestion.id, lang)}
+        />
+      )}
 
       {/* Reason modal */}
       {pendingAction && selectedQuestion && (
-        <ReviewModal
+        <ReasonModal
           action={pendingAction.action}
           questionId={selectedQuestion.id}
           questionText={pendingAction.questionText}

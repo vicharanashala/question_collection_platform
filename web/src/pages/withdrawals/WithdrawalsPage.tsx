@@ -77,7 +77,7 @@ export function WithdrawalsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const [viewWallet, setViewWallet] = useState<{ userId: string } | null>(null)
+  const [walletUserId, setWalletUserId] = useState<string | null>(null)
   const [walletOpen, setWalletOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -306,15 +306,10 @@ export function WithdrawalsPage() {
                           size="sm"
                           variant="ghost"
                           className="h-7 px-2 text-primary hover:text-primary"
-                          onClick={async () => {
+                          onClick={() => {
                             if (!w.user?.id) return
-                            console.log('[View] click', { userId: w.user.id, walletOpen, viewWallet })
-                            try {
-                              setViewWallet({ userId: w.user.id })
-                              setWalletOpen(true)
-                            } catch (e) {
-                              toast.error(getErrorMessage(e, 'Failed to open wallet'))
-                            }
+                            setWalletUserId(w.user.id)
+                            setWalletOpen(true)
                           }}
                         >
                           <Eye className="h-4 w-4 mr-1" />
@@ -337,9 +332,6 @@ export function WithdrawalsPage() {
                           <Eye className="h-4 w-4 mr-1" />
                           Details
                         </Button>
-                        {w.rejectionReason && (
-                          <p className="text-xs text-destructive mt-1">{w.rejectionReason}</p>
-                        )}
                       </td>
                     )}
                   </tr>
@@ -462,12 +454,12 @@ export function WithdrawalsPage() {
       </Dialog>
 
       {/* Wallet detail modal */}
-      {viewWallet && (
+      {walletUserId && (
         <WalletDetailModal
-          key={viewWallet.userId}
-          userId={viewWallet.userId}
+          key={walletUserId}
+          userId={walletUserId}
           open={walletOpen}
-          onClose={() => { setWalletOpen(false); setViewWallet(null) }}
+          onClose={() => { setWalletOpen(false); setWalletUserId(null) }}
         />
       )}
 
