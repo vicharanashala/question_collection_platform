@@ -421,10 +421,11 @@ export function WalletScreen() {
   const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawal && parsedAmount <= (balance ?? 0);
 
   function showWithdrawConfirm() {
-    if (!isValidAmount) {
+    if ((balance ?? 0) < minWithdrawal) {
       showToast(t('wallet.minWithdrawalError', { amount: minWithdrawal }), 'warning');
       return;
     }
+    setWithdrawAmount('');
     setConfirmOpen(true);
   }
 
@@ -517,38 +518,15 @@ export function WalletScreen() {
             </View>
             <View style={styles.balanceRight}>
               {(balance ?? 0) >= minWithdrawal ? (
-                <View style={styles.withdrawInputWrap}>
-                  <View style={[styles.withdrawInputRow, { borderColor: 'rgba(255,255,255,0.25)' }]}>
-                    <Text style={styles.withdrawRupee}>₹</Text>
-                    <TextInput
-                      style={styles.withdrawInput}
-                      placeholder="Enter amount"
-                      placeholderTextColor="rgba(255,255,255,0.45)"
-                      keyboardType="numeric"
-                      value={withdrawAmount}
-                      onChangeText={(v) => setWithdrawAmount(v.replace(/[^0-9.]/g, ''))}
-                      maxLength={8}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={[
-                      styles.withdrawCtaBtn,
-                      { backgroundColor: isValidAmount ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)' },
-                    ]}
-                    onPress={showWithdrawConfirm}
-                    disabled={!isValidAmount || withdrawing}
-                    activeOpacity={0.7}
-                  >
-                    {withdrawing ? (
-                      <ActivityIndicator size="small" color="rgba(255,255,255,0.9)" />
-                    ) : (
-                      <>
-                        <Ionicons name="arrow-up-outline" size={17} color={isValidAmount ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)'} />
-                        <Text style={[styles.withdrawCtaText, { color: isValidAmount ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)' }]}>{t('wallet.withdraw')}</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.18)' }]}
+                  onPress={showWithdrawConfirm}
+                  disabled={withdrawing}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="arrow-up-outline" size={17} color="rgba(255,255,255,0.9)" />
+                  <Text style={[styles.withdrawCtaText, { color: 'rgba(255,255,255,0.9)' }]}>{t('wallet.withdraw')}</Text>
+                </TouchableOpacity>
               ) : (
                 <View style={[styles.balanceMinAlert, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
                   <Ionicons name="information-circle" size={15} color="rgba(255,255,255,0.85)" />
@@ -746,31 +724,62 @@ export function WalletScreen() {
               <Ionicons name="arrow-up-outline" size={28} color={c.primary} />
             </View>
             <Text style={[confirmModalStyles.title, { color: c.text }]}>
-              {t('wallet.confirmWithdrawTitle') ?? 'Confirm Withdrawal'}
+              {t('wallet.confirmWithdrawTitle') ?? 'Withdraw Money'}
             </Text>
-            <Text style={[confirmModalStyles.message, { color: c.textSecondary }]}>
-              {t('wallet.confirmWithdrawMsg', { amount: parsedAmount }) ??
-                `You are about to withdraw ₹${parsedAmount.toLocaleString('en-IN')} to your UPI account.`}
+
+            {/* Balance display */}
+            <Text style={[confirmModalStyles.balanceLabel, { color: c.textTertiary }]}>
+              {t('wallet.availableBalance')}
             </Text>
+            <Text style={[confirmModalStyles.balanceValue, { color: c.text }]}>
+              ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </Text>
+
+            {/* Amount input */}
+            <View style={[confirmModalStyles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
+              <Text style={[confirmModalStyles.inputRupee, { color: c.textSecondary }]}>₹</Text>
+              <TextInput
+                style={[confirmModalStyles.input, { color: c.text }]}
+                placeholder={String(minWithdrawal)}
+                placeholderTextColor={c.textTertiary}
+                keyboardType="numeric"
+                value={withdrawAmount}
+                onChangeText={(v) => {
+                  setWithdrawAmount(v.replace(/[^0-9.]/g, ''));
+                }}
+                maxLength={8}
+                autoFocus
+              />
+            </View>
+            {!isValidAmount && withdrawAmount.length > 0 && (
+              <Text style={[confirmModalStyles.errorText, { color: c.error }]}>
+                Min ₹{minWithdrawal.toLocaleString('en-IN')} · Max ₹{(balance ?? 0).toLocaleString('en-IN')}
+              </Text>
+            )}
+
             <View style={confirmModalStyles.actions}>
               <TouchableOpacity
                 style={[confirmModalStyles.btn, confirmModalStyles.btnCancel, { borderColor: c.border }]}
-                onPress={() => setConfirmOpen(false)}
+                onPress={() => { setConfirmOpen(false); setWithdrawAmount(''); }}
               >
                 <Text style={[confirmModalStyles.btnCancelText, { color: c.textSecondary }]}>
                   {t('common.cancel')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[confirmModalStyles.btn, confirmModalStyles.btnConfirm, { backgroundColor: c.primary }]}
+                style={[
+                  confirmModalStyles.btn,
+                  confirmModalStyles.btnConfirm,
+                  { backgroundColor: isValidAmount ? c.primary : c.textTertiary },
+                ]}
                 onPress={handleWithdraw}
-                disabled={withdrawing}
+                disabled={!isValidAmount || withdrawing}
               >
                 {withdrawing ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={[confirmModalStyles.btnConfirmText, { color: '#fff' }]}>
-                    {t('wallet.confirm') ?? 'Confirm'}
+                    {t('wallet.confirm') ?? 'Withdraw'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -825,20 +834,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   withdrawCtaText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  withdrawInputWrap: { gap: tokens.spacing2, alignItems: 'stretch' },
-  withdrawInputRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    borderRadius: tokens.radiusMd,
-    borderWidth: 1,
-    paddingHorizontal: tokens.spacing3,
-    height: 40,
-  },
-  withdrawRupee: { color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', marginRight: 2 },
-  withdrawInput: {
-    flex: 1, color: '#fff', fontSize: 14, fontWeight: '600',
-    paddingVertical: 0,
-  },
   balanceMinAlert: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -941,7 +936,18 @@ const confirmModalStyles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginBottom: tokens.spacing4,
   },
-  title: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing2, textAlign: 'center' },
+  title: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing4, textAlign: 'center' },
+  balanceLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 4 },
+  balanceValue: { fontSize: 22, fontWeight: '800', marginBottom: tokens.spacing4 },
+  inputWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1.5, borderRadius: tokens.radiusMd,
+    paddingHorizontal: tokens.spacing3, height: 50,
+    width: '100%', marginBottom: 6,
+  },
+  inputRupee: { fontSize: 18, fontWeight: '700', marginRight: 4 },
+  input: { flex: 1, fontSize: 20, fontWeight: '700', paddingVertical: 0 },
+  errorText: { fontSize: 12, fontWeight: '500', marginBottom: tokens.spacing3 },
   message: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: tokens.spacing5 },
   actions: { flexDirection: 'row', gap: tokens.spacing3, width: '100%' },
   btn: { flex: 1, height: 46, borderRadius: tokens.radiusLg, alignItems: 'center', justifyContent: 'center' },
