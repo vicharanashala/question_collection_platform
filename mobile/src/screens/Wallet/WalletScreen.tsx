@@ -506,7 +506,7 @@ export function WalletScreen() {
             <View style={styles.balanceRight}>
               {(balance ?? 0) >= minWithdrawal ? (
                 <View
-                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.12)' }]}
+                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.12)', opacity: 0.35 }]}
                 >
                   <Ionicons name="arrow-up-outline" size={17} color="rgba(255,255,255,0.4)" />
                   <Text style={[styles.withdrawCtaText, { color: 'rgba(255,255,255,0.4)' }]}>{t('wallet.withdraw')}</Text>
