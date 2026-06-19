@@ -230,7 +230,7 @@ function MainNavigator() {
           <View style={mainStyles.brand}>
             <Image source={require('../../assets/icon.png')} style={mainStyles.logo} />
             <View style={mainStyles.brandText}>
-              <Text style={[mainStyles.appName, { color: c.text }]} numberOfLines={1}>KisanDekho</Text>
+              <Text style={[mainStyles.appName, { color: c.text }]} numberOfLines={1}>AnnaDatha</Text>
               <Text style={[mainStyles.tagline, { color: c.textSecondary }]} numberOfLines={1}>Empowering Farmers</Text>
             </View>
           </View>

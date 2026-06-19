@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "KisanDekho",
+    "name": "AnnaDatha",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,10 +15,10 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.kisanMitra.kisanDekho",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "KisanDekho needs photo library access to attach images or videos to your questions.",
-        "NSCameraUsageDescription": "KisanDekho needs camera access to capture photos and videos for your questions.",
-        "NSMicrophoneUsageDescription": "KisanDekho needs microphone access to record audio for your questions.",
-        "NSLocationWhenInUseUsageDescription": "KisanDekho uses your location to tag questions with the correct district and block.",
+        "NSPhotoLibraryUsageDescription": "AnnaDatha needs photo library access to attach images or videos to your questions.",
+        "NSCameraUsageDescription": "AnnaDatha needs camera access to capture photos and videos for your questions.",
+        "NSMicrophoneUsageDescription": "AnnaDatha needs microphone access to record audio for your questions.",
+        "NSLocationWhenInUseUsageDescription": "AnnaDatha uses your location to tag questions with the correct district and block.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -52,15 +52,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "KisanDekho needs photo library access to attach images or videos to your questions.",
-          "cameraPermission": "KisanDekho needs camera access to capture photos and videos for your questions."
+          "photosPermission": "AnnaDatha needs photo library access to attach images or videos to your questions.",
+          "cameraPermission": "AnnaDatha needs camera access to capture photos and videos for your questions."
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "KisanDekho needs photo library access to save and attach images or videos.",
-          "savePhotosPermission": "KisanDekho needs permission to save captured photos and videos."
+          "photosPermission": "AnnaDatha needs photo library access to save and attach images or videos.",
+          "savePhotosPermission": "AnnaDatha needs permission to save captured photos and videos."
         }
       ],
       "expo-asset"

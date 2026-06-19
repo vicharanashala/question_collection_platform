@@ -19,7 +19,7 @@
   "agreeToTerms": "By continuing, you agree to our",
   "and": "and",
   "app": {
-    "name": "KisanDekho",
+    "name": "AnnaDatha",
     "tagline": "Your district, in your language"
   },
   "auth": {
@@ -496,7 +496,7 @@
   "submissions.duplicate": "Duplicate",
   "wallet.upiTab": "UPI",
   "wallet.bankTab": "Bank Account",
-  "loginPhone.title": "KisanDekho",
+  "loginPhone.title": "AnnaDatha",
   "loginPhone.tagline": "Agricultural knowledge, powered by AI",
   "loginPhone.sendOtp": "Send OTP",
   "auth.sendOtp": "Send OTP",

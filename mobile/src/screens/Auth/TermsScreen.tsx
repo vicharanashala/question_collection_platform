@@ -25,12 +25,12 @@ const SECTIONS = [
   {
     id: '1',
     title: 'Acceptance of Terms',
-    body: 'By accessing or using the KisanDekho platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.',
+    body: 'By accessing or using the AnnaDatha platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.',
   },
   {
     id: '2',
     title: 'Purpose of the Platform',
-    body: 'KisanDekho is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.',
+    body: 'AnnaDatha is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.',
   },
   {
     id: '3',
