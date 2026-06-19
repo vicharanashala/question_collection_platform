@@ -10,6 +10,7 @@ import {
   Modal,
   ActivityIndicator,
   Animated,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../components/Button';
@@ -411,24 +412,29 @@ export function WalletScreen() {
     setRefreshing(false);
   }
 
-  // ─── Withdraw minimum ─────────────────────────────────────────────────────
-  const [withdrawingMin, setWithdrawingMin] = useState(false);
+  // ─── Withdraw amount ─────────────────────────────────────────────────────
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const parsedAmount = parseFloat(withdrawAmount);
+  const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawal && parsedAmount <= (balance ?? 0);
+
   function showWithdrawConfirm() {
-    if ((balance ?? 0) < minWithdrawal) {
+    if (!isValidAmount) {
       showToast(t('wallet.minWithdrawalError', { amount: minWithdrawal }), 'warning');
       return;
     }
     setConfirmOpen(true);
   }
 
-  async function handleWithdrawMin() {
-    setWithdrawingMin(true);
+  async function handleWithdraw() {
+    setWithdrawing(true);
     setConfirmOpen(false);
     try {
-      await walletApi.withdraw({ amount: minWithdrawal, payoutMethod: 'upi', payoutDetails: { upiId: '' } });
+      await walletApi.withdraw({ amount: parsedAmount, payoutMethod: 'upi', payoutDetails: { upiId: '' } });
       showToast(t('wallet.success'), 'success');
+      setWithdrawAmount('');
       fetchData();
     } catch (err: unknown) {
       const msg =
@@ -436,7 +442,7 @@ export function WalletScreen() {
         t('wallet.failed');
       showToast(msg, 'error');
     } finally {
-      setWithdrawingMin(false);
+      setWithdrawing(false);
     }
   }
 
@@ -511,21 +517,38 @@ export function WalletScreen() {
             </View>
             <View style={styles.balanceRight}>
               {(balance ?? 0) >= minWithdrawal ? (
-                <TouchableOpacity
-                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.18)' }]}
-                  onPress={showWithdrawConfirm}
-                  disabled={withdrawingMin}
-                  activeOpacity={0.7}
-                >
-                  {withdrawingMin ? (
-                    <ActivityIndicator size="small" color="rgba(255,255,255,0.9)" />
-                  ) : (
-                    <>
-                      <Ionicons name="arrow-up-outline" size={17} color="rgba(255,255,255,0.9)" />
-                      <Text style={[styles.withdrawCtaText, { color: 'rgba(255,255,255,0.9)' }]}>{t('wallet.withdraw')}</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                <View style={styles.withdrawInputWrap}>
+                  <View style={[styles.withdrawInputRow, { borderColor: 'rgba(255,255,255,0.25)' }]}>
+                    <Text style={styles.withdrawRupee}>₹</Text>
+                    <TextInput
+                      style={styles.withdrawInput}
+                      placeholder="Enter amount"
+                      placeholderTextColor="rgba(255,255,255,0.45)"
+                      keyboardType="numeric"
+                      value={withdrawAmount}
+                      onChangeText={(v) => setWithdrawAmount(v.replace(/[^0-9.]/g, ''))}
+                      maxLength={8}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.withdrawCtaBtn,
+                      { backgroundColor: isValidAmount ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)' },
+                    ]}
+                    onPress={showWithdrawConfirm}
+                    disabled={!isValidAmount || withdrawing}
+                    activeOpacity={0.7}
+                  >
+                    {withdrawing ? (
+                      <ActivityIndicator size="small" color="rgba(255,255,255,0.9)" />
+                    ) : (
+                      <>
+                        <Ionicons name="arrow-up-outline" size={17} color={isValidAmount ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)'} />
+                        <Text style={[styles.withdrawCtaText, { color: isValidAmount ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)' }]}>{t('wallet.withdraw')}</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
               ) : (
                 <View style={[styles.balanceMinAlert, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
                   <Ionicons name="information-circle" size={15} color="rgba(255,255,255,0.85)" />
@@ -726,8 +749,8 @@ export function WalletScreen() {
               {t('wallet.confirmWithdrawTitle') ?? 'Confirm Withdrawal'}
             </Text>
             <Text style={[confirmModalStyles.message, { color: c.textSecondary }]}>
-              {t('wallet.confirmWithdrawMsg', { amount: minWithdrawal }) ??
-                `You are about to withdraw ₹${minWithdrawal.toLocaleString('en-IN')} to your UPI account.`}
+              {t('wallet.confirmWithdrawMsg', { amount: parsedAmount }) ??
+                `You are about to withdraw ₹${parsedAmount.toLocaleString('en-IN')} to your UPI account.`}
             </Text>
             <View style={confirmModalStyles.actions}>
               <TouchableOpacity
@@ -740,10 +763,10 @@ export function WalletScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[confirmModalStyles.btn, confirmModalStyles.btnConfirm, { backgroundColor: c.primary }]}
-                onPress={handleWithdrawMin}
-                disabled={withdrawingMin}
+                onPress={handleWithdraw}
+                disabled={withdrawing}
               >
-                {withdrawingMin ? (
+                {withdrawing ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={[confirmModalStyles.btnConfirmText, { color: '#fff' }]}>
@@ -802,6 +825,20 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   withdrawCtaText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  withdrawInputWrap: { gap: tokens.spacing2, alignItems: 'stretch' },
+  withdrawInputRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1,
+    paddingHorizontal: tokens.spacing3,
+    height: 40,
+  },
+  withdrawRupee: { color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', marginRight: 2 },
+  withdrawInput: {
+    flex: 1, color: '#fff', fontSize: 14, fontWeight: '600',
+    paddingVertical: 0,
+  },
   balanceMinAlert: {
     flexDirection: 'row',
     alignItems: 'center',
