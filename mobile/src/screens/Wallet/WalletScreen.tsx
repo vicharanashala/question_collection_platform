@@ -505,12 +505,21 @@ export function WalletScreen() {
             </View>
             <View style={styles.balanceRight}>
               {(balance ?? 0) >= minWithdrawal ? (
-                <View
-                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.12)' }]}
+                <TouchableOpacity
+                  style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.18)' }]}
+                  onPress={handleWithdrawMin}
+                  disabled={withdrawingMin}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons name="arrow-up-outline" size={17} color="rgba(255,255,255,0.4)" />
-                  <Text style={[styles.withdrawCtaText, { color: 'rgba(255,255,255,0.4)' }]}>{t('wallet.withdraw')}</Text>
-                </View>
+                  {withdrawingMin ? (
+                    <ActivityIndicator size="small" color="rgba(255,255,255,0.9)" />
+                  ) : (
+                    <>
+                      <Ionicons name="arrow-up-outline" size={17} color="rgba(255,255,255,0.9)" />
+                      <Text style={[styles.withdrawCtaText, { color: 'rgba(255,255,255,0.9)' }]}>{t('wallet.withdraw')}</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               ) : (
                 <View style={[styles.balanceMinAlert, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
                   <Ionicons name="information-circle" size={15} color="rgba(255,255,255,0.85)" />
