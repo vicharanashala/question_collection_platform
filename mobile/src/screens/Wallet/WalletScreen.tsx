@@ -413,13 +413,19 @@ export function WalletScreen() {
 
   // ─── Withdraw minimum ─────────────────────────────────────────────────────
   const [withdrawingMin, setWithdrawingMin] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function handleWithdrawMin() {
+  function showWithdrawConfirm() {
     if ((balance ?? 0) < minWithdrawal) {
       showToast(t('wallet.minWithdrawalError', { amount: minWithdrawal }), 'warning');
       return;
     }
+    setConfirmOpen(true);
+  }
+
+  async function handleWithdrawMin() {
     setWithdrawingMin(true);
+    setConfirmOpen(false);
     try {
       await walletApi.withdraw({ amount: minWithdrawal, payoutMethod: 'upi', payoutDetails: { upiId: '' } });
       showToast(t('wallet.success'), 'success');
@@ -432,6 +438,7 @@ export function WalletScreen() {
     } finally {
       setWithdrawingMin(false);
     }
+  }
   }
 
   // ─── Filtered transactions ──────────────────────────────────────────────────
@@ -507,7 +514,7 @@ export function WalletScreen() {
               {(balance ?? 0) >= minWithdrawal ? (
                 <TouchableOpacity
                   style={[styles.withdrawCtaBtn, { backgroundColor: 'rgba(255,255,255,0.18)' }]}
-                  onPress={handleWithdrawMin}
+                  onPress={showWithdrawConfirm}
                   disabled={withdrawingMin}
                   activeOpacity={0.7}
                 >
@@ -709,6 +716,47 @@ export function WalletScreen() {
         </View>
       </ScrollView>
 
+      {/* Withdraw Confirmation Modal */}
+      <Modal visible={confirmOpen} transparent animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
+        <View style={confirmModalStyles.overlay}>
+          <View style={[confirmModalStyles.sheet, { backgroundColor: c.surface }]}>
+            <View style={confirmModalStyles.iconWrap}>
+              <Ionicons name="arrow-up-outline" size={28} color={c.primary} />
+            </View>
+            <Text style={[confirmModalStyles.title, { color: c.text }]}>
+              {t('wallet.confirmWithdrawTitle') ?? 'Confirm Withdrawal'}
+            </Text>
+            <Text style={[confirmModalStyles.message, { color: c.textSecondary }]}>
+              {t('wallet.confirmWithdrawMsg', { amount: minWithdrawal }) ??
+                `You are about to withdraw ₹${minWithdrawal.toLocaleString('en-IN')} to your UPI account.`}
+            </Text>
+            <View style={confirmModalStyles.actions}>
+              <TouchableOpacity
+                style={[confirmModalStyles.btn, confirmModalStyles.btnCancel, { borderColor: c.border }]}
+                onPress={() => setConfirmOpen(false)}
+              >
+                <Text style={[confirmModalStyles.btnCancelText, { color: c.textSecondary }]}>
+                  {t('common.cancel')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[confirmModalStyles.btn, confirmModalStyles.btnConfirm, { backgroundColor: c.primary }]}
+                onPress={handleWithdrawMin}
+                disabled={withdrawingMin}
+              >
+                {withdrawingMin ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={[confirmModalStyles.btnConfirmText, { color: '#fff' }]}>
+                    {t('wallet.confirm') ?? 'Confirm'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Transaction Detail Modal */}
       <TxDetailModal
         tx={selectedTx}
@@ -840,4 +888,29 @@ const styles = StyleSheet.create({
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: 14, fontWeight: '700' },
   txStatus: { fontSize: 11, marginTop: 2 },
+
+  confirmModalStyles: StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: tokens.spacing5 },
+    sheet: {
+      width: '100%', maxWidth: 340,
+      borderRadius: tokens.radiusXl,
+      paddingVertical: tokens.spacing6,
+      paddingHorizontal: tokens.spacing5,
+      alignItems: 'center',
+    },
+    iconWrap: {
+      width: 56, height: 56, borderRadius: 28,
+      backgroundColor: c.primary + '18',
+      alignItems: 'center', justifyContent: 'center',
+      marginBottom: tokens.spacing4,
+    },
+    title: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing2, textAlign: 'center' },
+    message: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: tokens.spacing5 },
+    actions: { flexDirection: 'row', gap: tokens.spacing3, width: '100%' },
+    btn: { flex: 1, height: 46, borderRadius: tokens.radiusLg, alignItems: 'center', justifyContent: 'center' },
+    btnCancel: { borderWidth: 1 },
+    btnCancelText: { fontSize: 15, fontWeight: '600' },
+    btnConfirm: {},
+    btnConfirmText: { fontSize: 15, fontWeight: '700' },
+  }),
 });
