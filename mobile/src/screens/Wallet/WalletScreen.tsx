@@ -439,7 +439,6 @@ export function WalletScreen() {
       setWithdrawingMin(false);
     }
   }
-  }
 
   // ─── Filtered transactions ──────────────────────────────────────────────────
 
@@ -888,29 +887,29 @@ const styles = StyleSheet.create({
   txRight: { alignItems: 'flex-end' },
   txAmount: { fontSize: 14, fontWeight: '700' },
   txStatus: { fontSize: 11, marginTop: 2 },
+});
 
-  confirmModalStyles: StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: tokens.spacing5 },
-    sheet: {
-      width: '100%', maxWidth: 340,
-      borderRadius: tokens.radiusXl,
-      paddingVertical: tokens.spacing6,
-      paddingHorizontal: tokens.spacing5,
-      alignItems: 'center',
-    },
-    iconWrap: {
-      width: 56, height: 56, borderRadius: 28,
-      backgroundColor: c.primary + '18',
-      alignItems: 'center', justifyContent: 'center',
-      marginBottom: tokens.spacing4,
-    },
-    title: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing2, textAlign: 'center' },
-    message: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: tokens.spacing5 },
-    actions: { flexDirection: 'row', gap: tokens.spacing3, width: '100%' },
-    btn: { flex: 1, height: 46, borderRadius: tokens.radiusLg, alignItems: 'center', justifyContent: 'center' },
-    btnCancel: { borderWidth: 1 },
-    btnCancelText: { fontSize: 15, fontWeight: '600' },
-    btnConfirm: {},
-    btnConfirmText: { fontSize: 15, fontWeight: '700' },
-  }),
+const confirmModalStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: tokens.spacing5 },
+  sheet: {
+    width: '100%', maxWidth: 340,
+    borderRadius: tokens.radiusXl,
+    paddingVertical: tokens.spacing6,
+    paddingHorizontal: tokens.spacing5,
+    alignItems: 'center',
+  },
+  iconWrap: {
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: '#e0f2ef',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: tokens.spacing4,
+  },
+  title: { fontSize: 18, fontWeight: '700', marginBottom: tokens.spacing2, textAlign: 'center' },
+  message: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: tokens.spacing5 },
+  actions: { flexDirection: 'row', gap: tokens.spacing3, width: '100%' },
+  btn: { flex: 1, height: 46, borderRadius: tokens.radiusLg, alignItems: 'center', justifyContent: 'center' },
+  btnCancel: { borderWidth: 1 },
+  btnCancelText: { fontSize: 15, fontWeight: '600' },
+  btnConfirm: {},
+  btnConfirmText: { fontSize: 15, fontWeight: '700' },
 });
