@@ -47,6 +47,7 @@ export type RootStackParamList = {
     /** Fallback rejection reason when the transaction hasn't loaded yet */
     initialReason?: string;
   };
+  PaymentDetails: undefined;
   QuestionDetail: {
     /** ID of the question to display */
     questionId: string;

@@ -300,11 +300,28 @@ export const walletApi = {
 
   getWalletConfig: () => api.get('/wallets/me/config'),
 
-  withdraw: (data: Record<string, unknown>) =>
+  withdraw: (data: { amount: number; paymentDetailId: string }) =>
     api.post('/wallets/withdraw', data),
 
   cancelWithdrawal: (withdrawalId: string) =>
-    api.delete(`/wallets/withdrawals/${withdrawalId}`),};
+    api.delete(`/wallets/withdrawals/${withdrawalId}`),
+
+  // Payment details
+  getPaymentDetails: () => api.get('/wallets/payment-details'),
+
+  addPaymentDetail: (data: {
+    payoutMethod: 'upi' | 'bank_transfer';
+    upiId?: string;
+    accountNumber?: string;
+    confirmAccountNumber?: string;
+    ifsc?: string;
+    accountHolderName?: string;
+    bankName?: string;
+  }) => api.post('/wallets/payment-details', data),
+
+  deletePaymentDetail: (id: string) =>
+    api.delete(`/wallets/payment-details/${id}`),
+};
 
 export const adminApi = {
   // Dashboard
@@ -347,6 +364,10 @@ export const adminApi = {
     api.get('/admin/withdrawals', { params }),
   processWithdrawal: (id: string, body: { action: 'approve' | 'reject'; failureReason?: string }) =>
     api.post(`/admin/withdrawals/${id}/process`, body),
+  retryWithdrawal: (id: string) =>
+    api.post(`/admin/withdrawals/${id}/retry`, {}),
+  markWithdrawalFailed: (id: string, body?: { reason?: string }) =>
+    api.post(`/admin/withdrawals/${id}/fail`, body),
 
   // Wallet detail (user wallet + transactions + withdrawals)
   getUserWallet: (userId: string) =>

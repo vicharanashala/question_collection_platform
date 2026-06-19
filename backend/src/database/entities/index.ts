@@ -3,6 +3,8 @@ export * from './user-crop-detail.entity';
 export * from './wallet.entity';
 export * from './transaction.entity';
 export * from './withdrawal-request.entity';
+export * from './user-payment-detail.entity';
+export * from './payment-log.entity';
 export * from './question.entity';
 export * from './audit-log.entity';
 export * from './admin-config.entity';

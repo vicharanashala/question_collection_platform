@@ -36,6 +36,7 @@ import { QuestionScreen } from '../screens/Question/QuestionScreen';
 import { WalletScreen } from '../screens/Wallet/WalletScreen';
 import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/Profile/EditProfileScreen';
+import { PaymentDetailsScreen } from '../screens/Wallet/PaymentDetailsScreen';
 import { CropManagementScreen } from '../screens/Profile/CropManagementScreen';
 import { NotificationScreen } from '../screens/Notification/NotificationScreen';
 import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
@@ -441,6 +442,11 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="TransactionDetail"
                   component={TransactionDetailScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="PaymentDetails"
+                  component={PaymentDetailsScreen}
                   options={{ presentation: 'modal' }}
                 />
                 <RootStack.Screen

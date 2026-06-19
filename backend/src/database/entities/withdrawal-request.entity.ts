@@ -4,12 +4,14 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   Index,
 } from 'typeorm';
 import { PayoutMethod, WithdrawalStatus } from '../../common/enums';
 import { User } from './user.entity';
 import { Wallet } from './wallet.entity';
+import { PaymentLog } from './payment-log.entity';
 
 @Entity('withdrawal_requests')
 export class WithdrawalRequest {
@@ -36,6 +38,13 @@ export class WithdrawalRequest {
   @Index('idx_withdrawals_status')
   status: WithdrawalStatus;
 
+  // PineLabs fields
+  @Column({ name: 'pinelabs_transaction_id', type: 'varchar', length: 100, nullable: true })
+  pinelabsTransactionId: string | null;
+
+  @Column({ name: 'order_id', type: 'varchar', length: 100, nullable: true, unique: true })
+  orderId: string | null;
+
   @Column({ name: 'processed_at', type: 'timestamp', nullable: true })
   processedAt: Date | null;
 
@@ -55,4 +64,7 @@ export class WithdrawalRequest {
   @ManyToOne(() => Wallet, (wallet) => wallet.withdrawalRequests)
   @JoinColumn({ name: 'wallet_id' })
   wallet: Wallet;
+
+  @OneToMany(() => PaymentLog, (pl) => pl.withdrawalRequest)
+  paymentLogs: PaymentLog[];
 }

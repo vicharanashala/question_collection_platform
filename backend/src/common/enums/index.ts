@@ -7,6 +7,13 @@ export enum UserCategory {
   NGO = 'ngo',
 }
 
+export enum PaymentDetailVerificationStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  VERIFIED = 'verified',
+  FAILED = 'failed',
+}
+
 export enum VerificationStatus {
   PENDING = 'pending',
   MANUAL_REVIEW = 'manual_review',
@@ -96,6 +103,13 @@ export enum WithdrawalStatus {
   COMPLETED = 'completed',
   REJECTED = 'rejected',
   CANCELLED = 'cancelled',
+  FAILED = 'failed',
+}
+
+export enum PaymentLogStatus {
+  SUCCESS = 'success',
+  FAILED = 'failed',
+  PENDING = 'pending',
 }
 
 export enum ViolationType {
@@ -108,6 +122,12 @@ export enum PenaltyType {
   WARNING = 'warning',
   SUSPENSION = 'suspension',
   BAN = 'ban',
+}
+
+export enum VerificationTriggerType {
+  USER_ADD = 'user_add',
+  USER_EDIT = 'user_edit',
+  WITHDRAWAL_VERIFY = 'withdrawal_verify',
 }
 
 export enum AuditAction {

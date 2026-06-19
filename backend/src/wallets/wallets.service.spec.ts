@@ -4,7 +4,9 @@ import { DataSource, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { AdminService } from '../admin/admin.service';
+import { PinelabsService } from '../payment/pinelabs.service';
 import { Wallet, Transaction, WithdrawalRequest } from '../database/entities';
+import { UserPaymentDetail } from '../database/entities/user-payment-detail.entity';
 import {
   TransactionType,
   TransactionSource,
@@ -19,10 +21,18 @@ const mockWalletRepo = () => ({
 
 const mockTransactionRepo = () => ({
   findAndCount: jest.fn(),
+  update: jest.fn(),
 });
 
 const mockWithdrawalRepo = () => ({
   findOne: jest.fn(),
+});
+
+const mockPaymentDetailRepo = () => ({
+  findOne: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+  update: jest.fn(),
 });
 
 const mockDataSource = () => ({
@@ -38,11 +48,17 @@ const mockAdminService = () => ({
   }),
 });
 
+const mockPinelabsService = () => ({
+  generateVerificationOrderId: jest.fn().mockImplementation((id) => `VF_${id.replace(/-/g, '')}_mock123456`),
+  dispatchVerificationPayout: jest.fn().mockResolvedValue({ success: true }),
+});
+
 describe('WalletsService', () => {
   let service: WalletsService;
   let walletRepo: ReturnType<typeof mockWalletRepo>;
   let transactionRepo: ReturnType<typeof mockTransactionRepo>;
   let withdrawalRepo: ReturnType<typeof mockWithdrawalRepo>;
+  let paymentDetailRepo: ReturnType<typeof mockPaymentDetailRepo>;
 
   const userId = '11111111-1111-1111-1111-111111111111';
   const walletId = '22222222-2222-2222-2222-222222222222';
@@ -62,8 +78,10 @@ describe('WalletsService', () => {
         { provide: getRepositoryToken(Wallet), useFactory: mockWalletRepo },
         { provide: getRepositoryToken(Transaction), useFactory: mockTransactionRepo },
         { provide: getRepositoryToken(WithdrawalRequest), useFactory: mockWithdrawalRepo },
+        { provide: getRepositoryToken(UserPaymentDetail), useFactory: mockPaymentDetailRepo },
         { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
+        { provide: PinelabsService, useFactory: mockPinelabsService },
       ],
     }).compile();
 
@@ -71,6 +89,7 @@ describe('WalletsService', () => {
     walletRepo = module.get(getRepositoryToken(Wallet));
     transactionRepo = module.get(getRepositoryToken(Transaction));
     withdrawalRepo = module.get(getRepositoryToken(WithdrawalRequest));
+    paymentDetailRepo = module.get(getRepositoryToken(UserPaymentDetail));
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -206,19 +225,54 @@ describe('WalletsService', () => {
       (service as unknown as { dataSource: { createQueryRunner: jest.Mock } }).dataSource.createQueryRunner.mockReturnValue(mockQueryRunner);
     };
 
+    const paymentDetailId = 'det-1111-1111-1111-111111111111';
+    const mockVerifiedDetail = {
+      id: paymentDetailId,
+      userId,
+      payoutMethod: PayoutMethod.UPI,
+      upiId: 'test@upi',
+      accountNumberEncrypted: null,
+      ifsc: null,
+      accountHolderName: null,
+      status: 'verified',
+    };
+
+    beforeEach(() => {
+      // Default: return a verified payment detail
+      paymentDetailRepo.findOne.mockResolvedValue(mockVerifiedDetail);
+    });
+
     it('should throw NotFoundException when wallet not found', async () => {
       walletRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.withdraw(userId, { amount: 100, payoutMethod: PayoutMethod.UPI, payoutDetails: {} }),
+        service.withdraw(userId, { amount: 100, paymentDetailId }),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when payment detail not found', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      paymentDetailRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.withdraw(userId, { amount: 100, paymentDetailId }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException when payment detail not verified', async () => {
+      walletRepo.findOne.mockResolvedValue(mockWallet);
+      paymentDetailRepo.findOne.mockResolvedValue({ ...mockVerifiedDetail, status: 'pending' });
+
+      await expect(
+        service.withdraw(userId, { amount: 100, paymentDetailId }),
+      ).rejects.toThrow(/not verified/);
     });
 
     it('should throw BadRequestException when amount is below minimum', async () => {
       walletRepo.findOne.mockResolvedValue(mockWallet);
 
       await expect(
-        service.withdraw(userId, { amount: 10, payoutMethod: PayoutMethod.UPI, payoutDetails: {} }),
+        service.withdraw(userId, { amount: 10, paymentDetailId }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -226,7 +280,7 @@ describe('WalletsService', () => {
       walletRepo.findOne.mockResolvedValue(mockWallet);
 
       await expect(
-        service.withdraw(userId, { amount: 1000, payoutMethod: PayoutMethod.UPI, payoutDetails: {} }),
+        service.withdraw(userId, { amount: 1000, paymentDetailId }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -238,7 +292,7 @@ describe('WalletsService', () => {
       });
 
       await expect(
-        service.withdraw(userId, { amount: 100, payoutMethod: PayoutMethod.UPI, payoutDetails: {} }),
+        service.withdraw(userId, { amount: 100, paymentDetailId }),
       ).rejects.toThrow(/pending/);
     });
 
@@ -247,11 +301,7 @@ describe('WalletsService', () => {
       withdrawalRepo.findOne.mockResolvedValue(null);
       setupQueryRunner(500);
 
-      const result = await service.withdraw(userId, {
-        amount: 100,
-        payoutMethod: PayoutMethod.UPI,
-        payoutDetails: { upiId: 'test@upi' },
-      });
+      const result = await service.withdraw(userId, { amount: 100, paymentDetailId });
 
       expect(result).toHaveProperty('amount', 100);
       expect(result).toHaveProperty('status', WithdrawalStatus.PENDING);
@@ -269,7 +319,7 @@ describe('WalletsService', () => {
       setupQueryRunner(50); // balance is 50 but we try to withdraw 100
 
       await expect(
-        service.withdraw(userId, { amount: 100, payoutMethod: PayoutMethod.UPI, payoutDetails: {} }),
+        service.withdraw(userId, { amount: 100, paymentDetailId }),
       ).rejects.toThrow(BadRequestException);
 
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
@@ -283,7 +333,7 @@ describe('WalletsService', () => {
       mockQueryRunner.manager.save.mockRejectedValue(new Error('DB error'));
 
       await expect(
-        service.withdraw(userId, { amount: 100, payoutMethod: PayoutMethod.UPI, payoutDetails: {} }),
+        service.withdraw(userId, { amount: 100, paymentDetailId }),
       ).rejects.toThrow('DB error');
 
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
@@ -295,7 +345,7 @@ describe('WalletsService', () => {
       withdrawalRepo.findOne.mockResolvedValue(null);
       setupQueryRunner(500);
 
-      await service.withdraw(userId, { amount: 100, payoutMethod: PayoutMethod.UPI, payoutDetails: {} });
+      await service.withdraw(userId, { amount: 100, paymentDetailId });
 
       expect(mockQueryRunner.release).toHaveBeenCalled();
     });

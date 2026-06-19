@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -382,6 +383,7 @@ const filterStyles = StyleSheet.create({
 // ─── Main WalletScreen ────────────────────────────────────────────────────────
 
 export function WalletScreen() {
+  const navigation = useNavigation();
   const { theme, isDark } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
@@ -437,25 +439,88 @@ export function WalletScreen() {
   const [withdrawing, setWithdrawing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Payout form state (inside confirmation modal)
+  const [payoutMethod, setPayoutMethod] = useState<'upi' | 'bank_transfer'>('upi');
+  const [upiId, setUpiId] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [ifsc, setIfsc] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [payoutError, setPayoutError] = useState('');
+
+  // Payment detail selection
+  type PaymentDetailStatus = 'pending' | 'in_progress' | 'verified' | 'failed';
+  interface PaymentDetailItem {
+    id: string;
+    payoutMethod: 'upi' | 'bank_transfer';
+    status: PaymentDetailStatus;
+    displayValue: string;
+    bankName: string | null;
+    ifsc: string | null;
+    accountHolderName: string | null;
+    verifiedAt: string | null;
+  }
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetailItem[]>([]);
+  const [selectedPaymentDetailId, setSelectedPaymentDetailId] = useState<string | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
   const parsedAmount = parseFloat(withdrawAmount);
   const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawal && parsedAmount <= (balance ?? 0);
+
+  async function loadPaymentDetails() {
+    setLoadingDetails(true);
+    try {
+      const res = await walletApi.getPaymentDetails();
+      const items = res.data as PaymentDetailItem[];
+      setPaymentDetails(items);
+      // Auto-select the first verified item
+      const verified = items.find((i) => i.status === 'verified');
+      setSelectedPaymentDetailId(verified?.id ?? (items[0]?.id ?? null));
+    } catch {
+      showToast('Failed to load payment methods', 'error');
+    } finally {
+      setLoadingDetails(false);
+    }
+  }
 
   function showWithdrawConfirm() {
     if ((balance ?? 0) < minWithdrawal) {
       showToast(t('wallet.minWithdrawalError', { amount: minWithdrawal }), 'warning');
       return;
     }
+    resetWithdrawForm();
+    loadPaymentDetails().then(() => setConfirmOpen(true));
+  }
+
+  function resetWithdrawForm() {
     setWithdrawAmount('');
-    setConfirmOpen(true);
+    setPayoutError('');
+    setSelectedPaymentDetailId(null);
+    setPaymentDetails([]);
+    setUpiId('');
+    setAccountNumber('');
+    setIfsc('');
+    setAccountHolderName('');
   }
 
   async function handleWithdraw() {
+    const selected = paymentDetails.find((d) => d.id === selectedPaymentDetailId);
+    if (!selected) {
+      setPayoutError('Please select a payment method first');
+      return;
+    }
+    if (selected.status !== 'verified') {
+      setPayoutError(`Payment method is not verified yet (status: ${selected.status})`);
+      return;
+    }
     setWithdrawing(true);
     setConfirmOpen(false);
     try {
-      await walletApi.withdraw({ amount: parsedAmount, payoutMethod: 'upi', payoutDetails: { upiId: '' } });
-      showToast(t('wallet.success'), 'success');
-      setWithdrawAmount('');
+      await walletApi.withdraw({
+        amount: parsedAmount,
+        paymentDetailId: selectedPaymentDetailId!,
+      });
+      showToast(t('wallet.success') ?? 'Withdrawal request submitted', 'success');
+      resetWithdrawForm();
       fetchData();
     } catch (err: unknown) {
       const msg =
@@ -516,6 +581,15 @@ export function WalletScreen() {
           <Text style={[styles.title, { color: c.text }]}>{t('wallet.title')}</Text>
           <TouchableOpacity onPress={onRefresh} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="refresh-outline" size={20} color={c.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => (navigation as any).navigate('PaymentDetails')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: c.primary + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
+              <Ionicons name="card-outline" size={15} color={c.primary} />
+              <Text style={{ color: c.primary, fontSize: 13, fontWeight: '700' }}>Payment Methods</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -737,7 +811,7 @@ export function WalletScreen() {
         </View>
       </ScrollView>
 
-      {/* Withdraw Confirmation Modal */}
+      {/* Withdraw Confirmation Modal — select verified payment detail */}
       <Modal visible={confirmOpen} transparent animationType="fade" onRequestClose={() => setConfirmOpen(false)}>
         <View style={confirmModalStyles.overlay}>
           <View style={[confirmModalStyles.sheet, { backgroundColor: c.surface }]}>
@@ -765,9 +839,7 @@ export function WalletScreen() {
                 placeholderTextColor={c.textTertiary}
                 keyboardType="numeric"
                 value={withdrawAmount}
-                onChangeText={(v) => {
-                  setWithdrawAmount(v.replace(/[^0-9.]/g, ''));
-                }}
+                onChangeText={(v) => setWithdrawAmount(v.replace(/[^0-9.]/g, ''))}
                 maxLength={8}
                 autoFocus
               />
@@ -778,10 +850,69 @@ export function WalletScreen() {
               </Text>
             )}
 
+            {/* Payment method selector */}
+            <Text style={[confirmModalStyles.sectionLabel, { color: c.textSecondary }]}>
+              Payment Method
+            </Text>
+
+            {loadingDetails ? (
+              <ActivityIndicator size="small" color={c.primary} style={{ marginVertical: tokens.spacing4 }} />
+            ) : paymentDetails.length === 0 ? (
+              <View style={[confirmModalStyles.noDetailsBox, { borderColor: c.warning + '44', backgroundColor: c.warning + '0a' }]}>
+                <Text style={[confirmModalStyles.noDetailsText, { color: c.warning }]}>
+                  No payment methods found.
+                </Text>
+                <Text style={[confirmModalStyles.noDetailsSub, { color: c.textSecondary }]}>
+                  Add one in Payment Methods first.
+                </Text>
+              </View>
+            ) : (
+              <View style={confirmModalStyles.pdList}>
+                {paymentDetails
+                  .filter((d) => d.status === 'verified')
+                  .map((detail) => (
+                    <TouchableOpacity
+                      key={detail.id}
+                      style={[
+                        confirmModalStyles.pdItem,
+                        { borderColor: c.border, backgroundColor: selectedPaymentDetailId === detail.id ? c.primary + '12' : 'transparent' },
+                      ]}
+                      onPress={() => { setSelectedPaymentDetailId(detail.id); setPayoutError(''); }}
+                    >
+                      <Ionicons
+                        name={detail.payoutMethod === 'upi' ? 'at' : 'card-outline'}
+                        size={16}
+                        color={selectedPaymentDetailId === detail.id ? c.primary : c.textSecondary}
+                      />
+                      <View style={{ flex: 1, marginLeft: tokens.spacing2 }}>
+                        <Text style={[confirmModalStyles.pdValue, { color: c.text }]}>
+                          {detail.payoutMethod === 'upi' ? detail.displayValue : `A/c ${detail.displayValue}`}
+                        </Text>
+                        {detail.payoutMethod === 'bank_transfer' && detail.bankName && (
+                          <Text style={[confirmModalStyles.pdBank, { color: c.textSecondary }]}>{detail.bankName}</Text>
+                        )}
+                      </View>
+                      {selectedPaymentDetailId === detail.id && (
+                        <Ionicons name="checkmark-circle" size={18} color={c.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                {paymentDetails.filter((d) => d.status === 'verified').length === 0 && (
+                  <Text style={[confirmModalStyles.noVerified, { color: c.textTertiary }]}>
+                    No verified payment methods. Add one in Payment Methods.
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {payoutError ? (
+              <Text style={[confirmModalStyles.errorText, { color: c.error }]}>{payoutError}</Text>
+            ) : null}
+
             <View style={confirmModalStyles.actions}>
               <TouchableOpacity
                 style={[confirmModalStyles.btn, confirmModalStyles.btnCancel, { borderColor: c.border }]}
-                onPress={() => { setConfirmOpen(false); setWithdrawAmount(''); }}
+                onPress={() => setConfirmOpen(false)}
               >
                 <Text style={[confirmModalStyles.btnCancelText, { color: c.textSecondary }]}>
                   {t('common.cancel')}
@@ -791,10 +922,10 @@ export function WalletScreen() {
                 style={[
                   confirmModalStyles.btn,
                   confirmModalStyles.btnConfirm,
-                  { backgroundColor: isValidAmount ? c.primary : c.textTertiary },
+                  { backgroundColor: isValidAmount && selectedPaymentDetailId ? c.primary : c.textTertiary },
                 ]}
                 onPress={handleWithdraw}
-                disabled={!isValidAmount || withdrawing}
+                disabled={!isValidAmount || !selectedPaymentDetailId || withdrawing}
               >
                 {withdrawing ? (
                   <ActivityIndicator size="small" color="#fff" />
@@ -969,6 +1100,14 @@ const confirmModalStyles = StyleSheet.create({
   inputRupee: { fontSize: 18, fontWeight: '700', marginRight: 4 },
   input: { flex: 1, fontSize: 20, fontWeight: '700', paddingVertical: 0 },
   errorText: { fontSize: 12, fontWeight: '500', marginBottom: tokens.spacing3 },
+  sectionLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: tokens.spacing2, alignSelf: 'flex-start' },
+  payoutMethodRow: { flexDirection: 'row', gap: tokens.spacing2, width: '100%', marginBottom: tokens.spacing3 },
+  payoutMethodBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderWidth: 1.5, borderRadius: tokens.radiusMd, height: 46,
+  },
+  payoutMethodLabel: { fontSize: 14, fontWeight: '700' },
+  bankFields: { width: '100%', gap: tokens.spacing2 },
   message: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: tokens.spacing5 },
   actions: { flexDirection: 'row', gap: tokens.spacing3, width: '100%' },
   btn: { flex: 1, height: 46, borderRadius: tokens.radiusLg, alignItems: 'center', justifyContent: 'center' },

@@ -14,6 +14,7 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { WalletsService } from './wallets.service';
 import { WithdrawDto } from './dto';
+import { AddPaymentDetailDto } from './dto/payment-details.dto';
 import { Request } from 'express';
 
 interface AuthenticatedRequest extends Request {
@@ -87,5 +88,29 @@ export class WalletsController {
   @HttpCode(HttpStatus.OK)
   async cancelWithdrawal(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.walletsService.cancelWithdrawal(req.user.id, id);
+  }
+
+  // ─── Payment Details ─────────────────────────────────────────────────────
+
+  /** Add a new payment detail and initiate ₹1 micro-transaction verification. */
+  @Post('payment-details')
+  @HttpCode(HttpStatus.CREATED)
+  async addPaymentDetail(@Req() req: AuthenticatedRequest, @Body() dto: AddPaymentDetailDto) {
+    return this.walletsService.addPaymentDetail(req.user.id, dto);
+  }
+
+  /** Get all payment details for the current user (masked). */
+  @Get('payment-details')
+  @HttpCode(HttpStatus.OK)
+  async getPaymentDetails(@Req() req: AuthenticatedRequest) {
+    return this.walletsService.getPaymentDetails(req.user.id);
+  }
+
+  /** Delete a payment detail (only allowed for non-verified details). */
+  @Delete('payment-details/:id')
+  @HttpCode(HttpStatus.OK)
+  async deletePaymentDetail(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    await this.walletsService.deletePaymentDetail(req.user.id, id);
+    return { success: true };
   }
 }

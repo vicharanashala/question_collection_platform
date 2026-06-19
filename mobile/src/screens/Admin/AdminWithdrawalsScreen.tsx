@@ -52,8 +52,11 @@ interface WithdrawalItem {
   status: string;
   createdAt: string;
   processedAt: string | null;
-  failureReason: string | null;
+  rejectionReason: string | null;
   user: { id: string; name: string; mobileNumber: string; state: string } | null;
+  payoutDetails?: Record<string, unknown>;
+  pinelabsTransactionId?: string | null;
+  orderId?: string | null;
 }
 
 const FILTERS: FilterOption[] = [
@@ -209,6 +212,46 @@ export function AdminWithdrawalsScreen() {
     }
   }
 
+  async function handleRetry(id: string) {
+    setProcessingId(id);
+    try {
+      const res = await adminApi.retryWithdrawal(id);
+      const data = res.data as { success: boolean; paymentFailed?: boolean; errorCode?: string; errorMessage?: string };
+      if (data.paymentFailed) {
+        showToast(`Payment failed: ${data.errorMessage ?? data.errorCode}`, 'error');
+        // Refresh to get updated failure reason
+        await fetch(1, true, activeFilters);
+      } else {
+        showToast('Payment successful!', 'success');
+        await fetch(1, true, activeFilters);
+      }
+    } catch (e) {
+      showToast(getErrorMessage(e, 'Retry failed'), 'error');
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function handleMarkFailed(id: string) {
+    Alert.prompt(
+      'Mark as Failed',
+      'Enter reason (optional):',
+      async (reason) => {
+        setProcessingId(id);
+        try {
+          await adminApi.markWithdrawalFailed(id, reason ? { reason } : undefined);
+          showToast('Marked as failed', 'success');
+          await fetch(1, true, activeFilters);
+        } catch (e) {
+          showToast(getErrorMessage(e, 'Failed to mark as failed'), 'error');
+        } finally {
+          setProcessingId(null);
+        }
+      },
+      'plain-text',
+    );
+  }
+
   function activeFilterCount(): number {
     return Object.entries(activeFilters).filter(([k, v]) => {
       if (k === 'sortBy') return v !== 'createdAt:DESC';
@@ -275,11 +318,67 @@ export function AdminWithdrawalsScreen() {
           </View>
         )}
 
-        {item.failureReason && (
+        {/* Payment action buttons for PROCESSING withdrawals */}
+        {item.status === 'processing' && isSuperAdmin && (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: c.warning + '22' }]}
+              onPress={() => handleRetry(item.id)}
+              disabled={processingId === item.id}
+            >
+              {processingId === item.id ? (
+                <ActivityIndicator size="small" color={c.warning} />
+              ) : (
+                <Text style={[styles.btnRetry, { color: c.warning }]}>↻ Retry Payment</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: '#ef444422' }]}
+              onPress={() => handleMarkFailed(item.id)}
+              disabled={processingId === item.id}
+            >
+              <Text style={styles.btnReject}>✗ Mark Failed</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Payment info for PROCESSING / COMPLETED */}
+        {item.status === 'processing' && (
+          <View style={[styles.paymentInfoBox, { borderColor: c.warning + '44', backgroundColor: c.warning + '0a' }]}>
+            <Ionicons name="hourglass-outline" size={13} color={c.warning} />
+            <Text style={[styles.paymentInfoText, { color: c.warning }]}>Awaiting PineLabs confirmation</Text>
+          </View>
+        )}
+
+        {item.status === 'completed' && item.pinelabsTransactionId && (
+          <View style={[styles.paymentInfoBox, { borderColor: c.success + '44', backgroundColor: c.success + '0a' }]}>
+            <Ionicons name="checkmark-circle-outline" size={13} color={c.success} />
+            <Text style={[styles.paymentInfoText, { color: c.success }]}>
+              PineLabs Txn: {item.pinelabsTransactionId}
+            </Text>
+          </View>
+        )}
+
+        {item.rejectionReason && (
           <Text style={[styles.failureReason, { color: c.error }]}>
-            Reason: {item.failureReason}
+            {item.status === 'rejected' ? 'Rejection: ' : item.status === 'failed' ? 'Failure: ' : ''}{item.rejectionReason}
           </Text>
         )}
+
+        {/* Payout details */}
+        {item.payoutDetails ? (
+          <View style={[styles.payoutBox, { borderColor: c.border, backgroundColor: c.surfaceVariant }]}>
+            <Text style={[styles.payoutBoxLabel, { color: c.textTertiary }]}>
+              {item.payoutMethod === 'upi' ? 'UPI ID' : 'Bank Account'}
+            </Text>
+            <Text style={[styles.payoutBoxValue, { color: c.text }]}>
+              {item.payoutMethod === 'upi'
+                ? String(item.payoutDetails['upiId'] ?? item.payoutDetails['upi_id'] ?? '—')
+                : `${String(item.payoutDetails['accountNumber'] ?? item.payoutDetails['account_number'] ?? '—')} (IFSC: ${String(item.payoutDetails['ifsc'] ?? item.payoutDetails['ifscCode'] ?? '—')})`
+              }
+            </Text>
+          </View>
+        ) : null}
 
         {item.user?.id && (
           <TouchableOpacity
@@ -393,7 +492,13 @@ const styles = StyleSheet.create({
   btn: { flex: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing2, alignItems: 'center' },
   btnApprove: { color: '#22c55e', fontWeight: '700', fontSize: 13 },
   btnReject: { color: '#ef4444', fontWeight: '700', fontSize: 13 },
+  btnRetry: { color: '#f59e0b', fontWeight: '700', fontSize: 13 },
   failureReason: { fontSize: 12, marginTop: tokens.spacing2 },
+  paymentInfoBox: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: tokens.radiusMd, paddingHorizontal: tokens.spacing3, paddingVertical: 6, marginTop: tokens.spacing2 },
+  paymentInfoText: { fontSize: 12, fontWeight: '600' },
+  payoutBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderRadius: tokens.radiusMd, paddingHorizontal: tokens.spacing3, paddingVertical: tokens.spacing2, marginTop: tokens.spacing2 },
+  payoutBoxLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.05 * 11 },
+  payoutBoxValue: { fontSize: 13, fontWeight: '600' },
   walletBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderRadius: tokens.radiusMd, paddingVertical: tokens.spacing2,

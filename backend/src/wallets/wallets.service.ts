@@ -4,10 +4,12 @@ import {
   NotFoundException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Wallet, Transaction, WithdrawalRequest, Question } from '../database/entities';
+import { Wallet, Transaction, WithdrawalRequest } from '../database/entities';
+import { UserPaymentDetail } from '../database/entities/user-payment-detail.entity';
 import {
   TransactionType,
   TransactionSource,
@@ -16,7 +18,10 @@ import {
   PayoutMethod,
 } from '../common/enums';
 import { AdminService } from '../admin/admin.service';
+import { PinelabsService } from '../payment/pinelabs.service';
 import { WithdrawDto } from './dto';
+import { AddPaymentDetailDto, PaymentDetailDto } from './dto/payment-details.dto';
+import { encrypt, decrypt } from '../common/utils/encryption.util';
 
 // Reward tiers based on approved question count (per TASK_06)
 // Tier 1:  1–25  approved → ₹1  (stored as maxApproved=26 → condition: count < 26)
@@ -31,6 +36,8 @@ const REWARD_TIERS: ReadonlyArray<{ maxApproved: number; reward: number }> = [
 
 @Injectable()
 export class WalletsService {
+  private readonly logger = new Logger(WalletsService.name);
+
   constructor(
     @InjectRepository(Wallet)
     private readonly walletRepo: Repository<Wallet>,
@@ -38,9 +45,12 @@ export class WalletsService {
     private readonly transactionRepo: Repository<Transaction>,
     @InjectRepository(WithdrawalRequest)
     private readonly withdrawalRepo: Repository<WithdrawalRequest>,
+    @InjectRepository(UserPaymentDetail)
+    private readonly paymentDetailRepo: Repository<UserPaymentDetail>,
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => AdminService))
     private readonly adminService: AdminService,
+    private readonly pinelabsService: PinelabsService,
   ) {}
 
   /**
@@ -193,6 +203,19 @@ export class WalletsService {
 
     if (!wallet) throw new NotFoundException('Wallet not found');
 
+    // Load and verify the payment detail
+    const paymentDetail = await this.paymentDetailRepo.findOne( {
+      where: { id: dto.paymentDetailId, userId },
+    });
+    if (!paymentDetail) {
+      throw new NotFoundException('Payment detail not found.');
+    }
+    if (paymentDetail.status !== 'verified') {
+      throw new BadRequestException(
+        `Payment detail is not verified (current status: ${paymentDetail.status}). Please add and verify a payment method first.`,
+      );
+    }
+
     const balance = Number(wallet.balance);
     if (dto.amount < minAmount) {
       throw new BadRequestException(
@@ -212,6 +235,15 @@ export class WalletsService {
         'A withdrawal request is already pending. Please wait for it to be processed.',
       );
     }
+
+    // Build payoutDetails from the stored payment detail
+    const payoutDetails: Record<string, unknown> = paymentDetail.payoutMethod === PayoutMethod.UPI
+      ? { upiId: paymentDetail.upiId }
+      : {
+          accountNumberEncrypted: paymentDetail.accountNumberEncrypted,
+          ifsc: paymentDetail.ifsc,
+          accountHolderName: paymentDetail.accountHolderName,
+        };
 
     // Atomic: deduct balance + create withdrawal request + create transaction
     const queryRunner = this.dataSource.createQueryRunner();
@@ -237,8 +269,8 @@ export class WalletsService {
         userId,
         walletId: wallet.id,
         amount: dto.amount,
-        payoutMethod: dto.payoutMethod as PayoutMethod,
-        payoutDetails: dto.payoutDetails,
+        payoutMethod: paymentDetail.payoutMethod,
+        payoutDetails,
         status: WithdrawalStatus.PENDING,
       });
       const saved = await queryRunner.manager.save(WithdrawalRequest, withdrawal);
@@ -251,7 +283,7 @@ export class WalletsService {
         amount: dto.amount,
         balanceAfter: newBalance,
         referenceId: saved.id,
-        description: `Withdrawal request — ${dto.payoutMethod}`,
+        description: `Withdrawal request — ${paymentDetail.payoutMethod}`,
         status: TransactionStatus.PENDING,
       });
       await queryRunner.manager.save(Transaction, tx);
@@ -334,5 +366,283 @@ export class WalletsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // ─── Payment Details ────────────────────────────────────────────────────────
+
+  /**
+   * Save a new payment detail and initiate micro-transaction verification.
+   * The detail starts with status 'in_progress' and a ₹1 debit is sent via PineLabs.
+   * On webhook success: status → 'verified', refund ₹1 to wallet.
+   * On webhook failure: status → 'failed'.
+   */
+  async addPaymentDetail(
+    userId: string,
+    dto: AddPaymentDetailDto,
+  ): Promise<{ id: string; status: string; message: string }> {
+    // Basic check: does user have a wallet?
+    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    // Reject if wallet balance < ₹1 (verification charge)
+    if (Number(wallet.balance) < 1) {
+      throw new BadRequestException(
+        'Insufficient balance (₹1 verification charge required). Please earn rewards first.',
+      );
+    }
+
+    // Check: no duplicate verified UPI already on this account
+    if (dto.payoutMethod === 'upi') {
+      const existing = await this.paymentDetailRepo.findOne( {
+        where: { userId, upiId: dto.upiId, status: 'verified' },
+      });
+      if (existing) {
+        throw new BadRequestException('This UPI ID is already verified on your account.');
+      }
+    }
+
+    // Build entity
+    const detail = new UserPaymentDetail();
+    detail.userId = userId;
+    detail.payoutMethod = dto.payoutMethod as PayoutMethod;
+    detail.status = 'in_progress';
+
+    if (dto.payoutMethod === 'upi') {
+      detail.upiId = dto.upiId ?? null;
+    } else {
+      if (dto.accountNumber !== dto.confirmAccountNumber) {
+        throw new BadRequestException('Account numbers do not match. Please re-enter.');
+      }
+      detail.accountNumberLast4 = dto.accountNumber!.slice(-4);
+      detail.ifsc = dto.ifsc ?? null;
+      detail.accountHolderName = dto.accountHolderName ?? null;
+      detail.bankName = dto.bankName ?? null;
+      detail.accountNumberEncrypted = encrypt(dto.accountNumber!);
+    }
+
+    // Save (without verification_order_id yet — we create that after debit)
+    const saved = await this.paymentDetailRepo.save( detail);
+
+    // Atomic: deduct ₹1 verification charge + create pending transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const newBalance = Number(wallet.balance) - 1;
+      await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
+
+      const verificationOrderId = this.pinelabsService.generateVerificationOrderId(saved.id);
+      const tx = queryRunner.manager.create(Transaction, {
+        walletId: wallet.id,
+        type: TransactionType.DEBIT,
+        source: TransactionSource.WITHDRAWAL,
+        amount: 1,
+        balanceAfter: newBalance,
+        referenceId: verificationOrderId, // used to match refund webhook
+        description: `Verification charge — ${dto.payoutMethod === 'upi' ? 'UPI' : 'bank account'}`,
+        status: TransactionStatus.PENDING,
+      });
+      await queryRunner.manager.save(Transaction, tx);
+
+      // Store orderId on the detail record
+      await queryRunner.manager.update(UserPaymentDetail, saved.id, {
+        verificationOrderId,
+      });
+
+      await queryRunner.commitTransaction();
+
+      // Fire-and-forget: send ₹1 to PineLabs (webhook will handle the result)
+      this.pinelabsService
+        .dispatchVerificationPayout({
+          orderId: verificationOrderId,
+          paymentMethod: dto.payoutMethod as PayoutMethod,
+          payoutDetails: this.buildPayoutDetailsForVerification(saved),
+        })
+        .catch((err) => this.logger.error(`[Verification] Payout dispatch failed: ${err.message}`));
+
+      return {
+        id: saved.id,
+        status: 'in_progress',
+        message:
+          'Payment detail saved. A ₹1 verification charge has been sent. ' +
+          'You will be notified once it is confirmed (usually within a few minutes).',
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      // Clean up the payment detail record on failure
+      await this.paymentDetailRepo.delete( saved.id);
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Get all payment details for a user (masked).
+   * Never returns the full account number or decrypted data.
+   */
+  async getPaymentDetails(userId: string): Promise<PaymentDetailDto[]> {
+    const details = await this.paymentDetailRepo.find( {
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+
+    return details.map((d) => ({
+      id: d.id,
+      payoutMethod: d.payoutMethod as 'upi' | 'bank_transfer',
+      status: d.status as 'pending' | 'in_progress' | 'verified' | 'failed',
+      displayValue:
+        d.payoutMethod === PayoutMethod.UPI
+          ? (d.upiId ?? '—')
+          : d.accountNumberLast4 ? `****${d.accountNumberLast4}` : '****',
+      bankName: d.bankName,
+      ifsc: d.ifsc,
+      accountHolderName: d.accountHolderName,
+      verifiedAt: d.verifiedAt,
+      createdAt: d.createdAt,
+    }));
+  }
+
+  /**
+   * Delete a payment detail.
+   * Only unverified or failed details can be deleted.
+   * Users cannot delete a detail that has an active verification in progress.
+   */
+  async deletePaymentDetail(userId: string, detailId: string): Promise<void> {
+    const detail = await this.paymentDetailRepo.findOne( {
+      where: { id: detailId, userId },
+    });
+    if (!detail) throw new NotFoundException('Payment detail not found');
+    if (detail.status === 'verified') {
+      throw new BadRequestException('Cannot delete a verified payment detail.');
+    }
+    if (detail.status === 'in_progress') {
+      throw new BadRequestException('Cannot delete while verification is in progress. Please wait a few minutes.');
+    }
+    await this.paymentDetailRepo.delete( detailId);
+  }
+
+  /**
+   * Called by the PineLabs webhook handler to mark a payment detail verified or failed.
+   * If successful: marks detail verified, refunds the ₹1 charge to the user's wallet.
+   * If failed: marks detail failed (no refund needed).
+   */
+  async handleVerificationCallback(params: {
+    orderId: string;
+    success: boolean;
+    errorCode?: string;
+    errorMessage?: string;
+    pinelabsTransactionId?: string;
+  }): Promise<void> {
+    const detail = await this.paymentDetailRepo.findOne( {
+      where: { verificationOrderId: params.orderId },
+      relations: ['user'],
+    });
+    if (!detail) {
+      this.logger.warn(`[Verification] No payment detail found for orderId=${params.orderId}`);
+      return;
+    }
+
+    if (params.success) {
+      // Mark verified
+      await this.paymentDetailRepo.update( detail.id, {
+        status: 'verified',
+        verifiedAt: new Date(),
+      });
+
+      // Refund ₹1 to user's wallet
+      const wallet = await this.walletRepo.findOne({ where: { userId: detail.userId } });
+      if (wallet) {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+          const newBalance = Number(wallet.balance) + 1;
+          await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
+
+          // Credit refund transaction
+          const creditTx = queryRunner.manager.create(Transaction, {
+            walletId: wallet.id,
+            type: TransactionType.CREDIT,
+            source: TransactionSource.REFUND,
+            amount: 1,
+            balanceAfter: newBalance,
+            referenceId: params.orderId,
+            description: 'Verification refund — payment detail confirmed',
+            status: TransactionStatus.COMPLETED,
+          });
+          await queryRunner.manager.save(Transaction, creditTx);
+
+          // Update debit tx to completed
+          await queryRunner.manager.update(
+            Transaction,
+            { referenceId: params.orderId },
+            { status: TransactionStatus.COMPLETED },
+          );
+
+          await queryRunner.commitTransaction();
+        } catch (err) {
+          await queryRunner.rollbackTransaction();
+          this.logger.error(`[Verification] Refund failed for orderId=${params.orderId}: ${err.message}`);
+        } finally {
+          await queryRunner.release();
+        }
+      }
+
+      this.logger.log(`[Verification] Payment detail verified | detailId=${detail.id} | orderId=${params.orderId}`);
+    } else {
+      // Mark failed
+      await this.paymentDetailRepo.update( detail.id, {
+        status: 'failed',
+        verificationFailedReason: [params.errorCode, params.errorMessage].filter(Boolean).join(': '),
+      });
+
+      // Mark the ₹1 debit as failed
+      await this.transactionRepo.update(
+        { referenceId: params.orderId },
+        { status: TransactionStatus.FAILED },
+      );
+
+      this.logger.warn(`[Verification] Payment detail failed | detailId=${detail.id} | code=${params.errorCode} | msg=${params.errorMessage}`);
+    }
+  }
+
+  /**
+   * Check whether user has at least one verified payment detail.
+   */
+  async hasVerifiedPaymentDetail(userId: string): Promise<boolean> {
+    const count = await this.paymentDetailRepo.count( {
+      where: { userId, status: 'verified' },
+    });
+    return count > 0;
+  }
+
+  /**
+   * Get the decrypted account number for a verified payment detail.
+   * Only used when dispatching a withdrawal payout.
+   */
+  async getDecryptedPayoutDetails(detailId: string): Promise<Record<string, unknown>> {
+    const detail = await this.paymentDetailRepo.findOne( {
+      where: { id: detailId, status: 'verified' },
+    });
+    if (!detail) throw new NotFoundException('Verified payment detail not found');
+    return this.buildPayoutDetailsForVerification(detail);
+  }
+
+  /**
+   * Build the payoutDetails object from a UserPaymentDetail entity.
+   * For bank accounts, uses the encrypted account number.
+   */
+  private buildPayoutDetailsForVerification(detail: UserPaymentDetail): Record<string, unknown> {
+    if (detail.payoutMethod === PayoutMethod.UPI) {
+      return { upiId: detail.upiId };
+    }
+    return {
+      accountNumberEncrypted: detail.accountNumberEncrypted,
+      ifsc: detail.ifsc,
+      accountHolderName: detail.accountHolderName,
+      accountNumber: undefined as unknown, // placeholder — not used when encrypted field is present
+    };
   }
 }

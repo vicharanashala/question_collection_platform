@@ -20,6 +20,7 @@ export enum NotificationType {
   WITHDRAWAL_REJECTED = 'withdrawal_rejected',
   ACCOUNT_SUSPENDED = 'account_suspended',
   ACCOUNT_BANNED = 'account_banned',
+  GENERAL = 'general',
 }
 
 export enum NotificationTriggerType {
@@ -27,6 +28,8 @@ export enum NotificationTriggerType {
   QUESTION = 'question',
   /** Notification triggered by a withdrawal request action */
   WITHDRAW = 'withdraw',
+  /** System-generated notification (e.g. payment failure alert) */
+  SYSTEM = 'system',
 }
 
 @Entity('notifications')

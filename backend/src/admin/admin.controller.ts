@@ -24,6 +24,7 @@ import {
   ExportQueryDto,
   ListWithdrawalsDto,
   ProcessWithdrawalDto,
+  MarkWithdrawalFailedDto,
   CreateUserDto,
   SuspendUserDto,
   ListAllWalletsDto,
@@ -286,6 +287,29 @@ export class AdminController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.adminService.processWithdrawal(req.user.id, id, dto);
+  }
+
+  /** Retry a failed PineLabs payout for a PROCESSING withdrawal */
+  @Post('withdrawals/:id/retry')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async retryWithdrawal(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.adminService.retryWithdrawal(req.user.id, id);
+  }
+
+  /** Admin explicitly marks a PROCESSING withdrawal as FAILED and refunds the user */
+  @Post('withdrawals/:id/fail')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async markWithdrawalFailed(
+    @Param('id') id: string,
+    @Body() dto: MarkWithdrawalFailedDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.adminService.markWithdrawalFailed(req.user.id, id, dto.reason);
   }
 
   // ─────────────────────────────────────────────────────────────

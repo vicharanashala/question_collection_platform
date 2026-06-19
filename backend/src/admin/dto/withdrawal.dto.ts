@@ -16,7 +16,7 @@ export class ListWithdrawalsDto {
   limit?: number = 20;
 
   @IsOptional()
-  @IsIn(['pending', 'processing', 'completed', 'rejected'])
+  @IsIn(['pending', 'processing', 'completed', 'rejected', 'failed'])
   status?: string;
 
   @IsOptional()
@@ -28,7 +28,7 @@ export class ListWithdrawalsDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(['pending', 'processing', 'completed', 'rejected', 'all'])
+  @IsIn(['pending', 'processing', 'completed', 'rejected', 'failed', 'all'])
   filterStatus?: string;
 
   @IsOptional()
@@ -57,4 +57,11 @@ export class ProcessWithdrawalDto {
   @IsString()
   @MaxLength(500, { message: 'Rejection reason must not exceed 500 characters.' })
   rejectionReason?: string;
+}
+
+export class MarkWithdrawalFailedDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
 }
