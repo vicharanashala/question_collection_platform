@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AIValidationResult } from '../utils/onDeviceAI';
@@ -118,37 +118,43 @@ export function AIValidationBanner({
 
       {/* Stage-by-stage confidence strip — only shown in warn mode */}
       {result.verdict === 'warn' && (
-        <View style={styles.stageStrip}>
-          {(
-            [
-              { key: 'relevance', label: t('onDeviceAI.stage.relevance') ?? 'Relevance' },
-              { key: 'duplicate', label: t('onDeviceAI.stage.duplicate') ?? 'Duplicate' },
-              { key: 'spam',      label: t('onDeviceAI.stage.spam')      ?? 'Spam' },
-            ] as const
-          ).map(({ key, label }) => {
-            const stage = result.stages[key];
-            const pass = stage.pass;
-            return (
-              <View key={key} style={styles.stageItem}>
-                <View
-                  style={[
-                    styles.stageDot,
-                    { backgroundColor: pass ? '#16A34A' : '#DC2626' },
-                  ]}
-                />
-                <Text style={[styles.stageLabel, { color: textColor }]}>{label}</Text>
-                <Text
-                  style={[
-                    styles.stageScore,
-                    { color: pass ? '#16A34A' : '#DC2626' },
-                  ]}
-                >
-                  {Math.round(stage.confidence * 100)}%
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.stageScrollContent}
+        >
+          <View style={styles.stageStrip}>
+            {(
+              [
+                { key: 'relevance', label: t('onDeviceAI.stage.relevance') ?? 'Relevance' },
+                { key: 'duplicate', label: t('onDeviceAI.stage.duplicate') ?? 'Duplicate' },
+                { key: 'spam',      label: t('onDeviceAI.stage.spam')      ?? 'Spam' },
+              ] as const
+            ).map(({ key, label }) => {
+              const stage = result.stages[key];
+              const pass = stage.pass;
+              return (
+                <View key={key} style={styles.stageItem}>
+                  <View
+                    style={[
+                      styles.stageDot,
+                      { backgroundColor: pass ? '#16A34A' : '#DC2626' },
+                    ]}
+                  />
+                  <Text style={[styles.stageLabel, { color: textColor }]}>{label}</Text>
+                  <Text
+                    style={[
+                      styles.stageScore,
+                      { color: pass ? '#16A34A' : '#DC2626' },
+                    ]}
+                  >
+                    {Math.round(stage.confidence * 100)}%
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -162,6 +168,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing4,
     paddingVertical: tokens.spacing3,
     marginTop: tokens.spacing3,
+    marginBottom: tokens.spacing3,
   },
   row: {
     flexDirection: 'row',
@@ -173,7 +180,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   message: {
-    flex: 1,
+    flexShrink: 1,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
@@ -200,11 +207,17 @@ const styles = StyleSheet.create({
   // Stage confidence strip
   stageStrip: {
     flexDirection: 'row',
-    gap: tokens.spacing4,
+    gap: tokens.spacing3,
+    alignItems: 'center',
     marginTop: tokens.spacing3,
     paddingTop: tokens.spacing3,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.08)',
+  },
+  stageScrollContent: {
+    flexDirection: 'row',
+    paddingRight: tokens.spacing2,
+    marginBottom: tokens.spacing2,
   },
   stageItem: {
     flexDirection: 'row',

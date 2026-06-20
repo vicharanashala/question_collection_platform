@@ -199,7 +199,11 @@
     "submitted": "கேள்வி சமர்ப்பிக்கப்பட்டது!",
     "rewardEarned": "நீங்கள் {{amount}} ₹ சம்பாதித்தீர்கள்!",
     "error": "சமர்ப்பிப்பு தோல்வி. மீண்டும் முயற்சிக்கவும்.",
-    "validationError": "தயவுசெய்து கேள்வியைச் சேர்."
+    "validationError": "தயவுசெய்து கேள்வியைச் சேர்.",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

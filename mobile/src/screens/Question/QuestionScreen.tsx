@@ -452,7 +452,9 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       ? '#E88B00'
       : c.textSecondary;
 
-  const canSubmit = questionText.trim().length > 0 && questionText.length <= maxChars && (isEditMode || remainingToday > 0);
+  const relevanceFailed = (aiValidation?.verdict === 'fail' && aiValidation?.reasonKey === 'onDeviceAI.relevance.low');
+
+  const canSubmit = questionText.trim().length > 0 && questionText.length <= maxChars && (isEditMode || remainingToday > 0) && !relevanceFailed;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -563,10 +565,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             {/* Submit button */}
             {!isEditMode ? (
               <Button
-                title={previewLoading ? t('question.submitting') : t('continue')}
+                title={previewLoading ? t('question.submitting') : relevanceFailed ? (t('question.notRelevant') ?? 'Not Relevant') : t('continue')}
                 onPress={handlePreview}
                 loading={previewLoading}
-                disabled={!canSubmit}
+                disabled={!canSubmit || relevanceFailed}
                 icon="arrow-forward"
                 iconPosition="right"
               />

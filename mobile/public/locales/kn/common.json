@@ -199,7 +199,11 @@
     "submitted": "ಪ್ರಶ್ನೆ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
     "rewardEarned": "ನೀವು {{amount}} ₹ ಗಳಿಸಿದ್ದೀರಿ!",
     "error": "ಸಲ್ಲಿಕೆ ವಿಫಲವಾಗಿದೆ. ಮರುಪ್ರಯತ್ನಿಸಿ.",
-    "validationError": "ದಯವಿಟ್ಟು ಪ್ರಶ್ನೆಯನ್ನು ಸೇರಿಸಿ."
+    "validationError": "ದಯವಿಟ್ಟು ಪ್ರಶ್ನೆಯನ್ನು ಸೇರಿಸಿ.",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
   "resendOtp": "OTP ಮರುಕಳುಹಿಸಿ",

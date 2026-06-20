@@ -102,12 +102,8 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
-      "courseNameOther": "Other Course Name",
-      "courseNameOtherPlaceholder": "Enter your course name",
-      "courseNameOtherRequired": "Please enter your course name",
-
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
       "districtPlaceholder": "Enter your district",
@@ -246,7 +242,11 @@ const resources = {
         "rewardEarned": "You earned Rs. {{amount}}!",
         "error": "Submission failed. Try again.",
         "validationError": "Please add a question.",
-        "audioLabel": "Tap to speak your question"
+        "audioLabel": "Tap to speak your question",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -542,20 +542,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -567,7 +557,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -577,10 +567,6 @@ const resources = {
         "manageCrops": "Manage My Crops",
         "farmSizeRequired": "Farm size is required for farmers",
         "courseNameRequired": "Course name is required for students",
-      "courseNameOther": "Other Course Name",
-      "courseNameOtherPlaceholder": "Enter your course name",
-      "courseNameOtherRequired": "Please enter your course name",
-
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
@@ -596,7 +582,34 @@ const resources = {
       "registrationSuccess": "Registration complete! Awaiting admin verification.",
       "wallet.confirmWithdrawTitle": "Confirm Withdrawal",
       "wallet.confirmWithdrawMsg": "You are about to withdraw Rs.{amount} to your UPI account.",
-      "wallet.confirm": "Confirm"
+      "wallet.confirm": "Confirm",
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
+      }
     }
   },
   "as": {
@@ -696,7 +709,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -801,7 +814,11 @@ const resources = {
         "submitted": "প্ৰশ্ন দাখিল কৰা হৈছে!",
         "rewardEarned": "আপুনি {{amount}} ₹ উপাৰ্জন কৰিছে!",
         "error": "দাখিল ব্যৰ্থ। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
-        "validationError": "অনুগ্ৰহ কৰি প্ৰশ্ন যোগ কৰক।"
+        "validationError": "অনুগ্ৰহ কৰি প্ৰশ্ন যোগ কৰক।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -1103,20 +1120,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -1128,7 +1135,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -1140,6 +1147,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -1240,7 +1274,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -1345,7 +1379,11 @@ const resources = {
         "submitted": "প্রশ্ন জমা হয়েছে!",
         "rewardEarned": "আপনি {{amount}} ₹ আয় করেছেন!",
         "error": "জমা ব্যর্থ। আবার চেষ্টা করুন।",
-        "validationError": "অনুগ্রহ করে প্রশ্ন যোগ করুন।"
+        "validationError": "অনুগ্রহ করে প্রশ্ন যোগ করুন।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -1647,20 +1685,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -1672,7 +1700,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -1684,6 +1712,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -1784,7 +1839,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -1889,7 +1944,11 @@ const resources = {
         "submitted": "सवाल जमा भय!",
         "rewardEarned": "बाई {{amount}} ₹ कमायो!",
         "error": "जमा फैल। गोथो प्रयास करो।",
-        "validationError": "कृपया सवाल जोड़ो।"
+        "validationError": "कृपया सवाल जोड़ो।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -2191,20 +2250,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -2216,7 +2265,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -2228,6 +2277,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -2328,7 +2404,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -2433,7 +2509,11 @@ const resources = {
         "submitted": "پوچھو جمع ہو گیا!",
         "rewardEarned": "تسی {{amount}} ₹ کمائے!",
         "error": "جمع ناکام۔ فیر کوشش کرو।",
-        "validationError": "کرم کردیاں پوچھو شامل کرو۔"
+        "validationError": "کرم کردیاں پوچھو شامل کرو۔",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -2735,20 +2815,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -2760,7 +2830,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -2772,6 +2842,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -2872,7 +2969,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -2977,7 +3074,11 @@ const resources = {
         "submitted": "પ્રશ્ન સબમિટ થયો!",
         "rewardEarned": "તમે {{amount}} ₹ કમાયા!",
         "error": "સબમિશન નિષ્ફળ. ફરી પ્રયત્ન કરો.",
-        "validationError": "કૃપા કરીને પ્રશ્ન ઉમેરો."
+        "validationError": "કૃપા કરીને પ્રશ્ન ઉમેરો.",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -3279,20 +3380,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -3304,7 +3395,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -3316,6 +3407,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -3416,7 +3534,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -3521,7 +3639,11 @@ const resources = {
         "submitted": "प्रश्न जमा हो गया!",
         "rewardEarned": "आपने {{amount}} ₹ कमाए!",
         "error": "जमा विफल। पुनः प्रयास करें।",
-        "validationError": "कृपया प्रश्न जोड़ें।"
+        "validationError": "कृपया प्रश्न जोड़ें।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -3847,13 +3969,36 @@ const resources = {
         "rolePlaceholder": "उदा., समन्वयक, फील्ड अधिकारी",
         "farmSizeRequired": "किसानों के लिए खेत का आकार आवश्यक है",
         "courseNameRequired": "छात्रों के लिए कोर्स का नाम आवश्यक है",
-      "courseNameOther": "Other Course Name",
-      "courseNameOtherPlaceholder": "Enter your course name",
-      "courseNameOtherRequired": "Please enter your course name",
-
         "universityNameRequired": "छात्रों के लिए विश्वविद्यालय का नाम आवश्यक है",
         "organisationNameRequired": "संगठन का नाम आवश्यक है",
         "roleRequired": "भूमिका आवश्यक है"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -3956,10 +4101,6 @@ const resources = {
       "courseName": "ಕೋರ್ಸ್ ಹೆಸರು",
       "courseNamePlaceholder": "ಉದಾಹರಣೆಗೆ: B.Sc. Agriculture",
       "courseNameRequired": "ಕೋರ್ಸ್ ಹೆಸರು ಅಗತ್ಯವಿದೆ",
-      "courseNameOther": "Other Course Name",
-      "courseNameOtherPlaceholder": "Enter your course name",
-      "courseNameOtherRequired": "Please enter your course name",
-
       "cropTypePlaceholder": "ಉದಾಹರಣೆಗೆ: ಭತ್ತ, ಗೋಧಿ, ಹತ್ತಿ",
       "cropTypeRequired": "ಬೆಳೆ ಪ್ರಕಾರ ಅಗತ್ಯವಿದೆ",
       "districtPlaceholder": "ನಿಮ್ಮ ಜಿಲ್ಲೆಯನ್ನು ನಮೂದಿಸಿ",
@@ -4063,7 +4204,11 @@ const resources = {
         "submitted": "ಪ್ರಶ್ನೆ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
         "rewardEarned": "ನೀವು {{amount}} ₹ ಗಳಿಸಿದ್ದೀರಿ!",
         "error": "ಸಲ್ಲಿಕೆ ವಿಫಲವಾಗಿದೆ. ಮರುಪ್ರಯತ್ನಿಸಿ.",
-        "validationError": "ದಯವಿಟ್ಟು ಪ್ರಶ್ನೆಯನ್ನು ಸೇರಿಸಿ."
+        "validationError": "ದಯವಿಟ್ಟು ಪ್ರಶ್ನೆಯನ್ನು ಸೇರಿಸಿ.",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
       "resendOtp": "OTP ಮರುಕಳುಹಿಸಿ",
@@ -4365,20 +4510,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -4390,7 +4525,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -4402,6 +4537,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -4502,7 +4664,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -4607,7 +4769,11 @@ const resources = {
         "submitted": "پوچھو جمع ہو گیا!",
         "rewardEarned": "تسی {{amount}} ₹ کمائے!",
         "error": "جمع ناکام۔ فیر کوشش کرو۔",
-        "validationError": "کرم کرکے پوچھو زیادہ کرو۔"
+        "validationError": "کرم کرکے پوچھو زیادہ کرو۔",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -4909,20 +5075,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -4934,7 +5090,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -4946,6 +5102,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -5046,7 +5229,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -5151,7 +5334,11 @@ const resources = {
         "submitted": "प्र सबमिट जालो!",
         "rewardEarned": "तुम्मी {{amount}} ₹ कमायलें!",
         "error": "सबमिशन फेल। पुनः प्रयत्न करो।",
-        "validationError": "कृपया प्र जोडो।"
+        "validationError": "कृपया प्र जोडो।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -5453,20 +5640,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -5478,7 +5655,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -5490,6 +5667,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -5590,7 +5794,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -5695,7 +5899,11 @@ const resources = {
         "submitted": "पछुआ जमा भेल!",
         "rewardEarned": "आपन {{amount}} ₹ कमाएल!",
         "error": "जमा असफल। फिनु सॆ प्रयास करू।",
-        "validationError": "कृपया पछुआ जोड़ू।"
+        "validationError": "कृपया पछुआ जोड़ू।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -5997,20 +6205,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -6022,7 +6220,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -6034,6 +6232,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -6134,7 +6359,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -6239,7 +6464,11 @@ const resources = {
         "submitted": "ചോദ്യം സമർപ്പിച്ചു!",
         "rewardEarned": "നിങ്ങൾ {{amount}} ₹ സമ്പാദിച്ചു!",
         "error": "സമർപ്പണം പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.",
-        "validationError": "ചോദ്യം ചേർക്കുക."
+        "validationError": "ചോദ്യം ചേർക്കുക.",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -6541,20 +6770,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -6566,7 +6785,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -6578,6 +6797,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -6678,7 +6924,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -6783,7 +7029,11 @@ const resources = {
         "submitted": "পূছা এহাংবা!",
         "rewardEarned": "বাই {{amount}} ₹ উপার্জন কৈ!",
         "error": "এহাংবা ফাইল। গি থাক্তা চেষ্টা করিংবা।",
-        "validationError": "কৃপা করিংবা পূছা লমদা।"
+        "validationError": "কৃপা করিংবা পূছা লমদা।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -7085,20 +7335,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -7110,7 +7350,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -7122,6 +7362,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -7222,7 +7489,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -7327,7 +7594,11 @@ const resources = {
         "submitted": "प्रश्न सबमिट झाला!",
         "rewardEarned": "तुम्ही {{amount}} ₹ कमावले!",
         "error": "सबमिशन अयशस्वी. पुन्हा प्रयत्न करा.",
-        "validationError": "कृपया प्रश्न जोडा."
+        "validationError": "कृपया प्रश्न जोडा.",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -7629,20 +7900,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -7654,7 +7915,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -7666,6 +7927,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -7766,7 +8054,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -7871,7 +8159,11 @@ const resources = {
         "submitted": "प्रश्न पेश भयो!",
         "rewardEarned": "तपाईंले {{amount}} ₹ कमाउनुभयो!",
         "error": "पेश विफल। फेरि प्रयास गर्नुहोस्।",
-        "validationError": "कृपया प्रश्न थप्नुहोस्।"
+        "validationError": "कृपया प्रश्न थप्नुहोस्।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -8173,20 +8465,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -8198,7 +8480,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -8210,6 +8492,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -8310,7 +8619,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -8415,7 +8724,11 @@ const resources = {
         "submitted": "ପ୍ରଶ୍ନ ଦାଖଲ ହେଲା!",
         "rewardEarned": "ଆପଣ {{amount}} ₹ ଉପାର୍ଜନ କରିଛନ୍ତି!",
         "error": "ଦାଖଲ ବିଫଳ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
-        "validationError": "ଦୟାକରି ପ୍ରଶ୍ନ ଯୋଡନ୍ତୁ।"
+        "validationError": "ଦୟାକରି ପ୍ରଶ୍ନ ଯୋଡନ୍ତୁ।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -8717,20 +9030,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -8742,7 +9045,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -8754,6 +9057,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -8854,7 +9184,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -8959,7 +9289,11 @@ const resources = {
         "submitted": "ਸਵਾਲ ਜਮ੍ਹਾਂ ਹੋ ਗਿਆ!",
         "rewardEarned": "ਤੁਸੀਂ {{amount}} ₹ ਕਮਾਏ!",
         "error": "ਜਮ੍ਹਾਂ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
-        "validationError": "ਕਿਰਪਾ ਕਰਕੇ ਸਵਾਲ ਜੋੜੋ।"
+        "validationError": "ਕਿਰਪਾ ਕਰਕੇ ਸਵਾਲ ਜੋੜੋ।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -9261,20 +9595,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -9286,7 +9610,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -9298,6 +9622,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -9398,7 +9749,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -9503,7 +9854,11 @@ const resources = {
         "submitted": "प्रश्नः प्रेषितः!",
         "rewardEarned": "भवान् {{amount}} ₹ उपावर्धत!",
         "error": "प्रेषणं विफलम्। पुनः प्रयतताम्।",
-        "validationError": "कृपया प्रश्नं योजयतु।"
+        "validationError": "कृपया प्रश्नं योजयतु।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -9805,20 +10160,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -9830,7 +10175,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -9842,6 +10187,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -9942,7 +10314,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -10047,7 +10419,11 @@ const resources = {
         "submitted": "ᱦᱟᱯᱟᱫ ᱢᱟᱱᱟᱣᱟᱱ!",
         "rewardEarned": "ᱟᱢᱟᱜ {{amount}} ₹ ᱨᱤᱡᱟᱹᱝᱟᱱ!",
         "error": "ᱢᱟᱱᱟᱣ ᱵᱷᱩᱞᱟᱱ। ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱱ ᱪᱮᱛᱟᱱ ᱢᱟᱱᱟᱣ।",
-        "validationError": "ᱠᱷᱟᱹᱞᱤ ᱦᱟᱯᱟᱫ ᱥᱮᱞᱮᱫ ᱢᱟᱱᱟᱣ।"
+        "validationError": "ᱠᱷᱟᱹᱞᱤ ᱦᱟᱯᱟᱫ ᱥᱮᱞᱮᱫ ᱢᱟᱱᱟᱣ।",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -10349,20 +10725,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -10374,7 +10740,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -10386,6 +10752,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -10486,7 +10879,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -10591,7 +10984,11 @@ const resources = {
         "submitted": "سوال جمع ٿي ويو!",
         "rewardEarned": "توهان {{amount}} ₹ ڪمائي!",
         "error": "جمع ناڪام۔ ٻيهر ڪوشش ڪريو۔",
-        "validationError": "مهرباني ڪري سوال شامل ڪريو۔"
+        "validationError": "مهرباني ڪري سوال شامل ڪريو۔",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -10893,20 +11290,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -10918,7 +11305,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -10930,6 +11317,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -11030,7 +11444,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -11135,7 +11549,11 @@ const resources = {
         "submitted": "கேள்வி சமர்ப்பிக்கப்பட்டது!",
         "rewardEarned": "நீங்கள் {{amount}} ₹ சம்பாதித்தீர்கள்!",
         "error": "சமர்ப்பிப்பு தோல்வி. மீண்டும் முயற்சிக்கவும்.",
-        "validationError": "தயவுசெய்து கேள்வியைச் சேர்."
+        "validationError": "தயவுசெய்து கேள்வியைச் சேர்.",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -11437,20 +11855,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -11462,7 +11870,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -11474,6 +11882,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -11574,7 +12009,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -11679,7 +12114,11 @@ const resources = {
         "submitted": "سوال جمع ہو گیا!",
         "rewardEarned": "آپ نے {{amount}} ₹ کمائے!",
         "error": "جمع ناکام۔ دوبارہ کوشش کریں۔",
-        "validationError": "براہ کرم سوال شامل کریں۔"
+        "validationError": "براہ کرم سوال شامل کریں۔",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -11981,20 +12420,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -12006,7 +12435,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -12018,6 +12447,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   },
@@ -12118,7 +12574,7 @@ const resources = {
       "consentIntro": "Please read the following terms carefully before creating your account:",
       "continue": "Continue",
       "courseName": "Course Name",
-      "courseNamePlaceholder": "Select your course",
+      "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
       "courseNameRequired": "Course name is required",
       "cropTypePlaceholder": "e.g., Rice, Wheat, Cotton",
       "cropTypeRequired": "Crop type is required",
@@ -12223,7 +12679,11 @@ const resources = {
         "submitted": "سوال جمع ہو گیا!",
         "rewardEarned": "آپ نے {{amount}} ₹ کمائے!",
         "error": "جمع ناکام۔ دوبارہ کوشش کریں۔",
-        "validationError": "براہ کرم سوال شامل کریں۔"
+        "validationError": "براہ کرم سوال شامل کریں۔",
+        "typeYourQuestion": "Type your question below",
+        "tapMicHint": "Tap the mic to speak your question",
+        "reviewHint": "Questions are mostly reviewed within 24 hours",
+        "notRelevant": "Not Relevant"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -12525,20 +12985,10 @@ const resources = {
         "deleteSuccess": "Crop removed"
       },
       "season": {
-        "Kharif": "Kharif",
-        "Rabi": "Rabi",
-        "Zaid": "Zaid",
-        "Pre-Kharif": "Pre-Kharif",
-        "Post-Kharif": "Post-Kharif",
-        "Pre-Rabi": "Pre-Rabi",
-        "Zaid Rabi": "Zaid Rabi",
-        "Spring": "Spring",
-        "Summer": "Summer",
-        "Autumn": "Autumn",
-        "Winter": "Winter",
-        "Monsoon": "Monsoon",
-        "Dry Season": "Dry Season",
-        "Wet Season": "Wet Season"
+        "kharif": "Kharif (Monsoon)",
+        "rabi": "Rabi (Winter)",
+        "zaid": "Zaid (Summer)",
+        "year_round": "Year Round"
       },
       "editProfile": {
         "categorySection": "Category Details",
@@ -12550,7 +13000,7 @@ const resources = {
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
         "courseName": "Course Name",
-        "courseNamePlaceholder": "Select your course",
+        "courseNamePlaceholder": "e.g., B.Sc. Agriculture",
         "universityName": "University Name",
         "universityNamePlaceholder": "Enter your university name",
         "organisationName": "Organisation Name",
@@ -12562,6 +13012,33 @@ const resources = {
         "universityNameRequired": "University name is required for students",
         "organisationNameRequired": "Organisation name is required",
         "roleRequired": "Role is required"
+      },
+      "onDeviceAI": {
+        "submitAnyway": "Submit Anyway",
+        "defaultMessage": "Review the message below before submitting.",
+        "defaultFail": "This question could not be submitted. Please review and try again.",
+        "relevance": {
+          "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+        },
+        "duplicate": {
+          "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+          "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+        },
+        "spam": {
+          "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+          "repeatedChars": "Please remove repeated characters or symbols from your question.",
+          "excessiveCaps": "Please avoid using excessive capital letters.",
+          "urlPresent": "Please remove website links from your question.",
+          "phoneNumber": "Please remove phone numbers or contact details from your question.",
+          "emailAddress": "Please remove email addresses from your question.",
+          "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+          "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+        },
+        "stage": {
+          "relevance": "Relevance",
+          "duplicate": "Duplicate",
+          "spam": "Spam"
+        }
       }
     }
   }

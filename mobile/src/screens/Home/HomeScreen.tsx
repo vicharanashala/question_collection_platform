@@ -191,7 +191,7 @@ export function HomeScreen() {
                 ? '…'
                 : stats
                 ? `${stats.remainingToday}`
-                : `${stats.remainingToday}`
+                : '—'
             }
             color={c.warning}
           />
@@ -343,7 +343,7 @@ export function HomeScreen() {
               },
               {
                 icon: 'calendar-outline',
-                text: `Daily limit — ${stats.dailyLimit ?? 20} questions per day`,
+                text: `Daily limit — ${stats?.dailyLimit ?? 20} questions per day`,
                 color: c.primary,
               },
               {

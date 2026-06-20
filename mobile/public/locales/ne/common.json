@@ -199,7 +199,11 @@
     "submitted": "प्रश्न पेश भयो!",
     "rewardEarned": "तपाईंले {{amount}} ₹ कमाउनुभयो!",
     "error": "पेश विफल। फेरि प्रयास गर्नुहोस्।",
-    "validationError": "कृपया प्रश्न थप्नुहोस्।"
+    "validationError": "कृपया प्रश्न थप्नुहोस्।",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

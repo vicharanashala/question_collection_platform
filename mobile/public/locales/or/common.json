@@ -199,7 +199,11 @@
     "submitted": "ପ୍ରଶ୍ନ ଦାଖଲ ହେଲା!",
     "rewardEarned": "ଆପଣ {{amount}} ₹ ଉପାର୍ଜନ କରିଛନ୍ତି!",
     "error": "ଦାଖଲ ବିଫଳ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
-    "validationError": "ଦୟାକରି ପ୍ରଶ୍ନ ଯୋଡନ୍ତୁ।"
+    "validationError": "ଦୟାକରି ପ୍ରଶ୍ନ ଯୋଡନ୍ତୁ।",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

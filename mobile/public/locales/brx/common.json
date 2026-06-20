@@ -199,7 +199,11 @@
     "submitted": "सवाल जमा भय!",
     "rewardEarned": "बाई {{amount}} ₹ कमायो!",
     "error": "जमा फैल। गोथो प्रयास करो।",
-    "validationError": "कृपया सवाल जोड़ो।"
+    "validationError": "कृपया सवाल जोड़ो।",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

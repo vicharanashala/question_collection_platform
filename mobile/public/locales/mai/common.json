@@ -199,7 +199,11 @@
     "submitted": "पछुआ जमा भेल!",
     "rewardEarned": "आपन {{amount}} ₹ कमाएल!",
     "error": "जमा असफल। फिनु सॆ प्रयास करू।",
-    "validationError": "कृपया पछुआ जोड़ू।"
+    "validationError": "कृपया पछुआ जोड़ू।",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

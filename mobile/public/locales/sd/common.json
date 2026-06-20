@@ -199,7 +199,11 @@
     "submitted": "سوال جمع ٿي ويو!",
     "rewardEarned": "توهان {{amount}} ₹ ڪمائي!",
     "error": "جمع ناڪام۔ ٻيهر ڪوشش ڪريو۔",
-    "validationError": "مهرباني ڪري سوال شامل ڪريو۔"
+    "validationError": "مهرباني ڪري سوال شامل ڪريو۔",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

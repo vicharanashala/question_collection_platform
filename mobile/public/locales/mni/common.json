@@ -199,7 +199,11 @@
     "submitted": "পূছা এহাংবা!",
     "rewardEarned": "বাই {{amount}} ₹ উপার্জন কৈ!",
     "error": "এহাংবা ফাইল। গি থাক্তা চেষ্টা করিংবা।",
-    "validationError": "কৃপা করিংবা পূছা লমদা।"
+    "validationError": "কৃপা করিংবা পূছা লমদা।",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

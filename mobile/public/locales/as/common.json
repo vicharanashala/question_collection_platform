@@ -199,7 +199,11 @@
     "submitted": "প্ৰশ্ন দাখিল কৰা হৈছে!",
     "rewardEarned": "আপুনি {{amount}} ₹ উপাৰ্জন কৰিছে!",
     "error": "দাখিল ব্যৰ্থ। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
-    "validationError": "অনুগ্ৰহ কৰি প্ৰশ্ন যোগ কৰক।"
+    "validationError": "অনুগ্ৰহ কৰি প্ৰশ্ন যোগ কৰক।",
+    "typeYourQuestion": "Type your question below",
+    "tapMicHint": "Tap the mic to speak your question",
+    "reviewHint": "Questions are mostly reviewed within 24 hours",
+    "notRelevant": "Not Relevant"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
