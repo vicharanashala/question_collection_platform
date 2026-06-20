@@ -270,6 +270,9 @@ export const userApi = {
 
   markAllNotificationsRead: () =>
     api.patch('/users/me/notifications/read-all', {}),
+
+  getLeaderboard: (params?: { limit?: number; offset?: number }) =>
+    api.get('/users/me/leaderboard', { params }),
 };
 
 export const questionApi = {

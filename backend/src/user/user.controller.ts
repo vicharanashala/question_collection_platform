@@ -56,6 +56,23 @@ export class UserController {
   }
 
   /**
+   * GET /users/me/leaderboard
+   * Returns the top users ranked by total earnings, with the current user's position.
+   */
+  @Get('me/leaderboard')
+  @HttpCode(HttpStatus.OK)
+  async getLeaderboard(
+    @Req() req: AuthenticatedRequest,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.userService.getLeaderboard(req.user.id, {
+      limit: limit ? parseInt(limit, 10) : undefined,
+      offset: offset ? parseInt(offset, 10) : undefined,
+    });
+  }
+
+  /**
    * PATCH /users/me
    * Update editable profile fields (name, location, language preference).
    */

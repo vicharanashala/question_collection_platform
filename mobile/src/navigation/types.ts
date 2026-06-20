@@ -49,6 +49,7 @@ export type RootStackParamList = {
     initialReason?: string;
   };
   PaymentDetails: undefined;
+  Leaderboard: undefined;
   QuestionDetail: {
     /** ID of the question to display */
     questionId: string;

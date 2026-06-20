@@ -353,6 +353,20 @@ export function ProfileScreen() {
             <TouchableOpacity
               style={styles.actionRow}
               activeOpacity={0.7}
+              onPress={() => navigation.navigate('Leaderboard')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.success + '18' }]}>
+                <Ionicons name="trophy-outline" size={16} color={c.success} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>Leaderboard</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
               onPress={handleLogoutPress}
             >
               <View style={[styles.actionIconWrap, { backgroundColor: c.error + '15' }]}>

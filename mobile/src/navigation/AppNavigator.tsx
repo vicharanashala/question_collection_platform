@@ -42,6 +42,7 @@ import { NotificationScreen } from '../screens/Notification/NotificationScreen';
 import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen';
 import { QuestionDetailScreen } from '../screens/Question/QuestionDetailScreen';
 import { TransactionDetailScreen } from '../screens/Transaction/TransactionDetailScreen';
+import { LeaderboardScreen } from '../screens/Leaderboard/LeaderboardScreen';
 
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
@@ -273,6 +274,14 @@ function MainNavigator() {
             >
               <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={21} color={c.text} />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Leaderboard')}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+              style={mainStyles.headerIcon}
+            >
+              <Ionicons name="trophy-outline" size={20} color={c.text} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -463,6 +472,11 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="QuestionDetail"
                   component={QuestionDetailScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="Leaderboard"
+                  component={LeaderboardScreen}
                   options={{ presentation: 'modal' }}
                 />
               </>
