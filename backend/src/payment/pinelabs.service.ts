@@ -26,7 +26,8 @@ export interface CardPaymentResult {
 
 interface TokenResponse {
   access_token: string;
-  expires_in: number;
+  expires_in?: number;
+  expires_at?: string; // ISO-8601 timestamp, e.g. "2026-06-20T11:29:48.778Z"
 }
 
 @Injectable()
@@ -95,12 +96,23 @@ export class PinelabsService {
       },
     );
 
-    const data = response.data;
-    this.accessToken = data.access_token;
-    // Expire 5 minutes early to avoid edge-case expiry during a request
-    this.accessTokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
+    const rawResponse = response.data as unknown as Record<string, unknown>;
+    this.logger.debug('[Pinelabs] OAuth raw response: ' + JSON.stringify(rawResponse));
+    const data = rawResponse;
+    const tokenData = (data['data'] ?? data) as unknown as TokenResponse;
+    this.accessToken = tokenData.access_token;
 
-    this.logger.log('[Pinelabs] OAuth token obtained, expires_in=' + data.expires_in);
+    // Prefer expires_at (ISO timestamp) over expires_in (seconds)
+    if (tokenData.expires_at) {
+      this.accessTokenExpiry = new Date(tokenData.expires_at).getTime() - 5 * 60 * 1000;
+    } else if (tokenData.expires_in != null) {
+      this.accessTokenExpiry = Date.now() + (tokenData.expires_in - 300) * 1000;
+    } else {
+      // No expiry info — treat as already expired to force refresh every call
+      this.accessTokenExpiry = 0;
+    }
+
+    this.logger.log('[Pinelabs] OAuth token obtained, expires_at=' + (tokenData.expires_at ?? 'n/a') + ', expires_in=' + (tokenData.expires_in ?? 'n/a'));
     return this.accessToken;
   }
 
@@ -110,13 +122,15 @@ export class PinelabsService {
    */
   private async buildAuthHeaders(): Promise<Record<string, string>> {
     const token = await this.getAccessToken();
-    return {
+    const headers = {
       'Content-Type': 'application/json',
       'Request-ID': this.generateRequestId(),
       'Request-Timestamp': this.generateRequestTimestamp(),
       'Authorization': `Bearer ${token}`,
       'accept': 'application/json',
     };
+    this.logger.debug('[Pinelabs] Auth headers for payout request | Authorization=Bearer ' + (token ? token.slice(0, 20) + '...' : 'EMPTY'));
+    return headers;
   }
 
   /**
@@ -470,20 +484,19 @@ export class PinelabsService {
       );
 
       const headers = await this.buildAuthHeaders();
+      const requestBody = {
+        clientReferenceId: params.clientReferenceId,
+        payeeName: params.payeeName,
+        amount: { value: params.amount, currency: 'INR' },
+        mode: 'UPI',
+        vpa: params.upiId,
+        remarks: (params.remarks ?? `Withdrawal payout ${params.clientReferenceId}`).slice(0, 50),
+      };
+      this.logger.debug('[Pinelabs] UPI payout request | url=' + `${this.baseUrl}/payouts/v3/payments/banks` + ' | body=' + JSON.stringify(requestBody));
 
       const response = await axios.post(
         `${this.baseUrl}/payouts/v3/payments/banks`,
-        {
-          clientReferenceId: params.clientReferenceId,
-          payeeName: params.payeeName,
-          amount: {
-            value: params.amount,
-            currency: 'INR',
-          },
-          mode: 'UPI',
-          vpa: params.upiId,
-          remarks: (params.remarks ?? `Withdrawal payout ${params.clientReferenceId}`).slice(0, 50),
-        },
+        requestBody,
         { headers, timeout: 30_000 },
       );
 
