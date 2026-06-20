@@ -388,6 +388,22 @@ export function AdminWithdrawalsScreen() {
           </View>
         )}
 
+        {item.status === 'failed' && isSuperAdmin && (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: '#ef444422' }]}
+              onPress={() => handleMarkFailed(item.id)}
+              disabled={processingId === item.id}
+            >
+              {processingId === item.id ? (
+                <ActivityIndicator size="small" color={c.error} />
+              ) : (
+                <Text style={styles.btnReject}>Mark Failed</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {item.status === 'processing' && (
           <View style={[styles.paymentInfoBox, { borderColor: c.warning + '44', backgroundColor: c.warning + '0a' }]}>
             <Ionicons name="hourglass-outline" size={13} color={c.warning} />

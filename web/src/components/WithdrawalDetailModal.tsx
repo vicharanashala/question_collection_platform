@@ -238,6 +238,9 @@ export function WithdrawalDetailModal({
   const hasFailedDebitTx = transactions.some(
     (tx) => tx.type === 'debit' && tx.status === 'failed',
   )
+  const hasCompletedDebitTx = transactions.some(
+    (tx) => tx.type === 'debit' && tx.status === 'completed',
+  )
 
   return (
     <>
@@ -505,8 +508,8 @@ export function WithdrawalDetailModal({
               </div>
             )}
 
-            {/* Failed (no failed DEBIT tx yet) — retry payment or mark failed */}
-            {!readOnly && !isPending && w.status === 'failed' && !hasFailedDebitTx && (
+            {/* Failed (no failed/completed DEBIT tx yet) — retry payment or mark failed */}
+            {!readOnly && !isPending && w.status === 'failed' && !hasFailedDebitTx && !hasCompletedDebitTx && (
               <div className="flex items-center gap-3">
                 <Button
                   size="sm"

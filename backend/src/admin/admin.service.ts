@@ -1146,10 +1146,7 @@ export class AdminService implements OnModuleInit {
         processedAt: new Date(),
         orderId,
       });
-      await this.transactionRepo.update(
-        { referenceId: withdrawalId },
-        { status: TransactionStatus.COMPLETED },
-      );
+      // DEBIT transaction stays PENDING until payout succeeds via webhook
       await this.logAudit({
         actorType: ActorType.ADMIN,
         actorId: adminId,
@@ -1271,7 +1268,8 @@ export class AdminService implements OnModuleInit {
 
   /**
    * Retry a failed PineLabs payout for a PROCESSING withdrawal.
-   * The withdrawal stays PROCESSING; only a payment_log entry is added.
+   * On payout failure the withdrawal is marked FAILED (no auto-refund —
+   * admin must explicitly call markWithdrawalFailed to refund the user).
    */
   async retryWithdrawal(adminId: string, withdrawalId: string): Promise<{
     success: boolean;
@@ -1341,7 +1339,8 @@ export class AdminService implements OnModuleInit {
   /**
    * Retry a FAILED withdrawal (one that was already refunded).
    * Resets to PROCESSING, creates a fresh DEBIT transaction, re-attempts payout.
-   * If payout fails again, re-triggers refund automatically.
+   * If payout fails again, withdrawal is marked FAILED again — no auto-refund;
+   * admin must explicitly call markWithdrawalFailed to refund.
    */
   async retryFailedWithdrawal(adminId: string, withdrawalId: string): Promise<{
     success: boolean;
@@ -1385,7 +1384,7 @@ export class AdminService implements OnModuleInit {
           amount: Number(withdrawal.amount),
           type: TransactionType.DEBIT,
           source: TransactionSource.WITHDRAWAL,
-          status: TransactionStatus.COMPLETED,
+          status: TransactionStatus.PENDING,
           referenceId: withdrawalId,
           description: 'Withdrawal payout retry',
         }),
@@ -1461,8 +1460,11 @@ export class AdminService implements OnModuleInit {
   /**
    * Handle a PineLabs payout failure by:
    * 1. Logging to payment_logs
-   * 2. Marking the withdrawal as FAILED and triggering refund
-   * 3. Notifying the user
+   * 2. Marking the withdrawal as FAILED
+   *
+   * No refund is issued here. The admin must explicitly call markWithdrawalFailed
+   * to trigger the refund after reviewing the failure.
+   *
    * Returns the new withdrawal status (always FAILED).
    */
   private async handleWithdrawalFailure(params: {
@@ -1487,12 +1489,22 @@ export class AdminService implements OnModuleInit {
       }),
     );
 
-    // 2. Mark withdrawal as FAILED and trigger refund
+    // 2. Mark withdrawal as FAILED — NO refund here; admin must explicitly call markWithdrawalFailed
     const failureReason = result.errorCode === 'NETWORK_ERROR'
       ? result.errorMessage ?? 'Payout dispatch failed'
       : `${result.errorCode ?? 'Payout failed'}: ${result.errorMessage ?? 'Unknown error'}`;
 
-    await this.markWithdrawalFailed(adminId, withdrawal.id, failureReason);
+    await this.withdrawalRepo.update(withdrawal.id, { status: WithdrawalStatus.FAILED });
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: 'withdrawal_payment_failed',
+      entityType: 'withdrawal_request',
+      entityId: withdrawal.id,
+      newValue: { status: WithdrawalStatus.FAILED, reason: failureReason, refundPending: true },
+    });
+
+    // No notification here — notification is sent only after admin explicitly clicks "Mark Failed"
     return WithdrawalStatus.FAILED;
   }
 
@@ -1568,7 +1580,7 @@ export class AdminService implements OnModuleInit {
 
       await queryRunner.commitTransaction();
 
-      // Notify user of failure
+      // Send two notifications: one for failed withdrawal, one for refund
       const withdrawalForNotify = await this.withdrawalRepo.findOne({
         where: { id: withdrawalId },
         relations: ['user'],
@@ -1588,12 +1600,14 @@ export class AdminService implements OnModuleInit {
         const maskedDetails = maskPayout(
           (withdrawalForNotify.payoutDetails as Record<string, unknown>) ?? null,
         )
-        const notification = await this.notificationRepo.save(
+
+        // 6a. Notify: withdrawal failed
+        const failedNotification = await this.notificationRepo.save(
           this.notificationRepo.create({
             userId: withdrawalForNotify.userId,
             type: NotificationType.WITHDRAWAL_FAILED,
             title: 'Withdrawal Failed',
-            body: `Your withdrawal of Rs. ${withdrawalForNotify.amount} has failed.${reason ? ' Reason: ' + reason + '.' : ''} The amount has been credited back to your wallet.`,
+            body: `Your withdrawal of Rs. ${withdrawalForNotify.amount} has failed.${reason ? ' Reason: ' + reason + '.' : ''}`,
             data: {
               withdrawalId,
               status: 'failed',
@@ -1605,9 +1619,32 @@ export class AdminService implements OnModuleInit {
           }),
         )
         this.notificationsService.sendToUser(withdrawalForNotify.userId, {
-          title: notification.title,
-          body: notification.body,
-          data: notification.data ?? undefined,
+          title: failedNotification.title,
+          body: failedNotification.body,
+          data: failedNotification.data ?? undefined,
+        })
+
+        // 6b. Notify: refund completed
+        const refundNotification = await this.notificationRepo.save(
+          this.notificationRepo.create({
+            userId: withdrawalForNotify.userId,
+            type: NotificationType.REFUND_COMPLETED,
+            title: 'Refund Processed',
+            body: `Rs. ${withdrawalForNotify.amount} has been credited back to your wallet.${reason ? ' Reason: ' + reason + '.' : ''}`,
+            data: {
+              withdrawalId,
+              refundAmount: Number(withdrawalForNotify.amount),
+              reason,
+              payoutDetails: maskedDetails,
+              userId: withdrawalForNotify.userId,
+            },
+            triggerType: NotificationTriggerType.WITHDRAW,
+          }),
+        )
+        this.notificationsService.sendToUser(withdrawalForNotify.userId, {
+          title: refundNotification.title,
+          body: refundNotification.body,
+          data: refundNotification.data ?? undefined,
         })
       }
 

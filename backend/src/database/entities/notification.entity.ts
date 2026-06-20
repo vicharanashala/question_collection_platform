@@ -19,6 +19,7 @@ export enum NotificationType {
   WITHDRAWAL_APPROVED = 'withdrawal_approved',
   WITHDRAWAL_REJECTED = 'withdrawal_rejected',
   WITHDRAWAL_FAILED = 'withdrawal_failed',
+  REFUND_COMPLETED = 'refund_completed',
   ACCOUNT_SUSPENDED = 'account_suspended',
   ACCOUNT_BANNED = 'account_banned',
   GENERAL = 'general',

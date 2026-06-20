@@ -475,23 +475,21 @@ export function WithdrawalDetailModal({
                 )}
 
                 {status === 'failed' && (
-                  <>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.actionBtnRetry, { flex: 2, ...tokens.shadowSm }]}
-                      onPress={handleRetry}
-                      disabled={processing}
-                      activeOpacity={0.8}
-                    >
-                      {processing ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <>
-                          <Ionicons name="refresh" size={17} color="#fff" />
-                          <Text style={styles.actionBtnText}>Retry Payment</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnRetry, { ...tokens.shadowSm }]}
+                    onPress={handleMarkFailed}
+                    disabled={processing}
+                    activeOpacity={0.8}
+                  >
+                    {processing ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <Ionicons name="close-circle" size={17} color="#fff" />
+                        <Text style={styles.actionBtnText}>Mark Failed</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 )}
               </View>
             )}
