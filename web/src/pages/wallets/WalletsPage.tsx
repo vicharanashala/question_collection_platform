@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { cn, formatINRFull } from '@/lib/utils'
 import { WalletDetailModal } from '@/components/WalletDetailModal'
 import {
   Wallet, Search, RefreshCw, X, TrendingUp,
@@ -134,7 +134,7 @@ export function WalletsPage() {
               <div>
                 <p className="text-sm text-text-secondary">Total Distributed</p>
                 <p className="mt-1 text-2xl font-extrabold text-success tabular-nums">
-                  ₹{totalEarned.toLocaleString('en-IN')}
+                  ₹{formatINRFull(totalEarned)}
                 </p>
                 <p className="text-xs text-text-tertiary mt-1">Across all wallets</p>
               </div>
@@ -151,7 +151,7 @@ export function WalletsPage() {
               <div>
                 <p className="text-sm text-text-secondary">Total Withdrawn</p>
                 <p className="mt-1 text-2xl font-extrabold text-destructive tabular-nums">
-                  ₹{totalWithdrawn.toLocaleString('en-IN')}
+                  ₹{formatINRFull(totalWithdrawn)}
                 </p>
                 <p className="text-xs text-text-tertiary mt-1">All withdrawal payouts</p>
               </div>
@@ -168,7 +168,7 @@ export function WalletsPage() {
               <div>
                 <p className="text-sm text-text-secondary">Active Balance</p>
                 <p className="mt-1 text-2xl font-extrabold text-primary tabular-nums">
-                  ₹{totalBalance.toLocaleString('en-IN')}
+                  ₹{formatINRFull(totalBalance)}
                 </p>
                 <p className="text-xs text-text-tertiary mt-1">Available in wallets</p>
               </div>
@@ -258,13 +258,13 @@ export function WalletsPage() {
                       <Badge variant="secondary" className="text-xs">{wallet.user.category}</Badge>
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-foreground tabular-nums">
-                      ₹{Number(wallet.balance).toLocaleString('en-IN')}
+                      ₹{formatINRFull(Number(wallet.balance))}
                     </td>
                     <td className="px-4 py-3 text-right text-success tabular-nums">
-                      ₹{Number(wallet.totalEarned).toLocaleString('en-IN')}
+                      ₹{formatINRFull(Number(wallet.totalEarned))}
                     </td>
                     <td className="px-4 py-3 text-right text-destructive tabular-nums">
-                      ₹{Number(wallet.totalWithdrawn).toLocaleString('en-IN')}
+                      ₹{formatINRFull(Number(wallet.totalWithdrawn))}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <Badge className={cn(

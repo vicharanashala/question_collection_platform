@@ -345,6 +345,27 @@ export const adminApi = {
       false,
     ).finally(() => invalidateCache('/api/admin')),
 
+  retryWithdrawal: (id: string) =>
+    request<{ success: boolean; withdrawalId: string; status: string }>(
+      `/admin/withdrawals/${id}/retry`,
+      { method: 'POST' },
+      false,
+    ).finally(() => invalidateCache('/api/admin')),
+
+  retryFailedWithdrawal: (id: string) =>
+    request<{
+      success: boolean;
+      withdrawalId: string;
+      status: string;
+      paymentFailed?: boolean;
+      errorCode?: string | null;
+      errorMessage?: string | null;
+    }>(
+      `/admin/withdrawals/${id}/retry-refund`,
+      { method: 'POST' },
+      false,
+    ).finally(() => invalidateCache('/api/admin')),
+
   updateWithdrawalFailureReason: (id: string, reason: string) =>
     request<{ success: boolean; withdrawalId: string }>(
       `/admin/withdrawals/${id}/failure-reason`,

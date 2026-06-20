@@ -81,3 +81,17 @@ export function formatINR(n: number): string {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
   return n.toLocaleString('en-IN')
 }
+
+/** Always shows exactly 2 decimal places, e.g. 50,630.00 */
+export function formatINRFull(n: number): string {
+  return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+/** Returns the appropriate Tailwind text size class based on formatted length (INR, 2dp) */
+export function getBalanceTextClass(n: number): string {
+  const len = n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).length
+  if (len <= 4) return 'text-4xl'
+  if (len <= 6) return 'text-3xl'
+  if (len <= 8) return 'text-2xl'
+  return 'text-xl'
+}

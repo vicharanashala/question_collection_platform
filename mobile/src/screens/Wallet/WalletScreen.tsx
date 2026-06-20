@@ -25,6 +25,7 @@ import { walletApi, questionApi, getErrorMessage } from '../../api/client';
 import { TranslatableTextReadOnly } from '../../components/TranslatableTextReadOnly';
 import { tokens } from '../../utils/theme';
 import { Transaction } from '../../types';
+import { formatINRFull, getBalanceFontSize } from '../../utils/currency';
 
 // ─── Filter options ───────────────────────────────────────────────────────────
 
@@ -710,8 +711,8 @@ export function WalletScreen() {
                 <Ionicons name="wallet" size={13} color={c.heroFg} style={{ opacity: 0.8 }} />
                 <Text style={[styles.balanceLabel, { color: c.heroFg }]}>{t('wallet.availableBalance')}</Text>
               </View>
-              <Text style={[styles.balanceAmount, { color: c.heroFg }]}>
-                ₹{(balance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              <Text style={[styles.balanceAmount, { color: c.heroFg, fontSize: getBalanceFontSize(balance ?? 0) }]}>
+                ₹{formatINRFull(balance ?? 0)}
               </Text>
               <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>Indian Rupees</Text>
             </View>
@@ -1079,7 +1080,7 @@ const styles = StyleSheet.create({
   balanceRight: { alignItems: 'flex-end' },
   balanceLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: tokens.spacing2 },
   balanceLabel: { fontSize: 12, fontWeight: '600', opacity: 0.85 },
-  balanceAmount: { fontSize: 36, fontWeight: '800', letterSpacing: -0.5, marginBottom: 2 },
+  balanceAmount: { fontWeight: '800', letterSpacing: -0.5, marginBottom: 2 },
   balanceCurrency: { fontSize: 11, opacity: 0.65 },
   withdrawCtaBtn: {
     flexDirection: 'row',

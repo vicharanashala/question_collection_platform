@@ -308,6 +308,21 @@ export class AdminController {
     return this.adminService.retryWithdrawal(req.user.id, id);
   }
 
+  /**
+   * Retry a failed withdrawal that was already refunded.
+   * Resets the withdrawal to PROCESSING, creates a new DEBIT transaction,
+   * re-attempts the PineLabs payout, and re-refunds if it fails again.
+   */
+  @Post('withdrawals/:id/retry-refund')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async retryFailedWithdrawal(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.adminService.retryFailedWithdrawal(req.user.id, id);
+  }
+
   /** Admin explicitly marks a PROCESSING withdrawal as FAILED and refunds the user */
   @Post('withdrawals/:id/fail')
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)

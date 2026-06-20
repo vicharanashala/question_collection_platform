@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { adminApi, getErrorMessage } from '@/api/client'
+import { formatINRFull } from '@/lib/utils'
 import { toast } from 'sonner'
 
 interface WalletAdjustModalProps {
@@ -78,7 +79,7 @@ export function WalletAdjustModal({ open, userId, userName, currentBalance, onCl
             <p className="text-xs text-muted-foreground mt-1">
               Current balance:{' '}
               <span className="font-semibold tabular-nums">
-                ₹{Number(currentBalance).toLocaleString('en-IN')}
+                ₹{formatINRFull(Number(currentBalance))}
               </span>
             </p>
           </div>

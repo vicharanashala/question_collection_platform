@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatDate } from '@/lib/utils'
+import { cn, formatDate, formatINRFull, getBalanceTextClass } from '@/lib/utils'
 import {
   Wallet, ArrowUpRight, ArrowDownRight,
   RefreshCw, TrendingUp, TrendingDown, Clock, Hash, X, Eye, XCircle,
@@ -288,8 +288,8 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               {isLoading ? (
                 <Skeleton className="h-10 w-36" />
               ) : (
-                <p className="text-4xl font-extrabold text-primary tabular-nums leading-none">
-                  ₹{Number(displayBalance).toLocaleString('en-IN')}
+                <p className={`${getBalanceTextClass(Number(displayBalance))} font-extrabold text-primary tabular-nums leading-none`}>
+                  ₹{formatINRFull(Number(displayBalance))}
                 </p>
               )}
               <div className="space-y-2 pt-2 border-t border-border-subtle">
@@ -302,7 +302,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                     <Skeleton className="h-3 w-16" />
                   ) : (
                     <span className="font-semibold text-success tabular-nums">
-                      ₹{Number(totalEarned).toLocaleString('en-IN')}
+                      ₹{formatINRFull(Number(totalEarned))}
                     </span>
                   )}
                 </div>
@@ -315,7 +315,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                     <Skeleton className="h-3 w-16" />
                   ) : (
                     <span className="font-semibold text-destructive tabular-nums">
-                      ₹{Number(totalWithdrawn).toLocaleString('en-IN')}
+                      ₹{formatINRFull(Number(totalWithdrawn))}
                     </span>
                   )}
                 </div>
@@ -361,7 +361,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                       <ArrowDownRight className="h-3 w-3 text-success" /> Credits
                     </span>
                     <span className="text-xs font-semibold text-success tabular-nums">
-                      +₹{Number(txSummary.totalCredits).toLocaleString('en-IN')}
+                      +₹{formatINRFull(Number(txSummary.totalCredits))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -369,7 +369,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                       <ArrowUpRight className="h-3 w-3 text-destructive" /> Debits
                     </span>
                     <span className="text-xs font-semibold text-destructive tabular-nums">
-                      -₹{Number(txSummary.totalDebits).toLocaleString('en-IN')}
+                      -₹{formatINRFull(Number(txSummary.totalDebits))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-t border-border-subtle pt-1.5">
@@ -379,7 +379,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                       txSummary.totalCredits - txSummary.totalDebits >= 0 ? 'text-success' : 'text-destructive',
                     )}>
                       {txSummary.totalCredits - txSummary.totalDebits >= 0 ? '+' : ''}
-                      ₹{(txSummary.totalCredits - txSummary.totalDebits).toLocaleString('en-IN')}
+                      ₹{formatINRFull(Number(txSummary.totalCredits - txSummary.totalDebits))}
                     </span>
                   </div>
                 </div>
@@ -493,7 +493,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                             <span className="capitalize">{tx.type}</span>
                           </div>
                           <p className={cn('text-sm font-bold tabular-nums text-right', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
-                            {tx.type === 'credit' ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN')}
+                            {tx.type === 'credit' ? '+' : '−'}₹{formatINRFull(Number(tx.amount))}
                           </p>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className={cn(
@@ -504,7 +504,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                             </span>
                             {tx.balanceAfter != null && (
                               <span className="text-[10px] text-muted-foreground tabular-nums">
-                                → ₹{Number(tx.balanceAfter).toLocaleString('en-IN')}
+                                → ₹{formatINRFull(Number(tx.balanceAfter))}
                               </span>
                             )}
                           </div>
@@ -587,7 +587,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                             )}
                           </div>
                           <p className="text-sm font-bold text-foreground tabular-nums text-right">
-                            ₹{Number(wd.amount).toLocaleString('en-IN')}
+                            ₹{formatINRFull(Number(wd.amount))}
                           </p>
                           <span className={cn(
                             'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize shrink-0',

@@ -16,7 +16,7 @@ import {
   CheckCircle, XCircle, User, Phone, CreditCard, Wallet,
   CalendarDays, Building2, Hash, ArrowRightLeft, ArrowDownCircle,
   ArrowUpCircle, ShieldCheck, MapPin, Banknote, Copy, CheckCheck,
-  AlertTriangle,
+  AlertTriangle, RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
@@ -505,22 +505,53 @@ export function WithdrawalDetailModal({
               </div>
             )}
 
-            {/* Failed (no failed DEBIT tx yet) — mark transaction as failed */}
+            {/* Failed (no failed DEBIT tx yet) — retry payment or mark failed */}
             {!readOnly && !isPending && w.status === 'failed' && !hasFailedDebitTx && (
-              <Button
-                size="sm"
-                className="bg-destructive hover:bg-destructive/90 text-white"
-                onClick={() => setReasonDialog({
-                  open: true,
-                  mode: 'fail',
-                  amount: w.amount,
-                  userName: w.user?.name ?? w.user?.mobileNumber ?? '',
-                })}
-                disabled={processing}
-              >
-                <XCircle className="h-4 w-4 mr-1.5" />
-                {processing ? 'Processing…' : 'Mark Transaction as Failed'}
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-white"
+                  onClick={async () => {
+                    if (processing) return
+                    setProcessing(true)
+                    try {
+                      const res = await adminApi.retryFailedWithdrawal(w.id)
+                      if (res.paymentFailed) {
+                        toast.error(
+                          `Retry failed${res.errorMessage ? ': ' + res.errorMessage : ''}`,
+                          { duration: 6000 },
+                        )
+                        setWithdrawal((prev) => ({ ...prev, status: res.status as any }))
+                      } else {
+                        toast.success('Payment succeeded — withdrawal completed')
+                      }
+                      onActioned?.(w.id)
+                    } catch (e) {
+                      toast.error(getErrorMessage(e, 'Retry failed'))
+                    } finally {
+                      setProcessing(false)
+                    }
+                  }}
+                  disabled={processing}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1.5" />
+                  {processing ? 'Processing…' : 'Retry Payment'}
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-destructive hover:bg-destructive/90 text-white"
+                  onClick={() => setReasonDialog({
+                    open: true,
+                    mode: 'fail',
+                    amount: w.amount,
+                    userName: w.user?.name ?? w.user?.mobileNumber ?? '',
+                  })}
+                  disabled={processing}
+                >
+                  <XCircle className="h-4 w-4 mr-1.5" />
+                  {processing ? 'Processing…' : 'Mark Failed'}
+                </Button>
+              </div>
             )}
 
             {/* Completed / Rejected — show status info */}

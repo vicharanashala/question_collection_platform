@@ -1337,6 +1337,125 @@ export class AdminService implements OnModuleInit {
   }
 
   /**
+   * Retry a FAILED withdrawal (one that was already refunded).
+   * Resets to PROCESSING, creates a fresh DEBIT transaction, re-attempts payout.
+   * If payout fails again, re-triggers refund automatically.
+   */
+  async retryFailedWithdrawal(adminId: string, withdrawalId: string): Promise<{
+    success: boolean;
+    withdrawalId: string;
+    status: WithdrawalStatus;
+    paymentFailed?: boolean;
+    errorCode?: string | null;
+    errorMessage?: string | null;
+  }> {
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id: withdrawalId },
+      relations: ['user', 'wallet'],
+    });
+    if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
+    if (withdrawal.status !== WithdrawalStatus.FAILED) {
+      throw new BadRequestException(`Cannot retry-refund a withdrawal in '${withdrawal.status}' status. Only FAILED withdrawals can be retried.`);
+    }
+
+    // Use existing orderId if present, otherwise generate a new one
+    const orderId = withdrawal.orderId ?? this.pinelabsService.generateOrderId(withdrawalId);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Reset withdrawal to PROCESSING
+      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
+        status: WithdrawalStatus.PROCESSING,
+        processedAt: new Date(),
+        orderId,
+        pinelabsTransactionId: null,
+      });
+
+      // 2. Create a new DEBIT transaction for the retry
+      const wallet = await queryRunner.manager.findOne(Wallet, { where: { id: withdrawal.walletId } });
+      const balanceBefore = wallet ? Number(wallet.balance) : 0;
+      await queryRunner.manager.save(
+        queryRunner.manager.create(Transaction, {
+          walletId: withdrawal.walletId,
+          amount: Number(withdrawal.amount),
+          type: TransactionType.DEBIT,
+          source: TransactionSource.WITHDRAWAL,
+          status: TransactionStatus.COMPLETED,
+          referenceId: withdrawalId,
+          description: 'Withdrawal payout retry',
+        }),
+      );
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: 'withdrawal_retry_refund',
+      entityType: 'withdrawal_request',
+      entityId: withdrawalId,
+      newValue: { action: 'retry_refund_attempted', orderId },
+    });
+
+    // 3. Attempt PineLabs payout
+    const result = await this.pinelabsService.dispatchPayout({
+      orderId,
+      paymentMethod: withdrawal.payoutMethod,
+      amount: Number(withdrawal.amount),
+      payoutDetails: withdrawal.payoutDetails,
+    });
+
+    if (result.success) {
+      await this.withdrawalRepo.update(withdrawalId, {
+        status: WithdrawalStatus.COMPLETED,
+        processedAt: new Date(),
+        pinelabsTransactionId: result.pinelabsTransactionId,
+      });
+      await this.transactionRepo.update(
+        { referenceId: withdrawalId, type: TransactionType.DEBIT },
+        { status: TransactionStatus.COMPLETED },
+      );
+      await this.logAudit({
+        actorType: ActorType.ADMIN,
+        actorId: adminId,
+        action: 'withdrawal_completed',
+        entityType: 'withdrawal_request',
+        entityId: withdrawalId,
+        newValue: { status: WithdrawalStatus.COMPLETED, pinelabsTransactionId: result.pinelabsTransactionId },
+      });
+      return { success: true, withdrawalId, status: WithdrawalStatus.COMPLETED };
+    } else {
+      // Re-mark as failed (which will re-refund via markWithdrawalFailed)
+      const failureReason = result.errorCode === 'NETWORK_ERROR'
+        ? result.errorMessage ?? 'Payout dispatch failed'
+        : `${result.errorCode ?? 'Payout failed'}: ${result.errorMessage ?? 'Unknown error'}`;
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal: { ...withdrawal, status: WithdrawalStatus.PROCESSING } as WithdrawalRequest,
+        orderId,
+        adminId,
+        result,
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: newStatus,
+        paymentFailed: true,
+        errorCode: result.errorCode,
+        errorMessage: result.errorMessage,
+      };
+    }
+  }
+
+  /**
    * Handle a PineLabs payout failure by:
    * 1. Logging to payment_logs
    * 2. Marking the withdrawal as FAILED and triggering refund
