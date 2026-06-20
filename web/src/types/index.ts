@@ -282,3 +282,96 @@ export interface ExportParams {
   dataType?: 'questions' | 'users' | 'rewards' | 'withdrawals'
   format?: 'csv' | 'excel'
 }
+
+// ─── Audit Logs (Task 19) ──────────────────────────────────────────────────────
+
+export interface AuditLogEntry {
+  id: string
+  actorType: 'admin' | 'curator' | 'user' | 'system'
+  actorId: string | null
+  actorName: string | null
+  actorRole: string | null
+  action: string
+  entityType: string | null
+  entityId: string | null
+  oldValue: Record<string, unknown> | null
+  newValue: Record<string, unknown> | null
+  metadata: Record<string, unknown> | null
+  createdAt: string
+}
+
+export interface AuditLogsResponse {
+  items: AuditLogEntry[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export interface ActorStats {
+  actorId: string
+  actorName: string
+  actorRole: string
+  withdrawalApproved: number
+  withdrawalRejected: number
+  withdrawalProcessed: number
+  withdrawalRetried: number
+  userSuspended: number
+  userBanned: number
+  userUnsuspended: number
+  userUnbanned: number
+  userVerified: number
+  questionApproved: number
+  questionRejected: number
+  questionHeld: number
+  configUpdated: number
+  totalActions: number
+}
+
+export interface AuditStatsResponse {
+  fromDate: string | null
+  toDate: string | null
+  actors: ActorStats[]
+  summary: {
+    totalActions: number
+    uniqueActors: number
+    mostActiveActor: string | null
+    mostActiveActorName: string | null
+  }
+}
+
+export interface AuditSummarySeries {
+  date: string
+  withdrawals: number
+  userActions: number
+  questionReviews: number
+  configChanges: number
+  total: number
+}
+
+export interface AuditSummaryResponse {
+  granularity: 'day' | 'week' | 'month'
+  series: AuditSummarySeries[]
+}
+
+export interface AuditEntityHistoryResponse {
+  entityType: string
+  entityId: string
+  entries: AuditLogEntry[]
+}
+
+export interface AuditLogQuery {
+  page?: number
+  limit?: number
+  actorId?: string
+  actorType?: string
+  action?: string
+  actions?: string[]
+  entityType?: string
+  entityId?: string
+  fromDate?: string
+  toDate?: string
+  search?: string
+  sortBy?: 'createdAt' | 'action' | 'actorId'
+  sortOrder?: 'ASC' | 'DESC'
+}

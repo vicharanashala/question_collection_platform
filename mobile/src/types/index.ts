@@ -299,3 +299,75 @@ export interface AnalyticsDashboard {
   questions: QuestionAnalytics;
   rewards: RewardAnalytics;
 }
+
+// ─── Audit Logs ───────────────────────────────────────────────────────────────
+
+export interface AuditLogEntry {
+  id: string;
+  actorType: string;
+  actorId: string | null;
+  actorName?: string | null;
+  actorRole?: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  oldValue: Record<string, unknown> | null;
+  newValue: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface AuditLogsResponse {
+  items: AuditLogEntry[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface AuditStatsResponse {
+  totalActions: number;
+  uniqueActors: number;
+  mostActiveActor: string | null;
+  mostActiveActorName: string | null;
+  byActor: Array<{
+    actorId: string;
+    actorName: string | null;
+    actorRole: string | null;
+    actionCount: number;
+  }>;
+}
+
+export interface AuditSummaryResponse {
+  fromDate: string;
+  toDate: string;
+  series: Array<{
+    date: string;
+    count: number;
+  }>;
+  summary: {
+    totalActions: number;
+    uniqueActors: number;
+    mostActiveActor: string | null;
+    mostActiveActorName: string | null;
+  };
+}
+
+export interface AuditEntityHistoryResponse {
+  entityType: string;
+  entityId: string;
+  entries: AuditLogEntry[];
+}
+
+export interface AuditLogQuery {
+  page?: number;
+  limit?: number;
+  actorId?: string;
+  action?: string;
+  entityType?: string;
+  entityId?: string;
+  fromDate?: string;
+  toDate?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}

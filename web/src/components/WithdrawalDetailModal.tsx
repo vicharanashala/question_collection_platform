@@ -16,10 +16,12 @@ import {
   CheckCircle, XCircle, User, Phone, CreditCard, Wallet,
   CalendarDays, Building2, Hash, ArrowRightLeft, ArrowDownCircle,
   ArrowUpCircle, ShieldCheck, MapPin, Banknote, Copy, CheckCheck,
-  AlertTriangle, RefreshCw, Clock, BadgeCheck,
+  AlertTriangle, RefreshCw, Clock, BadgeCheck, ScrollText,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Withdrawal } from '@/types'
+import type { Withdrawal, AuditLogEntry, AuditEntityHistoryResponse } from '@/types'
+import { auditApi } from '@/api/client'
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
@@ -111,6 +113,13 @@ export function WithdrawalDetailModal({
     userName: string
   } | null>(null)
 
+  // Audit history (super_admin)
+  const [auditCollapsed, setAuditCollapsed] = useState(true)
+  const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [auditPage, setAuditPage] = useState(1)
+  const AUDIT_PAGE_SIZE = 10
+
   useEffect(() => {
     if (!open) return
     setWithdrawal(initial)
@@ -118,12 +127,34 @@ export function WithdrawalDetailModal({
     setProcessing(false)
     setReasonDialog(null)
     setTransactions([])
+    // Reset audit state
+    setAuditCollapsed(true)
+    setAuditEntries([])
+    setAuditLoading(false)
 
     adminApi.getWithdrawalWithTransactions(initial.id).then((data) => {
       setWithdrawal(data as any)
       setTransactions((data as any).transactions ?? [])
     }).catch(() => {}).finally(() => setLoading(false))
   }, [open, initial.id])
+
+  async function loadAuditHistory() {
+    if (auditEntries.length > 0) {
+      setAuditCollapsed((c) => !c)
+      return
+    }
+    setAuditLoading(true)
+    try {
+      const res = await auditApi.getEntityHistory('withdrawal_request', initial.id)
+      setAuditEntries((res as AuditEntityHistoryResponse).entries)
+      setAuditCollapsed(false)
+      setAuditPage(1)
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to load audit history'))
+    } finally {
+      setAuditLoading(false)
+    }
+  }
 
   async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {
     if (processing) return
@@ -364,6 +395,117 @@ export function WithdrawalDetailModal({
                     </div>
                   </Section>
                 )}
+
+                {/* ── Audit History ───────────────────────────── */}
+                <Section label="Audit History" icon={ScrollText}>
+                  {/* Load button / count row */}
+                  <div className="flex items-center justify-between mb-3">
+                    <button
+                      onClick={loadAuditHistory}
+                      className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    >
+                      {auditLoading
+                        ? <span className="h-3 w-3 border border-blue-400 border-t-transparent rounded-full animate-spin" />
+                        : <ScrollText className="h-3 w-3" />}
+                      {auditLoading
+                        ? 'Loading...'
+                        : auditCollapsed && auditEntries.length === 0
+                          ? 'Load audit history'
+                          : `${auditEntries.length} audit ${auditEntries.length === 1 ? 'entry' : 'entries'}`}
+                    </button>
+                    {!auditCollapsed && auditEntries.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {auditEntries.length} total
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Empty state */}
+                  {!auditCollapsed && auditEntries.length === 0 && !auditLoading && (
+                    <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+                      <ScrollText className="h-7 w-7 opacity-25" />
+                      <p className="text-xs">No audit history for this withdrawal</p>
+                    </div>
+                  )}
+
+                  {/* Loading skeleton */}
+                  {!auditCollapsed && auditLoading && (
+                    <div className="space-y-2">
+                      {[3, 2, 4].map((_, i) => (
+                        <div key={i} className="h-14 rounded-lg bg-muted/40 animate-pulse" />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Paginated entry list */}
+                  {!auditCollapsed && auditEntries.length > 0 && !auditLoading && (
+                    <>
+                      <div className="space-y-2">
+                        {auditEntries
+                          .slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE)
+                          .map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="flex items-start gap-3 rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20 hover:bg-muted/30 transition-colors"
+                            >
+                              {/* Avatar initials */}
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold shrink-0">
+                                {(entry.actorName ?? entry.actorId ?? 'S').charAt(0).toUpperCase()}
+                              </div>
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-foreground">
+                                    {entry.actorName
+                                      ? `${entry.actorName} (${entry.actorRole ?? entry.actorType})`
+                                      : entry.actorId ?? 'System'}
+                                  </span>
+                                </div>
+                                <Badge variant="secondary" className="mt-1 text-xs capitalize">
+                                  {entry.action.replace(/_/g, ' ').toLowerCase()}
+                                </Badge>
+                                {entry.oldValue && entry.newValue && (
+                                  <p className="mt-1 text-xs text-muted-foreground font-mono">
+                                    {JSON.stringify(entry.oldValue)} → {JSON.stringify(entry.newValue)}
+                                  </p>
+                                )}
+                              </div>
+                              {/* Timestamp */}
+                              <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap mt-1">
+                                {formatDisplayDate(entry.createdAt)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+
+                      {/* Pagination */}
+                      {auditEntries.length > AUDIT_PAGE_SIZE && (
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border-subtle">
+                          <span className="text-xs text-muted-foreground">
+                            {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}–{Math.min(auditPage * AUDIT_PAGE_SIZE, auditEntries.length)} of {auditEntries.length}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
+                              disabled={auditPage === 1}
+                              className="h-7 w-7 flex items-center justify-center rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <span className="text-xs text-muted-foreground px-1">{auditPage}</span>
+                            <button
+                              onClick={() => setAuditPage((p) => p + 1)}
+                              disabled={auditPage * AUDIT_PAGE_SIZE >= auditEntries.length}
+                              className="h-7 w-7 flex items-center justify-center rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </Section>
 
               </div>
             )}

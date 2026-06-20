@@ -16,6 +16,7 @@ const SettingsPage   = lazyRoute(() => import('@/pages/settings/SettingsPage').t
 const WithdrawalsPage = lazyRoute(() => import('@/pages/withdrawals/WithdrawalsPage').then(m => ({ default: m.WithdrawalsPage })))
 const WalletsPage       = lazyRoute(() => import('@/pages/wallets/WalletsPage').then(m => ({ default: m.WalletsPage })))
 const NotificationsPage = lazyRoute(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
+const AuditLogsPage     = lazyRoute(() => import('@/pages/audit-logs/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })))
 
 /** Pages visible per role */
 const PAGE_ROLES: Record<string, UserRole[]> = {
@@ -29,6 +30,7 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   withdrawals:   ['admin', 'super_admin'],
   wallets:       ['admin', 'super_admin'],
   notifications: ['user', 'curator'],
+  auditLogs:     ['super_admin'],
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -81,6 +83,7 @@ export default function App() {
           <Route path="withdrawals" element={<><RoleRoute pageKey="withdrawals" /><WithdrawalsPage /></>} />
           <Route path="wallets"        element={<><RoleRoute pageKey="wallets"      /><WalletsPage    /></>} />
           <Route path="notifications" element={<><RoleRoute pageKey="notifications"/><NotificationsPage /></>} />
+          <Route path="audit-logs"     element={<><RoleRoute pageKey="auditLogs" /><AuditLogsPage /></>} />
         </Route>
       </Routes>
     </PrefetchProvider>

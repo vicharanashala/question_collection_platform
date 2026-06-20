@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
 import { AnalyticsController, ExportController } from './analytics.controller';
 import {
   User,
@@ -36,8 +38,8 @@ import { PaymentModule } from '../payment/payment.module';
     NotificationsModule,
     PaymentModule,
   ],
-  controllers: [AdminController, AnalyticsController, ExportController],
-  providers: [AdminService],
+  controllers: [AdminController, AnalyticsController, ExportController, AuditController],
+  providers: [AdminService, AuditService],
   exports: [AdminService],
 })
 export class AdminModule {}

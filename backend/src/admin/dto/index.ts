@@ -7,3 +7,5 @@ export * from './export.dto';
 export * from './withdrawal.dto';
 export * from './wallet.dto';
 export * from './create-user.dto';
+export * from './query-audit-logs.dto';
+export * from './audit-stats.dto';

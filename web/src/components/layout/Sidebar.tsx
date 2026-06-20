@@ -12,6 +12,7 @@ import {
   LogOut,
   Wallet,
   Bell,
+  ScrollText,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/wallets',   label: 'Wallets',       icon: Wallet,        roles: ['admin', 'super_admin'] },
   { to: '/notifications', label: 'Notifications', icon: Bell,          roles: ['user', 'curator'] },
   { to: '/settings',  label: 'Settings',      icon: Settings2,    roles: ['super_admin'] },
+  { to: '/audit-logs', label: 'Audit Logs',    icon: ScrollText,   roles: ['super_admin'] },
 ]
 
 export function Sidebar() {

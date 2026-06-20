@@ -11,7 +11,7 @@ import { useToast } from '../../components/Toast';
 import { SuspendBanModal } from '../../components/SuspendBanModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { WalletAdjustModal } from '../../components/WalletAdjustModal';
-import { adminApi, getErrorMessage, AccountLockedInfo } from '../../api/client';
+import { adminApi, auditApi, getErrorMessage, AccountLockedInfo } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { UserRole } from '../../types';
@@ -45,6 +45,15 @@ export function AdminUserDetailScreen() {
   const [walletAdjustVisible, setWalletAdjustVisible] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [auditCollapsed, setAuditCollapsed] = useState(true);
+  const [auditEntries, setAuditEntries] = useState<Array<{
+    id: string; actorType: string; actorId: string | null; actorName?: string | null;
+    actorRole?: string | null; action: string; oldValue: Record<string, unknown> | null;
+    newValue: Record<string, unknown> | null; createdAt: string;
+  }>>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditPage, setAuditPage] = useState(1);
+  const AUDIT_PAGE_SIZE = 10;
   useEffect(() => {
     adminApi.getUserDetail(userId)
       .then((r) => setData(r.data))
@@ -166,6 +175,24 @@ export function AdminUserDetailScreen() {
       showToast(msg ?? 'Failed to verify user', 'error');
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function loadAuditHistory() {
+    if (auditEntries.length > 0) {
+      setAuditCollapsed((c) => !c);
+      return;
+    }
+    setAuditLoading(true);
+    try {
+      const res = await auditApi.getEntityHistory('user', userId);
+      setAuditEntries((res.data as { entries: typeof auditEntries }).entries);
+      setAuditCollapsed(false);
+      setAuditPage(1);
+    } catch (e) {
+      showToast(getErrorMessage(e, 'Failed to load audit history'), 'error');
+    } finally {
+      setAuditLoading(false);
     }
   }
 
@@ -471,6 +498,120 @@ export function AdminUserDetailScreen() {
         )}
 
         <View style={{ height: tokens.spacing8 }} />
+
+        {/* ── Audit History (super_admin) ─────────────────── */}
+        {isSuperAdmin && (
+          <View style={styles.auditSection}>
+            <TouchableOpacity
+              style={styles.auditToggle}
+              onPress={loadAuditHistory}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={auditLoading ? 'sync' : 'git-branch-outline'}
+                size={15}
+                color={c.primary}
+              />
+              {auditLoading ? (
+                <ActivityIndicator size="small" color={c.primary} style={{ marginLeft: 6 }} />
+              ) : (
+                <Text style={[styles.auditToggleText, { color: c.primary }]}>
+                  {auditCollapsed && auditEntries.length === 0
+                    ? 'Audit History'
+                    : `${auditEntries.length} audit ${auditEntries.length === 1 ? 'entry' : 'entries'}`}
+                </Text>
+              )}
+              {!auditCollapsed && auditEntries.length > 0 && (
+                <Text style={[styles.auditCountText, { color: c.textTertiary }]}>
+                  {auditEntries.length} total
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {!auditCollapsed && auditEntries.length === 0 && !auditLoading && (
+              <View style={styles.auditEmpty}>
+                <Ionicons name="git-branch-outline" size={28} color={c.textTertiary} style={{ opacity: 0.4 }} />
+                <Text style={[styles.auditEmptyText, { color: c.textTertiary }]}>
+                  No audit history for this user
+                </Text>
+              </View>
+            )}
+
+            {auditLoading && (
+              <View style={styles.auditList}>
+                {[1, 2, 3].map((_, i) => (
+                  <View key={i} style={[styles.auditSkeleton, { backgroundColor: c.surfaceVariant }]} />
+                ))}
+              </View>
+            )}
+
+            {!auditCollapsed && auditEntries.length > 0 && !auditLoading && (
+              <>
+                <View style={styles.auditList}>
+                  {auditEntries
+                    .slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE)
+                    .map((entry) => (
+                      <View
+                        key={entry.id}
+                        style={[styles.auditRow, { backgroundColor: c.surfaceVariant + '60', borderColor: c.border }]}
+                      >
+                        <View style={[styles.auditAvatar, { backgroundColor: c.primary + '20' }]}>
+                          <Text style={[styles.auditAvatarText, { color: c.primary }]}>
+                            {(entry.actorName ?? entry.actorId ?? 'S').charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                        <View style={styles.auditContent}>
+                          <Text style={[styles.auditActor, { color: c.text }]}>
+                            {entry.actorName
+                              ? `${entry.actorName} (${entry.actorRole ?? entry.actorType})`
+                              : entry.actorId ?? 'System'}
+                          </Text>
+                          <View style={[styles.auditBadge, { backgroundColor: c.surfaceVariant }]}>
+                            <Text style={[styles.auditAction, { color: c.textSecondary }]}>
+                              {entry.action.replace(/_/g, ' ').toLowerCase()}
+                            </Text>
+                          </View>
+                          {entry.oldValue && entry.newValue && (
+                            <Text style={[styles.auditDiff, { color: c.textTertiary }]}>
+                              {JSON.stringify(entry.oldValue)} → {JSON.stringify(entry.newValue)}
+                            </Text>
+                          )}
+                        </View>
+                        <Text style={[styles.auditTime, { color: c.textTertiary }]}>
+                          {formatDate(entry.createdAt) ?? entry.createdAt.split('T')[0]}
+                        </Text>
+                      </View>
+                    ))}
+                </View>
+
+                {auditEntries.length > AUDIT_PAGE_SIZE && (
+                  <View style={styles.auditPagination}>
+                    <Text style={[styles.auditPaginationInfo, { color: c.textTertiary }]}>
+                      {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}–{Math.min(auditPage * AUDIT_PAGE_SIZE, auditEntries.length)} of {auditEntries.length}
+                    </Text>
+                    <View style={styles.auditPageButtons}>
+                      <TouchableOpacity
+                        onPress={() => setAuditPage((p) => Math.max(1, p - 1))}
+                        disabled={auditPage === 1}
+                        style={[styles.auditPageBtn, auditPage === 1 && { opacity: 0.3 }]}
+                      >
+                        <Ionicons name="chevron-back" size={16} color={c.text} />
+                      </TouchableOpacity>
+                      <Text style={[styles.auditPageNum, { color: c.textTertiary }]}>{auditPage}</Text>
+                      <TouchableOpacity
+                        onPress={() => setAuditPage((p) => p + 1)}
+                        disabled={auditPage * AUDIT_PAGE_SIZE >= auditEntries.length}
+                        style={[styles.auditPageBtn, auditPage * AUDIT_PAGE_SIZE >= auditEntries.length && { opacity: 0.3 }]}
+                      >
+                        <Ionicons name="chevron-forward" size={16} color={c.text} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       <SuspendBanModal
@@ -688,4 +829,119 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.spacing3,
   },
   adjustWalletBtnText: { fontSize: 13, fontWeight: '700' },
+
+  // ── Audit History ──────────────────────────────────────────────────────────
+  auditSection: {
+    marginTop: tokens.spacing5,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: tokens.spacing4,
+  },
+  auditToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.spacing3,
+    gap: 6,
+  },
+  auditToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  auditCountText: {
+    fontSize: 12,
+    marginLeft: 'auto',
+  },
+  auditEmpty: {
+    alignItems: 'center',
+    paddingVertical: tokens.spacing5,
+    gap: 8,
+  },
+  auditEmptyText: {
+    fontSize: 12,
+  },
+  auditList: {
+    gap: tokens.spacing2,
+  },
+  auditSkeleton: {
+    height: 56,
+    borderRadius: tokens.radiusMd,
+  },
+  auditRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: tokens.spacing3,
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1,
+    gap: tokens.spacing3,
+  },
+  auditAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  auditAvatarText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  auditContent: {
+    flex: 1,
+    gap: 4,
+  },
+  auditActor: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  auditBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  auditAction: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  auditDiff: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    marginTop: 3,
+  },
+  auditTime: {
+    fontSize: 11,
+    alignSelf: 'flex-start',
+    marginTop: 3,
+  },
+  auditPagination: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: tokens.spacing3,
+    paddingTop: tokens.spacing2,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  auditPaginationInfo: {
+    fontSize: 11,
+  },
+  auditPageButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  auditPageBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  auditPageNum: {
+    fontSize: 12,
+    paddingHorizontal: 4,
+  },
 });

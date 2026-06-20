@@ -23,6 +23,10 @@ import type {
   QuestionAnalytics,
   RewardAnalytics,
   ExportParams,
+  AuditLogsResponse,
+  AuditStatsResponse,
+  AuditSummaryResponse,
+  AuditEntityHistoryResponse,
 } from '@/types'
 
 const BASE = '/api/v1'
@@ -559,6 +563,67 @@ export const curatorApi = {
 // ─── Cache control ─────────────────────────────────────────────────────────
 
 export const cache = { invalidate: invalidateCache }
+
+// ─── Audit API (Task 19) ────────────────────────────────────────────────────────
+
+function buildAuditQS(p: Record<string, string | number | undefined | string[]>): string {
+  const sp = new URLSearchParams()
+  for (const [k, v] of Object.entries(p)) {
+    if (v === undefined) continue
+    if (Array.isArray(v)) {
+      v.forEach((val) => sp.append(k, val))
+    } else {
+      sp.set(k, String(v))
+    }
+  }
+  return sp.toString()
+}
+
+export const auditApi = {
+  getAuditLogs: (params: Record<string, string | number | undefined | string[]> = {}) => {
+    const qs = buildAuditQS(params as Record<string, string | number | undefined | string[]>)
+    return request<AuditLogsResponse>(`/admin/audit-logs${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  getAuditStats: (params: { fromDate?: string; toDate?: string; actorType?: string } = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    return request<AuditStatsResponse>(`/admin/audit-logs/stats${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  getAuditSummary: (params: { fromDate?: string; toDate?: string; granularity?: string } = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    return request<AuditSummaryResponse>(`/admin/audit-logs/summary${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  getEntityHistory: (entityType: string, entityId: string) =>
+    request<AuditEntityHistoryResponse>(
+      `/admin/audit-logs/entity/${entityType}/${entityId}`,
+      {}, false,
+    ),
+
+  exportCSV: (params: Record<string, string | number | undefined | string[]> = {}) => {
+    const qs = buildAuditQS(params as Record<string, string | number | undefined | string[]>)
+    const filename = `audit_logs_${Date.now()}.csv`
+    const token = getAccessToken()
+    return fetch(`${BASE}/admin/audit-logs?${qs}&format=csv`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(async (res) => {
+      if (!res.ok) throw new Error(`Export failed: ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    })
+  },
+}
 
 // ─── Error helper ──────────────────────────────────────────────────────────
 

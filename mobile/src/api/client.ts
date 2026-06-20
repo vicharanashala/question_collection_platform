@@ -398,6 +398,24 @@ export const adminApi = {
     api.get('/admin/export', { params, responseType: 'blob' }),
 };
 
+export const auditApi = {
+  /** Fetch paginated audit log entries */
+  getAuditLogs: (params?: Record<string, string | number>) =>
+    api.get('/admin/audit-logs', { params }),
+
+  /** Actor statistics */
+  getActorStats: (params?: Record<string, string | number>) =>
+    api.get('/admin/audit-logs/stats', { params }),
+
+  /** Time-series summary */
+  getSummary: (params?: Record<string, string | number>) =>
+    api.get('/admin/audit-logs/summary', { params }),
+
+  /** Audit history for a specific entity */
+  getEntityHistory: (entityType: string, entityId: string) =>
+    api.get(`/admin/audit-logs/entity/${entityType}/${entityId}`),
+};
+
 export const analyticsApi = {
   /** All dashboard metrics + chart data in one call */
   getDashboard: (params?: Record<string, string | number>) =>
