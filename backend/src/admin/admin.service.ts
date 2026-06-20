@@ -1161,7 +1161,8 @@ export class AdminService implements OnModuleInit {
 
       // Trigger PineLabs payout synchronously — admin waits for result
       const result = await this.pinelabsService.dispatchPayout({
-        orderId,
+        clientReferenceId: orderId,
+        payeeName: withdrawal.user?.name ?? 'Customer',
         paymentMethod: withdrawal.payoutMethod,
         amount: Number(withdrawal.amount),
         payoutDetails: withdrawal.payoutDetails,
@@ -1302,7 +1303,8 @@ export class AdminService implements OnModuleInit {
     });
 
     const result = await this.pinelabsService.dispatchPayout({
-      orderId: withdrawal.orderId,
+      clientReferenceId: withdrawal.orderId,
+      payeeName: withdrawal.user?.name ?? 'Customer',
       paymentMethod: withdrawal.payoutMethod,
       amount: Number(withdrawal.amount),
       payoutDetails: withdrawal.payoutDetails,
@@ -1408,7 +1410,8 @@ export class AdminService implements OnModuleInit {
 
     // 3. Attempt PineLabs payout
     const result = await this.pinelabsService.dispatchPayout({
-      orderId,
+      clientReferenceId: orderId,
+      payeeName: withdrawal.user?.name ?? 'Customer',
       paymentMethod: withdrawal.payoutMethod,
       amount: Number(withdrawal.amount),
       payoutDetails: withdrawal.payoutDetails,

@@ -70,4 +70,7 @@ media/
 .cache/
 *.bak
 
+# API specs
+pinelab-openai-spec.yaml
+
 

@@ -487,7 +487,7 @@ export class WalletsService {
       // If dispatch fails, mark the record as failed immediately so UI reflects reality.
       this.pinelabsService
         .dispatchVerificationPayout({
-          orderId: verificationOrderId,
+          clientReferenceId: verificationOrderId,
           paymentMethod: dto.payoutMethod as PayoutMethod,
           payoutDetails: this.buildPayoutDetailsForVerification(saved),
         })
