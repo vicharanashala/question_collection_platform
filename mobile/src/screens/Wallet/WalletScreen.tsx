@@ -353,8 +353,19 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
             )}
           </ScrollView>
 
+          {/* Disclaimer for non-pending withdrawals */}
+          {tx.source === 'withdrawal' && wd && wd.status !== 'pending' && (
+            <View style={{ backgroundColor: c.surfaceHighlight ?? '#FEF3E7', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+              <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>
+                {String((wd.retryCount as number) ?? 0) > 0
+                  ? `Your payment was attempted but could not be completed (Attempt ${(wd.retryCount as number) + 1}). We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.`
+                  : 'Your payment was attempted but could not be completed. We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.'}
+              </Text>
+            </View>
+          )}
+
           {/* Cancel withdrawal button — only for pending withdrawal transactions */}
-          {tx.source === 'withdrawal' && tx.status === 'pending' && (
+          {tx.source === 'withdrawal' && wd?.status === 'pending' && (
             <View style={[txModalStyles.footer, txModalStyles.footerFullWidth, { flexDirection: 'column' }]}>
               <Button
                 title={t('wallet.cancelWithdrawal')}
@@ -366,7 +377,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
           )}
 
           {/* Close button — all other transactions */}
-          {!(tx.source === 'withdrawal' && tx.status === 'pending') && (
+          {!(tx.source === 'withdrawal' && wd?.status === 'pending') && (
             <View style={[txModalStyles.footer, txModalStyles.footerFullWidth, { flexDirection: 'column' }]}>
               <Button title={t('common.cancel')} variant="outline" onPress={onClose} />
             </View>

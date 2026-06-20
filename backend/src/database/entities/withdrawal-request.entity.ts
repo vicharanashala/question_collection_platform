@@ -51,6 +51,9 @@ export class WithdrawalRequest {
   @Column({ name: 'cancelled_at', type: 'timestamp', nullable: true })
   cancelledAt: Date | null;
 
+  @Column({ name: 'retry_count', type: 'int', default: 0 })
+  retryCount: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -16,7 +16,7 @@ import {
   CheckCircle, XCircle, User, Phone, CreditCard, Wallet,
   CalendarDays, Building2, Hash, ArrowRightLeft, ArrowDownCircle,
   ArrowUpCircle, ShieldCheck, MapPin, Banknote, Copy, CheckCheck,
-  AlertTriangle, RefreshCw,
+  AlertTriangle, RefreshCw, Clock, BadgeCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
@@ -85,41 +85,12 @@ function Copyable({ value }: { value: string }) {
   )
 }
 
-function SectionHeader({ icon: Icon, label }: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-}) {
+function Info({ className }: { className?: string }) {
   return (
-    <div className="flex items-center gap-2 px-5 py-3 bg-muted/60 border-b border-border-subtle rounded-t-xl">
-      <Icon className="h-4 w-4 text-primary" />
-      <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-        {label}
-      </span>
-    </div>
-  )
-}
-
-function DataRow({ icon: Icon, label, value, mono, children }: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value?: string
-  mono?: boolean
-  children?: React.ReactNode
-}) {
-  return (
-    <div className="flex items-start gap-3 px-5 py-4 border-b border-border-subtle last:border-0">
-      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted shrink-0">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1 pt-0.5">
-        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
-        {children ?? (
-          <p className={cn('text-sm font-semibold text-foreground leading-snug', mono && 'font-mono')}>
-            {value || <span className="italic">—</span>}
-          </p>
-        )}
-      </div>
-    </div>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={cn('w-4 h-4', className)}>
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M8 5v.01M8 7.5v3" strokeLinecap="round" />
+    </svg>
   )
 }
 
@@ -151,9 +122,7 @@ export function WithdrawalDetailModal({
     adminApi.getWithdrawalWithTransactions(initial.id).then((data) => {
       setWithdrawal(data as any)
       setTransactions((data as any).transactions ?? [])
-    }).catch(() => {
-      // fallback: keep initial data
-    }).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [open, initial.id])
 
   async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {
@@ -161,15 +130,12 @@ export function WithdrawalDetailModal({
     setProcessing(true)
     try {
       if (mode === 'fail') {
-        // markWithdrawalFailed is idempotent — handles both PROCESSING and FAILED states,
-        // and writes rejectionReason to both DEBIT and CREDIT refund transactions
         await adminApi.markWithdrawalFailed(withdrawal.id, reason ?? '')
         toast.success('Transaction marked as failed')
         onActioned?.(withdrawal.id)
         onClose()
         return
       }
-
       const res = await adminApi.processWithdrawal(withdrawal.id, { action: mode, rejectionReason: reason })
       if (mode === 'reject') {
         toast.success('Withdrawal rejected')
@@ -177,13 +143,11 @@ export function WithdrawalDetailModal({
         onClose()
         return
       }
-      // Approve path
       if (res.paymentFailed) {
         toast.error(
           `Payout dispatch failed${res.errorMessage ? ': ' + res.errorMessage : ''} (${res.errorCode ?? 'unknown'})`,
           { duration: 6000 },
         )
-        // Keep modal open so admin can see the failure — refresh withdrawal state
         setWithdrawal((prev) => ({ ...prev, status: 'processing' }))
         onActioned?.(withdrawal.id)
       } else {
@@ -210,19 +174,16 @@ export function WithdrawalDetailModal({
   }
 
   const payoutFields: Array<{ icon: React.ComponentType<{ className?: string }>; label: string; value: string }> = []
-  if (payout.upiId)  payoutFields.push({ icon: Wallet,     label: 'UPI ID',          value: payout.upiId })
-  if (payout.vpa)    payoutFields.push({ icon: Wallet,     label: 'VPA',             value: payout.vpa })
-  if (payout.bankName) payoutFields.push({ icon: Building2, label: 'Bank Name',       value: payout.bankName })
-  if (payout.accountNumber) {
-    payoutFields.push({ icon: Building2, label: 'Account Number', value: payout.accountNumber })
-    if (payout.accountHolder) payoutFields.push({ icon: ShieldCheck, label: 'Account Holder', value: payout.accountHolder })
-    if (payout.ifsc)          payoutFields.push({ icon: Building2,  label: 'IFSC Code',       value: payout.ifsc })
-  }
-  if (payout.utr)          payoutFields.push({ icon: ArrowRightLeft, label: 'UTR Number',      value: payout.utr })
-  if (payout.transactionId) payoutFields.push({ icon: Hash,           label: 'Transaction ID',  value: payout.transactionId })
-  if (payout.refId)         payoutFields.push({ icon: Hash,           label: 'Reference ID',     value: payout.refId })
+  if (payout.upiId)         payoutFields.push({ icon: Wallet,     label: 'UPI ID',            value: payout.upiId })
+  if (payout.vpa)           payoutFields.push({ icon: Wallet,     label: 'VPA',               value: payout.vpa })
+  if (payout.bankName)      payoutFields.push({ icon: Building2,  label: 'Bank Name',         value: payout.bankName })
+  if (payout.accountNumber) payoutFields.push({ icon: Building2,  label: 'Account Number',    value: payout.accountNumber })
+  if (payout.accountHolder) payoutFields.push({ icon: ShieldCheck,label: 'Account Holder',    value: payout.accountHolder })
+  if (payout.ifsc)          payoutFields.push({ icon: Building2,  label: 'IFSC Code',         value: payout.ifsc })
+  if (payout.utr)           payoutFields.push({ icon: ArrowRightLeft, label: 'UTR Number',      value: payout.utr })
+  if (payout.transactionId) payoutFields.push({ icon: Hash,        label: 'Transaction ID',   value: payout.transactionId })
+  if (payout.refId)         payoutFields.push({ icon: Hash,        label: 'Reference ID',     value: payout.refId })
 
-  // Fallback: any unhandled payout fields
   const knownKeys = new Set(['bankName','accountNumber','accountHolder','ifsc','upiId','vpa','utr','transactionId','refId'])
   Object.entries(payout).filter(([k, v]) => !knownKeys.has(k) && v).forEach(([k, v]) => {
     payoutFields.push({
@@ -233,54 +194,56 @@ export function WithdrawalDetailModal({
   })
 
   const hasPayoutDetails = payoutFields.length > 0
-
   const isLoading = loading || (isPending && !withdrawal.user)
-  const hasFailedDebitTx = transactions.some(
-    (tx) => tx.type === 'debit' && tx.status === 'failed',
-  )
-  const hasCompletedDebitTx = transactions.some(
-    (tx) => tx.type === 'debit' && tx.status === 'completed',
-  )
+
+  const hasFailedDebitTx = transactions.some((tx) => tx.type === 'debit' && tx.status === 'failed')
+  const hasCompletedDebitTx = transactions.some((tx) => tx.type === 'debit' && tx.status === 'completed')
 
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-4xl p-0 gap-0 flex flex-col overflow-hidden" style={{ maxHeight: '90vh' }}>
+        <DialogContent className="max-w-2xl p-0 gap-0 flex flex-col overflow-hidden" style={{ maxHeight: '90vh' }}>
 
           {/* ── Header ──────────────────────────────────────── */}
-          <DialogHeader className="px-6 pt-6 pb-5 border-b border-border-subtle shrink-0">
+          <DialogHeader className="px-6 pt-6 pb-5 shrink-0">
+            {/* Top row: icon + title block | amount */}
             <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 shrink-0">
-                  <Banknote className="h-6 w-6 text-primary" />
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-primary/10 shrink-0">
+                  <Banknote className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <DialogTitle className="text-lg font-bold leading-none">
-                    Withdrawal Request
-                  </DialogTitle>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={cn(
-                      'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize',
-                      STATUS_COLORS[w.status] ?? 'bg-muted',
-                    )}>
-                      {STATUS_LABELS[w.status] ?? w.status}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-mono">{w.id}</span>
-                  </div>
+                  <DialogTitle className="text-base font-bold leading-none">Withdrawal Request</DialogTitle>
+                  {/* ID */}
+                  <p className="text-xs text-muted-foreground font-mono mt-1">{w.id}</p>
                 </div>
               </div>
-
               <div className="shrink-0 text-right">
-                <p className="text-xs text-muted-foreground mb-0.5">Withdrawal Amount</p>
-                <p className="text-4xl font-extrabold text-foreground tabular-nums leading-none">
+                <p className="text-3xl font-extrabold text-foreground tabular-nums leading-none">
                   ₹{Number(w.amount).toLocaleString('en-IN')}
                 </p>
               </div>
             </div>
 
+            {/* Status + attempt badge row */}
+            <div className="flex items-center gap-2 mt-3">
+              <span className={cn(
+                'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize',
+                STATUS_COLORS[w.status] ?? 'bg-muted',
+              )}>
+                {STATUS_LABELS[w.status] ?? w.status}
+              </span>
+              {(w.retryCount ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                  <RefreshCw className="h-3 w-3" />
+                  Attempt {(w.retryCount ?? 0) + 1}
+                </span>
+              )}
+            </div>
+
             {/* Rejection reason banner */}
             {w.rejectionReason && (
-              <div className="flex items-start gap-2.5 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 mt-4">
+              <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 mt-3">
                 <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-destructive">Rejection Reason</p>
@@ -291,143 +254,74 @@ export function WithdrawalDetailModal({
           </DialogHeader>
 
           {/* ── Body ───────────────────────────────────────── */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-8">
-              {isLoading ? (
-                <div className="space-y-6">
-                  {[
-                    [2],
-                    [2],
-                    [1],
-                    [2],
-                  ].map(([rows], gi) => (
-                    <div key={gi} className="rounded-xl border border-border bg-card overflow-hidden">
-                      <div className="px-5 py-3.5 bg-muted/60 border-b border-border-subtle">
-                        <Skeleton className="h-3 w-32" />
-                      </div>
-                      <div className="p-3">
-                        {Array.from({ length: rows as number }).map((_, i) => (
-                          <div key={i} className="flex items-start gap-4 px-4 py-4 border-b border-border-subtle last:border-0">
-                            <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
-                            <div className="flex-1 space-y-2 pt-1">
-                              <Skeleton className="h-2.5 w-20" />
-                              <Skeleton className="h-3.5 w-36" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
 
-                  {/* ── Two-column grid: User/Withdrawal + Payout ── */}
-                  <div className="grid grid-cols-[1fr_320px] gap-8">
+            {isLoading ? (
+              <div className="space-y-3 py-2">
+                {[4, 3, 5, 3].map((h, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
 
-                  {/* ── Left column ── User + Withdrawal ───── */}
-                  <div className="space-y-6">
+                {/* ── User Info ───────────────────────────────── */}
+                <Section label="User Information" icon={User}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Full Name"     value={w.user?.name} />
+                    <Field label="Mobile"        value={w.user?.mobileNumber} />
+                    <Field label="State"         value={w.user?.state} />
+                    <Field label="Category"      value={w.user?.category} />
+                  </div>
+                </Section>
 
-                    {/* User info */}
-                    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                      <SectionHeader icon={User} label="User Information" />
-                      <div className="p-3">
-                        <DataRow icon={User}   label="Full Name"     value={w.user?.name} />
-                        <DataRow icon={Phone}  label="Mobile Number" value={w.user?.mobileNumber} />
-                        <DataRow icon={MapPin} label="State"         value={w.user?.state} />
-                      </div>
-                    </div>
-
-                    {/* Withdrawal info */}
-                    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                      <SectionHeader icon={Hash} label="Withdrawal Details" />
-                      <div className="p-2">
-                        <DataRow
-                          icon={CalendarDays}
-                          label="Requested On"
-                          value={w.createdAt ? formatDisplayDate(w.createdAt) : undefined}
-                        />
-                        {w.processedAt && (
-                          <DataRow
-                            icon={CalendarDays}
-                            label="Processed On"
-                            value={formatDisplayDate(w.processedAt)}
-                          />
-                        )}
-                        <div className="flex items-start gap-3 px-5 py-4 border-b border-border-subtle last:border-0">
-                          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted shrink-0">
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div className="min-w-0 flex-1 pt-0.5">
-                            <p className="text-xs text-muted-foreground mb-1">Payout Method</p>
-                            <Badge variant="secondary" className="text-xs capitalize font-medium">
-                              {w.payoutMethod?.replace(/_/g, ' ') ?? '—'}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
+                {/* ── Withdrawal Details ─────────────────────── */}
+                <Section label="Withdrawal Details" icon={Hash}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field
+                      label="Requested On"
+                      value={w.createdAt ? formatDisplayDate(w.createdAt) : undefined}
+                    />
+                    {w.processedAt && (
+                      <Field
+                        label="Processed On"
+                        value={formatDisplayDate(w.processedAt)}
+                      />
+                    )}
+                    <div className="col-span-2">
+                      <p className="text-xs text-muted-foreground mb-1">Payout Method</p>
+                      <Badge variant="secondary" className="text-xs capitalize font-medium">
+                        {w.payoutMethod?.replace(/_/g, ' ') ?? '—'}
+                      </Badge>
                     </div>
                   </div>
+                </Section>
 
-                  {/* ── Right column ── Payout Details ──────── */}
-                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden h-fit sticky top-0">
-                    <SectionHeader icon={Wallet} label="Payout Details" />
-                    <div className="p-3">
-                      {hasPayoutDetails ? (
-                        payoutFields.map(({ icon, label, value }) => (
-                          <DataRow key={label} icon={icon} label={label} mono>
-                            <Copyable value={value} />
-                          </DataRow>
-                        ))
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-10 gap-3">
-                          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-muted">
-                            <Wallet className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                          <p className="text-sm font-medium text-muted-foreground">No payout details</p>
-                          <p className="text-xs text-muted-foreground text-center px-4">
-                            Payout information was not recorded
-                          </p>
+                {/* ── Payout Details ─────────────────────────── */}
+                <Section label="Payout Details" icon={Wallet}>
+                  {hasPayoutDetails ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {payoutFields.map(({ icon: Icon, label, value }) => (
+                        <div key={label} className="col-span-1">
+                          <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                          <Copyable value={value} />
                         </div>
-                      )}
+                      ))}
                     </div>
-                  </div>
-
-                    {/* ── Right column ── Payout Details ──────── */}
-                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden h-fit sticky top-0">
-                    <SectionHeader icon={Wallet} label="Payout Details" />
-                    <div className="p-3">
-                      {hasPayoutDetails ? (
-                        payoutFields.map(({ icon, label, value }) => (
-                          <DataRow key={label} icon={icon} label={label} mono>
-                            <Copyable value={value} />
-                          </DataRow>
-                        ))
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-10 gap-3">
-                          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-muted">
-                            <Wallet className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                          <p className="text-sm font-medium text-muted-foreground">No payout details</p>
-                          <p className="text-xs text-muted-foreground text-center px-4">
-                            Payout information was not recorded
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No payout details recorded.</p>
+                  )}
+                </Section>
 
                 {/* ── Transaction History ─────────────────────── */}
                 {transactions.length > 0 && (
-                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                    <SectionHeader icon={ArrowRightLeft} label="Transaction History" />
-                    <div className="divide-y divide-border-subtle">
+                  <Section label="Transaction History" icon={ArrowRightLeft}>
+                    <div className="space-y-2">
                       {transactions.map((tx) => (
-                        <div key={tx.id} className="flex items-center justify-between px-5 py-4 gap-4">
-                          <div className="flex items-center gap-3">
+                        <div key={tx.id} className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20">
+                          <div className="flex items-center gap-2.5 min-w-0">
                             <div className={cn(
-                              'flex items-center justify-center w-9 h-9 rounded-xl shrink-0',
+                              'flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
                               tx.source.toLowerCase() === 'withdrawal'
                                 ? tx.status === 'failed'
                                   ? 'bg-destructive/10'
@@ -439,29 +333,28 @@ export function WithdrawalDetailModal({
                                 : <ArrowUpCircle className="h-4 w-4 text-success" />
                               }
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold text-foreground capitalize">
-                                {tx.source.toLowerCase()}
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-foreground capitalize">
+                                {tx.source.toLowerCase()} · {tx.description ?? tx.type}
                               </p>
                               <p className="text-xs text-muted-foreground mt-0.5">
                                 {formatDisplayDate(tx.createdAt)}
-                                {tx.description && <span> · {tx.description}</span>}
                               </p>
                             </div>
                           </div>
                           <div className="text-right shrink-0">
                             <p className={cn(
-                              'text-sm font-bold',
+                              'text-sm font-bold tabular-nums',
                               tx.source.toLowerCase() === 'withdrawal' ? 'text-foreground' : 'text-success',
                             )}>
                               {tx.source.toLowerCase() === 'withdrawal' ? '-' : '+'}₹{Number(tx.amount).toLocaleString('en-IN')}
                             </p>
                             <span className={cn(
-                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize mt-1',
+                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize mt-0.5',
                               tx.status === 'completed' && 'bg-success/10 text-success',
-                              tx.status === 'failed' && 'bg-destructive/10 text-destructive',
-                              tx.status === 'pending' && 'bg-muted text-muted-foreground',
-                              tx.status === 'processing' && 'bg-primary/10 text-primary',
+                              tx.status === 'failed'    && 'bg-destructive/10 text-destructive',
+                              tx.status === 'pending'   && 'bg-muted text-muted-foreground',
+                              tx.status === 'processing' && 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
                             )}>
                               {tx.status}
                             </span>
@@ -469,32 +362,32 @@ export function WithdrawalDetailModal({
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </Section>
                 )}
 
               </div>
-              )}
-            </div>
-          <div className="shrink-0 px-6 py-5 border-t border-border-subtle bg-muted/20 flex items-center justify-between gap-3">
+            )}
+          </div>
+
+          {/* ── Footer ─────────────────────────────────────── */}
+          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/20 flex items-center justify-between gap-3">
             <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
 
             {/* Pending — approve / reject */}
             {!readOnly && isPending && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Button
                   variant="outline"
                   size="sm"
                   className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => setReasonDialog({
-                    open: true,
-                    mode: 'reject',
+                    open: true, mode: 'reject',
                     amount: w.amount,
                     userName: w.user?.name ?? w.user?.mobileNumber ?? '',
                   })}
                   disabled={processing}
                 >
-                  <XCircle className="h-4 w-4 mr-1.5" />
-                  Reject
+                  <XCircle className="h-4 w-4 mr-1.5" />Reject
                 </Button>
                 <Button
                   size="sm"
@@ -503,14 +396,14 @@ export function WithdrawalDetailModal({
                   disabled={processing}
                 >
                   <CheckCircle className="h-4 w-4 mr-1.5" />
-                  {processing ? 'Processing…' : 'Approve Withdrawal'}
+                  {processing ? 'Processing…' : 'Approve'}
                 </Button>
               </div>
             )}
 
-            {/* Failed (no failed/completed DEBIT tx yet) — retry payment or mark failed */}
+            {/* Failed (no debit tx yet) — retry / mark failed */}
             {!readOnly && !isPending && w.status === 'failed' && !hasFailedDebitTx && !hasCompletedDebitTx && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Button
                   size="sm"
                   className="bg-primary hover:bg-primary/90 text-white"
@@ -520,10 +413,7 @@ export function WithdrawalDetailModal({
                     try {
                       const res = await adminApi.retryFailedWithdrawal(w.id)
                       if (res.paymentFailed) {
-                        toast.error(
-                          `Retry failed${res.errorMessage ? ': ' + res.errorMessage : ''}`,
-                          { duration: 6000 },
-                        )
+                        toast.error(`Retry failed${res.errorMessage ? ': ' + res.errorMessage : ''}`, { duration: 6000 })
                         setWithdrawal((prev) => ({ ...prev, status: res.status as any }))
                       } else {
                         toast.success('Payment succeeded — withdrawal completed')
@@ -544,27 +434,27 @@ export function WithdrawalDetailModal({
                   size="sm"
                   className="bg-destructive hover:bg-destructive/90 text-white"
                   onClick={() => setReasonDialog({
-                    open: true,
-                    mode: 'fail',
+                    open: true, mode: 'fail',
                     amount: w.amount,
                     userName: w.user?.name ?? w.user?.mobileNumber ?? '',
                   })}
                   disabled={processing}
                 >
                   <XCircle className="h-4 w-4 mr-1.5" />
-                  {processing ? 'Processing…' : 'Mark Failed'}
+                  Mark Failed
                 </Button>
               </div>
             )}
 
-            {/* Completed / Rejected — show status info */}
-            {!readOnly && !isPending && w.status === 'completed' && (
-              <p className="text-xs text-muted-foreground italic">Already completed.</p>
+            {/* Completed / Rejected */}
+            {!readOnly && !isPending && (w.status === 'completed' || w.status === 'rejected') && (
+              <div className="flex items-center gap-1.5">
+                {w.status === 'completed'
+                  ? <><BadgeCheck className="h-4 w-4 text-success mr-1" /><span className="text-xs text-muted-foreground">Withdrawal completed</span></>
+                  : <><XCircle className="h-4 w-4 text-muted-foreground mr-1" /><span className="text-xs text-muted-foreground">Withdrawal rejected</span></>
+                }
+              </div>
             )}
-            {!readOnly && !isPending && w.status === 'rejected' && (
-              <p className="text-xs text-muted-foreground italic">Already rejected.</p>
-            )}
-
           </div>
         </DialogContent>
       </Dialog>
@@ -579,11 +469,8 @@ export function WithdrawalDetailModal({
           onConfirm={(reason) => {
             const mode = reasonDialog!.mode
             setReasonDialog(null)
-            if (mode === 'fail') {
-              handleAction('fail', reason)
-            } else {
-              handleAction('reject', reason)
-            }
+            if (mode === 'fail') handleAction('fail', reason)
+            else handleAction('reject', reason)
           }}
         />
       )}
@@ -591,14 +478,33 @@ export function WithdrawalDetailModal({
   )
 }
 
-// Need Info icon — using inline span as fallback
-function Info({ className }: { className?: string }) {
+function Section({
+  label, icon: Icon, children,
+}: {
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  children: React.ReactNode
+}) {
   return (
-    <span className={cn('inline-flex items-center justify-center w-4 h-4 text-muted-foreground', className)}>
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4">
-        <circle cx="8" cy="8" r="6.5" />
-        <path d="M8 5v.01M8 7.5v3" strokeLinecap="round" />
-      </svg>
-    </span>
+    <div className="rounded-xl border border-border bg-card">
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
+      </div>
+      <div className="p-3.5">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-semibold text-foreground">
+        {value || <span className="italic text-muted-foreground/60">—</span>}
+      </p>
+    </div>
   )
 }

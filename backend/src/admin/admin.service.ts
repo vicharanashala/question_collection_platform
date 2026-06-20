@@ -1367,28 +1367,14 @@ export class AdminService implements OnModuleInit {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Reset withdrawal to PROCESSING
+      // 1. Reset withdrawal to PROCESSING and increment retry count
       await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
         status: WithdrawalStatus.PROCESSING,
         processedAt: new Date(),
         orderId,
         pinelabsTransactionId: null,
+        retryCount: (withdrawal.retryCount ?? 0) + 1,
       });
-
-      // 2. Create a new DEBIT transaction for the retry
-      const wallet = await queryRunner.manager.findOne(Wallet, { where: { id: withdrawal.walletId } });
-      const balanceBefore = wallet ? Number(wallet.balance) : 0;
-      await queryRunner.manager.save(
-        queryRunner.manager.create(Transaction, {
-          walletId: withdrawal.walletId,
-          amount: Number(withdrawal.amount),
-          type: TransactionType.DEBIT,
-          source: TransactionSource.WITHDRAWAL,
-          status: TransactionStatus.PENDING,
-          referenceId: withdrawalId,
-          description: 'Withdrawal payout retry',
-        }),
-      );
 
       await queryRunner.commitTransaction();
     } catch (err) {
@@ -1422,10 +1408,6 @@ export class AdminService implements OnModuleInit {
         processedAt: new Date(),
         pinelabsTransactionId: result.pinelabsTransactionId,
       });
-      await this.transactionRepo.update(
-        { referenceId: withdrawalId, type: TransactionType.DEBIT },
-        { status: TransactionStatus.COMPLETED },
-      );
       await this.logAudit({
         actorType: ActorType.ADMIN,
         actorId: adminId,
@@ -2594,7 +2576,6 @@ export class AdminService implements OnModuleInit {
         'wr.payoutMethod',
         'wr.payoutDetails',
         'wr.status',
-        'wr.rejectionReason',
         'wr.processedAt',
         'wr.createdAt',
       ])
