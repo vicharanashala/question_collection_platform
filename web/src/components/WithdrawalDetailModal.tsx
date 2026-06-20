@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatDate } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { ReasonDialog } from '@/components/ReasonDialog'
 import {
   CheckCircle, XCircle, User, Phone, CreditCard, Wallet,
@@ -26,6 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
   completed:  'bg-success text-white',
   rejected:   'bg-destructive text-white',
   cancelled:  'bg-muted text-muted-foreground',
+  failed:     'bg-destructive text-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -34,6 +35,7 @@ const STATUS_LABELS: Record<string, string> = {
   completed:  'Completed',
   rejected:   'Rejected',
   cancelled:  'Cancelled',
+  failed:     'Failed',
 }
 
 interface PayoutDetails {
@@ -128,7 +130,7 @@ export function WithdrawalDetailModal({
   const [processing, setProcessing] = useState(false)
   const [reasonDialog, setReasonDialog] = useState<{
     open: boolean
-    mode: 'approve' | 'reject'
+    mode: 'approve' | 'reject' | 'fail'
     amount: number
     userName: string
   } | null>(null)
@@ -142,10 +144,26 @@ export function WithdrawalDetailModal({
     }
   }, [open, initial])
 
-  async function handleAction(mode: 'approve' | 'reject', reason?: string) {
+  async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {
     if (processing) return
     setProcessing(true)
     try {
+      if (mode === 'fail') {
+        if (withdrawal.status === 'failed') {
+          // Already failed — just update the reason
+          await adminApi.updateWithdrawalFailureReason(withdrawal.id, reason ?? '')
+          toast.success('Failure reason updated')
+          setWithdrawal((prev) => ({ ...prev, rejectionReason: reason ?? prev.rejectionReason }))
+        } else {
+          // New failure — mark and refund
+          await adminApi.markWithdrawalFailed(withdrawal.id, reason ?? '')
+          toast.success('Transaction marked as failed — amount refunded to user')
+          onActioned?.(withdrawal.id)
+          onClose()
+        }
+        return
+      }
+
       const res = await adminApi.processWithdrawal(withdrawal.id, { action: mode, rejectionReason: reason })
       if (mode === 'reject') {
         toast.success('Withdrawal rejected')
@@ -215,7 +233,7 @@ export function WithdrawalDetailModal({
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden" style={{ maxHeight: '90vh' }}>
+        <DialogContent className="max-w-4xl p-0 gap-0 flex flex-col overflow-hidden" style={{ maxHeight: '90vh' }}>
 
           {/* ── Header ──────────────────────────────────────── */}
           <DialogHeader className="px-6 pt-6 pb-5 border-b border-border-subtle shrink-0">
@@ -261,15 +279,14 @@ export function WithdrawalDetailModal({
           </DialogHeader>
 
           {/* ── Body ───────────────────────────────────────── */}
-          <div className="shrink-0 overflow-hidden" style={{ height: 'calc(90vh - 220px)', maxHeight: 'calc(90vh - 220px)' }}>
-            <div className="h-full overflow-y-auto p-8">
+          <div className="flex-1 min-h-0 overflow-y-auto p-8">
               {isLoading ? (
                 <div className="space-y-6">
                   {[
-                    [2, 3],
-                    [2, 1],
-                    [1, 2],
-                  ].map(([rows, cols], gi) => (
+                    [2],
+                    [2],
+                    [1],
+                  ].map(([rows], gi) => (
                     <div key={gi} className="rounded-xl border border-border bg-card overflow-hidden">
                       <div className="px-5 py-3.5 bg-muted/60 border-b border-border-subtle">
                         <Skeleton className="h-3 w-32" />
@@ -362,11 +379,12 @@ export function WithdrawalDetailModal({
                 </div>
               )}
             </div>
-          </div>
 
           {/* ── Footer ─────────────────────────────────────── */}
           <div className="shrink-0 px-6 py-5 border-t border-border-subtle bg-muted/20 flex items-center justify-between gap-3">
             <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+
+            {/* Pending — approve / reject */}
             {!readOnly && isPending && (
               <div className="flex items-center gap-3">
                 <Button
@@ -395,11 +413,52 @@ export function WithdrawalDetailModal({
                 </Button>
               </div>
             )}
-            {!readOnly && !isPending && (
-              <p className="text-xs text-muted-foreground italic">
-                Already {w.status}.
-              </p>
+
+            {/* Processing — mark transaction as failed */}
+            {!readOnly && !isPending && w.status === 'processing' && (
+              <Button
+                size="sm"
+                className="bg-destructive hover:bg-destructive/90 text-white"
+                onClick={() => setReasonDialog({
+                  open: true,
+                  mode: 'fail',
+                  amount: w.amount,
+                  userName: w.user?.name ?? w.user?.mobileNumber ?? '',
+                })}
+                disabled={processing}
+              >
+                <XCircle className="h-4 w-4 mr-1.5" />
+                {processing ? 'Processing…' : 'Mark Transaction as Failed'}
+              </Button>
             )}
+
+            {/* Failed — update the failure reason */}
+            {!readOnly && w.status === 'failed' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                onClick={() => setReasonDialog({
+                  open: true,
+                  mode: 'fail',
+                  amount: w.amount,
+                  userName: w.user?.name ?? w.user?.mobileNumber ?? '',
+                })}
+                disabled={processing}
+              >
+                <XCircle className="h-4 w-4 mr-1.5" />
+                {processing ? 'Processing…' : 'Mark Transaction as Failed'}
+              </Button>
+            )}
+
+            {/* Completed / Rejected — show status info */}
+            {!readOnly && !isPending && w.status === 'completed' && (
+              <p className="text-xs text-muted-foreground italic">Already completed.</p>
+            )}
+            {!readOnly && !isPending && w.status === 'rejected' && (
+              <p className="text-xs text-muted-foreground italic">Already rejected.</p>
+            )}
+
           </div>
         </DialogContent>
       </Dialog>
@@ -412,8 +471,13 @@ export function WithdrawalDetailModal({
           amount={reasonDialog.amount}
           userName={reasonDialog.userName}
           onConfirm={(reason) => {
+            const mode = reasonDialog!.mode
             setReasonDialog(null)
-            handleAction('reject', reason)
+            if (mode === 'fail') {
+              handleAction('fail', reason)
+            } else {
+              handleAction('reject', reason)
+            }
           }}
         />
       )}

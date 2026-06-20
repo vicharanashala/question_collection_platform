@@ -1173,8 +1173,8 @@ export class AdminService implements OnModuleInit {
         );
         return { success: true, action: 'approved', withdrawalId, status: WithdrawalStatus.COMPLETED, pinelabsTransactionId: result.pinelabsTransactionId };
       } else {
-        // Payment failed — log only, do NOT update withdrawal status or payment_failed_count
-        await this.handleWithdrawalFailure({
+        // Payment failed — mark withdrawal as FAILED and refund user
+        const newStatus = await this.handleWithdrawalFailure({
           withdrawal,
           orderId,
           adminId,
@@ -1184,7 +1184,7 @@ export class AdminService implements OnModuleInit {
           success: true,
           action: 'approved',
           withdrawalId,
-          status: WithdrawalStatus.PROCESSING,
+          status: newStatus,
           paymentFailed: true,
           errorCode: result.errorCode,
           errorMessage: result.errorMessage,
@@ -1304,11 +1304,11 @@ export class AdminService implements OnModuleInit {
       });
       return { success: true, withdrawalId, status: WithdrawalStatus.COMPLETED };
     } else {
-      await this.handleWithdrawalFailure({ withdrawal, orderId: withdrawal.orderId, adminId, result });
+      const newStatus = await this.handleWithdrawalFailure({ withdrawal, orderId: withdrawal.orderId, adminId, result });
       return {
         success: true,
         withdrawalId,
-        status: WithdrawalStatus.PROCESSING,
+        status: newStatus,
         paymentFailed: true,
         errorCode: result.errorCode,
         errorMessage: result.errorMessage,
@@ -1317,19 +1317,21 @@ export class AdminService implements OnModuleInit {
   }
 
   /**
-   * Log a payment failure WITHOUT modifying the withdrawal record.
-   * Status stays PROCESSING; payment_failed_count is NOT updated.
-   * Alerts admin after 3 consecutive failures (tracked via payment_logs count).
+   * Handle a PineLabs payout failure by:
+   * 1. Logging to payment_logs
+   * 2. Marking the withdrawal as FAILED and triggering refund
+   * 3. Notifying the user
+   * Returns the new withdrawal status (always FAILED).
    */
   private async handleWithdrawalFailure(params: {
     withdrawal: WithdrawalRequest;
     orderId: string;
     adminId: string;
     result: { pinelabsTransactionId: string | null; errorCode: string | null; errorMessage: string | null; rawResponse: Record<string, unknown> };
-  }): Promise<void> {
+  }): Promise<WithdrawalStatus> {
     const { withdrawal, orderId, adminId, result } = params;
 
-    // Log failure to payment_logs
+    // 1. Log failure to payment_logs
     await this.paymentLogRepo.save(
       this.paymentLogRepo.create({
         withdrawalRequestId: withdrawal.id,
@@ -1343,28 +1345,13 @@ export class AdminService implements OnModuleInit {
       }),
     );
 
-    // Count total failure attempts for this withdrawal
-    const failureCount = await this.paymentLogRepo.count({
-      where: {
-        withdrawalRequestId: withdrawal.id,
-        status: PaymentLogStatus.FAILED,
-      },
-    });
+    // 2. Mark withdrawal as FAILED and trigger refund
+    const failureReason = result.errorCode === 'NETWORK_ERROR'
+      ? result.errorMessage ?? 'Payout dispatch failed'
+      : `${result.errorCode ?? 'Payout failed'}: ${result.errorMessage ?? 'Unknown error'}`;
 
-    // After 3 failures, alert admin
-    if (failureCount >= 3) {
-      this.logger.warn(`[AdminService] Withdrawal ${withdrawal.id} has failed ${failureCount} times — alerting admins`);
-      await this.notificationRepo.save(
-        this.notificationRepo.create({
-          userId: withdrawal.userId,
-          type: NotificationType.GENERAL,
-          title: '⚠️ Withdrawal Payment Failure',
-          body: `Your withdrawal of Rs. ${withdrawal.amount} has failed ${failureCount} times. Please contact support.`,
-          data: { withdrawalId: withdrawal.id, type: 'withdrawal_failure_alert' },
-          triggerType: NotificationTriggerType.SYSTEM,
-        }),
-      );
-    }
+    await this.markWithdrawalFailed(adminId, withdrawal.id, failureReason);
+    return WithdrawalStatus.FAILED;
   }
 
   /**
@@ -1374,6 +1361,17 @@ export class AdminService implements OnModuleInit {
   async markWithdrawalFailed(adminId: string, withdrawalId: string, reason?: string): Promise<{ success: boolean; withdrawalId: string; status: WithdrawalStatus }> {
     const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
     if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
+    if (withdrawal.status === WithdrawalStatus.FAILED) {
+      // Idempotent: already failed — just update the reason if provided
+      if (reason && reason !== withdrawal.rejectionReason) {
+        await this.withdrawalRepo.update(withdrawalId, { rejectionReason: reason });
+        await this.transactionRepo.update(
+          { referenceId: withdrawalId, type: TransactionType.DEBIT },
+          { rejectionReason: reason },
+        );
+      }
+      return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
+    }
     if (withdrawal.status !== WithdrawalStatus.PROCESSING) {
       throw new BadRequestException(`Cannot mark withdrawal as failed in '${withdrawal.status}' status. Only PROCESSING withdrawals can be marked failed.`);
     }
@@ -1390,11 +1388,11 @@ export class AdminService implements OnModuleInit {
         processedAt: new Date(),
       });
 
-      // 2. Mark the DEBIT transaction as FAILED
+      // 2. Mark the DEBIT transaction as FAILED and store the reason
       await queryRunner.manager.update(
         Transaction,
-        { referenceId: withdrawalId },
-        { status: TransactionStatus.FAILED },
+        { referenceId: withdrawalId, type: TransactionType.DEBIT },
+        { status: TransactionStatus.FAILED, rejectionReason: reason ?? 'Marked failed by admin' },
       );
 
       // 3. Refund balance to wallet
@@ -1425,6 +1423,49 @@ export class AdminService implements OnModuleInit {
 
       await queryRunner.commitTransaction();
 
+      // Notify user of failure
+      const withdrawalForNotify = await this.withdrawalRepo.findOne({
+        where: { id: withdrawalId },
+        relations: ['user'],
+      });
+      if (withdrawalForNotify?.user) {
+        const maskPayout = (details: Record<string, unknown> | null) => {
+          if (!details) return {}
+          return Object.fromEntries(
+            Object.entries(details).map(([k, v]) => [
+              k,
+              typeof v === 'string' && v.length > 4
+                ? v.slice(0, 2) + '****' + v.slice(-2)
+                : v ?? '',
+            ]),
+          )
+        }
+        const maskedDetails = maskPayout(
+          (withdrawalForNotify.payoutDetails as Record<string, unknown>) ?? null,
+        )
+        const notification = await this.notificationRepo.save(
+          this.notificationRepo.create({
+            userId: withdrawalForNotify.userId,
+            type: NotificationType.WITHDRAWAL_FAILED,
+            title: 'Withdrawal Failed',
+            body: `Your withdrawal of Rs. ${withdrawalForNotify.amount} has failed.${reason ? ' Reason: ' + reason + '.' : ''} The amount has been credited back to your wallet.`,
+            data: {
+              withdrawalId,
+              status: 'failed',
+              reason,
+              payoutDetails: maskedDetails,
+              userId: withdrawalForNotify.userId,
+            },
+            triggerType: NotificationTriggerType.WITHDRAW,
+          }),
+        )
+        this.notificationsService.sendToUser(withdrawalForNotify.userId, {
+          title: notification.title,
+          body: notification.body,
+          data: notification.data ?? undefined,
+        })
+      }
+
       await this.logAudit({
         actorType: ActorType.ADMIN,
         actorId: adminId,
@@ -1442,6 +1483,41 @@ export class AdminService implements OnModuleInit {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  /** Admin updates the failure reason on an already-failed withdrawal. */
+  async updateWithdrawalFailureReason(
+    adminId: string,
+    withdrawalId: string,
+    reason: string,
+  ): Promise<{ success: boolean; withdrawalId: string }> {
+    const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
+    if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
+    if (withdrawal.status !== WithdrawalStatus.FAILED) {
+      throw new BadRequestException(
+        `Can only update failure reason for FAILED withdrawals. Current status: ${withdrawal.status}`,
+      );
+    }
+
+    await this.withdrawalRepo.update(withdrawalId, { rejectionReason: reason });
+
+    // Also update the rejection reason on the associated DEBIT transaction
+    await this.transactionRepo.update(
+      { referenceId: withdrawalId, type: TransactionType.DEBIT },
+      { rejectionReason: reason },
+    );
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: 'withdrawal_failure_reason_updated',
+      entityType: 'withdrawal_request',
+      entityId: withdrawalId,
+      oldValue: { rejectionReason: withdrawal.rejectionReason },
+      newValue: { rejectionReason: reason },
+    });
+
+    return { success: true, withdrawalId };
   }
 
   async listRewardLogs(dto: AnalyticsQueryDto) {

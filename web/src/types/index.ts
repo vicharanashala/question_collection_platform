@@ -146,7 +146,7 @@ export interface Withdrawal {
   amount: number
   payoutMethod: string
   payoutDetails: Record<string, unknown> | null
-  status: 'pending' | 'processing' | 'completed' | 'rejected'
+  status: 'pending' | 'processing' | 'completed' | 'rejected' | 'failed'
   createdAt: string
   processedAt: string | null
   rejectionReason: string | null

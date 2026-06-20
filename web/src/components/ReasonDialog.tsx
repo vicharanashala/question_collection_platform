@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils'
 interface ReasonDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** 'approve' — optional note; 'reject' — required reason */
-  mode: 'approve' | 'reject'
+  /** 'approve' — optional note; 'reject' — required reason; 'fail' — required reason */
+  mode: 'approve' | 'reject' | 'fail'
   amount: number
   userName: string
   onConfirm: (reason: string | undefined) => void
@@ -22,14 +22,14 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
   const [error, setError] = useState('')
 
   function handleConfirm() {
-    if (mode === 'reject') {
+    if (mode === 'reject' || mode === 'fail') {
       const trimmed = reason.trim()
       if (!trimmed) {
-        setError('Please provide a reason for rejection.')
+        setError('Please provide a reason.')
         return
       }
       if (trimmed.length > MAX_REASON_LENGTH) {
-        setError(`Rejection reason must not exceed ${MAX_REASON_LENGTH} characters.`)
+        setError(`Reason must not exceed ${MAX_REASON_LENGTH} characters.`)
         return
       }
       onConfirm(trimmed)
@@ -53,21 +53,23 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
         {/* Header */}
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-border-subtle shrink-0">
           <DialogTitle className="text-base font-semibold">
-            {mode === 'approve' ? 'Approve Withdrawal' : 'Reject Withdrawal'}
+            {mode === 'approve' ? 'Approve Withdrawal' : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
           </DialogTitle>
           <p className="text-xs text-muted-foreground mt-1">
             {mode === 'approve'
               ? `You are about to approve a withdrawal of ₹${Number(amount).toLocaleString('en-IN')} for ${userName || 'this user'}.`
-              : `Please provide a reason for rejecting the withdrawal of ₹${Number(amount).toLocaleString('en-IN')} for ${userName || 'this user'}.`}
+              : mode === 'reject'
+              ? `Please provide a reason for rejecting the withdrawal of ₹${Number(amount).toLocaleString('en-IN')} for ${userName || 'this user'}.`
+              : `Mark the transaction as failed for ₹${Number(amount).toLocaleString('en-IN')} for ${userName || 'this user'}. The amount will be credited back to the user's wallet. A reason is required.`}
           </p>
         </DialogHeader>
 
         {/* Body */}
         <div className="px-6 py-4 space-y-3">
-          {mode === 'reject' && (
+          {(mode === 'reject' || mode === 'fail') && (
             <div className="space-y-1.5">
               <Label htmlFor="withdrawal-reject-reason">
-                Rejection Reason <span className="text-destructive">*</span>
+                {mode === 'fail' ? 'Failure Reason' : 'Rejection Reason'} <span className="text-destructive">*</span>
               </Label>
               <textarea
                 id="withdrawal-reject-reason"
@@ -77,7 +79,11 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
                   'placeholder:text-muted-foreground',
                   error ? 'border-destructive focus:ring-destructive' : '',
                 )}
-                placeholder="Enter reason for rejection (e.g., invalid bank details, insufficient balance, etc.)"
+                placeholder={
+                  mode === 'fail'
+                    ? 'Enter reason for marking transaction as failed (e.g., payment gateway rejected, invalid account, etc.)'
+                    : 'Enter reason for rejection (e.g., invalid bank details, insufficient balance, etc.)'
+                }
                 value={reason}
                 maxLength={MAX_REASON_LENGTH}
                 onChange={(e) => {
@@ -133,7 +139,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onCon
             variant={mode === 'approve' ? 'success' : 'destructive'}
             onClick={handleConfirm}
           >
-            {mode === 'approve' ? 'Approve Withdrawal' : 'Reject Withdrawal'}
+            {mode === 'approve' ? 'Approve Withdrawal' : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
           </Button>
         </DialogFooter>
       </DialogContent>

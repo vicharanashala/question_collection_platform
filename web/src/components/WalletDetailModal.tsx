@@ -634,8 +634,8 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
             <WithdrawalDetailModal
               withdrawal={detailTarget}
               open={detailOpen}
-              readOnly
               onClose={() => { setDetailOpen(false); setDetailTarget(null) }}
+              onActioned={() => fetchWithdrawals(1)}
             />
           )}
 

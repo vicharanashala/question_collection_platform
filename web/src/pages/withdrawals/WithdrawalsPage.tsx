@@ -33,6 +33,7 @@ const STATUS_OPTIONS = [
   { value: 'processing', label: 'Processing' },
   { value: 'completed', label: 'Completed' },
   { value: 'rejected', label: 'Rejected' },
+  { value: 'failed', label: 'Failed' },
 ]
 
 const SORT_OPTIONS = [
@@ -174,14 +175,14 @@ export function WithdrawalsPage() {
     setFilterOpen(false)
   }
 
-  async function handleAction(id: string, action: 'approve' | 'reject' | 'reject_open', reason?: string) {
+  async function handleAction(id: string, action: 'approve' | 'reject' | 'reject_open' | 'fail', reason?: string) {
     if (processingId !== null) return  // guard: prevent double-call
-    if (action === 'reject_open') {
+    if (action === 'reject_open' || action === 'fail') {
       const w = items.find((q) => q.id === id)
       setReasonDialog({
         open: true,
         withdrawalId: id,
-        mode: 'reject',
+        mode: action === 'fail' ? 'fail' : 'reject',
         amount: w?.amount ?? 0,
         userName: w?.user?.name ?? w?.user?.mobileNumber ?? '',
       })
@@ -189,9 +190,14 @@ export function WithdrawalsPage() {
     }
     setProcessingId(id)
     try {
-      await adminApi.processWithdrawal(id, { action, rejectionReason: reason })
+      if (action === 'fail') {
+        await adminApi.markWithdrawalFailed(id, reason ?? '')
+        toast.success('Withdrawal marked as failed — amount refunded to user')
+      } else {
+        await adminApi.processWithdrawal(id, { action, rejectionReason: reason })
+        toast.success(`Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`)
+      }
       setItems((prev) => prev.filter((w) => w.id !== id))
-      toast.success(`Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`)
     } catch (e) {
       toast.error(getErrorMessage(e, `Failed to ${action}`))
     } finally {

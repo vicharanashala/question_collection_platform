@@ -327,6 +327,20 @@ export const adminApi = {
       body: JSON.stringify(body),
     }, false).finally(() => invalidateCache('/api/admin')),
 
+  markWithdrawalFailed: (id: string, reason: string) =>
+    request<{ success: boolean; withdrawalId: string; status: string }>(
+      `/admin/withdrawals/${id}/fail`,
+      { method: 'POST', body: JSON.stringify({ reason }) },
+      false,
+    ).finally(() => invalidateCache('/api/admin')),
+
+  updateWithdrawalFailureReason: (id: string, reason: string) =>
+    request<{ success: boolean; withdrawalId: string }>(
+      `/admin/withdrawals/${id}/failure-reason`,
+      { method: 'PATCH', body: JSON.stringify({ reason }) },
+      false,
+    ).finally(() => invalidateCache('/api/admin')),
+
   // ─── Wallet management ──────────────────────────────────────────────────────
   getWallets: (params: Record<string, string | number | undefined> = {}) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>

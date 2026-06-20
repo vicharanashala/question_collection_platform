@@ -65,3 +65,9 @@ export class MarkWithdrawalFailedDto {
   @MaxLength(500)
   reason?: string;
 }
+
+export class UpdateWithdrawalFailureReasonDto {
+  @IsString()
+  @MaxLength(500, { message: 'Reason must not exceed 500 characters.' })
+  reason: string;
+}

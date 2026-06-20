@@ -25,6 +25,7 @@ import {
   ListWithdrawalsDto,
   ProcessWithdrawalDto,
   MarkWithdrawalFailedDto,
+  UpdateWithdrawalFailureReasonDto,
   CreateUserDto,
   SuspendUserDto,
   ListAllWalletsDto,
@@ -310,6 +311,18 @@ export class AdminController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.adminService.markWithdrawalFailed(req.user.id, id, dto.reason);
+  }
+
+  /** Admin updates the failure reason on an already-failed withdrawal */
+  @Patch('withdrawals/:id/failure-reason')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async updateWithdrawalFailureReason(
+    @Param('id') id: string,
+    @Body() dto: UpdateWithdrawalFailureReasonDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.adminService.updateWithdrawalFailureReason(req.user.id, id, dto.reason);
   }
 
   // ─────────────────────────────────────────────────────────────
