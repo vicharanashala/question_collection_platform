@@ -457,47 +457,21 @@ export function WithdrawalDetailModal({
                 )}
 
                 {status === 'processing' && (
-                  <>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.actionBtnRetry, { ...tokens.shadowSm }]}
-                      onPress={handleRetry}
-                      disabled={processing}
-                      activeOpacity={0.8}
-                    >
-                      {processing ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <>
-                          <Ionicons name="refresh" size={17} color="#fff" />
-                          <Text style={styles.actionBtnText}>Retry Payment</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.actionBtnReject, { ...tokens.shadowSm }]}
-                      onPress={() => {
-                        Alert.prompt(
-                          'Mark as Failed',
-                          'Enter failure reason (optional)',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Confirm',
-                              style: 'destructive',
-                              onPress: (reason?: string) => handleMarkFailed(reason),
-                            },
-                          ],
-                          'plain-text',
-                        );
-                      }}
-                      disabled={processing}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="close-circle" size={17} color="#fff" />
-                      <Text style={styles.actionBtnText}>Mark Failed</Text>
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnRetry, { ...tokens.shadowSm }]}
+                    onPress={handleRetry}
+                    disabled={processing}
+                    activeOpacity={0.8}
+                  >
+                    {processing ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <Ionicons name="refresh" size={17} color="#fff" />
+                        <Text style={styles.actionBtnText}>Retry Payment</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 )}
 
                 {status === 'failed' && (

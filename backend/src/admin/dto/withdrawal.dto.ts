@@ -28,7 +28,7 @@ export class ListWithdrawalsDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(['pending', 'processing', 'completed', 'rejected', 'failed', 'all'])
+  @IsIn(['pending', 'processing', 'completed', 'rejected', 'failed', 'failed_pending_tx', 'all'])
   filterStatus?: string;
 
   @IsOptional()

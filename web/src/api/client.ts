@@ -303,6 +303,17 @@ export const adminApi = {
     request<{ message: string }>('/admin/config', { method: 'PATCH', body: JSON.stringify(body) }, false)
       .finally(() => invalidateCache('/api/admin')),
 
+  getWithdrawalWithTransactions: (id: string) =>
+    request<{
+      id: string; amount: number; payoutMethod: string; status: string;
+      orderId: string | null; createdAt: string; processedAt: string | null;
+      user: { id: string; name: string; mobileNumber: string } | null;
+      transactions: Array<{
+        id: string; type: string; amount: number; status: string;
+        rejectionReason: string | null; description: string; source: string; createdAt: string;
+      }>;
+    }>(`/admin/withdrawals/${id}`, {}, false),
+
   listWithdrawals: (params: Record<string, string | number | undefined> = {}) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()

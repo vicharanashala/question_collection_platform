@@ -34,6 +34,7 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Completed' },
   { value: 'rejected', label: 'Rejected' },
   { value: 'failed', label: 'Failed' },
+  { value: 'failed_pending_tx', label: 'Failed (Pending Refund)' },
 ]
 
 const SORT_OPTIONS = [
@@ -55,18 +56,23 @@ const INDIAN_STATES = [
 
 function buildParams(
   page: number,
-  active: { search: string; status: string; state: string; sortBy: string; fromDate: string; toDate: string },
+  active: { search: string; status: string; state: string; sortBy: string; fromDate: string; toDate: string; filterStatus?: string },
 ) {
   const params: Record<string, string | number> = { page, limit: 20 }
   if (active.search)   params.search   = active.search
   if (active.state)    params.state    = active.state
   if (active.fromDate) params.fromDate = active.fromDate
   if (active.toDate)   params.toDate   = active.toDate
+  const SPECIAL_FILTERS = ['failed_pending_tx']
+  if (SPECIAL_FILTERS.includes(active.status)) {
+    params.filterStatus = active.status
+  } else if (active.status) {
+    params.status = active.status
+  }
 
   if (active.sortBy === '_default') {
     // No backend sort — pending-first sort is applied client-side after fetching
   } else {
-    if (active.status)   params.status   = active.status
     const sortBy   = active.sortBy.split(':')[0]
     const sortOrder = active.sortBy.split(':')[1]
     if (sortBy)   params.sortBy   = sortBy
@@ -101,7 +107,7 @@ export function WithdrawalsPage() {
   // Filters
   const [filterOpen, setFilterOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState({
-    search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '',
+    search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '',
   })
   const [draftFilters, setDraftFilters] = useState({ ...activeFilters })
 
@@ -151,11 +157,7 @@ export function WithdrawalsPage() {
   }
 
   function applyFilters() {
-    // When default sort is selected, clear manual status to avoid conflict
-    const toApply = {
-      ...draftFilters,
-      status: draftFilters.sortBy === '_default' ? '' : draftFilters.status,
-    }
+    const toApply = { ...draftFilters }
     setActiveFilters(toApply)
     setPage(1)
     setItems([])
@@ -165,7 +167,7 @@ export function WithdrawalsPage() {
   }
 
   function resetFilters() {
-    const empty = { search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '' }
+    const empty = { search: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '', status: '' }
     setDraftFilters(empty)
     setActiveFilters(empty)
     setPage(1)

@@ -1048,11 +1048,12 @@ export class AdminService implements OnModuleInit {
     const {
       page = 1, limit = 20, status, state, search,
       sortBy = 'createdAt', sortOrder = 'DESC',
-      fromDate, toDate,
+      fromDate, toDate, filterStatus,
     } = dto;
     const qb = this.withdrawalRepo
       .createQueryBuilder('wr')
       .leftJoinAndSelect('wr.user', 'u')
+      .leftJoin('Transaction', 'tx', 'tx.reference_id = CAST(wr.id AS varchar) AND tx.type = :debitType', { debitType: TransactionType.DEBIT })
       .select([
         'wr.id',
         'wr.amount',
@@ -1061,9 +1062,9 @@ export class AdminService implements OnModuleInit {
         'wr.status',
         'wr.createdAt',
         'wr.processedAt',
-        'wr.rejectionReason',
         'wr.pinelabsTransactionId',
         'wr.orderId',
+        'tx.rejectionReason',
         'u.id',
         'u.name',
         'u.mobileNumber',
@@ -1082,6 +1083,17 @@ export class AdminService implements OnModuleInit {
       );
     }
 
+    if (filterStatus === 'failed_pending_tx') {
+      qb.andWhere('wr.status = :status', { status: 'failed' });
+      qb.andWhere(
+        `(SELECT COUNT(*) FROM transactions tx2
+          WHERE tx2.reference_id = CAST(wr.id AS varchar)
+            AND tx2.type = :debitType
+            AND tx2.status = :failedStatus) = 0`,
+        { debitType: TransactionType.DEBIT, failedStatus: TransactionStatus.FAILED },
+      );
+    }
+
     if (fromDate) qb.andWhere('wr.createdAt >= :fromDate', { fromDate: new Date(fromDate) });
     if (toDate) qb.andWhere('wr.createdAt <= :toDate', { toDate: new Date(toDate) });
 
@@ -1090,8 +1102,17 @@ export class AdminService implements OnModuleInit {
 
     const [items, total] = await qb.getManyAndCount();
     return {
-      items: items.map((wr) => ({
-        ...wr,
+      items: items.map((wr: any) => ({
+        id: wr.id,
+        amount: wr.amount,
+        payoutMethod: wr.payoutMethod,
+        payoutDetails: wr.payoutDetails,
+        status: wr.status,
+        createdAt: wr.createdAt,
+        processedAt: wr.processedAt,
+        pinelabsTransactionId: wr.pinelabsTransactionId,
+        orderId: wr.orderId,
+        rejectionReason: wr.rejectionReason ?? null,
         user: wr.user ? { id: wr.user.id, name: wr.user.name, mobileNumber: wr.user.mobileNumber, state: wr.user.state } : null,
       })),
       total,
@@ -1198,7 +1219,6 @@ export class AdminService implements OnModuleInit {
       await this.withdrawalRepo.update(withdrawalId, {
         status: WithdrawalStatus.REJECTED,
         processedAt: new Date(),
-        rejectionReason,
       });
       await this.transactionRepo.update(
         { referenceId: withdrawalId, status: TransactionStatus.PENDING },
@@ -1362,11 +1382,14 @@ export class AdminService implements OnModuleInit {
     const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
     if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
     if (withdrawal.status === WithdrawalStatus.FAILED) {
-      // Idempotent: already failed — just update the reason if provided
-      if (reason && reason !== withdrawal.rejectionReason) {
-        await this.withdrawalRepo.update(withdrawalId, { rejectionReason: reason });
+      // Idempotent: already failed — update the DEBIT and CREDIT (refund) transaction reasons
+      if (reason) {
         await this.transactionRepo.update(
           { referenceId: withdrawalId, type: TransactionType.DEBIT },
+          { rejectionReason: reason },
+        );
+        await this.transactionRepo.update(
+          { referenceId: withdrawalId, type: TransactionType.CREDIT, source: TransactionSource.REFUND },
           { rejectionReason: reason },
         );
       }
@@ -1384,7 +1407,6 @@ export class AdminService implements OnModuleInit {
       // 1. Mark withdrawal as FAILED
       await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
         status: WithdrawalStatus.FAILED,
-        rejectionReason: reason ?? 'Marked failed by admin',
         processedAt: new Date(),
       });
 
@@ -1415,6 +1437,7 @@ export class AdminService implements OnModuleInit {
           type: TransactionType.CREDIT,
           source: TransactionSource.REFUND,
           description: `Withdrawal failed${reason ? ': ' + reason : ''}`,
+          rejectionReason: reason ?? 'Marked failed by admin',
           status: TransactionStatus.COMPLETED,
           referenceId: withdrawalId,
           balanceAfter: newBalance,
@@ -1499,9 +1522,10 @@ export class AdminService implements OnModuleInit {
       );
     }
 
-    await this.withdrawalRepo.update(withdrawalId, { rejectionReason: reason });
-
-    // Also update the rejection reason on the associated DEBIT transaction
+    // Update the rejection reason on the associated DEBIT transaction
+    const debitTx = await this.transactionRepo.findOne({
+      where: { referenceId: withdrawalId, type: TransactionType.DEBIT },
+    });
     await this.transactionRepo.update(
       { referenceId: withdrawalId, type: TransactionType.DEBIT },
       { rejectionReason: reason },
@@ -1513,7 +1537,7 @@ export class AdminService implements OnModuleInit {
       action: 'withdrawal_failure_reason_updated',
       entityType: 'withdrawal_request',
       entityId: withdrawalId,
-      oldValue: { rejectionReason: withdrawal.rejectionReason },
+      oldValue: { rejectionReason: debitTx?.rejectionReason ?? null },
       newValue: { rejectionReason: reason },
     });
 
@@ -2217,9 +2241,10 @@ export class AdminService implements OnModuleInit {
       const qb = this.withdrawalRepo
         .createQueryBuilder('wr')
         .leftJoinAndSelect('wr.user', 'u')
+        .leftJoin('Transaction', 'tx', 'tx.reference_id = CAST(wr.id AS varchar) AND tx.type = :debitType', { debitType: TransactionType.DEBIT })
         .select([
           'wr.id', 'u.mobileNumber', 'u.name', 'wr.amount',
-          'wr.payoutMethod', 'wr.status', 'wr.createdAt', 'wr.processedAt', 'wr.rejectionReason',
+          'wr.payoutMethod', 'wr.status', 'wr.createdAt', 'wr.processedAt', 'tx.rejectionReason',
         ])
         .where('wr.createdAt BETWEEN :from AND :to', { from, to })
         .orderBy('wr.createdAt', 'DESC');
@@ -2294,6 +2319,33 @@ export class AdminService implements OnModuleInit {
             verificationStatus: wallet.user.verificationStatus,
           }
         : null,
+    };
+  }
+
+  async getWithdrawalWithTransactions(id: string) {
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+    if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
+
+    const transactions = await this.transactionRepo.find({
+      where: { referenceId: id },
+      order: { createdAt: 'ASC' },
+    });
+
+    return {
+      ...withdrawal,
+      transactions: transactions.map((tx) => ({
+        id: tx.id,
+        type: tx.type,
+        amount: Number(tx.amount),
+        status: tx.status,
+        rejectionReason: tx.rejectionReason,
+        description: tx.description,
+        source: tx.source,
+        createdAt: tx.createdAt,
+      })),
     };
   }
 

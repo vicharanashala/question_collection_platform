@@ -279,6 +279,13 @@ export class AdminController {
     return this.adminService.listWithdrawals(dto);
   }
 
+  @Get('withdrawals/:id')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async getWithdrawalWithTransactions(@Param('id') id: string) {
+    return this.adminService.getWithdrawalWithTransactions(id);
+  }
+
   @Post('withdrawals/:id/process')
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)

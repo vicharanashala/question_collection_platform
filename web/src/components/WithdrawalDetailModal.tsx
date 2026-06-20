@@ -14,8 +14,9 @@ import { cn } from '@/lib/utils'
 import { ReasonDialog } from '@/components/ReasonDialog'
 import {
   CheckCircle, XCircle, User, Phone, CreditCard, Wallet,
-  CalendarDays, Building2, Hash, ArrowRightLeft, ShieldCheck,
-  MapPin, Banknote, Copy, CheckCheck, AlertTriangle,
+  CalendarDays, Building2, Hash, ArrowRightLeft, ArrowDownCircle,
+  ArrowUpCircle, ShieldCheck, MapPin, Banknote, Copy, CheckCheck,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
@@ -128,6 +129,10 @@ export function WithdrawalDetailModal({
   const [withdrawal, setWithdrawal] = useState<Withdrawal>(initial)
   const [loading, setLoading] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [transactions, setTransactions] = useState<Array<{
+    id: string; type: string; amount: number; status: string;
+    rejectionReason: string | null; description: string; source: string; createdAt: string;
+  }>>([])
   const [reasonDialog, setReasonDialog] = useState<{
     open: boolean
     mode: 'approve' | 'reject' | 'fail'
@@ -136,31 +141,32 @@ export function WithdrawalDetailModal({
   } | null>(null)
 
   useEffect(() => {
-    if (open) {
-      setWithdrawal(initial)
-      setLoading(false)
-      setProcessing(false)
-      setReasonDialog(null)
-    }
-  }, [open, initial])
+    if (!open) return
+    setWithdrawal(initial)
+    setLoading(true)
+    setProcessing(false)
+    setReasonDialog(null)
+    setTransactions([])
+
+    adminApi.getWithdrawalWithTransactions(initial.id).then((data) => {
+      setWithdrawal(data as any)
+      setTransactions((data as any).transactions ?? [])
+    }).catch(() => {
+      // fallback: keep initial data
+    }).finally(() => setLoading(false))
+  }, [open, initial.id])
 
   async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {
     if (processing) return
     setProcessing(true)
     try {
       if (mode === 'fail') {
-        if (withdrawal.status === 'failed') {
-          // Already failed — just update the reason
-          await adminApi.updateWithdrawalFailureReason(withdrawal.id, reason ?? '')
-          toast.success('Failure reason updated')
-          setWithdrawal((prev) => ({ ...prev, rejectionReason: reason ?? prev.rejectionReason }))
-        } else {
-          // New failure — mark and refund
-          await adminApi.markWithdrawalFailed(withdrawal.id, reason ?? '')
-          toast.success('Transaction marked as failed — amount refunded to user')
-          onActioned?.(withdrawal.id)
-          onClose()
-        }
+        // markWithdrawalFailed is idempotent — handles both PROCESSING and FAILED states,
+        // and writes rejectionReason to both DEBIT and CREDIT refund transactions
+        await adminApi.markWithdrawalFailed(withdrawal.id, reason ?? '')
+        toast.success('Transaction marked as failed')
+        onActioned?.(withdrawal.id)
+        onClose()
         return
       }
 
@@ -229,6 +235,9 @@ export function WithdrawalDetailModal({
   const hasPayoutDetails = payoutFields.length > 0
 
   const isLoading = loading || (isPending && !withdrawal.user)
+  const hasFailedDebitTx = transactions.some(
+    (tx) => tx.type === 'debit' && tx.status === 'failed',
+  )
 
   return (
     <>
@@ -286,6 +295,7 @@ export function WithdrawalDetailModal({
                     [2],
                     [2],
                     [1],
+                    [2],
                   ].map(([rows], gi) => (
                     <div key={gi} className="rounded-xl border border-border bg-card overflow-hidden">
                       <div className="px-5 py-3.5 bg-muted/60 border-b border-border-subtle">
@@ -306,7 +316,10 @@ export function WithdrawalDetailModal({
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-[1fr_320px] gap-8">
+                <div className="space-y-6">
+
+                  {/* ── Two-column grid: User/Withdrawal + Payout ── */}
+                  <div className="grid grid-cols-[1fr_320px] gap-8">
 
                   {/* ── Left column ── User + Withdrawal ───── */}
                   <div className="space-y-6">
@@ -376,11 +389,89 @@ export function WithdrawalDetailModal({
                     </div>
                   </div>
 
+                    {/* ── Right column ── Payout Details ──────── */}
+                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden h-fit sticky top-0">
+                    <SectionHeader icon={Wallet} label="Payout Details" />
+                    <div className="p-3">
+                      {hasPayoutDetails ? (
+                        payoutFields.map(({ icon, label, value }) => (
+                          <DataRow key={label} icon={icon} label={label} mono>
+                            <Copyable value={value} />
+                          </DataRow>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-10 gap-3">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-muted">
+                            <Wallet className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm font-medium text-muted-foreground">No payout details</p>
+                          <p className="text-xs text-muted-foreground text-center px-4">
+                            Payout information was not recorded
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                 </div>
+
+                {/* ── Transaction History ─────────────────────── */}
+                {transactions.length > 0 && (
+                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                    <SectionHeader icon={ArrowRightLeft} label="Transaction History" />
+                    <div className="divide-y divide-border-subtle">
+                      {transactions.map((tx) => (
+                        <div key={tx.id} className="flex items-center justify-between px-5 py-4 gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              'flex items-center justify-center w-9 h-9 rounded-xl shrink-0',
+                              tx.source.toLowerCase() === 'withdrawal'
+                                ? tx.status === 'failed'
+                                  ? 'bg-destructive/10'
+                                  : 'bg-primary/10'
+                                : 'bg-success/10',
+                            )}>
+                              {tx.source.toLowerCase() === 'withdrawal'
+                                ? <ArrowDownCircle className={cn('h-4 w-4', tx.status === 'failed' ? 'text-destructive' : 'text-primary')} />
+                                : <ArrowUpCircle className="h-4 w-4 text-success" />
+                              }
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground capitalize">
+                                {tx.source.toLowerCase()}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {formatDisplayDate(tx.createdAt)}
+                                {tx.description && <span> · {tx.description}</span>}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className={cn(
+                              'text-sm font-bold',
+                              tx.source.toLowerCase() === 'withdrawal' ? 'text-foreground' : 'text-success',
+                            )}>
+                              {tx.source.toLowerCase() === 'withdrawal' ? '-' : '+'}₹{Number(tx.amount).toLocaleString('en-IN')}
+                            </p>
+                            <span className={cn(
+                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize mt-1',
+                              tx.status === 'completed' && 'bg-success/10 text-success',
+                              tx.status === 'failed' && 'bg-destructive/10 text-destructive',
+                              tx.status === 'pending' && 'bg-muted text-muted-foreground',
+                              tx.status === 'processing' && 'bg-primary/10 text-primary',
+                            )}>
+                              {tx.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
               )}
             </div>
-
-          {/* ── Footer ─────────────────────────────────────── */}
           <div className="shrink-0 px-6 py-5 border-t border-border-subtle bg-muted/20 flex items-center justify-between gap-3">
             <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
 
@@ -414,30 +505,11 @@ export function WithdrawalDetailModal({
               </div>
             )}
 
-            {/* Processing — mark transaction as failed */}
-            {!readOnly && !isPending && w.status === 'processing' && (
+            {/* Failed (no failed DEBIT tx yet) — mark transaction as failed */}
+            {!readOnly && !isPending && w.status === 'failed' && !hasFailedDebitTx && (
               <Button
                 size="sm"
                 className="bg-destructive hover:bg-destructive/90 text-white"
-                onClick={() => setReasonDialog({
-                  open: true,
-                  mode: 'fail',
-                  amount: w.amount,
-                  userName: w.user?.name ?? w.user?.mobileNumber ?? '',
-                })}
-                disabled={processing}
-              >
-                <XCircle className="h-4 w-4 mr-1.5" />
-                {processing ? 'Processing…' : 'Mark Transaction as Failed'}
-              </Button>
-            )}
-
-            {/* Failed — update the failure reason */}
-            {!readOnly && w.status === 'failed' && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-destructive border-destructive/40 hover:bg-destructive/10"
                 onClick={() => setReasonDialog({
                   open: true,
                   mode: 'fail',
