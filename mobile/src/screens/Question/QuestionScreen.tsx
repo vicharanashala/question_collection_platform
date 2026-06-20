@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
 import { questionApi } from '../../api/client';
 import api from '../../api/client';
+import { runOnDeviceValidation, cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
+import { AIValidationResult } from '../../utils/onDeviceAI';
+import { AIValidationBanner } from '../../components/AIValidationBanner';
 import { useTranslation } from 'react-i18next';
 import { DAILY_QUESTION_LIMIT, MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
@@ -320,6 +323,36 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [remainingToday, setRemainingToday] = useState(DAILY_QUESTION_LIMIT);
   const [maxChars, setMaxChars] = useState(MAX_QUESTION_CHARS_FALLBACK);
 
+  // ── On-device AI validation ───────────────────────────────────────────────
+  const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
+  const [aiValidationOverride, setAiValidationOverride] = useState(false);
+  const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevTextRef = useRef('');
+
+  // Debounced on-device AI pipeline fires ~600 ms after the user stops typing.
+  // Skipped when text is empty (no false positives on blank field) and when
+  // the same text is re-set by the mic (avoid re-validating transcript appends).
+  const scheduleValidation = useCallback(
+    (text: string) => {
+      if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+      if (!text.trim() || text === prevTextRef.current) return;
+      prevTextRef.current = text;
+      aiDebounceRef.current = setTimeout(async () => {
+        const result = await runOnDeviceValidation({ text, ownId: editingQuestionId });
+        setAiValidation(result);
+        // Auto-clear override flag when user meaningfully changes the text
+        if (result.verdict !== 'warn') setAiValidationOverride(false);
+      }, 600);
+    },
+    [editingQuestionId],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (isEditMode && editingQuestionId) {
       questionApi.get(editingQuestionId).then((res) => {
@@ -346,6 +379,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     return Object.keys(errs).length === 0;
   }
 
+  /**
+   * Called when user taps "Continue" (submit-for-preview).
+   * Runs on-device AI first; if verdict is 'fail' blocks immediately.
+   * If 'warn' shows the banner and awaits the user's "Submit Anyway" tap.
+   * When 'warn' + user has already tapped "Submit Anyway" the banner
+   * is dismissed and submission proceeds.
+   */
   async function handlePreview() {
     if (!validate()) return;
     if (questionText.trim().length > maxChars) {
@@ -356,6 +396,21 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       showToast(t('question.limitReached', { limit: DAILY_QUESTION_LIMIT }), 'warning');
       return;
     }
+
+    // ── On-device AI gate ────────────────────────────────────────────────────
+    const validation = await runOnDeviceValidation({ text: questionText.trim(), ownId: editingQuestionId });
+    setAiValidation(validation);
+
+    if (validation.verdict === 'fail') {
+      showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail') ?? t('onDeviceAI.defaultFail'), 'error');
+      return;
+    }
+
+    if (validation.verdict === 'warn' && !aiValidationOverride) {
+      // Show banner — do not navigate; user can override or dismiss
+      return;
+    }
+    // ── Proceed to preview API ───────────────────────────────────────────────
 
     setPreviewLoading(true);
     try {
@@ -459,7 +514,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <Input
                 placeholder={t('question.questionPlaceholder')}
                 value={questionText}
-                onChangeText={(v) => { setQuestionText(v); setErrors({}); }}
+                onChangeText={(v) => { setQuestionText(v); setErrors({}); scheduleValidation(v); }}
                 error={errors.questionText}
                 multiline
                 numberOfLines={6}
@@ -489,6 +544,21 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 {t('question.textTooLong', { max: maxChars })}
               </Text>
             )}
+
+            {/* On-device AI warning banner */}
+            <AIValidationBanner
+              result={aiValidation ?? { verdict: 'pass', message: null, reasonKey: null, stages: { relevance: { pass: true, confidence: 1 }, duplicate: { pass: true, confidence: 1 }, spam: { pass: true, confidence: 1 } }, ran: false }}
+              onOverride={() => {
+                // User chose to override the warning — allow submission
+                setAiValidationOverride(true);
+                // Re-call handlePreview now that override is set
+                handlePreview();
+              }}
+              onDismiss={() => {
+                setAiValidation(null);
+                setAiValidationOverride(false);
+              }}
+            />
 
             {/* Submit button */}
             {!isEditMode ? (
@@ -563,6 +633,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               onTranscribed={(text) => {
                 setQuestionText(text);
                 setErrors({});
+                scheduleValidation(text);
               }}
               disabled={remainingToday <= 0 && !isEditMode}
             />

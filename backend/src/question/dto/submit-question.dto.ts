@@ -99,3 +99,21 @@ export class PreviewQuestionDto {
   @IsString({ each: true })
   mediaUrls?: string[];
 }
+
+/**
+ * DTO for the /questions/validate endpoint.
+ * Mirrors PreviewQuestionDto but is intentionally lean — the mobile app
+ * sends only the question text; all other fields are pre-filled or
+ * deferred to the preview/submit step.
+ *
+ * This endpoint is called by the mobile app's on-device AI pipeline
+ * only when the device cannot run the checks locally (e.g. unknown OS,
+ * AsyncStorage failure, or when the question is long and warrants a
+ * server-side second opinion on similarity matching).
+ */
+export class ValidateQuestionDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxQuestionChars()
+  questionText: string;
+}

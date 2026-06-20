@@ -17,7 +17,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
 import { QuestionService } from './question.service';
-import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
+import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto, ValidateQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
@@ -49,6 +49,18 @@ export class QuestionController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.questionService.preview(req.user.id, dto);
+  }
+
+  // POST /questions/validate — On-device AI fallback + server-authoritative duplicate check
+  // Used when mobile cannot run local checks or when the question is long enough
+  // that a server-side similarity check against the full corpus is warranted.
+  @Post('validate')
+  @HttpCode(HttpStatus.OK)
+  async validateQuestion(
+    @Body() dto: ValidateQuestionDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.questionService.validateQuestion(req.user.id, dto);
   }
 
   // GET /questions — List questions (own or all for admin)

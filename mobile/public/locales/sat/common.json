@@ -528,5 +528,32 @@
     "universityNameRequired": "University name is required for students",
     "organisationNameRequired": "Organisation name is required",
     "roleRequired": "Role is required"
+  },
+  "onDeviceAI": {
+    "submitAnyway": "Submit Anyway",
+    "defaultMessage": "Review the message below before submitting.",
+    "defaultFail": "This question could not be submitted. Please review and try again.",
+    "relevance": {
+      "low": "Your question may not be clearly about agriculture. Consider adding details about your crop, field, or problem."
+    },
+    "duplicate": {
+      "exact": "A very similar question has already been submitted. Please check if your question has already been answered.",
+      "semantic": "This question looks similar to one you submitted recently. Please review and make sure it is different enough."
+    },
+    "spam": {
+      "promotional": "Questions containing promotional content or contact information cannot be submitted.",
+      "repeatedChars": "Please remove repeated characters or symbols from your question.",
+      "excessiveCaps": "Please avoid using excessive capital letters.",
+      "urlPresent": "Please remove website links from your question.",
+      "phoneNumber": "Please remove phone numbers or contact details from your question.",
+      "emailAddress": "Please remove email addresses from your question.",
+      "socialSolicitation": "Requests to share information on social media cannot be submitted.",
+      "tooShort": "Your question is too short. Please describe your agriculture question in more detail."
+    },
+    "stage": {
+      "relevance": "Relevance",
+      "duplicate": "Duplicate",
+      "spam": "Spam"
+    }
   }
 }

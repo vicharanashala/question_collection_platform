@@ -412,6 +412,164 @@ export class QuestionService {
   }
 }
 
+  // ─── Server-side AI Validation ──────────────────────────────────────────────
+
+  /**
+   * POST /questions/validate
+   *
+   * Server-side mirror of the mobile on-device AI pipeline.
+   * Used as a fallback when the mobile device cannot run local checks
+   * (e.g. unknown OS, storage unavailable) or when the question warrants
+   * a server-authoritative duplicate check against the full question corpus.
+   *
+   * Does NOT write to the database.
+   *
+   * Returns:
+   *   { verdict: 'pass' | 'warn' | 'fail', reasonKey: string | null, stages: {...}, duplicateId?: string }
+   */
+  async validateQuestion(userId: string, dto: ValidateQuestionDto) {
+    // 1. Spam check — mirrors mobile/src/utils/onDeviceAI.ts checkSpam()
+    const spamResult = this.serverCheckSpam(dto.questionText);
+
+    // 2. Agriculture relevance check — mirrors computeRelevanceScore()
+    const relevanceResult = this.serverCheckRelevance(dto.questionText);
+
+    // 3. Duplicate check — queries the full question corpus (authoritative)
+    const duplicateResult = await this.serverCheckDuplicate(userId, dto.questionText);
+
+    // Aggregate: spam > duplicate > relevance
+    let verdict: 'pass' | 'warn' | 'fail' = 'pass';
+    let reasonKey: string | null = null;
+
+    if (!spamResult.pass) {
+      verdict = 'fail';
+      reasonKey = spamResult.reasonKey ?? 'onDeviceAI.spam.default';
+    } else if (!duplicateResult.pass) {
+      verdict = 'warn';
+      reasonKey = duplicateResult.reasonKey ?? 'onDeviceAI.duplicate.semantic';
+    } else if (!relevanceResult.pass) {
+      verdict = 'warn';
+      reasonKey = 'onDeviceAI.relevance.low';
+    }
+
+    return {
+      verdict,
+      reasonKey,
+      stages: {
+        spam: { pass: spamResult.pass, confidence: spamResult.pass ? 1 : 0.98, detail: spamResult.detail },
+        relevance: { pass: relevanceResult.pass, confidence: relevanceResult.score, detail: relevanceResult.detail },
+        duplicate: { pass: duplicateResult.pass, confidence: duplicateResult.similarity ?? 0, detail: duplicateResult.detail },
+      },
+      ...(duplicateResult.duplicateId ? { duplicateId: duplicateResult.duplicateId } : {}),
+    };
+  }
+
+  // Private spam check (mirrors mobile checkSpam)
+  private serverCheckSpam(text: string) {
+    if (!text?.trim()) return { pass: true, reasonKey: null, detail: 'empty' };
+    const lower = text.toLowerCase();
+    const spamPatterns: Array<{ pattern: RegExp; reasonKey: string }> = [
+      { pattern: /\b(buy|sell|order|shop|discount|offer|free|gift|prize|winner|click here|register now)\b/gi, reasonKey: 'onDeviceAI.spam.promotional' },
+      { pattern: /(.)\1{5,}/g, reasonKey: 'onDeviceAI.spam.repeatedChars' },
+      { pattern: /https?:\/\/|www\./gi, reasonKey: 'onDeviceAI.spam.urlPresent' },
+      { pattern: /\b\d{10,}\b|\b\d[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, reasonKey: 'onDeviceAI.spam.phoneNumber' },
+      { pattern: /[\w.-]+@[\w.-]+\.\w{2,}/gi, reasonKey: 'onDeviceAI.spam.emailAddress' },
+    ];
+    for (const { pattern, reasonKey } of spamPatterns) {
+      pattern.lastIndex = 0;
+      if (pattern.test(text)) return { pass: false, reasonKey, detail: 'spam_match' };
+    }
+    const words = text.trim().split(/\s+/);
+    if (words.length < 3) return { pass: false, reasonKey: 'onDeviceAI.spam.tooShort', detail: 'too_short' };
+    return { pass: true, reasonKey: null, detail: 'clean' };
+  }
+
+  // Private relevance check (mirrors mobile computeRelevanceScore)
+  private serverCheckRelevance(text: string) {
+    const words = text.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (!words.length) return { pass: false, score: 0, detail: 'empty' };
+
+    // Stop words + agriculture keywords (inline set — keep in sync with mobile)
+    const stopWords = new Set(['the','a','an','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','must','shall','can','need','to','of','in','for','on','with','at','by','from','as','into','and','but','if','or','because','while','me','my','we','our','you','your','he','him','his','she','her','it','its','they','them','their','this','that','these','those','what','which','who','whom','when','where','why','how','all','some','any','no','not','only','same','so','than','too','very','just','also']);
+    const agriKeywords = new Set([
+      'wheat','rice','paddy','maize','bajra','jowar','ragi','barley','cotton','sugarcane','groundnut','mustard','soybean','sunflower','sesame','castor','gram','tur','masoor','moong','urad','lentil','chickpea','pigeonpea',
+      'tomato','potato','onion','garlic','ginger','turmeric','chilli','brinjal','cabbage','cauliflower','okra','cucumber','gourd','pumpkin','carrot','radish','spinach','fenugreek',
+      'coriander','cumin','fennel','blackpepper','cardamom','cinnamon','cloves',
+      'mango','banana','grape','citrus','orange','guava','pomegranate','papaya','coconut','arecanut','cashew',
+      'cattle','buffalo','cow','goat','sheep','poultry','chicken','fish','milk','dairy','breeding','milking','mastitis','fodder','feed',
+      'soil','nitrogen','phosphorus','potash','urea','dap','npk','compost','manure','vermicompost','biofertilizer','organic','lime',
+      'irrigation','drip','sprinkler','flood','canal','pump','borewell','drainage','drought','rainfall','monsoon',
+      'pesticide','insecticide','fungicide','herbicide','ipm','biopesticide','pest','insect','aphid','whitefly','borer','termite','mite','disease','blight','rust','mildew','wilt','rot',
+      'harvest','yield','storage','processing','milling',
+      'tractor','rotavator','seed drill','sprayer','harvester','thresher',
+      'fertilizer','dose','npk','urea','dap','micronutrient',
+      'seed','variety','hybrid','seed rate','seed treatment','foundation seed',
+      'crop','farming','agriculture','agronomy','horticulture','sowing','weeding','pruning','grafting',
+      'kharif','rabi','zaid','monsoon','sowing','pest','disease','fertilizer','irrigation','harvest',
+    ]);
+
+    let matched = 0;
+    for (const word of words) {
+      if (!stopWords.has(word) && agriKeywords.has(word)) matched++;
+    }
+    const score = Math.min(1, matched * 0.15 + Math.min(0.3, (matched / Math.max(words.length, 1)) * 0.8));
+    return { pass: score >= 0.15, score, detail: matched === 0 ? 'no_keywords' : `matched_${matched}` };
+  }
+
+  // Private duplicate check — authoritative, queries DB
+  private async serverCheckDuplicate(userId: string, text: string) {
+    const SIMILARITY_THRESHOLD = 0.9;
+    const maxChars = 300;
+    const truncated = text.length > maxChars ? text.slice(0, maxChars) : text;
+
+    // Exact match
+    const exact = await this.questionRepo.findOne({
+      where: [{ userId, questionText: text }, { userId, questionText: truncated }],
+      select: ['id'],
+    });
+    if (exact) return { pass: false, reasonKey: 'onDeviceAI.duplicate.exact', detail: 'exact_match', duplicateId: exact.id, similarity: 1 };
+
+    // Levenshtein similarity against recent questions (last 100, ordered by recency)
+    const recent = await this.questionRepo
+      .find({
+        where: { userId },
+        select: ['id', 'questionText'],
+        order: { submittedAt: 'DESC' },
+        take: 100,
+      })
+      .catch(() => []);
+
+    const normalised = (t: string) => t.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    const normTarget = normalised(text);
+
+    for (const q of recent) {
+      const sim = this.levenshteinSimilarity(normTarget, normalised(q.questionText));
+      if (sim >= SIMILARITY_THRESHOLD) {
+        return { pass: false, reasonKey: 'onDeviceAI.duplicate.semantic', detail: `sim_${Math.round(sim * 100)}`, duplicateId: q.id, similarity: sim };
+      }
+    }
+    return { pass: true, reasonKey: null, detail: 'no_duplicate', duplicateId: undefined, similarity: 0 };
+  }
+
+  /** Levenshtein similarity ratio: 1 - (editDistance / maxLen) */
+  private levenshteinSimilarity(a: string, b: string): number {
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    const m = a.length, n = b.length;
+    if (m === 0 || n === 0) return 0;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    let curr = new Array(n + 1).fill(0);
+    for (let i = 1; i <= m; i++) {
+      curr[0] = i;
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      }
+      [prev, curr] = [curr, prev];
+    }
+    return 1 - prev[n] / Math.max(m, n);
+  }
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const CROPS = ['Wheat', 'Rice', 'Cotton', 'Sugarcane', 'Soybean', 'Maize', 'Groundnut', 'Mustard'];

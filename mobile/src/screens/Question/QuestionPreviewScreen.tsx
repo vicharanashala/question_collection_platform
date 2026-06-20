@@ -18,6 +18,7 @@ import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { questionApi, lgdApi } from '../../api/client';
+import { cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
@@ -139,7 +140,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         mediaUrls: preview.mediaUrls ?? [],
       };
 
-      await questionApi.submit(payload);
+      const { data } = await questionApi.submit(payload);
+
+      // Populate local duplicate cache with the new question so future submissions
+      // can be checked against it without a server round-trip.
+      await cacheQuestionForDuplicateDetection(data.id, questionText.trim());
+
       showToast(t('question.submitSuccess'), 'success');
       navigation.goBack();
     } catch (err: unknown) {
