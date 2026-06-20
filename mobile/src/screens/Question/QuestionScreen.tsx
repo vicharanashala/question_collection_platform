@@ -32,7 +32,7 @@ import { runOnDeviceValidation, cacheQuestionForDuplicateDetection } from '../..
 import { AIValidationResult } from '../../utils/onDeviceAI';
 import { AIValidationBanner } from '../../components/AIValidationBanner';
 import { useTranslation } from 'react-i18next';
-import { DAILY_QUESTION_LIMIT, MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
+import { MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList, RootStackParamList } from '../../navigation/types';
 
@@ -320,7 +320,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [remainingToday, setRemainingToday] = useState(DAILY_QUESTION_LIMIT);
+  const [remainingToday, setRemainingToday] = useState(20);
   const [maxChars, setMaxChars] = useState(MAX_QUESTION_CHARS_FALLBACK);
 
   // ── On-device AI validation ───────────────────────────────────────────────
@@ -393,7 +393,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       return;
     }
     if (!isEditMode && remainingToday <= 0) {
-      showToast(t('question.limitReached', { limit: DAILY_QUESTION_LIMIT }), 'warning');
+      showToast(t('question.limitReached', { limit: 20 }), 'warning');
       return;
     }
 
@@ -435,7 +435,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         suggestedDistricts: res.data.suggestedDistricts ?? [],
         suggestedBlocks: res.data.suggestedBlocks ?? [],
         remainingToday: res.data.remainingToday ?? remainingToday,
-        dailyLimit: res.data.dailyLimit ?? DAILY_QUESTION_LIMIT,
+        dailyLimit: res.data.dailyLimit ?? 20,
       } as RootStackParamList['QuestionPreview']);
     } catch (err: unknown) {
       const { getErrorMessage } = await import('../../api/client');
@@ -484,7 +484,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <View style={styles.limitRow}>
                 <View style={[styles.limitDot, { backgroundColor: c.primary }]} />
                 <Text style={[styles.limitText, { color: c.textSecondary }]}>
-                  {remainingToday} of {DAILY_QUESTION_LIMIT} submissions remaining today
+                  {remainingToday} submissions remaining today
                 </Text>
               </View>
             )}
@@ -618,7 +618,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           <View style={styles.micInstructionCenter}>
             {remainingToday <= 0 && !isEditMode ? (
               <Text style={[styles.micHintText, { color: c.textTertiary }]}>
-                {t('question.dailyLimitReached', { total: DAILY_QUESTION_LIMIT })}
+                {t('question.dailyLimitReached', { total: 20 })}
               </Text>
             ) : (
               <Text style={[styles.micHintText, { color: c.textSecondary }]}>

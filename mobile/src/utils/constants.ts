@@ -308,10 +308,8 @@ export const REWARD_TIERS = [
 
 // ─── Validation Limits ─────────────────────────────────────────────────────────
 
-export const DAILY_QUESTION_LIMIT = 20;
 export const VIDEO_MAX_DURATION_SEC = 10;
 export const VIDEO_MAX_SIZE_MB = 10;
-export const MIN_WITHDRAWAL = 50;
 export const EDIT_WINDOW_SEC = 30;
 export const AI_CONFIDENCE_THRESHOLD = 90;
 export const SIMILARITY_THRESHOLD = 0.9;

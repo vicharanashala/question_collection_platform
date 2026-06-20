@@ -12,13 +12,12 @@ import { Platform } from 'react-native';
 import {
   VIDEO_MAX_DURATION_SEC,
   VIDEO_MAX_SIZE_MB,
-  DAILY_QUESTION_LIMIT,
   EDIT_WINDOW_SEC,
 } from './constants';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-export { VIDEO_MAX_DURATION_SEC, VIDEO_MAX_SIZE_MB, DAILY_QUESTION_LIMIT, EDIT_WINDOW_SEC };
+export { VIDEO_MAX_DURATION_SEC, VIDEO_MAX_SIZE_MB, EDIT_WINDOW_SEC };
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 

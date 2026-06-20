@@ -19,13 +19,13 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { walletApi, questionApi } from '../../api/client';
-import { REWARD_TIERS, EDIT_WINDOW_SEC, DAILY_QUESTION_LIMIT } from '../../utils/constants';
+import { REWARD_TIERS, EDIT_WINDOW_SEC } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
 import { VerificationStatus } from '../../types';
 import type { WalletBalance } from '../../types';
 
-type Stats = { dailyCount: number; remainingToday: number };
+type Stats = { dailyCount: number; remainingToday: number; dailyLimit: number };
 
 const categoryLabels: Record<string, string> = {
   farmer: 'Farmer',
@@ -191,7 +191,7 @@ export function HomeScreen() {
                 ? '…'
                 : stats
                 ? `${stats.remainingToday}`
-                : `${DAILY_QUESTION_LIMIT}`
+                : `${stats.remainingToday}`
             }
             color={c.warning}
           />
@@ -307,7 +307,7 @@ export function HomeScreen() {
             activeOpacity={0.75}
             onPress={() => {
               if (stats && stats.remainingToday <= 0) {
-                showToast(`You've used all ${DAILY_QUESTION_LIMIT} submissions for today. Try again tomorrow!`, 'warning');
+                showToast(`You've used all your submissions for today. Try again tomorrow!`, 'warning');
               } else {
                 navigation.navigate('AskQuestion');
               }
@@ -343,7 +343,7 @@ export function HomeScreen() {
               },
               {
                 icon: 'calendar-outline',
-                text: `Daily limit — ${DAILY_QUESTION_LIMIT} questions per day`,
+                text: `Daily limit — ${stats.dailyLimit ?? 20} questions per day`,
                 color: c.primary,
               },
               {
