@@ -864,14 +864,24 @@ export function AdminDashboardScreen() {
           />
 
           {user?.role === 'super_admin' && (
-            <QuickCard
-              label="Config"
-              sub="System settings"
-              icon="settings"
-              color="#6B7280"
-              onPress={() => navigation.navigate('AdminConfig')}
-              themeColors={c}
-            />
+            <>
+              <QuickCard
+                label="Audit Logs"
+                sub="Admin actions & stats"
+                icon="document-text"
+                color="#7c3aed"
+                onPress={() => navigation.navigate('AdminAuditLogs')}
+                themeColors={c}
+              />
+              <QuickCard
+                label="Config"
+                sub="System settings"
+                icon="settings"
+                color="#6B7280"
+                onPress={() => navigation.navigate('AdminConfig')}
+                themeColors={c}
+              />
+            </>
           )}
         </View>
 

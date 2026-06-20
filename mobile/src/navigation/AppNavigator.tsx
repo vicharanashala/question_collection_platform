@@ -54,6 +54,7 @@ import { AdminUserDetailScreen } from '../screens/Admin/AdminUserDetailScreen';
 import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
 import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
 import { AdminProfileScreen } from '../screens/Admin/AdminProfileScreen';
+import { AdminAuditLogsScreen } from '../screens/Admin/AdminAuditLogsScreen';
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
 
@@ -190,6 +191,11 @@ function AdminNavigator() {
       <AdminStackNav.Screen
         name="AdminProfile"
         component={AdminProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminAuditLogs"
+        component={AdminAuditLogsScreen}
         options={{ headerShown: false }}
       />
     </AdminStackNav.Navigator>

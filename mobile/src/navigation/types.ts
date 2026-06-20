@@ -31,6 +31,7 @@ export type AdminStackParamList = {
   AdminConfig: undefined;
   AdminWithdrawals: undefined;
   AdminProfile: undefined;
+  AdminAuditLogs: undefined;
 };
 
 export type RootStackParamList = {
