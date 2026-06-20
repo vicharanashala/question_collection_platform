@@ -25,7 +25,7 @@ import { walletApi, questionApi, getErrorMessage } from '../../api/client';
 import { TranslatableTextReadOnly } from '../../components/TranslatableTextReadOnly';
 import { tokens } from '../../utils/theme';
 import { Transaction } from '../../types';
-import { formatINRFull, getBalanceFontSize } from '../../utils/currency';
+import { formatINRFull, formatINRCompact, getBalanceFontSize, getStatFontSize } from '../../utils/currency';
 
 // ─── Filter options ───────────────────────────────────────────────────────────
 
@@ -508,21 +508,31 @@ export function WalletScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [balanceRes, txRes, configRes] = await Promise.allSettled([
+      const [balanceRes, configRes] = await Promise.allSettled([
         walletApi.getBalance(),
-        walletApi.getTransactions(),
         walletApi.getWalletConfig(),
       ]);
 
       if (balanceRes.status === 'fulfilled') {
         setBalance(balanceRes.value.data.balance);
       }
-      if (txRes.status === 'fulfilled') {
-        setAllTransactions(txRes.value.data.transactions ?? []);
-      }
       if (configRes.status === 'fulfilled') {
         setMinWithdrawal(configRes.value.data.minWithdrawalAmount ?? 50);
       }
+
+      // Load all pages so stats (totalEarned, withdrawn) are accurate
+      const allTx: Transaction[] = [];
+      let page = 1;
+      const PAGE = 50;
+      let hasMore = true;
+      while (hasMore) {
+        const res = await walletApi.getTransactions({ page, limit: PAGE });
+        const items: Transaction[] = res.data.transactions ?? [];
+        allTx.push(...items);
+        hasMore = items.length === PAGE;
+        page++;
+      }
+      setAllTransactions(allTx);
     } catch (err) {
       console.warn('[Wallet] Failed to load:', getErrorMessage(err, 'Failed to load wallet data. Please try again.'));
     }
@@ -638,7 +648,10 @@ export function WalletScreen() {
   // ─── Filtered transactions ──────────────────────────────────────────────────
 
   const filteredTransactions = useMemo(() => {
+    const seen = new Set<string>();
     return allTransactions.filter((tx) => {
+      if (seen.has(tx.id)) return false;
+      seen.add(tx.id);
       if (filterType !== 'all' && tx.type !== filterType) return false;
       if (filterSource !== 'all' && tx.source !== filterSource) return false;
       if (filterStatus !== 'all' && tx.status !== filterStatus) return false;
@@ -745,9 +758,12 @@ export function WalletScreen() {
             <View style={[styles.statIconWrap, { backgroundColor: c.success + '15' }]}>
               <Ionicons name="trending-up-outline" size={17} color={c.success} />
             </View>
-            <View>
-              <Text style={[styles.statValue, { color: c.success }]}>
-                ₹{totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[styles.statValue, { color: c.success, fontSize: getStatFontSize(totalEarned) }]}
+                numberOfLines={1}
+              >
+                ₹{totalEarned >= 1000 ? formatINRCompact(totalEarned) : formatINRFull(totalEarned)}
               </Text>
               <Text style={[styles.statLabel, { color: c.textSecondary }]}>Total Earned</Text>
             </View>
@@ -757,9 +773,12 @@ export function WalletScreen() {
             <View style={[styles.statIconWrap, { backgroundColor: c.primary + '15' }]}>
               <Ionicons name="arrow-up-outline" size={17} color={c.primary} />
             </View>
-            <View>
-              <Text style={[styles.statValue, { color: c.primary }]}>
-                ₹{totalWithdrawn.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[styles.statValue, { color: c.primary, fontSize: getStatFontSize(totalWithdrawn) }]}
+                numberOfLines={1}
+              >
+                ₹{totalWithdrawn >= 1000 ? formatINRCompact(totalWithdrawn) : formatINRFull(totalWithdrawn)}
               </Text>
               <Text style={[styles.statLabel, { color: c.textSecondary }]}>Withdrawn</Text>
             </View>
