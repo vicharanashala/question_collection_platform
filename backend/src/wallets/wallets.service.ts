@@ -453,7 +453,7 @@ export class WalletsService {
       const tx = queryRunner.manager.create(Transaction, {
         walletId: wallet.id,
         type: TransactionType.DEBIT,
-        source: TransactionSource.WITHDRAWAL,
+        source: TransactionSource.VERIFICATION_CHARGE,
         amount: 1,
         balanceAfter: newBalance,
         referenceId: verificationOrderId, // used to match refund webhook

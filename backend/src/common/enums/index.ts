@@ -80,6 +80,7 @@ export enum TransactionType {
 export enum TransactionSource {
   REWARD = 'reward',
   WITHDRAWAL = 'withdrawal',
+  VERIFICATION_CHARGE = 'verification_charge',
   REFUND = 'refund',
   ADJUSTMENT = 'adjustment',
 }
