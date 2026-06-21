@@ -7,13 +7,17 @@ export function formatINRFull(n: number): string {
 }
 
 /**
- * Abbreviate large numbers for compact display.
- * e.g. 1000 → "1K", 10500 → "10.5K", 100000 → "100K", 1500000 → "1.5M"
+ * Abbreviate large numbers for compact display using Indian notation.
+ * e.g. 1000 → "1K", 10500 → "10.5K", 100000 → "1L", 1500000 → "15L" / "1.5M"
  */
 export function formatINRCompact(n: number): string {
-  if (n >= 1000000) {
-    const m = n / 1000000
-    return m % 1 === 0 ? `${m}M` : `${m.toFixed(1)}M`
+  if (n >= 10000000) {
+    const cr = n / 10000000
+    return cr % 1 === 0 ? `${cr}Cr` : `${cr.toFixed(1)}Cr`
+  }
+  if (n >= 100000) {
+    const l = n / 100000
+    return l % 1 === 0 ? `${l}L` : `${l.toFixed(1)}L`
   }
   if (n >= 1000) {
     const k = n / 1000

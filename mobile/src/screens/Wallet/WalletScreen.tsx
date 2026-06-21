@@ -770,13 +770,10 @@ export function WalletScreen() {
               <Ionicons name="trending-up-outline" size={17} color={c.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text
-                style={[styles.statValue, { color: c.success, fontSize: getStatFontSize(totalEarned) }]}
-                numberOfLines={1}
-              >
-                ₹{totalEarned >= 1000 ? formatINRCompact(totalEarned) : formatINRFull(totalEarned)}
+              <Text style={[styles.statValue, { color: c.success }]} numberOfLines={1}>
+                ₹{formatINRCompact(totalEarned)}
               </Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Total Earned</Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]} numberOfLines={1}>Total Earned</Text>
             </View>
           </View>
 
@@ -785,13 +782,10 @@ export function WalletScreen() {
               <Ionicons name="arrow-up-outline" size={17} color={c.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text
-                style={[styles.statValue, { color: c.primary, fontSize: getStatFontSize(totalWithdrawn) }]}
-                numberOfLines={1}
-              >
-                ₹{totalWithdrawn >= 1000 ? formatINRCompact(totalWithdrawn) : formatINRFull(totalWithdrawn)}
+              <Text style={[styles.statValue, { color: c.primary }]} numberOfLines={1}>
+                ₹{formatINRCompact(totalWithdrawn)}
               </Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Withdrawn</Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]} numberOfLines={1}>Withdrawn</Text>
             </View>
           </View>
 
@@ -800,8 +794,8 @@ export function WalletScreen() {
               <Ionicons name="time-outline" size={17} color={pendingCount > 0 ? c.warning : c.textTertiary} />
             </View>
             <View>
-              <Text style={[styles.statValue, { color: c.text }]}>{pendingCount}</Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]}>Pending</Text>
+              <Text style={[styles.statValue, { color: c.text }]} numberOfLines={1}>{pendingCount}</Text>
+              <Text style={[styles.statLabel, { color: c.textSecondary }]} numberOfLines={1}>Pending</Text>
             </View>
           </View>
         </View>
@@ -1148,8 +1142,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  statValue: { fontSize: 13, fontWeight: '800' },
-  statLabel: { fontSize: 10, marginTop: 1 },
+  statValue: { fontSize: 13, fontWeight: '800', flexShrink: 1 },
+  statLabel: { fontSize: 10, flexShrink: 1, marginTop: 1 },
 
   // Info note
   infoNote: {
