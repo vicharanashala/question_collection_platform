@@ -233,7 +233,7 @@ export function PaymentDetailsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>

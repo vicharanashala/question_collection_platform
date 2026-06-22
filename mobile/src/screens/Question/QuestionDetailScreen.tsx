@@ -57,7 +57,7 @@ export function QuestionDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="chevron-back" size={24} color={c.text} />
@@ -74,7 +74,7 @@ export function QuestionDetailScreen() {
 
   if (error || !q) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="chevron-back" size={24} color={c.text} />
@@ -100,7 +100,7 @@ export function QuestionDetailScreen() {
   const isVideo = q.mediaType === 'video';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>

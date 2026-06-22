@@ -113,7 +113,7 @@ export function OtpScreen({ navigation, route }: Props) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         {/* Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>

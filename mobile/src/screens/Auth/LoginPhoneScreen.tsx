@@ -68,7 +68,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}

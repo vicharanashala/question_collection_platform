@@ -454,7 +454,7 @@ export function AdminQuestionsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>

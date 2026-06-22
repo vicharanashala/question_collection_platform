@@ -48,7 +48,7 @@ export function ConsentScreen({ navigation, route }: Props) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>

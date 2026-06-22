@@ -209,7 +209,7 @@ export function NotificationScreen() {
   ) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <View style={[styles.topBar, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={c.text} />

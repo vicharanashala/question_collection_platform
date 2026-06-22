@@ -245,6 +245,34 @@ export async function uploadAudioFile(
   return data;
 }
 
+// ─── Storage API (Image Uploads) ─────────────────────────────────────────────────
+
+export const storageApi = {
+  /**
+   * Upload an image to backend storage (GCP Nearline in production).
+   * Returns the permanent CDN URL and file size in bytes.
+   *
+   * Usage:
+   *   const { url } = await storageApi.uploadImage(uri, 'photo.jpg');
+   */
+  uploadImage: (
+    uri: string,
+    filename: string,
+  ): Promise<{ url: string; sizeBytes: number }> => {
+    const formData = new (globalThis.FormData)();
+    formData.append('file', {
+      uri,
+      name: filename,
+      type: 'image/jpeg',
+    } as unknown as string);
+    return uploadApi
+      .post<{ url: string; sizeBytes: number }>('/storage/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res) => res.data);
+  },
+};
+
 // ─── API Methods ──────────────────────────────────────────────────────────────
 
 export const authApi = {

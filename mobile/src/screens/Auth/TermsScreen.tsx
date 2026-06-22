@@ -81,7 +81,7 @@ export function TermsScreen({ navigation, route }: Props) {
   const [openId, setOpenId] = useState<string | null>('1');
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.topBar, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

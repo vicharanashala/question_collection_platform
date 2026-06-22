@@ -687,7 +687,7 @@ export function WalletScreen() {
   const pendingCount = allTransactions.filter((tx) => tx.status === 'pending').length;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}

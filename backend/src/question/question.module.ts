@@ -5,12 +5,14 @@ import { QuestionService } from './question.service';
 import { Question, AuditLog, Notification } from '../database/entities';
 import { UserModule } from '../user/user.module';
 import { AdminModule } from '../admin/admin.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Question, AuditLog, Notification]),
     UserModule,
     AdminModule,
+    StorageModule,
   ],
   controllers: [QuestionController],
   providers: [QuestionService],

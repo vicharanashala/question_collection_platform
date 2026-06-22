@@ -50,6 +50,11 @@ const DEFAULT_CONFIG = [
     value: 1000,
     description: 'Maximum allowed characters in a question text',
   },
+  {
+    key: 'max_image_size_mb',
+    value: 5,
+    description: 'Maximum image file size per question (MB)',
+  },
 ];
 
 async function seed() {

@@ -139,7 +139,7 @@ export function ProfileScreen() {
   const statusColor = user?.verificationStatus ? (STATUS_CONFIG[user.verificationStatus]?.color ?? c.textTertiary) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         <View style={{ marginTop: tokens.spacing4 }}>

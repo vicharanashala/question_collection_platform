@@ -458,7 +458,7 @@ export function AdminWithdrawalsScreen() {
   const countBadge = activeFilterCount();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ResultModal
         visible={resultModal.visible}
         variant={resultModal.variant}

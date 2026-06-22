@@ -11,6 +11,7 @@ import {
   smsConfig,
   appConfig,
   questionConfig,
+  gcpStorageConfig,
 } from './config/configuration';
 import { paymentConfig } from './config/payment.config';
 import { sarvamConfig } from './config/sarvam.config';
@@ -37,6 +38,7 @@ import { WalletsModule } from './wallets/wallets.module';
 import { SpeechModule } from './speech/speech.module';
 import { LgdModule } from './lgd/lgd.module';
 import { PaymentModule } from './payment/payment.module';
+import { StorageModule } from './storage/storage.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 
@@ -45,7 +47,7 @@ import { HealthController } from './health/health.controller';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, sarvamConfig, lgdConfig, paymentConfig],
+      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, sarvamConfig, lgdConfig, paymentConfig],
       envFilePath: ['.env'],
     }),
 
@@ -106,6 +108,7 @@ import { HealthController } from './health/health.controller';
     SpeechModule,
     LgdModule,
     PaymentModule,
+    StorageModule,
   ],
   controllers: [HealthController],
   providers: [

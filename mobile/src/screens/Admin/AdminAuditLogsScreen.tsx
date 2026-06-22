@@ -763,7 +763,7 @@ export function AdminAuditLogsScreen() {
   const maxDayTotal = Math.max(...recentSeries.map((d) => d.total), 1);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: tokens.spacing8 }}
         showsVerticalScrollIndicator={false}

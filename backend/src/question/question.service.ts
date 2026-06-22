@@ -16,6 +16,7 @@ import { ListQuestionsDto } from './dto/list-questions.dto';
 import { DOMAINS, inferDomains } from './constants/domains';
 import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class QuestionService {
@@ -29,6 +30,7 @@ export class QuestionService {
     private readonly dataSource: DataSource,
     private readonly adminService: AdminService,
     private readonly userService: UserService,
+    private readonly storageService: StorageService,
   ) {}
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
@@ -81,6 +83,22 @@ export class QuestionService {
       this.adminService.getConfigValue('question_edit_window_seconds'),
     ]);
     await this.checkDailyLimit(userId, dailyLimit);
+
+    // 2. Validate image submission: when mediaType is 'image' exactly 1 URL is required
+    if (dto.mediaType === 'image') {
+      if (!dto.mediaUrls || dto.mediaUrls.length === 0) {
+        throw new BadRequestException(
+          'An image URL is required when mediaType is "image". Upload the image via POST /storage/upload first.',
+        );
+      }
+      if (dto.mediaUrls.length > 1) {
+        throw new BadRequestException('At most 1 image is allowed per question');
+      }
+      const url = dto.mediaUrls[0];
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        throw new BadRequestException('mediaUrls must be valid HTTP(S) URLs');
+      }
+    }
 
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + editWindowSec * 1000);
@@ -365,14 +383,15 @@ export class QuestionService {
   }
 
   async getLimits() {
-    const [dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars] = await Promise.all([
+    const [dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb] = await Promise.all([
       this.adminService.getConfigValue('daily_question_limit'),
       this.adminService.getConfigValue('question_edit_window_seconds'),
       this.adminService.getConfigValue('video_max_size_mb'),
       this.adminService.getConfigValue('video_max_duration_seconds'),
       this.adminService.getConfigValue('max_question_chars'),
+      this.adminService.getConfigValue('max_image_size_mb'),
     ]);
-    return { dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars };
+    return { dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb };
   }
 
   // ─── Preview ────────────────────────────────────────────────────────────────

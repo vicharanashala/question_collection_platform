@@ -529,7 +529,7 @@ export function AdminDashboardScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={c.primary} />
           <Text style={[styles.loadingText, { color: c.mutedForeground }]}>Loading dashboard...</Text>
@@ -543,7 +543,7 @@ export function AdminDashboardScreen() {
   const approvalRate = s?.approvalRate ?? 0;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}

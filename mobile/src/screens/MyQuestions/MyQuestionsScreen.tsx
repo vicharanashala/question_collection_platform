@@ -221,7 +221,7 @@ export function MyQuestionsScreen() {
 
   if (loading && questions.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
           <Text style={[styles.centerText, { color: c.textSecondary }]}>{t('myQuestions.loading')}</Text>
         </View>
@@ -230,7 +230,7 @@ export function MyQuestionsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <FlatList
         data={questions}
         keyExtractor={(item) => item.id}

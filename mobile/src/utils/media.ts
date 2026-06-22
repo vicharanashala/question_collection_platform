@@ -1,14 +1,12 @@
 /**
  * Media utility helpers for question submission.
- * Handles compression, duration/size validation, and mock upload to object storage.
- *
- * NOTE: These are client-side helpers only. The actual upload to object storage (e.g. S3,
- * Cloudflare R2, GCS) requires presigned URLs from the backend. This module provides
- * the compression pipeline and returns local file URIs that are then exchanged for
- * permanent URLs via the backend's media upload endpoint.
+ * Handles compression, duration/size validation, and upload to backend object storage.
  */
 
 import { Platform } from 'react-native';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { SaveFormat } from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
 import {
   VIDEO_MAX_DURATION_SEC,
   VIDEO_MAX_SIZE_MB,
@@ -18,6 +16,84 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export { VIDEO_MAX_DURATION_SEC, VIDEO_MAX_SIZE_MB, EDIT_WINDOW_SEC };
+
+// ─── Image helpers ────────────────────────────────────────────────────────────
+
+/**
+ * Get file size in MB for a local URI.
+ *
+ * On iOS, `ph://` photo-library URIs cannot be read by FileSystem —
+ * use the `fileSize` field from the image-picker result instead.
+ * This function handles the common cases gracefully.
+ *
+ * Returns 0 if the file cannot be read (unavailable / permission denied / unsupported URI scheme).
+ */
+export async function getImageSizeMB(uri: string): Promise<number> {
+  try {
+    const info = await FileSystem.getInfoAsync(uri);
+    if (!info.exists) return 0;
+    const size = (info as { size?: number }).size;
+    if (size == null || size === 0) return 0;
+    return size / 1024 / 1024;
+  } catch {
+    // Thrown for unsupported URI schemes (e.g. ph:// on iOS).
+    return 0;
+  }
+}
+
+/**
+ * Compress an image using expo-image-manipulator.
+ *
+ * - Resizes to max 1280 px on the longest side
+ * - JPEG quality 80% (good balance of file size vs. visual quality)
+ *
+ * Returns the URI of the compressed image (a new temp file).
+ */
+export async function compressImage(uri: string): Promise<string> {
+  const manipResult = await ImageManipulator.manipulateAsync(
+    uri,
+    // Resize: longest side capped at 1280 px
+    [{ resize: { width: 1280 } }],
+    { compress: 0.8, format: SaveFormat.JPEG },
+  );
+  return manipResult.uri;
+}
+
+/**
+ * Upload a local image to backend storage (GCP Nearline).
+ * Compresses first if over the size threshold, then uploads.
+ *
+ * @param uri           Local file URI from image picker
+ * @param maxSizeMb     Maximum allowed size in MB (from server /stats endpoint)
+ * @param uploadFn      Async function that takes (uri, filename) → { url, sizeBytes }
+ *
+ * @returns             { tempUri: string } — the URI of the image to use (compressed or original)
+ *
+ * NOTE: This does NOT return the CDN URL. The caller receives only a local URI
+ * (compressed or original). After submit, the backend returns the CDN URL.
+ * For a full end-to-end upload-to-permanent-URL flow, use uploadImageToStorage().
+ */
+export async function prepareAndCompressImage(
+  uri: string,
+  maxSizeMb = 5,
+  uploadFn: (uri: string, filename: string) => Promise<{ url: string; sizeBytes: number }>,
+): Promise<{ localUri: string; cdnUrl?: string; sizeBytes: number }> {
+  const sizeMb = await getImageSizeMB(uri);
+
+  let localUri = uri;
+  if (sizeMb > maxSizeMb) {
+    localUri = await compressImage(uri);
+  }
+
+  const filename = uri.split('/').pop() ?? `image-${Date.now()}.jpg`;
+  const result = await uploadFn(localUri, filename);
+
+  return {
+    localUri,
+    cdnUrl: result.url,
+    sizeBytes: result.sizeBytes,
+  };
+}
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -49,65 +125,4 @@ export function validateVideo(fileSizeBytes: number, estimatedDurationSec?: numb
   }
 
   return { valid: true };
-}
-
-/**
- * Estimate compression quality for an image given target size.
- * Returns a quality value 0–1 for use with image editors / custom compression.
- */
-export function estimateJpegQuality(currentSizeMb: number, targetMb = 1): number {
-  if (currentSizeMb <= targetMb) return 1.0;
-  return Math.max(0.1, targetMb / currentSizeMb);
-}
-
-// ─── Mock object storage upload ───────────────────────────────────────────────
-
-/**
- * Mock upload to object storage (placeholder).
- * Real implementation:
- *  1. POST /media/presign  →  get presigned PUT URL
- *  2. PUT to presigned URL with file binary
- *  3. Return the public URL from the response
- */
-export async function uploadToStorage(
-  localUri: string,
-  _mediaType: 'image' | 'video' | 'audio',
-  _userId: string,
-): Promise<string> {
-  // Simulate upload latency
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Return a mock CDN URL — replace with real URL after upload
-  const filename = localUri.split('/').pop() ?? 'media';
-  const timestamp = Date.now();
-  return `https://cdn.example.com/media/${timestamp}-${filename}`;
-}
-
-/**
- * Compress image before upload (placeholder).
- * In a real app, use react-native-image-resizer or expo-image-manipulator:
- *
- *   import ImageResizer from 'react-native-image-resizer';
- *   const resized = await ImageResizer.createResizedImage(
- *     uri, width, height, 'JPEG', 80, 0, undefined, false,
- *   );
- *   return resized.uri;
- */
-export async function compressImage(uri: string, quality = 0.8): Promise<string> {
-  console.log(`[Media] Compress image at ${uri} with quality ${quality}`);
-  // TODO(abiram): replace with real implementation
-  return uri;
-}
-
-/**
- * Compress video before upload (placeholder).
- * In a real app, use react-native-video-processing or FFmpeg:
- *
- *   import { compressVideo } from '@react-native-camera-roll/video-processing';
- *   return await compressVideo(uri, { bitrate: 1_000_000, minimumBitrate: 500_000 });
- */
-export async function compressVideo(uri: string): Promise<string> {
-  console.log(`[Media] Compress video at ${uri}`);
-  // TODO(abiram): replace with real implementation
-  return uri;
 }

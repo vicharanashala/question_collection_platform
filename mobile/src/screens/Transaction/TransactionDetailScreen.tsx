@@ -67,7 +67,7 @@ export function TransactionDetailScreen() {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.topBar, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

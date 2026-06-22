@@ -9,6 +9,7 @@ import {
   AudioQuality,
   IOSOutputFormat,
 } from 'expo-audio';
+import { launchImageLibraryAsync } from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
@@ -17,12 +18,14 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
-import { questionApi } from '../../api/client';
+import { questionApi, storageApi } from '../../api/client';
 import api from '../../api/client';
 import { runOnDeviceValidation, cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
 import { AIValidationResult } from '../../utils/onDeviceAI';
 import { AIValidationBanner } from '../../components/AIValidationBanner';
 import { useTranslation } from 'react-i18next';
+import { Image, TouchableOpacity as ImgTouchableOpacity } from 'react-native';
+import { compressImage, getImageSizeMB } from '../../utils/media';
 import { MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList, RootStackParamList } from '../../navigation/types';
@@ -300,9 +303,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     if (isFocused && !isEditMode) {
       setQuestionText('');
       questionApi.getStats().then((res) => {
-        const data = res.data as { remainingToday: number; maxQuestionChars?: number };
+        const data = res.data as { remainingToday: number; maxQuestionChars?: number; maxImageSizeMb?: number };
         setRemainingToday(data.remainingToday);
         if (data.maxQuestionChars) setMaxChars(data.maxQuestionChars);
+        if (data.maxImageSizeMb) setMaxImageSizeMb(data.maxImageSizeMb);
       });
     }
   }, [isFocused, isEditMode]);
@@ -313,6 +317,14 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [remainingToday, setRemainingToday] = useState(20);
   const [maxChars, setMaxChars] = useState(MAX_QUESTION_CHARS_FALLBACK);
+  const [maxImageSizeMb, setMaxImageSizeMb] = useState(5);
+
+  // ── Image attachment state ────────────────────────────────────────────────
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [compressedImageUri, setCompressedImageUri] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // ── On-device AI validation ───────────────────────────────────────────────
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
@@ -344,6 +356,63 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     };
   }, []);
 
+  // ── Image picker ─────────────────────────────────────────────────────────
+  async function handleSelectImage() {
+    setImageError(null);
+    const result = await launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.9,
+      selectionLimit: 1,
+    });
+    if (!result.assets || result.assets.length === 0) return;
+
+    const asset = result.assets[0];
+    const uri: string = asset.uri ?? '';
+    if (!uri) return;
+
+    // Get file size: prefer photo-library metadata (accurate for ph:// URIs on iOS),
+    // fall back to FileSystem when unavailable (e.g. some non-photo URIs).
+    const reportedSize = asset.fileSize;
+    let sizeMb: number;
+    if (reportedSize != null && reportedSize > 0) {
+      sizeMb = reportedSize / 1024 / 1024;
+    } else {
+      sizeMb = await getImageSizeMB(uri);
+    }
+    if (sizeMb === 0) {
+      setImageError('Could not read image file. Please try a different one.');
+      return;
+    }
+    if (sizeMb > maxImageSizeMb * 3) {
+      // If it's already >3× the limit, warn but still try to compress
+      setImageError(`Image is ${sizeMb.toFixed(1)} MB — will be compressed to ~${maxImageSizeMb} MB`);
+    }
+
+    setSelectedImageUri(uri);
+    setCompressedImageUri(null);
+    setUploadedImageUrl(null);
+    setImageUploading(true);
+
+    try {
+      // Compress if needed
+      let toUploadUri = uri;
+      if (sizeMb > maxImageSizeMb) {
+        toUploadUri = await compressImage(uri);
+        setCompressedImageUri(toUploadUri);
+      }
+
+      // Upload
+      const filename = `question-img-${Date.now()}.jpg`;
+      const { url } = await storageApi.uploadImage(toUploadUri, filename);
+      setUploadedImageUrl(url);
+    } catch (err: unknown) {
+      const { getErrorMessage } = await import('../../api/client');
+      setImageError(getErrorMessage(err, 'Upload failed. Please try again.'));
+    } finally {
+      setImageUploading(false);
+    }
+  }
+
   useEffect(() => {
     if (isEditMode && editingQuestionId) {
       questionApi.get(editingQuestionId).then((res) => {
@@ -356,9 +425,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       });
     } else {
       questionApi.getStats().then((res) => {
-        const data = res.data as { remainingToday: number; maxQuestionChars?: number };
+        const data = res.data as { remainingToday: number; maxQuestionChars?: number; maxImageSizeMb?: number };
         setRemainingToday(data.remainingToday);
         if (data.maxQuestionChars) setMaxChars(data.maxQuestionChars);
+        if (data.maxImageSizeMb) setMaxImageSizeMb(data.maxImageSizeMb);
       });
     }
   }, [isEditMode, editingQuestionId]);
@@ -401,14 +471,25 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       // Show banner — do not navigate; user can override or dismiss
       return;
     }
+
+    // ── Image gate: block if user selected an image but upload is still in progress ──
+    if (selectedImageUri && !uploadedImageUrl) {
+      showToast('Please wait for the image to finish uploading before continuing', 'warning');
+      return;
+    }
+
+    // ── Resolve media type ────────────────────────────────────────────────────
+    const effectiveMediaType: 'none' | 'image' = uploadedImageUrl ? 'image' : 'none';
+    const effectiveMediaUrls: string[] = uploadedImageUrl ? [uploadedImageUrl] : [];
+
     // ── Proceed to preview API ───────────────────────────────────────────────
 
     setPreviewLoading(true);
     try {
       const res = await questionApi.preview({
         questionText: questionText.trim(),
-        mediaType: 'none',
-        mediaUrls: [],
+        mediaType: effectiveMediaType,
+        mediaUrls: effectiveMediaUrls,
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -420,8 +501,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         season: res.data.season ?? '',
         cropType: res.data.cropType ?? '',
         questionText: questionText.trim(),
-        mediaType: 'none',
-        mediaUrls: [],
+        mediaType: effectiveMediaType,
+        mediaUrls: effectiveMediaUrls,
         agroClimaticZone: res.data.agroClimaticZone ?? 'other',
         suggestedDistricts: res.data.suggestedDistricts ?? [],
         suggestedBlocks: res.data.suggestedBlocks ?? [],
@@ -450,7 +531,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -537,6 +618,58 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 {t('question.textTooLong', { max: maxChars })}
               </Text>
             )}
+
+            {/* ── Image attachment ─────────────────────────────────────────── */}
+            <View style={styles.imageSection}>
+              <Text style={[styles.imageSectionLabel, { color: c.textSecondary }]}>
+                Attach an image (optional)
+              </Text>
+
+              {/* Uploaded / preview state */}
+              {uploadedImageUrl ? (
+                <View style={styles.imagePreviewWrap}>
+                  <Image source={{ uri: uploadedImageUrl }} style={styles.attachedImage} resizeMode="cover" />
+                  <ImgTouchableOpacity
+                    style={[styles.removeImageBtn, { backgroundColor: c.error }]}
+                    onPress={() => {
+                      setUploadedImageUrl(null);
+                      setSelectedImageUri(null);
+                      setCompressedImageUri(null);
+                      setImageError(null);
+                    }}
+                    accessibilityLabel="Remove image"
+                  >
+                    <Ionicons name="close" size={14} color="#fff" />
+                  </ImgTouchableOpacity>
+                </View>
+              ) : selectedImageUri ? (
+                // Waiting for compression / upload to finish
+                <View style={[styles.imagePreviewWrap, { opacity: 0.7 }]}>
+                  <Image source={{ uri: compressedImageUri ?? selectedImageUri }} style={styles.attachedImage} resizeMode="cover" />
+                  <ActivityIndicator size="small" color={c.primary} style={styles.imageUploadSpinner} />
+                  <Text style={[styles.imageUploadingText, { color: c.textSecondary }]}>
+                    {imageError ?? 'Uploading…'}
+                  </Text>
+                </View>
+              ) : (
+                // Idle — show attach button
+                <TouchableOpacity
+                  style={[styles.attachImageBtn, { borderColor: c.borderSubtle }]}
+                  onPress={handleSelectImage}
+                  disabled={imageUploading}
+                  accessibilityLabel="Attach image from gallery"
+                >
+                  <Ionicons name="image-outline" size={22} color={c.textSecondary} />
+                  <Text style={[styles.attachImageBtnText, { color: c.textSecondary }]}>
+                    Add image
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {imageError && !imageUploading && (
+                <Text style={[styles.imageErrorText, { color: c.error }]}>{imageError}</Text>
+              )}
+            </View>
 
             {/* On-device AI warning banner */}
             <AIValidationBanner
@@ -736,5 +869,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     textAlign: 'center',
+  },
+
+  // ── Image attachment ────────────────────────────────────────────────────────
+  imageSection: {
+    marginTop: tokens.spacing3,
+    paddingTop: tokens.spacing3,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.06)',
+  },
+  imageSectionLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: tokens.spacing2,
+  },
+  attachImageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    borderWidth: 1.5,
+    borderRadius: tokens.radiusMd,
+    borderStyle: 'dashed',
+    paddingVertical: tokens.spacing2,
+    paddingHorizontal: tokens.spacing3,
+  },
+  attachImageBtnText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  imagePreviewWrap: {
+    position: 'relative',
+    alignSelf: 'flex-start',
+  },
+  attachedImage: {
+    width: 100,
+    height: 100,
+    borderRadius: tokens.radiusMd,
+    backgroundColor: '#f0f0f0',
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  imageUploadSpinner: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -10,
+    marginLeft: -10,
+  },
+  imageUploadingText: {
+    fontSize: 11,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  imageErrorText: {
+    fontSize: 12,
+    marginTop: tokens.spacing1,
   },
 });

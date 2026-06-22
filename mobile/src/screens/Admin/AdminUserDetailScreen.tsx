@@ -196,7 +196,7 @@ export function AdminUserDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}><ActivityIndicator size="large" color={c.primary} /></View>
       </SafeAreaView>
     );
@@ -204,7 +204,7 @@ export function AdminUserDetailScreen() {
 
   if (!data || !user) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}><Text style={{ color: c.text }}>User not found</Text></View>
       </SafeAreaView>
     );
@@ -222,7 +222,7 @@ export function AdminUserDetailScreen() {
   const statusLabel = isBanned ? 'Permanently Banned' : isSuspended ? 'Suspended' : verificationStatus === 'pending' ? 'Pending Verification' : 'Verified';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header bar */}
       <View style={[styles.headerBar, { borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>

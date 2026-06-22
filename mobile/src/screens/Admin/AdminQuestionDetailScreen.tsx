@@ -63,7 +63,7 @@ export function AdminQuestionDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}><ActivityIndicator size="large" color={c.primary} /></View>
       </SafeAreaView>
     );
@@ -71,7 +71,7 @@ export function AdminQuestionDetailScreen() {
 
   if (!q) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}><Text style={{ color: c.text }}>Question not found</Text></View>
       </SafeAreaView>
     );
@@ -80,7 +80,7 @@ export function AdminQuestionDetailScreen() {
   const user = q.user as Record<string, unknown> | null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />

@@ -292,9 +292,9 @@ function MainNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          height: 72 + insets.bottom,
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
-          paddingTop: 10,
+          height: 60 + (insets.bottom > 0 ? insets.bottom : 0),
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 4,
+          paddingTop: 8,
           backgroundColor: c.surface,
           borderTopWidth: 1,
           borderTopColor: c.borderSubtle,

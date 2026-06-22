@@ -21,6 +21,7 @@ const CONFIG_META: Record<string, { label: string; suffix: string }> = {
   ai_confidence_threshold:        { label: 'AI Confidence Threshold',    suffix: '%' },
   duplicate_similarity_threshold: { label: 'Duplicate Similarity',       suffix: '' },
   max_question_chars:             { label: 'Max Question Characters',   suffix: '' },
+  max_image_size_mb:              { label: 'Max Image Size',             suffix: ' MB' },
 }
 
 const HIDDEN_CONFIG_KEYS = new Set(['video_max_duration_seconds', 'video_max_size_mb'])

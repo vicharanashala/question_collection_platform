@@ -41,4 +41,11 @@ export const questionConfig = registerAs('question', () => ({
   editWindowSec: parseInt(process.env.QUESTION_EDIT_WINDOW_SEC || '30', 10),
   videoMaxSizeMb: parseInt(process.env.QUESTION_VIDEO_MAX_SIZE_MB || '10', 10),
   videoMaxDurationSec: parseInt(process.env.QUESTION_VIDEO_MAX_DURATION_SEC || '10', 10),
+  maxImageSizeMb: parseInt(process.env.QUESTION_IMAGE_MAX_SIZE_MB || '5', 10),
+}));
+
+export const gcpStorageConfig = registerAs('gcpStorage', () => ({
+  projectId: process.env.GCP_PROJECT_ID || '',
+  bucketName: process.env.GCP_BUCKET_NAME || '',
+  keyFile: process.env.GCP_KEY_FILE || '',
 }));

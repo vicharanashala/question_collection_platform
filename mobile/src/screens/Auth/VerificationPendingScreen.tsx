@@ -54,7 +54,7 @@ export function VerificationPendingScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <View style={styles.headerRight}>
         <TouchableOpacity
           onPress={handleCheckVerification}

@@ -714,7 +714,7 @@ export function SubmissionsScreen() {
 
   if (loading && questions.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
           <Text style={[styles.centerText, { color: c.textSecondary }]}>{t('submissions.loading')}</Text>
         </View>
@@ -723,7 +723,7 @@ export function SubmissionsScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <FlatList
         data={questions}
         keyExtractor={(item) => item.id}
