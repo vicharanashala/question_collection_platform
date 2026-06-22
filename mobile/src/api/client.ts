@@ -4,15 +4,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
+//
+// EXPO_PUBLIC_ENV   — set in .env or via `npx expo env`. 'production' = production build.
+//                     Anything else (or unset) is treated as 'development'.
+// EXPO_PUBLIC_API_BASE_URL — baked into the bundle at build/start time.
+//
+// Development:
+//   Android Emulator → http://10.0.2.2:3000/api/v1  (special emulator alias → host)
+//   iOS Simulator    → http://localhost:3000/api/v1
+//   Physical device  → set EXPO_PUBLIC_API_BASE_URL in .env to your LAN IP / ngrok URL
+//
+// Production: EXPO_PUBLIC_API_BASE_URL from .env is used directly (no fallback).
+//
+const isProduction = process.env.EXPO_PUBLIC_ENV === 'production';
 
-// Default to localhost for iOS Simulator / Android Emulator on the same machine.
-// Set EXPO_PUBLIC_API_BASE_URL in .env (or via 'npx expo env') to your LAN IP
-// when testing on a physical device from a different machine on the network.
-// e.g. EXPO_PUBLIC_API_BASE_URL=http://192.168.1.5:3000/api/v1
-const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL
-  ?? (Platform.OS === 'ios' || Platform.OS === 'android'
-    ? 'http://localhost:3000/api/v1'
-    : 'http://localhost:3000/api/v1');
+const BASE_URL = isProduction
+  ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api/v1')
+  : (Platform.OS === 'android'
+      ? 'http://10.0.2.2:3000/api/v1'
+      : 'http://localhost:3000/api/v1');
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
