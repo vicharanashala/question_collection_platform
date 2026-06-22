@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal,  } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { userApi } from '../../api/client';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { SEASONS, CROP_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import type { CropDetail } from '../../types';
@@ -34,6 +35,7 @@ export function CropManagementScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<{ cropName: string; season: string }>(EMPTY_CROP);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CropDetail | null>(null);
 
   const fetchCrops = useCallback(async () => {
     try {
@@ -87,23 +89,21 @@ export function CropManagementScreen() {
   }
 
   async function handleDelete(crop: CropDetail) {
-    Alert.alert(t('crops.deleteConfirm'), '', [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const updated = crops.filter((c) => c.id !== crop.id);
-            await userApi.updateCrops(updated.map((c) => ({ cropName: c.cropName, season: c.season || undefined })));
-            setCrops(updated);
-            showToast(t('crops.deleteSuccess'), 'success');
-          } catch {
-            showToast(t('common.serverError'), 'error');
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(crop);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    try {
+      const updated = crops.filter((c) => c.id !== deleteTarget.id);
+      await userApi.updateCrops(updated.map((c) => ({ cropName: c.cropName, season: c.season || undefined })));
+      setCrops(updated);
+      showToast(t('crops.deleteSuccess'), 'success');
+    } catch {
+      showToast(t('common.serverError'), 'error');
+    } finally {
+      setDeleteTarget(null);
+    }
   }
 
   function seasonLabel(raw: string | null) {
@@ -216,7 +216,17 @@ export function CropManagementScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+        <ConfirmModal
+          visible={deleteTarget !== null}
+          title={t('crops.deleteConfirm')}
+          message={`${deleteTarget?.cropName ?? ''}`}
+          confirmLabel={t('common.delete')}
+          cancelLabel={t('common.cancel')}
+          variant="danger"
+          onConfirm={confirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      </SafeAreaView>
   );
 }
 

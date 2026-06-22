@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert,  } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
+import { ResultModal } from '../../components/ResultModal';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,7 @@ export function MyQuestionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [alertModal, setAlertModal] = useState<{ visible: boolean; variant: 'success' | 'error' | 'info'; title: string; message: string }>({ visible: false, variant: 'info', title: '', message: '' });
 
   const fetchQuestions = useCallback(async (pageNum = 1, isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -102,7 +104,7 @@ export function MyQuestionsScreen() {
       setPage(pageNum);
     } catch (err) {
       console.log('[MyQuestions] fetch error:', err);
-      Alert.alert(t('common.error'), t('myQuestions.loadError'));
+      setAlertModal({ visible: true, variant: 'error', title: t('common.error'), message: t('myQuestions.loadError') });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -124,7 +126,7 @@ export function MyQuestionsScreen() {
 
   function handleEdit(question: Question) {
     if (!isWithinEditWindow(question)) {
-      Alert.alert(t('myQuestions.editWindowClosedTitle') ?? t('common.error'), t('myQuestions.editWindowClosed'));
+      setAlertModal({ visible: true, variant: 'info', title: t('myQuestions.editWindowClosedTitle') ?? t('common.error'), message: t('myQuestions.editWindowClosed') });
       return;
     }
     // Navigate to AskQuestion tab with the questionId — QuestionScreen will open in edit mode
@@ -265,9 +267,16 @@ export function MyQuestionsScreen() {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
       />
-    </SafeAreaView>
-  );
-}
+        <ResultModal
+          visible={alertModal.visible}
+          variant={alertModal.variant}
+          title={alertModal.title}
+          message={alertModal.message}
+          onClose={() => setAlertModal((p) => ({ ...p, visible: false }))}
+        />
+      </SafeAreaView>
+    );
+  }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 

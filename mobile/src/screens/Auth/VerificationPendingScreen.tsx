@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { useTheme } from '../../hooks/useTheme';
 import { tokens } from '../../utils/theme';
 import { Button } from '../../components/Button';
@@ -14,7 +15,8 @@ export function VerificationPendingScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { t } = useTranslation();
-  const { refreshProfile, user } = useAuth();
+  const { refreshProfile, user, logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   async function handleCheckVerification() {
     await refreshProfile();
@@ -23,14 +25,13 @@ export function VerificationPendingScreen() {
     }
   }
 
-  function handleLogout() {
-    const { clearAuth } = require('../../api/client');
-    clearAuth().then(() => {
-      require('@react-navigation/native').CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Auth' }],
-      });
-    });
+  async function handleLogout() {
+    setShowLogoutConfirm(false);
+    await logout();
+  }
+
+  function handleLogoutPress() {
+    setShowLogoutConfirm(true);
   }
 
   function handleContactAdmin() {
@@ -99,7 +100,7 @@ export function VerificationPendingScreen() {
             variant="secondary"
           />
 
-          <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>
+          <TouchableOpacity style={styles.logoutRow} onPress={handleLogoutPress}>
             <Ionicons name="log-out-outline" size={16} color={c.textTertiary} />
             <Text style={[styles.logoutText, { color: c.textTertiary }]}>
               {t('verificationPending.logout')}
@@ -107,7 +108,17 @@ export function VerificationPendingScreen() {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    <ConfirmModal
+      visible={showLogoutConfirm}
+      title={t('profile.signOut')}
+      message={t('profile.signOutConfirm')}
+      confirmLabel={t('profile.signOutAction')}
+      cancelLabel={t('profile.signOutCancel')}
+      variant="default"
+      onConfirm={handleLogout}
+      onClose={() => setShowLogoutConfirm(false)}
+    />
+  </SafeAreaView>
   );
 }
 

@@ -7,12 +7,13 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useToast } from '../components/Toast';
+import { ResultModal } from './ResultModal';
+import { TextInputModal } from './TextInputModal';
 import { adminApi, auditApi, getErrorMessage } from '../api/client';
 import { tokens } from '../utils/theme';
 
@@ -106,6 +107,8 @@ export function WithdrawalDetailModal({
   }>>([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditPage, setAuditPage] = useState(1);
+  const [errorModal, setErrorModal] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
+  const [textInputModal, setTextInputModal] = useState<{ loading: boolean } | null>(null);
   const AUDIT_PAGE_SIZE = 10;
 
   useEffect(() => {
@@ -189,7 +192,7 @@ export function WithdrawalDetailModal({
       const res = await adminApi.retryWithdrawal(item.id);
       const data = res.data as { success: boolean; paymentFailed?: boolean; errorCode?: string; errorMessage?: string };
       if (data.paymentFailed) {
-        Alert.alert('Payment Failed', data.errorMessage ?? data.errorCode ?? 'Unknown error');
+        setErrorModal({ visible: true, message: data.errorMessage ?? data.errorCode ?? 'Unknown error' });
       } else {
         showToast('Payment retried successfully', 'success');
         onStatusChange?.(item.id, 'completed');
@@ -459,21 +462,7 @@ export function WithdrawalDetailModal({
 
                     <TouchableOpacity
                       style={[styles.actionBtn, styles.actionBtnReject, { ...tokens.shadowSm }]}
-                      onPress={() => {
-                        Alert.prompt(
-                          'Reject Withdrawal',
-                          'Enter a reason for the user (optional)',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Reject',
-                              style: 'destructive',
-                              onPress: (reason?: string) => doAction('reject', reason),
-                            },
-                          ],
-                          'plain-text',
-                        );
-                      }}
+                      onPress={() => setTextInputModal({ loading: false })}
                       disabled={processing}
                       activeOpacity={0.8}
                     >
@@ -639,6 +628,27 @@ export function WithdrawalDetailModal({
           </ScrollView>
         </View>
       </View>
+
+      <ResultModal
+        visible={errorModal.visible}
+        variant="error"
+        title="Payment Failed"
+        message={errorModal.message}
+        onClose={() => setErrorModal((p) => ({ ...p, visible: false }))}
+      />
+
+      <TextInputModal
+        visible={textInputModal !== null}
+        title="Reject Withdrawal"
+        message="Enter a reason for the user (optional):"
+        placeholder="Reason…"
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={textInputModal?.loading ?? false}
+        onSubmit={(reason) => { setTextInputModal(null); doAction('reject', reason || undefined); }}
+        onClose={() => setTextInputModal(null)}
+      />
     </Modal>
   );
 }

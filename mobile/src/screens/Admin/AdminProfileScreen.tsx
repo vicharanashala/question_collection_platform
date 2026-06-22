@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ConfirmModal } from '../../components/ConfirmModal';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ export function AdminProfileScreen() {
   const { language } = useLanguage();
 
   const [langModalVisible, setLangModalVisible] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const infoRows: Array<{ label: string; value: string; icon: string }> = [
     { label: 'Name',    value: user?.name ?? '—',          icon: 'person' },
@@ -29,7 +31,12 @@ export function AdminProfileScreen() {
     { label: 'State',   value: user?.state ?? '—',         icon: 'location' },
   ];
 
+  function handleLogoutPress() {
+    setShowLogoutConfirm(true);
+  }
+
   async function handleLogout() {
+    setShowLogoutConfirm(false);
     await logout();
   }
 
@@ -143,7 +150,7 @@ export function AdminProfileScreen() {
         {/* ── Sign out ──────────────────────────────────────── */}
         <TouchableOpacity
           style={[styles.logoutBtn, { backgroundColor: c.error + '18' }]}
-          onPress={handleLogout}
+          onPress={handleLogoutPress}
         >
           <Ionicons name="log-out-outline" size={18} color={c.error} />
           <Text style={[styles.logoutText, { color: c.error }]}>{t('profile.signOut')}</Text>
@@ -154,7 +161,17 @@ export function AdminProfileScreen() {
         visible={langModalVisible}
         onClose={() => setLangModalVisible(false)}
       />
-    </SafeAreaView>
+    <ConfirmModal
+      visible={showLogoutConfirm}
+      title={t('profile.signOut')}
+      message={t('profile.signOutConfirm')}
+      confirmLabel={t('profile.signOutAction')}
+      cancelLabel={t('profile.signOutCancel')}
+      variant="default"
+      onConfirm={handleLogout}
+      onClose={() => setShowLogoutConfirm(false)}
+    />
+  </SafeAreaView>
   );
 }
 

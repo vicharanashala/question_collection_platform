@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert,  } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
+import { TextInputModal } from '../../components/TextInputModal';
 import { tokens } from '../../utils/theme';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { WalletDetailModal } from '../../components/WalletDetailModal';
@@ -132,6 +133,11 @@ export function AdminWithdrawalsScreen() {
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
   const [walletModal, setWalletModal] = useState<{ userId: string; userName: string } | null>(null);
+  const [textInputModal, setTextInputModal] = useState<{
+    action: 'reject' | 'markFailed';
+    id: string;
+    loading: boolean;
+  } | null>(null);
   const [resultModal, setResultModal] = useState<{
     visible: boolean;
     variant: 'success' | 'error' | 'info';
@@ -189,12 +195,7 @@ export function AdminWithdrawalsScreen() {
 
   function handleAction(id: string, action: 'approve' | 'reject') {
     if (action === 'reject') {
-      Alert.prompt(
-        'Reject Withdrawal',
-        'Enter rejection reason (optional):',
-        async (reason) => { await doAction(id, action, reason ?? undefined); },
-        'plain-text',
-      );
+      setTextInputModal({ action: 'reject', id, loading: false });
       return;
     }
     doAction(id, action, undefined);
@@ -266,24 +267,29 @@ export function AdminWithdrawalsScreen() {
     }
   }
 
-  async function handleMarkFailed(id: string) {
-    Alert.prompt(
-      'Mark as Failed',
-      'Enter reason (optional):',
-      async (reason) => {
+  function handleMarkFailed(id: string) {
+    setTextInputModal({ action: 'markFailed', id, loading: false });
+  }
+
+  async function submitTextInput(reason: string) {
+    if (!textInputModal) return;
+    const { action, id } = textInputModal;
+    setTextInputModal((p) => p ? { ...p, loading: true } : null);
+    try {
+      if (action === 'reject') {
+        await doAction(id, 'reject', reason || undefined);
+      } else {
         setProcessingId(id);
-        try {
-          await adminApi.markWithdrawalFailed(id, reason ? { reason } : undefined);
-          showToast('Marked as failed', 'success');
-          await fetch(1, true, activeFilters);
-        } catch (e) {
-          showToast(getErrorMessage(e, 'Failed to mark as failed'), 'error');
-        } finally {
-          setProcessingId(null);
-        }
-      },
-      'plain-text',
-    );
+        await adminApi.markWithdrawalFailed(id, reason ? { reason } : undefined);
+        showToast('Marked as failed', 'success');
+        await fetch(1, true, activeFilters);
+        setProcessingId(null);
+      }
+      setTextInputModal(null);
+    } catch (e) {
+      showToast(getErrorMessage(e, 'Operation failed'), 'error');
+      setTextInputModal((p) => p ? { ...p, loading: false } : null);
+    }
   }
 
   function activeFilterCount(): number {
@@ -528,6 +534,21 @@ export function AdminWithdrawalsScreen() {
         isSuperAdmin={isSuperAdmin}
         onStatusChange={handleWdStatusChange}
       />
+
+      {textInputModal && (
+        <TextInputModal
+          visible
+          title={textInputModal.action === 'reject' ? 'Reject Withdrawal' : 'Mark as Failed'}
+          message="Enter a reason (optional):"
+          placeholder="Reason…"
+          confirmLabel={textInputModal.action === 'reject' ? 'Reject' : 'Mark Failed'}
+          cancelLabel="Cancel"
+          variant={textInputModal.action === 'reject' ? 'danger' : 'default'}
+          loading={textInputModal.loading}
+          onSubmit={submitTextInput}
+          onClose={() => setTextInputModal(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

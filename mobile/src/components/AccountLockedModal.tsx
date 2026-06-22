@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAccountLocked } from '../context/AccountLockedContext';
 import { useAuth } from '../hooks/useAuth';
+import { ConfirmModal } from './ConfirmModal';
 import { tokens } from '../utils/theme';
 
 export function AccountLockedModal() {
@@ -12,6 +13,7 @@ export function AccountLockedModal() {
   const c = theme.colors;
   const { lockedInfo, clearLocked } = useAccountLocked();
   const { logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isBan = lockedInfo?.status === 'banned';
   const accentColor = isBan ? c.error : c.warning;
@@ -25,13 +27,16 @@ export function AccountLockedModal() {
     } catch { return null; }
   };
 
-  const handleLogout = async () => {
+  const handleLogoutPress = () => setShowLogoutConfirm(true);
+
+  async function handleLogout() {
+    setShowLogoutConfirm(false);
     clearLocked();
     await logout();
-  };
+  }
 
   return (
-    <Modal visible={!!lockedInfo} animationType="fade" onRequestClose={handleLogout}>
+    <Modal visible={!!lockedInfo} animationType="fade" onRequestClose={() => clearLocked()}>
 
       {/* Backdrop */}
       <View style={[styles.backdrop, { backgroundColor: isBan ? '#1a0000' : '#1a1200' }]} />
@@ -83,13 +88,24 @@ export function AccountLockedModal() {
           {/* Logout button */}
           <TouchableOpacity
             style={[styles.logoutBtn, { backgroundColor: accentColor }]}
-            onPress={handleLogout}
+            onPress={handleLogoutPress}
             activeOpacity={0.8}
           >
             <Text style={styles.logoutBtnText}>Log Out</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+
+      <ConfirmModal
+        visible={showLogoutConfirm}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        variant="default"
+        onConfirm={handleLogout}
+        onClose={() => setShowLogoutConfirm(false)}
+      />
     </Modal>
   );
 }

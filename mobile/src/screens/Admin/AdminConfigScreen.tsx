@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Alert,  } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
+import { TextInputModal } from '../../components/TextInputModal';
 import { tokens } from '../../utils/theme';
 
 interface ConfigItem {
@@ -39,6 +40,9 @@ export function AdminConfigScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
+  const [inputModal, setInputModal] = useState<{
+    key: string; label: string; value: string; loading: boolean;
+  } | null>(null);
 
   const fetch = useCallback(async () => {
     try {
@@ -59,33 +63,29 @@ export function AdminConfigScreen() {
     await fetch();
   }
 
-  async function handleUpdate(key: string, currentValue: number) {
-    Alert.prompt(
-      'Update Config',
-      `Enter new value for ${CONFIG_META[key]?.label ?? key}:`,
-      async (raw) => {
-        const val = parseFloat(raw ?? '');
-        if (isNaN(val) || val < 0) {
-          showToast('Invalid value', 'warning');
-          return;
-        }
-        setSaving(key);
-        try {
-          await adminApi.updateConfig({ key, value: val });
-          setConfigs((prev) =>
-            prev.map((c) => (c.key === key ? { ...c, value: val } : c)),
-          );
-          showToast('Config updated', 'success');
-        } catch (e) {
-          showToast(getErrorMessage(e, 'Update failed'), 'error');
-        } finally {
-          setSaving(null);
-        }
-      },
-      'plain-text',
-      String(currentValue),
-      'numeric',
-    );
+  function handleUpdate(key: string, currentValue: number) {
+    setInputModal({ key, label: CONFIG_META[key]?.label ?? key, value: String(currentValue), loading: false });
+  }
+
+  async function submitUpdate(raw: string) {
+    if (!inputModal) return;
+    const val = parseFloat(raw ?? '');
+    if (isNaN(val) || val < 0) {
+      showToast('Invalid value', 'warning');
+      return;
+    }
+    setInputModal((p) => p ? { ...p, loading: true } : null);
+    try {
+      await adminApi.updateConfig({ key: inputModal.key, value: val });
+      setConfigs((prev) =>
+        prev.map((c) => (c.key === inputModal.key ? { ...c, value: val } : c)),
+      );
+      showToast('Config updated', 'success');
+      setInputModal(null);
+    } catch (e) {
+      showToast(getErrorMessage(e, 'Update failed'), 'error');
+      setInputModal((p) => p ? { ...p, loading: false } : null);
+    }
   }
 
   if (loading) {
@@ -150,6 +150,21 @@ export function AdminConfigScreen() {
           );
         })}
       </ScrollView>
+
+      {inputModal && (
+        <TextInputModal
+          visible
+          title="Update Config"
+          message={`Enter new value for ${inputModal.label}:`}
+          placeholder="Enter value…"
+          initialValue={inputModal.value}
+          confirmLabel="Update"
+          cancelLabel="Cancel"
+          loading={inputModal.loading}
+          onSubmit={submitUpdate}
+          onClose={() => setInputModal(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
