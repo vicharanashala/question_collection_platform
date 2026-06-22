@@ -392,7 +392,7 @@ function FilterModal({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent presentationStyle="pageSheet">
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <View style={[fmStyles.overlay]}>
         <View style={[fmStyles.sheet, { backgroundColor: c.background }]}>
           <View style={fmStyles.sheetHeader}>
@@ -896,7 +896,7 @@ export function AdminAuditLogsScreen() {
             {/* Top performers */}
             {topActors.length > 0 && (
               <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-                <SectionHeader title="Admin Leaderboard" icon="trophy" themeColors={c} />
+                <SectionHeader title="Moderation Leaderboard" icon="trophy" themeColors={c} />
                 <View style={[styles.leaderboard, { backgroundColor: c.card, borderColor: c.border }]}>
                   {topActors.map((actor) => (
                     <ActorRow key={actor.actorId} actor={actor} themeColors={c} />

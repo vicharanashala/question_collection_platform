@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
+import { UserRole } from '../../types';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
@@ -300,7 +301,7 @@ export function AdminQuestionsScreen() {
 
   // Admins skip the pending queue and go straight to processed questions
   useEffect(() => {
-    if (user?.role === 'admin') {
+    if (user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN) {
       nav.replace('AdminProcessedQuestions');
     }
   }, [user?.role, nav]);

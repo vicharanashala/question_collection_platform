@@ -479,7 +479,7 @@ export function AdminDashboardScreen() {
       setRewards(r.data);
       try {
         const [qs1, qs2] = await Promise.all([
-          adminApi.getReviewQueue({ queueType: 'pending', page: 1, limit: 5 }),
+          adminApi.getReviewQueue({ queueType: 'ai_review', page: 1, limit: 5 }),
           adminApi.getReviewQueue({ queueType: 'human_review', page: 1, limit: 3 }),
         ]);
         setQueue([
