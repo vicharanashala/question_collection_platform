@@ -1,13 +1,6 @@
 import React, { useCallback } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  SafeAreaView,
-} from 'react-native';
+import { Modal, View, Text, TouchableOpacity, FlatList, StyleSheet,  } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, RTL_LANGUAGES, SupportedLanguageCode } from '../i18n';
 import { useLanguage } from '../hooks/useLanguage';

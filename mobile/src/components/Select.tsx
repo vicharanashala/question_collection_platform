@@ -1,13 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, ActivityIndicator } from 'react-native';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  SafeAreaView,
-} from 'react-native';
+import { TextInput, StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from '../utils/theme';
 import { useTheme } from '../hooks/useTheme';
 

@@ -1,18 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Modal,
-  ActivityIndicator,
-  Animated,
-  TextInput,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Modal, ActivityIndicator, Animated, TextInput,  } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../components/Button';
 import { Ionicons } from '@expo/vector-icons';
