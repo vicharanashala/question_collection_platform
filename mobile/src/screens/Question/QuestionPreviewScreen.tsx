@@ -8,7 +8,7 @@ import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
-import { questionApi, lgdApi } from '../../api/client';
+import { questionApi, lgdApi, storageApi, getMediaUrl } from '../../api/client';
 import { cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
@@ -118,6 +118,17 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
     setLoading(true);
     try {
+      // Upload image only when user confirms submission
+      let mediaType: 'none' | 'image' = 'none';
+      let mediaUrls: string[] = [];
+
+      if (preview.pendingImageUri) {
+        const filename = `question-img-${Date.now()}.jpg`;
+        const { url } = await storageApi.uploadImage(preview.pendingImageUri, filename);
+        mediaType = 'image';
+        mediaUrls = [url];
+      }
+
       const payload = {
         state: selectedState,
         district: selectedDistrict.trim(),
@@ -127,8 +138,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         cropType,
         questionText: questionText.trim(),
         agroClimaticZone: preview.agroClimaticZone,
-        mediaType: preview.mediaType,
-        mediaUrls: preview.mediaUrls ?? [],
+        mediaType,
+        mediaUrls,
       };
 
       const { data } = await questionApi.submit(payload);
@@ -357,18 +368,29 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             />
 
             {/* Media preview */}
-            {preview.mediaUrls && preview.mediaUrls.length > 0 && (
+            {preview.pendingImageUri ? (
               <View style={styles.mediaPreviewWrap}>
                 <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>
                   {t('question.attachMedia')}
                 </Text>
                 <Image
-                  source={{ uri: preview.mediaUrls[0] }}
+                  source={{ uri: preview.pendingImageUri }}
                   style={styles.previewImage}
                   resizeMode="cover"
                 />
               </View>
-            )}
+            ) : preview.mediaUrls && preview.mediaUrls.length > 0 ? (
+              <View style={styles.mediaPreviewWrap}>
+                <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>
+                  {t('question.attachMedia')}
+                </Text>
+                <Image
+                  source={{ uri: getMediaUrl(preview.mediaUrls[0]) }}
+                  style={styles.previewImage}
+                  resizeMode="cover"
+                />
+              </View>
+            ) : null}
 
             {/* Audio indicator */}
             {preview.mediaType === 'audio' && (

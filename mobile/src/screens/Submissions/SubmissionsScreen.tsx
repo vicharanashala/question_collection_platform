@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Modal, ScrollView, Pressable,  } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Modal, ScrollView, Pressable, Image,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,7 +9,7 @@ import { useToast } from '../../components/Toast';
 import { Trnscber } from '../../components/Trnscber';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
-import { questionApi } from '../../api/client';
+import { questionApi, getMediaUrl } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
 import { SEASONS, DOMAIN_OPTIONS, DOMAINS, INDIAN_STATES } from '../../utils/constants';
@@ -30,6 +30,7 @@ interface Question {
   block?: string | null;
   status: 'pending' | 'approved' | 'rejected';
   mediaType: 'none' | 'image' | 'video' | 'audio';
+  mediaUrls: string[] | null;
   submittedAt: string;
   editWindowClosesAt: string | null;
   rejectionReason?: string;
@@ -362,6 +363,22 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
                 </>
               )}
             </View>
+
+            {/* Image — shown when mediaType is 'image' */}
+            {question.mediaType === 'image' && question.mediaUrls && question.mediaUrls.length > 0 && (
+              <View style={styles.viewImageWrap}>
+                <Image
+                  source={{ uri: getMediaUrl(question.mediaUrls[0]) }}
+                  style={styles.viewImage}
+                  resizeMode="cover"
+                />
+                {question.mediaUrls.length > 1 && (
+                  <Text style={[styles.viewImageMore, { color: c.textSecondary }]}>
+                    +{question.mediaUrls.length - 1} more
+                  </Text>
+                )}
+              </View>
+            )}
 
             {/* Rejection reason */}
             {question.status === 'rejected' && question.rejectionReason && (
@@ -925,6 +942,9 @@ const styles = StyleSheet.create({
   viewModalBadges: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing4 },
   mediaBadge: { borderRadius: tokens.radiusFull, paddingHorizontal: tokens.spacing3, paddingVertical: 3 },
   mediaBadgeText: { fontSize: 12, fontWeight: '500' },
+  viewImageWrap: { marginTop: 16, borderRadius: tokens.radiusLg, overflow: 'hidden' },
+  viewImage: { width: '100%', height: 220, borderRadius: tokens.radiusLg },
+  viewImageMore: { marginTop: 6, fontSize: 13, textAlign: 'center' },
   viewQuestionText: { fontSize: 16, lineHeight: 24, fontWeight: '500', marginBottom: tokens.spacing5 },
   detailsCard: {
     borderWidth: 1, borderRadius: tokens.radiusLg, padding: tokens.spacing4,

@@ -322,7 +322,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   // ── Image attachment state ────────────────────────────────────────────────
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [compressedImageUri, setCompressedImageUri] = useState<string | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
@@ -389,27 +388,18 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     }
 
     setSelectedImageUri(uri);
-    setCompressedImageUri(null);
-    setUploadedImageUrl(null);
-    setImageUploading(true);
 
-    try {
-      // Compress if needed
-      let toUploadUri = uri;
-      if (sizeMb > maxImageSizeMb) {
-        toUploadUri = await compressImage(uri);
-        setCompressedImageUri(toUploadUri);
+    // Compress in background; store the compressed URI so handlePreview can upload it
+    if (sizeMb > maxImageSizeMb) {
+      try {
+        const compressed = await compressImage(uri);
+        setCompressedImageUri(compressed);
+      } catch {
+        // Compression failed — fall back to original
+        setCompressedImageUri(null);
       }
-
-      // Upload
-      const filename = `question-img-${Date.now()}.jpg`;
-      const { url } = await storageApi.uploadImage(toUploadUri, filename);
-      setUploadedImageUrl(url);
-    } catch (err: unknown) {
-      const { getErrorMessage } = await import('../../api/client');
-      setImageError(getErrorMessage(err, 'Upload failed. Please try again.'));
-    } finally {
-      setImageUploading(false);
+    } else {
+      setCompressedImageUri(null);
     }
   }
 
@@ -472,24 +462,14 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       return;
     }
 
-    // ── Image gate: block if user selected an image but upload is still in progress ──
-    if (selectedImageUri && !uploadedImageUrl) {
-      showToast('Please wait for the image to finish uploading before continuing', 'warning');
-      return;
-    }
-
-    // ── Resolve media type ────────────────────────────────────────────────────
-    const effectiveMediaType: 'none' | 'image' = uploadedImageUrl ? 'image' : 'none';
-    const effectiveMediaUrls: string[] = uploadedImageUrl ? [uploadedImageUrl] : [];
-
-    // ── Proceed to preview API ───────────────────────────────────────────────
+    // ── Image upload: defer to preview screen (only on final confirm) ──────────
 
     setPreviewLoading(true);
     try {
       const res = await questionApi.preview({
         questionText: questionText.trim(),
-        mediaType: effectiveMediaType,
-        mediaUrls: effectiveMediaUrls,
+        mediaType: 'none',
+        mediaUrls: [],
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -501,8 +481,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         season: res.data.season ?? '',
         cropType: res.data.cropType ?? '',
         questionText: questionText.trim(),
-        mediaType: effectiveMediaType,
-        mediaUrls: effectiveMediaUrls,
+        mediaType: 'none',
+        mediaUrls: [],
+        pendingImageUri: selectedImageUri,
+        pendingImageCompressed: compressedImageUri !== null,
         agroClimaticZone: res.data.agroClimaticZone ?? 'other',
         suggestedDistricts: res.data.suggestedDistricts ?? [],
         suggestedBlocks: res.data.suggestedBlocks ?? [],
@@ -626,13 +608,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               </Text>
 
               {/* Uploaded / preview state */}
-              {uploadedImageUrl ? (
+              {selectedImageUri ? (
                 <View style={styles.imagePreviewWrap}>
-                  <Image source={{ uri: uploadedImageUrl }} style={styles.attachedImage} resizeMode="cover" />
+                  <Image source={{ uri: compressedImageUri ?? selectedImageUri }} style={styles.attachedImage} resizeMode="cover" />
                   <ImgTouchableOpacity
                     style={[styles.removeImageBtn, { backgroundColor: c.error }]}
                     onPress={() => {
-                      setUploadedImageUrl(null);
                       setSelectedImageUri(null);
                       setCompressedImageUri(null);
                       setImageError(null);
@@ -642,21 +623,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                     <Ionicons name="close" size={14} color="#fff" />
                   </ImgTouchableOpacity>
                 </View>
-              ) : selectedImageUri ? (
-                // Waiting for compression / upload to finish
-                <View style={[styles.imagePreviewWrap, { opacity: 0.7 }]}>
-                  <Image source={{ uri: compressedImageUri ?? selectedImageUri }} style={styles.attachedImage} resizeMode="cover" />
-                  <ActivityIndicator size="small" color={c.primary} style={styles.imageUploadSpinner} />
-                  <Text style={[styles.imageUploadingText, { color: c.textSecondary }]}>
-                    {imageError ?? 'Uploading…'}
-                  </Text>
-                </View>
               ) : (
                 // Idle — show attach button
                 <TouchableOpacity
                   style={[styles.attachImageBtn, { borderColor: c.borderSubtle }]}
                   onPress={handleSelectImage}
-                  disabled={imageUploading}
                   accessibilityLabel="Attach image from gallery"
                 >
                   <Ionicons name="image-outline" size={22} color={c.textSecondary} />
@@ -666,7 +637,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 </TouchableOpacity>
               )}
 
-              {imageError && !imageUploading && (
+              {imageError && (
                 <Text style={[styles.imageErrorText, { color: c.error }]}>{imageError}</Text>
               )}
             </View>

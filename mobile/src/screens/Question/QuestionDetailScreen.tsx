@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../components/Toast';
 import { TranslatableTextReadOnly } from '../../components/TranslatableTextReadOnly';
-import { questionApi, getErrorMessage } from '../../api/client';
+import { questionApi, getErrorMessage, getMediaUrl } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { RootStackParamList } from '../../navigation/types';
 import { Question } from '../../types';
@@ -150,7 +150,7 @@ export function QuestionDetailScreen() {
         {hasMedia && isImage && (
           <View style={styles.mediaWrap}>
             <Image
-              source={{ uri: q.mediaUrls![0] }}
+              source={{ uri: getMediaUrl(q.mediaUrls![0]) }}
               style={styles.mediaImage}
               resizeMode="cover"
             />

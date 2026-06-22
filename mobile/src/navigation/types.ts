@@ -66,6 +66,10 @@ export type RootStackParamList = {
     questionText: string;
     mediaType: 'none' | 'image' | 'video' | 'audio';
     mediaUrls: string[];
+    /** Raw local image URI to upload only after user confirms submission */
+    pendingImageUri: string | null;
+    /** Whether pendingImageUri is already compressed */
+    pendingImageCompressed: boolean;
     agroClimaticZone: string;
     suggestedDistricts: string[];
     suggestedBlocks: string[];

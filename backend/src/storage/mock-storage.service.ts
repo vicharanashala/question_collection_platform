@@ -47,9 +47,9 @@ export class MockStorageService implements StorageService, OnModuleInit {
     writeFileSync(diskPath, buffer);
 
     this.logger.debug(`[Mock] Stored ${key} (${buffer.byteLength} bytes)`);
-    // In dev the NestJS app listens on PORT (default 3000).
-    // ServeStaticModule serves /static/{path} → mapped to the upload dir.
-    return `http://localhost:3000/static/${key}`;
+    // Return a relative path — the mobile app resolves this to the correct base URL
+    // at render time based on the current environment (simulator, LAN, production).
+    return `/static/${key}`;
   }
 
   async delete(path: string): Promise<void> {

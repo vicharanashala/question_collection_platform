@@ -28,6 +28,29 @@ const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'user';
 
+/**
+ * Resolve a relative media URL (e.g. '/static/questions/images/foo.jpg') to a
+ * full URL based on the current BASE_URL.
+ *
+ * Handles the API prefix (e.g. /api/v1) that is present in BASE_URL but must
+ * not appear in media URLs.
+ */
+export function getMediaUrl(relativePath: string | null | undefined): string {
+  if (!relativePath) return '';
+  if (
+    relativePath.startsWith('http://') ||
+    relativePath.startsWith('https://') ||
+    relativePath.startsWith('file://') ||
+    relativePath.startsWith('ph://') ||
+    relativePath.startsWith('content://')
+  ) {
+    return relativePath; // already absolute (e.g. GCP bucket URL, or local file URI)
+  }
+  // Strip /api/v1 (or any /api/{version}) suffix from BASE_URL, then append the path
+  const base = BASE_URL.replace(/\/api\/v\d+\/.*$/, '');
+  return `${base}${relativePath}`;
+}
+
 // ─── Axios Instance ───────────────────────────────────────────────────────────
 
 const api = axios.create({
