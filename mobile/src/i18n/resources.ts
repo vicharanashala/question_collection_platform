@@ -20,6 +20,19 @@ const resources = {
         "reviewNotes": "Review Notes",
         "search": "Search..."
       },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
+      },
       "agreeToConsent": "I have read and agree to the Terms of Service and Privacy Policy",
       "agreeToTerms": "By continuing, you agree to our",
       "and": "and",
@@ -227,7 +240,12 @@ const resources = {
           "transcribeError": "Transcription failed. Please try again.",
           "transcribing": "Transcribing…",
           "recording": "Recording — tap to stop",
-          "record": "Tap to record"
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
         },
         "textPlaceholder": "Write your agriculture-related question...",
         "addMedia": "Add Media",
@@ -246,7 +264,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "Your recording"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -801,7 +820,19 @@ const resources = {
         "text": "টেক্সট",
         "image": "ফটো",
         "video": "ভিডিঅ'",
-        "audio": "অডিঅ'",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "বাজো",
+          "tapToPlay": "সিনিবাৰ বাবে টেপ কৰক",
+          "delete": "মচক",
+          "stop": "ৰুবুংধা",
+          "playing": "বাজি থাকিছে…"
+        },
         "textPlaceholder": "আপোনাৰ কৃষি সংক্ৰান্ত প্ৰশ্ন লিখক...",
         "addMedia": "মিডিয়া যোগ কৰক",
         "addPhoto": "ফটো যোগ কৰক",
@@ -818,7 +849,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "আপোনাৰ ৰেকর্ডিং"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -1174,6 +1206,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "মাইক্রোফোনৰ অনুমতি প্রয়োজন",
+        "startError": "ৰেকর্ডিং আৰম্ভ কৰিব নোৱাৰিলো",
+        "transcribeError": "ট্রান্সক্রিপশন ব্যর্থ হৈছে। অনুগ্রহ কৰি পুনৰ চেষ্টা কৰক।",
+        "transcribing": "ট্রান্সক্রাইব হৈ আছে…",
+        "recording": "ৰেকর্ডিং — ৰুবুংধা",
+        "record": "ৰেকর্ড কৰিবলৈ টেপ কৰক",
+        "play": "বাজো",
+        "tapToPlay": "সিনিবাৰ বাবে টেপ কৰক",
+        "delete": "মচক",
+        "stop": "ৰুবুংধা",
+        "playing": "বাজি থাকিছে…"
       }
     }
   },
@@ -1366,7 +1411,19 @@ const resources = {
         "text": "টেক্সট",
         "image": "ফটো",
         "video": "ভিডিও",
-        "audio": "অডিও",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "শোনা",
+          "tapToPlay": "শুনতে ট্যাপ করুন",
+          "delete": "মুছে ফেলুন",
+          "stop": "থামান",
+          "playing": "চলছে…"
+        },
         "textPlaceholder": "আপনার কৃষি সংক্রান্ত প্রশ্ন লিখুন...",
         "addMedia": "মিডিয়া যোগ করুন",
         "addPhoto": "ফটো যোগ করুন",
@@ -1383,7 +1440,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "আপনার রেকর্ডিং"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -1739,6 +1797,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "মাইক্রোফোনের অনুমতি প্রয়োজন",
+        "startError": "রেকর্ডিং শুরু করতে ব্যর্থ",
+        "transcribeError": "ট্রান্সক্রিপশন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+        "transcribing": "ট্রান্সক্রাইব হচ্ছে…",
+        "recording": "রেকর্ডিং — থামাতে ট্যাপ করুন",
+        "record": "রেকর্ড করতে ট্যাপ করুন",
+        "play": "শোনা",
+        "tapToPlay": "শুনতে ট্যাপ করুন",
+        "delete": "মুছে ফেলুন",
+        "stop": "থামান",
+        "playing": "চলছে…"
       }
     }
   },
@@ -1931,7 +2002,19 @@ const resources = {
         "text": "टेक्स्ट",
         "image": "फोटो",
         "video": "भिडियो",
-        "audio": "अडियो",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "बर खेती सवाल लिखो...",
         "addMedia": "मिडिया जोड़ो",
         "addPhoto": "फोटो जोड़ो",
@@ -1948,7 +2031,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "गिटथान"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -2304,6 +2388,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -2496,7 +2593,19 @@ const resources = {
         "text": "ٹیکسٹ",
         "image": "فوٹو",
         "video": "ویڈیو",
-        "audio": "آڈیو",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "اپنا کھیتی متعلق پوچھو لکھو...",
         "addMedia": "میڈیا شامل کرو",
         "addPhoto": "فوٹو شامل کرو",
@@ -2513,7 +2622,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "ਤੁਹਾਡੀ ਰਿਕਾਰਡਿੰਗ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -2869,6 +2979,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -3061,7 +3184,19 @@ const resources = {
         "text": "ટેક્સ્ટ",
         "image": "ફોટો",
         "video": "વિડિયો",
-        "audio": "ઑડિયો",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "ચાલો",
+          "tapToPlay": "સાંભળવા માટે ટૅપ કરો",
+          "delete": "દૂર કરો",
+          "stop": "અટકાવો",
+          "playing": "ચાલી રહ્યું છે…"
+        },
         "textPlaceholder": "તમારો ખેતી સંબંધિત પ્રશ્ન લખો...",
         "addMedia": "મીડિયા ઉમેરો",
         "addPhoto": "ફોટો ઉમેરો",
@@ -3078,7 +3213,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "તમારી રેકોર્ડિંગ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -3434,6 +3570,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "માઇક્રોફોનની પરવાનગી જરૂરી છે",
+        "startError": "રેકોર્ડિંગ શરૂ કરવામાં નિષ્ફળ",
+        "transcribeError": "ટ્રાન્સ્ક્રિપ્શન નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "transcribing": "ટ્રાન્સ્ક્રાઇબ થઈ રહ્યું છે…",
+        "recording": "રેકોર્ડિંગ — રોકવા માટે ટૅપ કરો",
+        "record": "રેકોર્ડ કરવા માટે ટૅપ કરો",
+        "play": "ચાલો",
+        "tapToPlay": "સાંભળવા માટે ટૅપ કરો",
+        "delete": "દૂર કરો",
+        "stop": "અટકાવો",
+        "playing": "ચાલી રહ્યું છે…"
       }
     }
   },
@@ -3626,7 +3775,19 @@ const resources = {
         "text": "टेक्स्ट",
         "image": "फ़ोटो",
         "video": "वीडियो",
-        "audio": "ऑडियो",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "चलाएं",
+          "tapToPlay": "सुनने के लिए टैप करें",
+          "delete": "हटाएं",
+          "stop": "रोकें",
+          "playing": "चल रहा है…"
+        },
         "textPlaceholder": "अपना कृषि संबंधी प्रश्न लिखें...",
         "addMedia": "मीडिया जोड़ें",
         "addPhoto": "फ़ोटो जोड़ें",
@@ -3643,7 +3804,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "आपकी रिकॉर्डिंग"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -3999,6 +4161,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "माइक्रोफ़ोन की अनुमति आवश्यक है",
+        "startError": "रिकॉर्डिंग शुरू करने में विफल",
+        "transcribeError": "ट्रांसक्रिप्शन विफल। कृपया पुनः प्रयास करें।",
+        "transcribing": "ट्रांसक्राइब हो रहा है…",
+        "recording": "रिकॉर्डिंग — रोकने के लिए टैप करें",
+        "record": "रिकॉर्ड करने के लिए टैप करें",
+        "play": "चलाएं",
+        "tapToPlay": "सुनने के लिए टैप करें",
+        "delete": "हटाएं",
+        "stop": "रोकें",
+        "playing": "चल रहा है…"
       }
     }
   },
@@ -4191,7 +4366,19 @@ const resources = {
         "text": "ಪಠ್ಯ",
         "image": "ಫೋಟೋ",
         "video": "ವೀಡಿಯೊ",
-        "audio": "ಆಡಿಯೊ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "ಪ್ಲೇ",
+          "tapToPlay": "ಕೇಳಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+          "delete": "ಅಳಿಸಿ",
+          "stop": "ನಿಲ್ಲಿಸಿ",
+          "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
+        },
         "textPlaceholder": "ನಿಮ್ಮ ಕೃಷಿ ಸಂಬಂಧಿತ ಪ್ರಶ್ನೆಯನ್ನು ಬರೆಯಿರಿ...",
         "addMedia": "ಮೀಡಿಯಾ ಸೇರಿಸಿ",
         "addPhoto": "ಫೋಟೋ ಸೇರಿಸಿ",
@@ -4208,7 +4395,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "ನಿಮ್ಮ ರೆಕಾರ್ಡಿಂಗ್"
       },
       "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
       "resendOtp": "OTP ಮರುಕಳುಹಿಸಿ",
@@ -4564,6 +4752,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "ಮೈಕ್ರೊಫೋನ್ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ",
+        "startError": "ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ",
+        "transcribeError": "ಟ್ರಾನ್ಸ್‌ಕ್ರಿಪ್ಷನ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "transcribing": "ಟ್ರಾನ್ಸ್‌ಕ್ರೈಬ್ ಆಗುತ್ತಿದೆ…",
+        "recording": "ರೆಕಾರ್ಡಿಂಗ್ — ನಿಲ್ಲಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+        "record": "ರೆಕಾರ್ಡ್ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+        "play": "ಪ್ಲೇ",
+        "tapToPlay": "ಕೇಳಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+        "delete": "ಅಳಿಸಿ",
+        "stop": "ನಿಲ್ಲಿಸಿ",
+        "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
       }
     }
   },
@@ -4756,7 +4957,19 @@ const resources = {
         "text": "ٹیکسٹ",
         "image": "فوٹو",
         "video": "ویڈیو",
-        "audio": "آڈیو",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "اپنا کھیتی متعلق پوچھو لکھو...",
         "addMedia": "میڈیا زیادہ کرو",
         "addPhoto": "فوٹو زیادہ کرو",
@@ -4773,7 +4986,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "تمھاری ریکارڈنگ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -5129,6 +5343,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -5321,7 +5548,19 @@ const resources = {
         "text": "टेक्स्ट",
         "image": "फोटो",
         "video": "विडियो",
-        "audio": "ऑडियो",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "तुम्मचो शेती संबंदित प्र लिखो...",
         "addMedia": "मीडिया जोडो",
         "addPhoto": "फोटो जोडो",
@@ -5338,7 +5577,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "तुमची रेकॉर्डिंग"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -5694,6 +5934,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -5886,7 +6139,19 @@ const resources = {
         "text": "टेक्स्ट",
         "image": "फोटो",
         "video": "भिडियो",
-        "audio": "ऑडियो",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "आपन कृषि सम्बंधित पछुआ लिखू...",
         "addMedia": "मिडिया जोड़ू",
         "addPhoto": "फोटो जोड़ू",
@@ -5903,7 +6168,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "अहाँक रेकर्डिंग"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -6259,6 +6525,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -6451,7 +6730,19 @@ const resources = {
         "text": "ടെക്സ്റ്റ്",
         "image": "ചിത്രം",
         "video": "വീഡിയോ",
-        "audio": "ഓഡിയോ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "കളിക്കു",
+          "tapToPlay": "കേൾക്കാൻ ടാപ് ചെയ്യുക",
+          "delete": "വ delete െക്കുക",
+          "stop": "നിറുത്തു",
+          "playing": "കളിക്കുന്നു…"
+        },
         "textPlaceholder": "നിങ്ങളുടെ കാർഷിക ചോദ്യം എഴുതുക...",
         "addMedia": "മീഡിയ ചേർക്കുക",
         "addPhoto": "ചിത്രം ചേർക്കുക",
@@ -6468,7 +6759,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "നിങ്ങളുടെ റെക്കോർഡിംഗ്"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -6824,6 +7116,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "മൈക്രോഫോൺ അനുമതി ആവശ്യമാണ്",
+        "startError": "റെക്കോർഡിംഗ് ആരംഭിക്കാൻ കഴിഞ്ഞില്ല",
+        "transcribeError": "ട്രാൻസ്ക്രിപ്ഷൻ പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.",
+        "transcribing": "ട്രാൻസ്ക്രൈബ് ചെയ്തുകൊണ്ടിരിക്കുന്നു…",
+        "recording": "റെക്കോർഡിംഗ് — നിർത്താൻ ടാപ് ചെയ്യുക",
+        "record": "റെക്കോർഡ് ചെയ്യാൻ ടാപ് ചെയ്യുക",
+        "play": "കളിക്കു",
+        "tapToPlay": "കേൾക്കാൻ ടാപ് ചെയ്യുക",
+        "delete": "വ delete െക്കുക",
+        "stop": "നിറുത്തു",
+        "playing": "കളിക്കുന്നു…"
       }
     }
   },
@@ -7016,7 +7321,19 @@ const resources = {
         "text": "লেখা",
         "image": "ফোটো",
         "video": "ভিডিও",
-        "audio": "অডিও",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "বরো চৎকরি পূছা হাংবা...",
         "addMedia": "মিডিয়া লমদা",
         "addPhoto": "ফোটো লমদা",
@@ -7033,7 +7350,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "লৈ য়িং ৰেকর্ডিং"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -7389,6 +7707,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -7581,7 +7912,19 @@ const resources = {
         "text": "मजकूर",
         "image": "फोटो",
         "video": "व्हिडिओ",
-        "audio": "ऑडिओ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "चालू",
+          "tapToPlay": "ऐकण्यासाठी टॅप करा",
+          "delete": "हटवा",
+          "stop": "थांबा",
+          "playing": "चालू आहे…"
+        },
         "textPlaceholder": "तुमचा शेती संबंधित प्रश्न लिहा...",
         "addMedia": "मीडिया जोडा",
         "addPhoto": "फोटो जोडा",
@@ -7598,7 +7941,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "तुमची रेकॉर्डिंग"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -7954,6 +8298,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "मायक्रोफोन परवानगी आवश्यक आहे",
+        "startError": "रेकॉर्डिंग सुरू करण्यात अयशस्वी",
+        "transcribeError": "ट्रांसक्रिप्शन अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+        "transcribing": "ट्रांसक्राइब होत आहे…",
+        "recording": "रेकॉर्डिंग — थांबविण्यासाठी टॅप करा",
+        "record": "रिकॉर्ड करण्यासाठी टॅप करा",
+        "play": "चालू",
+        "tapToPlay": "ऐकण्यासाठी टॅप करा",
+        "delete": "हटवा",
+        "stop": "थांबा",
+        "playing": "चालू आहे…"
       }
     }
   },
@@ -8146,7 +8503,19 @@ const resources = {
         "text": "टेक्स्ट",
         "image": "फोटो",
         "video": "भिडियो",
-        "audio": "अडियो",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "बजाउनुहोस्",
+          "tapToPlay": "सुन्न ट्याप गर्नुहोस्",
+          "delete": "हटाउनुहोस्",
+          "stop": "रोक्नुहोस्",
+          "playing": "बजिरहेको…"
+        },
         "textPlaceholder": "तपाईंको कृषि सम्बन्धी प्रश्न लेख्नुहोस्...",
         "addMedia": "मिडिया थप्नुहोस्",
         "addPhoto": "फोटो थप्नुहोस्",
@@ -8163,7 +8532,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "तपाईंको रेकर्डिङ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -8519,6 +8889,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "माइक्रोफोन अनुमति आवश्यक छ",
+        "startError": "रेकर्डिङ सुरु गर्न असफल",
+        "transcribeError": "ट्रान्सक्रिप्सन असफल। कृपया पुनः प्रयास गर्नुहोस्।",
+        "transcribing": "ट्रान्सक्राइब हुँदै…",
+        "recording": "रेकर्डिङ — रोक्न ट्याप गर्नुहोस्",
+        "record": "रेकर्ड गर्न ट्याप गर्नुहोस्",
+        "play": "बजाउनुहोस्",
+        "tapToPlay": "सुन्न ट्याप गर्नुहोस्",
+        "delete": "हटाउनुहोस्",
+        "stop": "रोक्नुहोस्",
+        "playing": "बजिरहेको…"
       }
     }
   },
@@ -8711,7 +9094,19 @@ const resources = {
         "text": "ଟେକ୍ସଟ",
         "image": "ଫଟୋ",
         "video": "ଭିଡିଓ",
-        "audio": "ଅଡିଓ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "ଚଲାନ୍ତୁ",
+          "tapToPlay": "ଶୁଣିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+          "delete": "ଲୁଚି ଦିଅ",
+          "stop": "ବନ୍ଦ କରନ୍ତୁ",
+          "playing": "ଚାଲୁଛି…"
+        },
         "textPlaceholder": "ଆପଣଙ୍କ କୃଷି ସମ୍ବନ୍ଧୀୟ ପ୍ରଶ୍ନ ଲେଖନ୍ତୁ...",
         "addMedia": "ମିଡିଆ ଯୋଡନ୍ତୁ",
         "addPhoto": "ଫଟୋ ଯୋଡନ୍ତୁ",
@@ -8728,7 +9123,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "ଆପଣଙ୍କ ରେକର୍ଡିଂଗ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -9084,6 +9480,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "ମାଇକ୍ରୋଫୋନ ଅନୁମତି ଆବଶ୍ୟକ",
+        "startError": "ରେକର୍ଡିଂଗ ଆରମ୍ଭ କରିପାରିଲୁ ନାହିଁ",
+        "transcribeError": "ଟ୍ରାନ୍ସ୍‌କ୍ରିପସନ ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "transcribing": "ଟ୍ରାନ୍ସ୍‌କ୍ରାଇବ ହେଉଛି…",
+        "recording": "ରେକର୍ଡିଂଗ — ବନ୍ଦ କରିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+        "record": "ରେକର୍ଡ କରିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+        "play": "ଚଲାନ୍ତୁ",
+        "tapToPlay": "ଶୁଣିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+        "delete": "ଲୁଚି ଦିଅ",
+        "stop": "ବନ୍ଦ କରନ୍ତୁ",
+        "playing": "ଚାଲୁଛି…"
       }
     }
   },
@@ -9276,7 +9685,19 @@ const resources = {
         "text": "ਟੈਕਸਟ",
         "image": "ਫੋਟੋ",
         "video": "ਵੀਡੀਓ",
-        "audio": "ਆਡੀਓ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "ਚਲਾਓ",
+          "tapToPlay": "ਸੁਣਨ ਲਈ ਟੈਪ ਕਰੋ",
+          "delete": "ਹਟਾਓ",
+          "stop": "ਰੋਕੋ",
+          "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
+        },
         "textPlaceholder": "ਆਪਣਾ ਖੇਤੀ ਸੰਬੰਧੀ ਸਵਾਲ ਲਿਖੋ...",
         "addMedia": "ਮੀਡੀਆ ਜੋੜੋ",
         "addPhoto": "ਫੋਟੋ ਜੋੜੋ",
@@ -9293,7 +9714,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "ਤੁਹਾਡੀ ਰਿਕਾਰਡਿੰਗ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -9649,6 +10071,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "ਮਾਈਕ੍ਰੋਫੋਨ ਦੀ ਇਜਾਜ਼ਤ ਜ਼ਰੂਰੀ ਹੈ",
+        "startError": "ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+        "transcribeError": "ਟ੍ਰਾਂਸਕ੍ਰਿਪਸ਼ਨ ਅਸਫਲ ਹੋਈ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "transcribing": "ਟ੍ਰਾਂਸਕ੍ਰਾਈਬ ਹੋ ਰਿਹਾ ਹੈ…",
+        "recording": "ਰਿਕਾਰਡਿੰਗ — ਰੋਕਣ ਲਈ ਟੈਪ ਕਰੋ",
+        "record": "ਰਿਕਾਰਡ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ",
+        "play": "ਚਲਾਓ",
+        "tapToPlay": "ਸੁਣਨ ਲਈ ਟੈਪ ਕਰੋ",
+        "delete": "ਹਟਾਓ",
+        "stop": "ਰੋਕੋ",
+        "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
       }
     }
   },
@@ -9841,7 +10276,19 @@ const resources = {
         "text": "पाठ्यम्",
         "image": "चित्रम्",
         "video": "भिडियो",
-        "audio": "ध्वनिः",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "भवतः कृषिसंबद्धप्रश्नं लिखतु...",
         "addMedia": "माध्यमं योजयतु",
         "addPhoto": "चित्रं योजयतु",
@@ -9858,7 +10305,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "भवत्सल रेकर्डिंग"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -10214,6 +10662,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -10406,7 +10867,19 @@ const resources = {
         "text": "ᱯᱟᱹᱠᱷᱟᱹᱭ",
         "image": "ᱯᱟᱠᱷᱤ",
         "video": "ᱣᱤᱰᱤᱭᱚ",
-        "audio": "ᱚᱰᱤᱭᱚ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "ᱟᱯᱟᱴᱟᱣᱟᱜ ᱦᱟᱰᱤ ᱞᱟᱹᱜᱤᱱᱟᱜ ᱦᱟᱯᱟᱫ ᱢᱟᱱᱟᱣ...",
         "addMedia": "ᱢᱤᱰᱤᱭᱚ ᱥᱮᱞᱮᱫ ᱢᱟᱱᱟᱣ",
         "addPhoto": "ᱯᱟᱠᱷᱤ ᱥᱮᱞᱮᱫ ᱢᱟᱱᱟᱣ",
@@ -10423,7 +10896,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "ᱥᱟᱱᱛᱟᱞᱤ ᱨᱤᱠᱚᱰᱤᱝ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -10779,6 +11253,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -10971,7 +11458,19 @@ const resources = {
         "text": "ٽيڪسٽ",
         "image": "فوٽو",
         "video": "وڊيو",
-        "audio": "آڊيو",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "Play",
+          "tapToPlay": "Tap to play",
+          "delete": "Delete",
+          "stop": "Stop",
+          "playing": "Playing…"
+        },
         "textPlaceholder": "توهانجو زراعت سوال لکو...",
         "addMedia": "ميڊيا شامل ڪريو",
         "addPhoto": "فوٽو شامل ڪريو",
@@ -10988,7 +11487,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "توهانجو ریکارڈنگ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -11344,6 +11844,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "Microphone permission required",
+        "startError": "Failed to start recording",
+        "transcribeError": "Transcription failed. Please try again.",
+        "transcribing": "Transcribing…",
+        "recording": "Recording — tap to stop",
+        "record": "Tap to record",
+        "play": "Play",
+        "tapToPlay": "Tap to play",
+        "delete": "Delete",
+        "stop": "Stop",
+        "playing": "Playing…"
       }
     }
   },
@@ -11536,7 +12049,19 @@ const resources = {
         "text": "உரை",
         "image": "புகைப்படம்",
         "video": "காணொளி",
-        "audio": "ஆடியோ",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "இசைக்க",
+          "tapToPlay": "கேட்க டேப் செய்யுங்கள்",
+          "delete": "நீக்கு",
+          "stop": "நிறுத்து",
+          "playing": "இசை வாசிக்கிறது…"
+        },
         "textPlaceholder": "உங்கள் வேளாண்மை கேள்வியை எழுதவும்...",
         "addMedia": "மீடியா சேர்",
         "addPhoto": "புகைப்படம் சேர்",
@@ -11553,7 +12078,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "உங்கள் பதிவு"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -11909,6 +12435,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "மைக்ரோஃபோன் அனுமதி தேவை",
+        "startError": "ரெக்கார்டிங் தொடங்க முடியவில்லை",
+        "transcribeError": "ஒலிபெயர்ப்பு தோல்வி. மீண்டும் முயற்சிக்கவும்.",
+        "transcribing": "ஒலிபெயர்க்கப்படுகிறது…",
+        "recording": "ரெக்கார்டிங் — நிறுத்த டैப் செய்யுங்கள்",
+        "record": "ரெக்கார்டு செய்ய டேப் செய்யுங்கள்",
+        "play": "இசைக்க",
+        "tapToPlay": "கேட்க டேப் செய்யுங்கள்",
+        "delete": "நீக்கு",
+        "stop": "நிறுத்து",
+        "playing": "இசை வாசிக்கிறது…"
       }
     }
   },
@@ -12101,7 +12640,19 @@ const resources = {
         "text": "ٹیکسٹ",
         "image": "فوٹو",
         "video": "ویڈیو",
-        "audio": "آڈیو",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "చేయండి",
+          "tapToPlay": "వినడానికి ట్యాప్ చేయండి",
+          "delete": "తొలగించు",
+          "stop": "నిలిపు",
+          "playing": "ప్లే అవుతోంది…"
+        },
         "textPlaceholder": "اپنا زراعت سے متعلق سوال لکھیں...",
         "addMedia": "میڈیا شامل کریں",
         "addPhoto": "فوٹو شامل کریں",
@@ -12118,7 +12669,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "آپ کا ریکارڈنگ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -12474,6 +13026,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "మైక్రోఫోన్ అనుమతి అవసరం",
+        "startError": "రికార్డింగ్ ప్రారంభించడంలో విఫలమైనది",
+        "transcribeError": "ట్రాన్స్‌క్రిప్షన్ విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "transcribing": "ట్రాన్స్‌క్రైబ్ అవుతోంది…",
+        "recording": "రికార్డింగ్ — నిలిపితే ట్యాప్ చేయండి",
+        "record": "రికార్డ్ చేయడానికి ట్యాప్ చేయండి",
+        "play": "చేయండి",
+        "tapToPlay": "వినడానికి ట్యాప్ చేయండి",
+        "delete": "తొలగించు",
+        "stop": "నిలిపు",
+        "playing": "ప్లే అవుతోంది…"
       }
     }
   },
@@ -12666,7 +13231,19 @@ const resources = {
         "text": "ٹیکسٹ",
         "image": "فوٹو",
         "video": "ویڈیو",
-        "audio": "آڈیو",
+        "audio": {
+          "permissionDenied": "Microphone permission required",
+          "startError": "Failed to start recording",
+          "transcribeError": "Transcription failed. Please try again.",
+          "transcribing": "Transcribing…",
+          "recording": "Recording — tap to stop",
+          "record": "Tap to record",
+          "play": "چلائیں",
+          "tapToPlay": "سننے کے لیے ٹیپ کریں",
+          "delete": "حذف کریں",
+          "stop": "روکیں",
+          "playing": "چل رہا ہے…"
+        },
         "textPlaceholder": "اپنا زراعت سے متعلق سوال لکھیں...",
         "addMedia": "میڈیا شامل کریں",
         "addPhoto": "فوٹو شامل کریں",
@@ -12683,7 +13260,8 @@ const resources = {
         "typeYourQuestion": "Type your question below",
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
-        "notRelevant": "Not Relevant"
+        "notRelevant": "Not Relevant",
+        "yourRecording": "آپ کی ریکارڈنگ"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -13039,6 +13617,19 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
+      },
+      "audio": {
+        "permissionDenied": "مائیکروفون کی اجازت ضروری ہے",
+        "startError": "ریکارڈنگ شروع کرنے میں ناکام",
+        "transcribeError": "ٹرانسکرپشن ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
+        "transcribing": "ٹرانسکرائب ہو رہا ہے…",
+        "recording": "ریکارڈنگ — روکنے کے لیے ٹیپ کریں",
+        "record": "ریکارڈ کرنے کے لیے ٹیپ کریں",
+        "play": "چلائیں",
+        "tapToPlay": "سننے کے لیے ٹیپ کریں",
+        "delete": "حذف کریں",
+        "stop": "روکیں",
+        "playing": "چل رہا ہے…"
       }
     }
   }

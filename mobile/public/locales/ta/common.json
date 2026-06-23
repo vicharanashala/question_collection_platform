@@ -186,7 +186,19 @@
     "text": "உரை",
     "image": "புகைப்படம்",
     "video": "காணொளி",
-    "audio": "ஆடியோ",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "இசைக்க",
+      "tapToPlay": "கேட்க டேப் செய்யுங்கள்",
+      "delete": "நீக்கு",
+      "stop": "நிறுத்து",
+      "playing": "இசை வாசிக்கிறது…"
+    },
     "textPlaceholder": "உங்கள் வேளாண்மை கேள்வியை எழுதவும்...",
     "addMedia": "மீடியா சேர்",
     "addPhoto": "புகைப்படம் சேர்",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "உங்கள் பதிவு"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "மைக்ரோஃபோன் அனுமதி தேவை",
+    "startError": "ரெக்கார்டிங் தொடங்க முடியவில்லை",
+    "transcribeError": "ஒலிபெயர்ப்பு தோல்வி. மீண்டும் முயற்சிக்கவும்.",
+    "transcribing": "ஒலிபெயர்க்கப்படுகிறது…",
+    "recording": "ரெக்கார்டிங் — நிறுத்த டैப் செய்யுங்கள்",
+    "record": "ரெக்கார்டு செய்ய டேப் செய்யுங்கள்",
+    "play": "இசைக்க",
+    "tapToPlay": "கேட்க டேப் செய்யுங்கள்",
+    "delete": "நீக்கு",
+    "stop": "நிறுத்து",
+    "playing": "இசை வாசிக்கிறது…"
   }
 }

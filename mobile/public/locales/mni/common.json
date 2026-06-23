@@ -186,7 +186,19 @@
     "text": "লেখা",
     "image": "ফোটো",
     "video": "ভিডিও",
-    "audio": "অডিও",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "Play",
+      "tapToPlay": "Tap to play",
+      "delete": "Delete",
+      "stop": "Stop",
+      "playing": "Playing…"
+    },
     "textPlaceholder": "বরো চৎকরি পূছা হাংবা...",
     "addMedia": "মিডিয়া লমদা",
     "addPhoto": "ফোটো লমদা",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "লৈ য়িং ৰেকর্ডিং"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "Microphone permission required",
+    "startError": "Failed to start recording",
+    "transcribeError": "Transcription failed. Please try again.",
+    "transcribing": "Transcribing…",
+    "recording": "Recording — tap to stop",
+    "record": "Tap to record",
+    "play": "Play",
+    "tapToPlay": "Tap to play",
+    "delete": "Delete",
+    "stop": "Stop",
+    "playing": "Playing…"
   }
 }

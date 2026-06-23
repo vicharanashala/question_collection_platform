@@ -186,7 +186,19 @@
     "text": "टेक्स्ट",
     "image": "फोटो",
     "video": "भिडियो",
-    "audio": "अडियो",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "Play",
+      "tapToPlay": "Tap to play",
+      "delete": "Delete",
+      "stop": "Stop",
+      "playing": "Playing…"
+    },
     "textPlaceholder": "बर खेती सवाल लिखो...",
     "addMedia": "मिडिया जोड़ो",
     "addPhoto": "फोटो जोड़ो",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "गिटथान"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "Microphone permission required",
+    "startError": "Failed to start recording",
+    "transcribeError": "Transcription failed. Please try again.",
+    "transcribing": "Transcribing…",
+    "recording": "Recording — tap to stop",
+    "record": "Tap to record",
+    "play": "Play",
+    "tapToPlay": "Tap to play",
+    "delete": "Delete",
+    "stop": "Stop",
+    "playing": "Playing…"
   }
 }

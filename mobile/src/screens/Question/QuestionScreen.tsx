@@ -1,14 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, ScrollView,  } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
-import {
-  AudioModule,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-  AudioQuality,
-  IOSOutputFormat,
-} from 'expo-audio';
+import { AudioModule, requestRecordingPermissionsAsync, setAudioModeAsync, AudioQuality, IOSOutputFormat, AudioPlayer } from 'expo-audio';
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
@@ -24,28 +18,33 @@ import { runOnDeviceValidation, cacheQuestionForDuplicateDetection } from '../..
 import { AIValidationResult } from '../../utils/onDeviceAI';
 import { AIValidationBanner } from '../../components/AIValidationBanner';
 import { useTranslation } from 'react-i18next';
-import { Image, TouchableOpacity as ImgTouchableOpacity } from 'react-native';
+import { TouchableOpacity as ImgTouchableOpacity } from 'react-native';
 import { compressImage, getImageSizeMB } from '../../utils/media';
 import { MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList, RootStackParamList } from '../../navigation/types';
 
-// ─── Mic Button ────────────────────────────────────────────────────────────────
-// Large, thumb-friendly mic button docked at the bottom of the screen.
-// WhatsApp-style: always visible, secondary to the text area but
-// immediately accessible without scrolling.
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
-type MicState = 'idle' | 'recording' | 'uploading' | 'done';
+const toSarvamLang = (code: string) => {
+  const map: Record<string, string> = {
+    as: 'as-IN', bn: 'bn-IN', brx: 'brx-IN', doi: 'doi-IN',
+    gu: 'gu-IN', hi: 'hi-IN', kn: 'kn-IN', ks: 'ks-IN',
+    kok: 'kok-IN', mai: 'mai-IN', ml: 'ml-IN', mni: 'mni-IN',
+    mr: 'mr-IN', ne: 'ne-IN', or: 'or-IN', pa: 'pa-IN',
+    sa: 'sa-IN', sat: 'sat-IN', sd: 'sd-IN', ta: 'ta-IN',
+    te: 'te-IN', ur: 'ur-IN', en: 'en-IN',
+  };
+  return map[code] ?? `${code}-IN`;
+};
 
-const CHUNK_INTERVAL_MS = 5_000;
-const MAX_RECORDING_SECONDS = 60;
+// ─── MicButton ─────────────────────────────────────────────────────────────────
+// WhatsApp-style: tap to record, tap again to stop. No rolling chunks.
+// On stop, the full audio is sent to Sarvam for transcription + returned as a URI.
 
-interface ChunkResult { text: string; error: string | null; }
+type MicState = 'idle' | 'recording' | 'processing' | 'done';
 
-export function MicButton({ onTranscribed, disabled }: {
-  onTranscribed: (text: string) => void;
-  disabled?: boolean;
-}) {
+export function MicButton({ onTranscribed, disabled, onRecordingDeleted, onRecordingComplete }: { onTranscribed: (text: string) => void; disabled?: boolean; onRecordingDeleted: () => void; onRecordingComplete: (uri: string) => void }) {
   const { language } = useLanguage();
   const { theme } = useTheme();
   const c = theme.colors;
@@ -53,58 +52,13 @@ export function MicButton({ onTranscribed, disabled }: {
   const { t } = useTranslation();
 
   const [state, setState] = useState<MicState>('idle');
+  // Local copy of the URI — QuestionScreen keeps its own copy (pendingAudioUri).
+  const [localAudioUri, setLocalAudioUri] = useState<string | null>(null);
   const recorderRef = useRef<InstanceType<typeof AudioModule.AudioRecorder> | null>(null);
-  const chunkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sequenceRef = useRef(0);
-  const stoppingRef = useRef(false);
-  const transcriptRef = useRef('');
-
-  const toSarvamLang = (code: string) => {
-    const map: Record<string, string> = {
-      as: 'as-IN', bn: 'bn-IN', brx: 'brx-IN', doi: 'doi-IN',
-      gu: 'gu-IN', hi: 'hi-IN', kn: 'kn-IN', ks: 'ks-IN',
-      kok: 'kok-IN', mai: 'mai-IN', ml: 'ml-IN', mni: 'mni-IN',
-      mr: 'mr-IN', ne: 'ne-IN', or: 'or-IN', pa: 'pa-IN',
-      sa: 'sa-IN', sat: 'sat-IN', sd: 'sd-IN', ta: 'ta-IN',
-      te: 'te-IN', ur: 'ur-IN', en: 'en-IN',
-    };
-    return map[code] ?? `${code}-IN`;
-  };
-
-  const uploadChunk = async (uri: string, seq: number) => {
-    const formData = new (globalThis.FormData)();
-    formData.append('audio', { uri, name: `chunk-${seq}.m4a`, type: 'audio/mp4' } as unknown as string);
-    formData.append('languageCode', toSarvamLang(language));
-    formData.append('sequenceNumber', String(seq));
-    try {
-      const { data } = await api.post<ChunkResult>('/speech/transcribe-chunk', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      if (data.text) {
-        transcriptRef.current = transcriptRef.current
-          ? `${transcriptRef.current} ${data.text}`
-          : data.text;
-        onTranscribed(transcriptRef.current);
-      }
-    } catch { /* ignore individual chunk failures */ }
-  };
-
-  const cutAndRestart = async () => {
-    const rec = recorderRef.current;
-    if (!rec || stoppingRef.current) return;
-    await rec.stop();
-    const uri = rec.uri;
-    if (uri) uploadChunk(uri, sequenceRef.current++);
-    try {
-      await rec.prepareToRecordAsync();
-      rec.record();
-    } catch { /* ignore */ }
-  };
 
   useEffect(() => {
     return () => {
-      clearInterval(chunkTimerRef.current ?? undefined);
       clearTimeout(autoStopRef.current ?? undefined);
       recorderRef.current?.stop().catch(() => {});
     };
@@ -132,13 +86,10 @@ export function MicButton({ onTranscribed, disabled }: {
       await rec.prepareToRecordAsync();
       rec.record();
       recorderRef.current = rec;
-      stoppingRef.current = false;
-      sequenceRef.current = 0;
-      transcriptRef.current = '';
       setState('recording');
 
-      chunkTimerRef.current = setInterval(cutAndRestart, CHUNK_INTERVAL_MS);
-      autoStopRef.current = setTimeout(stopRecording, MAX_RECORDING_SECONDS * 1000);
+      // Hard auto-stop after 60 seconds
+      autoStopRef.current = setTimeout(stopRecording, 60_000);
     } catch (err) {
       console.error('[MicButton] start error:', err);
       showToast(t('audio.startError') ?? 'Failed to start recording', 'error');
@@ -146,32 +97,34 @@ export function MicButton({ onTranscribed, disabled }: {
   }
 
   async function stopRecording() {
-    if (stoppingRef.current) return;
-    stoppingRef.current = true;
-    clearInterval(chunkTimerRef.current ?? undefined);
     clearTimeout(autoStopRef.current ?? undefined);
-
     const rec = recorderRef.current;
     if (!rec) return;
 
-    setState('uploading');
+    setState('processing');
     await rec.stop();
-    const uri = rec.uri;
+    const uri = rec.uri ?? '';
 
+    // Immediately show AudioPreview so user can hear their recording right away.
+    if (uri) {
+      setLocalAudioUri(uri);
+      onRecordingComplete(uri);
+    }
+
+    // Send the full recording to Sarvam for transcription in the background.
     if (uri) {
       const formData = new (globalThis.FormData)();
-      formData.append('audio', { uri, name: 'final.m4a', type: 'audio/mp4' } as unknown as string);
+      formData.append('audio', { uri, name: 'recording.m4a', type: 'audio/mp4' } as unknown as string);
       formData.append('languageCode', toSarvamLang(language));
-      formData.append('sequenceNumber', String(sequenceRef.current++));
+
       try {
-        const { data } = await api.post<ChunkResult>('/speech/transcribe-final', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        const { data } = await api.post<{ text?: string; error?: string }>(
+          '/speech/transcribe-final',
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
         if (data.text) {
-          transcriptRef.current = transcriptRef.current
-            ? `${transcriptRef.current} ${data.text}`
-            : data.text;
-          onTranscribed(transcriptRef.current);
+          onTranscribed(data.text);
         } else if (data.error) {
           showToast(t('audio.transcribeError') ?? 'Transcription failed', 'error');
         }
@@ -180,9 +133,9 @@ export function MicButton({ onTranscribed, disabled }: {
       }
     }
 
-    setState('done');
     recorderRef.current = null;
-    setTimeout(() => setState('idle'), 2000);
+    setState('done');
+    setTimeout(() => setState('idle'), 3000);
   }
 
   function handlePress() {
@@ -191,30 +144,28 @@ export function MicButton({ onTranscribed, disabled }: {
     else if (state === 'recording') stopRecording();
   }
 
-  const isRecording = state === 'recording';
-  const isUploading = state === 'uploading';
-  const isDisabled = disabled || isUploading;
+  function handleDelete() {
+    setLocalAudioUri(null);
+    onRecordingDeleted();
+    onTranscribed('');
+  }
 
+  const isRecording = state === 'recording';
+  const isProcessing = state === 'processing';
+  const isDisabled = disabled || isProcessing;
   const btnBg = isDisabled ? c.muted : isRecording ? c.error : c.primary;
 
   return (
     <View style={micStyles.wrap}>
-      {/* Outer pulse rings while recording */}
-      {isRecording && (
-        <View style={[micStyles.pulseOuter, { borderColor: c.primary + '25' }]} />
-      )}
-      {isRecording && (
-        <View style={[micStyles.pulseInner, { borderColor: c.primary + '45' }]} />
-      )}
-
-      {/* Main button */}
+      {isRecording && <View style={[micStyles.pulseOuter, { borderColor: c.primary + '25' }]} />}
+      {isRecording && <View style={[micStyles.pulseInner, { borderColor: c.primary + '45' }]} />}
       <TouchableOpacity
         style={[micStyles.btn, { backgroundColor: btnBg }]}
         onPress={handlePress}
         disabled={isDisabled}
         activeOpacity={0.8}
       >
-        {isUploading ? (
+        {isProcessing ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <Ionicons
@@ -224,60 +175,160 @@ export function MicButton({ onTranscribed, disabled }: {
           />
         )}
       </TouchableOpacity>
-
-      {/* Recording indicator dot */}
-      {isRecording && (
-        <View style={[micStyles.recordingDot, { backgroundColor: c.error }]} />
-      )}
+      {isRecording && <View style={[micStyles.recordingDot, { backgroundColor: c.error }]} />}
     </View>
   );
 }
 
 const micStyles = StyleSheet.create({
-  wrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 72,
-    height: 72,
-    position: 'relative',
-  },
-  pulseOuter: {
-    position: 'absolute',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 2,
-  },
-  pulseInner: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 1.5,
-  },
+  wrap: { alignItems: 'center', justifyContent: 'center', width: 72, height: 72, position: 'relative' },
+  pulseOuter: { position: 'absolute', width: 72, height: 72, borderRadius: 36, borderWidth: 2 },
+  pulseInner: { position: 'absolute', width: 60, height: 60, borderRadius: 30, borderWidth: 1.5 },
   btn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1,
+    width: 64, height: 64, borderRadius: 32,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 8, zIndex: 1,
   },
   recordingDot: {
-    position: 'absolute',
-    bottom: 6,
-    right: 6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: '#fff',
-    zIndex: 2,
+    position: 'absolute', bottom: 6, right: 6,
+    width: 10, height: 10, borderRadius: 5,
+    borderWidth: 2, borderColor: '#fff', zIndex: 2,
+  },
+});
+
+// ─── AudioPreview ──────────────────────────────────────────────────────────────
+// Full-featured playback view: play/pause, seekable progress bar, duration,
+// delete, and a close button.
+
+function AudioPreview({ uri, onDelete, onClose }: { uri: string; onDelete: () => void; onClose?: () => void }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+  const { t } = useTranslation();
+  const [playing, setPlaying] = useState(false);
+  const [currentSec, setCurrentSec] = useState(0);
+  const [totalSec, setTotalSec] = useState(0);
+  const playerRef = useRef<AudioPlayer | null>(null);
+
+  const progress = totalSec > 0 ? Math.min(currentSec / totalSec, 1) : 0;
+
+  function formatTime(sec: number) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  async function togglePlay() {
+    try {
+      if (playing) {
+        playerRef.current?.pause();
+        setPlaying(false);
+        return;
+      }
+      const player = new AudioPlayer({ uri });
+      player.addListener('playbackStatusUpdate', (status) => {
+        setCurrentSec(status.currentTime ?? 0);
+        setTotalSec(status.duration ?? 0);
+        if (status.currentTime !== undefined && status.duration !== undefined) {
+          if (status.currentTime >= status.duration && status.duration > 0) {
+            player.remove();
+            playerRef.current = null;
+            setPlaying(false);
+            setCurrentSec(0);
+          }
+        }
+      });
+      await player.play();
+      playerRef.current = player;
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+    }
+  }
+
+  useEffect(() => () => { playerRef.current?.remove(); }, []);
+
+  return (
+    <View style={[audioPreviewStyles.wrap, { backgroundColor: c.surface, borderColor: c.borderSubtle }]}>
+      {/* Header row */}
+      <View style={audioPreviewStyles.headerRow}>
+        <Text style={[audioPreviewStyles.title, { color: c.text }]}>
+          {t('question.yourRecording') ?? 'Your recording'}
+        </Text>
+        {onClose && (
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={22} color={c.textTertiary} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Progress bar */}
+      <View style={audioPreviewStyles.progressRow}>
+        <View style={[audioPreviewStyles.track, { backgroundColor: c.borderSubtle }]}>
+          <View style={[audioPreviewStyles.fill, { width: `${progress * 100}%`, backgroundColor: c.primary }]} />
+        </View>
+        <Text style={[audioPreviewStyles.time, { color: c.textSecondary }]}>
+          {formatTime(currentSec)} / {formatTime(totalSec)}
+        </Text>
+      </View>
+
+      {/* Controls row */}
+      <View style={audioPreviewStyles.controlsRow}>
+        {/* Play / Pause */}
+        <TouchableOpacity
+          style={[audioPreviewStyles.playBtn, { backgroundColor: c.primary }]}
+          onPress={togglePlay}
+          accessibilityLabel={playing ? (t('audio.stop') ?? 'Stop') : (t('audio.play') ?? 'Play')}
+        >
+          <Ionicons name={playing ? 'pause' : 'play'} size={22} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Status text */}
+        <Text style={[audioPreviewStyles.statusText, { color: c.text }]}>
+          {playing ? (t('audio.playing') ?? 'Playing…') : (t('audio.tapToPlay') ?? 'Tap to play')}
+        </Text>
+
+        {/* Delete */}
+        <TouchableOpacity
+          style={[audioPreviewStyles.deleteBtn, { backgroundColor: c.error + '15' }]}
+          onPress={() => { playerRef.current?.remove(); playerRef.current = null; onDelete(); }}
+          accessibilityLabel={t('audio.delete') ?? 'Delete recording'}
+        >
+          <Ionicons name="trash-outline" size={18} color={c.error} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const audioPreviewStyles = StyleSheet.create({
+  wrap: {
+    borderWidth: 1.5,
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing4,
+    gap: tokens.spacing3,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: { fontSize: 15, fontWeight: '700' },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
+  track: { flex: 1, height: 5, borderRadius: 3 },
+  fill: { height: 5, borderRadius: 3 },
+  time: { fontSize: 12, fontWeight: '500', minWidth: 38, textAlign: 'right' },
+  controlsRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing3 },
+  playBtn: {
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2, shadowRadius: 4, elevation: 4,
+  },
+  statusText: { flex: 1, fontSize: 13, fontWeight: '500' },
+  deleteBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center',
   },
 });
 
@@ -302,6 +353,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   useEffect(() => {
     if (isFocused && !isEditMode) {
       setQuestionText('');
+      setPendingAudioUri(null);
       questionApi.getStats().then((res) => {
         const data = res.data as { remainingToday: number; maxQuestionChars?: number; maxImageSizeMb?: number };
         setRemainingToday(data.remainingToday);
@@ -325,15 +377,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
+  // ── Audio state ────────────────────────────────────────────────────────────
+  // MicButton owns the AudioPreview UI; QuestionScreen keeps the URI so it
+  // can be passed to QuestionPreview and used for mediaType detection.
+  const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
+
+
+
   // ── On-device AI validation ───────────────────────────────────────────────
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
   const [aiValidationOverride, setAiValidationOverride] = useState(false);
   const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevTextRef = useRef('');
 
-  // Debounced on-device AI pipeline fires ~600 ms after the user stops typing.
-  // Skipped when text is empty (no false positives on blank field) and when
-  // the same text is re-set by the mic (avoid re-validating transcript appends).
   const scheduleValidation = useCallback(
     (text: string) => {
       if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
@@ -342,7 +398,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       aiDebounceRef.current = setTimeout(async () => {
         const result = await runOnDeviceValidation({ text, ownId: editingQuestionId });
         setAiValidation(result);
-        // Auto-clear override flag when user meaningfully changes the text
         if (result.verdict !== 'warn') setAiValidationOverride(false);
       }, 600);
     },
@@ -350,9 +405,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   );
 
   useEffect(() => {
-    return () => {
-      if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-    };
+    return () => { if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current); };
   }, []);
 
   // ── Image picker ─────────────────────────────────────────────────────────
@@ -364,13 +417,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       selectionLimit: 1,
     });
     if (!result.assets || result.assets.length === 0) return;
-
     const asset = result.assets[0];
     const uri: string = asset.uri ?? '';
     if (!uri) return;
 
-    // Get file size: prefer photo-library metadata (accurate for ph:// URIs on iOS),
-    // fall back to FileSystem when unavailable (e.g. some non-photo URIs).
     const reportedSize = asset.fileSize;
     let sizeMb: number;
     if (reportedSize != null && reportedSize > 0) {
@@ -378,50 +428,21 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     } else {
       sizeMb = await getImageSizeMB(uri);
     }
-    if (sizeMb === 0) {
-      setImageError('Could not read image file. Please try a different one.');
-      return;
-    }
+    if (sizeMb === 0) { setImageError('Could not read image file. Please try a different one.'); return; }
     if (sizeMb > maxImageSizeMb * 3) {
-      // If it's already >3× the limit, warn but still try to compress
       setImageError(`Image is ${sizeMb.toFixed(1)} MB — will be compressed to ~${maxImageSizeMb} MB`);
     }
 
     setSelectedImageUri(uri);
-
-    // Compress in background; store the compressed URI so handlePreview can upload it
     if (sizeMb > maxImageSizeMb) {
       try {
         const compressed = await compressImage(uri);
         setCompressedImageUri(compressed);
-      } catch {
-        // Compression failed — fall back to original
-        setCompressedImageUri(null);
-      }
+      } catch { setCompressedImageUri(null); }
     } else {
       setCompressedImageUri(null);
     }
   }
-
-  useEffect(() => {
-    if (isEditMode && editingQuestionId) {
-      questionApi.get(editingQuestionId).then((res) => {
-        const q = res.data as Record<string, unknown>;
-        setQuestionText(q.questionText as string);
-      }).catch(async () => {
-        const { getErrorMessage } = await import('../../api/client');
-        showToast(getErrorMessage(null, t('question.updateFailed')), 'error');
-        navigation.navigate('Submissions' as never);
-      });
-    } else {
-      questionApi.getStats().then((res) => {
-        const data = res.data as { remainingToday: number; maxQuestionChars?: number; maxImageSizeMb?: number };
-        setRemainingToday(data.remainingToday);
-        if (data.maxQuestionChars) setMaxChars(data.maxQuestionChars);
-        if (data.maxImageSizeMb) setMaxImageSizeMb(data.maxImageSizeMb);
-      });
-    }
-  }, [isEditMode, editingQuestionId]);
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -430,39 +451,25 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     return Object.keys(errs).length === 0;
   }
 
-  /**
-   * Called when user taps "Continue" (submit-for-preview).
-   * Runs on-device AI first; if verdict is 'fail' blocks immediately.
-   * If 'warn' shows the banner and awaits the user's "Submit Anyway" tap.
-   * When 'warn' + user has already tapped "Submit Anyway" the banner
-   * is dismissed and submission proceeds.
-   */
+
+
+  // ── Submit-for-preview ─────────────────────────────────────────────────────
   async function handlePreview() {
     if (!validate()) return;
     if (questionText.trim().length > maxChars) {
-      showToast(t('question.textTooLong', { max: maxChars }), 'warning');
-      return;
+      showToast(t('question.textTooLong', { max: maxChars }), 'warning'); return;
     }
     if (!isEditMode && remainingToday <= 0) {
-      showToast(t('question.limitReached', { limit: 20 }), 'warning');
-      return;
+      showToast(t('question.limitReached', { limit: 20 }), 'warning'); return;
     }
 
-    // ── On-device AI gate ────────────────────────────────────────────────────
     const validation = await runOnDeviceValidation({ text: questionText.trim(), ownId: editingQuestionId });
     setAiValidation(validation);
-
     if (validation.verdict === 'fail') {
       showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail') ?? t('onDeviceAI.defaultFail'), 'error');
       return;
     }
-
-    if (validation.verdict === 'warn' && !aiValidationOverride) {
-      // Show banner — do not navigate; user can override or dismiss
-      return;
-    }
-
-    // ── Image upload: defer to preview screen (only on final confirm) ──────────
+    if (validation.verdict === 'warn' && !aiValidationOverride) return;
 
     setPreviewLoading(true);
     try {
@@ -472,7 +479,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         mediaUrls: [],
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hasAudio = Boolean(pendingAudioUri);
+      const hasImage = Boolean(selectedImageUri);
+      let mediaType: 'none' | 'image' | 'audio' = 'none';
+      if (hasAudio) mediaType = 'audio';
+      else if (hasImage) mediaType = 'image';
+
       (navigation as any).navigate('QuestionPreview', {
         state: res.data.state ?? user?.state ?? '',
         district: res.data.district ?? user?.district ?? '',
@@ -481,10 +493,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         season: res.data.season ?? '',
         cropType: res.data.cropType ?? '',
         questionText: questionText.trim(),
-        mediaType: 'none',
+        mediaType,
         mediaUrls: [],
         pendingImageUri: selectedImageUri,
         pendingImageCompressed: compressedImageUri !== null,
+        pendingAudioUri,
         agroClimaticZone: res.data.agroClimaticZone ?? 'other',
         suggestedDistricts: res.data.suggestedDistricts ?? [],
         suggestedBlocks: res.data.suggestedBlocks ?? [],
@@ -500,14 +513,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   }
 
   const charCountColor =
-    questionText.length > maxChars
-      ? c.error
-      : questionText.length > maxChars * 0.9
-      ? '#E88B00'
+    questionText.length > maxChars ? c.error
+      : questionText.length > maxChars * 0.9 ? '#E88B00'
       : c.textSecondary;
 
   const relevanceFailed = (aiValidation?.verdict === 'fail' && aiValidation?.reasonKey === 'onDeviceAI.relevance.low');
-
   const canSubmit = questionText.trim().length > 0 && questionText.length <= maxChars && (isEditMode || remainingToday > 0) && !relevanceFailed;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -518,7 +528,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
-        {/* Scrollable content area — text input and context */}
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
@@ -531,10 +540,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <Text style={[styles.title, { color: c.text }]}>
                 {isEditMode ? t('question.editQuestion') : t('question.askQuestion')}
               </Text>
-              <TooltipIcon
-                description={isEditMode ? t('question.tooltipEdit') : t('question.tooltipAsk')}
-                size={18}
-              />
+              <TooltipIcon description={isEditMode ? t('question.tooltipEdit') : t('question.tooltipAsk')} size={18} />
             </View>
             {!isEditMode && (
               <View style={styles.limitRow}>
@@ -556,9 +562,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             </View>
           )}
 
-          {/* Text input card */}
+          {/* Card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            {/* Card heading — what is the user doing here */}
             <Text style={[styles.cardHeading, { color: c.text }]}>
               {isEditMode
                 ? (t('question.editModeLabel') ?? 'Updating your question')
@@ -594,7 +599,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               )}
             </View>
 
-            {/* Over limit error */}
             {questionText.length > maxChars && (
               <Text style={[styles.overLimitText, { color: c.error }]}>
                 {t('question.textTooLong', { max: maxChars })}
@@ -606,55 +610,35 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <Text style={[styles.imageSectionLabel, { color: c.textSecondary }]}>
                 Attach an image (optional)
               </Text>
-
-              {/* Uploaded / preview state */}
               {selectedImageUri ? (
                 <View style={styles.imagePreviewWrap}>
                   <Image source={{ uri: compressedImageUri ?? selectedImageUri }} style={styles.attachedImage} resizeMode="cover" />
                   <ImgTouchableOpacity
                     style={[styles.removeImageBtn, { backgroundColor: c.error }]}
-                    onPress={() => {
-                      setSelectedImageUri(null);
-                      setCompressedImageUri(null);
-                      setImageError(null);
-                    }}
+                    onPress={() => { setSelectedImageUri(null); setCompressedImageUri(null); setImageError(null); }}
                     accessibilityLabel="Remove image"
                   >
                     <Ionicons name="close" size={14} color="#fff" />
                   </ImgTouchableOpacity>
                 </View>
               ) : (
-                // Idle — show attach button
                 <TouchableOpacity
                   style={[styles.attachImageBtn, { borderColor: c.borderSubtle }]}
                   onPress={handleSelectImage}
                   accessibilityLabel="Attach image from gallery"
                 >
                   <Ionicons name="image-outline" size={22} color={c.textSecondary} />
-                  <Text style={[styles.attachImageBtnText, { color: c.textSecondary }]}>
-                    Add image
-                  </Text>
+                  <Text style={[styles.attachImageBtnText, { color: c.textSecondary }]}>Add image</Text>
                 </TouchableOpacity>
               )}
-
-              {imageError && (
-                <Text style={[styles.imageErrorText, { color: c.error }]}>{imageError}</Text>
-              )}
+              {imageError && <Text style={[styles.imageErrorText, { color: c.error }]}>{imageError}</Text>}
             </View>
 
-            {/* On-device AI warning banner */}
+            {/* AI warning banner */}
             <AIValidationBanner
               result={aiValidation ?? { verdict: 'pass', message: null, reasonKey: null, stages: { relevance: { pass: true, confidence: 1 }, duplicate: { pass: true, confidence: 1 }, spam: { pass: true, confidence: 1 } }, ran: false }}
-              onOverride={() => {
-                // User chose to override the warning — allow submission
-                setAiValidationOverride(true);
-                // Re-call handlePreview now that override is set
-                handlePreview();
-              }}
-              onDismiss={() => {
-                setAiValidation(null);
-                setAiValidationOverride(false);
-              }}
+              onOverride={() => { setAiValidationOverride(true); handlePreview(); }}
+              onDismiss={() => { setAiValidation(null); setAiValidationOverride(false); }}
             />
 
             {/* Submit button */}
@@ -671,17 +655,10 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <Button
                 title={loading ? t('question.updating') : t('question.updateQuestion')}
                 onPress={async () => {
-                  if (!questionText.trim()) {
-                    setErrors({ questionText: t('question.enterQuestion') });
-                    return;
-                  }
+                  if (!questionText.trim()) { setErrors({ questionText: t('question.enterQuestion') }); return; }
                   setLoading(true);
                   try {
-                    await questionApi.update(editingQuestionId!, {
-                      questionText: questionText.trim(),
-                      mediaType: 'none',
-                      mediaUrls: [],
-                    });
+                    await questionApi.update(editingQuestionId!, { questionText: questionText.trim(), mediaType: 'none', mediaUrls: [] });
                     showToast(t('question.updateSuccess'), 'success');
                     navigation.navigate('Submissions' as never);
                   } catch (err: unknown) {
@@ -697,7 +674,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               />
             )}
 
-            {/* Review hint */}
             <Text style={[styles.reviewHint, { color: c.textSecondary }]}>
               {t('question.reviewHint') ?? 'Questions are mostly reviewed within 24 hours'}
             </Text>
@@ -705,13 +681,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         </ScrollView>
 
         {/* ── Mic dock — pinned to bottom ─────────────────────────────────── */}
-        {/* Accessible without reaching or scrolling. Always visible when
-            the keyboard is closed; stays above the keyboard when open. */}
         <View style={[styles.micDock, { backgroundColor: c.background }]}>
-          {/* Divider line above mic dock */}
           <View style={[styles.micDockDivider, { backgroundColor: c.borderSubtle }]} />
-
-          {/* Instruction text */}
           <View style={styles.micInstructionCenter}>
             {remainingToday <= 0 && !isEditMode ? (
               <Text style={[styles.micHintText, { color: c.textTertiary }]}>
@@ -723,8 +694,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               </Text>
             )}
           </View>
-
-          {/* The mic button — centered */}
           <View style={styles.micButtonCenter}>
             <MicButton
               onTranscribed={(text) => {
@@ -732,9 +701,35 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 setErrors({});
                 scheduleValidation(text);
               }}
+              onRecordingDeleted={() => {
+                setPendingAudioUri(null);
+                setQuestionText('');
+                setErrors({});
+                setAiValidation(null);
+                setAiValidationOverride(false);
+              }}
+              onRecordingComplete={(uri) => {
+                setPendingAudioUri(uri);
+              }}
               disabled={remainingToday <= 0 && !isEditMode}
             />
           </View>
+
+          {/* ── AudioPreview dock — full-width card below the mic button ── */}
+          {pendingAudioUri && (
+            <View style={styles.audioPreviewDock}>
+              <AudioPreview
+                uri={pendingAudioUri}
+                onDelete={() => {
+                  setPendingAudioUri(null);
+                  setQuestionText('');
+                  setErrors({});
+                  setAiValidation(null);
+                  setAiValidationOverride(false);
+                }}
+              />
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -747,162 +742,75 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
   scrollView: { flex: 1 },
-  scroll: {
-    flexGrow: 1,
-    padding: tokens.spacing6,
-    paddingBottom: tokens.spacing4,
-  },
+  scroll: { flexGrow: 1, padding: tokens.spacing6, paddingBottom: tokens.spacing4 },
 
-  // ── Header ──────────────────────────────────────────────────────────────────
   header: { marginBottom: tokens.spacing5 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
   title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-  limitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    marginTop: tokens.spacing2,
-  },
+  limitRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginTop: tokens.spacing2 },
   limitDot: { width: 7, height: 7, borderRadius: 4 },
   limitText: { fontSize: 13 },
 
-  // ── Edit banner ─────────────────────────────────────────────────────────────
   editBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: tokens.spacing3,
-    paddingVertical: tokens.spacing2,
-    borderRadius: tokens.radiusMd,
-    gap: tokens.spacing2,
-    marginBottom: tokens.spacing4,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: tokens.spacing3, paddingVertical: tokens.spacing2,
+    borderRadius: tokens.radiusMd, gap: tokens.spacing2, marginBottom: tokens.spacing4,
   },
   editBannerText: { fontSize: 13, fontWeight: '500', flex: 1 },
 
-  // ── Card ───────────────────────────────────────────────────────────────────
-  card: {
-    borderRadius: tokens.radiusXl,
-    padding: tokens.spacing5,
-  },
-  cardHeading: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: tokens.spacing4,
-  },
+  card: { borderRadius: tokens.radiusXl, padding: tokens.spacing5 },
+  cardHeading: { fontSize: 16, fontWeight: '700', marginBottom: tokens.spacing4 },
 
-  // ── Input ──────────────────────────────────────────────────────────────────
   inputWrap: { marginBottom: tokens.spacing2 },
   textArea: {
-    height: 160,
-    textAlignVertical: 'top',
-    paddingTop: tokens.spacing4,
-    paddingHorizontal: tokens.spacing3,
-    fontSize: 16,
-    lineHeight: 24,
+    height: 160, textAlignVertical: 'top',
+    paddingTop: tokens.spacing4, paddingHorizontal: tokens.spacing3,
+    fontSize: 16, lineHeight: 24,
   },
 
-  // ── Character count ────────────────────────────────────────────────────────
   charRow: { marginBottom: tokens.spacing3 },
   charCount: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
-  hintTipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  hintTipRow: { flexDirection: 'row', alignItems: 'center' },
   hintText: { fontSize: 12, fontWeight: '500', flex: 1 },
   overLimitText: { fontSize: 12, fontWeight: '600', marginBottom: tokens.spacing2 },
 
-  // ── Review hint ────────────────────────────────────────────────────────────
   reviewHint: {
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 17,
-    marginTop: tokens.spacing3,
+    fontSize: 12, textAlign: 'center',
+    lineHeight: 17, marginTop: tokens.spacing3,
   },
 
-  // ── Mic dock ───────────────────────────────────────────────────────────────
   micDock: {
     paddingHorizontal: tokens.spacing6,
-    paddingTop: tokens.spacing3,
-    paddingBottom: tokens.spacing4,
-    alignItems: 'center',
+    paddingTop: tokens.spacing3, paddingBottom: tokens.spacing4,
   },
-  micDockDivider: {
-    height: 1,
+  micDockDivider: { height: 1, width: '100%', marginBottom: tokens.spacing3 },
+  micInstructionCenter: { marginBottom: tokens.spacing3 },
+  micButtonCenter: { alignItems: 'center' },
+  micHintText: { fontSize: 13, fontWeight: '500', textAlign: 'center' },
+  audioPreviewDock: {
+    marginTop: tokens.spacing3,
     width: '100%',
-    marginBottom: tokens.spacing3,
-  },
-  micInstructionCenter: {
-    marginBottom: tokens.spacing3,
-  },
-  micButtonCenter: {
-    alignItems: 'center',
-  },
-  micHintText: {
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
   },
 
-  // ── Image attachment ────────────────────────────────────────────────────────
   imageSection: {
-    marginTop: tokens.spacing3,
-    paddingTop: tokens.spacing3,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.06)',
+    marginTop: tokens.spacing3, paddingTop: tokens.spacing3,
+    borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)',
   },
-  imageSectionLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    marginBottom: tokens.spacing2,
-  },
+  imageSectionLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
   attachImageBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    borderWidth: 1.5,
-    borderRadius: tokens.radiusMd,
-    borderStyle: 'dashed',
-    paddingVertical: tokens.spacing2,
-    paddingHorizontal: tokens.spacing3,
+    flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2,
+    borderWidth: 1.5, borderRadius: tokens.radiusMd, borderStyle: 'dashed',
+    paddingVertical: tokens.spacing2, paddingHorizontal: tokens.spacing3,
   },
-  attachImageBtnText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  imagePreviewWrap: {
-    position: 'relative',
-    alignSelf: 'flex-start',
-  },
+  attachImageBtnText: { fontSize: 14, fontWeight: '500' },
+  imagePreviewWrap: { position: 'relative', alignSelf: 'flex-start' },
   attachedImage: {
-    width: 100,
-    height: 100,
-    borderRadius: tokens.radiusMd,
-    backgroundColor: '#f0f0f0',
+    width: 100, height: 100, borderRadius: tokens.radiusMd, backgroundColor: '#f0f0f0',
   },
   removeImageBtn: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
+    position: 'absolute', top: -6, right: -6,
+    width: 22, height: 22, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center', zIndex: 1,
   },
-  imageUploadSpinner: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -10,
-    marginLeft: -10,
-  },
-  imageUploadingText: {
-    fontSize: 11,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  imageErrorText: {
-    fontSize: 12,
-    marginTop: tokens.spacing1,
-  },
+  imageErrorText: { fontSize: 12, marginTop: tokens.spacing1 },
 });

@@ -186,7 +186,19 @@
     "text": "ಪಠ್ಯ",
     "image": "ಫೋಟೋ",
     "video": "ವೀಡಿಯೊ",
-    "audio": "ಆಡಿಯೊ",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "ಪ್ಲೇ",
+      "tapToPlay": "ಕೇಳಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+      "delete": "ಅಳಿಸಿ",
+      "stop": "ನಿಲ್ಲಿಸಿ",
+      "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
+    },
     "textPlaceholder": "ನಿಮ್ಮ ಕೃಷಿ ಸಂಬಂಧಿತ ಪ್ರಶ್ನೆಯನ್ನು ಬರೆಯಿರಿ...",
     "addMedia": "ಮೀಡಿಯಾ ಸೇರಿಸಿ",
     "addPhoto": "ಫೋಟೋ ಸೇರಿಸಿ",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "ನಿಮ್ಮ ರೆಕಾರ್ಡಿಂಗ್"
   },
   "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
   "resendOtp": "OTP ಮರುಕಳುಹಿಸಿ",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "ಮೈಕ್ರೊಫೋನ್ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ",
+    "startError": "ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ",
+    "transcribeError": "ಟ್ರಾನ್ಸ್‌ಕ್ರಿಪ್ಷನ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "transcribing": "ಟ್ರಾನ್ಸ್‌ಕ್ರೈಬ್ ಆಗುತ್ತಿದೆ…",
+    "recording": "ರೆಕಾರ್ಡಿಂಗ್ — ನಿಲ್ಲಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+    "record": "ರೆಕಾರ್ಡ್ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+    "play": "ಪ್ಲೇ",
+    "tapToPlay": "ಕೇಳಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+    "delete": "ಅಳಿಸಿ",
+    "stop": "ನಿಲ್ಲಿಸಿ",
+    "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
   }
 }

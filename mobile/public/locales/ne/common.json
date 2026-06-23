@@ -186,7 +186,19 @@
     "text": "टेक्स्ट",
     "image": "फोटो",
     "video": "भिडियो",
-    "audio": "अडियो",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "बजाउनुहोस्",
+      "tapToPlay": "सुन्न ट्याप गर्नुहोस्",
+      "delete": "हटाउनुहोस्",
+      "stop": "रोक्नुहोस्",
+      "playing": "बजिरहेको…"
+    },
     "textPlaceholder": "तपाईंको कृषि सम्बन्धी प्रश्न लेख्नुहोस्...",
     "addMedia": "मिडिया थप्नुहोस्",
     "addPhoto": "फोटो थप्नुहोस्",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "तपाईंको रेकर्डिङ"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "माइक्रोफोन अनुमति आवश्यक छ",
+    "startError": "रेकर्डिङ सुरु गर्न असफल",
+    "transcribeError": "ट्रान्सक्रिप्सन असफल। कृपया पुनः प्रयास गर्नुहोस्।",
+    "transcribing": "ट्रान्सक्राइब हुँदै…",
+    "recording": "रेकर्डिङ — रोक्न ट्याप गर्नुहोस्",
+    "record": "रेकर्ड गर्न ट्याप गर्नुहोस्",
+    "play": "बजाउनुहोस्",
+    "tapToPlay": "सुन्न ट्याप गर्नुहोस्",
+    "delete": "हटाउनुहोस्",
+    "stop": "रोक्नुहोस्",
+    "playing": "बजिरहेको…"
   }
 }

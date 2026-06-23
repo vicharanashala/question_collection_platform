@@ -186,7 +186,19 @@
     "text": "ટેક્સ્ટ",
     "image": "ફોટો",
     "video": "વિડિયો",
-    "audio": "ઑડિયો",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "ચાલો",
+      "tapToPlay": "સાંભળવા માટે ટૅપ કરો",
+      "delete": "દૂર કરો",
+      "stop": "અટકાવો",
+      "playing": "ચાલી રહ્યું છે…"
+    },
     "textPlaceholder": "તમારો ખેતી સંબંધિત પ્રશ્ન લખો...",
     "addMedia": "મીડિયા ઉમેરો",
     "addPhoto": "ફોટો ઉમેરો",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "તમારી રેકોર્ડિંગ"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "માઇક્રોફોનની પરવાનગી જરૂરી છે",
+    "startError": "રેકોર્ડિંગ શરૂ કરવામાં નિષ્ફળ",
+    "transcribeError": "ટ્રાન્સ્ક્રિપ્શન નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    "transcribing": "ટ્રાન્સ્ક્રાઇબ થઈ રહ્યું છે…",
+    "recording": "રેકોર્ડિંગ — રોકવા માટે ટૅપ કરો",
+    "record": "રેકોર્ડ કરવા માટે ટૅપ કરો",
+    "play": "ચાલો",
+    "tapToPlay": "સાંભળવા માટે ટૅપ કરો",
+    "delete": "દૂર કરો",
+    "stop": "અટકાવો",
+    "playing": "ચાલી રહ્યું છે…"
   }
 }

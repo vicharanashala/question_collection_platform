@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image,  } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AudioPlayer } from 'expo-audio';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
-import { questionApi, lgdApi, storageApi, getMediaUrl } from '../../api/client';
+import { questionApi, lgdApi, storageApi } from '../../api/client';
 import { cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
@@ -20,6 +21,78 @@ import { adminApi } from '../../api/client';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
+
+// ─── AudioPreviewPlayer ────────────────────────────────────────────────────────
+
+function AudioPreviewPlayer({ uri }: { uri: string }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+  const { t } = useTranslation();
+  const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const playerRef = useRef<AudioPlayer | null>(null);
+
+  async function togglePlay() {
+    try {
+      if (playing) {
+        playerRef.current?.pause();
+        playerRef.current?.remove();
+        playerRef.current = null;
+        setPlaying(false);
+        return;
+      }
+      setLoading(true);
+      const player = new AudioPlayer({ uri });
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.positionSec >= status.durationSec && status.durationSec > 0) {
+          player.remove();
+          playerRef.current = null;
+          setPlaying(false);
+        }
+      });
+      player.play();
+      playerRef.current = player;
+      setPlaying(true);
+      setLoading(false);
+    } catch {
+      setPlaying(false);
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => () => { playerRef.current?.remove(); }, []);
+
+  return (
+    <View style={audioPlayerStyles.wrap}>
+      <TouchableOpacity
+        style={[audioPlayerStyles.btn, { backgroundColor: c.primary + '20' }]}
+        onPress={togglePlay}
+        disabled={loading}
+        accessibilityLabel={playing ? t('audio.stop') ?? 'Stop' : t('audio.play') ?? 'Play'}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={c.primary} />
+        ) : (
+          <Ionicons
+            name={playing ? 'stop' : 'play'}
+            size={20}
+            color={c.primary}
+          />
+        )}
+      </TouchableOpacity>
+      <Text style={[audioPlayerStyles.label, { color: c.text }]}>
+        {playing ? (t('audio.playing') ?? 'Playing…') : (t('audio.yourRecording') ?? 'Your recording — tap to play')}
+      </Text>
+    </View>
+  );
+}
+
+const audioPlayerStyles = StyleSheet.create({
+  wrap: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing2 },
+  btn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  label: { flex: 1, fontSize: 13, fontWeight: '500' },
+});
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface QuestionPreviewScreenProps {
@@ -41,7 +114,6 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     }).catch(() => {});
   }, []);
 
-  // Editable form state — domains pre-filled from backend inference
   const [selectedState, setSelectedState] = useState(preview.state);
   const [selectedStateCode, setSelectedStateCode] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState(preview.district);
@@ -54,7 +126,6 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // LGD reference data
   const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
   const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
   const [blockList, setBlockList] = useState<{ code: string; name: string }[]>([]);
@@ -62,7 +133,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingBlocks, setLoadingBlocks] = useState(false);
 
-  // Load states; pre-fill districts/blocks from the backend's pre-filled state/district
+  // Load states + pre-fill districts/blocks
   useEffect(() => {
     setLoadingStates(true);
     lgdApi.getStates()
@@ -118,14 +189,20 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
     setLoading(true);
     try {
-      // Upload image only when user confirms submission
-      let mediaType: 'none' | 'image' = 'none';
+      let mediaType: 'none' | 'image' | 'audio' = 'none';
       let mediaUrls: string[] = [];
 
       if (preview.pendingImageUri) {
+        // Upload image — only on final confirm
         const filename = `question-img-${Date.now()}.jpg`;
         const { url } = await storageApi.uploadImage(preview.pendingImageUri, filename);
         mediaType = 'image';
+        mediaUrls = [url];
+      } else if (preview.pendingAudioUri) {
+        // Upload audio — only on final confirm (dev: in-memory/GCP, prod: GCP)
+        const filename = `question-audio-${Date.now()}.m4a`;
+        const { url } = await storageApi.uploadAudio(preview.pendingAudioUri, filename);
+        mediaType = 'audio';
         mediaUrls = [url];
       }
 
@@ -144,8 +221,6 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
       const { data } = await questionApi.submit(payload);
 
-      // Populate local duplicate cache with the new question so future submissions
-      // can be checked against it without a server round-trip.
       await cacheQuestionForDuplicateDetection(data.id, questionText.trim());
 
       showToast(t('question.submitSuccess'), 'success');
@@ -188,7 +263,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             </View>
           )}
 
-          {/* Edit card */}
+          {/* Form card */}
           <View style={[styles.card, { backgroundColor: theme.colors.surface, ...tokens.shadowMd }]}>
 
             {/* State */}
@@ -217,6 +292,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               loading={loadingStates}
             />
 
+            {/* District */}
             <Select
               label={t('question.district')}
               placeholder={t('selectDistrict')}
@@ -242,6 +318,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               loading={loadingDistricts}
             />
 
+            {/* Block (optional) */}
             <Select
               label={t('question.blockOptional')}
               placeholder={t('selectBlock')}
@@ -254,9 +331,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
             {/* Agro-Climatic Zone (read-only) */}
             <View style={styles.zoneBadgeWrap}>
-              <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>
-                {'Agro-Climatic Zone'}
-              </Text>
+              <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>Agro-Climatic Zone</Text>
               <View style={[styles.zoneBadge, { backgroundColor: theme.colors.primary + '18' }]}>
                 <Text style={[styles.zoneBadgeText, { color: theme.colors.primary }]}>
                   {AGRO_CLIMATIC_ZONE_LABELS[preview.agroClimaticZone as AgroClimaticZone] ?? preview.agroClimaticZone}
@@ -266,14 +341,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
             <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
-            {/* Domains — all listed, backend-returned ones pre-selected */}
+            {/* Domains */}
             <View style={styles.domainSection}>
               <Text style={[styles.domainLabel, { color: theme.colors.text }]}>
                 {t('question.domain') ?? 'Agriculture Domain'}
               </Text>
-              <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>
-                Select one or more
-              </Text>
+              <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>Select one or more</Text>
               <View style={styles.domainPills}>
                 {DOMAINS.map((d) => {
                   const selected = domains.includes(d);
@@ -283,35 +356,21 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                       style={[
                         styles.domainPill,
                         {
-                          backgroundColor: selected
-                            ? theme.colors.primary + '22'
-                            : theme.colors.input,
-                          borderColor: selected
-                            ? theme.colors.primary
-                            : theme.colors.borderSubtle,
+                          backgroundColor: selected ? theme.colors.primary + '22' : theme.colors.input,
+                          borderColor: selected ? theme.colors.primary : theme.colors.borderSubtle,
                         },
                       ]}
                       onPress={() => {
-                        setDomains((prev) =>
-                          selected ? prev.filter((x) => x !== d) : [...prev, d],
-                        );
+                        setDomains((prev) => selected ? prev.filter((x) => x !== d) : [...prev, d]);
                         setErrors({});
                       }}
                       activeOpacity={0.7}
                     >
                       {selected && (
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={13}
-                          color={theme.colors.primary}
-                          style={styles.pillIcon}
-                        />
+                        <Ionicons name="checkmark-circle" size={13} color={theme.colors.primary} style={styles.pillIcon} />
                       )}
                       <Text
-                        style={[
-                          styles.domainPillText,
-                          { color: selected ? theme.colors.primary : theme.colors.text },
-                        ]}
+                        style={[styles.domainPillText, { color: selected ? theme.colors.primary : theme.colors.text }]}
                         numberOfLines={2}
                       >
                         {d}
@@ -321,9 +380,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                 })}
               </View>
               {errors.domains && (
-                <Text style={[styles.domainError, { color: theme.colors.error }]}>
-                  {errors.domains}
-                </Text>
+                <Text style={[styles.domainError, { color: theme.colors.error }]}>{errors.domains}</Text>
               )}
             </View>
 
@@ -356,7 +413,6 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
               {t('question.yourQuestion') ?? 'Your Question'}
             </Text>
-
             <Input
               placeholder={t('question.questionPlaceholder') ?? 'Type your agriculture question here…'}
               value={questionText}
@@ -367,7 +423,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               style={{ height: 120, textAlignVertical: 'top', paddingTop: tokens.spacing3 }}
             />
 
-            {/* Media preview */}
+            {/* ── Image preview ─────────────────────────────────────────────── */}
             {preview.pendingImageUri ? (
               <View style={styles.mediaPreviewWrap}>
                 <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>
@@ -379,28 +435,18 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                   resizeMode="cover"
                 />
               </View>
-            ) : preview.mediaUrls && preview.mediaUrls.length > 0 ? (
-              <View style={styles.mediaPreviewWrap}>
-                <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>
-                  {t('question.attachMedia')}
-                </Text>
-                <Image
-                  source={{ uri: getMediaUrl(preview.mediaUrls[0]) }}
-                  style={styles.previewImage}
-                  resizeMode="cover"
-                />
-              </View>
             ) : null}
 
-            {/* Audio indicator */}
-            {preview.mediaType === 'audio' && (
-              <View style={[styles.audioIndicator, { backgroundColor: theme.colors.muted }]}>
-                <Ionicons name="mic" size={24} color={theme.colors.text} />
-                <Text style={[styles.audioIndicatorText, { color: theme.colors.text }]}>
-                  {t('question.attachMedia')}
+            {/* ── Audio player preview ───────────────────────────────────────── */}
+            {preview.pendingAudioUri ? (
+              <View style={[styles.audioWrap, { backgroundColor: theme.colors.muted }]}>
+                <Ionicons name="mic" size={20} color={theme.colors.primary} style={{ marginRight: tokens.spacing2 }} />
+                <Text style={[styles.audioWrapLabel, { color: theme.colors.text }]}>
+                  {t('question.attachMedia') ?? 'Voice recording attached'}
                 </Text>
+                <AudioPreviewPlayer uri={preview.pendingAudioUri} />
               </View>
-            )}
+            ) : null}
 
             <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
@@ -421,7 +467,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               loading={loading}
             />
             <Button
-              title={'Go Back'}
+              title="Go Back"
               variant="secondary"
               onPress={() => navigation.goBack()}
               disabled={loading}
@@ -445,12 +491,9 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 13, marginTop: tokens.spacing1, lineHeight: 18 },
   card: { borderRadius: tokens.radiusXl, padding: tokens.spacing6, marginBottom: tokens.spacing4 },
   notEditableNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
-    marginBottom: tokens.spacing3,
+    flexDirection: 'row', alignItems: 'center',
+    gap: tokens.spacing2, borderRadius: tokens.radiusMd,
+    padding: tokens.spacing3, marginBottom: tokens.spacing3,
   },
   notEditableText: { fontSize: 13, flex: 1 },
   sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: tokens.spacing3 },
@@ -458,10 +501,8 @@ const styles = StyleSheet.create({
   zoneBadgeWrap: { marginBottom: tokens.spacing4 },
   zoneLabel: { fontSize: 13, fontWeight: '500', marginBottom: tokens.spacing2 },
   zoneBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: tokens.radiusMd,
-    paddingVertical: tokens.spacing2,
-    paddingHorizontal: tokens.spacing3,
+    alignSelf: 'flex-start', borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing2, paddingHorizontal: tokens.spacing3,
   },
   zoneBadgeText: { fontSize: 13, fontWeight: '600' },
   domainSection: { marginBottom: tokens.spacing4 },
@@ -469,12 +510,9 @@ const styles = StyleSheet.create({
   domainSublabel: { fontSize: 12, marginBottom: tokens.spacing3 },
   domainPills: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
   domainPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: tokens.radiusMd,
-    paddingVertical: tokens.spacing2,
-    paddingHorizontal: tokens.spacing3 + 2,
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing2, paddingHorizontal: tokens.spacing3 + 2,
     minHeight: 36,
   },
   pillIcon: { marginRight: 4 },
@@ -482,21 +520,15 @@ const styles = StyleSheet.create({
   domainError: { fontSize: 12, marginTop: tokens.spacing2 },
   mediaPreviewWrap: { marginBottom: tokens.spacing4 },
   previewImage: { width: '100%', height: 160, borderRadius: tokens.radiusMd, marginTop: tokens.spacing2 },
-  audioIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
-    marginBottom: tokens.spacing4,
+  audioWrap: {
+    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap',
+    borderRadius: tokens.radiusMd, padding: tokens.spacing3,
+    marginBottom: tokens.spacing4, gap: tokens.spacing1,
   },
-  audioIndicatorText: { fontSize: 13, fontWeight: '500' },
+  audioWrapLabel: { fontSize: 13, fontWeight: '500', width: '100%', marginBottom: tokens.spacing1 },
   statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
+    flexDirection: 'row', alignItems: 'center',
+    gap: tokens.spacing2, borderRadius: tokens.radiusMd, padding: tokens.spacing3,
   },
   statsText: { fontSize: 13 },
   actions: { gap: tokens.spacing3, marginBottom: tokens.spacing6 },

@@ -186,7 +186,19 @@
     "text": "ਟੈਕਸਟ",
     "image": "ਫੋਟੋ",
     "video": "ਵੀਡੀਓ",
-    "audio": "ਆਡੀਓ",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "ਚਲਾਓ",
+      "tapToPlay": "ਸੁਣਨ ਲਈ ਟੈਪ ਕਰੋ",
+      "delete": "ਹਟਾਓ",
+      "stop": "ਰੋਕੋ",
+      "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
+    },
     "textPlaceholder": "ਆਪਣਾ ਖੇਤੀ ਸੰਬੰਧੀ ਸਵਾਲ ਲਿਖੋ...",
     "addMedia": "ਮੀਡੀਆ ਜੋੜੋ",
     "addPhoto": "ਫੋਟੋ ਜੋੜੋ",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "ਤੁਹਾਡੀ ਰਿਕਾਰਡਿੰਗ"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "ਮਾਈਕ੍ਰੋਫੋਨ ਦੀ ਇਜਾਜ਼ਤ ਜ਼ਰੂਰੀ ਹੈ",
+    "startError": "ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+    "transcribeError": "ਟ੍ਰਾਂਸਕ੍ਰਿਪਸ਼ਨ ਅਸਫਲ ਹੋਈ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "transcribing": "ਟ੍ਰਾਂਸਕ੍ਰਾਈਬ ਹੋ ਰਿਹਾ ਹੈ…",
+    "recording": "ਰਿਕਾਰਡਿੰਗ — ਰੋਕਣ ਲਈ ਟੈਪ ਕਰੋ",
+    "record": "ਰਿਕਾਰਡ ਕਰਨ ਲਈ ਟੈਪ ਕਰੋ",
+    "play": "ਚਲਾਓ",
+    "tapToPlay": "ਸੁਣਨ ਲਈ ਟੈਪ ਕਰੋ",
+    "delete": "ਹਟਾਓ",
+    "stop": "ਰੋਕੋ",
+    "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
   }
 }

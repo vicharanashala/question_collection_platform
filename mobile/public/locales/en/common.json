@@ -15,6 +15,19 @@
     "reviewNotes": "Review Notes",
     "search": "Search..."
   },
+  "audio": {
+    "permissionDenied": "Microphone permission required",
+    "startError": "Failed to start recording",
+    "transcribeError": "Transcription failed. Please try again.",
+    "transcribing": "Transcribing…",
+    "recording": "Recording — tap to stop",
+    "record": "Tap to record",
+    "play": "Play",
+    "tapToPlay": "Tap to play",
+    "delete": "Delete",
+    "stop": "Stop",
+    "playing": "Playing…"
+  },
   "agreeToConsent": "I have read and agree to the Terms of Service and Privacy Policy",
   "agreeToTerms": "By continuing, you agree to our",
   "and": "and",
@@ -222,7 +235,12 @@
       "transcribeError": "Transcription failed. Please try again.",
       "transcribing": "Transcribing…",
       "recording": "Recording — tap to stop",
-      "record": "Tap to record"
+      "record": "Tap to record",
+      "play": "Play",
+      "tapToPlay": "Tap to play",
+      "delete": "Delete",
+      "stop": "Stop",
+      "playing": "Playing…"
     },
     "textPlaceholder": "Write your agriculture-related question...",
     "addMedia": "Add Media",
@@ -241,7 +259,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "Your recording"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",

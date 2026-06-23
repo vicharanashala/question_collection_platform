@@ -186,7 +186,19 @@
     "text": "ଟେକ୍ସଟ",
     "image": "ଫଟୋ",
     "video": "ଭିଡିଓ",
-    "audio": "ଅଡିଓ",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "ଚଲାନ୍ତୁ",
+      "tapToPlay": "ଶୁଣିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+      "delete": "ଲୁଚି ଦିଅ",
+      "stop": "ବନ୍ଦ କରନ୍ତୁ",
+      "playing": "ଚାଲୁଛି…"
+    },
     "textPlaceholder": "ଆପଣଙ୍କ କୃଷି ସମ୍ବନ୍ଧୀୟ ପ୍ରଶ୍ନ ଲେଖନ୍ତୁ...",
     "addMedia": "ମିଡିଆ ଯୋଡନ୍ତୁ",
     "addPhoto": "ଫଟୋ ଯୋଡନ୍ତୁ",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "ଆପଣଙ୍କ ରେକର୍ଡିଂଗ"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "ମାଇକ୍ରୋଫୋନ ଅନୁମତି ଆବଶ୍ୟକ",
+    "startError": "ରେକର୍ଡିଂଗ ଆରମ୍ଭ କରିପାରିଲୁ ନାହିଁ",
+    "transcribeError": "ଟ୍ରାନ୍ସ୍‌କ୍ରିପସନ ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "transcribing": "ଟ୍ରାନ୍ସ୍‌କ୍ରାଇବ ହେଉଛି…",
+    "recording": "ରେକର୍ଡିଂଗ — ବନ୍ଦ କରିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+    "record": "ରେକର୍ଡ କରିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+    "play": "ଚଲାନ୍ତୁ",
+    "tapToPlay": "ଶୁଣିବାକୁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+    "delete": "ଲୁଚି ଦିଅ",
+    "stop": "ବନ୍ଦ କରନ୍ତୁ",
+    "playing": "ଚାଲୁଛି…"
   }
 }

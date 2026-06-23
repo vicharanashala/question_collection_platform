@@ -186,7 +186,19 @@
     "text": "টেক্সট",
     "image": "ফটো",
     "video": "ভিডিঅ'",
-    "audio": "অডিঅ'",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "বাজো",
+      "tapToPlay": "সিনিবাৰ বাবে টেপ কৰক",
+      "delete": "মচক",
+      "stop": "ৰুবুংধা",
+      "playing": "বাজি থাকিছে…"
+    },
     "textPlaceholder": "আপোনাৰ কৃষি সংক্ৰান্ত প্ৰশ্ন লিখক...",
     "addMedia": "মিডিয়া যোগ কৰক",
     "addPhoto": "ফটো যোগ কৰক",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "আপোনাৰ ৰেকর্ডিং"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "মাইক্রোফোনৰ অনুমতি প্রয়োজন",
+    "startError": "ৰেকর্ডিং আৰম্ভ কৰিব নোৱাৰিলো",
+    "transcribeError": "ট্রান্সক্রিপশন ব্যর্থ হৈছে। অনুগ্রহ কৰি পুনৰ চেষ্টা কৰক।",
+    "transcribing": "ট্রান্সক্রাইব হৈ আছে…",
+    "recording": "ৰেকর্ডিং — ৰুবুংধা",
+    "record": "ৰেকর্ড কৰিবলৈ টেপ কৰক",
+    "play": "বাজো",
+    "tapToPlay": "সিনিবাৰ বাবে টেপ কৰক",
+    "delete": "মচক",
+    "stop": "ৰুবুংধা",
+    "playing": "বাজি থাকিছে…"
   }
 }

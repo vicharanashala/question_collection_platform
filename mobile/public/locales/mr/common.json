@@ -186,7 +186,19 @@
     "text": "मजकूर",
     "image": "फोटो",
     "video": "व्हिडिओ",
-    "audio": "ऑडिओ",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "चालू",
+      "tapToPlay": "ऐकण्यासाठी टॅप करा",
+      "delete": "हटवा",
+      "stop": "थांबा",
+      "playing": "चालू आहे…"
+    },
     "textPlaceholder": "तुमचा शेती संबंधित प्रश्न लिहा...",
     "addMedia": "मीडिया जोडा",
     "addPhoto": "फोटो जोडा",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "तुमची रेकॉर्डिंग"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "मायक्रोफोन परवानगी आवश्यक आहे",
+    "startError": "रेकॉर्डिंग सुरू करण्यात अयशस्वी",
+    "transcribeError": "ट्रांसक्रिप्शन अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+    "transcribing": "ट्रांसक्राइब होत आहे…",
+    "recording": "रेकॉर्डिंग — थांबविण्यासाठी टॅप करा",
+    "record": "रिकॉर्ड करण्यासाठी टॅप करा",
+    "play": "चालू",
+    "tapToPlay": "ऐकण्यासाठी टॅप करा",
+    "delete": "हटवा",
+    "stop": "थांबा",
+    "playing": "चालू आहे…"
   }
 }

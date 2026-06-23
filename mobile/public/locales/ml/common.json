@@ -186,7 +186,19 @@
     "text": "ടെക്സ്റ്റ്",
     "image": "ചിത്രം",
     "video": "വീഡിയോ",
-    "audio": "ഓഡിയോ",
+    "audio": {
+      "permissionDenied": "Microphone permission required",
+      "startError": "Failed to start recording",
+      "transcribeError": "Transcription failed. Please try again.",
+      "transcribing": "Transcribing…",
+      "recording": "Recording — tap to stop",
+      "record": "Tap to record",
+      "play": "കളിക്കു",
+      "tapToPlay": "കേൾക്കാൻ ടാപ് ചെയ്യുക",
+      "delete": "വ delete െക്കുക",
+      "stop": "നിറുത്തു",
+      "playing": "കളിക്കുന്നു…"
+    },
     "textPlaceholder": "നിങ്ങളുടെ കാർഷിക ചോദ്യം എഴുതുക...",
     "addMedia": "മീഡിയ ചേർക്കുക",
     "addPhoto": "ചിത്രം ചേർക്കുക",
@@ -203,7 +215,8 @@
     "typeYourQuestion": "Type your question below",
     "tapMicHint": "Tap the mic to speak your question",
     "reviewHint": "Questions are mostly reviewed within 24 hours",
-    "notRelevant": "Not Relevant"
+    "notRelevant": "Not Relevant",
+    "yourRecording": "നിങ്ങളുടെ റെക്കോർഡിംഗ്"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -559,5 +572,18 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
+  },
+  "audio": {
+    "permissionDenied": "മൈക്രോഫോൺ അനുമതി ആവശ്യമാണ്",
+    "startError": "റെക്കോർഡിംഗ് ആരംഭിക്കാൻ കഴിഞ്ഞില്ല",
+    "transcribeError": "ട്രാൻസ്ക്രിപ്ഷൻ പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.",
+    "transcribing": "ട്രാൻസ്ക്രൈബ് ചെയ്തുകൊണ്ടിരിക്കുന്നു…",
+    "recording": "റെക്കോർഡിംഗ് — നിർത്താൻ ടാപ് ചെയ്യുക",
+    "record": "റെക്കോർഡ് ചെയ്യാൻ ടാപ് ചെയ്യുക",
+    "play": "കളിക്കു",
+    "tapToPlay": "കേൾക്കാൻ ടാപ് ചെയ്യുക",
+    "delete": "വ delete െക്കുക",
+    "stop": "നിറുത്തു",
+    "playing": "കളിക്കുന്നു…"
   }
 }
