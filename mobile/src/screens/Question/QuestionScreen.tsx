@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
-import { AudioModule, requestRecordingPermissionsAsync, setAudioModeAsync, AudioQuality, IOSOutputFormat, AudioPlayer } from 'expo-audio';
+import { AudioModule, requestRecordingPermissionsAsync, setAudioModeAsync, AudioQuality, IOSOutputFormat, createAudioPlayer } from 'expo-audio';
+import { AudioRecorder } from '../../components/AudioRecorder';
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
@@ -38,164 +39,7 @@ const toSarvamLang = (code: string) => {
   return map[code] ?? `${code}-IN`;
 };
 
-// ─── MicButton ─────────────────────────────────────────────────────────────────
-// WhatsApp-style: tap to record, tap again to stop. No rolling chunks.
-// On stop, the full audio is sent to Sarvam for transcription + returned as a URI.
-
-type MicState = 'idle' | 'recording' | 'processing' | 'done';
-
-export function MicButton({ onTranscribed, disabled, onRecordingDeleted, onRecordingComplete }: { onTranscribed: (text: string) => void; disabled?: boolean; onRecordingDeleted: () => void; onRecordingComplete: (uri: string) => void }) {
-  const { language } = useLanguage();
-  const { theme } = useTheme();
-  const c = theme.colors;
-  const { showToast } = useToast();
-  const { t } = useTranslation();
-
-  const [state, setState] = useState<MicState>('idle');
-  // Local copy of the URI — QuestionScreen keeps its own copy (pendingAudioUri).
-  const [localAudioUri, setLocalAudioUri] = useState<string | null>(null);
-  const recorderRef = useRef<InstanceType<typeof AudioModule.AudioRecorder> | null>(null);
-  const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      clearTimeout(autoStopRef.current ?? undefined);
-      recorderRef.current?.stop().catch(() => {});
-    };
-  }, []);
-
-  async function startRecording() {
-    try {
-      const { granted } = await requestRecordingPermissionsAsync();
-      if (!granted) {
-        showToast(t('audio.permissionDenied') ?? 'Microphone permission required', 'error');
-        return;
-      }
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-
-      const rec = new AudioModule.AudioRecorder({
-        extension: '.m4a',
-        sampleRate: 44100,
-        numberOfChannels: 2,
-        bitRate: 128000,
-        ios: { outputFormat: IOSOutputFormat.MPEG4AAC, audioQuality: AudioQuality.MAX },
-        android: { outputFormat: 'mpeg4', audioEncoder: 'aac' },
-        web: { mimeType: 'audio/webm', bitsPerSecond: 128000 },
-      });
-
-      await rec.prepareToRecordAsync();
-      rec.record();
-      recorderRef.current = rec;
-      setState('recording');
-
-      // Hard auto-stop after 60 seconds
-      autoStopRef.current = setTimeout(stopRecording, 60_000);
-    } catch (err) {
-      console.error('[MicButton] start error:', err);
-      showToast(t('audio.startError') ?? 'Failed to start recording', 'error');
-    }
-  }
-
-  async function stopRecording() {
-    clearTimeout(autoStopRef.current ?? undefined);
-    const rec = recorderRef.current;
-    if (!rec) return;
-
-    setState('processing');
-    await rec.stop();
-    const uri = rec.uri ?? '';
-
-    // Immediately show AudioPreview so user can hear their recording right away.
-    if (uri) {
-      setLocalAudioUri(uri);
-      onRecordingComplete(uri);
-    }
-
-    // Send the full recording to Sarvam for transcription in the background.
-    if (uri) {
-      const formData = new (globalThis.FormData)();
-      formData.append('audio', { uri, name: 'recording.m4a', type: 'audio/mp4' } as unknown as string);
-      formData.append('languageCode', toSarvamLang(language));
-
-      try {
-        const { data } = await api.post<{ text?: string; error?: string }>(
-          '/speech/transcribe-final',
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        if (data.text) {
-          onTranscribed(data.text);
-        } else if (data.error) {
-          showToast(t('audio.transcribeError') ?? 'Transcription failed', 'error');
-        }
-      } catch {
-        showToast(t('audio.transcribeError') ?? 'Transcription failed', 'error');
-      }
-    }
-
-    recorderRef.current = null;
-    setState('done');
-    setTimeout(() => setState('idle'), 3000);
-  }
-
-  function handlePress() {
-    if (disabled) return;
-    if (state === 'idle' || state === 'done') startRecording();
-    else if (state === 'recording') stopRecording();
-  }
-
-  function handleDelete() {
-    setLocalAudioUri(null);
-    onRecordingDeleted();
-    onTranscribed('');
-  }
-
-  const isRecording = state === 'recording';
-  const isProcessing = state === 'processing';
-  const isDisabled = disabled || isProcessing;
-  const btnBg = isDisabled ? c.muted : isRecording ? c.error : c.primary;
-
-  return (
-    <View style={micStyles.wrap}>
-      {isRecording && <View style={[micStyles.pulseOuter, { borderColor: c.primary + '25' }]} />}
-      {isRecording && <View style={[micStyles.pulseInner, { borderColor: c.primary + '45' }]} />}
-      <TouchableOpacity
-        style={[micStyles.btn, { backgroundColor: btnBg }]}
-        onPress={handlePress}
-        disabled={isDisabled}
-        activeOpacity={0.8}
-      >
-        {isProcessing ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Ionicons
-            name={isRecording ? 'stop' : 'mic'}
-            size={30}
-            color={isDisabled && !isRecording ? c.textTertiary : '#fff'}
-          />
-        )}
-      </TouchableOpacity>
-      {isRecording && <View style={[micStyles.recordingDot, { backgroundColor: c.error }]} />}
-    </View>
-  );
-}
-
-const micStyles = StyleSheet.create({
-  wrap: { alignItems: 'center', justifyContent: 'center', width: 72, height: 72, position: 'relative' },
-  pulseOuter: { position: 'absolute', width: 72, height: 72, borderRadius: 36, borderWidth: 2 },
-  pulseInner: { position: 'absolute', width: 60, height: 60, borderRadius: 30, borderWidth: 1.5 },
-  btn: {
-    width: 64, height: 64, borderRadius: 32,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 8, zIndex: 1,
-  },
-  recordingDot: {
-    position: 'absolute', bottom: 6, right: 6,
-    width: 10, height: 10, borderRadius: 5,
-    borderWidth: 2, borderColor: '#fff', zIndex: 2,
-  },
-});
+// AudioRecorder handles chunked streaming transcription. See src/components/AudioRecorder.tsx
 
 // ─── AudioPreview ──────────────────────────────────────────────────────────────
 // Full-featured playback view: play/pause, seekable progress bar, duration,
@@ -225,28 +69,40 @@ function AudioPreview({ uri, onDelete, onClose }: { uri: string; onDelete: () =>
         setPlaying(false);
         return;
       }
-      const player = new AudioPlayer({ uri });
+
+      // createAudioPlayer(source, options) — options.updateInterval controls
+      // how often playbackStatusUpdate fires (ms). No shouldPlay option;
+      // playback starts only when play() is explicitly called.
+      const player = createAudioPlayer(uri, { updateInterval: 250 });
+      console.log('[AudioPreview] player created — isLoaded:', player.isLoaded, 'duration:', player.duration, 'error:', player.currentStatus.error);
+
       player.addListener('playbackStatusUpdate', (status) => {
-        setCurrentSec(status.currentTime ?? 0);
-        setTotalSec(status.duration ?? 0);
-        if (status.currentTime !== undefined && status.duration !== undefined) {
-          if (status.currentTime >= status.duration && status.duration > 0) {
-            player.remove();
-            playerRef.current = null;
-            setPlaying(false);
-            setCurrentSec(0);
-          }
+        console.log('[AudioPreview] status update — currentTime:', status.currentTime, 'duration:', status.duration, 'error:', status.error);
+        setCurrentSec(status.currentTime);
+        setTotalSec(status.duration);
+        if (status.didJustFinish && status.duration > 0) {
+          player.remove();
+          playerRef.current = null;
+          setPlaying(false);
+          setCurrentSec(0);
         }
       });
+
       await player.play();
       playerRef.current = player;
       setPlaying(true);
-    } catch {
+    } catch (err) {
+      console.warn('[AudioPreview] play error:', err);
       setPlaying(false);
     }
   }
 
-  useEffect(() => () => { playerRef.current?.remove(); }, []);
+  useEffect(() => {
+    return () => {
+      playerRef.current?.remove();
+      playerRef.current = null;
+    };
+  }, []);
 
   return (
     <View style={[audioPreviewStyles.wrap, { backgroundColor: c.surface, borderColor: c.borderSubtle }]}>
@@ -378,7 +234,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [imageError, setImageError] = useState<string | null>(null);
 
   // ── Audio state ────────────────────────────────────────────────────────────
-  // MicButton owns the AudioPreview UI; QuestionScreen keeps the URI so it
+  // AudioRecorder owns the audio recording UI; QuestionScreen keeps the URI so it
   // can be passed to QuestionPreview and used for mediaType detection.
   const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
 
@@ -695,18 +551,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             )}
           </View>
           <View style={styles.micButtonCenter}>
-            <MicButton
+            <AudioRecorder
               onTranscribed={(text) => {
                 setQuestionText(text);
                 setErrors({});
                 scheduleValidation(text);
-              }}
-              onRecordingDeleted={() => {
-                setPendingAudioUri(null);
-                setQuestionText('');
-                setErrors({});
-                setAiValidation(null);
-                setAiValidationOverride(false);
               }}
               onRecordingComplete={(uri) => {
                 setPendingAudioUri(uri);

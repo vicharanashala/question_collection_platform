@@ -29,6 +29,8 @@ type RecorderState = 'idle' | 'recording' | 'uploading' | 'done';
 interface AudioRecorderProps {
   /** Called with the transcribed text as it arrives (appended progressively). */
   onTranscribed: (text: string) => void;
+  /** Called when recording stops — provides the file URI for playback preview. */
+  onRecordingComplete?: (uri: string) => void;
   /** Show a label below the button */
   label?: string;
   /** Disable the recorder */
@@ -49,6 +51,7 @@ interface PendingChunk {
 
 export function AudioRecorder({
   onTranscribed,
+  onRecordingComplete,
   label,
   disabled,
 }: AudioRecorderProps) {
@@ -60,6 +63,10 @@ export function AudioRecorder({
 
   const [state, setState] = useState<RecorderState>('idle');
   const [transcriptSoFar, setTranscriptSoFar] = useState('');
+
+  // Keep onRecordingComplete ref fresh so it always calls the latest callback
+  const onRecordingCompleteRef = useRef(onRecordingComplete);
+  onRecordingCompleteRef.current = onRecordingComplete;
 
   // Active recorder instance
   const recorderRef = useRef<InstanceType<typeof AudioModule.AudioRecorder> | null>(null);
@@ -97,8 +104,8 @@ export function AudioRecorder({
         const formData = new (globalThis.FormData)();
         formData.append('audio', {
           uri,
-          name: `chunk-${seq}.m4a`,
-          type: 'audio/mp4',
+          name: `chunk-${seq}.aac`,
+          type: 'audio/aac',
         } as unknown as string);
         formData.append('languageCode', toSarvamLang(languageCode));
         formData.append('sequenceNumber', String(seq));
@@ -205,9 +212,9 @@ export function AudioRecorder({
       });
 
       const recorder = new AudioModule.AudioRecorder({
-        extension: '.m4a',
+        extension: '.aac',
         sampleRate: 44100,
-        numberOfChannels: 2,
+        numberOfChannels: 1,
         bitRate: 128000,
         ios: {
           outputFormat: IOSOutputFormat.MPEG4AAC,
@@ -217,7 +224,7 @@ export function AudioRecorder({
           linearPCMIsFloat: false,
         },
         android: {
-          outputFormat: 'mpeg4',
+          outputFormat: 'aac',
           audioEncoder: 'aac',
         },
         web: {
@@ -274,13 +281,16 @@ export function AudioRecorder({
       const uri = recorder.uri;
 
       if (uri) {
+        // Notify parent so it can show AudioPreview for playback
+        onRecordingCompleteRef.current?.(uri);
+
         // Upload final chunk with a high sequence number
         const seq = sequenceRef.current++;
         const formData = new (globalThis.FormData)();
         formData.append('audio', {
           uri,
-          name: `final-${seq}.m4a`,
-          type: 'audio/mp4',
+          name: `final-${seq}.aac`,
+          type: 'audio/aac',
         } as unknown as string);
         formData.append('languageCode', toSarvamLang(languageCode));
         formData.append('sequenceNumber', String(seq));
