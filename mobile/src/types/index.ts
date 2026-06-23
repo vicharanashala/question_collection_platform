@@ -111,7 +111,6 @@ export interface Question {
   mediaType: 'none' | 'image' | 'video' | 'audio';
   mediaUrls: string[] | null;
   status: 'pending' | 'ai_review' | 'human_review' | 'held' | 'approved' | 'rejected';
-  aiConfidenceScore: number | null;
   duplicateFlag: boolean;
   submittedAt: string;
   reviewedAt: string | null;
@@ -264,7 +263,6 @@ export interface QuestionSummary {
 
 export interface QuestionAnalytics {
   summary: QuestionSummary;
-  avgAiConfidence: number | null;
   dailyVolume: { date: string; submitted: number; approved: number; rejected: number }[];
   stateBreakdown: { state: string; count: number; approved: number }[];
   cropBreakdown: { cropType: string; count: number; approved: number }[];
@@ -294,7 +292,6 @@ export interface AnalyticsDashboard {
   datasetGrowthRate: number;
   costPerApprovedQuestion: number;
   stateParticipationRate: number;
-  avgQuestionQualityScore: number | null;
   users: UserAnalytics;
   questions: QuestionAnalytics;
   rewards: RewardAnalytics;

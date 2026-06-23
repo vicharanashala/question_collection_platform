@@ -58,7 +58,6 @@ async function main() {
       suggestedDistricts: ['Pune', 'Satara', 'Solapur'],
       suggestedBlocks: ['Block-1', 'Block-2', 'Block-3'],
       remainingToday: 19,
-      aiConfidence: 0.7 + (i % 10) * 0.03,
       status: QuestionStatus.PENDING,
       submittedAt: new Date(),
     });

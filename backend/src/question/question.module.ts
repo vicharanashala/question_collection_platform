@@ -6,6 +6,7 @@ import { Question, AuditLog, Notification } from '../database/entities';
 import { UserModule } from '../user/user.module';
 import { AdminModule } from '../admin/admin.module';
 import { StorageModule } from '../storage/storage.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { StorageModule } from '../storage/storage.module';
     UserModule,
     AdminModule,
     StorageModule,
+    AiModule,
   ],
   controllers: [QuestionController],
   providers: [QuestionService],

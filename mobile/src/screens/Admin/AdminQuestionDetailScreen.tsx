@@ -109,8 +109,7 @@ export function AdminQuestionDetailScreen() {
               ['Season', String(q.season)],
               ['State', String(q.state)],
               ['District', String(q.district)],
-              ['AI Score', q.aiConfidenceScore != null ? `${String(q.aiConfidenceScore)}%` : 'N/A'],
-            ].map(([k, v]) => (
+].map(([k, v]) => (
               <View key={k} style={styles.metaRow}>
                 <Text style={[styles.metaKey, { color: c.textSecondary }]}>{k}</Text>
                 <Text style={[styles.metaVal, { color: c.text }]}>{v}</Text>

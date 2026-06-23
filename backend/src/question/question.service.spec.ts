@@ -1,12 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { QuestionService } from './question.service';
 import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
-import { Question, AuditLog } from '../database/entities';
-import { QuestionStatus, MediaType, Season } from '../common/enums';
+import { StorageService } from '../storage/storage.service';
+import { GemmaService } from '../ai/gemma.service';
+import { Question, AuditLog, Notification } from '../database/entities';
+import { QuestionStatus, MediaType, Season, VerificationStatus } from '../common/enums';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+
+// ─── Repository / service mocks ────────────────────────────────────────────────
 
 const mockQuestionRepo = () => ({
   create: jest.fn(),
@@ -20,6 +24,11 @@ const mockAuditRepo = () => ({
   save: jest.fn(),
 });
 
+const mockNotificationRepo = () => ({
+  save: jest.fn(),
+  create: jest.fn((obj) => obj),
+});
+
 const mockDataSource = () => ({
   transaction: jest.fn((fn) => fn({ getRepository: () => mockQuestionRepo() })),
 });
@@ -31,15 +40,14 @@ const mockAdminService = () => ({
       question_edit_window_seconds: 30,
       video_max_size_mb: 10,
       video_max_duration_seconds: 10,
+      max_question_chars: 1000,
+      max_image_size_mb: 5,
     };
     return Promise.resolve(map[key] ?? 0);
   }),
   getConfigValues: jest.fn(),
 });
 
-import { VerificationStatus } from '../common/enums';
-
-// UserService is injected to look up languagePreference when client omits `language`
 const mockUserService = () => {
   const verifiedUser = {
     id: '11111111-1111-1111-1111-111111111111',
@@ -52,6 +60,20 @@ const mockUserService = () => {
   };
 };
 
+const mockGemmaService = () => ({
+  inferCropAndDomains: jest.fn().mockResolvedValue({
+    crop: 'Rice',
+    domains: ['Insect-Pest Management', 'Disease Management'],
+    confidence: 0.92,
+  }),
+});
+
+const mockStorageService = () => ({
+  upload: jest.fn(),
+});
+
+// ─── Tests ────────────────────────────────────────────────────────────────────
+
 describe('QuestionService', () => {
   let service: QuestionService;
   let questionRepo: ReturnType<typeof mockQuestionRepo>;
@@ -61,7 +83,7 @@ describe('QuestionService', () => {
   const questionId = '22222222-2222-2222-2222-222222222222';
 
   const baseDto = {
-    domains: ['Insect–Pest Management', 'Disease Management'],
+    domains: ['Insect-Pest Management', 'Disease Management'],
     season: Season.KHARIF,
     cropType: 'Rice',
     questionText: 'What is the best pesticide for brown planthopper?',
@@ -76,9 +98,12 @@ describe('QuestionService', () => {
         QuestionService,
         { provide: getRepositoryToken(Question), useFactory: mockQuestionRepo },
         { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
+        { provide: getRepositoryToken(Notification), useFactory: mockNotificationRepo },
         { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
         { provide: UserService, useFactory: mockUserService },
+        { provide: StorageService, useFactory: mockStorageService },
+        { provide: GemmaService, useFactory: mockGemmaService },
       ],
     }).compile();
 
@@ -89,7 +114,7 @@ describe('QuestionService', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  // ─── submit ──────────────────────────────────────────────────────────────
+  // ─── submit ────────────────────────────────────────────────────────────────
 
   describe('submit', () => {
     it('should create a question with PENDING status and return editWindowClosesAt', async () => {
@@ -107,11 +132,13 @@ describe('QuestionService', () => {
         submittedAt: new Date(),
       };
 
-      // Transaction wrapper
-      (service as any).dataSource.transaction.mockImplementation(async (fn: (em: unknown) => Promise<unknown>) => {
-        const repo = { save: jest.fn().mockResolvedValue(createdQuestion) };
-        return fn({ getRepository: () => repo });
-      });
+      // Override transaction so it uses our createdQuestion
+      (service as any).dataSource.transaction.mockImplementation(
+        async (fn: (em: unknown) => Promise<unknown>) => {
+          const repo = { save: jest.fn().mockResolvedValue(createdQuestion) };
+          return fn({ getRepository: () => repo });
+        },
+      );
 
       const result = await service.submit(userId, baseDto);
 
@@ -138,7 +165,7 @@ describe('QuestionService', () => {
     });
   });
 
-  // ─── update ──────────────────────────────────────────────────────────────
+  // ─── update ────────────────────────────────────────────────────────────────
 
   describe('update', () => {
     it('should allow update within edit window', async () => {
@@ -147,7 +174,7 @@ describe('QuestionService', () => {
         id: questionId,
         userId,
         questionText: 'Original text',
-        domains: ['Insect–Pest Management'],
+        domains: ['Insect-Pest Management'],
         season: 'Kharif',
         cropType: 'Rice',
         mediaType: MediaType.NONE,
@@ -200,7 +227,7 @@ describe('QuestionService', () => {
     });
   });
 
-  // ─── findOne ─────────────────────────────────────────────────────────────
+  // ─── findOne ───────────────────────────────────────────────────────────────
 
   describe('findOne', () => {
     it('should return a question for the owner', async () => {
@@ -238,11 +265,11 @@ describe('QuestionService', () => {
     });
   });
 
-  // ─── list ────────────────────────────────────────────────────────────────
+  // ─── list ──────────────────────────────────────────────────────────────────
 
   describe('list', () => {
     it('should return paginated results for a user', async () => {
-      const items = [{ id: questionId, userId, status: QuestionStatus.PENDING }];
+      const items = [{ id: questionId, userId, status: QuestionStatus.PENDING, reviewedByName: null }];
       questionRepo.findAndCount.mockResolvedValue([items, 1]);
 
       const result = await service.list(userId, { page: 1, limit: 20 });
@@ -277,7 +304,7 @@ describe('QuestionService', () => {
     });
   });
 
-  // ─── approve / reject ────────────────────────────────────────────────────
+  // ─── approve / reject ──────────────────────────────────────────────────────
 
   describe('approve', () => {
     it('should approve a question and set reviewerId', async () => {
@@ -325,7 +352,7 @@ describe('QuestionService', () => {
     });
   });
 
-  // ─── getDailyCount ───────────────────────────────────────────────────────
+  // ─── getDailyCount ─────────────────────────────────────────────────────────
 
   describe('getDailyCount', () => {
     it('should return the count of questions submitted today', async () => {
@@ -337,7 +364,7 @@ describe('QuestionService', () => {
     });
   });
 
-  // ─── getLimits ───────────────────────────────────────────────────────────
+  // ─── getLimits ─────────────────────────────────────────────────────────────
 
   describe('getLimits', () => {
     it('should return configured limits', async () => {

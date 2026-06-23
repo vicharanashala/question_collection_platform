@@ -37,7 +37,6 @@ export interface Question {
   language: string;
   mediaType: string;
   mediaUrls: string[] | null;
-  aiConfidenceScore: number | null;
   duplicateFlag: boolean;
   submittedAt: string;
   reviewedAt: string | null;
@@ -235,7 +234,6 @@ export interface QuestionSummary {
 
 export interface QuestionAnalytics {
   summary: QuestionSummary
-  avgAiConfidence: number | null
   dailyVolume: { date: string; submitted: number; approved: number; rejected: number }[]
   stateBreakdown: { state: string; count: number; approved: number }[]
   cropBreakdown: { cropType: string; count: number; approved: number }[]
@@ -266,7 +264,6 @@ export interface AnalyticsDashboard {
   datasetGrowthRate: number
   costPerApprovedQuestion: number
   stateParticipationRate: number
-  avgQuestionQualityScore: number | null
   // Sub-sections
   users: UserAnalytics
   questions: QuestionAnalytics

@@ -316,7 +316,6 @@ export class AdminService implements OnModuleInit {
         'id',
         'questionText',
         'status',
-        'aiConfidenceScore',
         'submittedAt',
         'reviewedAt',
         'rejectionReason',
@@ -462,7 +461,6 @@ export class AdminService implements OnModuleInit {
         'q.mediaType',
         'q.mediaUrls',
         'q.status',
-        'q.aiConfidenceScore',
         'q.submittedAt',
         'q.reviewedAt',
         'q.rejectionReason',
@@ -512,8 +510,7 @@ export class AdminService implements OnModuleInit {
 
     // Sorting
     const sortColumn =
-      sortBy === 'aiConfidenceScore' ? 'q.aiConfidenceScore'
-      : sortBy === 'state' ? 'q.state'
+      sortBy === 'state' ? 'q.state'
       : sortBy === 'reviewedAt' ? 'q.reviewedAt'
       : 'q.submittedAt';
     qb.orderBy(sortColumn, sortOrder);
@@ -1842,14 +1839,6 @@ export class AdminService implements OnModuleInit {
       .orderBy('count', 'DESC')
       .getRawMany();
 
-    // Average AI confidence
-    const avgConfidence = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('AVG(q.aiConfidenceScore)', 'avg')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .andWhere('q.aiConfidenceScore IS NOT NULL')
-      .getRawOne<{ avg: string | null }>();
-
     // Review turnaround (avg time from submittedAt to reviewedAt for approved/rejected)
     const avgTurnaroundRaw = await this.questionRepo
       .createQueryBuilder('q')
@@ -1891,7 +1880,6 @@ export class AdminService implements OnModuleInit {
         state: r.state,
         count: Number(r.count),
       })),
-      avgAiConfidence: avgConfidence?.avg ? parseFloat(Number(avgConfidence.avg).toFixed(2)) : null,
       avgReviewTurnaroundMinutes: avgTurnaroundMinutes || null,
     };
   }
@@ -1964,7 +1952,6 @@ export class AdminService implements OnModuleInit {
       datasetGrowthRate: growthRate,
       costPerApprovedQuestion: costPerApproved,
       stateParticipationRate: participationRate,
-      avgQuestionQualityScore: questionAnalytics.avgAiConfidence,
       // Sub-analytics (for charts)
       users: userAnalytics,
       questions: questionAnalytics,
@@ -2166,15 +2153,6 @@ export class AdminService implements OnModuleInit {
       approved: Number(r.approved),
     }));
 
-    // Average AI confidence score (quality proxy)
-    const avgConfidenceRaw = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('AVG(q.aiConfidenceScore)', 'avg')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .andWhere('q.aiConfidenceScore IS NOT NULL')
-      .getRawOne<{ avg: string | null }>();
-    const avgAiConfidence = avgConfidenceRaw?.avg ? parseFloat(Number(avgConfidenceRaw.avg).toFixed(2)) : null;
-
     // Approval rate
     const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
 
@@ -2198,7 +2176,6 @@ export class AdminService implements OnModuleInit {
         approvalRate,
         growthRate,
       },
-      avgAiConfidence,
       dailyVolume,
       stateBreakdown,
       cropBreakdown,
@@ -2334,7 +2311,6 @@ export class AdminService implements OnModuleInit {
           'q.district',
           'q.mediaType',
           'q.status',
-          'q.aiConfidenceScore',
           'q.submittedAt',
           'q.reviewedAt',
           'q.rejectionReason',
@@ -2349,7 +2325,7 @@ export class AdminService implements OnModuleInit {
       columns = [
         'id', 'mobileNumber', 'name', 'questionText', 'language',
         'domains', 'cropType', 'season', 'state', 'district',
-        'mediaType', 'status', 'aiConfidenceScore', 'submittedAt', 'reviewedAt',
+        'mediaType', 'status', 'submittedAt', 'reviewedAt',
         'rejectionReason', 'heldReason', 'approvalReason',
       ];
     } else if (dataType === 'users') {

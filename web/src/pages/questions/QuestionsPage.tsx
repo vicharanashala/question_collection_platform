@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { cn, formatDate } from '@/lib/utils'
 import {
-  Clock, User, Eye, Star,
+  Clock, User, Eye,
   MapPin, Wheat, CloudRain, Globe, Film,
   Hash, AlertTriangle, PauseCircle, CheckCircle,
   XCircle, ListFilter, Search, Info,
@@ -174,14 +174,7 @@ export function QuestionsPage() {
       ),
     },
     {
-      key: 'aiConfidenceScore', header: 'AI Score', width: '90px', sortable: true,
-      render: (q) => q.aiConfidenceScore != null ? (
-        <span className={cn('text-xs font-medium', q.aiConfidenceScore >= 80 ? 'text-success' : q.aiConfidenceScore >= 50 ? 'text-warning' : 'text-destructive')}>
-          {q.aiConfidenceScore}%
-        </span>
-      ) : <span className="text-xs text-muted-foreground">—</span>,
-    },
-    {
+      {
       key: 'submittedAt', header: 'Submitted', width: '120px', sortable: true,
       render: (q) => <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt)}</span>,
     },
@@ -328,12 +321,7 @@ export function QuestionsPage() {
                 {detailQuestion.domains?.length ? (
                   <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domains.join(', ')}</span>
                 ) : null}
-                {detailQuestion.aiConfidenceScore != null && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star className="h-3 w-3 text-warning" /> AI confidence: {detailQuestion.aiConfidenceScore}%
-                  </span>
-                )}
-                {detailQuestion.duplicateFlag && (
+{detailQuestion.duplicateFlag && (
                   <Badge variant="destructive" className="text-xs">
                     <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
                   </Badge>

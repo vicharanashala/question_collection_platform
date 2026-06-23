@@ -145,17 +145,6 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       ),
     },
     {
-      key: 'aiConfidenceScore',
-      header: 'AI Score',
-      width: '80px',
-      sortable: true,
-      render: (q) => (
-        <span className="text-xs font-medium text-muted-foreground">
-          {q.aiConfidenceScore != null ? `${Math.round(q.aiConfidenceScore * 100)}%` : '—'}
-        </span>
-      ),
-    },
-    {
       key: 'submittedAt',
       header: 'Submitted',
       width: '110px',
@@ -229,15 +218,6 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       key: 'cropType',
       header: 'Crop',
       render: (q) => <span className="text-xs text-muted-foreground capitalize">{q.cropType || '—'}</span>,
-    },
-    {
-      key: 'aiConfidenceScore',
-      header: 'AI Score',
-      render: (q) => (
-        <span className="text-xs text-muted-foreground">
-          {q.aiConfidenceScore != null ? `${Math.round(q.aiConfidenceScore * 100)}%` : '—'}
-        </span>
-      ),
     },
   ]
 }

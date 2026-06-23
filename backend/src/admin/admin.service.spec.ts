@@ -150,7 +150,6 @@ const mockQuestion = {
   cropType: 'Rice',
   state: 'Maharashtra',
   submittedAt: new Date(),
-  aiConfidenceScore: 75,
 };
 
 const mockConfig = {

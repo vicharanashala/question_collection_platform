@@ -205,34 +205,6 @@ export function QuestionDetailScreen() {
           </View>
         </View>
 
-        {/* AI score */}
-        {q.aiConfidenceScore != null && (
-          <View style={[styles.section, { backgroundColor: c.surface }]}>
-            <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
-              {t('notifications.aiScore', 'AI Confidence Score')}
-            </Text>
-            <View style={styles.aiScoreRow}>
-              <View style={[styles.aiScoreBar, { backgroundColor: c.muted }]}>
-                <View
-                  style={[
-                    styles.aiScoreFill,
-                    {
-                      backgroundColor:
-                        (q.aiConfidenceScore ?? 0) >= 80 ? '#22c55e'
-                        : (q.aiConfidenceScore ?? 0) >= 50 ? '#f59e0b'
-                        : '#ef4444',
-                      width: `${q.aiConfidenceScore ?? 0}%`,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={[styles.aiScoreText, { color: c.text }]}>
-                {q.aiConfidenceScore}%
-              </Text>
-            </View>
-          </View>
-        )}
-
         {/* Review reason — rejection */}
         {q.status === 'rejected' && q.rejectionReason && (
           <View style={[styles.reasonCard, { backgroundColor: '#fee2e2' }]}>

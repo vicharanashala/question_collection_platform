@@ -49,3 +49,9 @@ export const gcpStorageConfig = registerAs('gcpStorage', () => ({
   bucketName: process.env.GCP_BUCKET_NAME || '',
   keyFile: process.env.GCP_KEY_FILE || '',
 }));
+
+export const llmConfig = registerAs('llm', () => ({
+  baseUrl: process.env.OPENAI_BASE_URL || '',
+  apiKey: process.env.OPENAI_API_KEY || '',
+  model: process.env.OPENAI_MODEL || 'meta-llama/llama-4-maverick',
+}));

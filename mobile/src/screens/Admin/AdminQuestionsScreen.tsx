@@ -49,11 +49,9 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
 const STATE_OPTIONS = INDIAN_STATES.map((s) => ({ value: s, label: s }));
 
 const SORT_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'submittedAt:DESC',        label: 'Newest First' },
-  { value: 'submittedAt:ASC',         label: 'Oldest First' },
-  { value: 'aiConfidenceScore:DESC', label: 'AI Confidence ↓' },
-  { value: 'aiConfidenceScore:ASC',  label: 'AI Confidence ↑' },
-  { value: 'state:ASC',               label: 'State A→Z' },
+  { value: 'submittedAt:DESC', label: 'Newest First' },
+  { value: 'submittedAt:ASC',  label: 'Oldest First' },
+  { value: 'state:ASC',         label: 'State A→Z' },
 ];
 
 interface QueueItem {
@@ -66,7 +64,6 @@ interface QueueItem {
   district: string;
   mediaType: string;
   status: string;
-  aiConfidenceScore: number | null;
   submittedAt: string;
   user: { id: string; name: string; mobileNumber: string } | null;
   heldReason: string | null;
@@ -211,16 +208,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
               <Text style={[styles.metaVal, { color: c.text }]} numberOfLines={1}>{v}</Text>
             </View>
           ))}
-          {item.aiConfidenceScore != null && (
-            <View style={styles.metaRow}>
-              <Text style={[styles.metaKey, { color: c.textSecondary }]}>AI Score</Text>
-              <View style={styles.aiScoreVal}>
-                <Ionicons name="bulb" size={12} color="#f59e0b" />
-                <Text style={[styles.metaVal, { color: c.text }]}> {item.aiConfidenceScore}%</Text>
-              </View>
-            </View>
-          )}
-        </View>
+</View>
 
         {/* Submitter */}
         <View style={styles.sectionLabel}>
@@ -442,13 +430,7 @@ export function AdminQuestionsScreen() {
           <Text style={[styles.listSubmitter, { color: c.textSecondary }]} numberOfLines={1}>
             {item.user?.name ?? item.user?.mobileNumber ?? 'Unknown'}
           </Text>
-          {item.aiConfidenceScore != null && (
-            <View style={styles.listAiRow}>
-              <Ionicons name="bulb" size={10} color="#f59e0b" />
-              <Text style={[styles.listAi, { color: c.textTertiary }]}> {item.aiConfidenceScore}%</Text>
-            </View>
-          )}
-        </View>
+</View>
       </TouchableOpacity>
     );
   }

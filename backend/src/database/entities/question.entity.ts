@@ -64,9 +64,6 @@ export class Question {
   @Index('idx_questions_status')
   status: QuestionStatus;
 
-  @Column({ name: 'ai_confidence_score', type: 'decimal', precision: 5, scale: 2, nullable: true })
-  aiConfidenceScore: number | null;
-
   @Column({ name: 'duplicate_flag', type: 'boolean', default: false })
   duplicateFlag: boolean;
 

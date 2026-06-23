@@ -40,7 +40,7 @@ export class ListReviewQueueDto {
 
   @IsOptional()
   @IsString()
-  sortBy?: 'submittedAt' | 'aiConfidenceScore' | 'state' | 'reviewedAt' | 'createdAt';
+  sortBy?: 'submittedAt' | 'state' | 'reviewedAt' | 'createdAt';
 
   @IsOptional()
   @IsIn(['ASC', 'DESC'])

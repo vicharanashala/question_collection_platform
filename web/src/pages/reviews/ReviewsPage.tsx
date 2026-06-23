@@ -11,7 +11,7 @@ import {
   Search,
   Clock, Star,
   MapPin, Wheat, Film, Eye, Hash,
-  User, Zap, ThumbsUp, Ban, ListFilter,
+  User, ThumbsUp, Ban, ListFilter,
   Globe, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -67,19 +67,6 @@ function MetaItem({ icon: Icon, label, value }: { icon: React.ElementType; label
   )
 }
 
-function ConfidenceBar({ score }: { score: number }) {
-  const color = score >= 80 ? 'success' : score >= 50 ? 'warning' : 'destructive'
-  return (
-    <div className="flex items-end gap-2">
-      <span className={cn(
-        'text-3xl font-extrabold tabular-nums',
-        color === 'success' ? 'text-success' : color === 'warning' ? 'text-warning' : 'text-destructive',
-      )}>{score}%</span>
-      <span className="text-sm text-muted-foreground mb-1">AI confidence</span>
-    </div>
-  )
-}
-
 function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, selectedLang, onLangChange }: ReviewDetailModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -94,7 +81,7 @@ function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, sele
             <span className="text-xs text-muted-foreground font-mono">{q.id.slice(0, 8)}…</span>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {q.mediaUrls && q.mediaUrls.length > 0 && <span className="flex items-center gap-1"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>}
-              {q.aiConfidenceScore != null && <span className="flex items-center gap-1"><Zap className="h-3 w-3" />AI {q.aiConfidenceScore}%</span>}
+
             </div>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -116,13 +103,6 @@ function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, sele
               inline
             />
           </div>
-
-          {/* AI confidence */}
-          {q.aiConfidenceScore != null && (
-            <div className="rounded-xl border border-border-subtle p-4">
-              <ConfidenceBar score={q.aiConfidenceScore} />
-            </div>
-          )}
 
           {/* Status reason */}
           {q.status === 'held' && q.heldReason && (
@@ -456,14 +436,6 @@ function buildColumns(page: number): ColumnDef<Question>[] {
           {[q.district, q.state].filter(Boolean).join(', ') || '—'}
         </span>
       ),
-    },
-    {
-      key: 'aiConfidenceScore', header: 'AI Score', width: '90px', textAlign: 'right', sortable: true,
-      render: (q) => q.aiConfidenceScore != null ? (
-        <span className={cn('text-xs font-medium tabular-nums',
-          q.aiConfidenceScore >= 80 ? 'text-success' : q.aiConfidenceScore >= 50 ? 'text-warning' : 'text-destructive'
-        )}>{q.aiConfidenceScore}%</span>
-      ) : <span className="text-xs text-muted-foreground">—</span>,
     },
     {
       key: 'submittedAt', header: 'Submitted', width: '110px', textAlign: 'left', sortable: true,

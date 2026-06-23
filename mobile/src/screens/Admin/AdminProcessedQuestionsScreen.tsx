@@ -38,8 +38,7 @@ const SORT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'reviewedAt:DESC',           label: 'Recently Reviewed' },
   { value: 'reviewedAt:ASC',            label: 'Oldest Reviewed' },
   { value: 'submittedAt:DESC',          label: 'Recently Submitted' },
-  { value: 'aiConfidenceScore:DESC',   label: 'AI Confidence ↓' },
-  { value: 'state:ASC',                 label: 'State A→Z' },
+  { value: 'state:ASC', label: 'State A→Z' },
 ];
 
 interface QueueItem {
@@ -52,7 +51,6 @@ interface QueueItem {
   district: string;
   mediaType: string;
   status: string;
-  aiConfidenceScore: number | null;
   submittedAt: string;
   reviewedAt: string | null;
   user: { id: string; name: string; mobileNumber: string } | null;

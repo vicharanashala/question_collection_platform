@@ -13,10 +13,11 @@ import { NotificationType, NotificationTriggerType } from '../database/entities/
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
-import { DOMAINS, inferDomains } from './constants/domains';
+import { DOMAINS } from './constants/domains';
 import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
 import { StorageService } from '../storage/storage.service';
+import { GemmaService } from '../ai/gemma.service';
 
 @Injectable()
 export class QuestionService {
@@ -31,6 +32,7 @@ export class QuestionService {
     private readonly adminService: AdminService,
     private readonly userService: UserService,
     private readonly storageService: StorageService,
+    private readonly gemmaService: GemmaService,
   ) {}
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
@@ -110,21 +112,33 @@ export class QuestionService {
     });
     const isDuplicate = !!existingDuplicate;
 
-    // 4. Derive agro-climatic zone from state when not provided
+    // 4. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
+    const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
+
+    // Use Gemma-inferred crop/domains as defaults when not supplied by the user
+    const cropType = dto.cropType?.trim() || inferred.crop;
+    const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
+
+    // 5. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
 
-    // 5. Validate domains against allowed list
+    // 6. Low-confidence submissions go to human review
+    const status: QuestionStatus = inferred.confidence < 0.9
+      ? QuestionStatus.HUMAN_REVIEW
+      : (isDuplicate ? QuestionStatus.REJECTED : QuestionStatus.PENDING);
+
+    // 7. Validate domains against allowed list
     const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));
     if (invalidDomains.length > 0) {
       throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
     }
 
-    // 6. Persist question in a transaction
+    // 8. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
-      domains: dto.domains,
+      domains,
       season: dto.season,
-      cropType: dto.cropType,
+      cropType,
       agroClimaticZone,
       questionText: dto.questionText,
       state: dto.state ?? '',
@@ -133,7 +147,7 @@ export class QuestionService {
       mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
       mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
       deviceInfo: dto.deviceInfo ?? null,
-      status: isDuplicate ? QuestionStatus.REJECTED : QuestionStatus.PENDING,
+      status,
       editWindowClosesAt,
       submittedAt: now,
     });
@@ -143,7 +157,7 @@ export class QuestionService {
       return repo.save(question) as Promise<Question>;
     });
 
-    // 7. Audit log
+    // 9. Audit log
     await this.auditRepo.save({
       actorType: ActorType.USER,
       actorId: userId,
@@ -154,7 +168,7 @@ export class QuestionService {
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
-    // 8. Send duplicate notification after saving
+    // 10. Send duplicate notification after saving
     if (isDuplicate) {
       await this.notifRepo.save(
         this.notifRepo.create({
@@ -285,7 +299,7 @@ export class QuestionService {
       take: limit,
       select: [
         'id', 'domains', 'season', 'cropType', 'questionText',
-        'mediaType', 'mediaUrls', 'status', 'aiConfidenceScore', 'duplicateFlag',
+        'mediaType', 'mediaUrls', 'status', 'duplicateFlag',
         'submittedAt', 'reviewedAt', 'rejectionReason', 'heldReason', 'approvalReason',
         'state', 'district', 'block', 'language',
         'editWindowClosesAt', 'createdAt',
@@ -405,17 +419,18 @@ export class QuestionService {
    *   them in on the preview screen before final submission.
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
-    const inferredDomains = inferDomains(dto.questionText);
+    // Infer crop + domains via Gemma (falls back to keyword inference on failure)
+    const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
 
     return {
       state: 'Maharashtra',
       district: 'Pune',
       block: 'Haveli',
 
-      // Pre-filled with backend-inferred domains; user can modify on the preview screen
-      domains: inferredDomains,
+      // Pre-filled from Gemma inference; user can modify on the preview screen
+      domains: inferred.domains,
       season: Season.KHARIF,
-      cropType: CROPS[0],
+      cropType: inferred.crop,
 
       questionText: dto.questionText,
       mediaType: dto.mediaType ?? 'none',
