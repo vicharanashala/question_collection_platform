@@ -44,6 +44,9 @@ MEMORY.md
 HEARTBEAT.md
 USER.md
 
+# Session logs and debugging history
+.sessions/
+
 
 # Tracked markdown
 !README.md
