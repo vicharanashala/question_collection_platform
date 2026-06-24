@@ -217,7 +217,7 @@ export class RazorpayPayoutService {
           amount,
           currency: 'INR',
           mode,
-          purpose: 'refund',
+          purpose: 'payout',
           reference_id: referenceId,
           narration,
         },

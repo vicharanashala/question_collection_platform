@@ -1442,7 +1442,7 @@ export class AdminService implements OnModuleInit {
         amount: amountPaise,
         referenceId,
         mode: payoutMode,
-        narration: 'Withdrawal payout (retry)',
+        narration: 'Withdrawal payout retry',
       });
     } catch (err) {
       const newStatus = await this.handleWithdrawalFailure({
@@ -1629,7 +1629,7 @@ export class AdminService implements OnModuleInit {
         amount: amountPaise,
         referenceId,
         mode: payoutMode,
-        narration: 'Withdrawal payout (retry)',
+        narration: 'Withdrawal payout retry',
       });
     } catch (err) {
       const newStatus = await this.handleWithdrawalFailure({
