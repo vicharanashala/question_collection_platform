@@ -91,6 +91,22 @@ export class UserPaymentDetail {
   @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
   verifiedAt: Date | null;
 
+  /** Razorpay fund_account ID — created once per user, reused for all future payouts */
+  @Column({ name: 'razorpay_fund_account_id', type: 'varchar', length: 100, nullable: true })
+  razorpayFundAccountId: string | null;
+
+  /** Razorpay payout ID for the most recent payout */
+  @Column({ name: 'razorpay_payout_id', type: 'varchar', length: 100, nullable: true })
+  razorpayPayoutId: string | null;
+
+  /** Razorpay payment link ID for the latest ₹1 verification collection */
+  @Column({ name: 'razorpay_payment_link_id', type: 'varchar', length: 100, nullable: true })
+  razorpayPaymentLinkId: string | null;
+
+  /** Razorpay payment link short URL sent to the user */
+  @Column({ name: 'razorpay_payment_link_url', type: 'varchar', length: 500, nullable: true })
+  razorpayPaymentLinkUrl: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

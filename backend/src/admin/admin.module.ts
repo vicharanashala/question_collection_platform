@@ -16,6 +16,7 @@ import {
   AdminConfig,
   Notification,
   PaymentLog,
+  UserPaymentDetail,
 } from '../database/entities';
 import { WalletsModule } from '../wallets/wallets.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -33,6 +34,7 @@ import { PaymentModule } from '../payment/payment.module';
       AdminConfig,
       Notification,
       PaymentLog,
+      UserPaymentDetail,
     ]),
     forwardRef(() => WalletsModule),
     NotificationsModule,

@@ -16,4 +16,10 @@ export const paymentConfig = registerAs('payment', () => ({
     // Useful in dev/demo environments without live PineLabs credentials.
     mockVerification: process.env.PINELABS_MOCK_VERIFICATION === 'true',
   },
+  razorpay: {
+    env: process.env.RAZORPAY_ENV ?? 'sandbox',
+    apiKey: process.env.RAZORPAY_API_KEY ?? '',
+    secret: process.env.RAZORPAY_SECRET ?? '',
+    accountNumber: process.env.RAZORPAY_ACCOUNT_NUMBER ?? '',
+  },
 }));

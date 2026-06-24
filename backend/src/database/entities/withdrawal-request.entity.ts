@@ -45,6 +45,10 @@ export class WithdrawalRequest {
   @Column({ name: 'order_id', type: 'varchar', length: 100, nullable: true, unique: true })
   orderId: string | null;
 
+  /** Razorpay payout ID set after initiating a Razorpay payout */
+  @Column({ name: 'razorpay_payout_id', type: 'varchar', length: 100, nullable: true })
+  razorpayPayoutId: string | null;
+
   @Column({ name: 'processed_at', type: 'timestamp', nullable: true })
   processedAt: Date | null;
 

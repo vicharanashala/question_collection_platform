@@ -9,7 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Wallet, Transaction, WithdrawalRequest } from '../database/entities';
+import { Wallet, Transaction, WithdrawalRequest, User } from '../database/entities';
 import { UserPaymentDetail } from '../database/entities/user-payment-detail.entity';
 import {
   TransactionType,
@@ -20,6 +20,7 @@ import {
 } from '../common/enums';
 import { AdminService } from '../admin/admin.service';
 import { PinelabsService } from '../payment/pinelabs.service';
+import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
 import { WithdrawDto } from './dto';
 import { AddPaymentDetailDto, PaymentDetailDto } from './dto/payment-details.dto';
 import { encrypt, decrypt } from '../common/utils/encryption.util';
@@ -48,10 +49,13 @@ export class WalletsService {
     private readonly withdrawalRepo: Repository<WithdrawalRequest>,
     @InjectRepository(UserPaymentDetail)
     private readonly paymentDetailRepo: Repository<UserPaymentDetail>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => AdminService))
     private readonly adminService: AdminService,
     private readonly pinelabsService: PinelabsService,
+    private readonly razorpayPayoutService: RazorpayPayoutService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -135,9 +139,13 @@ export class WalletsService {
     return { reward: currentTier.reward, maxApproved: currentTier.maxApproved, nextTier };
   }
 
-  async getWalletConfig(): Promise<{ minWithdrawalAmount: number }> {
+  async getWalletConfig(): Promise<{
+    minWithdrawalAmount: number;
+    razorpayKeyId: string;
+  }> {
     const minWithdrawalAmount = await this.adminService.getConfigValue('min_withdrawal_amount');
-    return { minWithdrawalAmount };
+    const razorpayKeyId = this.configService.get<string>('payment.razorpay.apiKey') ?? '';
+    return { minWithdrawalAmount, razorpayKeyId };
   }
 
   async getBalance(userId: string): Promise<{ balance: number; currency: string }> {
@@ -388,29 +396,30 @@ export class WalletsService {
   // ─── Payment Details ────────────────────────────────────────────────────────
 
   /**
-   * Save a new payment detail and initiate micro-transaction verification.
-   * The detail starts with status 'in_progress' and a ₹1 debit is sent via PineLabs.
-   * On webhook success: status → 'verified', refund ₹1 to wallet.
-   * On webhook failure: status → 'failed'.
+   * Save a new payment detail and initiate verification via Razorpay Payment Link.
+   *
+   * Flow:
+   *  1. Save payment detail with status 'in_progress'.
+   *  2. Create a Razorpay Payment Link for ₹1 (paid BY the user TO us).
+   *  3. Razorpay sends SMS/email to user with the payment link.
+   *  4. User pays ₹1 → 'payment.captured' webhook → status → 'verified'.
+   *  5. User fails/refuses to pay → 'payment.failed' webhook → status → 'failed'.
+   *
+   * The ₹1 payment confirms the user owns the UPI ID or bank account, since
+   * any payment made to our Razorpay account from that source is proof of ownership.
    */
   async addPaymentDetail(
     userId: string,
     dto: AddPaymentDetailDto,
-  ): Promise<{ id: string; status: string; message: string }> {
-    // Basic check: does user have a wallet?
-    const wallet = await this.walletRepo.findOne({ where: { userId } });
-    if (!wallet) throw new NotFoundException('Wallet not found');
-
-    // Reject if wallet balance < ₹1 (verification charge)
-    if (Number(wallet.balance) < 1) {
-      throw new BadRequestException(
-        'Insufficient balance (₹1 verification charge required). Please earn rewards first.',
-      );
-    }
-
+  ): Promise<{
+    id: string;
+    status: string;
+    message: string;
+    paymentLinkUrl?: string;
+  }> {
     // Check: no duplicate verified UPI already on this account
     if (dto.payoutMethod === 'upi') {
-      const existing = await this.paymentDetailRepo.findOne( {
+      const existing = await this.paymentDetailRepo.findOne({
         where: { userId, upiId: dto.upiId, status: 'verified' },
       });
       if (existing) {
@@ -437,102 +446,50 @@ export class WalletsService {
       detail.accountNumberEncrypted = encrypt(dto.accountNumber!);
     }
 
-    // Save (without verification_order_id yet — we create that after debit)
-    const saved = await this.paymentDetailRepo.save( detail);
+    // Save with status in_progress
+    const saved = await this.paymentDetailRepo.save(detail);
 
-    // Atomic: deduct ₹1 verification charge + create pending transaction
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // Build description for the Razorpay Payment Link
+    const methodLabel = dto.payoutMethod === 'upi'
+      ? `UPI ID ${dto.upiId}`
+      : `bank account ${dto.accountNumber!.slice(-4)}`;
+
+    let userPhone = '';
+    try {
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      userPhone = user?.mobileNumber ?? '';
+    } catch {
+      // user phone lookup is best-effort
+    }
 
     try {
-      const newBalance = Number(wallet.balance) - 1;
-      await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
-
-      const verificationOrderId = this.pinelabsService.generateVerificationOrderId(saved.id);
-      const tx = queryRunner.manager.create(Transaction, {
-        walletId: wallet.id,
-        type: TransactionType.DEBIT,
-        source: TransactionSource.VERIFICATION_CHARGE,
-        amount: 1,
-        balanceAfter: newBalance,
-        referenceId: verificationOrderId, // used to match refund webhook
-        description: `Verification charge — ${dto.payoutMethod === 'upi' ? 'UPI' : 'bank account'}`,
-        status: TransactionStatus.PENDING,
-      });
-      await queryRunner.manager.save(Transaction, tx);
-
-      // Store orderId on the detail record
-      await queryRunner.manager.update(UserPaymentDetail, saved.id, {
-        verificationOrderId,
+      const linkResult = await this.razorpayPayoutService.createPaymentLink({
+        paymentDetailId: saved.id,
+        description: `Payment method verification — ${methodLabel}`,
+        userPhone: userPhone || '9999999999',
       });
 
-      await queryRunner.commitTransaction();
-
-      // Mock verification: skip PineLabs and auto-approve immediately.
-      if (this.configService.get<boolean>('payment.pinelabs.mockVerification')) {
-        await this.paymentDetailRepo.update(saved.id, {
-          status: 'verified',
-          verifiedAt: new Date(),
-        });
-        this.logger.log(`[Verification] Mock mode — auto-approved | detailId=${saved.id}`);
-        return {
-          id: saved.id,
-          status: 'verified',
-          message: 'Payment method verified successfully (demo mode).',
-        };
-      }
-
-      // Fire-and-forget: send ₹1 to PineLabs (webhook will handle the result)
-      // If dispatch fails, mark the record as failed immediately so UI reflects reality.
-      this.pinelabsService
-        .dispatchVerificationPayout({
-          clientReferenceId: verificationOrderId,
-          paymentMethod: dto.payoutMethod as PayoutMethod,
-          payoutDetails: this.buildPayoutDetailsForVerification(saved),
-        })
-        .then((result) => {
-          if (!result.success) {
-            this.paymentDetailRepo.update(saved.id, {
-              status: 'failed',
-              verificationFailedReason: result.errorMessage ?? 'Verification payout failed',
-            });
-            this.logger.warn(
-              `[Verification] Payout failed | orderId=${verificationOrderId} | reason=${result.errorMessage}`,
-            );
-          }
-        })
-        .catch((err) => {
-          this.paymentDetailRepo.update(saved.id, {
-            status: 'failed',
-            verificationFailedReason: 'Verification service unavailable. Please try again later.',
-          });
-          this.logger.error(`[Verification] Payout dispatch failed | orderId=${verificationOrderId} | ${err.message}`);
-        });
+      // Store link details so the app can fetch them and re-display the link
+      await this.paymentDetailRepo.update(saved.id, {
+        razorpayPaymentLinkId: linkResult.paymentLinkId,
+        razorpayPaymentLinkUrl: linkResult.paymentLinkUrl,
+      });
 
       return {
         id: saved.id,
         status: 'in_progress',
         message:
-          'Payment detail saved. A ₹1 verification charge has been sent. ' +
-          'You will be notified once it is confirmed (usually within a few minutes).',
+          `A ₹1 payment link has been sent to your registered phone number. ` +
+          `Complete the payment to verify your ${dto.payoutMethod === 'upi' ? 'UPI ID' : 'bank account'}.`,
+        paymentLinkUrl: linkResult.paymentLinkUrl,
       };
     } catch (err: any) {
-      await queryRunner.rollbackTransaction();
-      // Clean up the payment detail record on failure
-      await this.paymentDetailRepo.delete( saved.id);
-
-      if (err.code === '22P02') {
-        throw new BadRequestException(
-          'Verification could not be initiated. Please try again or contact support.',
-        );
-      }
-      this.logger.error(`[addPaymentDetail] Unexpected error: ${err.message}`, err.stack);
+      // Clean up the payment detail if we can't create the payment link
+      await this.paymentDetailRepo.delete(saved.id);
+      this.logger.error(`[addPaymentDetail] Failed to create payment link: ${err.message}`);
       throw new BadRequestException(
-        'Something went wrong while saving your payment detail. Please try again.',
+        'Could not initiate verification. Please try again or contact support.',
       );
-    } finally {
-      await queryRunner.release();
     }
   }
 
@@ -559,26 +516,24 @@ export class WalletsService {
       accountHolderName: d.accountHolderName,
       verifiedAt: d.verifiedAt,
       createdAt: d.createdAt,
+      // Include payment link URL while verification is still in progress
+      paymentLinkUrl: d.status === 'in_progress' ? d.razorpayPaymentLinkUrl ?? undefined : undefined,
     }));
   }
 
   /**
    * Delete a payment detail.
-   * Only unverified or failed details can be deleted.
    * Users cannot delete a detail that has an active verification in progress.
    */
   async deletePaymentDetail(userId: string, detailId: string): Promise<void> {
-    const detail = await this.paymentDetailRepo.findOne( {
+    const detail = await this.paymentDetailRepo.findOne({
       where: { id: detailId, userId },
     });
     if (!detail) throw new NotFoundException('Payment detail not found');
-    if (detail.status === 'verified') {
-      throw new BadRequestException('Cannot delete a verified payment detail.');
-    }
     if (detail.status === 'in_progress') {
       throw new BadRequestException('Cannot delete while verification is in progress. Please wait a few minutes.');
     }
-    await this.paymentDetailRepo.delete( detailId);
+    await this.paymentDetailRepo.delete(detailId);
   }
 
   /**
@@ -593,10 +548,21 @@ export class WalletsService {
     errorMessage?: string;
     pinelabsTransactionId?: string;
   }): Promise<void> {
-    const detail = await this.paymentDetailRepo.findOne( {
-      where: { verificationOrderId: params.orderId },
-      relations: ['user'],
-    });
+    // Support both PineLabs (VF_*) and Razorpay (rzp_pl_*) order ID formats.
+    // PineLabs: VF_<paymentDetailId>_<uuid>  → matches UserPaymentDetail.verificationOrderId
+    // Razorpay: rzp_pl_<paymentDetailId>     → extract paymentDetailId and find by primary key
+    let detail: UserPaymentDetail | null = null;
+
+    if (params.orderId.startsWith('rzp_pl_')) {
+      const paymentDetailId = params.orderId.replace('rzp_pl_', '');
+      detail = await this.paymentDetailRepo.findOne({ where: { id: paymentDetailId } });
+    } else {
+      detail = await this.paymentDetailRepo.findOne({
+        where: { verificationOrderId: params.orderId },
+        relations: ['user'],
+      });
+    }
+
     if (!detail) {
       this.logger.warn(`[Verification] No payment detail found for orderId=${params.orderId}`);
       return;
@@ -604,22 +570,26 @@ export class WalletsService {
 
     if (params.success) {
       // Mark verified
-      await this.paymentDetailRepo.update( detail.id, {
+      await this.paymentDetailRepo.update(detail.id, {
         status: 'verified',
         verifiedAt: new Date(),
       });
 
-      // Refund ₹1 to user's wallet
-      const wallet = await this.walletRepo.findOne({ where: { userId: detail.userId } });
-      if (wallet) {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-        try {
-          const newBalance = Number(wallet.balance) + 1;
-          await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
+      // Refund ₹1 to user's wallet — only for PineLabs verification (VF_* order IDs).
+      // For Razorpay Payment Link (rzp_pl_*), the user paid us ₹1 — no refund needed.
+      const isPineLabsVerification = params.orderId.startsWith('VF_');
 
-          // Credit refund transaction
+      if (isPineLabsVerification) {
+        const wallet = await this.walletRepo.findOne({ where: { userId: detail.userId } });
+        if (wallet) {
+          const queryRunner = this.dataSource.createQueryRunner();
+          await queryRunner.connect();
+          await queryRunner.startTransaction();
+          try {
+            const newBalance = Number(wallet.balance) + 1;
+            await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
+
+            // Credit refund transaction
           const creditTx = queryRunner.manager.create(Transaction, {
             walletId: wallet.id,
             type: TransactionType.CREDIT,
@@ -647,24 +617,27 @@ export class WalletsService {
           await queryRunner.release();
         }
       }
+    }
 
-      this.logger.log(`[Verification] Payment detail verified | detailId=${detail.id} | orderId=${params.orderId}`);
-    } else {
-      // Mark failed
-      await this.paymentDetailRepo.update( detail.id, {
-        status: 'failed',
-        verificationFailedReason: [params.errorCode, params.errorMessage].filter(Boolean).join(': '),
-      });
+    this.logger.log(`[Verification] Payment detail verified | detailId=${detail.id} | orderId=${params.orderId}`);
+  } else {
+    // Mark failed
+    await this.paymentDetailRepo.update(detail.id, {
+      status: 'failed',
+      verificationFailedReason: [params.errorCode, params.errorMessage].filter(Boolean).join(': '),
+    });
 
-      // Mark the ₹1 debit as failed
+    // Mark the ₹1 debit as failed — only for PineLabs flow (Razorpay has no debit)
+    if (params.orderId.startsWith('VF_')) {
       await this.transactionRepo.update(
         { referenceId: params.orderId },
         { status: TransactionStatus.FAILED },
       );
-
-      this.logger.warn(`[Verification] Payment detail failed | detailId=${detail.id} | code=${params.errorCode} | msg=${params.errorMessage}`);
     }
+
+    this.logger.warn(`[Verification] Payment detail failed | detailId=${detail.id} | code=${params.errorCode} | msg=${params.errorMessage}`);
   }
+}
 
   /**
    * Check whether user has at least one verified payment detail.
@@ -674,6 +647,65 @@ export class WalletsService {
       where: { userId, status: 'verified' },
     });
     return count > 0;
+  }
+
+  /**
+   * Handle verification callback when the mobile app uses the native Razorpay SDK.
+   * The SDK returns razorpay_payment_id on success; we fetch payment details from
+   * Razorpay API to confirm it was for the right amount, then mark the detail verified.
+   */
+  async handleRazorpayVerificationCallback(params: {
+    userId: string;
+    paymentDetailId: string;
+    razorpayPaymentId: string;
+  }): Promise<{ success: boolean; message: string }> {
+    const { userId, paymentDetailId, razorpayPaymentId } = params;
+
+    const detail = await this.paymentDetailRepo.findOne({
+      where: { id: paymentDetailId, userId },
+    });
+    if (!detail) {
+      throw new NotFoundException('Payment detail not found');
+    }
+
+    if (detail.status === 'verified') {
+      return { success: true, message: 'Already verified' };
+    }
+
+    // Fetch the payment from Razorpay to confirm amount and status
+    const payment = await this.razorpayPayoutService.getRazorpayPayment(razorpayPaymentId);
+
+    if (!payment) {
+      this.logger.warn(`[Razorpay Verification] Payment not found: ${razorpayPaymentId}`);
+      throw new BadRequestException('Payment not found on Razorpay');
+    }
+
+    if (payment.status !== 'captured') {
+      this.logger.warn(
+        `[Razorpay Verification] Payment not captured: ${razorpayPaymentId} status=${payment.status}`,
+      );
+      throw new BadRequestException(`Payment not captured (status: ${payment.status})`);
+    }
+
+    // Amount should be 100 paise (₹1) for verification payments
+    if (Number(payment.amount) !== 100) {
+      this.logger.warn(
+        `[Razorpay Verification] Unexpected amount ${payment.amount} for payment ${razorpayPaymentId}`,
+      );
+      throw new BadRequestException('Invalid payment amount');
+    }
+
+    // Mark verified
+    await this.paymentDetailRepo.update(detail.id, {
+      status: 'verified',
+      verifiedAt: new Date(),
+    });
+
+    this.logger.log(
+      `[Razorpay Verification] Payment detail verified via SDK | detailId=${detail.id} | paymentId=${razorpayPaymentId}`,
+    );
+
+    return { success: true, message: 'Payment verified successfully' };
   }
 
   /**

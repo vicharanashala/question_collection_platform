@@ -32,6 +32,10 @@ export class PaymentLog {
   @Column({ name: 'pinelabs_transaction_id', type: 'varchar', length: 100, nullable: true })
   pinelabsTransactionId: string | null;
 
+  /** Razorpay payout ID (set when using Razorpay for disbursement) */
+  @Column({ name: 'razorpay_payout_id', type: 'varchar', length: 100, nullable: true })
+  razorpayPayoutId: string | null;
+
   @Column({ type: 'varchar', length: 20 })
   status: PaymentLogStatus;
 

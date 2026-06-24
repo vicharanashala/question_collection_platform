@@ -16,10 +16,9 @@
       "bundleIdentifier": "com.kisanMitra.kisanDekho",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "AnnaDatha needs photo library access to attach images or videos to your questions.",
-        "NSCameraUsageDescription": "AnnaDatha needs camera access to capture photos and videos for your questions.",
-        "NSMicrophoneUsageDescription": "AnnaDatha needs microphone access to record audio for your questions.",
-        "NSLocationWhenInUseUsageDescription": "AnnaDatha uses your location to tag questions with the correct district and block.",
-        "ITSAppUsesNonExemptEncryption": false
+"NSMicrophoneUsageDescription": "AnnaDatha needs microphone access to record audio for your questions.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": []
       }
     },
     "android": {
@@ -30,14 +29,11 @@
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
+"android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.INTERNET",
         "android.permission.VIBRATE"
       ]
@@ -50,8 +46,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "AnnaDatha needs photo library access to attach images or videos to your questions.",
-          "cameraPermission": "AnnaDatha needs camera access to capture photos and videos for your questions."
+          "photosPermission": "AnnaDatha needs photo library access to attach images or videos to your questions."
         }
       ],
       [

@@ -391,6 +391,14 @@ export const walletApi = {
 
   deletePaymentDetail: (id: string) =>
     api.delete(`/wallets/payment-details/${id}`),
+
+  /**
+   * Called after the native Razorpay SDK returns a successful payment.
+   * The mobile SDK returns razorpayPaymentId; we send it here to confirm
+   * the payment with our backend and mark the payment detail as verified.
+   */
+  verifyPayment: (paymentDetailId: string, razorpayPaymentId: string) =>
+    api.post('/wallets/verify-payment', { paymentDetailId, razorpayPaymentId }),
 };
 
 export const adminApi = {

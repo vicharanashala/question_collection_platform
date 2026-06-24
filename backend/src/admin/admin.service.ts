@@ -22,6 +22,7 @@ import {
   NotificationType,
   NotificationTriggerType,
   PaymentLog,
+  UserPaymentDetail,
 } from '../database/entities';
 import {
   VerificationStatus,
@@ -56,6 +57,8 @@ import { ConfigService } from '@nestjs/config';
 import { WalletsService } from '../wallets/wallets.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PinelabsService } from '../payment/pinelabs.service';
+import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
+import { decrypt } from '../common/utils/encryption.util';
 
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
@@ -158,12 +161,15 @@ export class AdminService implements OnModuleInit {
     private readonly notificationRepo: Repository<Notification>,
     @InjectRepository(PaymentLog)
     private readonly paymentLogRepo: Repository<PaymentLog>,
+    @InjectRepository(UserPaymentDetail)
+    private readonly paymentDetailRepo: Repository<UserPaymentDetail>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WalletsService))
     private readonly walletsService: WalletsService,
     private readonly notificationsService: NotificationsService,
     private readonly pinelabsService: PinelabsService,
+    private readonly razorpayPayoutService: RazorpayPayoutService,
   ) {}
 
   private readonly logger = new Logger(AdminService.name);
@@ -1136,76 +1142,155 @@ export class AdminService implements OnModuleInit {
     }
 
     if (dto.action === 'approve') {
-      // Generate idempotent orderId for PineLabs
-      const orderId = this.pinelabsService.generateOrderId(withdrawalId);
-      await this.withdrawalRepo.update(withdrawalId, {
-        status: WithdrawalStatus.PROCESSING,
-        processedAt: new Date(),
-        orderId,
+      // ── Step 1: Fetch user's verified payment detail ──────────────────────────
+      const paymentDetail = await this.paymentDetailRepo.findOne({
+        where: { userId: withdrawal.userId, status: 'verified' },
+        order: { verifiedAt: 'DESC' },
       });
-      // DEBIT transaction stays PENDING until payout succeeds via webhook
-      await this.logAudit({
-        actorType: ActorType.ADMIN,
-        actorId: adminId,
-        action: 'withdrawal_approved',
-        entityType: 'withdrawal_request',
-        entityId: withdrawalId,
-        newValue: { status: WithdrawalStatus.PROCESSING, orderId },
-      });
+      if (!paymentDetail) {
+        throw new BadRequestException('No verified payment detail found for this user.');
+      }
 
-      // Trigger PineLabs payout synchronously — admin waits for result
-      const result = await this.pinelabsService.dispatchPayout({
-        clientReferenceId: orderId,
-        payeeName: withdrawal.user?.name ?? 'Customer',
-        paymentMethod: withdrawal.payoutMethod,
-        amount: Number(withdrawal.amount),
-        payoutDetails: withdrawal.payoutDetails,
-      });
+      // ── Step 2: Create or reuse Razorpay fund account ─────────────────────────
+      let fundAccountId = paymentDetail.razorpayFundAccountId;
+      if (!fundAccountId) {
+        const fundAccount = await this.razorpayPayoutService.createFundAccount({
+          userId: withdrawal.userId,
+          vpa: paymentDetail.upiId ?? undefined,
+          bankAccount:
+            paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+              ? {
+                  accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+                  ifsc: paymentDetail.ifsc,
+                  accountHolderName: paymentDetail.accountHolderName ?? '',
+                }
+              : undefined,
+        });
+        fundAccountId = fundAccount.fundAccountId;
+        // Persist for future use
+        await this.paymentDetailRepo.update(paymentDetail.id, {
+          razorpayFundAccountId: fundAccountId,
+        });
+      }
 
-      if (result.success) {
-        // Mark completed
-        await this.withdrawalRepo.update(withdrawalId, {
-          status: WithdrawalStatus.COMPLETED,
-          processedAt: new Date(),
-          pinelabsTransactionId: result.pinelabsTransactionId,
+      // ── Step 3: Initiate Razorpay payout ─────────────────────────────────────
+      const referenceId = `wd_${withdrawalId}`;
+      const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+      const payoutMode = withdrawal.payoutMethod === 'upi' ? 'UPI' : 'IMPS';
+
+      let payoutResult: { payoutId: string; status: string };
+      try {
+        payoutResult = await this.razorpayPayoutService.initiatePayout({
+          fundAccountId,
+          amount: amountPaise,
+          referenceId,
+          mode: payoutMode,
+          narration: 'Withdrawal payout',
         });
-        await this.logAudit({
-          actorType: ActorType.ADMIN,
-          actorId: adminId,
-          action: 'withdrawal_completed',
-          entityType: 'withdrawal_request',
-          entityId: withdrawalId,
-          newValue: { status: WithdrawalStatus.COMPLETED, pinelabsTransactionId: result.pinelabsTransactionId },
-        });
-        await this.notificationRepo.save(
-          this.notificationRepo.create({
-            userId: withdrawal.userId,
-            type: NotificationType.WITHDRAWAL_APPROVED,
-            title: 'Withdrawal Approved',
-            body: `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
-            data: { withdrawalId, status: 'processing', userId: withdrawal.userId },
-            triggerType: NotificationTriggerType.WITHDRAW,
-          }),
-        );
-        return { success: true, action: 'approved', withdrawalId, status: WithdrawalStatus.COMPLETED, pinelabsTransactionId: result.pinelabsTransactionId };
-      } else {
-        // Payment failed — mark withdrawal as FAILED and refund user
-        const newStatus = await this.handleWithdrawalFailure({
+      } catch (err) {
+        // Payout initiation failed — mark FAILED and refund immediately
+        this.logger.error(`[Razorpay] initiatePayout failed for withdrawal ${withdrawalId}: ${err.message}`);
+        await this.handleWithdrawalFailure({
           withdrawal,
-          orderId,
+          orderId: referenceId,
           adminId,
-          result,
+          result: {
+            pinelabsTransactionId: null,
+            errorCode: 'RAZORPAY_INIT_ERROR',
+            errorMessage: err.message,
+            rawResponse: {},
+          },
         });
         return {
           success: true,
           action: 'approved',
           withdrawalId,
-          status: newStatus,
+          status: WithdrawalStatus.FAILED,
           paymentFailed: true,
-          errorCode: result.errorCode,
-          errorMessage: result.errorMessage,
+          errorCode: 'RAZORPAY_INIT_ERROR',
+          errorMessage: err.message,
         };
       }
+
+      // ── Step 4: Update withdrawal based on Razorpay response ─────────────────
+      const { payoutId, status: razorpayStatus } = payoutResult;
+      const finalStatus =
+        razorpayStatus === 'success' || razorpayStatus === 'processed'
+          ? WithdrawalStatus.COMPLETED
+          : razorpayStatus === 'failed' || razorpayStatus === 'rejected'
+          ? WithdrawalStatus.FAILED
+          : WithdrawalStatus.PROCESSING;
+
+      await this.withdrawalRepo.update(withdrawalId, {
+        status: finalStatus,
+        processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+        razorpayPayoutId: payoutId,
+        orderId: referenceId,
+      });
+
+      // ── Step 5: Log the payment attempt ─────────────────────────────────────
+      const paymentLog = this.paymentLogRepo.create({
+        withdrawalRequestId: withdrawalId,
+        adminId,
+        orderId: referenceId,
+        razorpayPayoutId: payoutId,
+        status:
+          finalStatus === WithdrawalStatus.COMPLETED
+            ? PaymentLogStatus.SUCCESS
+            : finalStatus === WithdrawalStatus.FAILED
+            ? PaymentLogStatus.FAILED
+            : PaymentLogStatus.PENDING,
+        rawResponse: { payoutId, razorpayStatus } as Record<string, unknown>,
+      });
+      await this.paymentLogRepo.save(paymentLog);
+
+      await this.logAudit({
+        actorType: ActorType.ADMIN,
+        actorId: adminId,
+        action: finalStatus === WithdrawalStatus.COMPLETED ? 'withdrawal_completed' : 'withdrawal_approved',
+        entityType: 'withdrawal_request',
+        entityId: withdrawalId,
+        newValue: { status: finalStatus, razorpayPayoutId: payoutId },
+      });
+
+      // ── Step 6: On FAILED, trigger refund ────────────────────────────────────
+      if (finalStatus === WithdrawalStatus.FAILED) {
+        await this.handleWithdrawalFailure({
+          withdrawal,
+          orderId: referenceId,
+          adminId,
+          result: {
+            pinelabsTransactionId: null,
+            errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+            errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+            rawResponse: { payoutId, razorpayStatus },
+          },
+        });
+      } else {
+        // Send notification (PROCESSING or COMPLETED)
+        await this.notificationRepo.save(
+          this.notificationRepo.create({
+            userId: withdrawal.userId,
+            type: NotificationType.WITHDRAWAL_APPROVED,
+            title: 'Withdrawal Approved',
+            body:
+              finalStatus === WithdrawalStatus.COMPLETED
+                ? `Your withdrawal of Rs. ${withdrawal.amount} has been credited to your account.`
+                : `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
+            data: { withdrawalId, status: finalStatus === WithdrawalStatus.COMPLETED ? 'completed' : 'processing', userId: withdrawal.userId },
+            triggerType: NotificationTriggerType.WITHDRAW,
+          }),
+        );
+      }
+
+      return {
+        success: true,
+        action: 'approved',
+        withdrawalId,
+        status: finalStatus,
+        razorpayPayoutId: payoutId,
+        paymentFailed: finalStatus === WithdrawalStatus.FAILED,
+      };
     } else {
       const rejectionReason = dto.rejectionReason ?? 'Rejected by admin';
       await this.walletRepo.increment({ id: withdrawal.walletId }, 'balance', Number(withdrawal.amount));
@@ -1264,7 +1349,7 @@ export class AdminService implements OnModuleInit {
   }
 
   /**
-   * Retry a failed PineLabs payout for a PROCESSING withdrawal.
+   * Retry a PROCESSING withdrawal via Razorpay.
    * On payout failure the withdrawal is marked FAILED (no auto-refund —
    * admin must explicitly call markWithdrawalFailed to refund the user).
    */
@@ -1297,40 +1382,115 @@ export class AdminService implements OnModuleInit {
       newValue: { action: 'retry_attempted', orderId: withdrawal.orderId },
     });
 
-    const result = await this.pinelabsService.dispatchPayout({
-      clientReferenceId: withdrawal.orderId,
-      payeeName: withdrawal.user?.name ?? 'Customer',
-      paymentMethod: withdrawal.payoutMethod,
-      amount: Number(withdrawal.amount),
-      payoutDetails: withdrawal.payoutDetails,
+    // Fetch user's payment detail for fund account
+    const paymentDetail = await this.paymentDetailRepo.findOne({
+      where: { userId: withdrawal.userId, status: 'verified' },
+      order: { verifiedAt: 'DESC' },
     });
+    if (!paymentDetail) {
+      throw new BadRequestException('No verified payment detail found for this user.');
+    }
 
-    if (result.success) {
-      await this.withdrawalRepo.update(withdrawalId, {
-        status: WithdrawalStatus.COMPLETED,
-        processedAt: new Date(),
-        pinelabsTransactionId: result.pinelabsTransactionId,
+    // Reuse or recreate fund account
+    let fundAccountId = paymentDetail.razorpayFundAccountId;
+    if (!fundAccountId) {
+      const fundAccount = await this.razorpayPayoutService.createFundAccount({
+        userId: withdrawal.userId,
+        vpa: paymentDetail.upiId ?? undefined,
+        bankAccount:
+          paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+            ? {
+                accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+                ifsc: paymentDetail.ifsc,
+                accountHolderName: paymentDetail.accountHolderName ?? '',
+              }
+            : undefined,
       });
-      await this.logAudit({
-        actorType: ActorType.ADMIN,
-        actorId: adminId,
-        action: 'withdrawal_completed',
-        entityType: 'withdrawal_request',
-        entityId: withdrawalId,
-        newValue: { status: WithdrawalStatus.COMPLETED, pinelabsTransactionId: result.pinelabsTransactionId },
+      fundAccountId = fundAccount.fundAccountId;
+      await this.paymentDetailRepo.update(paymentDetail.id, { razorpayFundAccountId: fundAccountId });
+    }
+
+    const referenceId = `wd_${withdrawalId}`;
+    const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+    const payoutMode = withdrawal.payoutMethod === 'upi' ? 'UPI' : 'IMPS';
+
+    let payoutResult: { payoutId: string; status: string };
+    try {
+      payoutResult = await this.razorpayPayoutService.initiatePayout({
+        fundAccountId,
+        amount: amountPaise,
+        referenceId,
+        mode: payoutMode,
+        narration: 'Withdrawal payout (retry)',
       });
-      return { success: true, withdrawalId, status: WithdrawalStatus.COMPLETED };
-    } else {
-      const newStatus = await this.handleWithdrawalFailure({ withdrawal, orderId: withdrawal.orderId, adminId, result });
+    } catch (err) {
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: 'RAZORPAY_INIT_ERROR',
+          errorMessage: err.message,
+          rawResponse: {},
+        },
+      });
       return {
         success: true,
         withdrawalId,
         status: newStatus,
         paymentFailed: true,
-        errorCode: result.errorCode,
-        errorMessage: result.errorMessage,
+        errorCode: 'RAZORPAY_INIT_ERROR',
+        errorMessage: err.message,
       };
     }
+
+    const { payoutId, status: razorpayStatus } = payoutResult;
+    const finalStatus =
+      razorpayStatus === 'success' || razorpayStatus === 'processed'
+        ? WithdrawalStatus.COMPLETED
+        : razorpayStatus === 'failed' || razorpayStatus === 'rejected'
+        ? WithdrawalStatus.FAILED
+        : WithdrawalStatus.PROCESSING;
+
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: finalStatus,
+      processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+      razorpayPayoutId: payoutId,
+    });
+
+    if (finalStatus === WithdrawalStatus.FAILED) {
+      await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+          errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+          rawResponse: { payoutId, razorpayStatus },
+        },
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: finalStatus,
+        paymentFailed: true,
+        errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+        errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+      };
+    }
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: 'withdrawal_completed',
+      entityType: 'withdrawal_request',
+      entityId: withdrawalId,
+      newValue: { status: finalStatus, razorpayPayoutId: payoutId },
+    });
+
+    return { success: true, withdrawalId, status: finalStatus };
   }
 
   /**
@@ -1356,8 +1516,8 @@ export class AdminService implements OnModuleInit {
       throw new BadRequestException(`Cannot retry-refund a withdrawal in '${withdrawal.status}' status. Only FAILED withdrawals can be retried.`);
     }
 
-    // Use existing orderId if present, otherwise generate a new one
-    const orderId = withdrawal.orderId ?? this.pinelabsService.generateOrderId(withdrawalId);
+    // Use existing referenceId if present, otherwise build a new one
+    const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -1368,8 +1528,8 @@ export class AdminService implements OnModuleInit {
       await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
         status: WithdrawalStatus.PROCESSING,
         processedAt: new Date(),
-        orderId,
-        pinelabsTransactionId: null,
+        orderId: referenceId,
+        razorpayPayoutId: null,
         retryCount: (withdrawal.retryCount ?? 0) + 1,
       });
 
@@ -1387,53 +1547,122 @@ export class AdminService implements OnModuleInit {
       action: 'withdrawal_retry_refund',
       entityType: 'withdrawal_request',
       entityId: withdrawalId,
-      newValue: { action: 'retry_refund_attempted', orderId },
+      newValue: { action: 'retry_refund_attempted', orderId: referenceId },
     });
 
-    // 3. Attempt PineLabs payout
-    const result = await this.pinelabsService.dispatchPayout({
-      clientReferenceId: orderId,
-      payeeName: withdrawal.user?.name ?? 'Customer',
-      paymentMethod: withdrawal.payoutMethod,
-      amount: Number(withdrawal.amount),
-      payoutDetails: withdrawal.payoutDetails,
+    // 2. Fetch user's payment detail for fund account
+    const paymentDetail = await this.paymentDetailRepo.findOne({
+      where: { userId: withdrawal.userId, status: 'verified' },
+      order: { verifiedAt: 'DESC' },
     });
-
-    if (result.success) {
-      await this.withdrawalRepo.update(withdrawalId, {
-        status: WithdrawalStatus.COMPLETED,
-        processedAt: new Date(),
-        pinelabsTransactionId: result.pinelabsTransactionId,
-      });
-      await this.logAudit({
-        actorType: ActorType.ADMIN,
-        actorId: adminId,
-        action: 'withdrawal_completed',
-        entityType: 'withdrawal_request',
-        entityId: withdrawalId,
-        newValue: { status: WithdrawalStatus.COMPLETED, pinelabsTransactionId: result.pinelabsTransactionId },
-      });
-      return { success: true, withdrawalId, status: WithdrawalStatus.COMPLETED };
-    } else {
-      // Re-mark as failed (which will re-refund via markWithdrawalFailed)
-      const failureReason = result.errorCode === 'NETWORK_ERROR'
-        ? result.errorMessage ?? 'Payout dispatch failed'
-        : `${result.errorCode ?? 'Payout failed'}: ${result.errorMessage ?? 'Unknown error'}`;
+    if (!paymentDetail) {
       const newStatus = await this.handleWithdrawalFailure({
-        withdrawal: { ...withdrawal, status: WithdrawalStatus.PROCESSING } as WithdrawalRequest,
-        orderId,
+        withdrawal,
+        orderId: referenceId,
         adminId,
-        result,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: 'NO_PAYMENT_DETAIL',
+          errorMessage: 'No verified payment detail found for this user.',
+          rawResponse: {},
+        },
+      });
+      return { success: true, withdrawalId, status: newStatus, paymentFailed: true, errorCode: 'NO_PAYMENT_DETAIL', errorMessage: 'No verified payment detail found.' };
+    }
+
+    // 3. Reuse or recreate fund account
+    let fundAccountId = paymentDetail.razorpayFundAccountId;
+    if (!fundAccountId) {
+      const fundAccount = await this.razorpayPayoutService.createFundAccount({
+        userId: withdrawal.userId,
+        vpa: paymentDetail.upiId ?? undefined,
+        bankAccount:
+          paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+            ? {
+                accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+                ifsc: paymentDetail.ifsc,
+                accountHolderName: paymentDetail.accountHolderName ?? '',
+              }
+            : undefined,
+      });
+      fundAccountId = fundAccount.fundAccountId;
+      await this.paymentDetailRepo.update(paymentDetail.id, { razorpayFundAccountId: fundAccountId });
+    }
+
+    const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+    const payoutMode = withdrawal.payoutMethod === 'upi' ? 'UPI' : 'IMPS';
+
+    // 4. Attempt Razorpay payout
+    let payoutResult: { payoutId: string; status: string };
+    try {
+      payoutResult = await this.razorpayPayoutService.initiatePayout({
+        fundAccountId,
+        amount: amountPaise,
+        referenceId,
+        mode: payoutMode,
+        narration: 'Withdrawal payout (retry)',
+      });
+    } catch (err) {
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: 'RAZORPAY_INIT_ERROR',
+          errorMessage: err.message,
+          rawResponse: {},
+        },
+      });
+      return { success: true, withdrawalId, status: newStatus, paymentFailed: true, errorCode: 'RAZORPAY_INIT_ERROR', errorMessage: err.message };
+    }
+
+    const { payoutId, status: razorpayStatus } = payoutResult;
+    const finalStatus =
+      razorpayStatus === 'success' || razorpayStatus === 'processed'
+        ? WithdrawalStatus.COMPLETED
+        : razorpayStatus === 'failed' || razorpayStatus === 'rejected'
+        ? WithdrawalStatus.FAILED
+        : WithdrawalStatus.PROCESSING;
+
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: finalStatus,
+      processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+      razorpayPayoutId: payoutId,
+    });
+
+    if (finalStatus === WithdrawalStatus.FAILED) {
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+          errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+          rawResponse: { payoutId, razorpayStatus },
+        },
       });
       return {
         success: true,
         withdrawalId,
         status: newStatus,
         paymentFailed: true,
-        errorCode: result.errorCode,
-        errorMessage: result.errorMessage,
+        errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+        errorMessage: `Razorpay payout status: ${razorpayStatus}`,
       };
     }
+
+    await this.logAudit({
+      actorType: ActorType.ADMIN,
+      actorId: adminId,
+      action: 'withdrawal_completed',
+      entityType: 'withdrawal_request',
+      entityId: withdrawalId,
+      newValue: { status: finalStatus, razorpayPayoutId: payoutId },
+    });
+
+    return { success: true, withdrawalId, status: finalStatus };
   }
 
   /**

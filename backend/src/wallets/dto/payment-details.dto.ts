@@ -59,6 +59,8 @@ export class AddPaymentDetailResponseDto {
   payoutMethod: 'upi' | 'bank_transfer';
   displayValue: string; // e.g. "user@upi" or "****1234"
   message: string;
+  /** Short URL for the ₹1 Razorpay Payment Link. Present only while status is in_progress. */
+  paymentLinkUrl?: string;
 }
 
 export class PaymentDetailDto {
@@ -71,4 +73,6 @@ export class PaymentDetailDto {
   accountHolderName: string | null;
   verifiedAt: Date | null;
   createdAt: Date;
+  /** Short URL for the ₹1 Razorpay Payment Link. Present only while status is in_progress. */
+  paymentLinkUrl?: string;
 }

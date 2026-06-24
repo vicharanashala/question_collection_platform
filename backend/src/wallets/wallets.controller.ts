@@ -45,11 +45,35 @@ export class WalletsController {
     return this.walletsService.getRewardTier(count);
   }
 
-  /** Returns wallet configuration values needed by the client. */
+  /**
+   * Returns wallet configuration values needed by the client.
+   * Includes razorpayKeyId so the mobile app can initialise the native SDK.
+   */
   @Get('me/config')
   @HttpCode(HttpStatus.OK)
   async getWalletConfig(@Req() req: AuthenticatedRequest) {
     return this.walletsService.getWalletConfig();
+  }
+
+  /**
+   * Called by the mobile app after a successful Razorpay SDK payment.
+   * The app receives razorpay_payment_id from the SDK and sends it here.
+   * Backend then triggers the same verification flow as the webhook.
+   *
+   * POST /wallets/verify-payment
+   * Body: { paymentDetailId: string; razorpayPaymentId: string }
+   */
+  @Post('verify-payment')
+  @HttpCode(HttpStatus.OK)
+  async verifyPayment(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { paymentDetailId: string; razorpayPaymentId: string },
+  ) {
+    return this.walletsService.handleRazorpayVerificationCallback({
+      userId: req.user.id,
+      paymentDetailId: body.paymentDetailId,
+      razorpayPaymentId: body.razorpayPaymentId,
+    });
   }
 
   @Get('me/transactions')
