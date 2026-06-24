@@ -51,6 +51,10 @@ export class Question {
   @Column({ name: 'question_text', type: 'text' })
   questionText: string;
 
+  /** Vector embedding of the question text, produced by the embedding service */
+  @Column({ type: 'float8', array: true, nullable: true })
+  embedding: number[] | null;
+
   @Column({ name: 'media_type', type: 'varchar', length: 10, default: MediaType.NONE })
   mediaType: MediaType;
 

@@ -19,6 +19,7 @@ import { AdminService } from '../admin/admin.service';
 import { StorageService } from '../storage/storage.service';
 import { GemmaService } from '../ai/gemma.service';
 import { GdbService } from '../ai/gdb.service';
+import { EmbedService } from '../ai/embed.service';
 
 @Injectable()
 export class QuestionService {
@@ -35,6 +36,7 @@ export class QuestionService {
     private readonly storageService: StorageService,
     private readonly gemmaService: GemmaService,
     private readonly gdbService: GdbService,
+    private readonly embedService: EmbedService,
   ) {}
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
@@ -135,7 +137,12 @@ export class QuestionService {
       throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
     }
 
-    // 8. Persist question in a transaction
+    // 8. Fetch embedding for the question text
+    const [embedding] = await Promise.all([
+      this.embedService.embed(dto.questionText),
+    ]);
+
+    // 9. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
       domains,
@@ -152,6 +159,7 @@ export class QuestionService {
       status,
       editWindowClosesAt,
       submittedAt: now,
+      embedding,
     });
 
     const saved = await this.dataSource.transaction(async (em) => {
@@ -159,7 +167,7 @@ export class QuestionService {
       return repo.save(question) as Promise<Question>;
     });
 
-    // 9. Audit log
+    // 10. Audit log
     await this.auditRepo.save({
       actorType: ActorType.USER,
       actorId: userId,
@@ -170,7 +178,7 @@ export class QuestionService {
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
-    // 10. Send duplicate notification after saving
+    // 11. Send duplicate notification after saving
     if (isDuplicate) {
       await this.notifRepo.save(
         this.notifRepo.create({
