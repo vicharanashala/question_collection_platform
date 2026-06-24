@@ -50,8 +50,19 @@ export const gcpStorageConfig = registerAs('gcpStorage', () => ({
   keyFile: process.env.GCP_KEY_FILE || '',
 }));
 
+function required(key: string): string {
+  const val = process.env[key];
+  if (!val) throw new Error(`Missing required env var: ${key}`);
+  return val;
+}
+
 export const llmConfig = registerAs('llm', () => ({
-  baseUrl: process.env.OPENAI_BASE_URL || '',
-  apiKey: process.env.OPENAI_API_KEY || '',
-  model: process.env.OPENAI_MODEL || 'meta-llama/llama-4-maverick',
+  baseUrl: `${required('VM_SERVER_URL')}:${required('GEMMA_PORT')}/${required('GEMMA_VERSION')}`,
+  apiKey: required('GEMMA_API_KEY'),
+  model: required('GEMMA_MODEL'),
+}));
+
+export const gdbConfig = registerAs('gdb', () => ({
+  baseUrl: `${required('VM_SERVER_URL')}:${required('GDB_PORT')}`,
+  apiKey: required('GDB_API_KEY'),
 }));

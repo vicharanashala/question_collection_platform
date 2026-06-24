@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
-import { AudioModule, requestRecordingPermissionsAsync, setAudioModeAsync, AudioQuality, IOSOutputFormat, createAudioPlayer } from 'expo-audio';
+import { AudioModule, requestRecordingPermissionsAsync, setAudioModeAsync, AudioQuality, IOSOutputFormat, createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { AudioRecorder } from '../../components/AudioRecorder';
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { TooltipIcon } from '../../components/TooltipIcon';
+import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -238,6 +239,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   // can be passed to QuestionPreview and used for mediaType detection.
   const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
 
+  // ── GDB duplicate-check modal ─────────────────────────────────────────────
+  const [duplicateModal, setDuplicateModal] = useState<{
+    visible: boolean;
+    matchedQuestion: string;
+    matchedAnswer: string | null;
+    similarityScore: number | null;
+  }>({ visible: false, matchedQuestion: '', matchedAnswer: null, similarityScore: null });
 
 
   // ── On-device AI validation ───────────────────────────────────────────────
@@ -335,6 +343,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         mediaUrls: [],
       });
 
+      // ── Check if GDB found a near-duplicate ─────────────────────────────
+      const duplicate = res.data?.duplicate;
+      if (duplicate?.isDuplicate) {
+        setDuplicateModal({
+          visible: true,
+          matchedQuestion: duplicate.matchedQuestion ?? '',
+          matchedAnswer: duplicate.matchedAnswer ?? null,
+          similarityScore: duplicate.similarityScore ?? null,
+        });
+        setPreviewLoading(false);
+        return;
+      }
+
       const hasAudio = Boolean(pendingAudioUri);
       const hasImage = Boolean(selectedImageUri);
       let mediaType: 'none' | 'image' | 'audio' = 'none';
@@ -431,7 +452,17 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <Input
                 placeholder={t('question.questionPlaceholder')}
                 value={questionText}
-                onChangeText={(v) => { setQuestionText(v); setErrors({}); scheduleValidation(v); }}
+                onChangeText={(v) => {
+                  setQuestionText(v);
+                  setErrors({});
+                  if (!v.length) {
+                    setAiValidation(null);
+                    setAiValidationOverride(false);
+                    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+                  } else {
+                    scheduleValidation(v);
+                  }
+                }}
                 error={errors.questionText}
                 multiline
                 numberOfLines={6}
@@ -581,6 +612,20 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           )}
         </View>
       </KeyboardAvoidingView>
+
+      {/* GDB duplicate-check modal — shown when backend found a similar question */}
+      <DuplicateFoundModal
+        visible={duplicateModal.visible}
+        matchedQuestion={duplicateModal.matchedQuestion}
+        matchedAnswer={duplicateModal.matchedAnswer}
+        similarityScore={duplicateModal.similarityScore}
+        onDismiss={() => {
+          setDuplicateModal((p) => ({ ...p, visible: false }));
+          setQuestionText('');
+          setAiValidation(null);
+          setAiValidationOverride(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

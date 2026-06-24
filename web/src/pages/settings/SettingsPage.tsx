@@ -18,13 +18,16 @@ const CONFIG_META: Record<string, { label: string; suffix: string }> = {
   min_withdrawal_amount:          { label: 'Min Withdrawal Amount',     suffix: ' \u20b9' },
   question_edit_window_seconds:   { label: 'Edit Window',                suffix: 's' },
   daily_question_limit:           { label: 'Daily Question Limit',       suffix: '/day' },
-  ai_confidence_threshold:        { label: 'AI Confidence Threshold',    suffix: '%' },
   duplicate_similarity_threshold: { label: 'Duplicate Similarity',       suffix: '' },
   max_question_chars:             { label: 'Max Question Characters',   suffix: '' },
   max_image_size_mb:              { label: 'Max Image Size',             suffix: ' MB' },
 }
 
-const HIDDEN_CONFIG_KEYS = new Set(['video_max_duration_seconds', 'video_max_size_mb'])
+const HIDDEN_CONFIG_KEYS = new Set([
+  'video_max_duration_seconds',
+  'video_max_size_mb',
+  'ai_confidence_threshold',
+])
 
 export function SettingsPage() {
   const { user: currentUser } = useAuth()
@@ -64,9 +67,16 @@ export function SettingsPage() {
   async function handleSave() {
     if (!editKey) return
     const val = parseFloat(editValue)
-    if (isNaN(val) || val < 0) {
-      toast.error('Invalid value. Enter a non-negative number.')
-      return
+    if (editKey === 'duplicate_similarity_threshold') {
+      if (isNaN(val) || val < 0 || val > 1) {
+        toast.error('Duplicate Similarity must be a number between 0 and 1.')
+        return
+      }
+    } else {
+      if (isNaN(val) || val < 0) {
+        toast.error('Invalid value. Enter a non-negative number.')
+        return
+      }
     }
     setSaving(true)
     try {

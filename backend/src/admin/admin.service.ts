@@ -63,7 +63,6 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   min_withdrawal_amount: { value: 50, description: 'Minimum withdrawal threshold (INR)' },
   question_edit_window_seconds: { value: 30, description: 'Edit window after submission (seconds)' },
   daily_question_limit: { value: 20, description: 'Max questions per user per day' },
-  ai_confidence_threshold: { value: 90, description: 'Minimum AI confidence to auto-approve (%)' },
   duplicate_similarity_threshold: { value: 0.9, description: 'Semantic similarity threshold for duplicate detection' },
   video_max_duration_seconds: { value: 10, description: 'Maximum video duration (seconds)' },
   video_max_size_mb: { value: 10, description: 'Maximum video file size (MB)' },

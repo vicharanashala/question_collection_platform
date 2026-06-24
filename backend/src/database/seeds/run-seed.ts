@@ -26,11 +26,6 @@ const DEFAULT_CONFIG = [
     description: 'Maximum questions a user can submit per day',
   },
   {
-    key: 'ai_confidence_threshold',
-    value: 90.0,
-    description: 'Minimum AI confidence score (%) to auto-approve a question',
-  },
-  {
     key: 'duplicate_similarity_threshold',
     value: 0.9,
     description: 'Semantic similarity threshold (0-1) for duplicate detection',

@@ -100,3 +100,16 @@ export class PreviewQuestionDto {
   mediaUrls?: string[];
 }
 
+/**
+ * Embedded in the /questions/preview response when a similar question is found.
+ * The mobile app uses this to show the user the existing question + answer
+ * instead of proceeding to the preview/confirmation screen.
+ */
+export class DuplicateQuestionResultDto {
+  isDuplicate: boolean;
+  matchedQuestionId: string | null;
+  matchedQuestion: string | null;
+  matchedAnswer: string | null;
+  similarityScore: number | null;
+}
+

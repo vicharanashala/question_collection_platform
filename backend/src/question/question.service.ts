@@ -18,6 +18,7 @@ import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
 import { StorageService } from '../storage/storage.service';
 import { GemmaService } from '../ai/gemma.service';
+import { GdbService } from '../ai/gdb.service';
 
 @Injectable()
 export class QuestionService {
@@ -33,6 +34,7 @@ export class QuestionService {
     private readonly userService: UserService,
     private readonly storageService: StorageService,
     private readonly gemmaService: GemmaService,
+    private readonly gdbService: GdbService,
   ) {}
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
@@ -427,16 +429,25 @@ export class QuestionService {
 
     const { state, district, block } = user;
 
-    // 2. Gemma inference: domains + cropType
+    // 2. Gemma inference: domains + cropType  (run first so we have crop for GDB call)
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
 
-    // 3. Derive season from current month (India-centric calendar)
+    // 3. Check for semantically similar questions via GDB semantic search
+    //    If a match above the similarity threshold is found, the response carries
+    //    the matched question + answer so the mobile app can show it to the user.
+    const duplicateResult = await this.gdbService.checkDuplicate({
+      questionText: dto.questionText,
+      crop: inferred.crop,
+      state,
+    });
+
+    // 4. Derive season from current month (India-centric calendar)
     const season = deriveSeasonFromMonth(new Date().getMonth()); // 0-indexed
 
-    // 4. Derive agro-climatic zone from state
+    // 5. Derive agro-climatic zone from state
     const agroClimaticZone = this.deriveAgroClimaticZone(state);
 
-    // 5. Daily-limit counters
+    // 6. Daily-limit counters
     const [dailyLimit, dailyCount] = await Promise.all([
       this.adminService.getConfigValue('daily_question_limit'),
       this.getDailyCount(userId),
@@ -462,6 +473,9 @@ export class QuestionService {
 
       remainingToday: Math.max(0, dailyLimit - dailyCount),
       dailyLimit,
+
+      // Duplicate-check result — present when GDB found a similar question
+      duplicate: duplicateResult,
     };
   }
 }

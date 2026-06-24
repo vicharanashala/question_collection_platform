@@ -13,6 +13,7 @@ import {
   questionConfig,
   gcpStorageConfig,
   llmConfig,
+  gdbConfig,
 } from './config/configuration';
 import { paymentConfig } from './config/payment.config';
 import { sarvamConfig } from './config/sarvam.config';
@@ -49,7 +50,7 @@ import { HealthController } from './health/health.controller';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, sarvamConfig, lgdConfig, paymentConfig],
+      load: [databaseConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, gdbConfig, sarvamConfig, lgdConfig, paymentConfig],
       envFilePath: ['.env'],
     }),
 
