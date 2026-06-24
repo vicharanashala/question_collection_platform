@@ -415,86 +415,72 @@ export class QuestionService {
    * Does NOT write anything to the database.
    *
    * - Location (state, district, block) comes from the user's profile.
-   * - domains / season / cropType get placeholder defaults — user fills
-   *   them in on the preview screen before final submission.
+   * - domains / cropType come from Gemma inference.
+   * - season is derived from the current month.
+   * - agroClimaticZone is derived from the user's state.
+   * - suggestedDistricts / suggestedBlocks come from the LGD master-data service.
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
-    // Infer crop + domains via Gemma (falls back to keyword inference on failure)
+    // 1. Load user profile for location
+    const user = await this.userService.getProfile(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const { state, district, block } = user;
+
+    // 2. Gemma inference: domains + cropType
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
 
+    // 3. Derive season from current month (India-centric calendar)
+    const season = deriveSeasonFromMonth(new Date().getMonth()); // 0-indexed
+
+    // 4. Derive agro-climatic zone from state
+    const agroClimaticZone = this.deriveAgroClimaticZone(state);
+
+    // 5. Daily-limit counters
+    const [dailyLimit, dailyCount] = await Promise.all([
+      this.adminService.getConfigValue('daily_question_limit'),
+      this.getDailyCount(userId),
+    ]);
+
     return {
-      state: 'Maharashtra',
-      district: 'Pune',
-      block: 'Haveli',
+      state,
+      district,
+      block: block ?? null,
 
       // Pre-filled from Gemma inference; user can modify on the preview screen
       domains: inferred.domains,
-      season: Season.KHARIF,
       cropType: inferred.crop,
+      season,
 
       questionText: dto.questionText,
       mediaType: dto.mediaType ?? 'none',
       mediaUrls: dto.mediaUrls ?? [],
 
-      agroClimaticZone: this.deriveAgroClimaticZone('Maharashtra'),
-      suggestedDistricts: dummyDistrictsFor('Maharashtra'),
-      suggestedBlocks: dummyBlocksFor('Pune'),
+      agroClimaticZone,
+      suggestedDistricts: [],   // populated from user profile; no LGD lookup needed for preview
+      suggestedBlocks: [],
 
-      remainingToday: Math.max(0, (await this.adminService.getConfigValue('daily_question_limit')) - (await this.getDailyCount(userId))),
-      dailyLimit: await this.adminService.getConfigValue('daily_question_limit'),
+      remainingToday: Math.max(0, dailyLimit - dailyCount),
+      dailyLimit,
     };
   }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const CROPS = ['Wheat', 'Rice', 'Cotton', 'Sugarcane', 'Soybean', 'Maize', 'Groundnut', 'Mustard'];
+/**
+ * Derives the agricultural season from a 0-indexed month number (JavaScript convention).
+ * India-centric calendar:
+ *   Kharif  — June through October  (months 5–9)
+ *   Rabi    — November through March (months 10, 11, 0, 1, 2)
+ *   Zaid    — April through May       (months 3, 4)
+ * Pre/Post-Kharif and Pre-Rabi are used as sub-seasons around the main windows.
+ */
 
-const AGRO_CLIMATIC_ZONE_LABELS: Record<string, string> = {
-  western_himalayan: 'Western Himalayan',
-  eastern_himalayan: 'Eastern Himalayan',
-  lower_gangetic_plain: 'Lower Gangetic Plain',
-  middle_gangetic_plain: 'Middle Gangetic Plain',
-  upper_gangetic_plain: 'Upper Gangetic Plain',
-  trans_gangetic_plain: 'Trans-Gangetic Plain',
-  eastern_plateau_and_hills: 'Eastern Plateau and Hills',
-  central_plateau_and_hills: 'Central Plateau and Hills',
-  karnataka_plain_and_lcms: 'Karnataka Plain and LCMS',
-  coastal_andhra_and_karnataka: 'Coastal Andhra and Karnataka',
-  krishna_godavari_delta: 'Krishna-Godavari Delta',
-  western_ghats_and_coastal_kerala: 'Western Ghats and Coastal Kerala',
-  other: 'Other',
-};
-
-/** Returns dummy districts for a given state — replace with real master-data call */
-function dummyDistrictsFor(state: string): string[] {
-  const map: Record<string, string[]> = {
-    'Maharashtra': ['Pune', 'Mumbai Suburban', 'Nagpur', 'Nashik', 'Aurangabad', 'Solapur'],
-    'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra', 'Allahabad', 'Meerut'],
-    'Bihar': ['Patna', 'Gaya', 'Muzaffarpur', 'Bhagalpur', 'Darbhanga', 'Purnia'],
-    'Rajasthan': ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer', 'Bikaner'],
-    'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar'],
-    'Karnataka': ['Bangalore Urban', 'Mysore', 'Belgaum', 'Dharwad', 'Gulbarga', 'Mangalore'],
-    'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem', 'Tirunelveli'],
-    'West Bengal': ['Kolkata', 'Howrah', 'Asansol', 'Siliguri', 'Durgapur', 'Berhampore'],
-    'Punjab': ['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda', 'Mohali'],
-    'Haryana': ['Gurgaon', 'Faridabad', 'Rohtak', 'Hisar', 'Karnal', 'Panipat'],
-    'Madhya Pradesh': ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain', 'Sagar'],
-    'Chhattisgarh': ['Raipur', 'Bhilai', 'Bilaspur', 'Durg', 'Rajnandgaon', 'Jagdalpur'],
-    'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Tirupati'],
-    'Telangana': ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam', 'Rangareddy'],
-    'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam', 'Palakkad'],
-    'Assam': ['Kamrup', 'Dibrugarh', 'Tinsukia', 'Jorhat', 'Silchar', 'Guwahati'],
-  };
-  return map[state] ?? ['District A', 'District B', 'District C'];
+function deriveSeasonFromMonth(month: number): Season {
+  if (month >= 5 && month <= 9)  return Season.KHARIF;   // Jun–Oct  (sown Jun, harvested Oct–Nov)
+  if (month === 10 || month === 11 || month >= 0 && month <= 2) return Season.RABI; // Nov–Mar
+  if (month === 3 || month === 4) return Season.ZAID;    // Apr–May
+  return Season.RABI; // fallback (never reached with valid 0–11 input)
 }
 
-/** Returns dummy blocks for a given district — replace with real master-data call */
-function dummyBlocksFor(district: string): string[] {
-  if (!district) return [];
-  return [
-    `${district} Block 1`,
-    `${district} Block 2`,
-    `${district} Block 3`,
-  ];
-}

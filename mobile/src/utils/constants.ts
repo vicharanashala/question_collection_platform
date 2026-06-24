@@ -165,6 +165,7 @@ export const SEASONS = [
   { value: 'Wet Season', label: 'Wet Season' },
 ] as const;
 
+
 // ─── Agriculture Domains ───────────────────────────────────────────────────────
 
 export const DOMAINS = [

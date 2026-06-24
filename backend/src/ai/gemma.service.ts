@@ -21,33 +21,45 @@ const MAX_RETRIES = 2;
 
 // ─── Crop inference prompt ─────────────────────────────────────────────────────
 
-const CROP_SYSTEM_PROMPT = `You are an agricultural AI assistant. Respond with ONLY valid JSON — no markdown, no explanation.
+const CROP_SYSTEM_PROMPT = `You are an expert agricultural classifier. Your only job is to identify which crop (if any) a farmer is asking about.
 
+Respond with ONLY a valid JSON object. No markdown, no code fences, no explanation.
+
+Schema:
 {
-  "crop": "CropName or Unknown",
-  "confidence": 0.0-1.0
+  "crop": string,       // One value from the crop list below, or "Unknown"
+  "confidence": number  // Float between 0.0 (no idea) and 1.0 (certain)
 }
 
-Available crops: ${CROPS.join(', ')}.
-
-Identify the crop mentioned in the farmer's question from the list above, or "Unknown" if none is identifiable. confidence is your certainty.`;
-
-// ─── Domain inference prompt ───────────────────────────────────────────────────
-
-const DOMAIN_SYSTEM_PROMPT = `You are an agricultural AI assistant. Respond with ONLY valid JSON — no markdown, no explanation.
-
-{
-  "domains": ["Domain1", "Domain2"],
-  "confidence": 0.0-1.0
-}
-
-Available domains: ${DOMAINS.join(', ')}.
+Crop list:
+${CROPS.map((c) => `- ${c}`).join("\n")}
 
 Rules:
-- domains must be 1-3 values from the domains list
-- confidence is your certainty (0.0 = no confidence, 1.0 = certain)
-- Respond with ONLY the JSON object, no surrounding text`;
+- "crop" must be an exact match from the list above, or "Unknown"
+- Use "Unknown" if no crop is mentioned or identifiable
+- "confidence" reflects how certain you are of the match
+- Partial mentions, local names, and regional synonyms should still resolve to the correct crop if identifiable
+- Do NOT infer a crop from context alone (e.g. "paddy field" → Rice is fine, but "watering plants" → Unknown)`;
 
+const DOMAIN_SYSTEM_PROMPT = `You are an expert agricultural classifier. Your only job is to identify which agricultural domain(s) a farmer's question belongs to.
+
+Respond with ONLY a valid JSON object. No markdown, no code fences, no explanation.
+
+Schema:
+{
+  "domains": string[],  // 1–3 values from the domain list below
+  "confidence": number  // Float between 0.0 (no idea) and 1.0 (certain)
+}
+
+Domain list:
+${DOMAINS.map((d) => `- ${d}`).join("\n")}
+
+Rules:
+- "domains" must contain between 1 and 3 values, each an exact match from the list above
+- Order by relevance — most relevant domain first
+- "confidence" reflects your certainty across all selected domains
+- If the question spans multiple domains, include all that clearly apply (up to 3)
+- Do NOT include a domain unless it is clearly and directly relevant to the question`;
 const USER_PROMPT = (question: string) => `Question: "${question}"`;
 
 @Injectable()
@@ -83,6 +95,7 @@ export class GemmaService {
   }> {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
+
         return await this.inferCrop(questionText);
       } catch (err) {
         this.logger.warn(
@@ -93,7 +106,7 @@ export class GemmaService {
         if (attempt < MAX_RETRIES) await this.delay(RETRY_DELAY_MS * (attempt + 1));
       }
     }
-    this.logger.warn('[Crop] exhausted retries — returning Unknown');
+    this.logger.warn('[Gemma/Crop] exhausted retries — returning Unknown');
     return { crop: 'Unknown', confidence: 0.0 };
   }
 
@@ -108,16 +121,16 @@ export class GemmaService {
         { role: 'user', content: USER_PROMPT(questionText) },
       ],
       temperature: 0.2,
-      max_tokens: 64,
+      max_tokens: 128,
+      response_format: { type: 'json_object' },
     });
 
     const raw = completion.choices[0]?.message?.content?.trim() ?? '';
-    let parsed: { crop?: unknown; confidence?: unknown };
+    let parsed: Record<string, unknown>;
     try {
-      const jsonStr = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
-      parsed = JSON.parse(jsonStr);
+      parsed = this.tryParseJson(raw, ['crop', 'confidence']);
     } catch {
-      throw new Error(`Non-JSON: ${raw.slice(0, 80)}`);
+      throw new Error(`Non-JSON: ${raw.slice(0, 120)}`);
     }
 
     const crop = this.normaliseCrop(parsed.crop as string);
@@ -133,6 +146,7 @@ export class GemmaService {
   }> {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
+
         return await this.inferDomains(questionText);
       } catch (err) {
         this.logger.warn(
@@ -143,7 +157,7 @@ export class GemmaService {
         if (attempt < MAX_RETRIES) await this.delay(RETRY_DELAY_MS * (attempt + 1));
       }
     }
-    this.logger.warn('[Domains] exhausted retries — using keyword fallback');
+    this.logger.warn('[Gemma/Domains] exhausted retries — using keyword fallback');
     const domains = inferDomains(questionText);
     return { domains, confidence: 0.0 };
   }
@@ -163,15 +177,15 @@ export class GemmaService {
       ],
       temperature: 0.2,
       max_tokens: 128,
+      response_format: { type: 'json_object' },
     });
 
     const raw = completion.choices[0]?.message?.content?.trim() ?? '';
-    let parsed: { domains?: unknown; confidence?: unknown };
+    let parsed: Record<string, unknown>;
     try {
-      const jsonStr = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
-      parsed = JSON.parse(jsonStr);
+      parsed = this.tryParseJson(raw, ['domains', 'confidence']);
     } catch {
-      throw new Error(`Non-JSON: ${raw.slice(0, 80)}`);
+      throw new Error(`Non-JSON: ${raw.slice(0, 120)}`);
     }
 
     const domains = this.normaliseDomains(parsed.domains);
@@ -233,5 +247,44 @@ export class GemmaService {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Parse JSON from the model response with two strategies:
+   * 1. Direct JSON.parse after stripping markdown code fences
+   * 2. Regex extraction of key fields from partial/truncated responses
+   *
+   * Returns a partial object so callers can check which fields exist.
+   * Throws only if no fields could be recovered at all.
+   */
+  private tryParseJson(
+    raw: string,
+    fields: string[],
+  ): Record<string, unknown> {
+    // Strategy 1: clean markdown fences + JSON.parse
+    const stripped = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+    try {
+      return JSON.parse(stripped);
+    } catch {
+      // Strategy 2: regex-extract known fields from partial output
+      const extracted: Record<string, unknown> = {};
+      for (const field of fields) {
+        const re = new RegExp(`"${field}"\s*:\s*("[^"]*"|\[[^\]]*\]|\d+\.?\d*)`, 'i');
+        const m = stripped.match(re);
+        if (m) {
+          try {
+            extracted[field] = JSON.parse(m[1]);
+          } catch {
+            extracted[field] = m[1].replace(/^"|"$/g, '');
+          }
+        }
+      }
+      if (Object.keys(extracted).length > 0) {
+
+        return extracted;
+      }
+      // Nothing recoverable — throw so retry kicks in
+      throw new Error(`Non-JSON: ${raw.slice(0, 120)}`);
+    }
   }
 }
