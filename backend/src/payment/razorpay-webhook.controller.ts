@@ -49,7 +49,7 @@ interface RazorpayWebhookPayload {
   created_at?: number;
 }
 
-@Controller('api/v1/razorpay/webhook')
+@Controller('razorpay/webhook')
 export class RazorpayWebhookController {
   private readonly logger = new Logger(RazorpayWebhookController.name);
 
