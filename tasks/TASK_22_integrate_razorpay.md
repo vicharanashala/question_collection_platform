@@ -1,321 +1,617 @@
-# Task: Integrate Razorpay Standard Web Checkout
+# Task: Integrate Razorpay Payouts (Admin → User Disbursement)
 
 ## Branch
-`feat/integrate-razorpay-checkout`
+`feat/integrate-razorpay-payouts`
 
 ---
 
 ## Overview
 
-Integrate Razorpay Standard Web Checkout into the existing codebase to process payments via a hosted modal. Covers backend order creation, frontend checkout flow, and server-side signature verification.
+This task integrates **Razorpay Payouts** as the disbursement engine for withdrawal requests. When an admin approves a withdrawal on the web admin panel, the platform pushes money to the user's UPI ID or bank account via Razorpay.
+
+This is a **disbursement** integration (admin → user), NOT a collection/collection integration (user → admin). It serves as the **default payout provider**, replacing PineLabs logic for withdrawal execution, while keeping all PineLabs code intact for future use.
+
+**Razorpay mode:** `payouts` (push payments), NOT Standard Checkout.
+
+---
+
+## Context: How Withdrawal Works Today
+
+```
+User wallet page
+    └── User clicks "Withdraw Money"
+            → WithdrawalRequest created (status: PENDING)
+            → Transaction created (status: PENDING)
+
+Admin withdrawls page (/wallets/withdrawals)
+    └── Admin clicks "Approve"
+            → Backend calls payment provider API
+            → Provider pushes money to user's UPI/bank
+            → DB updated: COMPLETED or FAILED
+```
+
+Today, this is handled by PineLabs. This task adds Razorpay as the default provider.
 
 ---
 
 ## User Flow
 
-### 1. Payment Initiation
+### 1. Admin Approves a Withdrawal
 
-**Trigger:** User clicks a "Pay Now" button on the frontend.
+**Trigger:** Admin clicks "Approve" on a pending withdrawal request in the admin panel (`/wallets/withdrawals`).
 
-**Step 1.1 — Create Order (Backend)**
-- Frontend calls `POST /api/create-order` with the amount
-- Backend validates amount (minimum ₹1 / 100 paise)
-- Backend calls Razorpay API to create an order
-- Returns `{ order_id, amount, currency }` to frontend
+**Step 1.1 — Fetch User Payment Details (Backend)**
+- Load `UserPaymentDetail` for the requesting user
+- Validate that payment details exist and are verified
 
-**Step 1.2 — Open Razorpay Modal (Frontend)**
-- Frontend receives `order_id` and opens Razorpay checkout modal
-- User completes payment inside the modal (card / UPI / netbanking / wallet)
-- On success: Razorpay returns `razorpay_payment_id`, `razorpay_order_id`, `razorpay_signature`
-- On failure / dismiss: show appropriate error message to user
+**Step 1.2 — Initiate Razorpay Payout (Backend)**
+- Backend calls Razorpay Payouts API to push money to the user's UPI/bank account
+- Returns a `payout_id` and `status`
+- Uses `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` (server-side only)
 
-**Step 1.3 — Verify Payment (Backend)**
-- Frontend sends all three values to `POST /api/verify-payment`
-- Backend computes HMAC-SHA256 signature and compares
-- On match: mark payment as successful, return `200`
-- On mismatch: return `400`, do NOT mark as paid
+**Step 1.3 — Handle Payout Response (Backend)**
+- On `SUCCESS`: mark WithdrawalRequest as `COMPLETED`, set `razorpay_payout_id`
+- On `FAILED`: mark WithdrawalRequest as `FAILED`, store error from Razorpay
+- On `PROCESSING`: keep as `PROCESSING` — Razorpay is async, webhook will confirm final status
+
+**Step 1.4 — Webhook (Optional, for async confirmation)**
+- Razorpay can call a webhook on payout status change
+- Endpoint: `POST /api/v1/razorpay/webhook`
+- Recommended but not required for basic flow
 
 ---
 
 ## Implementation Steps
 
-### Step 1 — Install Dependencies
+### Step 1 — Environment Setup
 
-```bash
-npm install razorpay
-```
-
-Add `.env` to `.gitignore` if not already present:
-
-```bash
-echo ".env" >> .gitignore
-```
-
----
-
-### Step 2 — Environment Setup
-
-**File: `.env`**
+**File: `backend/.env`** (already has RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)
 
 ```env
-# Razorpay credentials — NEVER commit this file
 RAZORPAY_KEY_ID=rzp_test_T5L7ZaENPys403
-RAZORPAY_KEY_SECRET=hZfeFeBrhdPi7wRK5B4xwYnf
-
-# Frontend-exposed key (pick one based on your framework)
-# Next.js:
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_T5L7ZaENPys403
-# Vite:
-# VITE_RAZORPAY_KEY_ID=rzp_test_T5L7ZaENPys403
-# CRA:
-# REACT_APP_RAZORPAY_KEY_ID=rzp_test_T5L7ZaENPys403
+RAZORPAY_KEY_SECRET=hZfeFe…wYnf
+RAZORPAY_ENV=sandbox           # 'sandbox' for test, 'production' for live
 ```
 
-> ⚠️ `RAZORPAY_KEY_SECRET` must **never** be exposed to the frontend. Only `KEY_ID` gets a public prefix.
+> The Razorpay Payouts sandbox requires a funded test balance. Create a Razorpay dashboard account at https://dashboard.razorpay.com/app/keys and use the test keys above. Fund a test balance to send payouts.
 
 ---
 
-### Step 3 — Backend: Create Order
+### Step 2 — Razorpay Payouts API — Quick Reference
 
-**File: `src/controllers/razorpayController.ts`**
+**Endpoint:** `POST https://api.razorpay.com/v1/payouts`
+
+**Key payload fields:**
+
+```json
+{
+  "account_number": "RAZORPAY_ACCOUNT_NUMBER",
+  "amount": 10000,
+  "currency": "INR",
+  "mode": "UPI",
+  "purpose": "refund",
+  "fund_account": {
+    "account_type": "vpa",
+    "vpa": { "address": "user@upi" }
+  },
+  "reference_id": "withdrawal_req_abc123",
+  "narration": "Withdrawal payout"
+}
+```
+
+**`mode` options:** `UPI`, `IMPS`, `NEFT`, `RTGS`, `BANK_TRANSFER`
+
+**`account_type` options:** `vpa` (for UPI), `bank_account` (for IMPS/NEFT/RTGS)
+
+**Payout statuses:** `pending` → `processing` → `success` / `failed` / `rejected`
+
+> Full docs: https://razorpay.com/docs/payouts/
+
+---
+
+### Step 3 — Backend: Update Payment Config
+
+**File: `src/config/payment.config.ts`**
+
+The `razorpay` block was added in Step 1 of the previous task attempt. Verify it contains:
 
 ```typescript
-import Razorpay from 'razorpay';
-import { Request, Response } from 'express';
-import crypto from 'crypto';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-// POST /api/create-order
-export async function createOrder(req: Request, res: Response) {
-  const { amount, currency = 'INR', receipt } = req.body;
-
-  if (!amount || typeof amount !== 'number' || amount < 100) {
-    return res.status(400).json({
-      error: 'Invalid amount. Minimum is 100 paise (₹1).',
-    });
-  }
-
-  try {
-    const order = await razorpay.orders.create({
-      amount,           // in paise
-      currency,
-      receipt: receipt ?? `receipt_${Date.now()}`,
-    });
-
-    return res.status(200).json({
-      order_id: order.id,
-      amount: order.amount,
-      currency: order.currency,
-    });
-  } catch (err: any) {
-    if (err?.statusCode === 401) {
-      return res.status(401).json({ error: 'Razorpay authentication failed.' });
-    }
-    console.error('[Razorpay] Create order error:', err);
-    return res.status(500).json({ error: 'Failed to create Razorpay order.' });
-  }
-}
-
-// POST /api/verify-payment
-export async function verifyPayment(req: Request, res: Response) {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-    return res.status(400).json({ error: 'Missing required payment fields.' });
-  }
-
-  const body = `${razorpay_order_id}|${razorpay_payment_id}`;
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-    .update(body)
-    .digest('hex');
-
-  if (expectedSignature !== razorpay_signature) {
-    return res.status(400).json({ error: 'Payment signature verification failed.' });
-  }
-
-  // Signature matched — safe to mark payment as successful in your DB here
-
-  return res.status(200).json({
-    success: true,
-    payment_id: razorpay_payment_id,
-    order_id: razorpay_order_id,
-  });
-}
+razorpay: {
+  env: process.env.RAZORPAY_ENV ?? 'sandbox',
+  keyId: process.env.RAZORPAY_KEY_ID ?? '',
+  keySecret: process.env.RAZORPAY_KEY_SECRET ?? '',
+},
 ```
 
 ---
 
-### Step 4 — Backend: Routes
+### Step 4 — Backend: Fund Account (Create if not exists)
 
-**File: `src/routes/razorpayRoutes.ts`**
+Before sending a payout, Razorpay requires a "fund account" linked to the recipient (user's UPI or bank). This only needs to be created once per user.
 
-```typescript
-import { Router } from 'express';
-import { createOrder, verifyPayment } from '../controllers/razorpayController';
-
-const router = Router();
-
-router.post('/create-order', createOrder);
-router.post('/verify-payment', verifyPayment);
-
-export default router;
-```
-
-**Register in your main app file (`src/app.ts` or `src/index.ts`):**
+**File: `src/payment/razorpay-payout.service.ts`**
 
 ```typescript
-import razorpayRoutes from './routes/razorpayRoutes';
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
-app.use('/api', razorpayRoutes);
-```
+interface FundAccountVPA {
+  account_type: 'vpa';
+  vpa: { address: string };
+}
 
----
+interface FundAccountBank {
+  account_type: 'bank_account';
+  bank_account: {
+    account_number: string;
+    ifsc: string;
+    name: string;
+  };
+}
 
-### Step 5 — Frontend: Checkout Button
+type FundAccount = FundAccountVPA | FundAccountBank;
 
-**File: `src/components/RazorpayCheckout.tsx`**
+interface CreateFundAccountResult {
+  fundAccountId: string;
+  active: boolean;
+}
 
-```tsx
-import { useEffect } from 'react';
+interface InitiatePayoutResult {
+  payoutId: string;
+  status: 'pending' | 'processing';
+}
 
-declare global {
-  interface Window {
-    Razorpay: any;
+@Injectable()
+export class RazorpayPayoutService {
+  private readonly logger = new Logger(RazorpayPayoutService.name);
+  private readonly baseUrl: string;
+  private readonly keyId: string;
+  private readonly keySecret: string;
+  private readonly accountNumber: string; // Your Razorpay account number
+
+  constructor(private readonly configService: ConfigService) {
+    const env = this.configService.get<string>('payment.razorpay.env') ?? 'sandbox';
+    this.baseUrl = env === 'production'
+      ? 'https://api.razorpay.com/v1'
+      : 'https://api.razorpay.com/v1';
+    this.keyId = this.configService.get<string>('payment.razorpay.keyId') ?? '';
+    this.keySecret = this.configService.get<string>('payment.razorpay.keySecret') ?? '';
+    // Your Razorpay Business Account number (found in Dashboard → Settings → API Keys)
+    this.accountNumber = this.configService.get<string>('payment.razorpay.accountNumber') ?? '';
   }
-}
 
-interface RazorpayCheckoutProps {
-  amount: number;        // in paise
-  description?: string;
-  onSuccess?: (data: { payment_id: string; order_id: string }) => void;
-  onFailure?: (error: string) => void;
-}
+  private authHeader(): string {
+    return `Basic ${Buffer.from(`${this.keyId}:${this.keySecret}`).toString('base64')}`;
+  }
 
-export function RazorpayCheckout({
-  amount,
-  description = 'Payment',
-  onSuccess,
-  onFailure,
-}: RazorpayCheckoutProps) {
-  // Load Razorpay checkout script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
-  }, []);
+  /**
+   * Create or retrieve a Razorpay Fund Account for a user.
+   * Once created, the same fund_account_id can be reused for future payouts.
+   *
+   * @param userId  Used as idempotency key to avoid duplicate fund accounts
+   * @param vpa     UPI ID string (e.g. "user@upi")
+   */
+  async createFundAccount(params: {
+    userId: string;
+    vpa?: string;
+    bankAccount?: {
+      accountNumber: string;
+      ifsc: string;
+      accountHolderName: string;
+    };
+  }): Promise<CreateFundAccountResult> {
+    const { userId, vpa, bankAccount } = params;
 
-  const handlePayment = async () => {
+    const fundAccountPayload: FundAccount =
+      vpa
+        ? { account_type: 'vpa', vpa: { address: vpa } }
+        : {
+            account_type: 'bank_account',
+            bank_account: {
+              account_number: bankAccount!.accountNumber,
+              ifsc: bankAccount!.ifsc,
+              name: bankAccount!.accountHolderName,
+            },
+          };
+
     try {
-      // Step 1 — Create order
-      const orderRes = await fetch('/api/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount }),
-      });
-
-      if (!orderRes.ok) {
-        const err = await orderRes.json();
-        onFailure?.(err.error ?? 'Failed to create order.');
-        return;
-      }
-
-      const { order_id, amount: orderAmount, currency } = await orderRes.json();
-
-      // Step 2 — Open Razorpay modal
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // or VITE_ / REACT_APP_ variant
-        amount: orderAmount,
-        currency,
-        name: 'Your App Name',
-        description,
-        order_id,
-        handler: async (response: {
-          razorpay_payment_id: string;
-          razorpay_order_id: string;
-          razorpay_signature: string;
-        }) => {
-          // Step 3 — Verify payment
-          const verifyRes = await fetch('/api/verify-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(response),
-          });
-
-          if (verifyRes.ok) {
-            const data = await verifyRes.json();
-            onSuccess?.({
-              payment_id: data.payment_id,
-              order_id: data.order_id,
-            });
-          } else {
-            const err = await verifyRes.json();
-            onFailure?.(err.error ?? 'Payment verification failed.');
-          }
+      const response = await axios.post(
+        `${this.baseUrl}/fund_accounts`,
+        {
+          ...fundAccountPayload,
+          customer_id: userId,  // used as idempotency key
         },
-        modal: {
-          ondismiss: () => {
-            onFailure?.('Payment cancelled by user.');
+        {
+          headers: {
+            Authorization: this.authHeader(),
+            'Content-Type': 'application/json',
           },
         },
-        prefill: {
-          // Optional: pre-fill user details if available
-          // name: currentUser.name,
-          // email: currentUser.email,
-          // contact: currentUser.phone,
-        },
-        theme: {
-          color: '#6366F1', // match your brand colour
-        },
+      );
+
+      return {
+        fundAccountId: response.data.id,
+        active: response.data.active,
       };
-
-      const rzp = new window.Razorpay(options);
-
-      rzp.on('payment.failed', (response: any) => {
-        onFailure?.(
-          response.error?.description ?? 'Payment failed. Please try again.'
-        );
-      });
-
-      rzp.open();
-    } catch (err) {
-      console.error('[Razorpay] Checkout error:', err);
-      onFailure?.('An unexpected error occurred. Please try again.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: { description?: string } } } };
+      const message = error?.response?.data?.error?.description ?? 'Failed to create fund account';
+      this.logger.error(`[Razorpay] createFundAccount failed: ${message}`);
+      throw new InternalServerErrorException(message);
     }
-  };
+  }
 
-  return (
-    <button
-      onClick={handlePayment}
-      className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-    >
-      Pay ₹{(amount / 100).toFixed(2)}
-    </button>
-  );
+  /**
+   * Initiate a payout to a fund account.
+   *
+   * @param params
+   * @param params.fundAccountId  Razorpay fund_account ID
+   * @param params.amount         Amount in paise
+   * @param params.referenceId    Your internal reference (e.g. withdrawal request ID)
+   * @param params.mode           Payment mode: UPI, IMPS, NEFT, RTGS
+   * @param params.narration      Shown on user's bank statement
+   */
+  async initiatePayout(params: {
+    fundAccountId: string;
+    amount: number;
+    referenceId: string;
+    mode?: 'UPI' | 'IMPS' | 'NEFT' | 'RTGS' | 'BANK_TRANSFER';
+    narration?: string;
+  }): Promise<InitiatePayoutResult> {
+    const {
+      fundAccountId,
+      amount,
+      referenceId,
+      mode = 'UPI',
+      narration = 'Withdrawal payout',
+    } = params;
+
+    this.logger.log(
+      `[Razorpay] Initiating payout: fundAccount=${fundAccountId} amount=${amount} mode=${mode} ref=${referenceId}`,
+    );
+
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/payouts`,
+        {
+          account_number: this.accountNumber,
+          fund_account_id: fundAccountId,
+          amount,
+          currency: 'INR',
+          mode,
+          purpose: 'refund',
+          reference_id: referenceId,
+          narration,
+        },
+        {
+          headers: {
+            Authorization: this.authHeader(),
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      this.logger.log(
+        `[Razorpay] Payout created: id=${response.data.id} status=${response.data.status}`,
+      );
+
+      return {
+        payoutId: response.data.id,
+        status: response.data.status,
+      };
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: { description?: string } } } };
+      const message = error?.response?.data?.error?.description ?? 'Failed to initiate payout';
+      this.logger.error(`[Razorpay] initiatePayout failed: ${message}`);
+      throw new InternalServerErrorException(message);
+    }
+  }
+
+  /**
+   * Check the current status of an existing payout.
+   * Use this to poll after initiating a payout, or to verify before acting on a webhook.
+   */
+  async getPayoutStatus(payoutId: string): Promise<string> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/payouts/${payoutId}`,
+        {
+          headers: { Authorization: this.authHeader() },
+        },
+      );
+      return response.data.status;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: { description?: string } } } };
+      const message = error?.response?.data?.error?.description ?? 'Failed to fetch payout status';
+      this.logger.error(`[Razorpay] getPayoutStatus failed: ${message}`);
+      throw new InternalServerErrorException(message);
+    }
+  }
 }
 ```
 
-**Usage example:**
+---
 
-```tsx
-<RazorpayCheckout
-  amount={49900}  // ₹499.00 in paise
-  description="Premium plan subscription"
-  onSuccess={({ payment_id, order_id }) => {
-    console.log('Payment successful:', payment_id, order_id);
-    // redirect or update UI
-  }}
-  onFailure={(error) => {
-    console.error('Payment failed:', error);
-    // show toast/alert
-  }}
-/>
+### Step 5 — Backend: Withdrawals Approval Uses Razorpay
+
+When the admin approves a withdrawal, the flow must use `RazorpayPayoutService` instead of `PinelabsService`.
+
+**File: `src/wallets/wallets.service.ts`** (or wherever `approve` logic lives)
+
+The exact location depends on where the admin approve endpoint is. Likely in:
+- `src/admin/admin.controller.ts` or
+- `src/wallets/wallets.controller.ts`
+
+The approve handler should:
+
+```typescript
+async approveWithdrawal(withdrawalId: string, adminId: string) {
+  const withdrawal = await this.withdrawalRepo.findOne({
+    where: { id: withdrawalId },
+    relations: ['user', 'user.paymentDetails'],
+  });
+
+  // Get user's payment details
+  const paymentDetail = await this.paymentDetailRepo.findOne({
+    where: { userId: withdrawal.userId },
+    order: { createdAt: 'DESC' },
+  });
+
+  if (!paymentDetail) throw new BadRequestException('No payment details found for user');
+
+  // ── Step 1: Create fund account in Razorpay ─────────────────────────
+  let fundAccountId = paymentDetail.razorpayFundAccountId;
+
+  if (!fundAccountId) {
+    const fundAccount = await this.razorpayPayoutService.createFundAccount({
+      userId: withdrawal.userId,
+      vpa: paymentDetail.upiId ?? undefined,
+      bankAccount: paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+        ? {
+            accountNumber: this.decrypt(paymentDetail.accountNumberEncrypted),
+            ifsc: paymentDetail.ifsc,
+            accountHolderName: paymentDetail.accountHolderName ?? '',
+          }
+        : undefined,
+    });
+
+    fundAccountId = fundAccount.fundAccountId;
+
+    // Persist for future use
+    await this.paymentDetailRepo.update(paymentDetail.id, {
+      razorpayFundAccountId: fundAccountId,
+    });
+  }
+
+  // ── Step 2: Initiate payout ─────────────────────────────────────────
+  const payout = await this.razorpayPayoutService.initiatePayout({
+    fundAccountId,
+    amount: Math.round(withdrawal.amount * 100), // convert rupees → paise
+    referenceId: `wd_${withdrawal.id}`,
+    mode: paymentDetail.payoutMethod === PayoutMethod.UPI ? 'UPI' : 'IMPS',
+    narration: 'Withdrawal payout',
+  });
+
+  // ── Step 3: Update withdrawal record ────────────────────────────────
+  await this.withdrawalRepo.update(withdrawalId, {
+    status: payout.status === 'pending' || payout.status === 'processing'
+      ? WithdrawalStatus.PROCESSING
+      : payout.status === 'success'
+      ? WithdrawalStatus.COMPLETED
+      : WithdrawalStatus.FAILED,
+    razorpayPayoutId: payout.payoutId,
+    processedAt: payout.status === 'success' ? new Date() : null,
+  });
+
+  // ── Step 4: Log payment attempt ─────────────────────────────────────
+  const log = this.paymentLogRepo.create({
+    withdrawalRequestId: withdrawalId,
+    adminId,
+    orderId: payout.payoutId,
+    razorpayPayoutId: payout.payoutId,
+    status: payout.status === 'success' ? PaymentLogStatus.SUCCESS : PaymentLogStatus.PENDING,
+    rawResponse: { payout },
+  });
+  await this.paymentLogRepo.save(log);
+}
+```
+
+---
+
+### Step 6 — Backend: Webhook for Async Payout Confirmation
+
+Razorpay payouts are asynchronous. A webhook confirms the final status.
+
+**File: `src/payment/razorpay-webhook.controller.ts`**
+
+```typescript
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { WithdrawalRequest, PaymentLog } from '../database/entities';
+import { WithdrawalStatus, PaymentLogStatus } from '../common/enums';
+import { RazorpayPayoutService } from './razorpay-payout.service';
+
+@Controller('api/v1/razorpay/webhook')
+export class RazorpayWebhookController {
+  private readonly logger = new Logger(RazorpayWebhookController.name);
+
+  constructor(
+    private readonly razorpayPayoutService: RazorpayPayoutService,
+    @InjectRepository(WithdrawalRequest)
+    private readonly withdrawalRepo: Repository<WithdrawalRequest>,
+    @InjectRepository(PaymentLog)
+    private readonly paymentLogRepo: Repository<PaymentLog>,
+  ) {}
+
+  @Post()
+  @HttpCode(HttpStatus.OK)
+  async handleWebhook(@Body() body: Record<string, unknown>) {
+    const event = String(body.event ?? '');
+
+    if (event !== 'payout.money_transfer_success') {
+      return { received: true };
+    }
+
+    const payload = body.payload?.payout as {
+      entity?: { id?: string; status?: string; reference_id?: string };
+    };
+    const payoutId = payload?.entity?.id ?? '';
+    const status = payload?.entity?.status ?? '';
+    const referenceId = payload?.entity?.reference_id ?? '';
+
+    this.logger.log(`[Razorpay Webhook] payoutId=${payoutId} status=${status} ref=${referenceId}`);
+
+    if (!referenceId) {
+      return { received: true };
+    }
+
+    // Parse withdrawal ID from reference_id (format: wd_<withdrawalId>)
+    const withdrawalId = referenceId.replace('wd_', '');
+
+    const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
+    if (!withdrawal) {
+      this.logger.warn(`[Webhook] Withdrawal not found: ${withdrawalId}`);
+      return { received: true };
+    }
+
+    const finalStatus =
+      status === 'processed' || status === 'completed' ? WithdrawalStatus.COMPLETED
+      : status === 'failed' || status === 'rejected' ? WithdrawalStatus.FAILED
+      : withdrawal.status;
+
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: finalStatus,
+      processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+    });
+
+    const log = this.paymentLogRepo.create({
+      withdrawalRequestId: withdrawalId,
+      orderId: payoutId,
+      razorpayPayoutId: payoutId,
+      status: finalStatus === WithdrawalStatus.COMPLETED ? PaymentLogStatus.SUCCESS : PaymentLogStatus.FAILED,
+      rawResponse: body,
+    });
+    await this.paymentLogRepo.save(log);
+
+    return { received: true };
+  }
+}
+```
+
+Register in `PaymentModule`:
+
+```typescript
+controllers: [
+  PaymentWebhookController,        // existing PineLabs webhook
+  RazorpayWebhookController,       // new Razorpay webhook
+],
+providers: [PinelabsService, RazorpayPayoutService],
+```
+
+---
+
+### Step 7 — Payment Module Update
+
+**File: `src/payment/payment.module.ts`**
+
+Add `RazorpayPayoutService` and `RazorpayWebhookController`:
+
+```typescript
+import { RazorpayPayoutService } from './razorpay-payout.service';
+import { RazorpayWebhookController } from './razorpay-webhook.controller';
+
+@Module({
+  imports: [ConfigModule, TypeOrmModule.forFeature([...])],
+  controllers: [
+    PaymentWebhookController,
+    RazorpayWebhookController,
+  ],
+  providers: [
+    PinelabsService,
+    RazorpayPayoutService,   // ← add
+  ],
+  exports: [PinelabsService, RazorpayPayoutService],
+})
+export class PaymentModule {}
+```
+
+Also ensure `RazorpayPayoutService` is exported so `WalletsModule` or `AdminModule` can inject it.
+
+---
+
+### Step 8 — Add `razorpayFundAccountId` to Payment Detail Entity
+
+**File: `src/database/entities/user-payment-detail.entity.ts`**
+
+```typescript
+/** Razorpay fund_account ID — created once per user, reused for all future payouts */
+@Column({ name: 'razorpay_fund_account_id', type: 'varchar', length: 100, nullable: true })
+razorpayFundAccountId: string | null;
+
+/** Razorpay payout ID for the most recent payout */
+@Column({ name: 'razorpay_payout_id', type: 'varchar', length: 100, nullable: true })
+razorpayPayoutId: string | null;
+```
+
+---
+
+### Step 9 — Backend: New Env Var
+
+**File: `backend/.env`** — add:
+
+```env
+# Your Razorpay Business Account number (found in Dashboard → Settings → API Keys)
+# This is NOT the key_id — it's your account identifier like "789123456789012"
+RAZORPAY_ACCOUNT_NUMBER=your_razorpay_account_number
+```
+
+**File: `backend/.env.example`** — add:
+
+```env
+RAZORPAY_ACCOUNT_NUMBER=<YOUR_RAZORPAY_ACCOUNT_NUMBER>
+```
+
+Also update `src/config/payment.config.ts`:
+
+```typescript
+razorpay: {
+  env: process.env.RAZORPAY_ENV ?? 'sandbox',
+  keyId: process.env.RAZORPAY_KEY_ID ?? '',
+  keySecret: process.env.RAZORPAY_KEY_SECRET ?? '',
+  accountNumber: process.env.RAZORPAY_ACCOUNT_NUMBER ?? '',  // ← add
+},
+```
+
+---
+
+## Data Flow Summary
+
+```
+Admin clicks "Approve"
+    │
+    ├─► WalletsService / AdminService
+    │       │
+    │       ├─► RazorpayPayoutService.createFundAccount(userId, upiId)
+    │       │       └─► POST /fund_accounts → razorpay_fund_account_id
+    │       │
+    │       ├─► RazorpayPayoutService.initiatePayout(fundAccountId, amount)
+    │       │       └─► POST /payouts → payout_id, status=pending
+    │       │
+    │       ├─► DB: WithdrawalRequest updated (PROCESSING / COMPLETED)
+    │       └─► DB: PaymentLog created
+    │
+    └─► (Later) Razorpay webhook → final status confirmed
+            └─► DB: WithdrawalRequest FINAL status set
 ```
 
 ---
@@ -324,45 +620,19 @@ export function RazorpayCheckout({
 
 ```
 src/
-  controllers/
-    razorpayController.ts   # createOrder + verifyPayment handlers
-  routes/
-    razorpayRoutes.ts       # POST /api/create-order, POST /api/verify-payment
-  components/
-    RazorpayCheckout.tsx    # Frontend checkout button + modal logic
-.env                        # Credentials (never commit)
-.gitignore                  # Ensure .env is listed
-```
+  payment/
+    razorpay-payout.service.ts       # Fund account + payout logic
+    razorpay-webhook.controller.ts   # Webhook for async confirmation
+    razorpay.controller.ts           # [keep from prev task — remove if not needed]
+    razorpay.service.ts              # [keep from prev task — remove if not needed]
+    payment-webhook.controller.ts    # [existing — PineLabs, keep]
+    payment.module.ts                # add new controller + service
 
----
+  wallets/
+    wallets.service.ts               # approval logic → use RazorpayPayoutService
 
-## Data Models
-
-No new database tables are required for the base integration. If you want to persist payment records, add to your existing orders/transactions table:
-
-```sql
--- Add to your existing relevant table, e.g. orders or transactions
-razorpay_order_id    VARCHAR(100) NULL
-razorpay_payment_id  VARCHAR(100) NULL
-payment_status       ENUM('PENDING', 'PAID', 'FAILED') DEFAULT 'PENDING'
-paid_at              TIMESTAMP NULL
-```
-
-Only update `payment_status` to `PAID` **after** signature verification passes on the backend.
-
----
-
-## Configuration
-
-**File: `src/config/razorpay.ts`**
-
-```typescript
-export const razorpayConfig = {
-  keyId: process.env.RAZORPAY_KEY_ID!,
-  keySecret: process.env.RAZORPAY_KEY_SECRET!,
-  minAmountPaise: 100,   // ₹1 minimum
-  currency: 'INR',
-};
+  database/entities/
+    user-payment-detail.entity.ts    # + razorpayFundAccountId, razorpayPayoutId
 ```
 
 ---
@@ -371,68 +641,62 @@ export const razorpayConfig = {
 
 | Scenario | Handling |
 |---|---|
-| Amount < 100 paise | Return `400`, reject before calling Razorpay API |
-| Razorpay auth failure | Return `401`, log error |
-| Razorpay API timeout / 5xx | Return `500`, surface error to user |
-| Signature mismatch on verify | Return `400`, do NOT mark payment as paid |
-| Missing fields on verify | Return `400` |
-| User dismisses modal | Trigger `ondismiss` callback, show cancellation message |
-| `payment.failed` event | Surface Razorpay error description to user |
-
----
-
-## Notifications
-
-| Event | Channel | Message |
-|---|---|---|
-| Order created | — | (internal only, no user-facing message) |
-| Payment successful | In-app / Email | "Payment of ₹{amount} successful. Ref: {payment_id}" |
-| Payment failed | In-app | "Payment failed: {reason}. Please try again." |
-| Signature mismatch | In-app | "Payment could not be verified. Please contact support." |
-| User cancelled | In-app | "Payment was cancelled." |
+| No payment details for user | Return `400` — "No payment details found for user" |
+| Fund account creation fails | Return `500` — log error, do not mark withdrawal as processed |
+| Payout initiation fails | Return `500` — log error, withdrawal stays `PENDING` |
+| Payout `failed` / `rejected` | Mark withdrawal `FAILED` — admin must manually review |
+| Payout async (status=pending) | Mark `PROCESSING` — webhook will update later |
+| Webhook signature invalid | Log and ignore |
+| Amount mismatch (Razorpay vs DB) | Log warning, mark FAILED — investigate |
 
 ---
 
 ## Testing Checklist
 
-- [ ] `.env` created with both keys, added to `.gitignore`
-- [ ] `POST /api/create-order` returns valid `order_id`
-- [ ] Razorpay modal opens on button click
-- [ ] Successful payment with Razorpay test card (`4111 1111 1111 1111`, any future expiry, any CVV)
-- [ ] `POST /api/verify-payment` returns `200` on valid signature
-- [ ] Signature mismatch returns `400` and does not mark as paid
-- [ ] Modal dismiss triggers `ondismiss` callback
-- [ ] `payment.failed` event handled and shown to user
-- [ ] Amount below 100 paise rejected with `400`
-- [ ] `RAZORPAY_KEY_SECRET` not present in any frontend bundle (inspect network tab / build output)
-- [ ] Switch to production keys via `RAZORPAY_KEY_ID` env var — no code change required
+- [ ] `RAZORPAY_ACCOUNT_NUMBER` set in `.env`
+- [ ] `POST /fund_accounts` creates a fund account for a test UPI
+- [ ] `POST /payouts` successfully pushes money to test UPI
+- [ ] Withdrawal status updates to `PROCESSING` after payout initiated
+- [ ] Withdrawal status updates to `COMPLETED` when payout succeeds
+- [ ] Payout fails gracefully when UPI is invalid (no crash, DB stays consistent)
+- [ ] Webhook correctly updates withdrawal to `COMPLETED` / `FAILED`
+- [ ] `RAZORPAY_KEY_SECRET` not present in any frontend bundle
+- [ ] PineLabs code paths remain untouched
 
 ---
 
-## How to Test
+## How to Test (Sandbox)
 
-1. Start your backend server (`npm run dev` or equivalent)
-2. Ensure `.env` is loaded (e.g. via `dotenv`)
-3. Open the page containing `<RazorpayCheckout />`
-4. Click **Pay** — Razorpay modal should open
-5. Use test card: `4111 1111 1111 1111`, expiry `12/26`, CVV `123`, OTP `1234`
-6. On success, check your server logs for the verified `payment_id`
+1. Create a Razorpay dashboard account: https://dashboard.razorpay.com
+2. Go to **Settings → API Keys** → copy test `key_id` and `key_secret`
+3. Go to **Settings → Account Number** — note your test account number
+4. **Fund your test balance:** Dashboard → Funding → add test money
+5. Start the backend with `.env` pointing to test credentials
+6. Create a test user with a UPI ID (e.g. `success@razorpay`)
+7. Submit a withdrawal request as that user
+8. As admin, approve the withdrawal — check Razorpay dashboard for payout status
+
+**Razorpay test UPI handles for sandbox:**
+- `success@razorpay` — always succeeds
+- `failure@razorpay` — always fails
+- `twosteps@razorpay` — requires additional verification
 
 ---
 
 ## Notes
 
-- All monetary values passed to Razorpay must be in **paise** (integer); convert to rupees only for display
-- `RAZORPAY_KEY_SECRET` must never appear in frontend code or be returned from any API response
-- Razorpay webhook (`POST /api/webhooks/razorpay`) can be set up separately for async payment status confirmation — recommended for production
-- Razorpay test credentials (`rzp_test_*`) only work in sandbox; swap to live keys (`rzp_live_*`) for production via environment variable only
-- Refer to official docs for webhook setup: https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/
+- **PineLabs code stays intact** — this task only adds Razorpay as an alternative. A config flag can switch between providers in the future.
+- **Fund account is reusable** — once created per user, reuse `fund_account_id` for all future payouts. Store it on `UserPaymentDetail`.
+- **Razorpay payouts are async** — always expect a `PROCESSING` state immediately after initiation. The webhook or polling confirms the final status.
+- **`RAZORPAY_ACCOUNT_NUMBER`** is your business account identifier, not an API key. Found in Dashboard → Settings → Account & Settings → API Keys tab.
+- **Minimum payout amount:** ₹1 (100 paise) for UPI, higher for other modes.
+- Razorpay webhook docs: https://razorpay.com/docs/payouts/payout-workflows/webhooks/
 
 ---
 
 ## Status
 
 - [ ] Not started
-- [ ] In progress
+- [x] In progress (task spec updated)
 - [ ] Ready for review
 - [ ] Merged
