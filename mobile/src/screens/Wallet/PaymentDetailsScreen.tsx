@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { walletApi, getErrorMessage } from '../../api/client';
+import { config } from '../../config';
 import { tokens } from '../../utils/theme';
 import RazorpayCheckout from 'react-native-razorpay';
 
@@ -177,8 +178,26 @@ export function PaymentDetailsScreen() {
 
   /**
    * Bank transfer → open Razorpay SDK with netbanking only.
+   *
+   * Dev shortcut: if EXPO_PUBLIC_AUTO_VERIFY_PAYMENT_METHODS=true, skip the
+   * Razorpay SDK and auto-approve the payment method directly via the dev endpoint.
    */
   async function handleBankVerify(item: PaymentDetail) {
+    // ── Dev shortcut: auto-verify without any real payment ──
+    if (config.dev.autoVerifyPaymentMethods) {
+      setRazorpayLoading(item.id);
+      setApiError('');
+      try {
+        await walletApi.autoVerifyPayment(item.id);
+        await fetchDetails();
+      } catch (err) {
+        setApiError(getErrorMessage(err, 'Auto-verify failed'));
+      } finally {
+        setRazorpayLoading(null);
+      }
+      return;
+    }
+
     if (!razorpayKeyId) {
       setApiError('Razorpay key not available. Please refresh and try again.');
       return;
@@ -234,8 +253,26 @@ export function PaymentDetailsScreen() {
    * UPI → construct UPI intent URL and open the app directly.
    * No Razorpay SDK involved — just a raw UPI deep link.
    * Backend receives the ₹1 via Razorpay webhook after user pays.
+   *
+   * Dev shortcut: if EXPO_PUBLIC_AUTO_VERIFY_PAYMENT_METHODS=true, skip the
+   * UPI app and auto-approve the payment method via the server-side dev endpoint.
    */
   async function handleUpiVerify(item: PaymentDetail) {
+    // ── Dev shortcut: auto-verify without any real UPI flow ──
+    if (config.dev.autoVerifyPaymentMethods) {
+      setRazorpayLoading(item.id);
+      setApiError('');
+      try {
+        await walletApi.autoVerifyPayment(item.id);
+        await fetchDetails();
+      } catch (err) {
+        setApiError(getErrorMessage(err, 'Auto-verify failed'));
+      } finally {
+        setRazorpayLoading(null);
+      }
+      return;
+    }
+
     const upiUrl = `upi://pay?pa=${encodeURIComponent(item.displayValue)}&pn=AnnaDatha&am=1&cu=INR&tn=Verify+UPI+ID`;
 
     setRazorpayLoading(item.id);
@@ -288,7 +325,7 @@ export function PaymentDetailsScreen() {
 
     const isLoading = razorpayLoading === item.id;
     const canVerify = item.status === 'in_progress' && (item.paymentLinkUrl || isUpi);
-    const canRemove = item.status !== 'in_progress';
+    const canRemove = true;
 
     return (
       <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}>

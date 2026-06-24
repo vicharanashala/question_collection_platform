@@ -262,8 +262,8 @@ export class WalletsService {
     const payoutDetails: Record<string, unknown> = paymentDetail.payoutMethod === PayoutMethod.UPI
       ? { upiId: paymentDetail.upiId }
       : {
-          ifsc: paymentDetail.ifsc,
-          accountHolderName: paymentDetail.accountHolderName,
+          ifsc: paymentDetail.ifscEncrypted ? decrypt(paymentDetail.ifscEncrypted) : null,
+          accountHolderName: paymentDetail.accountHolderNameEncrypted ? decrypt(paymentDetail.accountHolderNameEncrypted) : null,
           bankName: paymentDetail.bankName,
           accountNumber: paymentDetail.accountNumberEncrypted
             ? decrypt(paymentDetail.accountNumberEncrypted)
@@ -393,6 +393,74 @@ export class WalletsService {
     }
   }
 
+  /**
+   * Credit a reversed payout amount back to the user's wallet.
+   * Called exclusively from the Razorpay payout.reversed webhook handler.
+   *
+   * The payout was already debited from the wallet when the withdrawal was created.
+   * When it gets reversed, we credit the amount back + create a REFUND transaction log.
+   */
+  async creditReversedWithdrawal(
+    walletId: string,
+    amount: number,
+    withdrawalId: string,
+    payoutId: string,
+  ): Promise<Wallet> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const wallet = await queryRunner.manager.findOne(Wallet, {
+        where: { id: walletId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!wallet) {
+        throw new NotFoundException('Wallet not found for reversed payout credit');
+      }
+
+      const newBalance = Number(wallet.balance) + Number(amount);
+
+      // Credit the reversed amount back to wallet
+      await queryRunner.manager.update(Wallet, walletId, { balance: newBalance });
+
+      // Create a REFUND transaction record
+      const refundTx = queryRunner.manager.create(Transaction, {
+        walletId,
+        type: TransactionType.CREDIT,
+        source: TransactionSource.REFUND,
+        amount,
+        balanceAfter: newBalance,
+        referenceId: payoutId,
+        description: `Withdrawal reversal — payout ${payoutId} was reversed by bank`,
+        status: TransactionStatus.COMPLETED,
+      });
+      await queryRunner.manager.save(Transaction, refundTx);
+
+      // Mark the original debit transaction as reversed
+      await queryRunner.manager.update(
+        Transaction,
+        { referenceId: withdrawalId },
+        { status: TransactionStatus.REVERSED },
+      );
+
+      await queryRunner.commitTransaction();
+
+      this.logger.log(
+        `[Reversal] ₹${amount} credited to wallet ${walletId} | withdrawal=${withdrawalId} | payout=${payoutId}`,
+      );
+
+      return wallet;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`[Reversal] Failed to credit wallet ${walletId}: ${err.message}`);
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   // ─── Payment Details ────────────────────────────────────────────────────────
 
   /**
@@ -440,10 +508,10 @@ export class WalletsService {
         throw new BadRequestException('Account numbers do not match. Please re-enter.');
       }
       detail.accountNumberLast4 = dto.accountNumber!.slice(-4);
-      detail.ifsc = dto.ifsc ?? null;
-      detail.accountHolderName = dto.accountHolderName ?? null;
       detail.bankName = dto.bankName ?? null;
       detail.accountNumberEncrypted = encrypt(dto.accountNumber!);
+      detail.ifscEncrypted = encrypt(dto.ifsc!);
+      detail.accountHolderNameEncrypted = encrypt(dto.accountHolderName!);
     }
 
     // Save with status in_progress
@@ -512,8 +580,8 @@ export class WalletsService {
           ? (d.upiId ?? '—')
           : d.accountNumberLast4 ? `****${d.accountNumberLast4}` : '****',
       bankName: d.bankName,
-      ifsc: d.ifsc,
-      accountHolderName: d.accountHolderName,
+      ifsc: d.ifscEncrypted ? decrypt(d.ifscEncrypted) : null,
+      accountHolderName: d.accountHolderNameEncrypted ? decrypt(d.accountHolderNameEncrypted) : null,
       verifiedAt: d.verifiedAt,
       createdAt: d.createdAt,
       // Include payment link URL while verification is still in progress
@@ -530,10 +598,43 @@ export class WalletsService {
       where: { id: detailId, userId },
     });
     if (!detail) throw new NotFoundException('Payment detail not found');
-    if (detail.status === 'in_progress') {
-      throw new BadRequestException('Cannot delete while verification is in progress. Please wait a few minutes.');
-    }
     await this.paymentDetailRepo.delete(detailId);
+  }
+
+  /**
+   * Auto-verify a payment detail for development/demo purposes.
+   * Only works when PINELABS_MOCK_VERIFICATION=true on the server.
+   * Marks the payment detail as verified without any ₹1 micro-transaction.
+   */
+  async autoVerifyPaymentDetail(userId: string, detailId: string): Promise<{ success: boolean; message: string }> {
+    const mockVerification = this.configService.get<boolean>('payment.pinelabs.mockVerification') ?? false;
+
+    if (!mockVerification) {
+      throw new BadRequestException(
+        'Auto-verify is only available when mock verification is enabled on the server.',
+      );
+    }
+
+    const detail = await this.paymentDetailRepo.findOne({
+      where: { id: detailId, userId },
+    });
+
+    if (!detail) {
+      throw new NotFoundException('Payment detail not found');
+    }
+
+    if (detail.status === 'verified') {
+      return { success: true, message: 'Already verified' };
+    }
+
+    await this.paymentDetailRepo.update(detailId, {
+      status: 'verified',
+      verifiedAt: new Date(),
+    });
+
+    this.logger.log(`[AutoVerify] Payment detail verified | detailId=${detailId} | userId=${userId}`);
+
+    return { success: true, message: 'Payment method verified successfully' };
   }
 
   /**
@@ -731,8 +832,8 @@ export class WalletsService {
     }
     return {
       accountNumberEncrypted: detail.accountNumberEncrypted,
-      ifsc: detail.ifsc,
-      accountHolderName: detail.accountHolderName,
+      ifscEncrypted: detail.ifscEncrypted,
+      accountHolderNameEncrypted: detail.accountHolderNameEncrypted,
     };
   }
 }

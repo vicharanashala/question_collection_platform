@@ -20,6 +20,12 @@ type FundAccount = FundAccountVPA | FundAccountBank;
 
 export interface CreateFundAccountResult {
   fundAccountId: string;
+  contactId: string;
+  active: boolean;
+}
+
+export interface CreateContactResult {
+  contactId: string;
   active: boolean;
 }
 
@@ -53,6 +59,54 @@ export class RazorpayPayoutService {
   }
 
   /**
+   * Create or reuse a RazorpayX Contact for a user.
+   * Uses userId as idempotency key so calling multiple times is safe.
+   *
+   * @param userId   Used as idempotency key and to look up user phone/name
+   * @param phone    User's mobile number (used as contact phone)
+   * @param name     User's display name
+   */
+  async createContact(params: {
+    userId: string;
+    phone: string;
+    name: string;
+  }): Promise<CreateContactResult> {
+    const { userId, phone, name } = params;
+
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/contacts`,
+        {
+          name,
+          contact: phone.replace(/\D/g, ''), // strip non-digits
+          type: 'customer',
+        },
+        {
+          headers: {
+            Authorization: this.authHeader(),
+            'Content-Type': 'application/json',
+            'X-Goa-Idempotency-Key': `contact_${userId}`,
+          },
+        },
+      );
+
+      this.logger.log(
+        `[Razorpay] Contact created: id=${response.data.id} active=${response.data.active}`,
+      );
+
+      return {
+        contactId: response.data.id,
+        active: response.data.active,
+      };
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: { description?: string; code?: string } } } };
+      const message = error?.response?.data?.error?.description ?? 'Failed to create contact';
+      this.logger.error(`[Razorpay] createContact failed: ${message}`);
+      throw new InternalServerErrorException(message);
+    }
+  }
+
+  /**
    * Create a Razorpay Fund Account for a user.
    * Once created, the same fund_account_id can be reused for future payouts.
    * Uses userId as idempotency key to avoid duplicate fund accounts.
@@ -63,6 +117,9 @@ export class RazorpayPayoutService {
    */
   async createFundAccount(params: {
     userId: string;
+    phone: string;
+    name: string;
+    existingContactId?: string;
     vpa?: string;
     bankAccount?: {
       accountNumber: string;
@@ -70,18 +127,28 @@ export class RazorpayPayoutService {
       accountHolderName: string;
     };
   }): Promise<CreateFundAccountResult> {
-    const { userId, vpa, bankAccount } = params;
+    const { userId, phone, name, existingContactId, vpa, bankAccount } = params;
 
-    const fundAccountPayload: FundAccount = vpa
-      ? { account_type: 'vpa', vpa: { address: vpa } }
-      : {
-          account_type: 'bank_account',
-          bank_account: {
-            account_number: bankAccount!.accountNumber,
-            ifsc: bankAccount!.ifsc,
-            name: bankAccount!.accountHolderName,
-          },
-        };
+    // Use persisted contact ID if available, otherwise create a new one (idempotent)
+    let contactId = existingContactId;
+    if (!contactId) {
+      const contact = await this.createContact({ userId, phone, name });
+      contactId = contact.contactId;
+    }
+
+    const fundAccountPayload = {
+      contact_id: contactId,
+      ...(vpa
+        ? { account_type: 'vpa', vpa: { address: vpa } }
+        : {
+            account_type: 'bank_account',
+            bank_account: {
+              account_number: bankAccount!.accountNumber,
+              ifsc: bankAccount!.ifsc,
+              name: bankAccount!.accountHolderName,
+            },
+          }),
+    };
 
     try {
       const response = await axios.post(
@@ -102,6 +169,7 @@ export class RazorpayPayoutService {
 
       return {
         fundAccountId: response.data.id,
+        contactId,
         active: response.data.active,
       };
     } catch (err: unknown) {

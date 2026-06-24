@@ -327,7 +327,12 @@ export class AdminService implements OnModuleInit {
       ],
     });
 
-    return { user, questions };
+    const paymentDetails = await this.paymentDetailRepo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+
+    return { user, questions, paymentDetails };
   }
 
   async suspendOrBanUser(
@@ -1156,6 +1161,9 @@ export class AdminService implements OnModuleInit {
       if (!fundAccountId) {
         const fundAccount = await this.razorpayPayoutService.createFundAccount({
           userId: withdrawal.userId,
+          phone: withdrawal.user.mobileNumber,
+          name: withdrawal.user.name ?? 'User',
+          existingContactId: withdrawal.user.razorpayContactId ?? undefined,
           vpa: paymentDetail.upiId ?? undefined,
           bankAccount:
             paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
@@ -1167,10 +1175,15 @@ export class AdminService implements OnModuleInit {
               : undefined,
         });
         fundAccountId = fundAccount.fundAccountId;
-        // Persist for future use
+        // Persist fund account and contact ID for future use
         await this.paymentDetailRepo.update(paymentDetail.id, {
           razorpayFundAccountId: fundAccountId,
         });
+        if (!withdrawal.user.razorpayContactId) {
+          await this.userRepo.update(withdrawal.userId, {
+            razorpayContactId: fundAccount.contactId,
+          });
+        }
       }
 
       // ── Step 3: Initiate Razorpay payout ─────────────────────────────────────
@@ -1396,6 +1409,9 @@ export class AdminService implements OnModuleInit {
     if (!fundAccountId) {
       const fundAccount = await this.razorpayPayoutService.createFundAccount({
         userId: withdrawal.userId,
+        phone: withdrawal.user.mobileNumber,
+        name: withdrawal.user.name ?? 'User',
+        existingContactId: withdrawal.user.razorpayContactId ?? undefined,
         vpa: paymentDetail.upiId ?? undefined,
         bankAccount:
           paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
@@ -1408,6 +1424,11 @@ export class AdminService implements OnModuleInit {
       });
       fundAccountId = fundAccount.fundAccountId;
       await this.paymentDetailRepo.update(paymentDetail.id, { razorpayFundAccountId: fundAccountId });
+      if (!withdrawal.user.razorpayContactId) {
+        await this.userRepo.update(withdrawal.userId, {
+          razorpayContactId: fundAccount.contactId,
+        });
+      }
     }
 
     const referenceId = `wd_${withdrawalId}`;
@@ -1575,6 +1596,9 @@ export class AdminService implements OnModuleInit {
     if (!fundAccountId) {
       const fundAccount = await this.razorpayPayoutService.createFundAccount({
         userId: withdrawal.userId,
+        phone: withdrawal.user.mobileNumber,
+        name: withdrawal.user.name ?? 'User',
+        existingContactId: withdrawal.user.razorpayContactId ?? undefined,
         vpa: paymentDetail.upiId ?? undefined,
         bankAccount:
           paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
@@ -1587,6 +1611,11 @@ export class AdminService implements OnModuleInit {
       });
       fundAccountId = fundAccount.fundAccountId;
       await this.paymentDetailRepo.update(paymentDetail.id, { razorpayFundAccountId: fundAccountId });
+      if (!withdrawal.user.razorpayContactId) {
+        await this.userRepo.update(withdrawal.userId, {
+          razorpayContactId: fundAccount.contactId,
+        });
+      }
     }
 
     const amountPaise = Math.round(Number(withdrawal.amount) * 100);

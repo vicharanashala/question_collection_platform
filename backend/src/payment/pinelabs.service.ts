@@ -673,19 +673,40 @@ export class PinelabsService {
     } else {
       // Account number may be encrypted (when fetched from UserPaymentDetail record)
       let accountNumber = String(params.payoutDetails['accountNumber'] ?? params.payoutDetails['account_number'] ?? '');
-      const encrypted = params.payoutDetails['accountNumberEncrypted'];
-      if (encrypted && typeof encrypted === 'string' && encrypted.includes(':')) {
+      const encAccount = params.payoutDetails['accountNumberEncrypted'];
+      if (encAccount && typeof encAccount === 'string' && encAccount.includes(':')) {
         try {
-          accountNumber = decrypt(encrypted);
+          accountNumber = decrypt(encAccount as string);
         } catch {
           this.logger.warn(`[Pinelabs] Failed to decrypt accountNumber for clientRef=${params.clientReferenceId}`);
         }
       }
+
+      let ifsc = String(params.payoutDetails['ifsc'] ?? params.payoutDetails['ifscCode'] ?? '');
+      const encIfsc = params.payoutDetails['ifscEncrypted'];
+      if (encIfsc && typeof encIfsc === 'string' && encIfsc.includes(':')) {
+        try {
+          ifsc = decrypt(encIfsc as string);
+        } catch {
+          this.logger.warn(`[Pinelabs] Failed to decrypt ifsc for clientRef=${params.clientReferenceId}`);
+        }
+      }
+
+      let payeeName = String(params.payoutDetails['accountHolderName'] ?? params.payoutDetails['account_holder_name'] ?? params.payeeName);
+      const encHolderName = params.payoutDetails['accountHolderNameEncrypted'];
+      if (encHolderName && typeof encHolderName === 'string' && encHolderName.includes(':')) {
+        try {
+          payeeName = decrypt(encHolderName as string);
+        } catch {
+          this.logger.warn(`[Pinelabs] Failed to decrypt accountHolderName for clientRef=${params.clientReferenceId}`);
+        }
+      }
+
       return this.payoutBank({
         clientReferenceId: params.clientReferenceId,
-        payeeName: params.payeeName,
+        payeeName,
         accountNumber,
-        ifsc: String(params.payoutDetails['ifsc'] ?? params.payoutDetails['ifscCode'] ?? ''),
+        ifsc,
         amount: params.amount,
         remarks: `Withdrawal ${params.clientReferenceId}`,
       });

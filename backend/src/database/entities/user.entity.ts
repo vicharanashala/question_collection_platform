@@ -102,6 +102,10 @@ export class User {
   @Column({ name: 'expo_push_token', type: 'varchar', length: 255, nullable: true })
   expoPushToken: string | null;
 
+  /** RazorpayX Contact ID — created once per user, reused for all fund accounts and payouts */
+  @Column({ name: 'razorpay_contact_id', type: 'varchar', length: 100, nullable: true })
+  razorpayContactId: string | null;
+
   @OneToOne(() => Wallet, (wallet) => wallet.user)
   wallet: Wallet;
 

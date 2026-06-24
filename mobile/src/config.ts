@@ -11,4 +11,8 @@ export const config = {
     email: env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@kisandekho.com',
     whatsapp: env.EXPO_PUBLIC_SUPPORT_WHATSAPP ?? '919876543210',
   },
+  dev: {
+    /** When true, auto-approves UPI and bank payment methods without any real verification. */
+    autoVerifyPaymentMethods: env.EXPO_PUBLIC_AUTO_VERIFY_PAYMENT_METHODS === 'true',
+  },
 } as const;

@@ -1,4 +1,6 @@
 export type UserRole = 'user' | 'admin' | 'super_admin' | 'curator';
+export type PaymentDetailStatus = 'pending' | 'in_progress' | 'verified' | 'failed';
+export type PayoutMethod = 'upi' | 'bank_transfer';
 export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'suspended' | 'banned';
 export type QuestionStatus = 'pending' | 'ai_review' | 'human_review' | 'held' | 'approved' | 'rejected';
 export type UserCategory = 'farmer' | 'fpo' | 'student' | 'volunteer' | 'ngo';
@@ -21,6 +23,20 @@ export interface User {
   bannedReason: string | null;
   createdAt: string;
   lastLoginAt: string | null;
+}
+
+export interface PaymentDetail {
+  id: string;
+  payoutMethod: PayoutMethod;
+  status: PaymentDetailStatus;
+  /** Masked value: "****1234" for bank, or the UPI ID itself */
+  displayValue: string;
+  bankName: string | null;
+  ifsc: string | null;
+  accountHolderName: string | null;
+  verifiedAt: string | null;
+  createdAt: string;
+  paymentLinkUrl?: string;
 }
 
 export interface Question {

@@ -20,9 +20,10 @@ import {
   ArrowLeft, Ban, PauseCircle, PlayCircle, CheckCircle,
   ShieldCheck, MapPin, Phone, Calendar, MessageSquare,
   Clock, FileText, Image, ChevronDown, ScrollText, ChevronRight, ChevronLeft,
+  Wallet, CreditCard, Building2, Smartphone,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { User as UserType, Question, QuestionStatus, AuditLogEntry } from '@/types'
+import type { User as UserType, Question, QuestionStatus, AuditLogEntry, PaymentDetail } from '@/types'
 import { auditApi } from '@/api/client'
 
 // ─── Status badge helpers ──────────────────────────────────────────────────────
@@ -47,6 +48,22 @@ function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
     held:         { label: 'Held',          dot: 'bg-orange-400', cls: 'text-orange-500' },
     approved:     { label: 'Approved',     dot: 'bg-emerald-500',  cls: 'text-emerald-600' },
     rejected:     { label: 'Rejected',     dot: 'bg-red-600', cls: 'text-red-600' },
+  }
+  const { label, dot, cls } = map[status] ?? { label: status, dot: 'bg-muted', cls: 'text-muted-foreground' }
+  return (
+    <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium', cls)}>
+      <span className={cn('h-1.5 w-1.5 rounded-full', dot)} />
+      {label}
+    </span>
+  )
+}
+
+function PaymentStatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; dot: string; cls: string }> = {
+    pending:      { label: 'Pending',      dot: 'bg-amber-500',  cls: 'text-amber-600' },
+    in_progress:  { label: 'In Progress',  dot: 'bg-blue-500',   cls: 'text-blue-600' },
+    verified:     { label: 'Verified',     dot: 'bg-emerald-500',cls: 'text-emerald-600' },
+    failed:       { label: 'Failed',       dot: 'bg-red-600',    cls: 'text-red-600' },
   }
   const { label, dot, cls } = map[status] ?? { label: status, dot: 'bg-muted', cls: 'text-muted-foreground' }
   return (
@@ -246,10 +263,12 @@ export function UserDetailPage() {
 
   const [user, setUser] = useState<UserType | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
 
   const [accountCollapsed, setAccountCollapsed] = useState(true)
+  const [paymentCollapsed, setPaymentCollapsed] = useState(false)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false)
   const [suspendAction, setSuspendAction] = useState<'suspend' | 'ban'>('suspend')
   const [suspendReason, setSuspendReason] = useState('')
@@ -298,7 +317,11 @@ export function UserDetailPage() {
     if (!userId) return
     setLoading(true)
     adminApi.getUserDetail(userId)
-      .then((res) => { setUser(res.user as UserType); setQuestions(res.questions as Question[]) })
+      .then((res) => {
+        setUser(res.user as UserType)
+        setQuestions(res.questions as Question[])
+        setPaymentDetails((res as any).paymentDetails ?? [])
+      })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user')))
       .finally(() => setLoading(false))
   }, [userId])
@@ -565,6 +588,92 @@ export function UserDetailPage() {
               <DetailRow label="Last Login" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'} />
               <DetailRow label="Role" value={user.role.replace('_', ' ')} />
               <DetailRow label="Status" value={<VerificationBadge status={user.verificationStatus} />} />
+            </CardContent>
+          </div>
+        </Card>
+
+        {/* Payment Methods card */}
+        <Card>
+          <CardHeader className="p-0">
+            <button
+              className={cn(
+                'flex items-center justify-between w-full cursor-pointer transition-all duration-200 py-3 px-6',
+              )}
+              onClick={() => setPaymentCollapsed((c) => !c)}
+              aria-expanded={!paymentCollapsed}
+            >
+              <div className="flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-blue-600" />
+                <CardTitle className="text-sm font-semibold">Payment Methods</CardTitle>
+                {paymentDetails.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">{paymentDetails.length}</Badge>
+                )}
+              </div>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200',
+                  paymentCollapsed ? '-rotate-90' : '',
+                )}
+              />
+            </button>
+          </CardHeader>
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-200',
+              paymentCollapsed ? 'max-h-0 opacity-0' : 'max-h-[600px] opacity-100',
+            )}
+          >
+            <CardContent className="pt-2">
+              {paymentDetails.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+                  <CreditCard className="h-7 w-7 opacity-25" />
+                  <p className="text-xs">No payment methods added</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paymentDetails.map((pd) => (
+                    <div key={pd.id} className="flex items-start justify-between py-3 border-b border-border/60 last:border-0 gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-semibold text-foreground">
+                            {pd.payoutMethod === 'bank_transfer' ? (
+                              <span className="flex items-center gap-1.5">
+                                <Building2 className="h-3.5 w-3.5" />
+                                {pd.bankName ?? 'Bank Account'}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1.5">
+                                < Smartphone className="h-3.5 w-3.5" />
+                                UPI
+                              </span>
+                            )}
+                          </span>
+                          <PaymentStatusBadge status={pd.status} />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {pd.displayValue}
+                          {pd.payoutMethod === 'bank_transfer' && pd.ifsc && (
+                            <span className="ml-2">IFSC: {pd.ifsc}</span>
+                          )}
+                        </p>
+                        {pd.accountHolderName && (
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {pd.accountHolderName}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Added {formatDate(pd.createdAt) ?? '—'}
+                          {pd.verifiedAt && (
+                            <span className="ml-2 text-emerald-600">
+                              Verified {formatDate(pd.verifiedAt)}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </div>
         </Card>

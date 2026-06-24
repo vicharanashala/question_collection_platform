@@ -1,7 +1,14 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
-const KEY = Buffer.from(process.env.PAYMENT_DETAILS_ENCRYPTION_KEY ?? 'default-dev-key-32-bytes-long!!', 'utf8').slice(0, 32);
+const KEY = process.env.PAYMENT_DETAILS_ENCRYPTION_KEY
+  ? Buffer.from(process.env.PAYMENT_DETAILS_ENCRYPTION_KEY, 'hex')
+  : Buffer.from('default-dev-key-32-bytes-long!!X', 'utf8');
+
+// Validate key length for AES-256 (must be exactly 32 bytes)
+if (process.env.PAYMENT_DETAILS_ENCRYPTION_KEY && KEY.length !== 32) {
+  throw new Error(`PAYMENT_DETAILS_ENCRYPTION_KEY must be 32 bytes (64 hex chars), got ${KEY.length} bytes`);
+}
 
 export function encrypt(plaintext: string): string {
   const iv = randomBytes(16);

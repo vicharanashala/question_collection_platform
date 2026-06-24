@@ -37,14 +37,20 @@ export class UserPaymentDetail {
   /**
    * For bank: IFSC code.
    */
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   ifsc: string | null;
+
+  @Column({ name: 'ifsc_encrypted', type: 'varchar', length: 500, nullable: true })
+  ifscEncrypted: string | null;
 
   /**
    * For bank: account holder name as per bank records.
    */
-  @Column({ name: 'account_holder_name', type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'account_holder_name', type: 'varchar', length: 500, nullable: true })
   accountHolderName: string | null;
+
+  @Column({ name: 'account_holder_name_encrypted', type: 'varchar', length: 500, nullable: true })
+  accountHolderNameEncrypted: string | null;
 
   /**
    * For bank: bank name looked up from IFSC (can be pre-filled or edited by user).

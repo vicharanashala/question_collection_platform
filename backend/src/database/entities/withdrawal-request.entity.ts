@@ -55,6 +55,10 @@ export class WithdrawalRequest {
   @Column({ name: 'cancelled_at', type: 'timestamp', nullable: true })
   cancelledAt: Date | null;
 
+  /** Human-readable reason set when a withdrawal fails or is reversed (e.g. bank rejected, payout reversed) */
+  @Column({ name: 'failure_reason', type: 'varchar', length: 500, nullable: true })
+  failureReason: string | null;
+
   @Column({ name: 'retry_count', type: 'int', default: 0 })
   retryCount: number;
 

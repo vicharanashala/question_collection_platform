@@ -399,6 +399,14 @@ export const walletApi = {
    */
   verifyPayment: (paymentDetailId: string, razorpayPaymentId: string) =>
     api.post('/wallets/verify-payment', { paymentDetailId, razorpayPaymentId }),
+
+  /**
+   * Auto-verifies a payment method for development/demo purposes.
+   * Only functional when the server-side dev flag is enabled.
+   * Skips the ₹1 micro-transaction entirely.
+   */
+  autoVerifyPayment: (paymentDetailId: string) =>
+    api.post(`/wallets/payment-details/${paymentDetailId}/auto-verify`),
 };
 
 export const adminApi = {

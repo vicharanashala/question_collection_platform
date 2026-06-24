@@ -105,12 +105,14 @@ export enum WithdrawalStatus {
   REJECTED = 'rejected',
   CANCELLED = 'cancelled',
   FAILED = 'failed',
+  REVERSED = 'reversed',
 }
 
 export enum PaymentLogStatus {
   SUCCESS = 'success',
   FAILED = 'failed',
   PENDING = 'pending',
+  REVERSED = 'reversed',
 }
 
 export enum ViolationType {

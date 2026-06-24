@@ -55,27 +55,6 @@ export class WalletsController {
     return this.walletsService.getWalletConfig();
   }
 
-  /**
-   * Called by the mobile app after a successful Razorpay SDK payment.
-   * The app receives razorpay_payment_id from the SDK and sends it here.
-   * Backend then triggers the same verification flow as the webhook.
-   *
-   * POST /wallets/verify-payment
-   * Body: { paymentDetailId: string; razorpayPaymentId: string }
-   */
-  @Post('verify-payment')
-  @HttpCode(HttpStatus.OK)
-  async verifyPayment(
-    @Req() req: AuthenticatedRequest,
-    @Body() body: { paymentDetailId: string; razorpayPaymentId: string },
-  ) {
-    return this.walletsService.handleRazorpayVerificationCallback({
-      userId: req.user.id,
-      paymentDetailId: body.paymentDetailId,
-      razorpayPaymentId: body.razorpayPaymentId,
-    });
-  }
-
   @Get('me/transactions')
   @HttpCode(HttpStatus.OK)
   async getTransactions(
@@ -142,5 +121,16 @@ export class WalletsController {
   async deletePaymentDetail(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     await this.walletsService.deletePaymentDetail(req.user.id, id);
     return { success: true };
+  }
+
+  /**
+   * Auto-verify a payment detail (dev/demo only).
+   * Only works when PINELABS_MOCK_VERIFICATION=true on the server.
+   * Skips the ₹1 micro-transaction and marks the detail as verified immediately.
+   */
+  @Post('payment-details/:id/auto-verify')
+  @HttpCode(HttpStatus.OK)
+  async autoVerifyPaymentDetail(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.walletsService.autoVerifyPaymentDetail(req.user.id, id);
   }
 }

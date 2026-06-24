@@ -265,7 +265,7 @@ export const adminApi = {
   },
 
   getUserDetail: (userId: string) =>
-    request<{ user: User; questions: Question[] }>(
+    request<{ user: User; questions: Question[]; paymentDetails: import('@/types').PaymentDetail[] }>(
       `/admin/users/${userId}`,
       {}, false,
     ),
