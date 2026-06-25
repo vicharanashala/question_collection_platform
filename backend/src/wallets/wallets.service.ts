@@ -463,19 +463,7 @@ export class WalletsService {
 
   // ─── Payment Details ────────────────────────────────────────────────────────
 
-  /**
-   * Save a new payment detail and initiate verification via Razorpay Payment Link.
-   *
-   * Flow:
-   *  1. Save payment detail with status 'in_progress'.
-   *  2. Create a Razorpay Payment Link for ₹1 (paid BY the user TO us).
-   *  3. Razorpay sends SMS/email to user with the payment link.
-   *  4. User pays ₹1 → 'payment.captured' webhook → status → 'verified'.
-   *  5. User fails/refuses to pay → 'payment.failed' webhook → status → 'failed'.
-   *
-   * The ₹1 payment confirms the user owns the UPI ID or bank account, since
-   * any payment made to our Razorpay account from that source is proof of ownership.
-   */
+
   async addPaymentDetail(
     userId: string,
     dto: AddPaymentDetailDto,
@@ -483,7 +471,6 @@ export class WalletsService {
     id: string;
     status: string;
     message: string;
-    paymentLinkUrl?: string;
   }> {
     // Check: no duplicate verified UPI already on this account
     if (dto.payoutMethod === 'upi') {
@@ -517,54 +504,86 @@ export class WalletsService {
     // Save with status in_progress
     const saved = await this.paymentDetailRepo.save(detail);
 
-    // Build description for the Razorpay Payment Link
-    const methodLabel = dto.payoutMethod === 'upi'
-      ? `UPI ID ${dto.upiId}`
-      : `bank account ${dto.accountNumber!.slice(-4)}`;
-
-    let userPhone = '';
-    try {
-      const user = await this.userRepo.findOne({ where: { id: userId } });
-      userPhone = user?.mobileNumber ?? '';
-    } catch {
-      // user phone lookup is best-effort
-    }
+    // Load user to get phone and existing Razorpay contact ID
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const userPhone = user?.mobileNumber ?? '9999999999';
 
     try {
-      const linkResult = await this.razorpayPayoutService.createPaymentLink({
+      // Step 1: Create or reuse Razorpay Contact
+      const contactResult = await this.razorpayPayoutService.createContact({
+        userId,
+        phone: userPhone,
+        name: user?.name ?? 'User',
+      });
+
+      // Persist the contact ID on the user for reuse
+      if (!user?.razorpayContactId) {
+        await this.userRepo.update(userId, { razorpayContactId: contactResult.contactId });
+      }
+
+      // Step 2: Create Fund Account (idempotent per user via X-Goa-Idempotency-Key)
+      const fundAccountResult = await this.razorpayPayoutService.createFundAccount({
+        userId,
+        phone: userPhone,
+        name: user?.name ?? 'User',
+        existingContactId: contactResult.contactId,
+        vpa: dto.payoutMethod === 'upi' ? dto.upiId! : undefined,
+        bankAccount:
+          dto.payoutMethod !== 'upi'
+            ? {
+                accountNumber: dto.accountNumber!,
+                ifsc: dto.ifsc!,
+                accountHolderName: dto.accountHolderName!,
+              }
+            : undefined,
+      });
+
+      // Step 3: Initiate Fund Account Validation
+      const validationResult = await this.razorpayPayoutService.validateFundAccount({
+        fundAccountId: fundAccountResult.fundAccountId,
+        contactId: contactResult.contactId,
         paymentDetailId: saved.id,
-        description: `Payment method verification — ${methodLabel}`,
-        userPhone: userPhone || '9999999999',
+        userPhone,
       });
 
-      // Store link details so the app can fetch them and re-display the link
+      // Persist IDs on the payment detail record
       await this.paymentDetailRepo.update(saved.id, {
-        razorpayPaymentLinkId: linkResult.paymentLinkId,
-        razorpayPaymentLinkUrl: linkResult.paymentLinkUrl,
+        razorpayFundAccountId: fundAccountResult.fundAccountId,
+        razorpayValidationId: validationResult.validationId,
       });
+
+      // Step 4: For VPAs, Razorpay may return status=completed synchronously.
+      // If so, mark the detail verified immediately instead of waiting for a webhook.
+      if (validationResult.status === 'completed') {
+        await this.paymentDetailRepo.update(saved.id, {
+          status: 'verified',
+          verifiedAt: new Date(),
+        });
+        return {
+          id: saved.id,
+          status: 'verified',
+          message:
+            `Your ${dto.payoutMethod === 'upi' ? 'UPI ID' : 'bank account'} has been verified successfully.`,
+        };
+      }
 
       return {
         id: saved.id,
         status: 'in_progress',
         message:
-          `A ₹1 payment link has been sent to your registered phone number. ` +
-          `Complete the payment to verify your ${dto.payoutMethod === 'upi' ? 'UPI ID' : 'bank account'}.`,
-        paymentLinkUrl: linkResult.paymentLinkUrl,
+          `Your ${dto.payoutMethod === 'upi' ? 'UPI ID' : 'bank account'} is being verified. ` +
+          `This usually takes a few seconds. You'll be notified once verification is complete.`,
       };
     } catch (err: any) {
-      // Clean up the payment detail if we can't create the payment link
+      // Clean up the payment detail if we couldn't initiate validation
       await this.paymentDetailRepo.delete(saved.id);
-      this.logger.error(`[addPaymentDetail] Failed to create payment link: ${err.message}`);
+      this.logger.error(`[addPaymentDetail] Fund account validation failed: ${err.message}`);
       throw new BadRequestException(
-        'Could not initiate verification. Please try again or contact support.',
+        'Could not initiate account verification. Please check your details and try again.',
       );
     }
   }
 
-  /**
-   * Get all payment details for a user (masked).
-   * Never returns the full account number or decrypted data.
-   */
   async getPaymentDetails(userId: string): Promise<PaymentDetailDto[]> {
     const details = await this.paymentDetailRepo.find( {
       where: { userId },
@@ -648,14 +667,32 @@ export class WalletsService {
     errorCode?: string;
     errorMessage?: string;
     pinelabsTransactionId?: string;
+    /** Razorpay only: registered name returned by the bank (from fund_account.validated webhook) */
+    registeredName?: string;
   }): Promise<void> {
     // Support both PineLabs (VF_*) and Razorpay (rzp_pl_*) order ID formats.
     // PineLabs: VF_<paymentDetailId>_<uuid>  → matches UserPaymentDetail.verificationOrderId
     // Razorpay: rzp_pl_<paymentDetailId>     → extract paymentDetailId and find by primary key
     let detail: UserPaymentDetail | null = null;
 
+    // Resolve paymentDetailId from orderId prefix:
+    // - rzp_pl_<paymentDetailId>  → Razorpay payment link (old ₹1 flow)
+    // - fav_<paymentDetailId>      → Razorpay fund account validation (new flow)
+    // - VF_<paymentDetailId>_...   → PineLabs (legacy)
+    let paymentDetailId: string | null = null;
+
     if (params.orderId.startsWith('rzp_pl_')) {
-      const paymentDetailId = params.orderId.replace('rzp_pl_', '');
+      paymentDetailId = params.orderId.replace('rzp_pl_', '');
+    } else if (params.orderId.startsWith('fav_')) {
+      // Look up the payment detail by razorpayValidationId
+      const validationDetail = await this.paymentDetailRepo.findOne({
+        where: { razorpayValidationId: params.orderId },
+      });
+      paymentDetailId = validationDetail?.id ?? null;
+    }
+    // else: PineLabs or other — try by verificationOrderId below
+
+    if (paymentDetailId) {
       detail = await this.paymentDetailRepo.findOne({ where: { id: paymentDetailId } });
     } else {
       detail = await this.paymentDetailRepo.findOne({

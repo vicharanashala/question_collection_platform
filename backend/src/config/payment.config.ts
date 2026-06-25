@@ -21,5 +21,8 @@ export const paymentConfig = registerAs('payment', () => ({
     apiKey: process.env.RAZORPAY_API_KEY ?? '',
     secret: process.env.RAZORPAY_SECRET ?? '',
     accountNumber: process.env.RAZORPAY_ACCOUNT_NUMBER ?? '',
+    // When true, account validation is auto-approved immediately without calling
+    // Razorpay. Useful in dev/demo environments or when RAZORPAY_ENV=sandbox.
+    mockVerification: process.env.RAZORPAY_MOCK_VERIFICATION === 'true',
   },
 }));

@@ -131,6 +131,20 @@ export class RazorpayWebhookController {
       return { received: true };
     }
 
+    // ── Handle fund account validation completed ──────────────────────────────
+    if (event === 'fund_account.validation.completed') {
+      this.logger.debug('[Webhook] Routing to handleFundAccountValidationCompleted');
+      await this.handleFundAccountValidationCompleted(body);
+      return { received: true };
+    }
+
+    // ── Handle fund account validation failed ─────────────────────────────────
+    if (event === 'fund_account.validation.failed') {
+      this.logger.debug('[Webhook] Routing to handleFundAccountValidationFailed');
+      await this.handleFundAccountValidationFailed(body);
+      return { received: true };
+    }
+
     // ── Handle withdrawal payout processed ──────────────────────────────────
     if (event === 'payout.processed') {
       this.logger.debug('[Webhook] Routing to handlePayoutSuccess');
@@ -473,5 +487,91 @@ export class RazorpayWebhookController {
     this.logger.log(
       `[Razorpay Webhook] Reversal complete — ₹${withdrawal.amount} credited to wallet ${withdrawal.walletId} | withdrawal=${withdrawalId}`,
     );
+  }
+
+  /**
+   * Handle fund_account.validation.completed webhook — marks a payment detail as verified.
+   *
+   * Razorpay fires this when Fund Account Validation (POST /v1/fund_accounts/validations)
+   * succeeds. We mark the detail verified and persist any account-holder name returned
+   * by Razorpay (from the bank's records) so it can be displayed to the user.
+   */
+  private async handleFundAccountValidationCompleted(body: Record<string, unknown>) {
+    this.logger.debug('[handleFundAccountValidationCompleted] Started');
+
+    const payload = body.payload as Record<string, unknown> | undefined;
+    const validationWrapper = payload?.['fund_account.validation'] as Record<string, unknown> | undefined;
+    const validation = validationWrapper?.entity as Record<string, unknown> | undefined;
+    if (!validation) {
+      this.logger.warn('[Razorpay Webhook] No fund_account.validation.entity in validation.completed event');
+      return;
+    }
+
+    const validationId = String(validation.id ?? '');
+    const status = String(validation.status ?? '');
+    const notes = validation.notes as Record<string, string> | undefined;
+    const paymentDetailId = notes?.payment_detail_id;
+    const results = validation.results as Record<string, unknown> | undefined;
+    const registeredName = results?.registered_name as string | null | undefined;
+
+    this.logger.debug(
+      `[handleFundAccountValidationCompleted] validationId=${validationId} status=${status} registeredName=${registeredName} detailId=${paymentDetailId}`,
+    );
+    this.logger.log(
+      `[Razorpay Webhook] Fund account validation completed | validationId=${validationId} | detailId=${paymentDetailId}`,
+    );
+
+    if (!paymentDetailId) {
+      this.logger.warn('[Razorpay Webhook] No payment_detail_id in fund_account.validation.completed notes');
+      return;
+    }
+
+    await this.walletsService.handleVerificationCallback({
+      orderId: `rzp_pl_${paymentDetailId}`,
+      success: true,
+      registeredName: registeredName ?? undefined,
+    });
+  }
+
+  /**
+   * Handle fund_account.validation.failed webhook — marks a payment detail as failed.
+   *
+   * Possible reasons include: invalid IFSC, account does not exist, bank not reachable.
+   */
+  private async handleFundAccountValidationFailed(body: Record<string, unknown>) {
+    this.logger.debug('[handleFundAccountValidationFailed] Started');
+
+    const payload = body.payload as Record<string, unknown> | undefined;
+    const validationWrapper = payload?.['fund_account.validation'] as Record<string, unknown> | undefined;
+    const validation = validationWrapper?.entity as Record<string, unknown> | undefined;
+    if (!validation) {
+      this.logger.warn('[Razorpay Webhook] No fund_account.validation.entity in validation.failed event');
+      return;
+    }
+
+    const validationId = String(validation.id ?? '');
+    const notes = validation.notes as Record<string, string> | undefined;
+    const paymentDetailId = notes?.payment_detail_id;
+    const statusDetails = validation.status_details as Record<string, unknown> | undefined;
+    const reason = (statusDetails?.reason as string) ?? String(validation.status ?? 'Validation failed');
+
+    this.logger.debug(
+      `[handleFundAccountValidationFailed] validationId=${validationId} reason=${reason} detailId=${paymentDetailId}`,
+    );
+    this.logger.warn(
+      `[Razorpay Webhook] Fund account validation failed | validationId=${validationId} | reason=${reason}`,
+    );
+
+    if (!paymentDetailId) {
+      this.logger.warn('[Razorpay Webhook] No payment_detail_id in fund_account.validation.failed notes');
+      return;
+    }
+
+    await this.walletsService.handleVerificationCallback({
+      orderId: `rzp_pl_${paymentDetailId}`,
+      success: false,
+      errorCode: 'VALIDATION_FAILED',
+      errorMessage: reason,
+    });
   }
 }

@@ -67,7 +67,7 @@ export class UserPaymentDetail {
   accountNumberEncrypted: string | null;
 
   /**
-   * Verification status — starts UNVERIFIED, becomes VERIFIED or FAILED.
+   * Verification status — starts pending, becomes verified or failed.
    */
   @Column({
     name: 'status',
@@ -79,14 +79,14 @@ export class UserPaymentDetail {
   status: 'pending' | 'in_progress' | 'verified' | 'failed';
 
   /**
-   * The PineLabs order ID used for the verification micro-transaction.
+   * The PineLabs order ID used for the verification micro-transaction (deprecated).
    */
   @Column({ name: 'verification_order_id', type: 'varchar', length: 100, nullable: true, unique: true })
   verificationOrderId: string | null;
 
   /**
    * Reference to the withdrawal request that triggered this verification (if any).
-   * Used to link verification → withdrawal flow.
+   * Used to link verification -> withdrawal flow.
    */
   @Column({ name: 'withdrawal_request_id', type: 'uuid', nullable: true })
   withdrawalRequestId: string | null;
@@ -105,13 +105,22 @@ export class UserPaymentDetail {
   @Column({ name: 'razorpay_payout_id', type: 'varchar', length: 100, nullable: true })
   razorpayPayoutId: string | null;
 
-  /** Razorpay payment link ID for the latest ₹1 verification collection */
+  /** Razorpay payment link ID for the latest verification collection (deprecated — use fund account validation) */
   @Column({ name: 'razorpay_payment_link_id', type: 'varchar', length: 100, nullable: true })
   razorpayPaymentLinkId: string | null;
 
-  /** Razorpay payment link short URL sent to the user */
+  /** Razorpay payment link short URL sent to the user (deprecated — use fund account validation) */
   @Column({ name: 'razorpay_payment_link_url', type: 'varchar', length: 500, nullable: true })
   razorpayPaymentLinkUrl: string | null;
+
+  /**
+   * Razorpay fund account validation ID (fav_xxx).
+   * Returned when POST /v1/fund_accounts/validations is called to verify
+   * the payment detail. Correlates fund_account.validated / fund_account.validation_failed
+   * webhook events to this record.
+   */
+  @Column({ name: 'razorpay_validation_id', type: 'varchar', length: 100, nullable: true })
+  razorpayValidationId: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

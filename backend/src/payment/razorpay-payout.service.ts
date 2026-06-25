@@ -40,6 +40,25 @@ export interface CreatePaymentLinkResult {
   status: string;
 }
 
+export interface FundAccountValidationResult {
+  validationId: string;
+  fundAccountId: string;
+  status: 'created' | 'completed' | 'failed';
+  active: boolean;
+}
+
+export interface FundAccountValidationStatus {
+  validationId: string;
+  status: 'created' | 'completed' | 'failed';
+  active: boolean;
+  results?: {
+    accountStatus: 'active' | 'invalid';
+    registeredName: string | null;
+    nameMatchScore: string | null;
+  };
+  failureReason?: string;
+}
+
 @Injectable()
 export class RazorpayPayoutService {
   private readonly logger = new Logger(RazorpayPayoutService.name);
@@ -47,8 +66,10 @@ export class RazorpayPayoutService {
   private readonly apiKey: string;
   private readonly secret: string;
   private readonly accountNumber: string;
+  private readonly mockVerification: boolean;
 
   constructor(private readonly configService: ConfigService) {
+    this.mockVerification = this.configService.get<boolean>('payment.razorpay.mockVerification') ?? false;
     this.apiKey = this.configService.get<string>('payment.razorpay.apiKey') ?? '';
     this.secret = this.configService.get<string>('payment.razorpay.secret') ?? '';
     this.accountNumber = this.configService.get<string>('payment.razorpay.accountNumber') ?? '';
@@ -176,6 +197,148 @@ export class RazorpayPayoutService {
       const error = err as { response?: { data?: { error?: { description?: string; code?: string } } } };
       const message = error?.response?.data?.error?.description ?? 'Failed to create fund account';
       this.logger.error(`[Razorpay] createFundAccount failed: ${message}`);
+      throw new InternalServerErrorException(message);
+    }
+  }
+
+  /**
+   * Validate a fund account via Razorpay's Fund Account Validation API.
+   *
+   * For bank accounts: validation is always async — poll getValidationStatus() or wait
+   * for fund_account.validated / fund_account.validation_failed webhook events.
+   *
+   * For VPA: may be synchronous (status=completed immediately) or async depending on
+   * the VPA/gateway.
+   *
+   * @param params.fundAccountId   The Razorpay fund_account ID to validate
+   * @param params.contactId       Contact ID for the account owner
+   * @param params.paymentDetailId Our internal payment detail ID (used as idempotency key + notes)
+   * @param params.userPhone       User's phone number (used for reminder SMS)
+   */
+  async validateFundAccount(params: {
+    fundAccountId: string;
+    contactId: string;
+    paymentDetailId: string;
+    userPhone: string;
+  }): Promise<FundAccountValidationResult> {
+    // Mock mode: return completed synchronously without calling Razorpay.
+    // Mirrors the PINELABS_MOCK_VERIFICATION behaviour for consistency.
+    if (this.mockVerification) {
+      this.logger.log(
+        `[Razorpay] Mock mode — skipping validation | fundAccount=${params.fundAccountId}`,
+      );
+      return {
+        validationId: `fav_mock_${params.paymentDetailId}`,
+        fundAccountId: params.fundAccountId,
+        status: 'completed',
+        active: true,
+      };
+    }
+
+    const { fundAccountId, contactId, paymentDetailId, userPhone } = params;
+
+    this.logger.log(
+      `[Razorpay] Initiating fund account validation | fundAccount=${fundAccountId} contact=${contactId}`,
+    );
+
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/fund_accounts/validations`,
+        {
+          fund_account_id: fundAccountId,
+          contact_id: contactId,
+          notify: { sms: true },
+          notes: {
+            payment_detail_id: paymentDetailId,
+            purpose: 'account_validation',
+          },
+        },
+        {
+          headers: {
+            Authorization: this.authHeader(),
+            'Content-Type': 'application/json',
+            'X-Goa-Idempotency-Key': `fav_${paymentDetailId}`,
+          },
+        },
+      );
+
+      const data = response.data as {
+        id?: string;
+        fund_account?: { id?: string; active?: boolean };
+        status?: string;
+        [key: string]: unknown;
+      };
+
+      this.logger.log(
+        `[Razorpay] Fund account validation created | id=${data.id} status=${data.status} fa=${data.fund_account?.id}`,
+      );
+
+      return {
+        validationId: String(data.id ?? ''),
+        fundAccountId: String(data.fund_account?.id ?? ''),
+        status: (data.status as 'created' | 'completed' | 'failed') ?? 'created',
+        active: data.fund_account?.active ?? false,
+      };
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: { description?: string; code?: string } } } };
+      const message = error?.response?.data?.error?.description ?? 'Failed to validate fund account';
+      this.logger.error(`[Razorpay] validateFundAccount failed: ${message}`);
+      throw new InternalServerErrorException(message);
+    }
+  }
+
+  /**
+   * Fetch the current status of a fund account validation.
+   * Used to poll when validation is async (bank accounts).
+   *
+   * @param validationId  fav_xxx returned from validateFundAccount()
+   */
+  async getValidationStatus(validationId: string): Promise<FundAccountValidationStatus> {
+    // Mock mode: return completed for any fav_mock_* ID
+    if (this.mockVerification && validationId.startsWith('fav_mock_')) {
+      return {
+        validationId,
+        status: 'completed',
+        active: true,
+      };
+    }
+
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/fund_accounts/validations/${validationId}`,
+        { headers: { Authorization: this.authHeader() } },
+      );
+
+      const data = response.data as {
+        id?: string;
+        status?: string;
+        active?: boolean;
+        results?: {
+          account_status?: string;
+          registered_name?: string | null;
+          name_match_score?: string | null;
+        };
+        [key: string]: unknown;
+      };
+
+      const results = data.results as typeof data.results | undefined;
+
+      return {
+        validationId: String(data.id ?? ''),
+        status: (data.status as 'created' | 'completed' | 'failed') ?? 'created',
+        active: data.active ?? false,
+        results: results
+          ? {
+              accountStatus: (results.account_status as 'active' | 'invalid') ?? 'invalid',
+              registeredName: results.registered_name ?? null,
+              nameMatchScore: results.name_match_score ?? null,
+            }
+          : undefined,
+      };
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: { description?: string } } } };
+      const message = error?.response?.data?.error?.description ?? 'Failed to fetch validation status';
+      this.logger.error(`[Razorpay] getValidationStatus failed: ${message}`);
       throw new InternalServerErrorException(message);
     }
   }
