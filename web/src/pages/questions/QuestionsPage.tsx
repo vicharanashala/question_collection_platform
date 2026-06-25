@@ -174,7 +174,6 @@ export function QuestionsPage() {
       ),
     },
     {
-      {
       key: 'submittedAt', header: 'Submitted', width: '120px', sortable: true,
       render: (q) => <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt)}</span>,
     },
