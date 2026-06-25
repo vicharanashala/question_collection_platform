@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Linking } from 'react-native';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,7 +9,21 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { walletApi, getErrorMessage } from '../../api/client';
 import { config } from '../../config';
 import { tokens } from '../../utils/theme';
-import RazorpayCheckout from 'react-native-razorpay';
+
+/**
+ * Lazily resolved RazorpayCheckout — avoids top-level import which triggers
+ * NativeEventEmitter in Expo Go and crashes the app.
+ * react-native-razorpay only works in a custom Expo dev build or a published build.
+ */
+function getRazorpayCheckout() {
+  if (Platform.OS === 'web') return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('react-native-razorpay').default as typeof import('react-native-razorpay').default;
+  } catch {
+    return null;
+  }
+}
 
 type PaymentDetailStatus = 'pending' | 'in_progress' | 'verified' | 'failed';
 
@@ -233,6 +247,13 @@ export function PaymentDetailsScreen() {
           purpose: 'verification',
         },
       };
+
+      const RazorpayCheckout = getRazorpayCheckout();
+      if (!RazorpayCheckout) {
+        setApiError('Payment is not available in Expo Go. Please use a development build.');
+        setRazorpayLoading(null);
+        return;
+      }
 
       const paymentResult = await RazorpayCheckout.open(options);
 
@@ -505,7 +526,7 @@ export function PaymentDetailsScreen() {
   }
 
   return (
-    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
