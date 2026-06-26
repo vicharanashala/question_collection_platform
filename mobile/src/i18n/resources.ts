@@ -161,7 +161,7 @@ const resources = {
         "serverError": "Server error — try again later",
         "unknownError": "An unknown error occurred"
       },
-      "farmSize": "Farm Size",
+      "farmSize": "Farm Size (acres)",
       "farmSizePlaceholder": "e.g., 2.5 acres",
       "farmSizeRequired": "Farm size is required",
       "farmer": "Farmer",
@@ -600,7 +600,7 @@ const resources = {
         "farmerDetails": "Farmer Details",
         "studentDetails": "Student Details",
         "organisationDetails": "Organisation Details",
-        "farmSize": "Farm Size",
+        "farmSize": "Farm Size (acres)",
         "farmSizePlaceholder": "e.g., 2.5 acres",
         "primaryCrop": "Primary Crop",
         "primaryCropPlaceholder": "e.g., Rice, Wheat, Cotton",
