@@ -260,7 +260,9 @@ export const COURSE_OPTIONS = [
   { value: 'BBA',                          label: 'BBA' },
   { value: 'MBA',                          label: 'MBA' },
   { value: 'BA',                           label: 'BA' },
+  { value: 'Under Graduate',               label: 'Under Graduate' },
   { value: 'MA',                           label: 'MA' },
+  { value: 'Post Graduate',                label: 'Post Graduate' },
   { value: '__other__',                    label: 'Other' },
 ];
 
