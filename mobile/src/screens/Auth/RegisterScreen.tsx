@@ -91,7 +91,7 @@ export function RegisterScreen({ navigation, route }: Props) {
   }, []);
 
   const [farmSize, setFarmSize] = useState('');
-  const [cropType, setCropType] = useState('');
+  const [cropType, setCropType] = useState<string[]>([]);
   const [courseName, setCourseName] = useState('');
   const [courseNameOther, setCourseNameOther] = useState('');
   const [universityName, setUniversityName] = useState('');
@@ -126,7 +126,7 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
       if (category === UserCategory.FARMER) {
-        if (!cropType) errs.cropType = t('cropTypeRequired');
+        if (cropType.length === 0) errs.cropType = t('cropTypeRequired');
       }
       if (category === UserCategory.STUDENT) {
         if (!courseName) errs.courseName = t('courseNameRequired');
@@ -153,7 +153,7 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (!validateStep(4)) return;
     setLoading(true);
     const profileData: Record<string, string> = {};
-    if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType; }
+    if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType.join(', '); }
     else if (category === UserCategory.STUDENT) {
       profileData.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
       profileData.universityName = universityName;
@@ -327,6 +327,8 @@ export function RegisterScreen({ navigation, route }: Props) {
                   error={errors.state}
                   searchable
                   loading={loadingStates}
+                  disabled={loadingStates}
+                  disabledMessage={t('stateLoadingMessage')}
                 />
                 <Select
                   label={t('district')}
@@ -356,6 +358,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                   error={errors.district}
                   searchable
                   loading={loadingDistricts}
+                  disabled={loadingDistricts || !selectedState}
+                  disabledMessage={
+                    !selectedState ? t('selectStateBeforeDistrict') : t('districtLoadingMessage')
+                  }
                 />
                 <Select
                   label={category === UserCategory.FARMER ? t('block') : t('blockOptional')}
@@ -387,6 +393,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                   error={errors.block}
                   searchable
                   loading={loadingSubdistricts}
+                  disabled={loadingSubdistricts || !selectedDistrict}
+                  disabledMessage={
+                    !selectedDistrict ? t('selectDistrictBeforeBlock') : t('blockLoadingMessage')
+                  }
                 />
                 {showOtherBlock && (
                   <Input
@@ -418,6 +428,12 @@ export function RegisterScreen({ navigation, route }: Props) {
                   error={errors.village}
                   searchable
                   loading={loadingVillages}
+                  disabled={loadingVillages || (!block && !showOtherBlock)}
+                  disabledMessage={
+                    !block && !showOtherBlock
+                      ? t('selectBlockBeforeVillage')
+                      : t('villageLoadingMessage')
+                  }
                 />
                 {showOtherVillage && (
                   <Input
@@ -448,6 +464,8 @@ export function RegisterScreen({ navigation, route }: Props) {
                   }}
                   error={errors.kvk}
                   searchable
+                  disabled={category === UserCategory.FARMER && !selectedDistrict}
+                  disabledMessage={t('selectVillageBeforeKvk')}
                 />
                 {showOtherKvk && (
                   <Input
@@ -487,9 +505,10 @@ export function RegisterScreen({ navigation, route }: Props) {
                       placeholder={t('cropTypePlaceholder')}
                       value={cropType}
                       options={CROP_OPTIONS}
-                      onChange={(v) => { setCropType(v); setErrors({}); }}
+                      onChange={(v) => { setCropType(v as string[]); setErrors({}); }}
                       error={errors.cropType}
                       searchable
+                      multi
                     />
                   </>
                 )}

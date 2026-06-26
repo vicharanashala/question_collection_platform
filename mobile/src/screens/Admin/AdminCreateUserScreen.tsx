@@ -230,8 +230,9 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               value={state}
               options={stateList.map((s) => ({ value: s.name, label: s.name }))}
               onChange={(v) => {
-                setState(v);
-                setStateCode(stateList.find((s) => s.name === v)?.code ?? '');
+                const val = v as string;
+                setState(val);
+                setStateCode(stateList.find((s) => s.name === val)?.code ?? '');
                 setDistrict('');
                 setDistrictCode('');
                 setBlock('');
@@ -254,6 +255,8 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               error={errors.state}
               searchable
               loading={loadingStates}
+              disabled={loadingStates}
+              disabledMessage={t('stateLoadingMessage')}
             />
             <Select
               label="District"
@@ -261,8 +264,9 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               value={district}
               options={districtList.map((d) => ({ value: d.name, label: d.name }))}
               onChange={(v) => {
-                setDistrict(v);
-                setDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
+                const val = v as string;
+                setDistrict(val);
+                setDistrictCode(districtList.find((d) => d.name === val)?.code ?? '');
                 setBlock('');
                 setShowOtherBlock(false);
                 setVillage('');
@@ -283,6 +287,10 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               error={errors.district}
               searchable
               loading={loadingDistricts}
+              disabled={loadingDistricts || !state}
+              disabledMessage={
+                !state ? t('selectStateBeforeDistrict') : t('districtLoadingMessage')
+              }
             />
             <Select
               label={category === 'farmer' ? t('block') : t('blockOptional')}
@@ -293,18 +301,19 @@ export function AdminCreateUserScreen({ navigation }: Props) {
                 { value: '__other__', label: t('others') },
               ]}
               onChange={(v) => {
-                if (v === '__other__') {
+                const val = v as string;
+                if (val === '__other__') {
                   setShowOtherBlock(true);
                   setBlock('');
                 } else {
                   setShowOtherBlock(false);
-                  setBlock(v);
+                  setBlock(val);
                   setVillage('');
                   setShowOtherVillage(false);
                   setVillageList([]);
                   setErrors({});
                   setLoadingVillages(true);
-                  lgdApi.getVillages(v)
+                  lgdApi.getVillages(val)
                     .then((res) => setVillageList(res.data.villages))
                     .catch(() => setVillageList([]))
                     .finally(() => setLoadingVillages(false));
@@ -314,6 +323,10 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               error={errors.block}
               searchable
               loading={loadingSubdistricts}
+              disabled={loadingSubdistricts || !district}
+              disabledMessage={
+                !district ? t('selectDistrictBeforeBlock') : t('blockLoadingMessage')
+              }
             />
             {showOtherBlock && (
               <Input
@@ -345,6 +358,12 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               error={errors.village}
               searchable
               loading={loadingVillages}
+              disabled={loadingVillages || (!block && !showOtherBlock)}
+              disabledMessage={
+                !block && !showOtherBlock
+                  ? t('selectBlockBeforeVillage')
+                  : t('villageLoadingMessage')
+              }
             />
             {showOtherVillage && (
               <Input
@@ -375,6 +394,8 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               }}
               error={errors.kvk}
               searchable
+              disabled={category === 'farmer' && !block}
+              disabledMessage={t('selectVillageBeforeKvk')}
             />
             {showOtherKvk && (
               <Input

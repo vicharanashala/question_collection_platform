@@ -585,5 +585,15 @@
     "delete": "நீக்கு",
     "stop": "நிறுத்து",
     "playing": "இசை வாசிக்கிறது…"
-  }
+  },
+  "selectState": "மாநிலத்தைத் தேர்ந்தெடுக்கவும்",
+  "selectDistrict": "மாவட்டத்தைத் தேர்ந்தெடுக்கவும்",
+  "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+  "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+  "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+  "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+  "stateLoadingMessage": "Please wait, states are being loaded.",
+  "districtLoadingMessage": "Please wait, districts are being loaded.",
+  "blockLoadingMessage": "Please wait, blocks are being loaded.",
+  "villageLoadingMessage": "Please wait, villages are being loaded."
 }

@@ -53,6 +53,14 @@
     "district": "District",
     "selectState": "Select State",
     "selectDistrict": "Select District",
+    "stateLoadingMessage": "Please wait, states are being loaded.",
+    "districtLoadingMessage": "Please wait, districts are being loaded.",
+    "blockLoadingMessage": "Please wait, blocks are being loaded.",
+    "villageLoadingMessage": "Please wait, villages are being loaded.",
+    "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+    "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+    "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+    "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
     "language": "Language",
     "selectLanguage": "Select Language",
     "consentTitle": "Consent",
@@ -90,7 +98,6 @@
   "others": "Others",
   "noBlocksFound": "No blocks found — please choose Others",
   "noVillagesFound": "No villages found — please choose Others",
-  "kvk": "KVK (Krishi Vigyan Kendra)",
   "kvkRequired": "Please select your nearest KVK",
   "selectKvk": "Select nearest KVK",
   "kvkOther": "KVK Name",
@@ -98,7 +105,6 @@
   "kvkOtherPlaceholder": "Enter KVK name",
   "kvkOtherRequired": "Please enter KVK name",
   "kvkNotListed": "KVK not listed",
-  "village": "Village",
   "villagePlaceholder": "Enter your village name",
   "villageRequired": "Village is required",
   "cat.farmer": "Farmer",
@@ -221,7 +227,7 @@
   "organisationNamePlaceholder": "Enter organisation name",
   "organisationRequired": "Organisation name is required",
   "otpSent": "A 6-digit code has been sent to",
-  "primaryCropType": "Primary Crop Type",
+  "primaryCropType": "Primary Crop Types",
   "privacyConsent": "Privacy & Consent",
   "profile": {
     "myCrops": "My Crops",
@@ -654,5 +660,15 @@
       "duplicate": "Duplicate",
       "spam": "Spam"
     }
-  }
+  },
+  "selectState": "Select State",
+  "selectDistrict": "Select District",
+  "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+  "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+  "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+  "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+  "stateLoadingMessage": "Please wait, states are being loaded.",
+  "districtLoadingMessage": "Please wait, districts are being loaded.",
+  "blockLoadingMessage": "Please wait, blocks are being loaded.",
+  "villageLoadingMessage": "Please wait, villages are being loaded."
 }

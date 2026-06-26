@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { TextInput, StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { WarningModal } from './WarningModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from '../utils/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -13,12 +14,17 @@ interface Option {
 interface SelectProps {
   label?: string;
   placeholder?: string;
-  value: string;
+  value: string | string[];
   options: readonly Option[] | Option[];
-  onChange: (value: string) => void;
+  onChange: (value: string | string[]) => void;
   error?: string;
   searchable?: boolean;
   loading?: boolean;
+  /** Prevent interaction and show a warning if the user tries to tap */
+  disabled?: boolean;
+  disabledMessage?: string;
+  /** Render as multi-select with checkboxes and chip summary in trigger */
+  multi?: boolean;
 }
 
 export const Select = React.memo(function Select({
@@ -30,13 +36,19 @@ export const Select = React.memo(function Select({
   error,
   searchable = false,
   loading = false,
+  disabled = false,
+  disabledMessage,
+  multi = false,
 }: SelectProps) {
   const { theme } = useTheme();
   const c = theme.colors;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [showWarning, setShowWarning] = useState(false);
 
-  const selected = options.find((o) => o.value === value);
+  const selectedValues = multi ? (Array.isArray(value) ? value : []) : [];
+  const singleSelected = multi ? '' : (typeof value === 'string' ? value : '');
+  const selected = options.find((o) => o.value === singleSelected);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return options as Option[];
@@ -54,7 +66,20 @@ export const Select = React.memo(function Select({
   }
 
   function handleSelect(item: Option) {
-    onChange(item.value);
+    if (multi) {
+      const current = Array.isArray(value) ? value : [];
+      const next = current.includes(item.value)
+        ? current.filter((v) => v !== item.value)
+        : [...current, item.value];
+      onChange(next);
+    } else {
+      onChange(item.value);
+      setOpen(false);
+    }
+  }
+
+  function closeModal() {
+    if (multi) setQuery('');
     setOpen(false);
   }
 
@@ -65,20 +90,31 @@ export const Select = React.memo(function Select({
         style={[
           styles.trigger,
           {
-            borderColor: error ? c.error : c.borderSubtle,
-            backgroundColor: c.input,
+            borderColor: disabled ? c.borderSubtle : (error ? c.error : c.borderSubtle),
+            backgroundColor: disabled ? c.input : c.input,
+            opacity: disabled ? 0.55 : 1,
           },
         ]}
-        onPress={openModal}
+        onPress={() => {
+          if (disabled && disabledMessage) { setShowWarning(true); return; }
+          openModal();
+        }}
         activeOpacity={0.7}
       >
         <Text
           style={[
             styles.triggerText,
-            { color: selected ? c.text : c.textTertiary },
+            { color: (multi ? selectedValues.length > 0 : !!selected) ? c.text : c.textTertiary },
           ]}
+          numberOfLines={1}
         >
-          {selected?.label ?? placeholder}
+          {multi
+            ? selectedValues.length === 0
+              ? placeholder
+              : selectedValues.length === 1
+              ? options.find((o) => o.value === selectedValues[0])?.label ?? selectedValues[0]
+              : `${selectedValues.length} selected`
+            : (selected?.label ?? placeholder)}
         </Text>
         {loading ? (
           <ActivityIndicator size="small" color={c.primary} />
@@ -103,7 +139,7 @@ export const Select = React.memo(function Select({
                 {label ?? 'Select'}
               </Text>
               <TouchableOpacity
-                onPress={() => setOpen(false)}
+                onPress={closeModal}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Text style={[styles.closeBtn, { color: c.textSecondary }]}>
@@ -148,15 +184,25 @@ export const Select = React.memo(function Select({
                   <TouchableOpacity
                     style={[
                       styles.option,
-                      item.value === value && { backgroundColor: c.accent },
+                      (multi
+                        ? (Array.isArray(value) ? value : []).includes(item.value)
+                        : item.value === value) && { backgroundColor: c.accent },
                     ]}
                     onPress={() => handleSelect(item)}
                   >
                     <Text
                       style={[
                         styles.optionText,
-                        { color: item.value === value ? c.primary : c.text },
-                        item.value === value && styles.optionTextSelected,
+                        {
+                          color: (multi
+                            ? (Array.isArray(value) ? value : []).includes(item.value)
+                            : item.value === value)
+                            ? c.primary
+                            : c.text,
+                        },
+                        (multi
+                          ? (Array.isArray(value) ? value : []).includes(item.value)
+                          : item.value === value) && styles.optionTextSelected,
                       ]}
                     >
                       {item.label}
@@ -180,9 +226,26 @@ export const Select = React.memo(function Select({
                 )}
               />
             )}
+            {multi && (
+              <View style={[styles.multiFooter, { borderTopColor: c.borderSubtle }]}>
+                <TouchableOpacity
+                  style={[styles.doneBtn, { backgroundColor: c.primary }]}
+                  onPress={closeModal}
+                >
+                  <Text style={[styles.doneBtnText, { color: c.primaryForeground }]}>
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </SafeAreaView>
         </View>
       </Modal>
+      <WarningModal
+        visible={showWarning}
+        message={disabledMessage ?? ''}
+        onClose={() => setShowWarning(false)}
+      />
     </View>
   );
 });
@@ -248,4 +311,15 @@ const styles = StyleSheet.create({
   optionTextSelected: { fontWeight: '700' },
   optionSublabel: { fontSize: 12, marginTop: 2 },
   separator: { height: 1 },
+  multiFooter: {
+    borderTopWidth: 1,
+    paddingHorizontal: tokens.spacing6,
+    paddingVertical: tokens.spacing4,
+  },
+  doneBtn: {
+    borderRadius: tokens.radiusMd,
+    paddingVertical: tokens.spacing3 + 2,
+    alignItems: 'center',
+  },
+  doneBtnText: { fontSize: 16, fontWeight: '700' },
 });

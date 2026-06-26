@@ -58,6 +58,14 @@ const resources = {
         "district": "District",
         "selectState": "Select State",
         "selectDistrict": "Select District",
+        "stateLoadingMessage": "Please wait, states are being loaded.",
+        "districtLoadingMessage": "Please wait, districts are being loaded.",
+        "blockLoadingMessage": "Please wait, blocks are being loaded.",
+        "villageLoadingMessage": "Please wait, villages are being loaded.",
+        "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+        "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+        "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+        "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
         "language": "Language",
         "selectLanguage": "Select Language",
         "consentTitle": "Consent",
@@ -224,7 +232,7 @@ const resources = {
       "organisationNamePlaceholder": "Enter organisation name",
       "organisationRequired": "Organisation name is required",
       "otpSent": "A 6-digit code has been sent to",
-      "primaryCropType": "Primary Crop Type",
+      "primaryCropType": "Primary Crop Types",
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "myCrops": "My Crops",
@@ -657,7 +665,17 @@ const resources = {
           "duplicate": "Duplicate",
           "spam": "Spam"
         }
-      }
+      },
+      "selectState": "Select State",
+      "selectDistrict": "Select District",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "as": {
@@ -1248,7 +1266,17 @@ const resources = {
         "delete": "মচক",
         "stop": "ৰুবুংধা",
         "playing": "বাজি থাকিছে…"
-      }
+      },
+      "selectState": "ৰাজ্য বাছনি কৰক",
+      "selectDistrict": "জিলা বাছনি কৰক",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "bn": {
@@ -1839,7 +1867,17 @@ const resources = {
         "delete": "মুছে ফেলুন",
         "stop": "থামান",
         "playing": "চলছে…"
-      }
+      },
+      "selectState": "রাজ্য নির্বাচন করুন",
+      "selectDistrict": "জেলা নির্বাচন করুন",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "brx": {
@@ -2430,7 +2468,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "राज्य बाटो",
+      "selectDistrict": "जिल्ला बाटो",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "doi": {
@@ -3021,7 +3069,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "ریاست چنو",
+      "selectDistrict": "ضلع چنو",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "gu": {
@@ -3612,7 +3670,17 @@ const resources = {
         "delete": "દૂર કરો",
         "stop": "અટકાવો",
         "playing": "ચાલી રહ્યું છે…"
-      }
+      },
+      "selectState": "રાજ્ય પસંદ કરો",
+      "selectDistrict": "જિલ્લો પસંદ કરો",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "hi": {
@@ -4203,7 +4271,17 @@ const resources = {
         "delete": "हटाएं",
         "stop": "रोकें",
         "playing": "चल रहा है…"
-      }
+      },
+      "selectState": "राज्य चुनें",
+      "selectDistrict": "जिला चुनें",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "kn": {
@@ -4794,7 +4872,17 @@ const resources = {
         "delete": "ಅಳಿಸಿ",
         "stop": "ನಿಲ್ಲಿಸಿ",
         "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
-      }
+      },
+      "selectState": "ರಾಜ್ಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+      "selectDistrict": "ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "ks": {
@@ -5385,7 +5473,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "ریاست چنو",
+      "selectDistrict": "ضلع چنو",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "kok": {
@@ -5976,7 +6074,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "राज्य निवडो",
+      "selectDistrict": "जिल्हो निवडो",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "mai": {
@@ -6567,7 +6675,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "राज्य बाटू",
+      "selectDistrict": "जिल्ला बाटू",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "ml": {
@@ -7158,7 +7276,17 @@ const resources = {
         "delete": "വ delete െക്കുക",
         "stop": "നിറുത്തു",
         "playing": "കളിക്കുന്നു…"
-      }
+      },
+      "selectState": "സംസ്ഥാനം തിരഞ്ഞെടുക്കുക",
+      "selectDistrict": "ജില്ല തിരഞ്ഞെടുക്കുക",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "mni": {
@@ -7749,7 +7877,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "রাজ্য ইনাংবা",
+      "selectDistrict": "জিলা ইনাংবা",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "mr": {
@@ -8340,7 +8478,17 @@ const resources = {
         "delete": "हटवा",
         "stop": "थांबा",
         "playing": "चालू आहे…"
-      }
+      },
+      "selectState": "राज्य निवडा",
+      "selectDistrict": "जिल्हा निवडा",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "ne": {
@@ -8931,7 +9079,17 @@ const resources = {
         "delete": "हटाउनुहोस्",
         "stop": "रोक्नुहोस्",
         "playing": "बजिरहेको…"
-      }
+      },
+      "selectState": "प्रदेश छान्नुहोस्",
+      "selectDistrict": "जिल्ला छान्नुहोस्",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "or": {
@@ -9522,7 +9680,17 @@ const resources = {
         "delete": "ଲୁଚି ଦିଅ",
         "stop": "ବନ୍ଦ କରନ୍ତୁ",
         "playing": "ଚାଲୁଛି…"
-      }
+      },
+      "selectState": "ରାଜ୍ୟ ବାଛନ୍ତୁ",
+      "selectDistrict": "ଜିଲ୍ଲା ବାଛନ୍ତୁ",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "pa": {
@@ -10113,7 +10281,17 @@ const resources = {
         "delete": "ਹਟਾਓ",
         "stop": "ਰੋਕੋ",
         "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
-      }
+      },
+      "selectState": "ਸੂਬਾ ਚੁਣੋ",
+      "selectDistrict": "ਜ਼ਿਲ੍ਹਾ ਚੁਣੋ",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "sa": {
@@ -10704,7 +10882,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "राज्यं वृणुताम्",
+      "selectDistrict": "जिल्लां वृणुताम्",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "sat": {
@@ -11295,7 +11483,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "ᱯᱚᱱᱚᱛ ᱵᱟᱪᱟᱣ ᱢᱟᱱᱟᱣ",
+      "selectDistrict": "ᱦᱟᱰᱟ ᱵᱟᱪᱟᱣ ᱢᱟᱱᱟᱣ",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "sd": {
@@ -11886,7 +12084,17 @@ const resources = {
         "delete": "Delete",
         "stop": "Stop",
         "playing": "Playing…"
-      }
+      },
+      "selectState": "صوبو چونڊيو",
+      "selectDistrict": "ضلعو چونڊيو",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "ta": {
@@ -12477,7 +12685,17 @@ const resources = {
         "delete": "நீக்கு",
         "stop": "நிறுத்து",
         "playing": "இசை வாசிக்கிறது…"
-      }
+      },
+      "selectState": "மாநிலத்தைத் தேர்ந்தெடுக்கவும்",
+      "selectDistrict": "மாவட்டத்தைத் தேர்ந்தெடுக்கவும்",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "te": {
@@ -13068,7 +13286,17 @@ const resources = {
         "delete": "తొలగించు",
         "stop": "నిలిపు",
         "playing": "ప్లే అవుతోంది…"
-      }
+      },
+      "selectState": "ریاست منتخب کریں",
+      "selectDistrict": "ضلع منتخب کریں",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   },
   "ur": {
@@ -13659,7 +13887,17 @@ const resources = {
         "delete": "حذف کریں",
         "stop": "روکیں",
         "playing": "چل رہا ہے…"
-      }
+      },
+      "selectState": "ریاست منتخب کریں",
+      "selectDistrict": "ضلع منتخب کریں",
+      "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+      "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+      "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+      "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+      "stateLoadingMessage": "Please wait, states are being loaded.",
+      "districtLoadingMessage": "Please wait, districts are being loaded.",
+      "blockLoadingMessage": "Please wait, blocks are being loaded.",
+      "villageLoadingMessage": "Please wait, villages are being loaded."
     }
   }
 };

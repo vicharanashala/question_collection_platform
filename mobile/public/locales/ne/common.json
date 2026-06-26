@@ -585,5 +585,15 @@
     "delete": "हटाउनुहोस्",
     "stop": "रोक्नुहोस्",
     "playing": "बजिरहेको…"
-  }
+  },
+  "selectState": "प्रदेश छान्नुहोस्",
+  "selectDistrict": "जिल्ला छान्नुहोस्",
+  "selectStateBeforeDistrict": "Please select a state before selecting a district.",
+  "selectDistrictBeforeBlock": "Please select a district before selecting a block.",
+  "selectBlockBeforeVillage": "Please select a block before selecting a village.",
+  "selectVillageBeforeKvk": "Please select a village before selecting a KVK.",
+  "stateLoadingMessage": "Please wait, states are being loaded.",
+  "districtLoadingMessage": "Please wait, districts are being loaded.",
+  "blockLoadingMessage": "Please wait, blocks are being loaded.",
+  "villageLoadingMessage": "Please wait, villages are being loaded."
 }
