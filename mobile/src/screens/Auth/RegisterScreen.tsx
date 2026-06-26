@@ -11,7 +11,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
-import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS } from '../../utils/constants';
+import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, KVKS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
 import { useTranslation } from 'react-i18next';
@@ -64,15 +64,22 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
   const [block, setBlock] = useState('');
+  const [showOtherBlock, setShowOtherBlock] = useState(false);
+  const [village, setVillage] = useState('');
+  const [showOtherVillage, setShowOtherVillage] = useState(false);
+  const [kvk, setKvk] = useState('');
+  const [showOtherKvk, setShowOtherKvk] = useState(false);
   const [language, setLanguage] = useState('en');
 
   // LGD reference data
   const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
   const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
-  const [blockList, setBlockList] = useState<{ code: string; name: string }[]>([]);
+  const [subdistrictList, setSubdistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [villageList, setVillageList] = useState<{ code: string; name: string }[]>([]);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
-  const [loadingBlocks, setLoadingBlocks] = useState(false);
+  const [loadingSubdistricts, setLoadingSubdistricts] = useState(false);
+  const [loadingVillages, setLoadingVillages] = useState(false);
 
   // Load states on mount
   useEffect(() => {
@@ -97,6 +104,24 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (s === 2) {
       if (!selectedState) errs.state = t('stateRequired');
       if (!selectedDistrict.trim()) errs.district = t('districtRequired');
+      // Block, village, and KVK are only mandatory for Farmers
+      if (category === UserCategory.FARMER) {
+        if (showOtherBlock) {
+          if (!block.trim()) errs.blockOther = t('blockOtherRequired');
+        } else {
+          if (!block.trim()) errs.block = t('blockRequired');
+        }
+        if (showOtherVillage) {
+          if (!village.trim()) errs.villageOther = t('villageOtherRequired');
+        } else {
+          if (!village.trim()) errs.village = t('villageRequired');
+        }
+        if (showOtherKvk) {
+          if (!kvk.trim()) errs.kvkOther = t('kvkOtherRequired');
+        } else {
+          if (!kvk.trim()) errs.kvk = t('kvkRequired');
+        }
+      }
     }
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
@@ -141,7 +166,9 @@ export function RegisterScreen({ navigation, route }: Props) {
         mobileNumber,
         state: selectedState,
         district: selectedDistrict.trim(),
-        block: block.trim() || undefined,
+        block: block.trim(),
+        village: village.trim(),
+        kvk: kvk.trim(),
         category,
         languagePreference: language,
         consentGiven: true,
@@ -287,7 +314,6 @@ export function RegisterScreen({ navigation, route }: Props) {
                     setSelectedStateCode(stateList.find((s) => s.name === v)?.code ?? '');
                     setSelectedDistrict('');
                     setSelectedDistrictCode('');
-                    setBlockList([]);
                     setBlock('');
                     setErrors({});
                     setLoadingDistricts(true);
@@ -307,34 +333,131 @@ export function RegisterScreen({ navigation, route }: Props) {
                   placeholder={t('selectDistrict')}
                   value={selectedDistrict}
                   options={districtList.map((d) => ({ value: d.name, label: d.name }))}
-                  onChange={async (v) => {
+                  onChange={(v) => {
                     setSelectedDistrict(v);
                     setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
-                    setBlockList([]);
                     setBlock('');
+                    setShowOtherBlock(false);
+                    setVillage('');
+                    setShowOtherVillage(false);
+                    setKvk('');
+                    setShowOtherKvk(false);
+                    setSubdistrictList([]);
+                    setVillageList([]);
                     setErrors({});
-                    const code = districtList.find((d) => d.name === v)?.code ?? '';
-                    if (!code) return;
-                    setLoadingBlocks(true);
-                    try {
-                      const res = await lgdApi.getSubDistricts(code);
-                      setBlockList(res.data.subdistricts);
-                    } catch { setBlockList([]); }
-                    finally { setLoadingBlocks(false); }
+                    const districtCode = districtList.find((d) => d.name === v)?.code ?? '';
+                    if (!districtCode) return;
+                    setLoadingSubdistricts(true);
+                    lgdApi.getSubDistricts(districtCode)
+                      .then((res) => setSubdistrictList(res.data.subdistricts))
+                      .catch(() => setSubdistrictList([]))
+                      .finally(() => setLoadingSubdistricts(false));
                   }}
                   error={errors.district}
                   searchable
                   loading={loadingDistricts}
                 />
                 <Select
-                  label={t('blockOptional')}
+                  label={category === UserCategory.FARMER ? t('block') : t('blockOptional')}
                   placeholder={t('selectBlock')}
-                  value={block}
-                  options={blockList.map((b) => ({ value: b.name, label: b.name }))}
-                  onChange={setBlock}
+                  value={showOtherBlock ? '__other__' : block}
+                  options={[
+                    ...subdistrictList.map((s) => ({ value: s.code, label: s.name })),
+                    { value: '__other__', label: t('others') },
+                  ]}
+                  onChange={(v) => {
+                    if (v === '__other__') {
+                      setShowOtherBlock(true);
+                      setBlock('');
+                    } else {
+                      setShowOtherBlock(false);
+                      setBlock(v);
+                      setVillage('');
+                      setShowOtherVillage(false);
+                      setVillageList([]);
+                      setErrors({});
+                      setLoadingVillages(true);
+                      lgdApi.getVillages(v)
+                        .then((res) => setVillageList(res.data.villages))
+                        .catch(() => setVillageList([]))
+                        .finally(() => setLoadingVillages(false));
+                    }
+                    setErrors({});
+                  }}
+                  error={errors.block}
                   searchable
-                  loading={loadingBlocks}
+                  loading={loadingSubdistricts}
                 />
+                {showOtherBlock && (
+                  <Input
+                    label={category === UserCategory.FARMER ? t('blockOther') : t('blockOtherOptional')}
+                    placeholder={t('blockOtherPlaceholder')}
+                    value={block}
+                    onChangeText={(txt) => { setBlock(txt); setErrors({}); }}
+                    error={errors.blockOther}
+                  />
+                )}
+                <Select
+                  label={category === UserCategory.FARMER ? t('village') : t('villageOptional')}
+                  placeholder={t('selectVillage')}
+                  value={showOtherVillage ? '__other__' : village}
+                  options={[
+                    ...villageList.map((v) => ({ value: v.code, label: v.name })),
+                    { value: '__other__', label: t('others') },
+                  ]}
+                  onChange={(v) => {
+                    if (v === '__other__') {
+                      setShowOtherVillage(true);
+                      setVillage('');
+                    } else {
+                      setShowOtherVillage(false);
+                      setVillage(v);
+                    }
+                    setErrors({});
+                  }}
+                  error={errors.village}
+                  searchable
+                  loading={loadingVillages}
+                />
+                {showOtherVillage && (
+                  <Input
+                    label={category === UserCategory.FARMER ? t('villageOther') : t('villageOtherOptional')}
+                    placeholder={t('villageOtherPlaceholder')}
+                    value={village}
+                    onChangeText={(txt) => { setVillage(txt); setErrors({}); }}
+                    error={errors.villageOther}
+                  />
+                )}
+                <Select
+                  label={category === UserCategory.FARMER ? t('kvk') : t('kvkOptional')}
+                  placeholder={t('selectKvk')}
+                  value={showOtherKvk ? '__other__' : kvk}
+                  options={[
+                    ...(KVKS[selectedDistrict] ?? []).map((k) => ({ value: k, label: k })),
+                    { value: '__other__', label: t('kvkNotListed') },
+                  ]}
+                  onChange={(v) => {
+                    if (v === '__other__') {
+                      setShowOtherKvk(true);
+                      setKvk('');
+                    } else {
+                      setShowOtherKvk(false);
+                      setKvk(v);
+                    }
+                    setErrors({});
+                  }}
+                  error={errors.kvk}
+                  searchable
+                />
+                {showOtherKvk && (
+                  <Input
+                    label={category === UserCategory.FARMER ? t('kvkOther') : t('kvkOtherOptional')}
+                    placeholder={t('kvkOtherPlaceholder')}
+                    value={kvk}
+                    onChangeText={(txt) => { setKvk(txt); setErrors({}); }}
+                    error={errors.kvkOther}
+                  />
+                )}
                 <Button title={t('continue')} onPress={next} />
               </>
             )}

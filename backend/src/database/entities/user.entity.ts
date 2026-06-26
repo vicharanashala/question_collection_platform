@@ -45,6 +45,12 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true })
   block: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  village: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  kvk: string | null;
+
   @Column({ name: 'language_preference', type: 'varchar', length: 50 })
   languagePreference: string;
 

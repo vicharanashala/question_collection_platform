@@ -291,7 +291,8 @@ export const adminApi = {
     category?: string
     state: string
     district: string
-    block?: string
+    block: string
+    village: string
     languagePreference?: string
   }) =>
     request<{ message: string; user: User }>(

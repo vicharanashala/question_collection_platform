@@ -188,7 +188,9 @@ export class AdminService implements OnModuleInit {
       category?: string;
       state: string;
       district: string;
-      block?: string;
+      block: string;
+      village: string;
+      kvk?: string;
       languagePreference?: string;
     },
   ) {
@@ -235,6 +237,8 @@ export class AdminService implements OnModuleInit {
       state: dto.state,
       district: dto.district,
       block: dto.block ?? null,
+      village: dto.village ?? null,
+      kvk: dto.kvk ?? null,
       languagePreference: dto.languagePreference ?? 'en',
       verificationStatus: VerificationStatus.VERIFIED,
       tokenVersion: 0,
@@ -2983,6 +2987,8 @@ export class AdminService implements OnModuleInit {
       state: user.state,
       district: user.district,
       block: user.block,
+      village: user.village,
+      kvk: user.kvk,
       languagePreference: user.languagePreference,
       verificationStatus: user.verificationStatus,
       role: user.role,

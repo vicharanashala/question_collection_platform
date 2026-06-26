@@ -18,6 +18,7 @@ export class LgdService {
   private readonly statesUrl: string;
   private readonly districtsUrl: string;
   private readonly subdistrictsUrl: string;
+  private readonly villagesUrl: string;
   private readonly cacheTtlMs: number;
   private readonly pageSize = 1000;
 
@@ -25,14 +26,36 @@ export class LgdService {
   private readonly statesCache = new Map<string, CachedData<LgdRecord[]>>();
   private readonly districtsCache = new Map<string, CachedData<LgdRecord[]>>();
   private readonly subdistrictsCache = new Map<string, CachedData<LgdRecord[]>>();
+  private readonly villagesCache = new Map<string, CachedData<LgdRecord[]>>();
 
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>('LGD_API_KEY') ?? '';
     this.statesUrl = this.configService.get<string>('LGD_STATES_API_URL') ?? '';
     this.districtsUrl = this.configService.get<string>('LGD_DISTRICTS_API_URL') ?? '';
     this.subdistrictsUrl = this.configService.get<string>('LGD_SUBDISTRICTS_API_URL') ?? '';
+    this.villagesUrl = this.configService.get<string>('LGD_VILLAGES_API_URL') ?? '';
     this.cacheTtlMs = (this.configService.get<number>('LGD_CACHE_TTL_DAYS') ?? 7) * 86_400_000;
     this.logger.log(`LGD API configured — cache TTL: ${this.cacheTtlMs / 86_400_000}d`);
+  }
+
+  /** Returns all villages for a given subdistrict (block) code, sorted by name */
+  async getVillages(subdistrictCode: string): Promise<LgdRecord[]> {
+    const cached = this.villagesCache.get(subdistrictCode);
+    if (this.isValid(cached)) {
+      return cached!.data;
+    }
+
+    // LGD API ignores the subdistrict_code filter server-side, so fetch all and filter client-side
+    const allRecords = await this.fetchAllPages(this.villagesUrl, {});
+    const filtered = allRecords.filter(
+      (r) => String(r['subdistrict_code'] ?? '').trim() === subdistrictCode,
+    );
+    const sorted = filtered.sort((a, b) =>
+      (a['village_name_english'] ?? '').localeCompare(b['village_name_english'] ?? ''),
+    );
+    this.villagesCache.set(subdistrictCode, { data: sorted, fetchedAt: Date.now() });
+    this.logger.log(`LGD: cached ${sorted.length} villages for subdistrict ${subdistrictCode}`);
+    return sorted;
   }
 
   /** Returns all Indian states, sorted by name */

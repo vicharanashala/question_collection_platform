@@ -133,6 +133,7 @@ const mockTargetUser = {
   state: 'Maharashtra',
   district: 'Pune',
   block: 'Haveli',
+  village: 'Hadapsar',
   languagePreference: 'hi',
   verificationStatus: VerificationStatus.PENDING,
   tokenVersion: 0,
@@ -222,6 +223,8 @@ describe('AdminService', () => {
           category: UserCategory.FARMER,
           state: 'Maharashtra',
           district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
         },
       );
 
@@ -243,6 +246,8 @@ describe('AdminService', () => {
         category: UserCategory.FARMER,
         state: 'Maharashtra',
         district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
       });
 
       expect(result.user.mobileNumber).toBe('9876543210');
@@ -259,6 +264,8 @@ describe('AdminService', () => {
           category: UserCategory.FARMER,
           state: 'Maharashtra',
           district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -276,6 +283,8 @@ describe('AdminService', () => {
           category: UserCategory.FARMER,
           state: 'Maharashtra',
           district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
         }),
       ).rejects.toThrow(/maximum/);
     });
@@ -294,6 +303,8 @@ describe('AdminService', () => {
         role: UserRole.ADMIN,
         state: 'Maharashtra',
         district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
       });
 
       expect(result.user.role).toBe(UserRole.ADMIN);
@@ -309,6 +320,8 @@ describe('AdminService', () => {
           role: UserRole.SUPER_ADMIN,
           state: 'Maharashtra',
           district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
         }),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -321,6 +334,8 @@ describe('AdminService', () => {
           role: UserRole.SUPER_ADMIN,
           state: 'Maharashtra',
           district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
         }),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -337,6 +352,8 @@ describe('AdminService', () => {
         role: UserRole.CURATOR,
         state: 'Maharashtra',
         district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
       });
 
       expect(result.user.category).toBeNull();

@@ -44,6 +44,8 @@ export interface PublicUser {
   state: string;
   district: string;
   block: string | null;
+  village: string | null;
+  kvk: string | null;
   languagePreference: string;
   verificationStatus: VerificationStatus;
   role: UserRole;
@@ -339,6 +341,8 @@ export class AuthService {
       user.state = dto.state;
       user.district = dto.district;
       user.block = dto.block ?? null;
+      user.village = dto.village ?? null;
+      user.kvk = dto.kvk ?? null;
       user.languagePreference = dto.languagePreference;
       user.consentGiven = dto.consentGiven;
       user.consentTimestamp = dto.consentGiven ? new Date() : null;
@@ -533,6 +537,8 @@ export class AuthService {
       state: user.state,
       district: user.district,
       block: user.block,
+      village: user.village,
+      kvk: user.kvk,
       languagePreference: user.languagePreference,
       verificationStatus: user.verificationStatus,
       role: user.role,

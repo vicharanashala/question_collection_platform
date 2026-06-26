@@ -82,6 +82,8 @@ describe('AuthController', () => {
       mobileNumber: '+919876543210',
       state: 'Maharashtra',
       district: 'Pune',
+      block: 'Haveli',
+      village: 'Hadapsar',
       category: UserCategory.FARMER,
       languagePreference: 'hi',
       consentGiven: true,

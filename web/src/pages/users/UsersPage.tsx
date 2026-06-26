@@ -68,19 +68,20 @@ export function UsersPage() {
     state: '',
     district: '',
     block: '',
+    village: '',
   })
   const [formError, setFormError] = useState('')
 
   function openCreate() {
-    setForm({ name: '', mobileNumber: '', role: 'user', category: 'farmer', state: '', district: '', block: '' })
+    setForm({ name: '', mobileNumber: '', role: 'user', category: 'farmer', state: '', district: '', block: '', village: '' })
     setFormError('')
     setCreateOpen(true)
   }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name.trim() || !form.mobileNumber.trim() || !form.state.trim() || !form.district.trim()) {
-      setFormError('Name, mobile number, state, and district are required.')
+    if (!form.name.trim() || !form.mobileNumber.trim() || !form.state.trim() || !form.district.trim() || !form.block.trim() || !form.village.trim()) {
+      setFormError('Name, mobile number, state, district, block, and village are required.')
       return
     }
     setCreating(true)
@@ -93,7 +94,8 @@ export function UsersPage() {
         category: form.role === 'user' ? form.category : undefined,
         state: form.state.trim(),
         district: form.district.trim(),
-        block: form.block.trim() || undefined,
+        block: form.block.trim(),
+        village: form.village.trim(),
       })
       toast.success('User created successfully')
       setCreateOpen(false)
@@ -354,12 +356,21 @@ export function UsersPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="cu-block">Block <span className="text-text-tertiary font-normal">(optional)</span></Label>
+                <Label htmlFor="cu-block">Block</Label>
                 <Input
                   id="cu-block"
                   value={form.block}
                   onChange={(e) => setForm((f) => ({ ...f, block: e.target.value }))}
                   placeholder="Haveli"
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="cu-village">Village</Label>
+                <Input
+                  id="cu-village"
+                  value={form.village}
+                  onChange={(e) => setForm((f) => ({ ...f, village: e.target.value }))}
+                  placeholder="Hadapsar"
                 />
               </div>
             </div>

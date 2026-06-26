@@ -530,6 +530,12 @@ export const lgdApi = {
     api.get<{ subdistricts: { code: string; name: string; districtCode: string }[] }>('/lgd/subdistricts', {
       params: { districtCode },
     }),
+
+  /** List villages for a given LGD subdistrict (block) code */
+  getVillages: (blockCode: string) =>
+    api.get<{ villages: { code: string; name: string; blockCode: string }[] }>('/lgd/villages', {
+      params: { blockCode },
+    }),
 };
 
 export default api;

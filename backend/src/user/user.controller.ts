@@ -42,6 +42,7 @@ export class UserController {
         state: user.state,
         district: user.district,
         block: user.block,
+        village: user.village,
         languagePreference: user.languagePreference,
         verificationStatus: user.verificationStatus,
         role: user.role,

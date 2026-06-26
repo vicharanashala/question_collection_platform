@@ -14,6 +14,7 @@ export interface User {
   state: string;
   district: string;
   block: string | null;
+  village: string | null;
   languagePreference: string;
   verificationStatus: VerificationStatus;
   suspendedAt: string | null;
@@ -50,6 +51,7 @@ export interface Question {
   state: string;
   district: string;
   block: string | null;
+  village: string | null;
   language: string;
   mediaType: string;
   mediaUrls: string[] | null;
@@ -110,6 +112,7 @@ export interface AuthUser {
   state?: string;
   district?: string;
   block?: string | null;
+  village?: string | null;
   languagePreference?: string;
   verificationStatus?: VerificationStatus;
   createdAt?: string;

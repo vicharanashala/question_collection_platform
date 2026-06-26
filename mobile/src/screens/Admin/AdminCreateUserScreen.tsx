@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,10 +9,11 @@ import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
-import { adminApi, getErrorMessage } from '../../api/client';
+import { useTranslation } from 'react-i18next';
+import { adminApi, getErrorMessage, lgdApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
-import { INDIAN_STATES } from '../../utils/constants';
+import { KVKS } from '../../utils/constants';
 
 type Props = {
   navigation: NativeStackNavigationProp<AdminStackParamList, 'AdminCreateUser'>;
@@ -33,7 +34,7 @@ const CATEGORY_OPTIONS = [
   { value: 'ngo',       label: 'NGO' },
 ];
 
-const stateOptions = INDIAN_STATES.map((s) => ({ value: s, label: s }));
+
 
 const CATEGORY_COLORS: Record<string, string> = {
   farmer:    '#2D9A3E',
@@ -47,6 +48,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,8 +58,34 @@ export function AdminCreateUserScreen({ navigation }: Props) {
   const [role, setRole] = useState<'user' | 'admin' | 'curator'>('user');
   const [category, setCategory] = useState('');
   const [state, setState] = useState('');
+  const [stateCode, setStateCode] = useState('');
   const [district, setDistrict] = useState('');
+  const [districtCode, setDistrictCode] = useState('');
   const [block, setBlock] = useState('');
+  const [showOtherBlock, setShowOtherBlock] = useState(false);
+  const [village, setVillage] = useState('');
+  const [showOtherVillage, setShowOtherVillage] = useState(false);
+  const [kvk, setKvk] = useState('');
+  const [showOtherKvk, setShowOtherKvk] = useState(false);
+
+  // LGD data
+  const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
+  const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [subdistrictList, setSubdistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [villageList, setVillageList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingSubdistricts, setLoadingSubdistricts] = useState(false);
+  const [loadingVillages, setLoadingVillages] = useState(false);
+
+  // Load states on mount
+  useEffect(() => {
+    setLoadingStates(true);
+    lgdApi.getStates()
+      .then((res) => setStateList(res.data.states))
+      .catch(() => setStateList([]))
+      .finally(() => setLoadingStates(false));
+  }, []);
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -66,6 +94,24 @@ export function AdminCreateUserScreen({ navigation }: Props) {
     if (role === 'user' && !category) errs.category = 'Category is required for users';
     if (!state) errs.state = 'State is required';
     if (!district.trim()) errs.district = 'District is required';
+    // Block, village, and KVK are only mandatory for Farmers
+    if (category === 'farmer') {
+      if (showOtherBlock) {
+        if (!block.trim()) errs.blockOther = t('blockOtherRequired');
+      } else {
+        if (!block.trim()) errs.block = 'Block is required';
+      }
+      if (showOtherVillage) {
+        if (!village.trim()) errs.villageOther = t('villageOtherRequired');
+      } else {
+        if (!village.trim()) errs.village = 'Village is required';
+      }
+      if (showOtherKvk) {
+        if (!kvk.trim()) errs.kvkOther = t('kvkOtherRequired');
+      } else {
+        if (!kvk.trim()) errs.kvk = t('kvkRequired');
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -81,7 +127,9 @@ export function AdminCreateUserScreen({ navigation }: Props) {
         ...(role === 'user' ? { category } : {}),
         state,
         district: district.trim(),
-        block: block.trim() || undefined,
+        block: block.trim(),
+        village: village.trim(),
+        kvk: kvk.trim(),
       });
       showToast('User created successfully', 'success');
       navigation.goBack();
@@ -113,7 +161,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
             <Input
               label="Full Name"
-              placeholder="Enter full name"
+              placeholder={t('namePlaceholder')}
               value={name}
               onChangeText={(txt) => { setName(txt); setErrors({}); }}
               error={errors.name}
@@ -121,7 +169,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
             />
             <Input
               label="Mobile Number"
-              placeholder="10-digit number"
+              placeholder={t('mobileNumberPlaceholder')}
               value={mobileNumber}
               onChangeText={(txt) => { setMobileNumber(txt.replace(/\D/g, '').slice(0, 10)); setErrors({}); }}
               error={errors.mobileNumber}
@@ -178,26 +226,165 @@ export function AdminCreateUserScreen({ navigation }: Props) {
 
             <Select
               label="State"
-              placeholder="Select state"
+              placeholder={t('selectState')}
               value={state}
-              options={stateOptions}
-              onChange={(v) => { setState(v); setErrors({}); }}
+              options={stateList.map((s) => ({ value: s.name, label: s.name }))}
+              onChange={(v) => {
+                setState(v);
+                setStateCode(stateList.find((s) => s.name === v)?.code ?? '');
+                setDistrict('');
+                setDistrictCode('');
+                setBlock('');
+                setShowOtherBlock(false);
+                setVillage('');
+                setShowOtherVillage(false);
+                setKvk('');
+                setShowOtherKvk(false);
+                setSubdistrictList([]);
+                setVillageList([]);
+                setErrors({});
+                const code = stateList.find((s) => s.name === v)?.code ?? '';
+                if (!code) return;
+                setLoadingDistricts(true);
+                lgdApi.getDistricts(code)
+                  .then((res) => setDistrictList(res.data.districts))
+                  .catch(() => setDistrictList([]))
+                  .finally(() => setLoadingDistricts(false));
+              }}
               error={errors.state}
               searchable
+              loading={loadingStates}
             />
-            <Input
+            <Select
               label="District"
-              placeholder="Enter district"
+              placeholder={t('selectDistrict')}
               value={district}
-              onChangeText={(txt) => { setDistrict(txt); setErrors({}); }}
+              options={districtList.map((d) => ({ value: d.name, label: d.name }))}
+              onChange={(v) => {
+                setDistrict(v);
+                setDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
+                setBlock('');
+                setShowOtherBlock(false);
+                setVillage('');
+                setShowOtherVillage(false);
+                setKvk('');
+                setShowOtherKvk(false);
+                setSubdistrictList([]);
+                setVillageList([]);
+                setErrors({});
+                const code = districtList.find((d) => d.name === v)?.code ?? '';
+                if (!code) return;
+                setLoadingSubdistricts(true);
+                lgdApi.getSubDistricts(code)
+                  .then((res) => setSubdistrictList(res.data.subdistricts))
+                  .catch(() => setSubdistrictList([]))
+                  .finally(() => setLoadingSubdistricts(false));
+              }}
               error={errors.district}
+              searchable
+              loading={loadingDistricts}
             />
-            <Input
-              label="Block (Optional)"
-              placeholder="Enter block"
-              value={block}
-              onChangeText={setBlock}
+            <Select
+              label={category === 'farmer' ? t('block') : t('blockOptional')}
+              placeholder={t('selectBlock')}
+              value={showOtherBlock ? '__other__' : block}
+              options={[
+                ...subdistrictList.map((s) => ({ value: s.code, label: s.name })),
+                { value: '__other__', label: t('others') },
+              ]}
+              onChange={(v) => {
+                if (v === '__other__') {
+                  setShowOtherBlock(true);
+                  setBlock('');
+                } else {
+                  setShowOtherBlock(false);
+                  setBlock(v);
+                  setVillage('');
+                  setShowOtherVillage(false);
+                  setVillageList([]);
+                  setErrors({});
+                  setLoadingVillages(true);
+                  lgdApi.getVillages(v)
+                    .then((res) => setVillageList(res.data.villages))
+                    .catch(() => setVillageList([]))
+                    .finally(() => setLoadingVillages(false));
+                }
+                setErrors({});
+              }}
+              error={errors.block}
+              searchable
+              loading={loadingSubdistricts}
             />
+            {showOtherBlock && (
+              <Input
+                label={category === 'farmer' ? t('blockOther') : t('blockOtherOptional')}
+                placeholder={t('blockOtherPlaceholder')}
+                value={block}
+                onChangeText={(txt) => { setBlock(txt); setErrors({}); }}
+                error={errors.blockOther}
+              />
+            )}
+            <Select
+              label={category === 'farmer' ? t('village') : t('villageOptional')}
+              placeholder={t('selectVillage')}
+              value={showOtherVillage ? '__other__' : village}
+              options={[
+                ...villageList.map((v) => ({ value: v.code, label: v.name })),
+                { value: '__other__', label: t('others') },
+              ]}
+              onChange={(v) => {
+                if (v === '__other__') {
+                  setShowOtherVillage(true);
+                  setVillage('');
+                } else {
+                  setShowOtherVillage(false);
+                  setVillage(v);
+                }
+                setErrors({});
+              }}
+              error={errors.village}
+              searchable
+              loading={loadingVillages}
+            />
+            {showOtherVillage && (
+              <Input
+                label={category === 'farmer' ? t('villageOther') : t('villageOtherOptional')}
+                placeholder={t('villageOtherPlaceholder')}
+                value={village}
+                onChangeText={(txt) => { setVillage(txt); setErrors({}); }}
+                error={errors.villageOther}
+              />
+            )}
+            <Select
+              label={category === 'farmer' ? t('kvk') : t('kvkOptional')}
+              placeholder={t('selectKvk')}
+              value={showOtherKvk ? '__other__' : kvk}
+              options={[
+                ...(KVKS[district] ?? []).map((k) => ({ value: k, label: k })),
+                { value: '__other__', label: t('kvkNotListed') },
+              ]}
+              onChange={(v) => {
+                if (v === '__other__') {
+                  setShowOtherKvk(true);
+                  setKvk('');
+                } else {
+                  setShowOtherKvk(false);
+                  setKvk(v);
+                }
+                setErrors({});
+              }}
+              error={errors.kvk}
+              searchable
+            />
+            {showOtherKvk && (
+              <Input
+                label={category === 'farmer' ? t('kvkOther') : t('kvkOtherOptional')}
+                placeholder={t('kvkOtherPlaceholder')}
+                value={kvk}
+                onChangeText={(txt) => { setKvk(txt); setErrors({}); }}
+                error={errors.kvkOther}
+              />
+            )}
 
             <Button title="Create User" onPress={handleSubmit} loading={loading} />
           </View>

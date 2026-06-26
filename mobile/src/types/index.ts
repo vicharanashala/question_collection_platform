@@ -59,6 +59,7 @@ export interface PublicUser {
   state: string;
   district: string;
   block: string | null;
+  village: string | null;
   languagePreference: string;
   verificationStatus: VerificationStatus;
   role: UserRole;
@@ -147,7 +148,8 @@ export interface RegisterFormData {
   mobileNumber: string;
   state: string;
   district: string;
-  block?: string;
+  block: string;
+  village: string;
   category: UserCategory;
   languagePreference: string;
   consentGiven: boolean;

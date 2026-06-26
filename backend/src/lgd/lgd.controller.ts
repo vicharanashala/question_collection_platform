@@ -43,4 +43,17 @@ export class LgdController {
             })),
         };
     }
+
+    @Get('villages')
+    async getVillages(@Query('blockCode') blockCode: string) {
+        if (!blockCode) throw new BadRequestException('blockCode query param is required');
+        const records = await this.lgdService.getVillages(blockCode);
+        return {
+            villages: records.map((r) => ({
+                code: String(r['village_code'] ?? '').trim(),
+                name: String(r['village_name_english'] ?? '').trim(),
+                blockCode: String(r['subdistrict_code'] ?? '').trim(),
+            })),
+        };
+    }
 }

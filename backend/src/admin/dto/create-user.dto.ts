@@ -30,9 +30,17 @@ export class CreateUserDto {
   @IsNotEmpty()
   district: string;
 
+  @IsString()
+  @IsNotEmpty()
+  block: string;
+
+  @IsString()
+  @IsNotEmpty()
+  village: string;
+
   @IsOptional()
   @IsString()
-  block?: string;
+  kvk?: string;
 
   @IsOptional()
   @IsString()

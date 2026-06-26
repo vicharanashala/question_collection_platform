@@ -99,9 +99,17 @@ export class RegisterDto {
   @IsString()
   district: string;
 
+  @IsNotEmpty()
+  @IsString()
+  block: string;
+
+  @IsNotEmpty()
+  @IsString()
+  village: string;
+
   @IsOptional()
   @IsString()
-  block?: string;
+  kvk?: string;
 
   @IsNotEmpty()
   @IsEnum(UserCategory)
