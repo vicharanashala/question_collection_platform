@@ -596,7 +596,6 @@ export function PaymentDetailsScreen() {
 
             {payoutMethod === 'upi' ? (
               <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
-                <Text style={[styles.inputPrefix, { color: c.textSecondary }]}>@</Text>
                 <TextInput
                   style={[styles.input, { color: c.text }]}
                   placeholder="yourname@upi"
