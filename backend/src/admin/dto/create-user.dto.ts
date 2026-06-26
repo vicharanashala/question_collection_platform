@@ -45,4 +45,17 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   languagePreference?: string;
+
+  // Student-specific profile fields
+  @IsOptional()
+  @IsString()
+  courseName?: string;
+
+  @IsOptional()
+  @IsString()
+  collegeName?: string;
+
+  @IsOptional()
+  @IsString()
+  universityName?: string;
 }

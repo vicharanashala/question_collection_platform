@@ -235,11 +235,13 @@ export function ProfileScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-<InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
+            <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
             <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
             {user?.block && <InfoRow icon="business-outline" label="Block" value={user.block} />}
             {user?.village && <InfoRow icon="navigate-outline" label="Village" value={user.village} />}
             {(user?.profileData ?? {}).kvk && <InfoRow icon="school-outline" label="KVK" value={(user?.profileData ?? {}).kvk!} />}
+            {user?.category === 'student' && (user?.profileData ?? {}).collegeName && <InfoRow icon="business-outline" label="College" value={(user?.profileData ?? {}).collegeName!} />}
+            {user?.category === 'student' && (user?.profileData ?? {}).universityName && <InfoRow icon="school-outline" label="University" value={(user?.profileData ?? {}).universityName!} />}
           </View>
         </View>
 

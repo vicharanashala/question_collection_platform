@@ -192,6 +192,9 @@ export class AdminService implements OnModuleInit {
       village: string;
       kvk?: string;
       languagePreference?: string;
+      courseName?: string;
+      collegeName?: string;
+      universityName?: string;
     },
   ) {
     // Super admin cannot create another super admin
@@ -240,6 +243,13 @@ export class AdminService implements OnModuleInit {
       village: dto.village ?? null,
       kvk: dto.kvk ?? null,
       languagePreference: dto.languagePreference ?? 'en',
+      profileData: (dto.category === 'student')
+        ? {
+            ...(dto.courseName ? { courseName: dto.courseName } : {}),
+            ...(dto.collegeName ? { collegeName: dto.collegeName } : {}),
+            ...(dto.universityName ? { universityName: dto.universityName } : {}),
+          }
+        : null,
       verificationStatus: VerificationStatus.VERIFIED,
       tokenVersion: 0,
       lastLoginAt: null,

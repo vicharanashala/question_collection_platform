@@ -158,6 +158,7 @@ export interface RegisterFormData {
   cropType?: string;
   // Student
   courseName?: string;
+  collegeName?: string;
   universityName?: string;
   // FPO / Volunteer / NGO
   organizationName?: string;

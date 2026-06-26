@@ -45,7 +45,7 @@ export class UserService {
 
     const PROFILE_DATA_KEYS = [
       'farmSize', 'cropType', 'courseName',
-      'universityName', 'organisationName', 'memberRole',
+      'collegeName', 'universityName', 'organisationName', 'memberRole',
     ];
 
     const userRecord = user as unknown as Record<string, unknown>;

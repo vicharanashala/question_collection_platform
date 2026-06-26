@@ -330,7 +330,7 @@
   "student": "Student",
   "studentDesc": "Agriculture / allied sciences student",
   "termsTitle": "Terms of Service & Privacy Policy",
-  "university": "University / College",
+  "university": "University",
   "universityNamePlaceholder": "Enter your university name",
   "universityNameRequired": "University name is required",
   "volunteer": "Volunteer",
@@ -633,7 +633,10 @@
     "courseNameRequired": "Course name is required for students",
     "universityNameRequired": "University name is required for students",
     "organisationNameRequired": "Organisation name is required",
-    "roleRequired": "Role is required"
+    "roleRequired": "Role is required",
+    "collegeName": "College Name",
+    "collegeNamePlaceholder": "Enter your college name",
+    "collegeNameRequired": "College name is required"
   },
   "verificationPending": {
     "title": "Verification Pending",
@@ -683,5 +686,8 @@
   "stateLoadingMessage": "Please wait, states are being loaded.",
   "districtLoadingMessage": "Please wait, districts are being loaded.",
   "blockLoadingMessage": "Please wait, blocks are being loaded.",
-  "villageLoadingMessage": "Please wait, villages are being loaded."
+  "villageLoadingMessage": "Please wait, villages are being loaded.",
+  "college": "College",
+  "collegeNamePlaceholder": "Enter your college name",
+  "collegeNameRequired": "College name is required"
 }

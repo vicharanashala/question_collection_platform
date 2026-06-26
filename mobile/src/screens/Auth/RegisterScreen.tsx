@@ -96,6 +96,7 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [cropType, setCropType] = useState<string[]>([]);
   const [courseName, setCourseName] = useState('');
   const [courseNameOther, setCourseNameOther] = useState('');
+  const [collegeName, setCollegeName] = useState('');
   const [universityName, setUniversityName] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [role, setRole] = useState('');
@@ -135,6 +136,7 @@ export function RegisterScreen({ navigation, route }: Props) {
       if (category === UserCategory.STUDENT) {
         if (!courseName) errs.courseName = t('courseNameRequired');
         else if (courseName === '__other__' && !courseNameOther.trim()) errs.courseNameOther = t('courseNameOtherRequired');
+        if (!collegeName.trim()) errs.collegeName = t('collegeNameRequired');
         if (!universityName.trim()) errs.universityName = t('universityNameRequired');
       }
       if (
@@ -160,6 +162,7 @@ export function RegisterScreen({ navigation, route }: Props) {
     if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType.join(', '); }
     else if (category === UserCategory.STUDENT) {
       profileData.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
+      profileData.collegeName = collegeName;
       profileData.universityName = universityName;
     }
     else { profileData.organizationName = organizationName; profileData.role = role; }
@@ -560,6 +563,13 @@ export function RegisterScreen({ navigation, route }: Props) {
                         error={errors.courseNameOther}
                       />
                     )}
+                    <Input
+                      label={t('college')}
+                      placeholder={t('collegeNamePlaceholder')}
+                      value={collegeName}
+                      onChangeText={(txt) => { setCollegeName(txt); setErrors({}); }}
+                      error={errors.collegeName}
+                    />
                     <Input
                       label={t('university')}
                       placeholder={t('universityNamePlaceholder')}

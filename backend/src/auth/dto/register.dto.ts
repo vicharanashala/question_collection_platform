@@ -49,6 +49,10 @@ export class StudentProfileDto {
 
   @IsOptional()
   @IsString()
+  collegeName?: string;
+
+  @IsOptional()
+  @IsString()
   universityName?: string;
 }
 

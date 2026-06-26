@@ -611,6 +611,9 @@ export function UserDetailPage() {
               {user.category === 'student' && user.profileData?.courseName && (
                 <DetailRow label="Course" value={user.profileData.courseName as string} />
               )}
+              {user.category === 'student' && user.profileData?.collegeName && (
+                <DetailRow label="College" value={user.profileData.collegeName as string} />
+              )}
               {user.category === 'student' && user.profileData?.universityName && (
                 <DetailRow label="University" value={user.profileData.universityName as string} />
               )}

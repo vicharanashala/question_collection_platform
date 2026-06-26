@@ -105,6 +105,7 @@ export function EditProfileScreen({ navigation }: Props) {
   const [primaryCrop, setPrimaryCrop] = useState(profileData?.cropType ?? '');
   const [courseName, setCourseName] = useState(profileData?.courseName ?? '');
   const [courseNameOther, setCourseNameOther] = useState('');
+  const [collegeName, setCollegeName] = useState(profileData?.collegeName ?? '');
   const [universityName, setUniversityName] = useState(profileData?.universityName ?? '');
   const [organisationName, setOrganisationName] = useState(profileData?.organisationName ?? '');
   const [memberRole, setMemberRole] = useState(profileData?.memberRole ?? '');
@@ -114,6 +115,7 @@ export function EditProfileScreen({ navigation }: Props) {
   const handleNameChange = useCallback((text: string) => setName(text), []);
   const handleFarmSizeChange = useCallback((text: string) => setFarmSize(text), []);
   const handlePrimaryCropChange = useCallback((text: string) => setPrimaryCrop(text), []);
+  const handleCollegeNameChange = useCallback((text: string) => setCollegeName(text), []);
   const handleUniversityNameChange = useCallback((text: string) => setUniversityName(text), []);
   const handleOrganisationNameChange = useCallback((text: string) => setOrganisationName(text), []);
   const handleMemberRoleChange = useCallback((text: string) => setMemberRole(text), []);
@@ -128,6 +130,7 @@ export function EditProfileScreen({ navigation }: Props) {
     if (!isPrivileged && user?.category === UserCategory.STUDENT) {
       if (!courseName) errs.courseName = t('editProfile.courseNameRequired');
       else if (courseName === '__other__' && !courseNameOther.trim()) errs.courseNameOther = t('courseNameOtherRequired');
+      if (!collegeName.trim()) errs.collegeName = t('editProfile.collegeNameRequired');
       if (!universityName.trim()) errs.universityName = t('editProfile.universityNameRequired');
     }
     if (!isPrivileged && user?.category === UserCategory.VOLUNTEER) {
@@ -162,7 +165,8 @@ export function EditProfileScreen({ navigation }: Props) {
           if (primaryCrop.trim()) payload.cropType = primaryCrop.trim();
         } else if (user?.category === UserCategory.STUDENT) {
           payload.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
-          payload.universityName = universityName.trim();
+          if (collegeName.trim()) payload.collegeName = collegeName.trim();
+          if (universityName.trim()) payload.universityName = universityName.trim();
         } else if (user?.category === UserCategory.VOLUNTEER || user?.category === UserCategory.NGO) {
           payload.organisationName = organisationName.trim();
           payload.memberRole = memberRole.trim();
@@ -335,6 +339,13 @@ export function EditProfileScreen({ navigation }: Props) {
                       error={errors.courseNameOther}
                     />
                   )}
+                  <Input
+                    label={t('editProfile.collegeName')}
+                    placeholder={t('editProfile.collegeNamePlaceholder')}
+                    value={collegeName}
+                    onChangeText={handleCollegeNameChange}
+                    error={errors.collegeName}
+                  />
                   <Input
                     label={t('editProfile.universityName')}
                     placeholder={t('editProfile.universityNamePlaceholder')}
