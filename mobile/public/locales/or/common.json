@@ -176,7 +176,11 @@
   "privacyConsent": "Privacy & Consent",
   "profile": {
     "edit": "Edit",
-    "editProfile": "Edit Profile"
+    "editProfile": "Edit Profile",
+    "signOut": "Sign Out",
+    "signOutConfirm": "Are you sure you want to sign out?",
+    "signOutCancel": "Cancel",
+    "signOutAction": "Sign Out"
   },
   "profileLanguage": "App Language",
   "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -595,5 +599,13 @@
   "stateLoadingMessage": "Please wait, states are being loaded.",
   "districtLoadingMessage": "Please wait, districts are being loaded.",
   "blockLoadingMessage": "Please wait, blocks are being loaded.",
-  "villageLoadingMessage": "Please wait, villages are being loaded."
+  "villageLoadingMessage": "Please wait, villages are being loaded.",
+  "verificationPending": {
+    "title": "Verification Pending",
+    "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+    "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+    "statusNote": "You will be able to submit questions once your account is verified.",
+    "contactAdmin": "Contact Admin",
+    "logout": "Log out and sign in with a different account"
+  }
 }

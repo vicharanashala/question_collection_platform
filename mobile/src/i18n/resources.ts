@@ -261,7 +261,11 @@ const resources = {
           "fieldRole": "Role",
           "fieldCrops": "Crops"
         },
-        "edit": "Edit"
+        "edit": "Edit",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -857,7 +861,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -1276,7 +1284,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "bn": {
@@ -1458,7 +1474,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -1877,7 +1897,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "brx": {
@@ -2059,7 +2087,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -2478,7 +2510,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "doi": {
@@ -2660,7 +2700,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -3079,7 +3123,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "gu": {
@@ -3261,7 +3313,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -3680,7 +3736,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "hi": {
@@ -3862,7 +3926,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -4281,7 +4349,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "kn": {
@@ -4463,7 +4539,11 @@ const resources = {
       "privacyConsent": "ಗೌಪ್ಯತೆ ಮತ್ತು ಒಪ್ಪಿಗೆ",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆ",
       "profileLanguageDesc": "ಇದು ಅಪ್ಲಿಕೇಶನ್ ಇಂಟರ್ಫೇಸ್ ಮತ್ತು ಪ್ರಶ್ನೆ ಸಲ್ಲಿಕೆಗಳಿಗೆ ಡೀಫಾಲ್ಟ್ ಭಾಷೆಯಾಗಿರುತ್ತದೆ",
@@ -4882,7 +4962,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "ks": {
@@ -5064,7 +5152,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -5483,7 +5575,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "kok": {
@@ -5665,7 +5765,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -6084,7 +6188,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "mai": {
@@ -6266,7 +6378,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -6685,7 +6801,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "ml": {
@@ -6867,7 +6991,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -7286,7 +7414,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "mni": {
@@ -7468,7 +7604,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -7887,7 +8027,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "mr": {
@@ -8069,7 +8217,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -8488,7 +8640,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "ne": {
@@ -8670,7 +8830,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -9089,7 +9253,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "or": {
@@ -9271,7 +9443,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -9690,7 +9866,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "pa": {
@@ -9872,7 +10056,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -10291,7 +10479,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "sa": {
@@ -10473,7 +10669,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -10892,7 +11092,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "sat": {
@@ -11074,7 +11282,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -11493,7 +11705,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "sd": {
@@ -11675,7 +11895,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -12094,7 +12318,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "ta": {
@@ -12276,7 +12508,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -12695,7 +12931,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "te": {
@@ -12877,7 +13121,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -13296,7 +13544,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   },
   "ur": {
@@ -13478,7 +13734,11 @@ const resources = {
       "privacyConsent": "Privacy & Consent",
       "profile": {
         "edit": "Edit",
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "signOut": "Sign Out",
+        "signOutConfirm": "Are you sure you want to sign out?",
+        "signOutCancel": "Cancel",
+        "signOutAction": "Sign Out"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -13897,7 +14157,15 @@ const resources = {
       "stateLoadingMessage": "Please wait, states are being loaded.",
       "districtLoadingMessage": "Please wait, districts are being loaded.",
       "blockLoadingMessage": "Please wait, blocks are being loaded.",
-      "villageLoadingMessage": "Please wait, villages are being loaded."
+      "villageLoadingMessage": "Please wait, villages are being loaded.",
+      "verificationPending": {
+        "title": "Verification Pending",
+        "subtitle": "Your account has been created but requires admin approval before you can start submitting questions.",
+        "infoText": "Our team reviews new registrations to maintain quality and security. This usually takes a short time.",
+        "statusNote": "You will be able to submit questions once your account is verified.",
+        "contactAdmin": "Contact Admin",
+        "logout": "Log out and sign in with a different account"
+      }
     }
   }
 };
