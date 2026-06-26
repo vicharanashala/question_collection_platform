@@ -39,10 +39,6 @@ export class FarmerProfileDto {
   @IsOptional()
   @IsString()
   farmSize?: string; // e.g. "2.5 acres"
-
-  @IsOptional()
-  @IsString()
-  cropType?: string;
 }
 
 // Student-specific profile fields

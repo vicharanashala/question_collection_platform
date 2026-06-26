@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { User, UserCropDetail, AuditLog, Notification, Question, Transaction } from '../database/entities';
+import { User, AuditLog, Notification, Question, Transaction } from '../database/entities';
 import { AuditAction, ActorType, QuestionStatus, TransactionType, TransactionSource, TransactionStatus, UserRole } from '../common/enums';
 import { UpdateProfileDto, UpdateCropDetailsDto } from './dto';
 
@@ -10,8 +10,6 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(UserCropDetail)
-    private readonly cropRepo: Repository<UserCropDetail>,
     @InjectRepository(AuditLog)
     private readonly auditRepo: Repository<AuditLog>,
     @InjectRepository(Notification)
@@ -54,7 +52,12 @@ export class UserService {
     for (const [key, newVal] of Object.entries(dto)) {
       if (newVal === undefined) continue;
 
-      if (PROFILE_DATA_KEYS.includes(key)) {
+      if (key === 'crops') {
+        // Crops are stored directly on the user record as text[]
+        oldValue[key] = userRecord[key];
+        userRecord[key] = newVal;
+        newValue[key] = newVal;
+      } else if (PROFILE_DATA_KEYS.includes(key)) {
         // Store category-specific fields inside profileData JSONB
         const existing = (userRecord['profileData'] as Record<string, unknown>) ?? {};
         oldValue[key] = existing[key];
@@ -82,46 +85,18 @@ export class UserService {
     return savedUser;
   }
 
-  async updateCropDetails(userId: string, dto: UpdateCropDetailsDto): Promise<UserCropDetail[]> {
+  /**
+   * Replace the user's crop list. Thin wrapper around updateProfile.
+   * Kept for backwards-compatible /me/crops endpoint.
+   */
+  async updateCropDetails(userId: string, dto: UpdateCropDetailsDto): Promise<string[]> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Remove existing crop details
-      await queryRunner.manager.delete(UserCropDetail, { userId });
-
-      // Insert new ones
-      if (dto.crops && dto.crops.length > 0) {
-        const cropDetails = dto.crops.map((crop) =>
-          queryRunner.manager.create(UserCropDetail, {
-            userId,
-            cropName: crop.cropName,
-            season: crop.season,
-          }),
-        );
-        await queryRunner.manager.save(cropDetails);
-      }
-
-      await queryRunner.commitTransaction();
-
-      // Reload and return
-      return this.cropRepo.find({ where: { userId }, order: { createdAt: 'ASC' } });
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
-  async getCropDetails(userId: string): Promise<UserCropDetail[]> {
-    return this.cropRepo.find({ where: { userId }, order: { createdAt: 'ASC' } });
+    user.crops = dto.crops ?? [];
+    await this.userRepo.save(user);
+    return user.crops;
   }
 
   // ─── Notifications ───────────────────────────────────────────────────────

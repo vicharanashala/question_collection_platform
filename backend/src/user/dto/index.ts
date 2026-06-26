@@ -1,15 +1,10 @@
 import {
-  IsNotEmpty,
   IsString,
-  IsEnum,
   IsOptional,
-  ValidateNested,
   IsArray,
   MinLength,
   MaxLength,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { UserCategory } from '../../common/enums';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -62,24 +57,23 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   memberRole?: string;
-}
 
-export class CropDetailDto {
-  @IsNotEmpty()
-  @IsString()
-  cropName: string;
-
+  /** Crop names to associate with the user (replaces existing list). */
   @IsOptional()
-  @IsString()
-  season?: string; // kharif | rabi | zaid | year_round
+  @IsArray()
+  @IsString({ each: true })
+  crops?: string[];
 }
 
+/**
+ * DTO for replacing the user's full crop list.
+ * Crops are stored as a simple text[] on the user record — no season, no separate table.
+ */
 export class UpdateCropDetailsDto {
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CropDetailDto)
-  crops?: CropDetailDto[];
+  @IsString({ each: true })
+  crops?: string[];
 }
 
 export const SUPPORTED_STATES = [

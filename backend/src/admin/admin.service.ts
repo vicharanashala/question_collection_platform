@@ -309,10 +309,12 @@ export class AdminService implements OnModuleInit {
       relations: ['wallet'],
       select: [
         'id', 'mobileNumber', 'name', 'role', 'verificationStatus',
-        'category', 'district', 'state', 'languagePreference',
+        'category', 'district', 'state', 'block', 'village', 'kvk',
+        'languagePreference', 'profileData', 'crops',
         'createdAt', 'lastLoginAt',
         'suspendedAt', 'suspendedUntil', 'suspendedReason',
         'bannedAt', 'bannedReason',
+        'consentGiven', 'consentTimestamp',
       ],
     });
     if (!user) throw new NotFoundException('User not found');
@@ -336,7 +338,7 @@ export class AdminService implements OnModuleInit {
       order: { createdAt: 'DESC' },
     });
 
-    return { user, questions, paymentDetails };
+    return { user, questions, paymentDetails, crops: user.crops ?? [] };
   }
 
   async suspendOrBanUser(

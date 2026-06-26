@@ -20,7 +20,7 @@ import {
   ArrowLeft, Ban, PauseCircle, PlayCircle, CheckCircle,
   ShieldCheck, MapPin, Phone, Calendar, MessageSquare,
   Clock, FileText, Image, ChevronDown, ScrollText, ChevronRight, ChevronLeft,
-  Wallet, CreditCard, Building2, Smartphone,
+  Wallet, CreditCard, Building2, Smartphone, Leaf,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User as UserType, Question, QuestionStatus, AuditLogEntry, PaymentDetail } from '@/types'
@@ -264,10 +264,12 @@ export function UserDetailPage() {
   const [user, setUser] = useState<UserType | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([])
+  const [crops, setCrops] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
 
   const [accountCollapsed, setAccountCollapsed] = useState(true)
+  const [cropsCollapsed, setCropsCollapsed] = useState(true)
   const [paymentCollapsed, setPaymentCollapsed] = useState(false)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false)
   const [suspendAction, setSuspendAction] = useState<'suspend' | 'ban'>('suspend')
@@ -276,6 +278,7 @@ export function UserDetailPage() {
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<'unsuspend' | 'unban'>('unsuspend')
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false)
 
   // Audit history (super_admin only)
   const [auditCollapsed, setAuditCollapsed] = useState(true)
@@ -321,7 +324,7 @@ export function UserDetailPage() {
         setUser(res.user as UserType)
         setQuestions(res.questions as Question[])
         setPaymentDetails((res as any).paymentDetails ?? [])
-      })
+        setCrops((res.user as any)?.crops ?? [])      })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user')))
       .finally(() => setLoading(false))
   }, [userId])
@@ -340,6 +343,7 @@ export function UserDetailPage() {
     try {
       await adminApi.verifyUser(userId)
       toast.success('User verified')
+      setVerifyModalOpen(false)
       const r = await adminApi.getUserDetail(userId)
       setUser(r.user as UserType)
     } catch (e) {
@@ -348,6 +352,20 @@ export function UserDetailPage() {
       setActionLoading(false)
     }
   }
+
+  // Compute which fields are missing / incomplete before verification
+  const missingFields = useMemo(() => {
+    if (!user) return []
+    const missing: string[] = []
+    if (!user.name || user.name.trim().length < 2) missing.push('Name (missing or too short)')
+    if (!user.category) missing.push('Category')
+    if (!user.block) missing.push('Block')
+    if (!user.village) missing.push('Village')
+    if (!user.profileData || !user.profileData['farmSize']) missing.push('Farm size')
+    if (!user.crops || user.crops.length === 0) missing.push('Crops')
+    if (!user.consentGiven) missing.push('Consent not given')
+    return missing
+  }, [user])
 
   async function handleSuspendBan() {
     if (!userId || !suspendReason.trim()) { toast.error('Please provide a reason'); return }
@@ -455,7 +473,7 @@ export function UserDetailPage() {
                 {isSuperAdmin && user.role !== 'super_admin' && (
                   <div className="flex flex-wrap gap-2">
                     {isPending && (
-                      <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 gap-1.5 text-white" onClick={handleVerify} disabled={actionLoading}>
+                      <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 gap-1.5 text-white" onClick={() => setVerifyModalOpen(true)}>
                         <CheckCircle className="h-4 w-4" /> Verify
                       </Button>
                     )}
@@ -584,10 +602,78 @@ export function UserDetailPage() {
               <DetailRow label="State" value={user.state || '—'} />
               <DetailRow label="District" value={user.district || '—'} />
               <DetailRow label="Block" value={user.block ?? '—'} />
+              <DetailRow label="Village" value={user.village ?? '—'} />
+              <DetailRow label="KVK" value={user.kvk ?? '—'} />
+              {/* Category-specific profile fields */}
+              {user.category === 'farmer' && user.profileData?.farmSize && (
+                <DetailRow label="Farm Size" value={`${user.profileData.farmSize} acres`} />
+              )}
+              {user.category === 'student' && user.profileData?.courseName && (
+                <DetailRow label="Course" value={user.profileData.courseName as string} />
+              )}
+              {user.category === 'student' && user.profileData?.universityName && (
+                <DetailRow label="University" value={user.profileData.universityName as string} />
+              )}
+              {['fpo', 'ngo'].includes(user.category ?? '') && user.profileData?.organisationName && (
+                <DetailRow label="Organisation" value={user.profileData.organisationName as string} />
+              )}
+              {['fpo', 'ngo', 'volunteer'].includes(user.category ?? '') && user.profileData?.memberRole && (
+                <DetailRow label="Role" value={user.profileData.memberRole as string} />
+              )}
               <DetailRow label="Joined" value={formatDate(user.createdAt) ?? '—'} />
               <DetailRow label="Last Login" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'} />
               <DetailRow label="Role" value={user.role.replace('_', ' ')} />
               <DetailRow label="Status" value={<VerificationBadge status={user.verificationStatus} />} />
+            </CardContent>
+          </div>
+        </Card>
+
+        {/* Crops card */}
+        <Card>
+          <CardHeader className="p-0">
+            <button
+              className={cn(
+                'flex items-center justify-between w-full cursor-pointer transition-all duration-200 py-3 px-6',
+              )}
+              onClick={() => setCropsCollapsed((c) => !c)}
+              aria-expanded={!cropsCollapsed}
+            >
+              <div className="flex items-center gap-2">
+                <Leaf className="h-4 w-4 text-green-600" />
+                <CardTitle className="text-sm font-semibold">Crops</CardTitle>
+                {crops.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">{crops.length}</Badge>
+                )}
+              </div>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200',
+                  cropsCollapsed ? '-rotate-90' : '',
+                )}
+              />
+            </button>
+          </CardHeader>
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-200',
+              cropsCollapsed ? 'max-h-0 opacity-0' : 'max-h-[600px] opacity-100',
+            )}
+          >
+            <CardContent className="pt-2">
+              {crops.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+                  <Leaf className="h-7 w-7 opacity-25" />
+                  <p className="text-xs">No crops added</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {crops.map((cropName, i) => (
+                    <div key={i} className="flex items-center justify-between py-2 border-b border-border/60 last:border-0">
+                      <p className="text-sm font-medium text-foreground">{cropName}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </div>
         </Card>
@@ -915,6 +1001,77 @@ export function UserDetailPage() {
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
             <Button onClick={handleReinstate} disabled={actionLoading}>
               {actionLoading ? 'Processing...' : confirmAction === 'unban' ? 'Unban User' : 'Lift Suspension'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Verify confirmation dialog */}
+      <Dialog open={verifyModalOpen} onOpenChange={setVerifyModalOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Verify User</DialogTitle>
+            <DialogDescription>
+              Review this user&apos;s account before verifying. All listed fields will be permanently set as the user&apos;s verified profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          {user && (
+            <div className="space-y-4 py-2">
+              {/* Missing fields warning */}
+              {missingFields.length > 0 && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3 space-y-1">
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Missing / Incomplete Fields</p>
+                  {missingFields.map((f) => (
+                    <p key={f} className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
+                      {f}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {/* Full field listing */}
+              <div className="rounded-lg border border-border divide-y divide-border/60">
+                {[
+                  { label: 'Name', value: user.name || '—' },
+                  { label: 'Mobile', value: user.mobileNumber },
+                  { label: 'Category', value: user.category || '—' },
+                  { label: 'State', value: user.state },
+                  { label: 'District', value: user.district },
+                  { label: 'Block', value: user.block || '—' },
+                  { label: 'Village', value: user.village || '—' },
+                  { label: 'KVK', value: user.kvk || '—' },
+                  { label: 'Language', value: user.languagePreference },
+                  { label: 'Farm Size', value: (user.profileData as Record<string, unknown>)?.['farmSize'] as string || '—' },
+                  { label: 'Crops', value: user.crops?.length ? user.crops.join(', ') : '—' },
+                  { label: 'Consent Given', value: user.consentGiven ? 'Yes' : 'No' },
+                  { label: 'Verification Status', value: user.verificationStatus },
+                  { label: 'Created At', value: formatDate(user.createdAt) || '—' },
+                  { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between px-3 py-2.5">
+                    <span className="text-xs text-muted-foreground">{label}</span>
+                    <span className={cn(
+                      'text-xs font-medium text-right',
+                      value === '—' ? 'text-muted-foreground/60' : 'text-foreground',
+                    )}>
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVerifyModalOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={handleVerify}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Verifying...' : 'Confirm & Verify'}
             </Button>
           </DialogFooter>
         </DialogContent>

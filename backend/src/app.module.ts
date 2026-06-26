@@ -28,7 +28,6 @@ import {
   Question,
   AuditLog,
   AdminConfig,
-  UserCropDetail,
   Notification,
   UserPaymentDetail,
 } from './database/entities';
@@ -92,7 +91,6 @@ import { HealthController } from './health/health.controller';
           Question,
           AuditLog,
           AdminConfig,
-          UserCropDetail,
           Notification,
           UserPaymentDetail,
         ],

@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { TooltipIcon } from '../../components/TooltipIcon';
 import { ConfirmModal } from '../../components/ConfirmModal';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { VerificationStatus, UserCategory, UserRole } from '../../types';
-import { ProfileCompletionWidget } from '../../components/ProfileCompletionWidget';
-import type { CropDetail, WalletBalance } from '../../types';
+import type { WalletBalance } from '../../types';
 
 const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 
@@ -42,7 +40,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 
 function getCategoryInfo(user: any): { label: string; value: string } | null {
   if (!user?.category) return null;
-  const profileData = user.profileData ?? {};
+  const profileData = user?.profileData ?? {};
   if (user.category === UserCategory.FARMER || user.category === UserCategory.FPO) {
     if (profileData.farmSize) return { label: 'Farm Size', value: profileData.farmSize };
     if (profileData.cropType) return { label: 'Primary Crop', value: profileData.cropType };
@@ -65,33 +63,12 @@ export function ProfileScreen() {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
 
-  const [crops, setCrops] = useState<CropDetail[]>([]);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
+  const [userCrops, setUserCrops] = useState<{ id: string; cropName: string; season: string | null }[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const seasonLabels: Record<string, string> = {
-    Kharif: t('season.Kharif'),
-    Rabi: t('season.Rabi'),
-    Zaid: t('season.Zaid'),
-    'Pre-Kharif': t('season.Pre-Kharif'),
-    'Post-Kharif': t('season.Post-Kharif'),
-    'Pre-Rabi': t('season.Pre-Rabi'),
-    'Zaid Rabi': t('season.Zaid Rabi'),
-    Spring: t('season.Spring'),
-    Summer: t('season.Summer'),
-    Autumn: t('season.Autumn'),
-    Winter: t('season.Winter'),
-    Monsoon: t('season.Monsoon'),
-    'Dry Season': t('season.Dry Season'),
-    'Wet Season': t('season.Wet Season'),
-  };
-
-  function seasonLabel(raw: string | null) {
-    if (!raw) return '';
-    return seasonLabels[raw] ?? raw;
-  }
 
   const fetchAll = useCallback(async () => {
     setLoadingData(true);
@@ -101,7 +78,11 @@ export function ProfileScreen() {
         walletApi.getBalance(),
         questionApi.list({ page: 1, limit: 1 }),
       ]);
-      if (results[0].status === 'fulfilled') setCrops(results[0].value.data.crops ?? []);
+
+      if (results[0].status === 'fulfilled') {
+        const crops = results[0].value.data?.crops ?? [];
+        setUserCrops(crops.map((name: string) => ({ id: name, cropName: name, season: null })));
+      }
       if (results[1].status === 'fulfilled') {
         setWalletBalance((results[1].value.data as WalletBalance).balance);
       }
@@ -113,7 +94,7 @@ export function ProfileScreen() {
     finally { setLoadingData(false); }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useFocusEffect(useCallback(() => { fetchAll(); }, [fetchAll]));
 
   function handleLogoutPress() {
     setShowLogoutConfirm(true);
@@ -141,10 +122,6 @@ export function ProfileScreen() {
   return (
     <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
-        <View style={{ marginTop: tokens.spacing4 }}>
-          <ProfileCompletionWidget onEdit={() => navigation.navigate('EditProfile')} hasCrops={crops.length > 0} />
-        </View>
 
         {/* ── Hero card ─────────────────────────────────────── */}
         <View style={[styles.heroCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
@@ -220,7 +197,7 @@ export function ProfileScreen() {
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             {loadingData
-              ? <ActivityIndicator size="small" color={c.primary} />
+              ? <View style={styles.statLoading}><ActivityIndicator size="small" color={c.primary} /></View>
               : <>
                   <Ionicons name="wallet-outline" size={18} color={c.primary} style={styles.statIcon} />
                   <Text style={[styles.statValue, { color: c.text }]}>₹{walletBalance ?? 0}</Text>
@@ -230,7 +207,7 @@ export function ProfileScreen() {
           </View>
           <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             {loadingData
-              ? <ActivityIndicator size="small" color={c.primary} />
+              ? <View style={styles.statLoading}><ActivityIndicator size="small" color={c.primary} /></View>
               : <>
                   <Ionicons name="help-circle-outline" size={18} color={c.primary} style={styles.statIcon} />
                   <Text style={[styles.statValue, { color: c.text }]}>{totalQuestions ?? '—'}</Text>
@@ -239,13 +216,18 @@ export function ProfileScreen() {
             }
           </View>
           <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <Ionicons name="calendar-outline" size={18} color={c.primary} style={styles.statIcon} />
-            <Text style={[styles.statValue, { color: c.text }]}>
-              {user?.createdAt
-                ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                : '—'}
-            </Text>
-            <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('profile.memberSince')}</Text>
+            {loadingData
+              ? <View style={styles.statLoading}><ActivityIndicator size="small" color={c.primary} /></View>
+              : <>
+                  <Ionicons name="calendar-outline" size={18} color={c.primary} style={styles.statIcon} />
+                  <Text style={[styles.statValue, { color: c.text }]}>
+                    {user?.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : '—'}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('profile.memberSince')}</Text>
+                </>
+            }
           </View>
         </View>
 
@@ -253,82 +235,33 @@ export function ProfileScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <InfoRow icon="call-outline" label="Mobile" value={user?.mobileNumber ?? '—'} />
-            <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
+<InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
             <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
             {user?.block && <InfoRow icon="business-outline" label="Block" value={user.block} />}
+            {user?.village && <InfoRow icon="navigate-outline" label="Village" value={user.village} />}
+            {(user?.profileData ?? {}).kvk && <InfoRow icon="school-outline" label="KVK" value={(user?.profileData ?? {}).kvk!} />}
           </View>
         </View>
 
-        {/* ── My Crops ──────────────────────────────────────── */}
-        <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.myCrops')}</Text>
-            {crops.length > 0 && (
-              <View style={[styles.countBadge, { backgroundColor: c.primary + '18' }]}>
-                <Ionicons name="leaf-outline" size={10} color={c.primary} />
-                <Text style={[styles.countText, { color: c.primary }]}>{crops.length}</Text>
-              </View>
-            )}
+        {/* ── Crops ──────────────────────────────────────────── */}
+        {userCrops.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Crops</Text>
+            <View style={styles.cropTags}>
+              {userCrops.map((crop) => (
+                <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.primary + '14', borderColor: c.primary + '30' }]}>
+                  <Ionicons name="leaf-outline" size={11} color={c.primary} />
+                  <Text style={[styles.cropTagText, { color: c.primary }]}>{crop.cropName}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate('CropManagement')}
-          >
-            {crops.length > 0 ? (
-              <View style={styles.cropTags}>
-                {crops.map((crop) => (
-                  <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.primary + '14', borderColor: c.primary + '30' }]}>
-                    <Ionicons name="leaf-outline" size={11} color={c.primary} />
-                    <Text style={[styles.cropTagText, { color: c.primary }]}>{crop.cropName}</Text>
-                    {crop.season && (
-                      <Text style={[styles.cropSeason, { color: c.textSecondary }]}> · {seasonLabel(crop.season)}</Text>
-                    )}
-                  </View>
-                ))}
-                <View style={[styles.manageCropsTag, { borderColor: c.border }]}>
-                  <Ionicons name="add-circle-outline" size={11} color={c.textTertiary} />
-                  <Text style={[styles.manageCropsText, { color: c.textTertiary }]}>Manage Crops</Text>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.noCropsRow}>
-                <View style={[styles.noCropsIconWrap, { backgroundColor: c.primary + '14' }]}>
-                  <Ionicons name="leaf-outline" size={20} color={c.primary} />
-                </View>
-                <View style={styles.noCropsTextWrap}>
-                  <Text style={[styles.noCropsTitle, { color: c.textSecondary }]}>
-                    {t('profile.noCropsTitle', { defaultValue: 'No crops added yet' })}
-                  </Text>
-                  <Text style={[styles.noCropsHint, { color: c.textTertiary }]}>
-                    {t('profile.noCropsHint', { defaultValue: 'Add crops to get relevant questions' })}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+        )}
 
         {/* ── Actions ───────────────────────────────────────── */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>Actions</Text>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <TouchableOpacity
-              style={styles.actionRow}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
-              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
-                <Ionicons name="create-outline" size={16} color={c.primary} />
-              </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.editProfile')}</Text>
-              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
-            </TouchableOpacity>
-
-            <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />
-
             <TouchableOpacity
               style={styles.actionRow}
               activeOpacity={0.7}
@@ -485,7 +418,7 @@ const styles = StyleSheet.create({
   // ── Stats
   statsRow: {
     flexDirection: 'row',
-    paddingHorizontal: tokens.spacing4,
+    marginHorizontal: tokens.spacing4,
     gap: tokens.spacing2,
     marginBottom: tokens.spacing5,
   },
@@ -499,6 +432,7 @@ const styles = StyleSheet.create({
   statIcon: { marginBottom: tokens.spacing1 },
   statValue: { fontSize: 16, fontWeight: '800', marginTop: 2 },
   statLabel: { fontSize: 10, fontWeight: '500', marginTop: 2, textAlign: 'center' },
+  statLoading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   // ── Info rows
   infoRow: {
@@ -525,30 +459,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   cropTagText: { fontSize: 12, fontWeight: '600' },
-  cropSeason: { fontSize: 11 },
-  manageCropsTag: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: tokens.spacing3,
-    paddingVertical: tokens.spacing1 + 2,
-    borderRadius: tokens.radiusFull,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    gap: 4,
-  },
-  manageCropsText: { fontSize: 11, fontWeight: '500' },
-
-  noCropsRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: tokens.spacing3,
-  },
-  noCropsIconWrap: {
-    width: 40, height: 40,
-    borderRadius: tokens.radiusMd,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  noCropsTextWrap: { flex: 1 },
-  noCropsTitle: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
-  noCropsHint: { fontSize: 12 },
 
   // ── Actions
   actionRow: {

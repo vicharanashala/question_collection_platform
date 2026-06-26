@@ -11,7 +11,6 @@ import {
 import { VerificationStatus, UserCategory, UserRole } from '../../common/enums';
 import { Wallet } from './wallet.entity';
 import { Question } from './question.entity';
-import { UserCropDetail } from './user-crop-detail.entity';
 import { WithdrawalRequest } from './withdrawal-request.entity';
 import { Notification } from './notification.entity';
 
@@ -112,14 +111,15 @@ export class User {
   @Column({ name: 'razorpay_contact_id', type: 'varchar', length: 100, nullable: true })
   razorpayContactId: string | null;
 
+  /** Crop names selected by the user (no season) */
+  @Column({ name: 'crops', type: 'text', array: true, default: '{}' })
+  crops: string[];
+
   @OneToOne(() => Wallet, (wallet) => wallet.user)
   wallet: Wallet;
 
   @OneToMany(() => Question, (question) => question.user)
   questions: Question[];
-
-  @OneToMany(() => UserCropDetail, (crop) => crop.user)
-  cropDetails: UserCropDetail[];
 
   @OneToMany(() => WithdrawalRequest, (wr) => wr.user)
   withdrawalRequests: WithdrawalRequest[];

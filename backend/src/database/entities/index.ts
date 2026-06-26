@@ -1,5 +1,4 @@
 export * from './user.entity';
-export * from './user-crop-detail.entity';
 export * from './wallet.entity';
 export * from './transaction.entity';
 export * from './withdrawal-request.entity';

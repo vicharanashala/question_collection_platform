@@ -12,7 +12,6 @@ const mockUserService = () => ({
   getProfile: jest.fn(),
   updateProfile: jest.fn(),
   updateCropDetails: jest.fn(),
-  getCropDetails: jest.fn(),
 });
 
 const mockUser = {
@@ -31,6 +30,7 @@ const mockUser = {
   consentTimestamp: new Date(),
   createdAt: new Date(),
   lastLoginAt: null,
+  crops: [] as string[],
 };
 
 describe('UserController', () => {
@@ -59,51 +59,45 @@ describe('UserController', () => {
   // ─── GET /users/me ──────────────────────────────────────────────────────────
 
   describe('GET /users/me', () => {
-    it('should return user profile with crop details', async () => {
-      const crops = [
-        { id: 'crop-1', cropName: 'Wheat', season: 'Rabi' },
-        { id: 'crop-2', cropName: 'Rice', season: 'Kharif' },
-      ];
-      userService.getProfile.mockResolvedValue(mockUser);
-      userService.getCropDetails.mockResolvedValue(crops);
+    it('should return user profile with crops', async () => {
+      userService.getProfile.mockResolvedValue({
+        ...mockUser,
+        crops: ['Wheat', 'Rice'],
+      });
 
       const result = await controller.getProfile(userReq as any);
 
-      expect(result.user.id).toBe('user-1');
-      expect(result.user.mobileNumber).toBe('9876543210');
-      expect(result.user.name).toBe('Ramesh Kumar');
-      expect(result.user).not.toHaveProperty('passwordHash');
-      expect(result.crops).toEqual(crops);
+      expect(result.id).toBe('user-1');
+      expect(result.crops).toEqual(['Wheat', 'Rice']);
     });
 
-    it('should not expose internal fields on the user object', async () => {
-      userService.getProfile.mockResolvedValue(mockUser);
-      userService.getCropDetails.mockResolvedValue([]);
+    it('should not expose internal fields', async () => {
+      userService.getProfile.mockResolvedValue({ ...mockUser, crops: [] });
 
       const result = await controller.getProfile(userReq as any);
 
-      expect(result.user).not.toHaveProperty('passwordHash');
-      expect(result.user).not.toHaveProperty('tokenVersion');
+      expect(result).not.toHaveProperty('passwordHash');
+      expect(result).not.toHaveProperty('tokenVersion');
     });
 
     it('should include all expected public fields', async () => {
-      userService.getProfile.mockResolvedValue(mockUser);
-      userService.getCropDetails.mockResolvedValue([]);
+      userService.getProfile.mockResolvedValue({ ...mockUser, crops: [] });
 
       const result = await controller.getProfile(userReq as any);
 
-      expect(result.user).toHaveProperty('id');
-      expect(result.user).toHaveProperty('mobileNumber');
-      expect(result.user).toHaveProperty('name');
-      expect(result.user).toHaveProperty('category');
-      expect(result.user).toHaveProperty('state');
-      expect(result.user).toHaveProperty('district');
-      expect(result.user).toHaveProperty('block');
-      expect(result.user).toHaveProperty('languagePreference');
-      expect(result.user).toHaveProperty('verificationStatus');
-      expect(result.user).toHaveProperty('role');
-      expect(result.user).toHaveProperty('createdAt');
-      expect(result.user).toHaveProperty('consentGiven');
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('mobileNumber');
+      expect(result).toHaveProperty('name');
+      expect(result).toHaveProperty('category');
+      expect(result).toHaveProperty('state');
+      expect(result).toHaveProperty('district');
+      expect(result).toHaveProperty('block');
+      expect(result).toHaveProperty('languagePreference');
+      expect(result).toHaveProperty('verificationStatus');
+      expect(result).toHaveProperty('role');
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('consentGiven');
+      expect(result).toHaveProperty('crops');
     });
   });
 
@@ -111,7 +105,7 @@ describe('UserController', () => {
 
   describe('PATCH /users/me', () => {
     it('should call updateProfile with user id and dto', async () => {
-      const updatedUser = { ...mockUser, name: 'Suresh Kumar' };
+      const updatedUser = { ...mockUser, name: 'Suresh Kumar', crops: [] };
       userService.updateProfile.mockResolvedValue(updatedUser);
 
       const result = await controller.updateProfile(
@@ -134,18 +128,16 @@ describe('UserController', () => {
       ).rejects.toThrow('Update failed');
     });
 
-    it('should update multiple fields in a single call', async () => {
-      const updated = { ...mockUser, name: 'Changed', state: 'Karnataka' };
+    it('should update crops via updateProfile', async () => {
+      const updated = { ...mockUser, crops: ['Cotton', 'Soybean'] };
       userService.updateProfile.mockResolvedValue(updated);
 
       await controller.updateProfile(userReq as any, {
-        name: 'Changed',
-        state: 'Karnataka',
+        crops: ['Cotton', 'Soybean'],
       } as any);
 
       expect(userService.updateProfile).toHaveBeenCalledWith('user-1', {
-        name: 'Changed',
-        state: 'Karnataka',
+        crops: ['Cotton', 'Soybean'],
       });
     });
   });
@@ -154,19 +146,17 @@ describe('UserController', () => {
 
   describe('PATCH /users/me/crops', () => {
     it('should replace crop list and return updated crops', async () => {
-      const newCrops = [
-        { cropName: 'Soybean', season: 'Rabi' },
-        { cropName: 'Cotton', season: 'Kharif' },
-      ];
-      userService.updateCropDetails.mockResolvedValue(newCrops);
+      userService.updateCropDetails.mockResolvedValue(['Soybean', 'Cotton']);
 
       const result = await controller.updateCropDetails(
         userReq as any,
-        { crops: newCrops } as any,
+        { crops: ['Soybean', 'Cotton'] } as any,
       );
 
-      expect(result.crops).toHaveLength(2);
-      expect(userService.updateCropDetails).toHaveBeenCalledWith('user-1', { crops: newCrops });
+      expect(result.crops).toEqual(['Soybean', 'Cotton']);
+      expect(userService.updateCropDetails).toHaveBeenCalledWith('user-1', {
+        crops: ['Soybean', 'Cotton'],
+      });
     });
 
     it('should pass through service errors', async () => {

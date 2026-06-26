@@ -15,7 +15,10 @@ export interface User {
   district: string;
   block: string | null;
   village: string | null;
+  kvk: string | null;
   languagePreference: string;
+  /** Category-specific fields (farmSize, courseName, universityName, etc.) */
+  profileData: Record<string, unknown> | null;
   verificationStatus: VerificationStatus;
   suspendedAt: string | null;
   suspendedUntil: string | null;
@@ -24,7 +27,11 @@ export interface User {
   bannedReason: string | null;
   createdAt: string;
   lastLoginAt: string | null;
+  consentGiven: boolean;
+  /** Crop names stored as a string array on the user record */
+  crops: string[];
 }
+
 
 export interface PaymentDetail {
   id: string;

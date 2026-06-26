@@ -350,8 +350,10 @@ export class AuthService {
       user.otpHash = null;
       user.otpExpiresAt = null;
 
-      if (dto.profileData) {
-        user.profileData = dto.profileData as Record<string, unknown>;
+      // Separate cropType (stored as rows) from other profileData fields (stored as JSONB)
+      const { cropType, ...restProfileData } = (dto.profileData ?? {}) as Record<string, unknown>;
+      if (Object.keys(restProfileData).length > 0) {
+        user.profileData = restProfileData;
       }
 
       await queryRunner.manager.save(user);
@@ -365,6 +367,12 @@ export class AuthService {
           currency: 'INR',
         });
         await queryRunner.manager.save(wallet);
+      }
+
+      // Store crops directly on the user record as a text[]
+      if (cropType && typeof cropType === 'string' && cropType.trim()) {
+        user.crops = cropType.split(',').map((c: string) => c.trim()).filter(Boolean);
+        await queryRunner.manager.save(user);
       }
 
       await queryRunner.commitTransaction();

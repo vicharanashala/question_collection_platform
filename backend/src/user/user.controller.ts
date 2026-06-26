@@ -26,33 +26,30 @@ export class UserController {
 
   /**
    * GET /users/me
-   * Returns the authenticated user's full profile.
+   * Returns the authenticated user's full profile including crops.
    */
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async getProfile(@Req() req: AuthenticatedRequest) {
     const user = await this.userService.getProfile(req.user.id);
-    const crops = await this.userService.getCropDetails(req.user.id);
     return {
-      user: {
-        id: user.id,
-        mobileNumber: user.mobileNumber,
-        name: user.name,
-        category: user.category,
-        state: user.state,
-        district: user.district,
-        block: user.block,
-        village: user.village,
-        languagePreference: user.languagePreference,
-        verificationStatus: user.verificationStatus,
-        role: user.role,
-        profileData: user.profileData,
-        consentGiven: user.consentGiven,
-        consentTimestamp: user.consentTimestamp,
-        createdAt: user.createdAt,
-        lastLoginAt: user.lastLoginAt,
-      },
-      crops,
+      id: user.id,
+      mobileNumber: user.mobileNumber,
+      name: user.name,
+      category: user.category,
+      state: user.state,
+      district: user.district,
+      block: user.block,
+      village: user.village,
+      languagePreference: user.languagePreference,
+      verificationStatus: user.verificationStatus,
+      role: user.role,
+      profileData: user.profileData,
+      consentGiven: user.consentGiven,
+      consentTimestamp: user.consentTimestamp,
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt,
+      crops: user.crops,
     };
   }
 
@@ -75,7 +72,7 @@ export class UserController {
 
   /**
    * PATCH /users/me
-   * Update editable profile fields (name, location, language preference).
+   * Update editable profile fields (name, location, language preference, crops).
    */
   @Patch('me')
   @HttpCode(HttpStatus.OK)
@@ -108,6 +105,13 @@ export class UserController {
    * PATCH /users/me/notifications/read-all
    * Mark all unread notifications as read.
    */
+  @Patch('me/notifications/read-all')
+  @HttpCode(HttpStatus.OK)
+  async markAllRead(@Req() req: AuthenticatedRequest) {
+    await this.userService.markAllNotificationsRead(req.user.id);
+    return { success: true };
+  }
+
   /**
    * PATCH /users/me/notifications/:id/read
    * Mark a single notification as read.
@@ -123,19 +127,8 @@ export class UserController {
   }
 
   /**
-   * PATCH /users/me/notifications/read-all
-   * Mark all unread notifications as read.
-   */
-  @Patch('me/notifications/read-all')
-  @HttpCode(HttpStatus.OK)
-  async markAllRead(@Req() req: AuthenticatedRequest) {
-    await this.userService.markAllNotificationsRead(req.user.id);
-    return { success: true };
-  }
-
-  /**
    * PATCH /users/me/crops
-   * Replace the user's crop list (full upsert).
+   * Replace the user's crop list (full upsert). Crops can also be set via PATCH /users/me.
    */
   @Patch('me/crops')
   @HttpCode(HttpStatus.OK)
