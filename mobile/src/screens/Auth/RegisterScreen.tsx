@@ -59,6 +59,8 @@ export function RegisterScreen({ navigation, route }: Props) {
 
   const [category, setCategory] = useState<UserCategory | ''>('');
   const [name, setName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
+  const [age, setAge] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedStateCode, setSelectedStateCode] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
@@ -125,6 +127,8 @@ export function RegisterScreen({ navigation, route }: Props) {
     }
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
+      if (!gender) errs.gender = t('genderRequired');
+      if (!age.trim() || isNaN(Number(age)) || Number(age) < 18 || Number(age) > 120) errs.age = t('ageRequired');
       if (category === UserCategory.FARMER) {
         if (cropType.length === 0) errs.cropType = t('cropTypeRequired');
       }
@@ -152,7 +156,7 @@ export function RegisterScreen({ navigation, route }: Props) {
   async function handleSubmit() {
     if (!validateStep(4)) return;
     setLoading(true);
-    const profileData: Record<string, string> = {};
+    const profileData: Record<string, string> = { gender, age };
     if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType.join(', '); }
     else if (category === UserCategory.STUDENT) {
       profileData.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
@@ -492,6 +496,30 @@ export function RegisterScreen({ navigation, route }: Props) {
                   error={errors.name}
                   autoCapitalize="words"
                 />
+                <Text style={[styles.fieldLabel, { color: c.text }]}>{t('gender')} <Text style={{ color: c.error }}>*</Text></Text>
+                <View style={styles.radioGroup}>
+                  {(['male', 'female', 'other'] as const).map((g) => (
+                    <TouchableOpacity
+                      key={g}
+                      style={[styles.radioOption, { borderColor: gender === g ? c.primary : c.borderSubtle, backgroundColor: gender === g ? c.primary + '12' : 'transparent' }]}
+                      onPress={() => { setGender(g); setErrors({}); }}
+                    >
+                      <Text style={[styles.radioOptionText, { color: gender === g ? c.primary : c.text }]}>
+                        {t(`gender.${g}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {errors.gender && <Text style={[styles.error, { color: c.error }]}>{errors.gender}</Text>}
+                <Input
+                  label={`${t('age')} (${t('years')})`}
+                  placeholder={t('agePlaceholder')}
+                  value={age}
+                  onChangeText={(txt) => { setAge(txt.replace(/[^0-9]/g, '')); setErrors({}); }}
+                  error={errors.age}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                />
                 {category === UserCategory.FARMER && (
                   <>
                     <Input
@@ -660,4 +688,15 @@ const styles = StyleSheet.create({
   },
   radioInner: { width: 12, height: 12, borderRadius: tokens.radiusFull },
   error: { fontSize: 12, marginBottom: tokens.spacing3, letterSpacing: 0.01 * 12 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: tokens.spacing2, marginTop: tokens.spacing3 },
+  radioGroup: { flexDirection: 'row', gap: tokens.spacing3, marginBottom: tokens.spacing2 },
+  radioOption: {
+    flex: 1,
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing2,
+    borderRadius: tokens.radiusMd,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  radioOptionText: { fontSize: 13, fontWeight: '600' },
 });
