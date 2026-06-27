@@ -315,7 +315,10 @@ const resources = {
         "tapMicHint": "Tap the mic to speak your question",
         "reviewHint": "Questions are mostly reviewed within 24 hours",
         "notRelevant": "Not Relevant",
-        "yourRecording": "Your recording"
+        "yourRecording": "Your recording",
+        "duplicateFoundTitle": "Similar Question Found",
+        "duplicateFoundMessage": "We appreciate your effort in submitting a question! A similar question has already been answered — please review it before submitting a new one.",
+        "duplicateDismiss": "Go Back"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
