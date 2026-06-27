@@ -2844,7 +2844,8 @@ export class AdminService implements OnModuleInit {
 
   async adjustWalletBalance(adminId: string, dto: AdjustWalletDto) {
     const isSuperAdmin = await this.isSuperAdmin(adminId);
-    if (!isSuperAdmin) throw new ForbiddenException('Only super admins can manually adjust wallet balances');
+    // if (!isSuperAdmin) 
+    throw new ForbiddenException('Only super admins can manually adjust wallet balances');
 
     const wallet = await this.walletRepo.findOne({ where: { userId: dto.userId } });
     if (!wallet) throw new NotFoundException('Wallet not found for this user');

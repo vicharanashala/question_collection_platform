@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { SuspendBanModal } from '../../components/SuspendBanModal';
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { WalletAdjustModal } from '../../components/WalletAdjustModal';
+
 import { adminApi, auditApi, getErrorMessage, AccountLockedInfo } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
@@ -40,7 +40,6 @@ export function AdminUserDetailScreen() {
   const [suspendModalAction, setSuspendModalAction] = useState<'suspend' | 'ban'>('suspend');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmModalAction, setConfirmModalAction] = useState<'unsuspend' | 'unban'>('unsuspend');
-  const [walletAdjustVisible, setWalletAdjustVisible] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(false);
   const [auditCollapsed, setAuditCollapsed] = useState(true);
@@ -364,13 +363,6 @@ export function AdminUserDetailScreen() {
                   </Text>
                 )}
               </View>
-              <TouchableOpacity
-                style={[styles.adjustWalletBtn, { backgroundColor: c.primary + '18' }]}
-                onPress={() => setWalletAdjustVisible(true)}
-              >
-                <Ionicons name="swap-vertical" size={15} color={c.primary} />
-                <Text style={[styles.adjustWalletBtnText, { color: c.primary }]}>Adjust</Text>
-              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -636,18 +628,6 @@ export function AdminUserDetailScreen() {
         onClose={() => setConfirmModalVisible(false)}
       />
 
-      <WalletAdjustModal
-        visible={walletAdjustVisible}
-        userId={userId}
-        userName={userName}
-        onClose={() => setWalletAdjustVisible(false)}
-        onAdjusted={() => {
-          setWalletAdjustVisible(false);
-          adminApi.getUserWallet(userId)
-            .then((r) => setWalletBalance((r.data as { balance?: number }).balance ?? 0))
-            .catch(() => null);
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -818,15 +798,6 @@ const styles = StyleSheet.create({
   walletInfo: { flex: 1, gap: 4 },
   walletLabel: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: '600' },
   walletBalance: { fontSize: 24, fontWeight: '800' },
-  adjustWalletBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing2,
-    borderRadius: tokens.radiusMd,
-    paddingHorizontal: tokens.spacing4,
-    paddingVertical: tokens.spacing3,
-  },
-  adjustWalletBtnText: { fontSize: 13, fontWeight: '700' },
 
   // ── Audit History ──────────────────────────────────────────────────────────
   auditSection: {

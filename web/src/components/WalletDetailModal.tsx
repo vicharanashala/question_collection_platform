@@ -24,7 +24,6 @@ import {
 import { toast } from 'sonner'
 import type { Transaction, Withdrawal } from '@/types'
 import { WithdrawalDetailModal } from '@/components/WithdrawalDetailModal'
-import { WalletAdjustModal } from '@/components/WalletAdjustModal'
 
 const TX_STATUS_COLORS: Record<string, string> = {
   pending:   'bg-warning text-white',
@@ -103,8 +102,6 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
     createdAt: string
   } | null>(null)
 
-  const [adjustOpen, setAdjustOpen] = useState(false)
-  const [adjustedBalance, setAdjustedBalance] = useState<number | null>(null)
   const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
@@ -189,8 +186,6 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
       setTotalEarned(0)
       setTotalWithdrawn(0)
       setWalletUser(null)
-      setAdjustedBalance(null)
-      setAdjustOpen(false)
       setLoadingWallet(true)
 
       // Fetch user details + wallet summary in parallel
@@ -200,15 +195,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
     }
   }, [open, userId, fetchWalletUser, fetchTransactions, fetchWithdrawals])
 
-  function handleAdjustClose(newBalance?: number) {
-    setAdjustOpen(false)
-    if (newBalance != null) {
-      setAdjustedBalance(newBalance)
-      setBalance(newBalance)
-    }
-  }
-
-  const displayBalance = adjustedBalance ?? balance
+  const displayBalance = balance
   const isLoading = loadingTx && transactions.length === 0
 
   return (
@@ -386,17 +373,6 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               </div>
             )}
 
-            {/* Adjust button */}
-            {isSuperAdmin && !isLoading && (
-              <Button
-                variant="outline"
-                onClick={() => setAdjustOpen(true)}
-                className="w-full justify-start text-sm"
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                Adjust Balance
-              </Button>
-            )}
           </div>
 
           {/* ── Right panel ────────────────────────────── */}
@@ -639,14 +615,6 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
             />
           )}
 
-          {/* ── Wallet adjust modal (portal) ──────────────── */}
-          <WalletAdjustModal
-            open={adjustOpen}
-            userId={userId}
-            userName={walletUser?.name ?? 'User'}
-            currentBalance={displayBalance}
-            onClose={handleAdjustClose}
-          />
         </div>
       </DialogContent>
     </Dialog>
