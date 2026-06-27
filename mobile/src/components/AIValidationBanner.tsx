@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radiusMd,
     paddingHorizontal: tokens.spacing4,
     paddingVertical: tokens.spacing3,
-    marginTop: tokens.spacing3,
+    // marginTop: tokens.spacing3,
     marginBottom: tokens.spacing3,
   },
   row: {

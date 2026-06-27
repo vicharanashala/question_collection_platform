@@ -472,18 +472,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
             {/* Character count */}
             <View style={styles.charRow}>
-              {questionText.trim().length > 0 ? (
+              {questionText.trim().length > 0 && (
                 <Text style={[styles.charCount, { color: charCountColor }]}>
                   {questionText.trim().length} / {maxChars}
                 </Text>
-              ) : (
-                <View style={styles.hintTipRow}>
-                  <Ionicons name="bulb" size={14} color="#FACC15" style={{ marginRight: tokens.spacing1 }} />
-                  <Text style={[styles.hintText, { color: c.text }]}>
-                    Be specific and clear for faster approvals
-                  </Text>
-                </View>
-              )}
+              ) }
+              {/* // : (
+              //   <View style={styles.hintTipRow}>
+              //     <Ionicons name="bulb" size={14} color="#FACC15" style={{ marginRight: tokens.spacing1 }} />
+              //     <Text style={[styles.hintText, { color: c.text }]}>
+              //       Be specific and clear for faster approvals
+              //     </Text>
+              //   </View>
+              // )} */}
             </View>
 
             {questionText.length > maxChars && (
@@ -493,7 +494,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             )}
 
             {/* ── Image attachment ─────────────────────────────────────────── */}
-            <View style={styles.imageSection}>
+            {/* <View style={styles.imageSection}>
               <Text style={[styles.imageSectionLabel, { color: c.textSecondary }]}>
                 Attach an image (optional)
               </Text>
@@ -519,7 +520,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 </TouchableOpacity>
               )}
               {imageError && <Text style={[styles.imageErrorText, { color: c.error }]}>{imageError}</Text>}
-            </View>
+            </View> */}
 
             {/* AI warning banner */}
             <AIValidationBanner
@@ -662,7 +663,7 @@ const styles = StyleSheet.create({
     fontSize: 16, lineHeight: 24,
   },
 
-  charRow: { marginBottom: tokens.spacing3 },
+  charRow: { },
   charCount: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
   hintTipRow: { flexDirection: 'row', alignItems: 'center' },
   hintText: { fontSize: 12, fontWeight: '500', flex: 1 },
