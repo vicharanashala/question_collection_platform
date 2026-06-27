@@ -245,6 +245,7 @@ export interface UserAnalytics {
   signupGrowth: number
   signupTrend: SignupTrendPoint[]
   stateBreakdown: { state: string; count: number }[]
+  districtBreakdown: { district: string; state: string; count: number }[]
   categoryBreakdown: { category: UserCategory; count: number }[]
   roleDistribution: { role: UserRole; count: number }[]
 }
@@ -262,6 +263,7 @@ export interface QuestionAnalytics {
   summary: QuestionSummary
   dailyVolume: { date: string; submitted: number; approved: number; rejected: number }[]
   stateBreakdown: { state: string; count: number; approved: number }[]
+  districtBreakdown: { district: string; state: string; count: number; approved: number }[]
   cropBreakdown: { cropType: string; count: number; approved: number }[]
   domainBreakdown: { domain: string; count: number; approved: number }[]
 }

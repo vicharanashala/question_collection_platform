@@ -83,8 +83,8 @@ export function BarChartComponent({
         />
         <Bar
           dataKey={dataKey}
-          fill={color}
-          radius={[4, 4, 0, 0]}
+          style={{ fill: color }}
+          radius={layout === 'vertical' ? [0, 4, 4, 0] : [4, 4, 0, 0]}
           maxBarSize={48}
           unit=""
         />

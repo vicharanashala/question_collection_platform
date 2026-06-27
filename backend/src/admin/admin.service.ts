@@ -2310,6 +2310,21 @@ export class AdminService implements OnModuleInit {
     if (state) stateQb = stateQb.andWhere('u.state = :state', { state });
     const stateBreakdown: Array<{ state: string; count: number }> = (await stateQb.getRawMany()).map((r) => ({ state: r.state, count: Number(r.count) }));
 
+    // District breakdown (top 20 per state if filtered, else overall top 20)
+    let districtQb = this.userRepo.createQueryBuilder('u')
+      .select('u.district', 'district')
+      .addSelect('u.state', 'state')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('u.district')
+      .addGroupBy('u.state')
+      .orderBy('count', 'DESC')
+      .limit(50);
+    if (state) districtQb = districtQb.andWhere('u.state = :state', { state });
+    const districtBreakdownRaw: Array<{ district: string; state: string; count: string }> = await districtQb.getRawMany();
+    const districtBreakdown = districtBreakdownRaw
+      .filter((r) => r.district != null)
+      .map((r) => ({ district: r.district, state: r.state, count: Number(r.count) }));
+
     // Category breakdown
     const categoryBreakdownRaw = await this.userRepo
       .createQueryBuilder('u')
@@ -2336,6 +2351,7 @@ export class AdminService implements OnModuleInit {
       signupGrowth,
       signupTrend,
       stateBreakdown,
+      districtBreakdown,
       categoryBreakdown,
       roleDistribution,
     };
@@ -2426,6 +2442,25 @@ export class AdminService implements OnModuleInit {
       approved: Number(r.approved),
     }));
 
+    // District breakdown (top 20 per state if filtered, else overall top 20)
+    let districtQb = this.questionRepo
+      .createQueryBuilder('q')
+      .select('q.district', 'district')
+      .addSelect('q.state', 'state')
+      .addSelect('COUNT(*)', 'count')
+      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+      .groupBy('q.district')
+      .addGroupBy('q.state')
+      .orderBy('count', 'DESC')
+      .limit(50);
+    if (state) districtQb = districtQb.andWhere('q.state = :state', { state });
+    const districtBreakdown: Array<{ district: string; state: string; count: number; approved: number }> = (
+      await districtQb.getRawMany()
+    )
+      .filter((r) => r.district != null)
+      .map((r) => ({ district: r.district, state: r.state, count: Number(r.count), approved: Number(r.approved) }));
+
     // Approval rate
     const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
 
@@ -2451,6 +2486,7 @@ export class AdminService implements OnModuleInit {
       },
       dailyVolume,
       stateBreakdown,
+      districtBreakdown,
       cropBreakdown,
       domainBreakdown,
     };
@@ -2850,46 +2886,53 @@ export class AdminService implements OnModuleInit {
     const wallet = await this.walletRepo.findOne({ where: { userId: dto.userId } });
     if (!wallet) throw new NotFoundException('Wallet not found for this user');
 
+    // Extract non-null values immediately after the guard — TypeScript cannot narrow across await
+    const walletId = wallet!.id;
+    const initialBalance = Number(wallet!.balance);
+    let currentBalance = initialBalance;
+
     const amount = Number(dto.amount);
     if (amount === 0) throw new BadRequestException('Adjustment amount cannot be zero');
 
     if (amount > 0) {
-      await this.walletRepo.increment({ id: wallet.id }, 'balance', amount);
+      await this.walletRepo.increment({ id: walletId }, 'balance', amount);
+      currentBalance += amount;
       await this.transactionRepo.save({
-        walletId: wallet.id,
+        walletId,
         amount,
         type: TransactionType.CREDIT,
         source: TransactionSource.ADJUSTMENT,
         status: TransactionStatus.COMPLETED,
         description: dto.description ?? `Manual adjustment: ${dto.reason}`,
-        balanceAfter: Number(wallet.balance) + amount,
+        balanceAfter: currentBalance,
       });
     } else {
       const debit = Math.abs(amount);
-      if (Number(wallet.balance) < debit) {
+      if (currentBalance < debit) {
         throw new BadRequestException('Insufficient balance for this debit adjustment');
       }
-      await this.walletRepo.decrement({ id: wallet.id }, 'balance', debit);
+      await this.walletRepo.decrement({ id: walletId }, 'balance', debit);
+      currentBalance -= debit;
       await this.transactionRepo.save({
-        walletId: wallet.id,
+        walletId,
         amount: debit,
         type: TransactionType.DEBIT,
         source: TransactionSource.ADJUSTMENT,
         status: TransactionStatus.COMPLETED,
         description: dto.description ?? `Manual adjustment: ${dto.reason}`,
-        balanceAfter: Number(wallet.balance) - debit,
+        balanceAfter: currentBalance,
       });
     }
 
-    const updatedWallet = await this.walletRepo.findOne({ where: { id: wallet.id } });
+    const updatedWallet = await this.walletRepo.findOne({ where: { id: walletId } });
 
     await this.logAudit({
       actorType: ActorType.ADMIN,
       actorId: adminId,
       action: 'wallet_balance_adjusted',
       entityType: 'wallet',
-      entityId: wallet.id,
-      oldValue: { balance: Number(wallet.balance) },
+      entityId: walletId,
+      oldValue: { balance: initialBalance },
       newValue: { balance: Number(updatedWallet!.balance) },
       metadata: { reason: dto.reason, adjustmentAmount: amount },
     });
@@ -2897,8 +2940,8 @@ export class AdminService implements OnModuleInit {
     return {
       success: true,
       userId: dto.userId,
-      walletId: wallet.id,
-      previousBalance: Number(wallet.balance),
+      walletId,
+      previousBalance: initialBalance,
       newBalance: Number(updatedWallet!.balance),
       adjustment: amount,
       reason: dto.reason,

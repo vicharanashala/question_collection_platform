@@ -9,6 +9,9 @@ import { ChartCard } from '@/components/charts/ChartCard'
 import { AreaChartComponent } from '@/components/charts/AreaChartComponent'
 import { DonutChartComponent } from '@/components/charts/DonutChartComponent'
 import { BarChartComponent } from '@/components/charts/BarChartComponent'
+import { BulletChartComponent } from '@/components/charts/BulletChartComponent'
+import { TreemapChartComponent } from '@/components/charts/TreemapChartComponent'
+import { RankedBarList } from '@/components/charts/RankedBarList'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatINR } from '@/lib/utils'
 import { format, parseISO } from 'date-fns'
@@ -247,6 +250,12 @@ export function DashboardPage() {
     value: s.count,
   }))
 
+  // District breakdown bar (top 10, label shows district + state)
+  const districtBarData = (qAnalytics?.districtBreakdown ?? []).slice(0, 10).map((d) => ({
+    name: d.district,
+    value: d.count,
+  }))
+
   // Crop breakdown donut
   const cropDonutData = (qAnalytics?.cropBreakdown ?? []).slice(0, 7).map((c) => ({
     name: c.cropType,
@@ -418,43 +427,38 @@ export function DashboardPage() {
         </ChartCard>
       </div>
 
-      {/* ── Charts row 2: State breakdown + Crop donut ──────────────────────── */}
+      {/* ── Charts row 2: State + District + Crop breakdowns ─────────────────── */}
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title="Top States by Volume" subtitle="Questions submitted per state">
-          <BarChartComponent
+          <BulletChartComponent
             data={stateBarData}
-            dataKey="value"
-            color="hsl(var(--chart-2))"
             height={220}
-            layout="vertical"
+            primaryColor="bg-[hsl(var(--chart-2))]"
+            valueFormatter={(v) => formatNumber(v)}
+          />
+        </ChartCard>
+
+        <ChartCard title="Top Districts by Volume" subtitle="Questions submitted per district">
+          <TreemapChartComponent
+            data={districtBarData}
+            height={220}
             valueFormatter={(v) => formatNumber(v)}
           />
         </ChartCard>
 
         <ChartCard title="Top Crops" subtitle="Question distribution by crop type">
           {cropDonutData.length > 0 ? (
-            <DonutChartComponent
+            <RankedBarList
               data={cropDonutData}
               height={220}
-              innerRadius={55}
-              outerRadius={90}
+              color="hsl(var(--primary))"
+              valueFormatter={(v) => formatNumber(v)}
             />
           ) : (
             <div className="h-52 flex items-center justify-center text-sm text-text-tertiary">
               No crop data available
             </div>
           )}
-        </ChartCard>
-
-        <ChartCard title="Questions by Domain" subtitle="Subject area breakdown">
-          <BarChartComponent
-            data={domainBarData}
-            dataKey="value"
-            color="hsl(var(--warning))"
-            height={220}
-            layout="vertical"
-            valueFormatter={(v) => formatNumber(v)}
-          />
         </ChartCard>
       </div>
 
