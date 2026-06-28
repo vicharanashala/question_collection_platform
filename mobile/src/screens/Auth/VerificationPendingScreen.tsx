@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform,  } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -15,6 +16,7 @@ export function VerificationPendingScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const { t } = useTranslation();
+  const navigation = useNavigation();
   const { refreshProfile, user, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -27,6 +29,12 @@ export function VerificationPendingScreen() {
 
   async function handleLogout() {
     setShowLogoutConfirm(false);
+    // Navigate to Auth stack (contains LoginPhone) at the root level before auth state clears
+    // This ensures the user lands on LoginPhone even if the PendingStack unmounts
+    navigation.getParent()?.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
     await logout();
   }
 

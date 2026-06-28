@@ -58,4 +58,17 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   universityName?: string;
+
+  // Volunteer / NGO / FPO-specific profile fields
+  @IsOptional()
+  @IsString()
+  organisationType?: string;
+
+  @IsOptional()
+  @IsString()
+  organisationName?: string;
+
+  @IsOptional()
+  @IsString()
+  memberRole?: string;
 }

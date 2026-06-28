@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity,  } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,7 +11,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
-import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, KVKS } from '../../utils/constants';
+import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, KVKS, ORG_TYPE_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
 import { useTranslation } from 'react-i18next';
@@ -98,6 +98,9 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [courseNameOther, setCourseNameOther] = useState('');
   const [collegeName, setCollegeName] = useState('');
   const [universityName, setUniversityName] = useState('');
+  const [belongsToOrganization, setBelongsToOrganization] = useState<boolean | null>(null);
+  const [organisationType, setOrganisationType] = useState('');
+  const [organisationTypeOther, setOrganisationTypeOther] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [role, setRole] = useState('');
 
@@ -141,8 +144,11 @@ export function RegisterScreen({ navigation, route }: Props) {
       }
       if (
         (category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) &&
-        (!organizationName.trim() || !role.trim())
+        belongsToOrganization === true &&
+        (!organisationType || !organizationName.trim() || !role.trim())
       ) {
+        if (!organisationType) errs.organisationType = t('organisationTypeRequired');
+        if (organisationType === '__other__' && !organisationTypeOther.trim()) errs.organisationTypeOther = t('organisationTypeOtherRequired');
         if (!organizationName.trim()) errs.organizationName = t('organisationRequired');
         if (!role.trim()) errs.role = t('roleRequired');
       }
@@ -158,14 +164,6 @@ export function RegisterScreen({ navigation, route }: Props) {
   async function handleSubmit() {
     if (!validateStep(4)) return;
     setLoading(true);
-    const profileData: Record<string, string> = { gender, age };
-    if (category === UserCategory.FARMER) { profileData.farmSize = farmSize; profileData.cropType = cropType.join(', '); }
-    else if (category === UserCategory.STUDENT) {
-      profileData.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
-      profileData.collegeName = collegeName;
-      profileData.universityName = universityName;
-    }
-    else { profileData.organizationName = organizationName; profileData.role = role; }
 
     try {
       await register({
@@ -179,7 +177,22 @@ export function RegisterScreen({ navigation, route }: Props) {
         category,
         languagePreference: language,
         consentGiven: true,
-        profileData,
+        gender,
+        age: age ? parseInt(age, 10) : undefined,
+        ...(category === UserCategory.FARMER && {
+          farmSize,
+          cropType: cropType.join(', '),
+        }),
+        ...(category === UserCategory.STUDENT && {
+          courseName: courseName === '__other__' ? courseNameOther.trim() : courseName,
+          collegeName,
+          universityName,
+        }),
+        ...(belongsToOrganization === true && {
+          organisationType:   organisationType === '__other__' ? organisationTypeOther.trim() : organisationType,
+          organizationName,
+          organizationRole: role,
+        }),
       });
       showToast(t('registrationSuccess'), 'success');
       navigation.reset({
@@ -581,20 +594,60 @@ export function RegisterScreen({ navigation, route }: Props) {
                 )}
                 {(category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) && (
                   <>
-                    <Input
-                      label={t('organisationName')}
-                      placeholder={t('organisationNamePlaceholder')}
-                      value={organizationName}
-                      onChangeText={(txt) => { setOrganizationName(txt); setErrors({}); }}
-                      error={errors.organizationName}
-                    />
-                    <Input
-                      label={t('yourRole')}
-                      placeholder={t('rolePlaceholder')}
-                      value={role}
-                      onChangeText={(txt) => { setRole(txt); setErrors({}); }}
-                      error={errors.role}
-                    />
+                    <View style={styles.switchRow}>
+                      <Text style={[styles.switchLabel, { color: c.text }]}>
+                        {t('belongsToOrganisationQuestion')}
+                      </Text>
+                      <Text style={[styles.switchYesLabel, { color: belongsToOrganization ? c.primary : c.textTertiary }]}>
+                        {belongsToOrganization ? t('belongsToOrganisationYes') : t('belongsToOrganisationNo')}
+                      </Text>
+                      <Switch
+                        value={belongsToOrganization ?? false}
+                        onValueChange={(v) => {
+                          setBelongsToOrganization(v);
+                          if (!v) { setOrganisationType(''); setOrganisationTypeOther(''); setOrganizationName(''); setRole(''); }
+                          setErrors({});
+                        }}
+                        trackColor={{ false: c.borderSubtle, true: c.primary + '60' }}
+                        thumbColor={belongsToOrganization ? c.primary : c.surface}
+                      />
+                    </View>
+                    {belongsToOrganization === true && (
+                      <>
+                        <Select
+                          label={t('organisationType')}
+                          placeholder={t('organisationTypePlaceholder')}
+                          value={organisationType}
+                          options={ORG_TYPE_OPTIONS}
+                          onChange={(v) => { setOrganisationType(v); if (v !== '__other__') setOrganisationTypeOther(''); setErrors({}); }}
+                          error={errors.organisationType}
+                          searchable
+                        />
+                        {organisationType === '__other__' && (
+                          <Input
+                            label={t('organisationTypeOther')}
+                            placeholder={t('organisationTypeOtherPlaceholder')}
+                            value={organisationTypeOther}
+                            onChangeText={(txt) => { setOrganisationTypeOther(txt); setErrors({}); }}
+                            error={errors.organisationTypeOther}
+                          />
+                        )}
+                        <Input
+                          label={t('organisationName')}
+                          placeholder={t('organisationNamePlaceholder')}
+                          value={organizationName}
+                          onChangeText={(txt) => { setOrganizationName(txt); setErrors({}); }}
+                          error={errors.organizationName}
+                        />
+                        <Input
+                          label={t('yourRole')}
+                          placeholder={t('rolePlaceholder')}
+                          value={role}
+                          onChangeText={(txt) => { setRole(txt); setErrors({}); }}
+                          error={errors.role}
+                        />
+                      </>
+                    )}
                   </>
                 )}
                 <Button title={t('continue')} onPress={next} />
@@ -709,4 +762,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   radioOptionText: { fontSize: 13, fontWeight: '600' },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: tokens.spacing3,
+    marginBottom: tokens.spacing2,
+  },
+  switchLabel: { fontSize: 14, fontWeight: '600', flex: 1, marginRight: tokens.spacing3 },
+  switchYesLabel: { fontSize: 12, fontWeight: '600', marginRight: tokens.spacing2 },
 });

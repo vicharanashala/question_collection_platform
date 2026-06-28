@@ -102,6 +102,180 @@ export const CROPS = [
 
 export const CROP_OPTIONS = CROPS.map((c) => ({ value: c, label: c }));
 
+// ─── Organisation Types ─────────────────────────────────────────────────────────
+export const ORG_TYPE_OPTIONS = [
+  { value: "Agriculture", label: "Agriculture" },
+  
+  { value: "Healthcare", label: "Healthcare" },
+
+  { value: "Education", label: "Education" },
+
+  { value: "Water & Sanitation", label: "Water & Sanitation" },
+
+  { value: "Livelihoods", label: "Livelihoods" },
+
+  { value: "Women & Child Development", label: "Women & Child Development" },
+
+  { value: "Youth Development", label: "Youth Development" },
+
+  { value: "Environment & Climate", label: "Environment & Climate" },
+
+  { value: "Disaster Relief", label: "Disaster Relief & Emergency Response" },
+
+  { value: "Banking & Finance", label: "Banking & Finance" },
+
+  { value: "Governance & Advocacy", label: "Governance & Advocacy" },
+
+  // Social Development
+
+  { value: "Rural Development", label: "Rural Development" },
+
+  { value: "Urban Development", label: "Urban Development" },
+
+  { value: "Community Development", label: "Community Development" },
+
+  { value: "Social Welfare", label: "Social Welfare" },
+
+  { value: "Poverty Alleviation", label: "Poverty Alleviation" },
+
+  // Agriculture & Allied
+
+  { value: "Animal Husbandry", label: "Animal Husbandry" },
+
+  { value: "Dairy Development", label: "Dairy Development" },
+
+  { value: "Fisheries", label: "Fisheries" },
+
+  { value: "Horticulture", label: "Horticulture" },
+
+  { value: "Forestry", label: "Forestry" },
+
+  { value: "Organic Farming", label: "Organic Farming" },
+
+  // Education
+
+  { value: "School Education", label: "School Education" },
+
+  { value: "Higher Education", label: "Higher Education" },
+
+  { value: "Vocational Training", label: "Vocational Training" },
+
+  { value: "Skill Development", label: "Skill Development" },
+
+  { value: "Digital Literacy", label: "Digital Literacy" },
+
+  { value: "Research & Innovation", label: "Research & Innovation" },
+
+  // Health
+
+  { value: "Public Health", label: "Public Health" },
+
+  { value: "Mental Health", label: "Mental Health" },
+
+  { value: "Nutrition", label: "Nutrition" },
+
+  { value: "Maternal Health", label: "Maternal Health" },
+
+  { value: "Child Health", label: "Child Health" },
+
+  { value: "Disability Support", label: "Disability Support" },
+
+  { value: "Elderly Care", label: "Elderly Care" },
+
+  // Women & Children
+
+  { value: "Women Empowerment", label: "Women Empowerment" },
+
+  { value: "Child Protection", label: "Child Protection" },
+
+  { value: "Gender Equality", label: "Gender Equality" },
+
+  // Environment
+
+  { value: "Climate Action", label: "Climate Action" },
+
+  { value: "Renewable Energy", label: "Renewable Energy" },
+
+  { value: "Biodiversity Conservation", label: "Biodiversity Conservation" },
+
+  { value: "Waste Management", label: "Waste Management" },
+
+  { value: "Water Conservation", label: "Water Conservation" },
+
+  // Economic
+
+  { value: "Microfinance", label: "Microfinance" },
+
+  { value: "Entrepreneurship", label: "Entrepreneurship Development" },
+
+  { value: "Employment Generation", label: "Employment Generation" },
+
+  { value: "MSME Support", label: "MSME Support" },
+
+  { value: "Financial Inclusion", label: "Financial Inclusion" },
+
+  // Governance
+
+  { value: "Policy Research", label: "Policy Research" },
+
+  { value: "Legal Aid", label: "Legal Aid" },
+
+  { value: "Human Rights", label: "Human Rights" },
+
+  { value: "Citizen Engagement", label: "Citizen Engagement" },
+
+  {
+    value: "Transparency & Accountability",
+    label: "Transparency & Accountability",
+  },
+
+  // Technology
+
+  { value: "Technology for Development", label: "Technology for Development" },
+
+  { value: "AI & Innovation", label: "AI & Innovation" },
+
+  { value: "ICT Services", label: "ICT Services" },
+
+  // Culture & Society
+
+  { value: "Arts & Culture", label: "Arts & Culture" },
+
+  { value: "Sports Development", label: "Sports Development" },
+
+  { value: "Heritage Conservation", label: "Heritage Conservation" },
+
+  // Special Groups
+
+  { value: "Tribal Development", label: "Tribal Development" },
+
+  { value: "Minority Welfare", label: "Minority Welfare" },
+
+  { value: "Migrant Support", label: "Migrant Support" },
+
+  { value: "Refugee Support", label: "Refugee Support" },
+
+  // Government / Institutional
+
+  { value: "Government Department", label: "Government Department" },
+
+  { value: "Government Agency", label: "Government Agency" },
+
+  { value: "Research Institution", label: "Research Institution" },
+
+  { value: "Academic Institution", label: "Academic Institution" },
+
+  { value: "Corporate CSR", label: "Corporate CSR" },
+
+  { value: "Foundation", label: "Foundation" },
+
+  { value: "Trust", label: "Trust" },
+
+  { value: "Cooperative Society", label: "Cooperative Society" },
+
+  { value: "__other__", label: "Others" },
+];
+
 // ─── Indian States ─────────────────────────────────────────────────────────────
 
 export const INDIAN_STATES = [

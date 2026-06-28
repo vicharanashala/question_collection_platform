@@ -4,6 +4,8 @@ import {
   IsArray,
   MinLength,
   MaxLength,
+  IsInt,
+  Min,
 } from 'class-validator';
 
 export class UpdateProfileDto {
@@ -29,11 +31,22 @@ export class UpdateProfileDto {
   @IsString()
   languagePreference?: string;
 
-  /**
-   * Arbitrary profile fields stored in the user.profileData JSONB column.
-   * Accepted keys: farmSize, cropType, courseName, universityName,
-   * organisationName, memberRole, and any future category-specific fields.
-   */
+  // ── General ─────────────────────────────────────────────────────────────────
+
+  /** Age — applicable to all categories. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  age?: number;
+
+  /** Gender — applicable to all categories. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  gender?: string;
+
+  // ── Farmer ──────────────────────────────────────────────────────────────────
+
   @IsOptional()
   @IsString()
   farmSize?: string;
@@ -44,19 +57,42 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  season?: string;
+
+  // ── Student ─────────────────────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
   courseName?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  collegeName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
   universityName?: string;
 
+  // ── FPO / NGO / Volunteer ───────────────────────────────────────────────────
+
+  /** Organisation type — fpo / ngo / volunteer. */
   @IsOptional()
   @IsString()
-  organisationName?: string;
+  @MaxLength(200)
+  organisationType?: string;
 
   @IsOptional()
   @IsString()
-  memberRole?: string;
+  @MaxLength(255)
+  organizationName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  organizationRole?: string;
 
   /** Crop names to associate with the user (replaces existing list). */
   @IsOptional()

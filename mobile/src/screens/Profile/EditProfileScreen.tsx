@@ -12,7 +12,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi, lgdApi } from '../../api/client';
-import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS } from '../../utils/constants';
+import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory, UserRole } from '../../types';
 
@@ -46,8 +46,6 @@ export function EditProfileScreen({ navigation }: Props) {
   const { t } = useTranslation();
 
   const isPrivileged = PRIVILEGED_ROLES.includes(user?.role as UserRole);
-
-  const profileData = (user as any)?.profileData ?? {};
 
   const [name, setName] = useState(user?.name ?? '');
   const [selectedState, setSelectedState] = useState(user?.state ?? '');
@@ -101,14 +99,15 @@ export function EditProfileScreen({ navigation }: Props) {
       .finally(() => setLoadingStates(false));
   }, []);
   // Category-specific — only used for non-privileged roles
-  const [farmSize, setFarmSize] = useState(profileData?.farmSize ?? '');
-  const [primaryCrop, setPrimaryCrop] = useState(profileData?.cropType ?? '');
-  const [courseName, setCourseName] = useState(profileData?.courseName ?? '');
+  const [farmSize, setFarmSize] = useState(user?.farmSize ?? '');
+  const [primaryCrop, setPrimaryCrop] = useState(user?.cropType ?? '');
+  const [courseName, setCourseName] = useState(user?.courseName ?? '');
   const [courseNameOther, setCourseNameOther] = useState('');
-  const [collegeName, setCollegeName] = useState(profileData?.collegeName ?? '');
-  const [universityName, setUniversityName] = useState(profileData?.universityName ?? '');
-  const [organisationName, setOrganisationName] = useState(profileData?.organisationName ?? '');
-  const [memberRole, setMemberRole] = useState(profileData?.memberRole ?? '');
+  const [collegeName, setCollegeName] = useState(user?.collegeName ?? '');
+  const [universityName, setUniversityName] = useState(user?.universityName ?? '');
+  const [organisationType, setOrganisationType] = useState(user?.organisationType ?? '');
+  const [organisationName, setOrganisationName] = useState(user?.organizationName ?? '');
+  const [memberRole, setMemberRole] = useState(user?.organizationRole ?? '');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -168,8 +167,9 @@ export function EditProfileScreen({ navigation }: Props) {
           if (collegeName.trim()) payload.collegeName = collegeName.trim();
           if (universityName.trim()) payload.universityName = universityName.trim();
         } else if (user?.category === UserCategory.VOLUNTEER || user?.category === UserCategory.NGO) {
-          payload.organisationName = organisationName.trim();
-          payload.memberRole = memberRole.trim();
+          payload.organisationType = organisationType.trim();
+          payload.organizationName = organisationName.trim();
+          payload.organizationRole = memberRole.trim();
         }
         // else: category is null or unknown — send nothing extra
       }
@@ -360,6 +360,14 @@ export function EditProfileScreen({ navigation }: Props) {
             {!isPrivileged && [UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory) && (
               <FieldGroup icon="business-outline" label={t('editProfile.organisationDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <Select
+                    label={t('editProfile.organisationType')}
+                    placeholder={t('editProfile.organisationTypePlaceholder')}
+                    options={ORG_TYPE_OPTIONS}
+                    value={organisationType}
+                    onChange={(v) => { setOrganisationType(v); setErrors({}); }}
+                    error={errors.organisationType}
+                  />
                   <Input
                     label={t('editProfile.organisationName')}
                     placeholder={t('editProfile.organisationNamePlaceholder')}

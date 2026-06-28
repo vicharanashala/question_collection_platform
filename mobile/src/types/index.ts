@@ -64,8 +64,18 @@ export interface PublicUser {
   verificationStatus: VerificationStatus;
   role: UserRole;
   createdAt: string;
-  // Category-specific fields — stored in profileData JSONB on backend
-  profileData?: Record<string, string>;
+  // Flattened profile fields (replacing profileData JSONB)
+  age:              number | null;
+  gender:           string | null;
+  farmSize:         string | null;
+  season:           string | null;
+  cropType:         string | null;
+  courseName:       string | null;
+  collegeName:      string | null;
+  universityName:     string | null;
+  organisationType:   string | null;
+  organizationName:   string | null;
+  organizationRole:   string | null;
   // Crop details (populated from /users/me)
   crops?: CropDetail[];
 }

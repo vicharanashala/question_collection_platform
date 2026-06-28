@@ -40,18 +40,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 
 function getCategoryInfo(user: any): { label: string; value: string } | null {
   if (!user?.category) return null;
-  const profileData = user?.profileData ?? {};
   if (user.category === UserCategory.FARMER || user.category === UserCategory.FPO) {
-    if (profileData.farmSize) return { label: 'Farm Size', value: profileData.farmSize };
-    if (profileData.cropType) return { label: 'Primary Crop', value: profileData.cropType };
+    if (user.farmSize) return { label: 'Farm Size', value: user.farmSize };
+    if (user.cropType) return { label: 'Primary Crop', value: user.cropType };
   }
   if (user.category === UserCategory.STUDENT) {
-    if (profileData.courseName) return { label: 'Course', value: profileData.courseName };
-    if (profileData.universityName) return { label: 'University', value: profileData.universityName };
+    if (user.courseName) return { label: 'Course', value: user.courseName };
+    if (user.universityName) return { label: 'University', value: user.universityName };
   }
   if (user.category === UserCategory.VOLUNTEER || user.category === UserCategory.NGO) {
-    if (profileData.memberRole) return { label: 'Role', value: profileData.memberRole };
-    if (profileData.organisationName) return { label: 'Organisation', value: profileData.organisationName };
+    if (user.organizationRole) return { label: 'Role', value: user.organizationRole };
+    if (user.organizationName) return { label: 'Organisation', value: user.organizationName };
   }
   return null;
 }
@@ -239,9 +238,9 @@ export function ProfileScreen() {
             <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
             {user?.block && <InfoRow icon="business-outline" label="Block" value={user.block} />}
             {user?.village && <InfoRow icon="navigate-outline" label="Village" value={user.village} />}
-            {(user?.profileData ?? {}).kvk && <InfoRow icon="school-outline" label="KVK" value={(user?.profileData ?? {}).kvk!} />}
-            {user?.category === 'student' && (user?.profileData ?? {}).collegeName && <InfoRow icon="business-outline" label="College" value={(user?.profileData ?? {}).collegeName!} />}
-            {user?.category === 'student' && (user?.profileData ?? {}).universityName && <InfoRow icon="school-outline" label="University" value={(user?.profileData ?? {}).universityName!} />}
+            {user?.kvk && <InfoRow icon="school-outline" label="KVK" value={user.kvk} />}
+            {user?.category === 'student' && user?.collegeName && <InfoRow icon="business-outline" label="College" value={user.collegeName} />}
+            {user?.category === 'student' && user?.universityName && <InfoRow icon="school-outline" label="University" value={user.universityName} />}
           </View>
         </View>
 

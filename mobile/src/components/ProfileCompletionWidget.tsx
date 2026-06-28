@@ -49,17 +49,16 @@ function buildStatus(
     check('language', user.languagePreference),
   ];
 
-  const profileData = user.profileData ?? {};
   const catFields: ReturnType<typeof check>[] = [];
   if (user.category === UserCategory.FARMER || user.category === UserCategory.FPO) {
-    catFields.push(check('farmSize', profileData.farmSize));
-    catFields.push(check('cropType', profileData.cropType));
+    catFields.push(check('farmSize', user.farmSize));
+    catFields.push(check('cropType', user.cropType));
   } else if (user.category === UserCategory.STUDENT) {
-    catFields.push(check('courseName', profileData.courseName));
-    catFields.push(check('universityName', profileData.universityName));
+    catFields.push(check('courseName', user.courseName));
+    catFields.push(check('universityName', user.universityName));
   } else {
-    catFields.push(check('organisationName', profileData.organisationName));
-    catFields.push(check('role', profileData.memberRole));
+    catFields.push(check('organisationName', user.organizationName));
+    catFields.push(check('role', user.organizationRole));
   }
 
   const allFields = [...baseFields, ...catFields, check('crops', hasCrops)];

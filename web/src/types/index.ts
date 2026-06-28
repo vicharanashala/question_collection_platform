@@ -16,9 +16,20 @@ export interface User {
   block: string | null;
   village: string | null;
   kvk: string | null;
+  /** Organisation type for fpo / volunteer / ngo users */
+  organisationType: string | null;
   languagePreference: string;
-  /** Category-specific fields (farmSize, courseName, universityName, etc.) */
-  profileData: Record<string, unknown> | null;
+  // Flattened profile fields (replacing profileData JSONB)
+  age:              number | null;
+  gender:           string | null;
+  farmSize:         string | null;
+  season:           string | null;
+  cropType:         string | null;
+  courseName:       string | null;
+  collegeName:      string | null;
+  universityName:   string | null;
+  organizationName:   string | null;
+  organizationRole:   string | null;
   verificationStatus: VerificationStatus;
   suspendedAt: string | null;
   suspendedUntil: string | null;

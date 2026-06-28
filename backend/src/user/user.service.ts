@@ -43,31 +43,13 @@ export class UserService {
     const oldValue: Record<string, unknown> = {};
     const newValue: Record<string, unknown> = {};
 
-    const PROFILE_DATA_KEYS = [
-      'farmSize', 'cropType', 'courseName',
-      'collegeName', 'universityName', 'organisationName', 'memberRole',
-    ];
-
+    // All DTO fields are now top-level columns — assign directly
     const userRecord = user as unknown as Record<string, unknown>;
     for (const [key, newVal] of Object.entries(dto)) {
       if (newVal === undefined) continue;
-
-      if (key === 'crops') {
-        // Crops are stored directly on the user record as text[]
-        oldValue[key] = userRecord[key];
-        userRecord[key] = newVal;
-        newValue[key] = newVal;
-      } else if (PROFILE_DATA_KEYS.includes(key)) {
-        // Store category-specific fields inside profileData JSONB
-        const existing = (userRecord['profileData'] as Record<string, unknown>) ?? {};
-        oldValue[key] = existing[key];
-        userRecord['profileData'] = { ...existing, [key]: newVal };
-        newValue[key] = newVal;
-      } else {
-        oldValue[key] = userRecord[key];
-        userRecord[key] = newVal;
-        newValue[key] = newVal;
-      }
+      oldValue[key] = userRecord[key];
+      userRecord[key] = newVal;
+      newValue[key] = newVal;
     }
 
     const savedUser = await this.userRepo.save(user);

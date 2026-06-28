@@ -8,6 +8,7 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
+export { VerificationStatus, UserCategory, UserRole } from '../../common/enums';
 import { VerificationStatus, UserCategory, UserRole } from '../../common/enums';
 import { Wallet } from './wallet.entity';
 import { Question } from './question.entity';
@@ -33,6 +34,10 @@ export class User {
   @Column({ type: 'varchar', length: 20, nullable: true })
   @Index('idx_users_category')
   category: UserCategory | null;
+
+  @Column({ name: 'organisation_type', type: 'varchar', length: 200, nullable: true })
+  @Index('idx_users_organisation_type')
+  organisationType: string | null;
 
   @Column({ type: 'varchar', length: 100 })
   @Index('idx_users_state')
@@ -88,6 +93,46 @@ export class User {
 
   @Column({ name: 'profile_data', type: 'jsonb', nullable: true })
   profileData: Record<string, unknown> | null;
+
+  /** Age — applicable to all categories */
+  @Column({ type: 'integer', nullable: true })
+  age: number | null;
+
+  /** Gender — applicable to all categories */
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  gender: string | null;
+
+  /** Farm size in acres — farmer only */
+  @Column({ name: 'farm_size', type: 'varchar', length: 100, nullable: true })
+  farmSize: string | null;
+
+  /** Farming season — farmer / volunteer */
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  season: string | null;
+
+  /** Primary crop — farmer / volunteer */
+  @Column({ name: 'crop_type', type: 'varchar', length: 200, nullable: true })
+  cropType: string | null;
+
+  /** Student's course name */
+  @Column({ name: 'course_name', type: 'varchar', length: 255, nullable: true })
+  courseName: string | null;
+
+  /** Student's college name */
+  @Column({ name: 'college_name', type: 'varchar', length: 255, nullable: true })
+  collegeName: string | null;
+
+  /** Student's university name */
+  @Column({ name: 'university_name', type: 'varchar', length: 255, nullable: true })
+  universityName: string | null;
+
+  /** Organisation name — fpo / ngo / volunteer */
+  @Column({ name: 'organization_name', type: 'varchar', length: 255, nullable: true })
+  organizationName: string | null;
+
+  /** Role within the organisation — fpo / ngo / volunteer */
+  @Column({ name: 'organization_role', type: 'varchar', length: 255, nullable: true })
+  organizationRole: string | null;
 
   @Column({ name: 'consent_given', type: 'boolean', default: false })
   consentGiven: boolean;

@@ -195,6 +195,9 @@ export class AdminService implements OnModuleInit {
       courseName?: string;
       collegeName?: string;
       universityName?: string;
+      organisationType?: string;
+      organisationName?: string;
+      memberRole?: string;
     },
   ) {
     // Super admin cannot create another super admin
@@ -243,13 +246,12 @@ export class AdminService implements OnModuleInit {
       village: dto.village ?? null,
       kvk: dto.kvk ?? null,
       languagePreference: dto.languagePreference ?? 'en',
-      profileData: (dto.category === 'student')
-        ? {
-            ...(dto.courseName ? { courseName: dto.courseName } : {}),
-            ...(dto.collegeName ? { collegeName: dto.collegeName } : {}),
-            ...(dto.universityName ? { universityName: dto.universityName } : {}),
-          }
-        : null,
+      organisationType: dto.organisationType ?? null,
+      courseName:      dto.courseName ?? null,
+      collegeName:     dto.collegeName ?? null,
+      universityName:  dto.universityName ?? null,
+      organizationName:   dto.organisationName ?? null,
+      organizationRole:   dto.memberRole ?? null,
       verificationStatus: VerificationStatus.VERIFIED,
       tokenVersion: 0,
       lastLoginAt: null,
@@ -320,7 +322,12 @@ export class AdminService implements OnModuleInit {
       select: [
         'id', 'mobileNumber', 'name', 'role', 'verificationStatus',
         'category', 'district', 'state', 'block', 'village', 'kvk',
-        'languagePreference', 'profileData', 'crops',
+        'organisationType',
+        'languagePreference',
+        'age', 'gender', 'farmSize', 'season', 'cropType',
+        'courseName', 'collegeName', 'universityName',
+        'organizationName', 'organizationRole',
+        'crops',
         'createdAt', 'lastLoginAt',
         'suspendedAt', 'suspendedUntil', 'suspendedReason',
         'bannedAt', 'bannedReason',

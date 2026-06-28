@@ -137,7 +137,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       filterOptions: [],  // derived from data
       render: (q) => (
         <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
-          {(q.domains ?? []).join(', ') || '—'}
+          {(q.domains ?? []).join(', ') || '-'}
         </span>
       ),
     },
@@ -149,7 +149,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       filterable: true,
       filterOptions: [],
       render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.season || '—'}</span>
+        <span className="text-xs text-muted-foreground capitalize">{q.season || '-'}</span>
       ),
     },
     {
@@ -158,7 +158,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       width: '100px',
       sortable: true,
       render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.cropType || '—'}</span>
+        <span className="text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>
       ),
     },
     {
@@ -167,7 +167,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       width: '110px',
       sortable: true,
       render: (q) => (
-        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '—'}</span>
+        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '-'}</span>
       ),
     },
     {
@@ -187,7 +187,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
             {q.mediaUrls.length > 1 ? `${q.mediaUrls.length}` : ''}
           </a>
         ) : (
-          <span className="text-xs text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">-</span>
         ),
     },
   ]
@@ -206,7 +206,7 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       key: 'submittedAt',
       header: 'Submitted',
       render: (q) => (
-        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '—'}</span>
+        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '-'}</span>
       ),
     },
     {
@@ -219,7 +219,7 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       header: 'Category',
       render: (q) => (
         <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded capitalize">
-          {(q.domains ?? []).join(', ') || '—'}
+          {(q.domains ?? []).join(', ') || '-'}
         </span>
       ),
     },
@@ -228,13 +228,13 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       key: 'season',
       header: 'Season',
       render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.season || '—'}</span>
+        <span className="text-xs text-muted-foreground capitalize">{q.season || '-'}</span>
       ),
     },
     {
       key: 'cropType',
       header: 'Crop',
-      render: (q) => <span className="text-xs text-muted-foreground capitalize">{q.cropType || '—'}</span>,
+      render: (q) => <span className="text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>,
     },
   ]
 }
@@ -359,10 +359,21 @@ export function UserDetailPage() {
     const missing: string[] = []
     if (!user.name || user.name.trim().length < 2) missing.push('Name (missing or too short)')
     if (!user.category) missing.push('Category')
-    if (!user.block) missing.push('Block')
-    if (!user.village) missing.push('Village')
-    if (!user.profileData || !user.profileData['farmSize']) missing.push('Farm size')
-    if (!user.crops || user.crops.length === 0) missing.push('Crops')
+    // Block, village are only required for farmers
+    if (user.category === 'farmer' && !user.block) missing.push('Block')
+    if (user.category === 'farmer' && !user.village) missing.push('Village')
+    if (user.category === 'farmer' && !user.farmSize) missing.push('Farm size')
+    if (user.category === 'farmer' && (!user.crops || user.crops.length === 0)) missing.push('Crops')
+    // Org fields required for fpo / volunteer / ngo
+    if (['fpo', 'volunteer', 'ngo'].includes(user.category ?? '') && !user.organisationType) {
+      missing.push('Organisation Type')
+    }
+    if (['fpo', 'volunteer', 'ngo'].includes(user.category ?? '') && !user.organizationName) {
+      missing.push('Organisation Name')
+    }
+    if (['fpo', 'volunteer', 'ngo'].includes(user.category ?? '') && !user.organizationRole) {
+      missing.push('Role in Organisation')
+    }
     if (!user.consentGiven) missing.push('Consent not given')
     return missing
   }, [user])
@@ -469,7 +480,7 @@ export function UserDetailPage() {
                   </div>
                 </div>
 
-                {/* Action buttons — only for super_admin, never on self */}
+                {/* Action buttons - only for super_admin, never on self */}
                 {isSuperAdmin && user.role !== 'super_admin' && (
                   <div className="flex flex-wrap gap-2">
                     {isPending && (
@@ -507,11 +518,11 @@ export function UserDetailPage() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" />
-                  {[user.district, user.state].filter(Boolean).join(', ') || '—'}
+                  {[user.district, user.state].filter(Boolean).join(', ') || '-'}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
-                  Joined {formatDate(user.createdAt) ?? '—'}
+                  Joined {formatDate(user.createdAt) ?? '-'}
                 </span>
                 {user.lastLoginAt && (
                   <span className="flex items-center gap-1.5">
@@ -557,10 +568,10 @@ export function UserDetailPage() {
         </Card>
       )}
 
-      {/* Stats strip — only show when there are questions */}
+      {/* Stats strip - only show when there are questions */}
       {questions.length > 0 && <StatsStrip questions={questions} />}
 
-      {/* Account + Questions — stacked vertically */}
+      {/* Account + Questions - stacked vertically */}
       <div className="flex flex-col gap-4">
 
         {/* Account details card */}
@@ -597,33 +608,44 @@ export function UserDetailPage() {
             )}
           >
             <CardContent className="pt-4">
-              <DetailRow label="Language" value={user.languagePreference || '—'} />
-              <DetailRow label="Category" value={user.category ?? '—'} />
-              <DetailRow label="State" value={user.state || '—'} />
-              <DetailRow label="District" value={user.district || '—'} />
-              <DetailRow label="Block" value={user.block ?? '—'} />
-              <DetailRow label="Village" value={user.village ?? '—'} />
+              <DetailRow label="Language" value={user.languagePreference || '-'} />
+              <DetailRow label="Category" value={user.category ?? '-'} />
+              <DetailRow label="State" value={user.state || '-'} />
+              <DetailRow label="District" value={user.district || '-'} />
+              <DetailRow label="Block" value={user.block ?? '-'} />
+              <DetailRow label="Village" value={user.village ?? '-'} />
               <DetailRow label="KVK" value={user.kvk ?? '—'} />
-              {/* Category-specific profile fields */}
-              {user.category === 'farmer' && user.profileData?.farmSize && (
-                <DetailRow label="Farm Size" value={`${user.profileData.farmSize} acres`} />
+              {user.age && <DetailRow label="Age" value={user.age.toString()} />}
+              {user.gender && <DetailRow label="Gender" value={user.gender} />}
+              {user.organisationType && (
+                <DetailRow label="Org. Type" value={user.organisationType} />
               )}
-              {user.category === 'student' && user.profileData?.courseName && (
-                <DetailRow label="Course" value={user.profileData.courseName as string} />
+              {/* Category-specific fields */}
+              {user.category === 'farmer' && user.farmSize && (
+                <DetailRow label="Farm Size" value={`${user.farmSize} acres`} />
               )}
-              {user.category === 'student' && user.profileData?.collegeName && (
-                <DetailRow label="College" value={user.profileData.collegeName as string} />
+              {user.category === 'farmer' && user.cropType && (
+                <DetailRow label="Crop" value={user.cropType} />
               )}
-              {user.category === 'student' && user.profileData?.universityName && (
-                <DetailRow label="University" value={user.profileData.universityName as string} />
+              {user.category === 'farmer' && user.season && (
+                <DetailRow label="Season" value={user.season} />
               )}
-              {['fpo', 'ngo'].includes(user.category ?? '') && user.profileData?.organisationName && (
-                <DetailRow label="Organisation" value={user.profileData.organisationName as string} />
+              {user.category === 'student' && user.courseName && (
+                <DetailRow label="Course" value={user.courseName} />
               )}
-              {['fpo', 'ngo', 'volunteer'].includes(user.category ?? '') && user.profileData?.memberRole && (
-                <DetailRow label="Role" value={user.profileData.memberRole as string} />
+              {user.category === 'student' && user.collegeName && (
+                <DetailRow label="College" value={user.collegeName} />
               )}
-              <DetailRow label="Joined" value={formatDate(user.createdAt) ?? '—'} />
+              {user.category === 'student' && user.universityName && (
+                <DetailRow label="University" value={user.universityName} />
+              )}
+              {['fpo', 'ngo', 'volunteer'].includes(user.category ?? '') && user.organizationName && (
+                <DetailRow label="Organisation" value={user.organizationName} />
+              )}
+              {['fpo', 'ngo', 'volunteer'].includes(user.category ?? '') && user.organizationRole && (
+                <DetailRow label="Role" value={user.organizationRole} />
+              )}
+              <DetailRow label="Joined" value={formatDate(user.createdAt) ?? '-'} />
               <DetailRow label="Last Login" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'} />
               <DetailRow label="Role" value={user.role.replace('_', ' ')} />
               <DetailRow label="Status" value={<VerificationBadge status={user.verificationStatus} />} />
@@ -751,7 +773,7 @@ export function UserDetailPage() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Added {formatDate(pd.createdAt) ?? '—'}
+                          Added {formatDate(pd.createdAt) ?? '-'}
                           {pd.verifiedAt && (
                             <span className="ml-2 text-emerald-600">
                               Verified {formatDate(pd.verifiedAt)}
@@ -821,7 +843,7 @@ export function UserDetailPage() {
         </Card>
       </div>
 
-      {/* Audit History — super_admin only */}
+      {/* Audit History - super_admin only */}
       {isSuperAdmin && (
         <Card>
           <CardHeader className="p-0">
@@ -917,7 +939,7 @@ export function UserDetailPage() {
                   {auditEntries.length > AUDIT_PAGE_SIZE && (
                     <div className="flex items-center justify-between mt-3 pt-2 border-t border-border-subtle">
                       <span className="text-xs text-muted-foreground">
-                        {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}–{Math.min(auditPage * AUDIT_PAGE_SIZE, auditEntries.length)} of {auditEntries.length}
+                        {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}-{Math.min(auditPage * AUDIT_PAGE_SIZE, auditEntries.length)} of {auditEntries.length}
                       </span>
                       <div className="flex items-center gap-1">
                         <button
@@ -1036,28 +1058,57 @@ export function UserDetailPage() {
 
               {/* Full field listing */}
               <div className="rounded-lg border border-border divide-y divide-border/60">
-                {[
-                  { label: 'Name', value: user.name || '—' },
-                  { label: 'Mobile', value: user.mobileNumber },
-                  { label: 'Category', value: user.category || '—' },
-                  { label: 'State', value: user.state },
-                  { label: 'District', value: user.district },
-                  { label: 'Block', value: user.block || '—' },
-                  { label: 'Village', value: user.village || '—' },
-                  { label: 'KVK', value: user.kvk || '—' },
-                  { label: 'Language', value: user.languagePreference },
-                  { label: 'Farm Size', value: (user.profileData as Record<string, unknown>)?.['farmSize'] as string || '—' },
-                  { label: 'Crops', value: user.crops?.length ? user.crops.join(', ') : '—' },
-                  { label: 'Consent Given', value: user.consentGiven ? 'Yes' : 'No' },
-                  { label: 'Verification Status', value: user.verificationStatus },
-                  { label: 'Created At', value: formatDate(user.createdAt) || '—' },
-                  { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '—' },
-                ].map(({ label, value }) => (
+                {(() => {
+                  const fields: { label: string; value: string }[] = [
+                    { label: 'Name', value: user.name || '—' },
+                    { label: 'Mobile', value: user.mobileNumber },
+                    { label: 'Category', value: user.category || '—' },
+                    { label: 'State', value: user.state },
+                    { label: 'District', value: user.district },
+                    { label: 'Language', value: user.languagePreference },
+                    { label: 'Consent Given', value: user.consentGiven ? 'Yes' : 'No' },
+                  ]
+                  if (user.category === 'farmer') {
+                    fields.push(
+                      { label: 'Block', value: user.block || '—' },
+                      { label: 'Village', value: user.village || '—' },
+                      { label: 'KVK', value: user.kvk || '—' },
+                      { label: 'Farm Size', value: user.farmSize || '—' },
+                      { label: 'Crop', value: user.cropType || '—' },
+                      { label: 'Season', value: user.season || '—' },
+                      { label: 'Crops', value: user.crops?.length ? user.crops.join(', ') : '—' },
+                    )
+                  }
+                  if (['fpo', 'volunteer', 'ngo'].includes(user.category ?? '')) {
+                    fields.push(
+                      { label: 'Block', value: user.block || '—' },
+                      { label: 'Village', value: user.village || '—' },
+                      { label: 'Org. Type', value: user.organisationType || '—' },
+                    )
+                    if (user.organizationName) fields.push({ label: 'Organisation', value: user.organizationName })
+                    if (user.organizationRole) fields.push({ label: 'Role in Org.', value: user.organizationRole })
+                  }
+                  if (user.category === 'student') {
+                    if (user.courseName) fields.push({ label: 'Course', value: user.courseName })
+                    if (user.collegeName) fields.push({ label: 'College', value: user.collegeName })
+                    if (user.universityName) fields.push({ label: 'University', value: user.universityName })
+                  }
+                  fields.push(
+                    { label: 'Age', value: user.age?.toString() || '—' },
+                    { label: 'Gender', value: user.gender || '—' },
+                  )
+                  fields.push(
+                    { label: 'Verification Status', value: user.verificationStatus },
+                    { label: 'Created At', value: formatDate(user.createdAt) || '—' },
+                    { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '—' },
+                  )
+                  return fields
+                })().map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between px-3 py-2.5">
                     <span className="text-xs text-muted-foreground">{label}</span>
                     <span className={cn(
                       'text-xs font-medium text-right',
-                      value === '—' ? 'text-muted-foreground/60' : 'text-foreground',
+                      value === '-' ? 'text-muted-foreground/60' : 'text-foreground',
                     )}>
                       {value}
                     </span>

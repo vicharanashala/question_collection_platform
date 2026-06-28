@@ -50,7 +50,18 @@ export interface PublicUser {
   verificationStatus: VerificationStatus;
   role: UserRole;
   createdAt: Date;
-  profileData?: Record<string, unknown>;
+  // Flattened profile fields (replacing profileData JSONB)
+  age:             number | null;
+  gender:          string | null;
+  farmSize:        string | null;
+  season:          string | null;
+  cropType:        string | null;
+  courseName:      string | null;
+  collegeName:     string | null;
+  universityName:   string | null;
+  organisationType:  string | null;
+  organizationName:  string | null;
+  organizationRole:  string | null;
 }
 
 @Injectable()
@@ -335,6 +346,12 @@ export class AuthService {
         );
       }
 
+      // Block, village, kvk are only required for farmers — validate server-side
+      if (dto.category === UserCategory.FARMER) {
+        if (!dto.block?.trim())   throw new BadRequestException('Block is required for farmer registration.');
+        if (!dto.village?.trim()) throw new BadRequestException('Village is required for farmer registration.');
+      }
+
       // Update user with registration data
       user.name = dto.name.trim();
       user.category = dto.category;
@@ -350,10 +367,22 @@ export class AuthService {
       user.otpHash = null;
       user.otpExpiresAt = null;
 
-      // Separate cropType (stored as rows) from other profileData fields (stored as JSONB)
-      const { cropType, ...restProfileData } = (dto.profileData ?? {}) as Record<string, unknown>;
-      if (Object.keys(restProfileData).length > 0) {
-        user.profileData = restProfileData;
+      // Flat top-level fields (replacing profileData JSONB)
+      user.age             = dto.age ?? null;
+      user.gender          = dto.gender ?? null;
+      user.farmSize        = dto.farmSize ?? null;
+      user.season          = dto.season ?? null;
+      user.cropType        = dto.cropType ?? null;
+      user.courseName      = dto.courseName ?? null;
+      user.collegeName     = dto.collegeName ?? null;
+      user.universityName  = dto.universityName ?? null;
+      user.organisationType  = dto.organisationType ?? null;
+      user.organizationName  = dto.organizationName ?? null;
+      user.organizationRole  = dto.organizationRole ?? null;
+
+      // Volunteer has volunteerCropType alias for cropType
+      if (dto.category === UserCategory.VOLUNTEER && dto.volunteerCropType) {
+        user.cropType = dto.volunteerCropType;
       }
 
       await queryRunner.manager.save(user);
@@ -369,10 +398,10 @@ export class AuthService {
         await queryRunner.manager.save(wallet);
       }
 
-      // Store crops directly on the user record as a text[]
-      if (cropType && typeof cropType === 'string' && cropType.trim()) {
-        user.crops = cropType.split(',').map((c: string) => c.trim()).filter(Boolean);
-        await queryRunner.manager.save(user);
+      // Store crops directly on the user record as a text[] (comma-separated string)
+      const cropInput = dto.cropType ?? dto.volunteerCropType;
+      if (cropInput && typeof cropInput === 'string' && cropInput.trim()) {
+        user.crops = cropInput.split(',').map((c: string) => c.trim()).filter(Boolean);
       }
 
       await queryRunner.commitTransaction();
@@ -551,7 +580,17 @@ export class AuthService {
       verificationStatus: user.verificationStatus,
       role: user.role,
       createdAt: user.createdAt,
-      profileData: user.profileData ?? undefined,
+      age:              user.age,
+      gender:           user.gender,
+      farmSize:         user.farmSize,
+      season:           user.season,
+      cropType:         user.cropType,
+      courseName:       user.courseName,
+      collegeName:      user.collegeName,
+      universityName:   user.universityName,
+      organisationType: user.organisationType,
+      organizationName: user.organizationName,
+      organizationRole: user.organizationRole,
     };
   }
 

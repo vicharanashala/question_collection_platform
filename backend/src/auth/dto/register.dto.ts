@@ -4,15 +4,14 @@ import {
   IsEnum,
   IsBoolean,
   IsOptional,
-  ValidateNested,
-  IsArray,
   MinLength,
   MaxLength,
+  IsNumber,
+  IsInt,
+  Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { UserCategory } from '../../common/enums';
 
-// Supported Indian states (abbreviated list)
 export const SUPPORTED_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
@@ -25,7 +24,6 @@ export const SUPPORTED_STATES = [
 
 export type SupportedState = typeof SUPPORTED_STATES[number];
 
-// 22 Indian languages + English
 export const SUPPORTED_LANGUAGES = [
   'as', 'bn', 'brx', 'doi', 'en', 'gu', 'hi', 'kn', 'ks', 'leo',
   'mai', 'ml', 'mr', 'mni', 'ne', 'or', 'pa', 'raj', 'sa', 'sat',
@@ -33,50 +31,6 @@ export const SUPPORTED_LANGUAGES = [
 ] as const;
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
-
-// Farmer-specific profile fields
-export class FarmerProfileDto {
-  @IsOptional()
-  @IsString()
-  farmSize?: string; // e.g. "2.5 acres"
-}
-
-// Student-specific profile fields
-export class StudentProfileDto {
-  @IsOptional()
-  @IsString()
-  courseName?: string;
-
-  @IsOptional()
-  @IsString()
-  collegeName?: string;
-
-  @IsOptional()
-  @IsString()
-  universityName?: string;
-}
-
-// FPO-specific profile fields
-export class FpoProfileDto {
-  @IsOptional()
-  @IsString()
-  organizationName?: string;
-
-  @IsOptional()
-  @IsString()
-  role?: string;
-}
-
-// Volunteer/NGO-specific profile fields
-export class VolunteerProfileDto {
-  @IsOptional()
-  @IsString()
-  organizationName?: string;
-
-  @IsOptional()
-  @IsString()
-  role?: string;
-}
 
 export class RegisterDto {
   @IsNotEmpty()
@@ -99,30 +53,106 @@ export class RegisterDto {
   @IsString()
   district: string;
 
-  @IsNotEmpty()
+  /** Only required for farmer category. */
+  @IsOptional()
   @IsString()
-  block: string;
+  block?: string;
 
-  @IsNotEmpty()
+  /** Only required for farmer category. */
+  @IsOptional()
   @IsString()
-  village: string;
+  village?: string;
 
+  /** Only required for farmer category. */
   @IsOptional()
   @IsString()
   kvk?: string;
+
+  /** Age — applicable to all categories. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  age?: number;
+
+  /** Gender — applicable to all categories. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  gender?: string;
 
   @IsNotEmpty()
   @IsEnum(UserCategory)
   category: UserCategory;
 
+  // ── Farmer-specific ─────────────────────────────────────────────────────────
+
+  /** Farm size in acres — farmer only. */
+  @IsOptional()
+  @IsString()
+  farmSize?: string;
+
+  /** Primary crop — farmer only. */
+  @IsOptional()
+  @IsString()
+  cropType?: string;
+
+  // ── Student-specific ────────────────────────────────────────────────────────
+
+  /** Course name — student only. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  courseName?: string;
+
+  /** College name — student only. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  collegeName?: string;
+
+  /** University name — student only. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  universityName?: string;
+
+  // ── FPO / NGO / Volunteer ───────────────────────────────────────────────────
+
+  /** Organisation type — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  organisationType?: string;
+
+  /** Organisation name — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  organizationName?: string;
+
+  /** Role within the organisation — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  organizationRole?: string;
+
+  // ── Volunteer ───────────────────────────────────────────────────────────────
+
+  /** Season — volunteer (gardening season) only. */
+  @IsOptional()
+  @IsString()
+  season?: string;
+
+  /** Primary crop — volunteer only. */
+  @IsOptional()
+  @IsString()
+  volunteerCropType?: string;
+
   @IsNotEmpty()
   @IsString()
-  languagePreference: string; // language code e.g. 'hi', 'mr', 'ta'
+  languagePreference: string;
 
-  /** Must be explicitly `true` — validated again in the auth service */
+  /** Must be explicitly `true` — validated again in the auth service. */
   @IsBoolean()
   consentGiven: boolean;
-
-  @IsOptional()
-  profileData?: FarmerProfileDto | StudentProfileDto | FpoProfileDto | VolunteerProfileDto;
 }
