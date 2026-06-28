@@ -134,6 +134,26 @@ export class User {
   @Column({ name: 'organization_role', type: 'varchar', length: 255, nullable: true })
   organizationRole: string | null;
 
+  /** Number of farmers under this FPO/NGO — fpo / ngo only */
+  @Column({ name: 'number_of_farmers', type: 'integer', nullable: true })
+  numberOfFarmers: number | null;
+
+  /** Organisation state — fpo / ngo / volunteer */
+  @Column({ name: 'organization_state', type: 'varchar', length: 100, nullable: true })
+  organizationState: string | null;
+
+  /** Organisation district — fpo / ngo / volunteer */
+  @Column({ name: 'organization_district', type: 'varchar', length: 100, nullable: true })
+  organizationDistrict: string | null;
+
+  /** Organisation block — fpo / ngo / volunteer */
+  @Column({ name: 'organization_block', type: 'varchar', length: 100, nullable: true })
+  organizationBlock: string | null;
+
+  /** Organisation village — fpo / ngo / volunteer */
+  @Column({ name: 'organization_village', type: 'varchar', length: 100, nullable: true })
+  organizationVillage: string | null;
+
   @Column({ name: 'consent_given', type: 'boolean', default: false })
   consentGiven: boolean;
 

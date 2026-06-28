@@ -83,6 +83,16 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [loadingSubdistricts, setLoadingSubdistricts] = useState(false);
   const [loadingVillages, setLoadingVillages] = useState(false);
 
+  // Load org states when category is FPO/NGO (runs whenever category changes)
+  useEffect(() => {
+    if (![UserCategory.FPO, UserCategory.NGO].includes(category as UserCategory)) return;
+    setLoadingOrgStates(true);
+    lgdApi.getStates()
+      .then((res) => setOrgStateList(res.data.states))
+      .catch(() => setOrgStateList([]))
+      .finally(() => setLoadingOrgStates(false));
+  }, [category]);
+
   // Load states on mount
   useEffect(() => {
     setLoadingStates(true);
@@ -103,6 +113,25 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [organisationTypeOther, setOrganisationTypeOther] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [role, setRole] = useState('');
+  const [numberOfFarmers, setNumberOfFarmers] = useState('');
+
+  // FPO/NGO org location (separate from personal location above)
+  const [orgState, setOrgState] = useState('');
+  const [orgStateCode, setOrgStateCode] = useState('');
+  const [orgDistrict, setOrgDistrict] = useState('');
+  const [orgDistrictCode, setOrgDistrictCode] = useState('');
+  const [orgBlock, setOrgBlock] = useState('');
+  const [orgShowOtherBlock, setOrgShowOtherBlock] = useState(false);
+  const [orgVillage, setOrgVillage] = useState('');
+  const [orgShowOtherVillage, setOrgShowOtherVillage] = useState(false);
+  const [orgVillageList, setOrgVillageList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingOrgVillages, setLoadingOrgVillages] = useState(false);
+  const [orgStateList, setOrgStateList] = useState<{ code: string; name: string }[]>([]);
+  const [orgDistrictList, setOrgDistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [orgBlockList, setOrgBlockList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingOrgStates, setLoadingOrgStates] = useState(false);
+  const [loadingOrgDistricts, setLoadingOrgDistricts] = useState(false);
+  const [loadingOrgBlocks, setLoadingOrgBlocks] = useState(false);
 
   function validateStep(s: number): boolean {
     const errs: Record<string, string> = {};
@@ -144,13 +173,25 @@ export function RegisterScreen({ navigation, route }: Props) {
       }
       if (
         (category === UserCategory.FPO || category === UserCategory.VOLUNTEER || category === UserCategory.NGO) &&
-        belongsToOrganization === true &&
-        (!organisationType || !organizationName.trim() || !role.trim())
+        belongsToOrganization === true
       ) {
         if (!organisationType) errs.organisationType = t('organisationTypeRequired');
         if (organisationType === '__other__' && !organisationTypeOther.trim()) errs.organisationTypeOther = t('organisationTypeOtherRequired');
         if (!organizationName.trim()) errs.organizationName = t('organisationRequired');
         if (!role.trim()) errs.role = t('roleRequired');
+        if (!numberOfFarmers.trim()) errs.numberOfFarmers = t('numberOfFarmersRequired');
+        else {
+          const n = parseInt(numberOfFarmers.trim(), 10);
+          if (isNaN(n) || n < 1) errs.numberOfFarmers = t('numberOfFarmersInvalid');
+        }
+        if (!orgState) errs.orgState = t('orgStateRequired');
+        if (!orgDistrict.trim()) errs.orgDistrict = t('orgDistrictRequired');
+        if (orgShowOtherBlock) {
+          if (!orgBlock.trim()) errs.orgBlockOther = t('blockOtherRequired');
+        }
+        if (orgShowOtherVillage) {
+          if (!orgVillage.trim()) errs.orgVillageOther = t('villageOtherRequired');
+        }
       }
     }
     if (s === 4 && !language) errs.language = t('languageRequired');
@@ -192,6 +233,11 @@ export function RegisterScreen({ navigation, route }: Props) {
           organisationType:   organisationType === '__other__' ? organisationTypeOther.trim() : organisationType,
           organizationName,
           organizationRole: role,
+          numberOfFarmers: parseInt(numberOfFarmers.trim(), 10),
+          organizationState:    orgState,
+          organizationDistrict: orgDistrict.trim(),
+          organizationBlock:    orgBlock.trim() || undefined,
+          organizationVillage:  orgVillage.trim() || undefined,
         }),
       });
       showToast(t('registrationSuccess'), 'success');
@@ -605,7 +651,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                         value={belongsToOrganization ?? false}
                         onValueChange={(v) => {
                           setBelongsToOrganization(v);
-                          if (!v) { setOrganisationType(''); setOrganisationTypeOther(''); setOrganizationName(''); setRole(''); }
+                          if (!v) { setOrganisationType(''); setOrganisationTypeOther(''); setOrganizationName(''); setRole(''); setNumberOfFarmers(''); setOrgState(''); setOrgDistrict(''); setOrgBlock(''); setOrgVillage(''); setOrgShowOtherBlock(false); setOrgShowOtherVillage(false); setOrgDistrictList([]); setOrgBlockList([]); setOrgVillageList([]); }
                           setErrors({});
                         }}
                         trackColor={{ false: c.borderSubtle, true: c.primary + '60' }}
@@ -646,6 +692,146 @@ export function RegisterScreen({ navigation, route }: Props) {
                           onChangeText={(txt) => { setRole(txt); setErrors({}); }}
                           error={errors.role}
                         />
+                        <Input
+                          label={t('editProfile.numberOfFarmers')}
+                          placeholder={t('editProfile.numberOfFarmersPlaceholder')}
+                          value={numberOfFarmers}
+                          onChangeText={(txt) => { setNumberOfFarmers(txt); setErrors({}); }}
+                          keyboardType="numeric"
+                          error={errors.numberOfFarmers}
+                        />
+                        <Select
+                          label={t('editProfile.orgLocationState')}
+                          placeholder={t('selectState')}
+                          value={orgState}
+                          options={orgStateList.map((s) => ({ value: s.name, label: s.name }))}
+                          onChange={async (v) => {
+                            setOrgState(v);
+                            setOrgDistrict('');
+                            setOrgBlock('');
+                            setOrgVillage('');
+                            setOrgShowOtherBlock(false);
+                            setOrgShowOtherVillage(false);
+                            setOrgDistrictList([]);
+                            setOrgBlockList([]);
+                            setOrgVillageList([]);
+                            setLoadingOrgDistricts(true);
+                            try {
+                              const code = orgStateList.find((s) => s.name === v)?.code ?? '';
+                              const res = await lgdApi.getDistricts(code);
+                              setOrgDistrictList(res.data.districts);
+                            } catch { setOrgDistrictList([]); }
+                            finally { setLoadingOrgDistricts(false); }
+                          }}
+                          error={errors.orgState}
+                          searchable
+                          loading={loadingOrgStates}
+                        />
+                        <Select
+                          label={t('editProfile.orgLocationDistrict')}
+                          placeholder={t('selectDistrict')}
+                          value={orgDistrict}
+                          options={orgDistrictList.map((d) => ({ value: d.name, label: d.name }))}
+                          onChange={async (v) => {
+                            setOrgDistrict(v);
+                            setOrgBlock('');
+                            setOrgVillage('');
+                            setOrgShowOtherBlock(false);
+                            setOrgShowOtherVillage(false);
+                            setOrgBlockList([]);
+                            setOrgVillageList([]);
+                            const code = orgDistrictList.find((d) => d.name === v)?.code ?? '';
+                            if (!code) return;
+                            setLoadingOrgBlocks(true);
+                            try {
+                              const res = await lgdApi.getSubDistricts(code);
+                              setOrgBlockList(res.data.subdistricts);
+                            } catch { setOrgBlockList([]); }
+                            finally { setLoadingOrgBlocks(false); }
+                          }}
+                          error={errors.orgDistrict}
+                          searchable
+                          loading={loadingOrgDistricts}
+                        />
+                        <Select
+                          label={t('question.blockOptional')}
+                          placeholder={t('selectBlock')}
+                          value={orgShowOtherBlock ? '__other__' : orgBlock}
+                          options={[
+                            ...orgBlockList.map((b) => ({ value: b.code, label: b.name })),
+                            { value: '__other__', label: t('others') },
+                          ]}
+                          onChange={(v) => {
+                            if (v === '__other__') {
+                              setOrgShowOtherBlock(true);
+                              setOrgBlock('');
+                            } else {
+                              setOrgShowOtherBlock(false);
+                              setOrgBlock(v);
+                              setOrgVillage('');
+                              setOrgShowOtherVillage(false);
+                              setOrgVillageList([]);
+                              setErrors({});
+                              setLoadingOrgVillages(true);
+                              lgdApi.getVillages(v)
+                                .then((res) => setOrgVillageList(res.data.villages))
+                                .catch(() => setOrgVillageList([]))
+                                .finally(() => setLoadingOrgVillages(false));
+                            }
+                            setErrors({});
+                          }}
+                          error={errors.orgBlock}
+                          searchable
+                          loading={loadingOrgBlocks}
+                          disabled={loadingOrgBlocks || !orgDistrict}
+                          disabledMessage={!orgDistrict ? t('selectDistrictBeforeBlock') : t('blockLoadingMessage')}
+                        />
+                        {orgShowOtherBlock && (
+                          <Input
+                            label={t('blockOtherOptional')}
+                            placeholder={t('blockOtherPlaceholder')}
+                            value={orgBlock}
+                            onChangeText={(txt) => { setOrgBlock(txt); setErrors({}); }}
+                            error={errors.orgBlockOther}
+                          />
+                        )}
+                        <Select
+                          label={t('villageOptional')}
+                          placeholder={t('selectVillage')}
+                          value={orgShowOtherVillage ? '__other__' : orgVillage}
+                          options={[
+                            ...orgVillageList.map((v) => ({ value: v.code, label: v.name })),
+                            { value: '__other__', label: t('others') },
+                          ]}
+                          onChange={(v) => {
+                            if (v === '__other__') {
+                              setOrgShowOtherVillage(true);
+                              setOrgVillage('');
+                            } else {
+                              setOrgShowOtherVillage(false);
+                              setOrgVillage(v);
+                            }
+                            setErrors({});
+                          }}
+                          error={errors.orgVillage}
+                          searchable
+                          loading={loadingOrgVillages}
+                          disabled={loadingOrgVillages || (!orgBlock && !orgShowOtherBlock)}
+                          disabledMessage={
+                            !orgBlock && !orgShowOtherBlock
+                              ? t('selectBlockBeforeVillage')
+                              : t('villageLoadingMessage')
+                          }
+                        />
+                        {orgShowOtherVillage && (
+                          <Input
+                            label={t('villageOtherOptional')}
+                            placeholder={t('villageOtherPlaceholder')}
+                            value={orgVillage}
+                            onChangeText={(txt) => { setOrgVillage(txt); setErrors({}); }}
+                            error={errors.orgVillageOther}
+                          />
+                        )}
                       </>
                     )}
                   </>

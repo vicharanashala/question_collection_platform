@@ -93,6 +93,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async me(@Req() req: AuthenticatedRequest) {
     const user = await this.authService.getProfile(req.user.id);
+    console.log(`[DEBUG /auth/me] userId=${req.user.id} orgState=${(user as any).organizationState} orgDistrict=${(user as any).organizationDistrict}`);
     return { user };
   }
 

@@ -267,6 +267,20 @@ export function AdminUserDetailScreen() {
                 </Text>
               </View>
             )}
+            {(!!user.block || !!user.village) && (
+              <View style={styles.heroDetailRow}>
+                <Ionicons name="locate-outline" size={13} color={c.textTertiary} />
+                <Text style={[styles.heroDetail, { color: c.textSecondary }]}>
+                  {[String(user.block ?? ''), String(user.village ?? '')].filter(Boolean).join(' › ')}
+                </Text>
+              </View>
+            )}
+            {!!user.kvk && (
+              <View style={styles.heroDetailRow}>
+                <Ionicons name="school-outline" size={13} color={c.textTertiary} />
+                <Text style={[styles.heroDetail, { color: c.textSecondary }]}>KVK: {String(user.kvk)}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -349,6 +363,47 @@ export function AdminUserDetailScreen() {
           </View>
         </View>
 
+        {/* Location details section */}
+        <Text style={[styles.sectionHeading, { color: c.text }]}>Location Details</Text>
+        <View style={[styles.card, { backgroundColor: c.surface }]}>
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>State</Text>
+              <Text style={[styles.infoValue, { color: c.text }]}>{String(user.state ?? '—')}</Text>
+            </View>
+            <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>District</Text>
+              <Text style={[styles.infoValue, { color: c.text }]}>{String(user.district ?? '—')}</Text>
+            </View>
+          </View>
+          <View style={[styles.infoRowBorder, { backgroundColor: c.border }]} />
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Block</Text>
+              <Text style={[styles.infoValue, { color: c.text }]}>{String(user.block ?? '—')}</Text>
+            </View>
+            <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Village</Text>
+              <Text style={[styles.infoValue, { color: c.text }]}>{String(user.village ?? '—')}</Text>
+            </View>
+          </View>
+          {!!user.kvk && (
+            <>
+              <View style={[styles.infoRowBorder, { backgroundColor: c.border }]} />
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Text style={[styles.infoLabel, { color: c.textTertiary }]}>KVK</Text>
+                  <Text style={[styles.infoValue, { color: c.text }]}>{String(user.kvk)}</Text>
+                </View>
+                <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
+                <View style={styles.infoItem} />
+              </View>
+            </>
+          )}
+        </View>
+
         {/* Wallet card — super admin only, for non-privileged users */}
         {isSuperAdmin && !PRIVILEGED_ROLES.includes(user.role as UserRole) && (
           <View style={[styles.card, { backgroundColor: c.surface }]}>
@@ -427,6 +482,75 @@ export function AdminUserDetailScreen() {
             <Text style={[styles.cardSectionDesc, { color: c.textSecondary }]}>
               This user has completed registration but is awaiting admin verification.
             </Text>
+
+            {/* Location summary for pending users */}
+            <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
+              <View style={styles.verifyInfoItem}>
+                <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>State</Text>
+                <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.state ?? '—')}</Text>
+              </View>
+              <View style={styles.verifyInfoItem}>
+                <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>District</Text>
+                <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.district ?? '—')}</Text>
+              </View>
+            </View>
+            {(!!user.block || !!user.village) && (
+              <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
+                <View style={styles.verifyInfoItem}>
+                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Block</Text>
+                  <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.block ?? '—')}</Text>
+                </View>
+                <View style={styles.verifyInfoItem}>
+                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Village</Text>
+                  <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.village ?? '—')}</Text>
+                </View>
+              </View>
+            )}
+            {!!user.kvk && (
+              <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
+                <View style={styles.verifyInfoItem}>
+                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>KVK</Text>
+                  <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.kvk)}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Org info for FPO / NGO */}
+            {(user.category === 'fpo' || user.category === 'ngo') && (
+              <>
+                {user.organisationType && (
+                  <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
+                    <View style={styles.verifyInfoItem}>
+                      <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Org Type</Text>
+                      <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organisationType)}</Text>
+                    </View>
+                    {user.organizationName && (
+                      <View style={styles.verifyInfoItem}>
+                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Org Name</Text>
+                        <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organizationName)}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+                {(user.organizationRole || user.numberOfFarmers) && (
+                  <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
+                    {user.organizationRole && (
+                      <View style={styles.verifyInfoItem}>
+                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Role</Text>
+                        <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organizationRole)}</Text>
+                      </View>
+                    )}
+                    {user.numberOfFarmers && (
+                      <View style={styles.verifyInfoItem}>
+                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Members</Text>
+                        <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.numberOfFarmers)}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </>
+            )}
+
             <TouchableOpacity
               style={[styles.verifyBtn, { backgroundColor: c.success }]}
               onPress={handleVerifyUser}
@@ -912,5 +1036,26 @@ const styles = StyleSheet.create({
   auditPageNum: {
     fontSize: 12,
     paddingHorizontal: 4,
+  },
+  verifyInfoRow: {
+    flexDirection: 'row',
+    paddingVertical: tokens.spacing2,
+    borderTopWidth: 1,
+    marginTop: tokens.spacing2,
+    gap: tokens.spacing4,
+  },
+  verifyInfoItem: {
+    flex: 1,
+  },
+  verifyInfoLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  verifyInfoValue: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

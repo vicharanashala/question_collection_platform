@@ -38,23 +38,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
   banned:        { label: 'Banned',       color: '#991B1B', icon: 'close-circle-outline' },
 };
 
-function getCategoryInfo(user: any): { label: string; value: string } | null {
-  if (!user?.category) return null;
-  if (user.category === UserCategory.FARMER || user.category === UserCategory.FPO) {
-    if (user.farmSize) return { label: 'Farm Size', value: user.farmSize };
-    if (user.cropType) return { label: 'Primary Crop', value: user.cropType };
-  }
-  if (user.category === UserCategory.STUDENT) {
-    if (user.courseName) return { label: 'Course', value: user.courseName };
-    if (user.universityName) return { label: 'University', value: user.universityName };
-  }
-  if (user.category === UserCategory.VOLUNTEER || user.category === UserCategory.NGO) {
-    if (user.organizationRole) return { label: 'Role', value: user.organizationRole };
-    if (user.organizationName) return { label: 'Organisation', value: user.organizationName };
-  }
-  return null;
-}
-
 export function ProfileScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -178,18 +161,6 @@ export function ProfileScreen() {
               </View>
             )}
           </View>
-
-          {/* Category-specific info strip */}
-          {(() => {
-            const info = getCategoryInfo(user);
-            if (!info) return null;
-            return (
-              <View style={[styles.categoryStrip, { borderTopColor: c.borderSubtle }]}>
-                <Text style={[styles.categoryStripLabel, { color: c.textTertiary }]}>{info.label}</Text>
-                <Text style={[styles.categoryStripValue, { color: c.text }]}>{info.value}</Text>
-              </View>
-            );
-          })()}
         </View>
 
         {/* ── Stats row ─────────────────────────────────────── */}
@@ -236,13 +207,36 @@ export function ProfileScreen() {
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
             <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
-            {user?.block && <InfoRow icon="business-outline" label="Block" value={user.block} />}
-            {user?.village && <InfoRow icon="navigate-outline" label="Village" value={user.village} />}
-            {user?.kvk && <InfoRow icon="school-outline" label="KVK" value={user.kvk} />}
+            {user?.block
+              ? <InfoRow icon="business-outline" label="Block" value={user.block} />
+              : <InfoRow icon="business-outline" label="Block" value="—" />}
+            {user?.village
+              ? <InfoRow icon="navigate-outline" label="Village" value={user.village} />
+              : <InfoRow icon="navigate-outline" label="Village" value="—" />}
+            {user?.kvk
+              ? <InfoRow icon="school-outline" label="KVK" value={user.kvk} />
+              : null}
             {user?.category === 'student' && user?.collegeName && <InfoRow icon="business-outline" label="College" value={user.collegeName} />}
             {user?.category === 'student' && user?.universityName && <InfoRow icon="school-outline" label="University" value={user.universityName} />}
           </View>
         </View>
+
+        {/* ── Organisation details ──────────────────────────── */}
+        {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage || user?.organisationType || user?.organizationName || user?.organizationRole || user?.numberOfFarmers) && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
+            <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+              <InfoRow icon="location-outline" label="State" value={user?.organizationState ?? '—'} />
+              <InfoRow icon="map-outline" label="District" value={user?.organizationDistrict ?? '—'} />
+              <InfoRow icon="business-outline" label="Block" value={user?.organizationBlock ?? '—'} />
+              <InfoRow icon="navigate-outline" label="Village" value={user?.organizationVillage ?? '—'} />
+              {user?.organisationType && <InfoRow icon="business-outline" label="Org Type" value={user.organisationType} />}
+              {user?.organizationName && <InfoRow icon="people-outline" label="Org Name" value={user.organizationName} />}
+              {user?.organizationRole && <InfoRow icon="id-card-outline" label="Role" value={user.organizationRole} />}
+              {user?.numberOfFarmers && <InfoRow icon="people-outline" label="Members" value={String(user.numberOfFarmers)} />}
+            </View>
+          </View>
+        )}
 
         {/* ── Crops ──────────────────────────────────────────── */}
         {userCrops.length > 0 && (
@@ -390,17 +384,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   verificationText: { fontSize: 11, fontWeight: '700' },
-
-  // Category strip at bottom of hero
-  categoryStrip: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: tokens.spacing4,
-    paddingVertical: tokens.spacing3,
-    borderTopWidth: 1,
-  },
-  categoryStripLabel: { fontSize: 12, fontWeight: '600' },
-  categoryStripValue: { fontSize: 13, fontWeight: '700' },
 
   // ── Stats
   statsRow: {

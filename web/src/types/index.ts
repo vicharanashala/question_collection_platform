@@ -28,8 +28,13 @@ export interface User {
   courseName:       string | null;
   collegeName:      string | null;
   universityName:   string | null;
-  organizationName:   string | null;
-  organizationRole:   string | null;
+  organizationName:     string | null;
+  organizationRole:     string | null;
+  organizationState:    string | null;
+  organizationDistrict: string | null;
+  organizationBlock:    string | null;
+  organizationVillage:  string | null;
+  numberOfFarmers:      number | null;
   verificationStatus: VerificationStatus;
   suspendedAt: string | null;
   suspendedUntil: string | null;
@@ -134,6 +139,10 @@ export interface AuthUser {
   languagePreference?: string;
   verificationStatus?: VerificationStatus;
   createdAt?: string;
+  organizationState?:    string | null;
+  organizationDistrict?: string | null;
+  organizationBlock?:    string | null;
+  organizationVillage?:  string | null;
 }
 
 export type TimeRange = '7d' | '30d' | '90d'

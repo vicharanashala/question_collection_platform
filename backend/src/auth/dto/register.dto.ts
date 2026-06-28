@@ -136,6 +136,36 @@ export class RegisterDto {
   @MaxLength(255)
   organizationRole?: string;
 
+  /** Number of farmers under this FPO/NGO — fpo / ngo only. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  numberOfFarmers?: number;
+
+  /** Organisation state — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  organizationState?: string;
+
+  /** Organisation district — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  organizationDistrict?: string;
+
+  /** Organisation block — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  organizationBlock?: string;
+
+  /** Organisation village — fpo / ngo / volunteer. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  organizationVillage?: string;
+
   // ── Volunteer ───────────────────────────────────────────────────────────────
 
   /** Season — volunteer (gardening season) only. */

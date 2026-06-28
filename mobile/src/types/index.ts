@@ -60,6 +60,7 @@ export interface PublicUser {
   district: string;
   block: string | null;
   village: string | null;
+  kvk: string | null;
   languagePreference: string;
   verificationStatus: VerificationStatus;
   role: UserRole;
@@ -76,6 +77,7 @@ export interface PublicUser {
   organisationType:   string | null;
   organizationName:   string | null;
   organizationRole:   string | null;
+  numberOfFarmers:     number | null;
   // Crop details (populated from /users/me)
   crops?: CropDetail[];
 }

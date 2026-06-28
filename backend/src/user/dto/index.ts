@@ -29,6 +29,11 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  village?: string;
+
+  @IsOptional()
+  @IsString()
   languagePreference?: string;
 
   // ── General ─────────────────────────────────────────────────────────────────
@@ -93,6 +98,12 @@ export class UpdateProfileDto {
   @IsString()
   @MaxLength(255)
   organizationRole?: string;
+
+  /** Number of farmers under this FPO/NGO — fpo / ngo only. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  numberOfFarmers?: number;
 
   /** Crop names to associate with the user (replaces existing list). */
   @IsOptional()

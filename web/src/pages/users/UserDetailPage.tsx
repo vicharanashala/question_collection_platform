@@ -607,53 +607,87 @@ export function UserDetailPage() {
               accountCollapsed ? 'max-h-0 opacity-0' : 'max-h-[600px] opacity-100',
             )}
           >
-            <CardContent className="pt-4">
-              <DetailRow label="Language" value={user.languagePreference || '-'} />
-              <DetailRow label="Category" value={user.category ?? '-'} />
-              <DetailRow label="State" value={user.state || '-'} />
-              <DetailRow label="District" value={user.district || '-'} />
-              <DetailRow label="Block" value={user.block ?? '-'} />
-              <DetailRow label="Village" value={user.village ?? '-'} />
-              <DetailRow label="KVK" value={user.kvk ?? '—'} />
-              {user.age && <DetailRow label="Age" value={user.age.toString()} />}
-              {user.gender && <DetailRow label="Gender" value={user.gender} />}
-              {user.organisationType && (
-                <DetailRow label="Org. Type" value={user.organisationType} />
+            <CardContent className="pt-4 pb-5 space-y-5">
+              {/* Personal Info */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Personal Info</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-0">
+                  <DetailRow label="Language" value={user.languagePreference || '-'} />
+                  <DetailRow label="Category" value={user.category ?? '-'} />
+                  {user.age && <DetailRow label="Age" value={user.age.toString()} />}
+                  {user.gender && <DetailRow label="Gender" value={user.gender} />}
+                  {user.organisationType && (
+                    <DetailRow label="Org. Type" value={user.organisationType} />
+                  )}
+                </div>
+              </div>
+
+              {/* Personal Location */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Personal Location</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-0">
+                  <DetailRow label="State" value={user.state || '-'} />
+                  <DetailRow label="District" value={user.district || '-'} />
+                  <DetailRow label="Block" value={user.block ?? '-'} />
+                  <DetailRow label="Village" value={user.village ?? '-'} />
+                  <DetailRow label="KVK" value={user.kvk ?? '—'} />
+                </div>
+              </div>
+
+              {/* Organisation */}
+              {(user.organizationName || user.organizationRole ||
+                user.organizationState || user.organizationDistrict ||
+                user.organizationBlock || user.organizationVillage) && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Organisation</p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-0">
+                    {user.organizationName && <DetailRow label="Name" value={user.organizationName} />}
+                    {user.organizationRole && <DetailRow label="Role" value={user.organizationRole} />}
+                    <DetailRow label="Org. State" value={user.organizationState ?? '-'} />
+                    <DetailRow label="Org. District" value={user.organizationDistrict ?? '-'} />
+                    <DetailRow label="Org. Block" value={user.organizationBlock ?? '-'} />
+                    <DetailRow label="Org. Village" value={user.organizationVillage ?? '-'} />
+                    {user.numberOfFarmers != null && <DetailRow label="Members" value={user.numberOfFarmers.toString()} />}
+                  </div>
+                </div>
               )}
-              {/* Category-specific fields */}
-              {user.category === 'farmer' && user.farmSize && (
-                <DetailRow label="Farm Size" value={`${user.farmSize} acres`} />
+
+              {/* Category-specific */}
+              {user.category === 'farmer' && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Farming</p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-0">
+                    {user.farmSize && <DetailRow label="Farm Size" value={`${user.farmSize} acres`} />}
+                    {user.cropType && <DetailRow label="Crop" value={user.cropType} />}
+                    {user.season && <DetailRow label="Season" value={user.season} />}
+                  </div>
+                </div>
               )}
-              {user.category === 'farmer' && user.cropType && (
-                <DetailRow label="Crop" value={user.cropType} />
+              {user.category === 'student' && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Education</p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-0">
+                    {user.courseName && <DetailRow label="Course" value={user.courseName} />}
+                    {user.collegeName && <DetailRow label="College" value={user.collegeName} />}
+                    {user.universityName && <DetailRow label="University" value={user.universityName} />}
+                  </div>
+                </div>
               )}
-              {user.category === 'farmer' && user.season && (
-                <DetailRow label="Season" value={user.season} />
-              )}
-              {user.category === 'student' && user.courseName && (
-                <DetailRow label="Course" value={user.courseName} />
-              )}
-              {user.category === 'student' && user.collegeName && (
-                <DetailRow label="College" value={user.collegeName} />
-              )}
-              {user.category === 'student' && user.universityName && (
-                <DetailRow label="University" value={user.universityName} />
-              )}
-              {['fpo', 'ngo', 'volunteer'].includes(user.category ?? '') && user.organizationName && (
-                <DetailRow label="Organisation" value={user.organizationName} />
-              )}
-              {['fpo', 'ngo', 'volunteer'].includes(user.category ?? '') && user.organizationRole && (
-                <DetailRow label="Role" value={user.organizationRole} />
-              )}
-              <DetailRow label="Joined" value={formatDate(user.createdAt) ?? '-'} />
-              <DetailRow label="Last Login" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'} />
-              <DetailRow label="Role" value={user.role.replace('_', ' ')} />
-              <DetailRow label="Status" value={<VerificationBadge status={user.verificationStatus} />} />
+
+              {/* Account */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Account</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-0">
+                  <DetailRow label="Joined" value={formatDate(user.createdAt) ?? '-'} />
+                  <DetailRow label="Last Login" value={user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never'} />
+                </div>
+              </div>
             </CardContent>
           </div>
         </Card>
 
         {/* Crops card */}
+        {user.category === 'farmer' && (
         <Card>
           <CardHeader className="p-0">
             <button
@@ -702,6 +736,7 @@ export function UserDetailPage() {
             </CardContent>
           </div>
         </Card>
+        )}
 
         {/* Payment Methods card */}
         <Card>
@@ -1042,7 +1077,7 @@ export function UserDetailPage() {
           </DialogHeader>
 
           {user && (
-            <div className="space-y-4 py-2">
+            <div className="space-y-5 py-2">
               {/* Missing fields warning */}
               {missingFields.length > 0 && (
                 <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3 space-y-1">
@@ -1056,64 +1091,123 @@ export function UserDetailPage() {
                 </div>
               )}
 
-              {/* Full field listing */}
-              <div className="rounded-lg border border-border divide-y divide-border/60">
-                {(() => {
-                  const fields: { label: string; value: string }[] = [
+              {/* Section: Basic Info */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Basic Info</p>
+                <div className="rounded-lg border border-border">
+                  {[
                     { label: 'Name', value: user.name || '—' },
                     { label: 'Mobile', value: user.mobileNumber },
                     { label: 'Category', value: user.category || '—' },
-                    { label: 'State', value: user.state },
-                    { label: 'District', value: user.district },
                     { label: 'Language', value: user.languagePreference },
                     { label: 'Consent Given', value: user.consentGiven ? 'Yes' : 'No' },
-                  ]
-                  if (user.category === 'farmer') {
-                    fields.push(
-                      { label: 'Block', value: user.block || '—' },
-                      { label: 'Village', value: user.village || '—' },
-                      { label: 'KVK', value: user.kvk || '—' },
-                      { label: 'Farm Size', value: user.farmSize || '—' },
+                    { label: 'Age', value: user.age?.toString() || '—' },
+                    { label: 'Gender', value: user.gender || '—' },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                      <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Personal Location */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Personal Location</p>
+                <div className="rounded-lg border border-border">
+                  {[
+                    { label: 'State', value: user.state || '—' },
+                    { label: 'District', value: user.district || '—' },
+                    { label: 'Block', value: user.block || '—' },
+                    { label: 'Village', value: user.village || '—' },
+                    ...(user.category === 'farmer' ? [{ label: 'KVK', value: user.kvk || '—' }] : []),
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                      <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section: Farmer-specific */}
+              {user.category === 'farmer' && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Farming</p>
+                  <div className="rounded-lg border border-border">
+                    {[
+                      { label: 'Farm Size', value: user.farmSize ? `${user.farmSize} acres` : '—' },
                       { label: 'Crop', value: user.cropType || '—' },
                       { label: 'Season', value: user.season || '—' },
                       { label: 'Crops', value: user.crops?.length ? user.crops.join(', ') : '—' },
-                    )
-                  }
-                  if (['fpo', 'volunteer', 'ngo'].includes(user.category ?? '')) {
-                    fields.push(
-                      { label: 'Block', value: user.block || '—' },
-                      { label: 'Village', value: user.village || '—' },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
+                        <span className="text-xs text-muted-foreground">{label}</span>
+                        <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section: Organisation */}
+              {['fpo', 'volunteer', 'ngo'].includes(user.category ?? '') && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Organisation</p>
+                  <div className="rounded-lg border border-border">
+                    {[
                       { label: 'Org. Type', value: user.organisationType || '—' },
-                    )
-                    if (user.organizationName) fields.push({ label: 'Organisation', value: user.organizationName })
-                    if (user.organizationRole) fields.push({ label: 'Role in Org.', value: user.organizationRole })
-                  }
-                  if (user.category === 'student') {
-                    if (user.courseName) fields.push({ label: 'Course', value: user.courseName })
-                    if (user.collegeName) fields.push({ label: 'College', value: user.collegeName })
-                    if (user.universityName) fields.push({ label: 'University', value: user.universityName })
-                  }
-                  fields.push(
-                    { label: 'Age', value: user.age?.toString() || '—' },
-                    { label: 'Gender', value: user.gender || '—' },
-                  )
-                  fields.push(
+                      { label: 'Name', value: user.organizationName || '—' },
+                      { label: 'Role', value: user.organizationRole || '—' },
+                      { label: 'Org. State', value: user.organizationState || '—' },
+                      { label: 'Org. District', value: user.organizationDistrict || '—' },
+                      { label: 'Org. Block', value: user.organizationBlock || '—' },
+                      { label: 'Org. Village', value: user.organizationVillage || '—' },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
+                        <span className="text-xs text-muted-foreground">{label}</span>
+                        <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section: Student */}
+              {user.category === 'student' && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Education</p>
+                  <div className="rounded-lg border border-border">
+                    {[
+                      { label: 'Course', value: user.courseName || '—' },
+                      { label: 'College', value: user.collegeName || '—' },
+                      { label: 'University', value: user.universityName || '—' },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
+                        <span className="text-xs text-muted-foreground">{label}</span>
+                        <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section: Account */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Account</p>
+                <div className="rounded-lg border border-border">
+                  {[
                     { label: 'Verification Status', value: user.verificationStatus },
                     { label: 'Created At', value: formatDate(user.createdAt) || '—' },
                     { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '—' },
-                  )
-                  return fields
-                })().map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between px-3 py-2.5">
-                    <span className="text-xs text-muted-foreground">{label}</span>
-                    <span className={cn(
-                      'text-xs font-medium text-right',
-                      value === '-' ? 'text-muted-foreground/60' : 'text-foreground',
-                    )}>
-                      {value}
-                    </span>
-                  </div>
-                ))}
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                      <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

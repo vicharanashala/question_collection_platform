@@ -59,9 +59,14 @@ export interface PublicUser {
   courseName:      string | null;
   collegeName:     string | null;
   universityName:   string | null;
-  organisationType:  string | null;
-  organizationName:  string | null;
-  organizationRole:  string | null;
+  organisationType:    string | null;
+  organizationName:    string | null;
+  organizationRole:    string | null;
+  numberOfFarmers:     number | null;
+  organizationState:   string | null;
+  organizationDistrict: string | null;
+  organizationBlock:   string | null;
+  organizationVillage: string | null;
 }
 
 @Injectable()
@@ -379,6 +384,11 @@ export class AuthService {
       user.organisationType  = dto.organisationType ?? null;
       user.organizationName  = dto.organizationName ?? null;
       user.organizationRole  = dto.organizationRole ?? null;
+      user.numberOfFarmers     = dto.numberOfFarmers ?? null;
+      user.organizationState   = dto.organizationState ?? null;
+      user.organizationDistrict = dto.organizationDistrict ?? null;
+      user.organizationBlock   = dto.organizationBlock ?? null;
+      user.organizationVillage = dto.organizationVillage ?? null;
 
       // Volunteer has volunteerCropType alias for cropType
       if (dto.category === UserCategory.VOLUNTEER && dto.volunteerCropType) {
@@ -556,6 +566,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
+    console.log(`[DEBUG getProfile] orgState=${user.organizationState} orgDistrict=${user.organizationDistrict} orgBlock=${user.organizationBlock} orgVillage=${user.organizationVillage}`);
     return this.toPublicUser(user);
   }
 
@@ -588,9 +599,14 @@ export class AuthService {
       courseName:       user.courseName,
       collegeName:      user.collegeName,
       universityName:   user.universityName,
-      organisationType: user.organisationType,
-      organizationName: user.organizationName,
-      organizationRole: user.organizationRole,
+      organisationType:     user.organisationType,
+      organizationName:     user.organizationName,
+      organizationRole:     user.organizationRole,
+      numberOfFarmers:      user.numberOfFarmers,
+      organizationState:    user.organizationState,
+      organizationDistrict: user.organizationDistrict,
+      organizationBlock:    user.organizationBlock,
+      organizationVillage:  user.organizationVillage,
     };
   }
 

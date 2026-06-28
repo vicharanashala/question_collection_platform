@@ -63,6 +63,42 @@ export function EditProfileScreen({ navigation }: Props) {
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingBlocks, setLoadingBlocks] = useState(false);
 
+  // Load organisation states (FPO/NGO only)
+  useEffect(() => {
+    if (![UserCategory.FPO, UserCategory.NGO].includes(user?.category as UserCategory)) return;
+    setLoadingOrgStates(true);
+    lgdApi.getStates()
+      .then((res) => {
+        setOrgStateList(res.data.states);
+        if (user?.state) {
+          const match = res.data.states.find((s) => s.name === user.state);
+          if (match) {
+            setOrgStateCode(match.code);
+            return lgdApi.getDistricts(match.code);
+          }
+        }
+        return null;
+      })
+      .then((res) => {
+        if (!res) return;
+        setOrgDistrictList(res.data.districts);
+        if (user?.district) {
+          const dm = res.data.districts.find((d: any) => d.name === user.district);
+          if (dm) {
+            setOrgDistrictCode(dm.code);
+            return lgdApi.getSubDistricts(dm.code);
+          }
+        }
+        return null;
+      })
+      .then((res) => {
+        if (!res) return;
+        setOrgBlockList(res.data.subdistricts);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingOrgStates(false));
+  }, []);
+
   // Load all states; once loaded, hydrate districts for the existing user state
   useEffect(() => {
     setLoadingStates(true);
@@ -108,6 +144,22 @@ export function EditProfileScreen({ navigation }: Props) {
   const [organisationType, setOrganisationType] = useState(user?.organisationType ?? '');
   const [organisationName, setOrganisationName] = useState(user?.organizationName ?? '');
   const [memberRole, setMemberRole] = useState(user?.organizationRole ?? '');
+  const [numberOfFarmers, setNumberOfFarmers] = useState(user?.numberOfFarmers?.toString() ?? '');
+
+  // FPO/NGO organisation location (separate from personal location above)
+  const [orgState, setOrgState] = useState(user?.state ?? '');
+  const [orgStateCode, setOrgStateCode] = useState('');
+  const [orgDistrict, setOrgDistrict] = useState(user?.district ?? '');
+  const [orgDistrictCode, setOrgDistrictCode] = useState('');
+  const [orgBlock, setOrgBlock] = useState(user?.block ?? '');
+  const [orgVillage, setOrgVillage] = useState(user?.village ?? '');
+  const [orgStateList, setOrgStateList] = useState<{ code: string; name: string }[]>([]);
+  const [orgDistrictList, setOrgDistrictList] = useState<{ code: string; name: string }[]>([]);
+  const [orgBlockList, setOrgBlockList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingOrgStates, setLoadingOrgStates] = useState(false);
+  const [loadingOrgDistricts, setLoadingOrgDistricts] = useState(false);
+  const [loadingOrgBlocks, setLoadingOrgBlocks] = useState(false);
+  const [village, setVillage] = useState(user?.village ?? '');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -118,6 +170,9 @@ export function EditProfileScreen({ navigation }: Props) {
   const handleUniversityNameChange = useCallback((text: string) => setUniversityName(text), []);
   const handleOrganisationNameChange = useCallback((text: string) => setOrganisationName(text), []);
   const handleMemberRoleChange = useCallback((text: string) => setMemberRole(text), []);
+  const handleNumberOfFarmersChange = useCallback((text: string) => setNumberOfFarmers(text), []);
+  const handleOrgVillageChange = useCallback((text: string) => setOrgVillage(text), []);
+  const handleVillageChange = useCallback((text: string) => setVillage(text), []);
 
   function validate() {
     const errs: Record<string, string> = {};
@@ -166,10 +221,16 @@ export function EditProfileScreen({ navigation }: Props) {
           payload.courseName = courseName === '__other__' ? courseNameOther.trim() : courseName;
           if (collegeName.trim()) payload.collegeName = collegeName.trim();
           if (universityName.trim()) payload.universityName = universityName.trim();
-        } else if (user?.category === UserCategory.VOLUNTEER || user?.category === UserCategory.NGO) {
+        } else if (user?.category === UserCategory.FPO || user?.category === UserCategory.VOLUNTEER || user?.category === UserCategory.NGO) {
           payload.organisationType = organisationType.trim();
           payload.organizationName = organisationName.trim();
           payload.organizationRole = memberRole.trim();
+          const numFarmers = parseInt(numberOfFarmers.trim(), 10);
+          if (!isNaN(numFarmers) && numFarmers > 0) payload.numberOfFarmers = numFarmers;
+          if (orgState) payload.state = orgState;
+          if (orgDistrict.trim()) payload.district = orgDistrict.trim();
+          if (orgBlock.trim()) payload.block = orgBlock.trim();
+          if (orgVillage.trim()) payload.village = orgVillage.trim();
         }
         // else: category is null or unknown — send nothing extra
       }
@@ -357,7 +418,8 @@ export function EditProfileScreen({ navigation }: Props) {
               </FieldGroup>
             )}
 
-            {!isPrivileged && [UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory) && (
+            {!isPrivileged && [UserCategory.FPO, UserCategory.VOLUNTEER, UserCategory.NGO].includes(user?.category as UserCategory) && (
+              <>
               <FieldGroup icon="business-outline" label={t('editProfile.organisationDetails')} accentColor={c.primary}>
                 <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                   <Select
@@ -382,8 +444,81 @@ export function EditProfileScreen({ navigation }: Props) {
                     onChangeText={handleMemberRoleChange}
                     error={errors.role}
                   />
+                  <Input
+                    label={t('editProfile.numberOfFarmers')}
+                    placeholder={t('editProfile.numberOfFarmersPlaceholder')}
+                    value={numberOfFarmers}
+                    onChangeText={handleNumberOfFarmersChange}
+                    keyboardType="numeric"
+                    error={undefined}
+                  />
                 </View>
               </FieldGroup>
+
+              <FieldGroup icon="location-outline" label={t('editProfile.orgLocation')} accentColor={c.primary}>
+                <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <Select
+                    label={t('editProfile.orgLocationState')}
+                    placeholder={t('selectState')}
+                    value={orgState}
+                    options={orgStateList.map((s) => ({ value: s.name, label: s.name }))}
+                    onChange={async (v) => {
+                      setOrgState(v);
+                      setOrgDistrict('');
+                      setOrgBlock('');
+                      setOrgVillage('');
+                      setLoadingOrgDistricts(true);
+                      try {
+                        const code = orgStateList.find((s) => s.name === v)?.code ?? '';
+                        const res = await lgdApi.getDistricts(code);
+                        setOrgDistrictList(res.data.districts);
+                      } catch { setOrgDistrictList([]); }
+                      finally { setLoadingOrgDistricts(false); }
+                    }}
+                    error={undefined}
+                    searchable
+                    loading={loadingOrgStates}
+                  />
+                  <Select
+                    label={t('editProfile.orgLocationDistrict')}
+                    placeholder={t('selectDistrict')}
+                    value={orgDistrict}
+                    options={orgDistrictList.map((d) => ({ value: d.name, label: d.name }))}
+                    onChange={async (v) => {
+                      setOrgDistrict(v);
+                      setOrgBlock('');
+                      const code = orgDistrictList.find((d) => d.name === v)?.code ?? '';
+                      if (!code) return;
+                      setLoadingOrgBlocks(true);
+                      try {
+                        const res = await lgdApi.getSubDistricts(code);
+                        setOrgBlockList(res.data.subdistricts);
+                      } catch { setOrgBlockList([]); }
+                      finally { setLoadingOrgBlocks(false); }
+                    }}
+                    error={undefined}
+                    searchable
+                    loading={loadingOrgDistricts}
+                  />
+                  <Select
+                    label={t('question.blockOptional')}
+                    placeholder={t('selectBlock')}
+                    value={orgBlock}
+                    options={orgBlockList.map((b) => ({ value: b.name, label: b.name }))}
+                    onChange={setOrgBlock}
+                    searchable
+                    loading={loadingOrgBlocks}
+                  />
+                  <Input
+                    label={t('editProfile.orgLocationVillage')}
+                    placeholder={t('editProfile.orgLocationVillagePlaceholder')}
+                    value={orgVillage}
+                    onChangeText={handleOrgVillageChange}
+                    error={undefined}
+                  />
+                </View>
+              </FieldGroup>
+              </>
             )}
 
             <Button

@@ -91,6 +91,47 @@ export function ProfilePage() {
             </div>
           ))}
 
+          {/* Personal location breakdown */}
+          <div className="space-y-1.5 pt-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-tertiary">Personal Location</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+              {[
+                { label: 'State', value: user.state || '—' },
+                { label: 'District', value: user.district || '—' },
+                { label: 'Block', value: user.block || '—' },
+                { label: 'Village', value: user.village || '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between text-sm">
+                  <span className="text-text-tertiary text-xs">{label}</span>
+                  <span className="font-medium text-text text-xs">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {(user.organizationState || user.organizationDistrict ||
+            user.organizationBlock || user.organizationVillage) && (
+            <>
+              <Separator />
+              <div className="space-y-1.5 pt-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-text-tertiary">Organisation</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  {[
+                    { label: 'Org. State', value: user.organizationState || '—' },
+                    { label: 'Org. District', value: user.organizationDistrict || '—' },
+                    { label: 'Org. Block', value: user.organizationBlock || '—' },
+                    { label: 'Org. Village', value: user.organizationVillage || '—' },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between text-sm">
+                      <span className="text-text-tertiary text-xs">{label}</span>
+                      <span className="font-medium text-text text-xs">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
           <Separator />
 
           {/* Language preference */}

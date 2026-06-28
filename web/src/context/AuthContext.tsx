@@ -49,21 +49,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  // Rehydrate user from valid token on startup
+  // Rehydrate and refresh user from API on startup
   useEffect(() => {
-    if (token && !user) {
-      setIsLoading(true)
-      authApi.me()
-        .then(({ user: u }) => {
-          const authUser: AuthUser = { ...u, token }
-          login({ accessToken: token, refreshToken: localStorage.getItem('refresh_token') ?? token }, authUser)
-        })
-        .catch(() => {
-          logout()
-        })
-        .finally(() => setIsLoading(false))
-    }
-  }, [token, user, login, logout])
+    if (!token) return
+    setIsLoading(true)
+    authApi.me()
+      .then(({ user: u }) => {
+        const authUser: AuthUser = { ...u, token }
+        login({ accessToken: token, refreshToken: localStorage.getItem('refresh_token') ?? token }, authUser)
+      })
+      .catch(() => {
+        logout()
+      })
+      .finally(() => setIsLoading(false))
+  }, [token])
 
   return (
     <AuthContext.Provider
