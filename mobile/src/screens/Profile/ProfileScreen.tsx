@@ -87,18 +87,6 @@ export function ProfileScreen() {
     await logout();
   }
 
-  function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
-    return (
-      <View style={styles.infoRow}>
-        <View style={[styles.infoIconWrap, { backgroundColor: c.primary + '18' }]}>
-          <Ionicons name={icon as any} size={13} color={c.primary} />
-        </View>
-        <Text style={[styles.infoLabel, { color: c.textSecondary }]}>{label}</Text>
-        <Text style={[styles.infoValue, { color: c.text }]}>{value}</Text>
-      </View>
-    );
-  }
-
   const statusColor = user?.verificationStatus ? (STATUS_CONFIG[user.verificationStatus]?.color ?? c.textTertiary) : null;
 
   return (
@@ -203,37 +191,189 @@ export function ProfileScreen() {
 
         {/* ── Account details ───────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
+              <Ionicons name="person-outline" size={14} color={c.primary} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
+          </View>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <InfoRow icon="location-outline" label="State" value={user?.state ?? '—'} />
-            <InfoRow icon="map-outline" label="District" value={user?.district ?? '—'} />
-            {user?.block
-              ? <InfoRow icon="business-outline" label="Block" value={user.block} />
-              : <InfoRow icon="business-outline" label="Block" value="—" />}
-            {user?.village
-              ? <InfoRow icon="navigate-outline" label="Village" value={user.village} />
-              : <InfoRow icon="navigate-outline" label="Village" value="—" />}
-            {user?.kvk
-              ? <InfoRow icon="school-outline" label="KVK" value={user.kvk} />
-              : null}
-            {user?.category === 'student' && user?.collegeName && <InfoRow icon="business-outline" label="College" value={user.collegeName} />}
-            {user?.category === 'student' && user?.universityName && <InfoRow icon="school-outline" label="University" value={user.universityName} />}
+
+            {/* Personal Info */}
+            <Text style={[styles.groupLabel, { color: c.textTertiary }]}>Personal Info</Text>
+            <View style={styles.fieldGrid}>
+              {user?.category && (
+                <View style={styles.fieldCell}>
+                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Category</Text>
+                  <Text style={[styles.fieldValue, { color: c.text, textTransform: 'uppercase' }]}>{user.category}</Text>
+                </View>
+              )}
+              {user?.gender && (
+                <View style={styles.fieldCell}>
+                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Gender</Text>
+                  <Text style={[styles.fieldValue, { color: c.text, textTransform: 'uppercase' }]}>{user.gender}</Text>
+                </View>
+              )}
+              {user?.age && (
+                <View style={styles.fieldCell}>
+                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Age</Text>
+                  <Text style={[styles.fieldValue, { color: c.text }]}>{user.age}</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
+
+            {/* Location */}
+            <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Location</Text>
+            <View style={styles.fieldGrid}>
+              <View style={styles.fieldCell}>
+                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>State</Text>
+                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.state ?? '—'}</Text>
+              </View>
+              <View style={styles.fieldCell}>
+                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>District</Text>
+                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.district ?? '—'}</Text>
+              </View>
+              <View style={styles.fieldCell}>
+                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Block</Text>
+                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.block ?? '—'}</Text>
+              </View>
+              <View style={styles.fieldCell}>
+                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Village</Text>
+                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.village ?? '—'}</Text>
+              </View>
+              {user?.kvk && (
+                <View style={styles.fieldCell}>
+                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>KVK</Text>
+                  <Text style={[styles.fieldValue, { color: c.text }]}>{user.kvk}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Education — students only */}
+            {user?.category === 'student' && (
+              <>
+                <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
+                <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Education</Text>
+                <View style={styles.fieldGrid}>
+                  {user?.courseName && (
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Course</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.courseName}</Text>
+                    </View>
+                  )}
+                  {user?.collegeName && (
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>College</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.collegeName}</Text>
+                    </View>
+                  )}
+                  {user?.universityName && (
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>University</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.universityName}</Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
+
+            {/* Farming — farmers only */}
+            {user?.category === 'farmer' && (
+              <>
+                <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
+                <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Farming</Text>
+                <View style={styles.fieldGrid}>
+                  {user?.farmSize && (
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Farm Size</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.farmSize} acres</Text>
+                    </View>
+                  )}
+                  {user?.cropType && (
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Crop</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.cropType}</Text>
+                    </View>
+                  )}
+                  {user?.season && (
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Season</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.season}</Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         </View>
 
         {/* ── Organisation details ──────────────────────────── */}
         {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage || user?.organisationType || user?.organizationName || user?.organizationRole || user?.numberOfFarmers) && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
+                <Ionicons name="business-outline" size={14} color={c.primary} />
+              </View>
+              <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
+            </View>
             <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-              <InfoRow icon="location-outline" label="State" value={user?.organizationState ?? '—'} />
-              <InfoRow icon="map-outline" label="District" value={user?.organizationDistrict ?? '—'} />
-              <InfoRow icon="business-outline" label="Block" value={user?.organizationBlock ?? '—'} />
-              <InfoRow icon="navigate-outline" label="Village" value={user?.organizationVillage ?? '—'} />
-              {user?.organisationType && <InfoRow icon="business-outline" label="Org Type" value={user.organisationType} />}
-              {user?.organizationName && <InfoRow icon="people-outline" label="Org Name" value={user.organizationName} />}
-              {user?.organizationRole && <InfoRow icon="id-card-outline" label="Role" value={user.organizationRole} />}
-              {user?.numberOfFarmers && <InfoRow icon="people-outline" label="Members" value={String(user.numberOfFarmers)} />}
+
+              {/* Org Info */}
+              <Text style={[styles.groupLabel, { color: c.textTertiary }]}>Organisation</Text>
+              <View style={styles.fieldGrid}>
+                {user?.organisationType && (
+                  <View style={styles.fieldCell}>
+                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Org. Type</Text>
+                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organisationType}</Text>
+                  </View>
+                )}
+                {user?.organizationName && (
+                  <View style={styles.fieldCell}>
+                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Name</Text>
+                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organizationName}</Text>
+                  </View>
+                )}
+                {user?.organizationRole && (
+                  <View style={styles.fieldCell}>
+                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Role</Text>
+                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organizationRole}</Text>
+                  </View>
+                )}
+                {user?.numberOfFarmers != null && (
+                  <View style={styles.fieldCell}>
+                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Members</Text>
+                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.numberOfFarmers}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Org Location */}
+              {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage) && (
+                <>
+                  <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
+                  <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Organisation Location</Text>
+                  <View style={styles.fieldGrid}>
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>State</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationState ?? '—'}</Text>
+                    </View>
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>District</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationDistrict ?? '—'}</Text>
+                    </View>
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Block</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationBlock ?? '—'}</Text>
+                    </View>
+                    <View style={styles.fieldCell}>
+                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Village</Text>
+                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationVillage ?? '—'}</Text>
+                    </View>
+                  </View>
+                </>
+              )}
             </View>
           </View>
         )}
@@ -255,7 +395,12 @@ export function ProfileScreen() {
 
         {/* ── Actions ───────────────────────────────────────── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>Actions</Text>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
+              <Ionicons name="flash-outline" size={14} color={c.primary} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Actions</Text>
+          </View>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <TouchableOpacity
               style={styles.actionRow}
@@ -307,7 +452,7 @@ const styles = StyleSheet.create({
 
   // ── Shared
   section: { paddingHorizontal: tokens.spacing4, marginBottom: tokens.spacing5 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', marginBottom: tokens.spacing3, paddingLeft: 2 },
+  sectionTitle: { fontSize: 14, fontWeight: '700' },
   sectionTitleRow: {
     flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2,
     marginBottom: tokens.spacing3, paddingLeft: 2,
@@ -326,6 +471,45 @@ const styles = StyleSheet.create({
   },
 
   divider: { height: 1, marginVertical: tokens.spacing1 },
+  dividerLine: { height: 1, marginTop: tokens.spacing3 },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+    marginBottom: tokens.spacing3,
+    height: 28,
+  },
+  sectionIconWrap: {
+    width: 26, height: 26,
+    borderRadius: tokens.radius,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  groupLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: tokens.spacing3,
+  },
+  fieldGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  fieldCell: {
+    width: '50%',
+    paddingVertical: tokens.spacing1 + 1,
+    paddingRight: tokens.spacing2,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  fieldValue: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
 
   // ── Hero
   heroCard: {
@@ -403,20 +587,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 16, fontWeight: '800', marginTop: 2 },
   statLabel: { fontSize: 10, fontWeight: '500', marginTop: 2, textAlign: 'center' },
   statLoading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-
-  // ── Info rows
-  infoRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: tokens.spacing2 + 2,
-    gap: tokens.spacing3,
-  },
-  infoIconWrap: {
-    width: 26, height: 26,
-    borderRadius: tokens.radius,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  infoLabel: { fontSize: 13, width: 72 },
-  infoValue: { fontSize: 13, fontWeight: '600', flex: 1, textAlign: 'right' },
 
   // ── Crops
   cropTags: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
