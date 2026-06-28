@@ -30,6 +30,7 @@ import {
   AdminConfig,
   Notification,
   UserPaymentDetail,
+  SystemContent,
 } from './database/entities';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -42,6 +43,7 @@ import { LgdModule } from './lgd/lgd.module';
 import { PaymentModule } from './payment/payment.module';
 import { StorageModule } from './storage/storage.module';
 import { AiModule } from './ai/ai.module';
+import { SystemModule } from './system/system.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 
@@ -93,6 +95,7 @@ import { HealthController } from './health/health.controller';
           AdminConfig,
           Notification,
           UserPaymentDetail,
+          SystemContent,
         ],
         migrations: [],
         synchronize: process.env.NODE_ENV !== 'production',
@@ -112,6 +115,7 @@ import { HealthController } from './health/health.controller';
     PaymentModule,
     StorageModule,
     AiModule,
+    SystemModule,
   ],
   controllers: [HealthController],
   providers: [

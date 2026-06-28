@@ -539,3 +539,23 @@ export const lgdApi = {
 };
 
 export default api;
+
+// ─── System Content API ─────────────────────────────────────────────────────────
+// Fetches admin-managed Terms of Service and Privacy Policy for the registration
+// consent screen. Public endpoint — no auth required.
+
+export interface SystemContentPublic {
+  title: string
+  description: string | null
+  content: string | null
+  isActive: boolean
+  updatedAt: string
+}
+
+export const systemApi = {
+  /** Public — returns termsOfService + privacyPolicy for consent/registration screen */
+  getPublicContent: () =>
+    api.get<{ termsOfService: SystemContentPublic | null; privacyPolicy: SystemContentPublic | null }>(
+      '/system-content/public',
+    ),
+}

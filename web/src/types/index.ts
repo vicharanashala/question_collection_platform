@@ -409,7 +409,7 @@ export interface AuditLogQuery {
   page?: number
   limit?: number
   actorId?: string
-  actorType?: string
+  actorType?: string;
   action?: string
   actions?: string[]
   entityType?: string
@@ -419,4 +419,31 @@ export interface AuditLogQuery {
   search?: string
   sortBy?: 'createdAt' | 'action' | 'actorId'
   sortOrder?: 'ASC' | 'DESC'
+}
+
+// ── System Content (Terms of Service / Privacy Policy) ────────────────────────
+
+export type SystemContentType = 'terms_of_service' | 'privacy_policy'
+
+export interface SystemContentItem {
+  id: string
+  type: SystemContentType
+  title: string
+  description: string | null
+  content: string | null
+  isActive: boolean
+  updatedBy: string | null
+  updatedAt: string
+}
+
+export interface SystemContentPublic {
+  title: string
+  description: string | null
+  content: string | null
+  isActive: boolean
+}
+
+export interface SystemPublicResponse {
+  termsOfService: SystemContentPublic | null
+  privacyPolicy: SystemContentPublic | null
 }

@@ -626,6 +626,49 @@ export const auditApi = {
   },
 }
 
+// ─── System Content API (Terms of Service / Privacy Policy) ──────────────────
+
+export const systemApi = {
+  /** Public — fetch content for the registration/consent screen */
+  getPublicContent: () =>
+    request<import('@/types').SystemPublicResponse>('/system-content/public', {}, true),
+
+  /** Admin — get all system content entries */
+  getAll: () =>
+    request<import('@/types').SystemContentItem[]>('/system-content', {}, false),
+
+  /**
+   * Upload a .md file. Returns { content: string } with the parsed file text.
+   * The returned content is then used in the upsert call.
+   */
+  uploadMarkdown: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const token = getAccessToken()
+    return fetch(`${BASE}/system-content/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) throw new Error(`Upload failed: ${res.status}`)
+      return res.json() as Promise<{ content: string }>
+    })
+  },
+
+  /** Admin — upsert terms of service or privacy policy */
+  upsert: (type: import('@/types').SystemContentType, body: {
+    title: string
+    description?: string
+    content?: string
+    isActive?: boolean
+  }) =>
+    request<import('@/types').SystemContentItem>(
+      `/system-content/${type === 'terms_of_service' ? 'terms-of-service' : 'privacy-policy'}`,
+      { method: 'POST', body: JSON.stringify({ type, ...body }) },
+      false,
+    ),
+}
+
 // ─── Error helper ──────────────────────────────────────────────────────────
 
 export function getErrorMessage(e: unknown, fallback: string): string {

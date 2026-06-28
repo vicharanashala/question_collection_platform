@@ -13,6 +13,9 @@ import {
   Wallet,
   Bell,
   ScrollText,
+  FileText,
+  ChevronRight,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -27,7 +30,16 @@ const navItems = [
   { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,   roles: ['admin', 'super_admin'] },
   { to: '/wallets',   label: 'Wallets',       icon: Wallet,        roles: ['admin', 'super_admin'] },
   { to: '/notifications', label: 'Notifications', icon: Bell,          roles: ['user', 'curator'] },
-  { to: '/settings',  label: 'Settings',      icon: Settings2,    roles: ['super_admin'] },
+  {
+    to: '/settings',
+    label: 'Settings',
+    icon: Settings2,
+    roles: ['super_admin'],
+    children: [
+      { to: '/settings',         label: 'System Settings',    icon: Settings2,   exact: true },
+      { to: '/settings/legal',   label: 'Legal & Consent',    icon: FileText,    exact: false },
+    ],
+  },
   { to: '/audit-logs', label: 'Audit Logs',    icon: ScrollText,   roles: ['super_admin'] },
 ]
 
@@ -51,12 +63,64 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, label, icon: Icon, roles }) => {
-          if (!roles?.includes(user?.role as string)) return null
+        {navItems.map((item) => {
+          if (!item.roles?.includes(user?.role as string)) return null
+
+          // Parent item with children (dropdown)
+          if (item.children) {
+            const hasActiveChild = item.children.some(({ to }) => {
+              if (item.to && to === item.to) return window.location.pathname === to
+              return window.location.pathname.startsWith(to)
+            })
+            return (
+              <div key={item.to}>
+                <NavLink
+                  to={item.to}
+                  end={item.children.some(c => c.exact)}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      hasActiveChild || isActive
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    )
+                  }
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  <ChevronRight className={cn('h-3.5 w-3.5 transition-transform', hasActiveChild && 'rotate-90')} />
+                </NavLink>
+                {hasActiveChild && (
+                  <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
+                    {item.children.map(({ to, label, icon: Icon, exact }) => (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        end={exact}
+                        className={({ isActive }) =>
+                          cn(
+                            'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors',
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                          )
+                        }
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        {label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          // Simple item (no children)
           return (
             <NavLink
-              key={to}
-              to={to}
+              key={item.to}
+              to={item.to}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -66,8 +130,8 @@ export function Sidebar() {
                 )
               }
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
+              <item.icon className="h-4 w-4 shrink-0" />
+              {item.label}
             </NavLink>
           )
         })}

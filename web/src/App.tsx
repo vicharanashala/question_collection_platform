@@ -12,7 +12,8 @@ const UserDetailPage = lazyRoute(() => import('@/pages/users/UserDetailPage').th
 const QuestionsPage  = lazyRoute(() => import('@/pages/questions/QuestionsPage').then(m => ({ default: m.QuestionsPage })))
 const ReviewsPage    = lazyRoute(() => import('@/pages/reviews/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
 const ProfilePage    = lazyRoute(() => import('@/pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })))
-const SettingsPage   = lazyRoute(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const SettingsPage      = lazyRoute(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const SystemContentPage = lazyRoute(() => import('@/pages/settings/SystemContentPage').then(m => ({ default: m.SystemContentPage })))
 const WithdrawalsPage = lazyRoute(() => import('@/pages/withdrawals/WithdrawalsPage').then(m => ({ default: m.WithdrawalsPage })))
 const WalletsPage       = lazyRoute(() => import('@/pages/wallets/WalletsPage').then(m => ({ default: m.WalletsPage })))
 const NotificationsPage = lazyRoute(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
@@ -26,7 +27,8 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   questions:    ['user', 'curator', 'admin', 'super_admin'],
   reviews:      ['curator', 'super_admin'],
   profile:      ['user', 'curator', 'admin', 'super_admin'],
-  settings:     ['super_admin'],
+  settings:          ['super_admin'],
+  systemContent:   ['super_admin'],
   withdrawals:   ['admin', 'super_admin'],
   wallets:       ['admin', 'super_admin'],
   notifications: ['user', 'curator'],
@@ -79,7 +81,8 @@ export default function App() {
           <Route path="questions"  element={<><RoleRoute pageKey="questions" /><QuestionsPage /></>} />
           <Route path="reviews"    element={<><RoleRoute pageKey="reviews" /><ReviewsPage /></>} />
           <Route path="profile"    element={<><RoleRoute pageKey="profile" /><ProfilePage /></>} />
-          <Route path="settings"   element={<><RoleRoute pageKey="settings" /><SettingsPage /></>} />
+          <Route path="settings"         element={<><RoleRoute pageKey="settings" /><SettingsPage /></>} />
+          <Route path="settings/legal" element={<><RoleRoute pageKey="systemContent" /><SystemContentPage /></>} />
           <Route path="withdrawals" element={<><RoleRoute pageKey="withdrawals" /><WithdrawalsPage /></>} />
           <Route path="wallets"        element={<><RoleRoute pageKey="wallets"      /><WalletsPage    /></>} />
           <Route path="notifications" element={<><RoleRoute pageKey="notifications"/><NotificationsPage /></>} />
