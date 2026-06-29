@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { TextInputModal } from '../../components/TextInputModal';
+import { UserRole } from '../../types';
 import { tokens } from '../../utils/theme';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { WalletDetailModal } from '../../components/WalletDetailModal';
@@ -121,7 +122,8 @@ export function AdminWithdrawalsScreen() {
   const nav = useNavigation();
   const { showToast } = useToast();
   const { user: currentUser } = useAuth();
-  const isSuperAdmin = currentUser?.role === 'super_admin';
+  const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
+  const isAdmin = currentUser?.role === UserRole.ADMIN || isSuperAdmin || currentUser?.role === UserRole.FINANCE;
 
   const [items, setItems] = useState<WithdrawalItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,7 +341,7 @@ export function AdminWithdrawalsScreen() {
           )}
         </View>
 
-        {item.status === 'pending' && isSuperAdmin && (
+        {item.status === 'pending' && isAdmin && (
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.btn, { backgroundColor: '#22c55e22' }]}

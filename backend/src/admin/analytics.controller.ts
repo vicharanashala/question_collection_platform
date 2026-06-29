@@ -17,7 +17,7 @@ import { UserRole } from '../common/enums';
 
 @Controller('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
 export class AnalyticsController {
   constructor(private readonly adminService: AdminService) {}
 

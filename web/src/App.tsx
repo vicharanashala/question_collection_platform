@@ -20,15 +20,15 @@ const AuditLogsPage     = lazyRoute(() => import('@/pages/audit-logs/AuditLogsPa
 
 /** Pages visible per role */
 const PAGE_ROLES: Record<string, UserRole[]> = {
-  dashboard:    ['user', 'curator', 'admin', 'super_admin'],
-  users:        ['admin', 'super_admin'],
-  userDetail:   ['admin', 'super_admin'],
+  dashboard:    ['user', 'curator', 'finance', 'admin', 'super_admin'],
+  users:        ['finance', 'admin', 'super_admin'],
+  userDetail:   ['admin', 'super_admin', 'finance'],
   questions:    ['user', 'curator', 'admin', 'super_admin'],
   reviews:      ['curator', 'super_admin'],
-  profile:      ['user', 'curator', 'admin', 'super_admin'],
+  profile:      ['user', 'curator', 'finance', 'admin', 'super_admin'],
   settings:     ['super_admin'],
-  withdrawals:   ['admin', 'super_admin'],
-  wallets:       ['admin', 'super_admin'],
+  withdrawals:   ['finance', 'admin', 'super_admin'],
+  wallets:       ['finance', 'admin', 'super_admin'],
   notifications: ['user', 'curator'],
   auditLogs:     ['super_admin'],
 }

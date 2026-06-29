@@ -20,12 +20,12 @@ import {
 import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, roles: ['user', 'curator', 'admin', 'super_admin'] },
-  { to: '/users',     label: 'Users',        icon: Users,        roles: ['admin', 'super_admin'] },
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, roles: ['user', 'curator', 'finance', 'admin', 'super_admin'] },
+  { to: '/users',     label: 'Users',        icon: Users,        roles: ['finance', 'admin', 'super_admin'] },
   { to: '/questions', label: 'Questions',     icon: MessageSquare, roles: ['user', 'curator', 'admin', 'super_admin'] },
   { to: '/reviews',   label: 'Review Queue',  icon: CheckSquare,   roles: ['curator', 'super_admin'] },
-  { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,   roles: ['admin', 'super_admin'] },
-  { to: '/wallets',   label: 'Wallets',       icon: Wallet,        roles: ['admin', 'super_admin'] },
+  { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,   roles: ['finance', 'admin', 'super_admin'] },
+  { to: '/wallets',   label: 'Wallets',       icon: Wallet,        roles: ['finance', 'admin', 'super_admin'] },
   { to: '/notifications', label: 'Notifications', icon: Bell,          roles: ['user', 'curator'] },
   { to: '/settings',  label: 'Settings',      icon: Settings2,    roles: ['super_admin'] },
   { to: '/audit-logs', label: 'Audit Logs',    icon: ScrollText,   roles: ['super_admin'] },

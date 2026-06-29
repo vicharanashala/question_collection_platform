@@ -14,7 +14,7 @@ import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { UserRole } from '../../types';
 
-const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
+const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE];
 type Route = RouteProp<AdminStackParamList, 'AdminUserDetail'>;
 
 const STATUS_COLORS: Record<string, string> = {

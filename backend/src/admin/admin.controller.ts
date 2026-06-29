@@ -44,7 +44,7 @@ interface AuthenticatedRequest extends Request {
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -53,28 +53,28 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Post('users')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() dto: CreateUserDto, @Req() req: AuthenticatedRequest) {
     return this.adminService.createUser(req.user.id, req.user.role as UserRole, dto);
   }
 
   @Get('users')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
   }
 
   @Get('users/:id')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getUserDetail(@Param('id') id: string) {
     return this.adminService.getUserDetail(id);
   }
 
   @Post('users/:id/suspend')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async suspendUser(
     @Param('id') id: string,
@@ -98,7 +98,7 @@ export class AdminController {
   }
 
   @Post('users/:id/verify')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async verifyUser(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.adminService.verifyUser(req.user.id, id);
@@ -115,7 +115,7 @@ export class AdminController {
   }
 
   @Get('questions/:id')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getQuestion(@Param('id') id: string) {
     return this.adminService.getQuestionForReview(id);
@@ -145,14 +145,14 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('config')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async listConfig() {
     return this.adminService.listConfig();
   }
 
   @Post('config')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.CREATED)
   async createConfig(
     @Body() dto: CreateConfigDto,
@@ -162,7 +162,7 @@ export class AdminController {
   }
 
   @Patch('config')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async updateConfig(
     @Body() dto: UpdateConfigDto,
@@ -176,7 +176,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('analytics/dashboard')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
@@ -184,7 +184,7 @@ export class AdminController {
 
   /** Full stats for the admin dashboard */
   @Get('stats')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getStats(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getStats(dto);
@@ -209,7 +209,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('fraud')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getFraudStats(@Query() dto: { page?: number; limit?: number; state?: string }) {
     return this.adminService.getFraudStats(dto);
@@ -221,7 +221,7 @@ export class AdminController {
 
   /** List all wallets with user info, filterable by search/state/sort */
   @Get('wallets')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async listAllWallets(@Query() dto: ListAllWalletsDto) {
     return this.adminService.listAllWallets(dto);
@@ -229,7 +229,7 @@ export class AdminController {
 
   /** Get a single user's wallet + user details */
   @Get('wallets/user/:userId')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getUserWallet(@Param('userId') userId: string) {
     return this.adminService.getUserWallet(userId);
@@ -237,7 +237,7 @@ export class AdminController {
 
   /** Full transaction history for a specific user */
   @Get('wallets/user/:userId/transactions')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async listUserTransactions(
     @Param('userId') userId: string,
@@ -248,7 +248,7 @@ export class AdminController {
 
   /** Withdrawal history for a specific user */
   @Get('wallets/user/:userId/withdrawals')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async listUserWithdrawals(
     @Param('userId') userId: string,
@@ -268,38 +268,46 @@ export class AdminController {
     return this.adminService.adjustWalletBalance(req.user.id, dto);
   }
 
+  /** Financial summary stats for the finance role dashboard */
+  @Get('analytics/financial-summary')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  async getFinancialSummary(@Query() dto: AnalyticsQueryDto) {
+    return this.adminService.getFinancialSummary(dto);
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Section 6b: Withdrawals — curator blocked
   // ─────────────────────────────────────────────────────────────
 
   @Get('withdrawals')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async listWithdrawals(@Query() dto: ListWithdrawalsDto) {
     return this.adminService.listWithdrawals(dto);
   }
 
   @Get('withdrawals/:id')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getWithdrawalWithTransactions(@Param('id') id: string) {
     return this.adminService.getWithdrawalWithTransactions(id);
   }
 
   @Post('withdrawals/:id/process')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async processWithdrawal(
     @Param('id') id: string,
     @Body() dto: ProcessWithdrawalDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.adminService.processWithdrawal(req.user.id, id, dto);
+    return this.adminService.processWithdrawal(req.user.id, id, dto, req.user.role as UserRole);
   }
 
   /** Retry a failed PineLabs payout for a PROCESSING withdrawal */
   @Post('withdrawals/:id/retry')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async retryWithdrawal(
     @Param('id') id: string,
@@ -314,7 +322,7 @@ export class AdminController {
    * re-attempts the PineLabs payout, and re-refunds if it fails again.
    */
   @Post('withdrawals/:id/retry-refund')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async retryFailedWithdrawal(
     @Param('id') id: string,
@@ -325,7 +333,7 @@ export class AdminController {
 
   /** Admin explicitly marks a PROCESSING withdrawal as FAILED and refunds the user */
   @Post('withdrawals/:id/fail')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async markWithdrawalFailed(
     @Param('id') id: string,
@@ -337,7 +345,7 @@ export class AdminController {
 
   /** Admin updates the failure reason on an already-failed withdrawal */
   @Patch('withdrawals/:id/failure-reason')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async updateWithdrawalFailureReason(
     @Param('id') id: string,
@@ -352,7 +360,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get('export')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async exportData(@Query() dto: ExportQueryDto, @Res() res: Response) {
     const result = await this.adminService.exportData(dto);

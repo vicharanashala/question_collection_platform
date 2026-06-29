@@ -11,6 +11,13 @@ export class AnalyticsQueryDto {
   toDate?: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  @Transform(({ value }) => (value !== undefined ? parseInt(value, 10) : undefined))
+  days?: number;
+
+  @IsOptional()
   @IsString()
   state?: string;
 

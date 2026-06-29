@@ -176,6 +176,7 @@ export function UsersPage() {
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Location</th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Joined</th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Last Login</th>
+                {isSuperAdmin && <th className="px-4 py-3 text-left font-semibold text-text-secondary">Verify</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -235,6 +236,28 @@ export function UsersPage() {
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
                         {u.lastLoginAt ? formatDateTime(u.lastLoginAt) : 'Never'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isSuperAdmin && (u.verificationStatus === 'pending' || u.verificationStatus === 'manual_review') && (
+                          <button
+                            className="text-xs rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40 px-2 py-1 font-semibold transition-colors"
+                            onClick={async (e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              if (!confirm(`Verify ${u.name || u.mobileNumber}?`)) return
+                              try {
+                                await adminApi.verifyUser(u.id)
+                                toast.success('User verified')
+                                const res = await adminApi.getUsers({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
+                                setUsers(res.items); setTotal(res.total)
+                              } catch (err) {
+                                toast.error(getErrorMessage(err, 'Failed to verify user'))
+                              }
+                            }}
+                          >
+                            Verify
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )

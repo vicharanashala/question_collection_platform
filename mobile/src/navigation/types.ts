@@ -32,6 +32,12 @@ export type AdminStackParamList = {
   AdminWithdrawals: undefined;
   AdminProfile: undefined;
   AdminAuditLogs: undefined;
+  // Finance role screens (subset of admin screens)
+  FinanceDashboard: undefined;
+  FinanceWithdrawals: undefined;
+  FinanceWallets: undefined;
+  FinanceUsers: undefined;
+  FinanceProfile: undefined;
 };
 
 export type RootStackParamList = {

@@ -410,6 +410,20 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ userId, ...body }),
     }, false).finally(() => invalidateCache('/api/admin')),
+
+  getFinancialSummary: (params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    return request<{
+      totalPaidOut: number
+      pendingWithdrawals: { count: number; amount: number }
+      completedWithdrawals: { count: number; amount: number }
+      failedWithdrawals: { count: number }
+      totalWalletBalance: number
+      today: { payoutCount: number; payoutAmount: number }
+      dailyPayoutTrend: Array<{ date: string; count: number; amount: number }>
+    }>(`/admin/analytics/financial-summary${qs ? `?${qs}` : ''}`)
+  },
 }
 
 // ─── Analytics API (Task 11) ───────────────────────────────────────────────────

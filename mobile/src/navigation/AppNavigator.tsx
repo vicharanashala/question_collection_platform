@@ -18,6 +18,7 @@ import { UserRole, VerificationStatus } from '../types';
 import { userApi } from '../api/client';
 
 const isNormalUser = (role: string | undefined) => role === UserRole.USER;
+const isFinance = (role: string | undefined) => role === UserRole.FINANCE;
 
 // Auth screens
 import { LoginPhoneScreen } from '../screens/Auth/LoginPhoneScreen';
@@ -56,6 +57,9 @@ import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
 import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
 import { AdminProfileScreen } from '../screens/Admin/AdminProfileScreen';
 import { AdminAuditLogsScreen } from '../screens/Admin/AdminAuditLogsScreen';
+import { AdminUsersScreen as FinanceUsersScreen } from '../screens/Admin/AdminUsersScreen';
+import { FinanceDashboardScreen } from '../screens/Admin/FinanceDashboardScreen';
+import { FinanceWalletsScreen } from '../screens/Admin/FinanceWalletsScreen';
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
 
@@ -204,6 +208,71 @@ function AdminNavigator() {
 }
 
 // ─── Main Tab Navigator ───────────────────────────────────────────────────────
+
+// ─── Finance Navigator (limited access: Dashboard, Withdrawals, Wallets, Profile) ──────────────
+
+function FinanceNavigator() {
+  const { theme } = useTheme();
+  const c = theme.colors;
+  const adminNav = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
+
+  const headerRight = () => (
+    <TouchableOpacity
+      style={{ marginRight: tokens.spacing3 }}
+      onPress={() => adminNav.navigate('FinanceProfile')}
+    >
+      <Ionicons name="person-circle" size={28} color={c.primary} />
+    </TouchableOpacity>
+  );
+
+  const screenOpts = {
+    headerStyle: { backgroundColor: c.surface },
+    headerTintColor: c.text,
+    headerShadowVisible: false,
+    headerRight,
+    headerBackTitleVisible: false,
+  } as const;
+
+  return (
+    <AdminStackNav.Navigator screenOptions={screenOpts}>
+      <AdminStackNav.Screen
+        name="FinanceDashboard"
+        component={FinanceDashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="FinanceWithdrawals"
+        component={AdminWithdrawalsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="FinanceWallets"
+        component={FinanceWalletsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="FinanceUsers"
+        component={FinanceUsersScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminUserDetail"
+        component={AdminUserDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminCreateUser"
+        component={AdminCreateUserScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="FinanceProfile"
+        component={AdminProfileScreen}
+        options={{ headerShown: false }}
+      />
+    </AdminStackNav.Navigator>
+  );
+}
 
 function MainNavigator() {
   const { theme } = useTheme();
@@ -401,7 +470,7 @@ export function AppNavigator() {
   const { theme, isDark } = useTheme();
   const { user, isLoading, isReady } = useAuth();
 
-  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN || user?.role === UserRole.CURATOR;
+  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN || user?.role === UserRole.CURATOR || user?.role === UserRole.FINANCE;
 
   if (!isReady || isLoading) {
     return <LoadingScreen message="Starting app…" />;
@@ -426,6 +495,8 @@ export function AppNavigator() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 
+  const activeAdminNav = isFinance(user?.role) ? FinanceNavigator : AdminNavigator;
+
   return (
     <NavigationContainer theme={navTheme}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
@@ -437,7 +508,7 @@ export function AppNavigator() {
               <>
                 <RootStack.Screen
                   name="Main"
-                  component={isAdmin ? AdminNavigator : MainNavigator}
+                  component={isAdmin ? activeAdminNav : MainNavigator}
                 />
                 <RootStack.Screen
                   name="EditProfile"

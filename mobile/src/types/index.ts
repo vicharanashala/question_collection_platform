@@ -21,6 +21,7 @@ export enum UserRole {
   ADMIN = 'admin',
   SUPER_ADMIN = 'super_admin',
   CURATOR = 'curator',
+  FINANCE = 'finance',
 }
 
 export enum CropSeason {

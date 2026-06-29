@@ -448,7 +448,14 @@ export class AdminService implements OnModuleInit {
     return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
   }
 
-  async verifyUser(adminId: string, userId: string) {
+  async verifyUser(actorId: string, userId: string) {
+    const actor = await this.userRepo.findOne({ where: { id: actorId } });
+    if (!actor) throw new NotFoundException('Actor not found');
+    const validActors = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE];
+    if (!validActors.includes(actor.role as UserRole)) {
+      throw new ForbiddenException('Only admins, super admins or finance can verify users');
+    }
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -460,8 +467,8 @@ export class AdminService implements OnModuleInit {
     await this.userRepo.update(userId, { verificationStatus: VerificationStatus.VERIFIED });
 
     await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
+      actorType: actor.role === UserRole.FINANCE ? ActorType.FINANCE : ActorType.ADMIN,
+      actorId: actorId,
       action: AuditAction.USER_VERIFIED,
       entityType: 'user',
       entityId: userId,
@@ -1023,6 +1030,106 @@ export class AdminService implements OnModuleInit {
     }
   }
 
+  async getFinancialSummary(query: AnalyticsQueryDto) {
+    const since = new Date(Date.now() - (query.days ?? 30) * 24 * 60 * 60 * 1000);
+
+    const [
+      totalPaidOut,
+      pendingWithdrawalCount,
+      pendingWithdrawalAmount,
+      completedWithdrawalCount,
+      completedWithdrawalAmount,
+      failedWithdrawalCount,
+      totalWalletBalance,
+      todayPayoutCount,
+      todayPayoutAmount,
+      dailyPayoutTrend,
+    ] = await Promise.all([
+      // Total amount ever completed
+      this.withdrawalRepo
+        .createQueryBuilder('w')
+        .select('COALESCE(SUM(w.amount), 0)', 'total')
+        .where('w.status = :status', { status: WithdrawalStatus.COMPLETED })
+        .getRawOne<{ total: string }>(),
+      // Pending withdrawal count
+      this.withdrawalRepo.count({ where: { status: WithdrawalStatus.PENDING } }),
+      // Pending withdrawal total amount
+      this.withdrawalRepo
+        .createQueryBuilder('w')
+        .select('COALESCE(SUM(w.amount), 0)', 'total')
+        .where('w.status = :status', { status: WithdrawalStatus.PENDING })
+        .getRawOne<{ total: string }>(),
+      // Completed withdrawal count
+      this.withdrawalRepo.count({ where: { status: WithdrawalStatus.COMPLETED } }),
+      // Completed withdrawal total amount
+      this.withdrawalRepo
+        .createQueryBuilder('w')
+        .select('COALESCE(SUM(w.amount), 0)', 'total')
+        .where('w.status = :status', { status: WithdrawalStatus.COMPLETED })
+        .getRawOne<{ total: string }>(),
+      // Failed withdrawal count
+      this.withdrawalRepo.count({ where: { status: WithdrawalStatus.FAILED } }),
+      // Total balance across all wallets
+      this.walletRepo
+        .createQueryBuilder('w')
+        .select('COALESCE(SUM(w.balance), 0)', 'total')
+        .getRawOne<{ total: string }>(),
+      // Today's payout count
+      this.withdrawalRepo.count({
+        where: {
+          status: WithdrawalStatus.COMPLETED,
+          processedAt: Between(
+            new Date(new Date().setHours(0, 0, 0, 0)),
+            new Date(),
+          ),
+        },
+      }),
+      // Today's payout amount
+      this.withdrawalRepo
+        .createQueryBuilder('w')
+        .select('COALESCE(SUM(w.amount), 0)', 'total')
+        .where('w.status = :status', { status: WithdrawalStatus.COMPLETED })
+        .andWhere('w.processedAt >= :today', { today: new Date(new Date().setHours(0, 0, 0, 0)) })
+        .getRawOne<{ total: string }>(),
+      // Daily payout trend (last N days)
+      this.withdrawalRepo
+        .createQueryBuilder('w')
+        .select("TO_CHAR(w.processedAt, 'YYYY-MM-DD')", 'date')
+        .addSelect('COUNT(*)', 'count')
+        .addSelect('COALESCE(SUM(w.amount), 0)', 'amount')
+        .where('w.status = :status', { status: WithdrawalStatus.COMPLETED })
+        .andWhere('w.processedAt >= :since', { since })
+        .groupBy("TO_CHAR(w.processedAt, 'YYYY-MM-DD')")
+        .orderBy('date', 'ASC')
+        .getRawMany<{ date: string; count: string; amount: string }>(),
+    ]);
+
+    return {
+      totalPaidOut: Number(totalPaidOut?.total ?? 0),
+      pendingWithdrawals: {
+        count: pendingWithdrawalCount,
+        amount: Number(pendingWithdrawalAmount?.total ?? 0),
+      },
+      completedWithdrawals: {
+        count: completedWithdrawalCount,
+        amount: Number(completedWithdrawalAmount?.total ?? 0),
+      },
+      failedWithdrawals: {
+        count: failedWithdrawalCount,
+      },
+      totalWalletBalance: Number(totalWalletBalance?.total ?? 0),
+      today: {
+        payoutCount: todayPayoutCount,
+        payoutAmount: Number(todayPayoutAmount?.total ?? 0),
+      },
+      dailyPayoutTrend: dailyPayoutTrend.map((d) => ({
+        date: d.date,
+        count: Number(d.count),
+        amount: Number(d.amount),
+      })),
+    };
+  }
+
   async getRewardSummary(query: AnalyticsQueryDto) {
     const { fromDate, toDate, state } = query;
     const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -1153,7 +1260,7 @@ export class AdminService implements OnModuleInit {
     };
   }
 
-  async processWithdrawal(adminId: string, withdrawalId: string, dto: ProcessWithdrawalDto) {
+  async processWithdrawal(adminId: string, withdrawalId: string, dto: ProcessWithdrawalDto, reviewerRole?: UserRole) {
     const withdrawal = await this.withdrawalRepo.findOne({
       where: { id: withdrawalId },
       relations: ['user', 'wallet'],
@@ -1280,8 +1387,15 @@ export class AdminService implements OnModuleInit {
       });
       await this.paymentLogRepo.save(paymentLog);
 
+      const actorType: ActorType =
+        reviewerRole === UserRole.FINANCE
+          ? ActorType.FINANCE
+          : reviewerRole === UserRole.CURATOR
+          ? ActorType.CURATOR
+          : ActorType.ADMIN;
+
       await this.logAudit({
-        actorType: ActorType.ADMIN,
+        actorType,
         actorId: adminId,
         action: finalStatus === WithdrawalStatus.COMPLETED ? 'withdrawal_completed' : 'withdrawal_approved',
         entityType: 'withdrawal_request',

@@ -115,9 +115,9 @@ export class AuthService {
           'This number is not registered on the platform. Please use the mobile app to sign up.',
         );
       }
-      if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.CURATOR) {
+      if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.CURATOR && user.role !== UserRole.FINANCE) {
         throw new ForbiddenException(
-          'Only admin and curator accounts can access the web portal. Please use the mobile app.',
+          'Only admin, curator, and finance accounts can access the web portal. Please use the mobile app.',
         );
       }
       if (user.verificationStatus !== VerificationStatus.VERIFIED) {

@@ -464,10 +464,16 @@ export const adminApi = {
     api.get(`/admin/wallets/user/${userId}/withdrawals`, { params }),
   adjustWallet: (userId: string, body: { amount: number; reason: string }) =>
     api.post('/admin/wallets/adjust', { userId, ...body }),
+  getWallets: (params?: Record<string, string | number>) =>
+    api.get('/admin/wallets', { params }),
 
   // Reward logs
   getRewardLogs: (params?: Record<string, string | number>) =>
     api.get('/admin/analytics/reward-logs', { params }),
+
+  // Finance role
+  getFinancialSummary: (params?: Record<string, string | number>) =>
+    api.get('/admin/analytics/financial-summary', { params }),
 
   // Fraud
   getFraudStats: (params?: Record<string, string | number>) =>
