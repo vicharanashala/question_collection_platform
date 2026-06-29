@@ -225,6 +225,27 @@ export function TransactionDetailScreen() {
                 mono
               />
             )}
+            {/* UTR Number — shown once payment is processed (completed) */}
+            {displayTx.status === 'completed' && (displayTx.utrNumber ?? displayTx.razorpayPayoutId) && (
+              <View style={[styles.utrSection, { borderColor: c.success + '30', backgroundColor: c.success + '08' }]}>
+                {displayTx.utrNumber && (
+                  <MetaRow
+                    label={t('wallet.utrNumber', 'UTR Number')}
+                    value={displayTx.utrNumber}
+                    c={c}
+                    mono
+                  />
+                )}
+                {displayTx.razorpayPayoutId && (
+                  <MetaRow
+                    label={t('wallet.razorpayPayoutId', 'Razorpay Payout ID')}
+                    value={displayTx.razorpayPayoutId}
+                    c={c}
+                    mono
+                  />
+                )}
+              </View>
+            )}
           </View>
         </ScrollView>
       )}
@@ -339,4 +360,10 @@ const styles = StyleSheet.create({
   },
   rejectionLabel: { fontSize: 12, fontWeight: '700', flex: 1 },
   rejectionValue: { fontSize: 13, fontWeight: '500', flex: 2, textAlign: 'right' },
+  utrSection: {
+    marginTop: tokens.spacing3,
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    overflow: 'hidden',
+  },
 });

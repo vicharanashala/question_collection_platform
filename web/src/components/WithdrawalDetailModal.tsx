@@ -332,6 +332,18 @@ export function WithdrawalDetailModal({
                         {w.payoutMethod?.replace(/_/g, ' ') ?? '—'}
                       </Badge>
                     </div>
+                    {w.utrNumber && (
+                      <div className="col-span-2">
+                        <p className="text-xs text-muted-foreground mb-1">UTR Number</p>
+                        <Copyable value={w.utrNumber} />
+                      </div>
+                    )}
+                    {w.razorpayPayoutId && (
+                      <div className="col-span-2">
+                        <p className="text-xs text-muted-foreground mb-1">Razorpay Payout ID</p>
+                        <Copyable value={w.razorpayPayoutId} />
+                      </div>
+                    )}
                   </div>
                 </Section>
 
@@ -432,6 +444,12 @@ export function WithdrawalDetailModal({
                                   {pl.pinelabsTransactionId && <span className="font-mono mr-2">PL: {pl.pinelabsTransactionId}</span>}
                                   {pl.razorpayPayoutId && <span className="font-mono mr-2">RZ: {pl.razorpayPayoutId}</span>}
                                 </p>
+                                {(pl.utrNumber || pl.razorpayPayoutId) && (
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {pl.utrNumber && <span className="font-mono mr-2">UTR: {pl.utrNumber}</span>}
+                                    {pl.razorpayPayoutId && <span className="font-mono">RZ Payout: {pl.razorpayPayoutId}</span>}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             <div className="text-right shrink-0">

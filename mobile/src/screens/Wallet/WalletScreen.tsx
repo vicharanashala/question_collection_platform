@@ -325,6 +325,28 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                       </View>
                     )}
 
+                    {/* UTR Number — shown only when payment is completed */}
+                    {(wd['utrNumber'] || wd['razorpayPayoutId']) && wd.status === 'completed' && (
+                      <>
+                        {wd['utrNumber'] && (
+                          <View style={txModalStyles.payoutRow}>
+                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>UTR Number</Text>
+                            <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
+                              {String(wd['utrNumber'])}
+                            </Text>
+                          </View>
+                        )}
+                        {wd['razorpayPayoutId'] && (
+                          <View style={txModalStyles.payoutRow}>
+                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Razorpay Payout ID</Text>
+                            <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
+                              {String(wd['razorpayPayoutId'])}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
+
                     {/* Withdrawal ID */}
                     <View style={txModalStyles.payoutRow}>
                       <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Withdrawal ID</Text>
@@ -342,13 +364,22 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
             )}
           </ScrollView>
 
-          {/* Disclaimer for non-pending withdrawals */}
-          {tx.source === 'withdrawal' && wd && wd.status !== 'pending' && (
+          {/* Retry disclaimer — only for withdrawals where payment failed/rejected (not for completed or reversed) */}
+          {tx.source === 'withdrawal' && wd && (tx.status === 'failed' || tx.status === 'rejected') && (
             <View style={{ backgroundColor: c.surfaceHighlight ?? '#FEF3E7', borderRadius: 10, padding: 12, marginBottom: 16 }}>
               <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>
                 {String((wd.retryCount as number) ?? 0) > 0
                   ? `Your payment was attempted but could not be completed (Attempt ${(wd.retryCount as number) + 1}). We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.`
                   : 'Your payment was attempted but could not be completed. We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.'}
+              </Text>
+            </View>
+          )}
+
+          {/* Reversal disclaimer — for payouts that were reversed (money returned to wallet) */}
+          {tx.source === 'withdrawal' && wd && tx.status === 'reversed' && (
+            <View style={{ backgroundColor: c.surfaceHighlight ?? '#FEF3E7', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+              <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>
+                Your payment was reversed by the bank and the amount has been credited back to your wallet. Please add a different payment detail and try again.
               </Text>
             </View>
           )}

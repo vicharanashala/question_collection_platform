@@ -191,6 +191,8 @@ export interface PaymentLogEntry {
   orderId: string
   pinelabsTransactionId: string | null
   razorpayPayoutId: string | null
+  utrNumber: string | null
+  razorpayPayoutId: string | null
   status: 'initiated' | 'success' | 'failed' | 'pending'
   errorCode: string | null
   errorMessage: string | null
@@ -209,6 +211,8 @@ export interface Withdrawal {
   processedAt: string | null
   rejectionReason: string | null
   failureReason: string | null
+  utrNumber: string | null
+  razorpayPayoutId: string | null
   user: WithdrawalUser | null
   paymentLogs?: PaymentLogEntry[]
 }

@@ -254,6 +254,10 @@ export class RazorpayWebhookController {
     const payoutId = String(entity.id ?? '');
     const status = String(entity.status ?? '');
     const referenceId = String(entity.reference_id ?? '');
+    // UTR (Unique Transaction Reference) is the bank's confirmation number
+    const utrNumber = entity.utr ? String(entity.utr) : null;
+    // Settlement ID groups payouts into a Razorpay settlement run
+    const settlements = entity.settlements as Record<string, string> | undefined;
 
     this.logger.debug(`[handlePayoutSuccess] entity: ${JSON.stringify(entity)}`);
     this.logger.log(
@@ -286,6 +290,7 @@ export class RazorpayWebhookController {
     await this.withdrawalRepo.update(withdrawalId, {
       status: finalStatus,
       processedAt: isSuccess ? new Date() : withdrawal.processedAt,
+      utrNumber,
     });
 
     // Also update the corresponding transaction from PENDING → COMPLETED
@@ -308,13 +313,19 @@ export class RazorpayWebhookController {
         withdrawalRequestId: withdrawalId,
         orderId: referenceId,
         razorpayPayoutId: payoutId,
+        utrNumber,
         status: isSuccess ? PaymentLogStatus.SUCCESS : PaymentLogStatus.FAILED,
         rawResponse: body as unknown as Record<string, unknown>,
       });
       await this.paymentLogRepo.save(log);
       this.logger.debug(`[handlePayoutSuccess] payment_log created`);
     } else {
-      this.logger.debug(`[handlePayoutSuccess] payment_log already exists — skipping`);
+      // Back-fill UTR and settlement if they weren't available at initiation time
+      await this.paymentLogRepo.update(existingLog.id, {
+        utrNumber,
+        status: isSuccess ? PaymentLogStatus.SUCCESS : PaymentLogStatus.FAILED,
+      });
+      this.logger.debug(`[handlePayoutSuccess] payment_log back-filled with utrNumber=${utrNumber}`);
     }
 
     this.logger.debug(`[handlePayoutSuccess] Completed`);
@@ -341,7 +352,8 @@ export class RazorpayWebhookController {
     const payoutId = String(entity.id ?? '');
     const referenceId = String(entity.reference_id ?? '');
     const reason = (entity.remarks as string) ?? String(entity.status ?? 'Rejected by bank');
-
+    // UTR may be present even on rejected payouts depending on where rejection occurred
+    const utrNumber = entity.utr ? String(entity.utr) : null;
     this.logger.debug(`[handlePayoutFailure] payoutId=${payoutId} ref=${referenceId} reason=${reason}`);
     this.logger.warn(
       `[Razorpay Webhook] Payout rejected | payoutId=${payoutId} ref=${referenceId} reason=${reason}`,
@@ -365,6 +377,7 @@ export class RazorpayWebhookController {
     await this.withdrawalRepo.update(withdrawalId, {
       status: WithdrawalStatus.FAILED,
       processedAt: new Date(),
+      utrNumber,
     });
 
     this.logger.debug(`[handlePayoutFailure] Looking up payment_log for payoutId=${payoutId}`);
@@ -378,6 +391,7 @@ export class RazorpayWebhookController {
         withdrawalRequestId: withdrawalId,
         orderId: referenceId,
         razorpayPayoutId: payoutId,
+        utrNumber,
         status: PaymentLogStatus.FAILED,
         rawResponse: body as unknown as Record<string, unknown>,
       });
@@ -420,6 +434,8 @@ export class RazorpayWebhookController {
     const reason = (entity.remarks as string)
       ?? (entity.failure_reason as string)
       ?? String(entity.status ?? 'Payout was reversed — funds returned to your account');
+    // UTR is preserved from the original payout that was reversed
+    const utrNumber = entity.utr ? String(entity.utr) : null;
 
     this.logger.debug(`[handlePayoutReversed] payoutId=${payoutId} status=${status} ref=${referenceId} reason=${reason}`);
     this.logger.warn(
@@ -470,6 +486,7 @@ export class RazorpayWebhookController {
       status: WithdrawalStatus.REVERSED,
       processedAt: new Date(),
       failureReason: reason,
+      utrNumber,
     });
 
     // ── Log the reversal in payment_logs ──────────────────────────────────────
@@ -477,6 +494,7 @@ export class RazorpayWebhookController {
       withdrawalRequestId: withdrawalId,
       orderId: referenceId,
       razorpayPayoutId: payoutId,
+      utrNumber,
       status: PaymentLogStatus.REVERSED,
       errorCode: 'PAYOUT_REVERSED',
       errorMessage: reason,

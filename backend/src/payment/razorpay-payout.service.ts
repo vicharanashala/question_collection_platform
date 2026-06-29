@@ -32,6 +32,8 @@ export interface CreateContactResult {
 export interface InitiatePayoutResult {
   payoutId: string;
   status: 'pending' | 'processing' | 'success' | 'failed' | 'rejected';
+  /** UTR number — present only when payout has been processed/confirmed by the bank */
+  utrNumber?: string | null;
 }
 
 export interface CreatePaymentLinkResult {
@@ -393,12 +395,13 @@ export class RazorpayPayoutService {
       );
 
       this.logger.log(
-        `[Razorpay] Payout created: id=${response.data.id} status=${response.data.status}`,
+        `[Razorpay] Payout created: id=${response.data.id} status=${response.data.status} utr=${response.data.utr ?? 'n/a'}`,
       );
 
       return {
         payoutId: response.data.id,
         status: response.data.status,
+        utrNumber: response.data.utr ?? null,
       };
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: { description?: string; code?: string } } } };

@@ -511,11 +511,12 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               {/* ── Withdrawals tab ─────────────────────── */}
               <TabsContent value="withdrawals" className="flex flex-col flex-1 min-h-0 mt-3">
                 <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1">
-                  <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
                     <span>Request ID</span>
                     <span>Payout Method</span>
                     <span className="text-right">Amount</span>
-                    <span>Status</span>
+                    <span>UTR / Payout ID</span>
+                    <span className="text-center">Status</span>
                     <span className="text-center">Details</span>
                   </div>
                   <div className="overflow-y-auto flex-1">
@@ -538,7 +539,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                       withdrawals.map((wd) => (
                         <div
                           key={wd.id}
-                          className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
+                          className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
                         >
                           <div className="min-w-0">
                             <p className="text-xs font-mono text-muted-foreground truncate">{wd.id}</p>
@@ -565,6 +566,24 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                           <p className="text-sm font-bold text-foreground tabular-nums text-right">
                             ₹{formatINRFull(Number(wd.amount))}
                           </p>
+                          <div className="min-w-0">
+                            {(wd.utrNumber || wd.razorpayPayoutId) ? (
+                              <div className="flex flex-col gap-0.5">
+                                {wd.utrNumber && (
+                                  <p className="text-xs font-mono text-muted-foreground" title="UTR Number">
+                                    UTR: {wd.utrNumber}
+                                  </p>
+                                )}
+                                {wd.razorpayPayoutId && (
+                                  <p className="text-xs font-mono text-muted-foreground" title="Razorpay Payout ID">
+                                    RZ: {wd.razorpayPayoutId}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/50">—</span>
+                            )}
+                          </div>
                           <span className={cn(
                             'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize shrink-0',
                             WD_STATUS_COLORS[wd.status] ?? 'bg-muted',

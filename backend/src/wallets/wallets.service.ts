@@ -200,7 +200,7 @@ export class WalletsService {
     const qb = this.withdrawalRepo
       .createQueryBuilder('wr')
       .where('wr.walletId = :walletId', { walletId: wallet.id })
-      .select(['wr.id', 'wr.amount', 'wr.payoutMethod', 'wr.payoutDetails', 'wr.status', 'wr.rejectionReason', 'wr.processedAt', 'wr.createdAt', 'wr.cancelledAt'])
+      .select(['wr.id', 'wr.amount', 'wr.payoutMethod', 'wr.payoutDetails', 'wr.status', 'wr.rejectionReason', 'wr.processedAt', 'wr.createdAt', 'wr.cancelledAt', 'wr.utrNumber', 'wr.razorpayPayoutId'])
       .orderBy('wr.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);

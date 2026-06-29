@@ -1316,12 +1316,11 @@ export class AdminService implements OnModuleInit {
         }
       }
 
-      // ── Step 3: Initiate Razorpay payout ─────────────────────────────────────
       const referenceId = `wd_${withdrawalId}`;
       const amountPaise = Math.round(Number(withdrawal.amount) * 100);
       const payoutMode = withdrawal.payoutMethod === 'upi' ? 'UPI' : 'IMPS';
 
-      let payoutResult: { payoutId: string; status: string };
+      let payoutResult: { payoutId: string; status: string; utrNumber?: string | null };
       try {
         payoutResult = await this.razorpayPayoutService.initiatePayout({
           fundAccountId,
@@ -1369,6 +1368,7 @@ export class AdminService implements OnModuleInit {
         processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
         razorpayPayoutId: payoutId,
         orderId: referenceId,
+        utrNumber: payoutResult.utrNumber ?? null,
       });
 
       // ── Step 5: Log the payment attempt ─────────────────────────────────────
@@ -1377,13 +1377,13 @@ export class AdminService implements OnModuleInit {
         adminId,
         orderId: referenceId,
         razorpayPayoutId: payoutId,
+        utrNumber: payoutResult.utrNumber ?? null,
         status:
           finalStatus === WithdrawalStatus.COMPLETED
             ? PaymentLogStatus.SUCCESS
             : finalStatus === WithdrawalStatus.FAILED
             ? PaymentLogStatus.FAILED
             : PaymentLogStatus.PENDING,
-        rawResponse: { payoutId, razorpayStatus } as Record<string, unknown>,
       });
       await this.paymentLogRepo.save(paymentLog);
 
@@ -1400,7 +1400,6 @@ export class AdminService implements OnModuleInit {
         action: finalStatus === WithdrawalStatus.COMPLETED ? 'withdrawal_completed' : 'withdrawal_approved',
         entityType: 'withdrawal_request',
         entityId: withdrawalId,
-        newValue: { status: finalStatus, razorpayPayoutId: payoutId },
       });
 
       // ── Step 6: On FAILED, trigger refund ────────────────────────────────────
@@ -1567,12 +1566,11 @@ export class AdminService implements OnModuleInit {
         });
       }
     }
-
     const referenceId = `wd_${withdrawalId}`;
     const amountPaise = Math.round(Number(withdrawal.amount) * 100);
     const payoutMode = withdrawal.payoutMethod === 'upi' ? 'UPI' : 'IMPS';
 
-    let payoutResult: { payoutId: string; status: string };
+    let payoutResult: { payoutId: string; status: string; utrNumber?: string | null };
     try {
       payoutResult = await this.razorpayPayoutService.initiatePayout({
         fundAccountId,
@@ -1615,6 +1613,7 @@ export class AdminService implements OnModuleInit {
       status: finalStatus,
       processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
       razorpayPayoutId: payoutId,
+      utrNumber: payoutResult.utrNumber ?? null,
     });
 
     if (finalStatus === WithdrawalStatus.FAILED) {
@@ -1627,6 +1626,7 @@ export class AdminService implements OnModuleInit {
           errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
           errorMessage: `Razorpay payout status: ${razorpayStatus}`,
           rawResponse: { payoutId, razorpayStatus },
+          utrNumber: payoutResult.utrNumber ?? null,
         },
       });
       return {
@@ -1645,7 +1645,6 @@ export class AdminService implements OnModuleInit {
       action: 'withdrawal_completed',
       entityType: 'withdrawal_request',
       entityId: withdrawalId,
-      newValue: { status: finalStatus, razorpayPayoutId: payoutId },
     });
 
     return { success: true, withdrawalId, status: finalStatus };
@@ -1758,8 +1757,7 @@ export class AdminService implements OnModuleInit {
     const amountPaise = Math.round(Number(withdrawal.amount) * 100);
     const payoutMode = withdrawal.payoutMethod === 'upi' ? 'UPI' : 'IMPS';
 
-    // 4. Attempt Razorpay payout
-    let payoutResult: { payoutId: string; status: string };
+    let payoutResult: { payoutId: string; status: string; utrNumber?: string | null };
     try {
       payoutResult = await this.razorpayPayoutService.initiatePayout({
         fundAccountId,
@@ -1795,6 +1793,7 @@ export class AdminService implements OnModuleInit {
       status: finalStatus,
       processedAt: finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
       razorpayPayoutId: payoutId,
+      utrNumber: payoutResult.utrNumber ?? null,
     });
 
     if (finalStatus === WithdrawalStatus.FAILED) {
@@ -1807,6 +1806,7 @@ export class AdminService implements OnModuleInit {
           errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
           errorMessage: `Razorpay payout status: ${razorpayStatus}`,
           rawResponse: { payoutId, razorpayStatus },
+          utrNumber: payoutResult.utrNumber ?? null,
         },
       });
       return {
@@ -1825,7 +1825,6 @@ export class AdminService implements OnModuleInit {
       action: 'withdrawal_completed',
       entityType: 'withdrawal_request',
       entityId: withdrawalId,
-      newValue: { status: finalStatus, razorpayPayoutId: payoutId },
     });
 
     return { success: true, withdrawalId, status: finalStatus };
@@ -1845,7 +1844,7 @@ export class AdminService implements OnModuleInit {
     withdrawal: WithdrawalRequest;
     orderId: string;
     adminId: string;
-    result: { pinelabsTransactionId: string | null; errorCode: string | null; errorMessage: string | null; rawResponse: Record<string, unknown> };
+    result: { pinelabsTransactionId: string | null; errorCode: string | null; errorMessage: string | null; rawResponse: Record<string, unknown>; utrNumber?: string | null };
   }): Promise<WithdrawalStatus> {
     const { withdrawal, orderId, adminId, result } = params;
 
@@ -1860,6 +1859,7 @@ export class AdminService implements OnModuleInit {
         errorCode: result.errorCode,
         errorMessage: result.errorMessage,
         rawResponse: result.rawResponse,
+        utrNumber: result.utrNumber ?? null,
       }),
     );
 
@@ -2892,6 +2892,7 @@ export class AdminService implements OnModuleInit {
       orderId: pl.orderId,
       pinelabsTransactionId: pl.pinelabsTransactionId,
       razorpayPayoutId: pl.razorpayPayoutId,
+      utrNumber: pl.utrNumber,
       status: pl.status,
       errorCode: pl.errorCode,
       errorMessage: pl.errorMessage,
@@ -3003,6 +3004,8 @@ export class AdminService implements OnModuleInit {
         'wr.status',
         'wr.processedAt',
         'wr.createdAt',
+        'wr.utrNumber',
+        'wr.razorpayPayoutId',
       ])
       .skip((page - 1) * limit)
       .take(limit);

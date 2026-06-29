@@ -110,6 +110,8 @@ export interface Transaction {
   rejectionReason: string | null;
   status: 'pending' | 'completed' | 'failed' | 'reversed' | 'rejected';
   createdAt: string;
+  utrNumber?: string | null;
+  razorpayPayoutId?: string | null;
 }
 
 export interface Question {

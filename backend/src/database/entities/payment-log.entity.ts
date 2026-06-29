@@ -36,6 +36,10 @@ export class PaymentLog {
   @Column({ name: 'razorpay_payout_id', type: 'varchar', length: 100, nullable: true })
   razorpayPayoutId: string | null;
 
+  /** UTR number returned by Razorpay once the payout is processed */
+  @Column({ name: 'utr_number', type: 'varchar', length: 100, nullable: true })
+  utrNumber: string | null;
+
   @Column({ type: 'varchar', length: 20 })
   status: PaymentLogStatus;
 
