@@ -10,6 +10,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { Public } from '../common/decorators/public.decorator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -51,6 +52,7 @@ interface RazorpayWebhookPayload {
 }
 
 @Controller('razorpay/webhook')
+@Public() // Razorpay sends webhooks without JWT — bypass global JwtAuthGuard
 export class RazorpayWebhookController {
   private readonly logger = new Logger(RazorpayWebhookController.name);
 
@@ -106,10 +108,10 @@ export class RazorpayWebhookController {
     this.logger.debug(`[Webhook] RAW BODY: ${rawBody}`);
     this.logger.debug(`[Webhook] SIGNATURE HEADER: ${signature}`);
 
-    // if (signature && !this.verifySignature(rawBody, signature)) {
-    //   this.logger.warn('[Webhook] Invalid signature — rejecting request');
-    //   throw new UnauthorizedException('Invalid webhook signature');
-    // }
+    if (signature && !this.verifySignature(rawBody, signature)) {
+      this.logger.warn('[Webhook] Invalid signature — rejecting request');
+      throw new UnauthorizedException('Invalid webhook signature');
+    }
 
     this.logger.debug('[Webhook] Signature verification passed');
 
