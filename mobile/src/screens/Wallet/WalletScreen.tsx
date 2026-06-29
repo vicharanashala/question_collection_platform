@@ -710,7 +710,7 @@ export function WalletScreen() {
 
   // Quick stats
   const totalEarned = allTransactions
-    .filter((tx) => tx.type === 'credit' && tx.status === 'completed')
+    .filter((tx) => tx.type === 'credit' && tx.status === 'completed' && tx.source === 'reward')
     .reduce((sum, tx) => sum + Number(tx.amount), 0);
   const totalWithdrawn = allTransactions
     .filter((tx) => tx.source === 'withdrawal' && tx.status === 'completed')
@@ -785,38 +785,31 @@ export function WalletScreen() {
 
         {/* ── Quick stats row ────────────────────────────────── */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <View style={[styles.statIconWrap, { backgroundColor: c.success + '15' }]}>
-              <Ionicons name="trending-up-outline" size={17} color={c.success} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.statValue, { color: c.success }]} numberOfLines={1}>
-                ₹{formatINRCompact(totalEarned)}
-              </Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]} numberOfLines={1}>Total Earned</Text>
-            </View>
+          <View style={[styles.statCard, { backgroundColor: c.success + '12', borderColor: c.success + '25' }]}>
+            <Ionicons name="trending-up-outline" size={16} color={c.success} style={styles.statCardIcon} />
+            <Text style={[styles.statValue, { color: c.success }]}>
+              {formatINRCompact(totalEarned)}
+            </Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary }]}>Earned</Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <View style={[styles.statIconWrap, { backgroundColor: c.primary + '15' }]}>
-              <Ionicons name="arrow-up-outline" size={17} color={c.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.statValue, { color: c.primary }]} numberOfLines={1}>
-                ₹{formatINRCompact(totalWithdrawn)}
-              </Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]} numberOfLines={1}>Withdrawn</Text>
-            </View>
+          <View style={[styles.statCard, { backgroundColor: c.primary + '12', borderColor: c.primary + '25' }]}>
+            <Ionicons name="arrow-up-outline" size={16} color={c.primary} style={styles.statCardIcon} />
+            <Text style={[styles.statValue, { color: c.primary }]}>
+              {formatINRCompact(totalWithdrawn)}
+            </Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary }]}>Withdrawn</Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            <View style={[styles.statIconWrap, { backgroundColor: pendingCount > 0 ? c.warning + '15' : c.textTertiary + '15' }]}>
-              <Ionicons name="time-outline" size={17} color={pendingCount > 0 ? c.warning : c.textTertiary} />
-            </View>
-            <View>
-              <Text style={[styles.statValue, { color: c.text }]} numberOfLines={1}>{pendingCount}</Text>
-              <Text style={[styles.statLabel, { color: c.textSecondary }]} numberOfLines={1}>Pending</Text>
-            </View>
+          <View style={[styles.statCard, {
+            backgroundColor: pendingCount > 0 ? c.warning + '12' : c.textTertiary + '10',
+            borderColor: pendingCount > 0 ? c.warning + '25' : c.textTertiary + '20',
+          }]}>
+            <Ionicons name="time-outline" size={16} color={pendingCount > 0 ? c.warning : c.textTertiary} style={styles.statCardIcon} />
+            <Text style={[styles.statValue, { color: pendingCount > 0 ? c.warning : c.text }]}>
+              {formatINRCompact(pendingCount)}
+            </Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary }]}>Pending</Text>
           </View>
         </View>
 
@@ -1149,21 +1142,17 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: tokens.spacing2, marginBottom: tokens.spacing4 },
   statCard: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
-    gap: tokens.spacing2,
-  },
-  statIconWrap: {
-    width: 32, height: 32,
-    borderRadius: tokens.radius,
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
+    borderRadius: tokens.radiusLg,
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing2,
+    borderWidth: 1,
+    gap: 2,
   },
-  statValue: { fontSize: 13, fontWeight: '800', flexShrink: 1 },
-  statLabel: { fontSize: 10, flexShrink: 1, marginTop: 1 },
+  statCardIcon: { marginBottom: 4 },
+  statValue: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
+  statLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
 
   // Info note
   infoNote: {
