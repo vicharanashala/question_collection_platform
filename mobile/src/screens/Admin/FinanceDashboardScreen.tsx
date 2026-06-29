@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { AdminStackParamList } from '../../navigation/types';
@@ -88,6 +89,7 @@ function MiniBarChart({ data }: { data: Array<{ date: string; amount: number }> 
 export function FinanceDashboardScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
+  const { user } = useAuth();
   const { showToast } = useToast();
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
 
@@ -143,6 +145,58 @@ export function FinanceDashboardScreen() {
       >
         {summary ? (
           <>
+            {/* ── Hero header ── */}
+            <View style={[styles.hero, { backgroundColor: c.heroBg }]}>
+              <View style={styles.heroTop}>
+                <View style={styles.heroLeft}>
+                  <Text style={[styles.heroGreeting, { color: c.heroFg + 'bb' }]}>
+                    {(() => {
+                      const h = new Date().getHours();
+                      if (h < 12) return 'Good morning';
+                      if (h < 17) return 'Good afternoon';
+                      return 'Good evening';
+                    })()},
+                  </Text>
+                  <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Finance'}</Text>
+                  <View style={[styles.heroRolePill, { backgroundColor: c.heroFg + '22' }]}>
+                    <Ionicons name="cash" size={13} color={c.heroFg} />
+                    <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>Finance Team</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.avatarContainer, { backgroundColor: c.heroFg + '33', borderColor: c.heroBg }]}
+                  onPress={() => navigation.navigate('FinanceProfile')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.avatarText, { color: c.heroBg }]}>
+                    {(user?.name ?? 'F').charAt(0).toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.heroBottom}>
+                <View style={styles.heroStatPills}>
+                  <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
+                    <Ionicons name="time" size={11} color={c.heroFg + 'cc'} />
+                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
+                      {summary.pendingWithdrawals.count} pending
+                    </Text>
+                  </View>
+                  <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
+                    <Ionicons name="checkmark-circle" size={11} color={c.heroFg + 'cc'} />
+                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
+                      {summary.completedWithdrawals.count} completed
+                    </Text>
+                  </View>
+                  <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
+                    <Ionicons name="ban" size={11} color={c.heroFg + 'cc'} />
+                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
+                      {summary.failedWithdrawals.count} failed
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
             {/* ── Primary stats ── */}
             <View style={styles.statsGrid}>
               <StatCard
@@ -303,8 +357,80 @@ const styles = StyleSheet.create({
   },
   screenTitle: { fontSize: 18, fontWeight: '700' },
   loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
+  scroll: { paddingBottom: tokens.spacing4 },
   scrollContent: { padding: tokens.spacing4, gap: tokens.spacing3 },
+
+  // Hero
+  hero: {
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing5,
+    overflow: 'hidden',
+  },
+  heroTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  heroLeft: { flex: 1 },
+  heroGreeting: {
+    fontSize: 12.5,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  heroName: {
+    fontSize: 26,
+    fontWeight: '800',
+    lineHeight: 30,
+    marginBottom: 8,
+  },
+  heroRolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  heroRoleText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
+  heroBottom: {
+    marginTop: tokens.spacing4,
+  },
+  heroStatPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  heroStatPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  heroStatPillText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
+  avatarContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: tokens.spacing4,
+    flexShrink: 0,
+    borderWidth: 2,
+  },
+  avatarText: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
