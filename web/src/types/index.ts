@@ -186,6 +186,18 @@ export interface WithdrawalUser {
   state: string
 }
 
+export interface PaymentLogEntry {
+  id: string
+  orderId: string
+  pinelabsTransactionId: string | null
+  razorpayPayoutId: string | null
+  status: 'initiated' | 'success' | 'failed' | 'pending'
+  errorCode: string | null
+  errorMessage: string | null
+  rawResponse: Record<string, unknown> | null
+  attemptedAt: string
+}
+
 export interface Withdrawal {
   id: string
   amount: number
@@ -196,7 +208,9 @@ export interface Withdrawal {
   createdAt: string
   processedAt: string | null
   rejectionReason: string | null
+  failureReason: string | null
   user: WithdrawalUser | null
+  paymentLogs?: PaymentLogEntry[]
 }
 
 export interface WalletSummary {

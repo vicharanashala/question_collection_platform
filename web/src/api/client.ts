@@ -313,10 +313,16 @@ export const adminApi = {
     request<{
       id: string; amount: number; payoutMethod: string; status: string;
       orderId: string | null; createdAt: string; processedAt: string | null;
+      rejectionReason: string | null; failureReason: string | null;
       user: { id: string; name: string; mobileNumber: string } | null;
       transactions: Array<{
         id: string; type: string; amount: number; status: string;
         rejectionReason: string | null; description: string; source: string; createdAt: string;
+      }>;
+      paymentLogs: Array<{
+        id: string; orderId: string; pinelabsTransactionId: string | null;
+        razorpayPayoutId: string | null; status: string; errorCode: string | null;
+        errorMessage: string | null; rawResponse: Record<string, unknown> | null; attemptedAt: string;
       }>;
     }>(`/admin/withdrawals/${id}`, {}, false),
 

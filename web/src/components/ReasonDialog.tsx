@@ -12,6 +12,8 @@ interface ReasonDialogProps {
   mode: 'approve' | 'reject' | 'fail'
   amount: number
   userName: string
+  /** Pre-fill the reason field (useful for re-failing a failed withdrawal) */
+  initialReason?: string
   onConfirm: (reason: string | undefined) => void
 }
 
@@ -40,21 +42,28 @@ const SUGGESTED_REASONS: Record<'reject' | 'fail', string[]> = {
   ],
 }
 
-export function ReasonDialog({ open, onOpenChange, mode, amount, userName, onConfirm }: ReasonDialogProps) {
+export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initialReason, onConfirm }: ReasonDialogProps) {
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // Apply initialReason after mount so it overrides the cleared state
   useEffect(() => {
     if (open) {
-      // Small delay to ensure dialog is visible before focusing
-      const t = setTimeout(() => textareaRef.current?.focus(), 80)
-      return () => clearTimeout(t)
+      if (initialReason !== undefined) {
+        const t = setTimeout(() => {
+          setReason(initialReason)
+          textareaRef.current?.focus()
+        }, 30)
+        return () => clearTimeout(t)
+      } else {
+        textareaRef.current?.focus()
+      }
     } else {
       setReason('')
       setError('')
     }
-  }, [open])
+  }, [open, initialReason])
 
   function handleConfirm() {
     if (mode === 'reject' || mode === 'fail') {

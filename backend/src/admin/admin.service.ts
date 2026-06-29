@@ -1868,7 +1868,10 @@ export class AdminService implements OnModuleInit {
       ? result.errorMessage ?? 'Payout dispatch failed'
       : `${result.errorCode ?? 'Payout failed'}: ${result.errorMessage ?? 'Unknown error'}`;
 
-    await this.withdrawalRepo.update(withdrawal.id, { status: WithdrawalStatus.FAILED });
+    await this.withdrawalRepo.update(withdrawal.id, {
+      status: WithdrawalStatus.FAILED,
+      failureReason,
+    });
     await this.logAudit({
       actorType: ActorType.ADMIN,
       actorId: adminId,
@@ -1900,6 +1903,7 @@ export class AdminService implements OnModuleInit {
           { referenceId: withdrawalId, type: TransactionType.CREDIT, source: TransactionSource.REFUND },
           { rejectionReason: reason },
         );
+        await this.withdrawalRepo.update(withdrawalId, { failureReason: reason });
       }
       return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
     }
@@ -1916,6 +1920,7 @@ export class AdminService implements OnModuleInit {
       await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
         status: WithdrawalStatus.FAILED,
         processedAt: new Date(),
+        failureReason: reason ?? 'Marked failed by admin',
       });
 
       // 2. Mark the DEBIT transaction as FAILED and store the reason
@@ -2873,7 +2878,7 @@ export class AdminService implements OnModuleInit {
   async getWithdrawalWithTransactions(id: string) {
     const withdrawal = await this.withdrawalRepo.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'paymentLogs'],
     });
     if (!withdrawal) throw new NotFoundException('Withdrawal request not found');
 
@@ -2881,6 +2886,18 @@ export class AdminService implements OnModuleInit {
       where: { referenceId: id },
       order: { createdAt: 'ASC' },
     });
+
+    const paymentLogs = (withdrawal.paymentLogs ?? []).map((pl) => ({
+      id: pl.id,
+      orderId: pl.orderId,
+      pinelabsTransactionId: pl.pinelabsTransactionId,
+      razorpayPayoutId: pl.razorpayPayoutId,
+      status: pl.status,
+      errorCode: pl.errorCode,
+      errorMessage: pl.errorMessage,
+      rawResponse: pl.rawResponse,
+      attemptedAt: pl.attemptedAt,
+    }));
 
     return {
       ...withdrawal,
@@ -2894,6 +2911,7 @@ export class AdminService implements OnModuleInit {
         source: tx.source,
         createdAt: tx.createdAt,
       })),
+      paymentLogs,
     };
   }
 

@@ -20,7 +20,7 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Withdrawal, AuditLogEntry, AuditEntityHistoryResponse } from '@/types'
+import type { Withdrawal, AuditLogEntry, AuditEntityHistoryResponse, PaymentLogEntry } from '@/types'
 import { auditApi } from '@/api/client'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -106,11 +106,13 @@ export function WithdrawalDetailModal({
     id: string; type: string; amount: number; status: string;
     rejectionReason: string | null; description: string; source: string; createdAt: string;
   }>>([])
+  const [paymentLogs, setPaymentLogs] = useState<PaymentLogEntry[]>([])
   const [reasonDialog, setReasonDialog] = useState<{
     open: boolean
     mode: 'approve' | 'reject' | 'fail'
     amount: number
     userName: string
+    initialReason?: string
   } | null>(null)
 
   // Audit history (super_admin)
@@ -135,6 +137,7 @@ export function WithdrawalDetailModal({
     adminApi.getWithdrawalWithTransactions(initial.id).then((data) => {
       setWithdrawal(data as any)
       setTransactions((data as any).transactions ?? [])
+      setPaymentLogs((data as any).paymentLogs ?? [])
     }).catch(() => {}).finally(() => setLoading(false))
   }, [open, initial.id])
 
@@ -272,13 +275,17 @@ export function WithdrawalDetailModal({
               )}
             </div>
 
-            {/* Rejection reason banner */}
-            {w.rejectionReason && (
+            {/* Rejection / Failure reason banner */}
+            {(w.rejectionReason || w.failureReason) && (
               <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 mt-3">
                 <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-destructive">Rejection Reason</p>
-                  <p className="text-sm text-foreground mt-0.5">{w.rejectionReason}</p>
+                  <p className="text-xs font-semibold text-destructive">
+                    {w.status === 'failed' ? 'Failure Reason' : 'Rejection Reason'}
+                  </p>
+                  <p className="text-sm text-foreground mt-0.5">
+                    {w.status === 'failed' ? w.failureReason : w.rejectionReason}
+                  </p>
                 </div>
               </div>
             )}
@@ -390,6 +397,80 @@ export function WithdrawalDetailModal({
                               {tx.status}
                             </span>
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
+
+                {/* ── Payment Attempts ─────────────────────────── */}
+                {w.status === 'failed' && paymentLogs.length > 0 && (
+                  <Section label="Payment Attempts" icon={RefreshCw}>
+                    <div className="space-y-2">
+                      {paymentLogs.map((pl, idx) => (
+                        <div key={pl.id} className="rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className={cn(
+                                'flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
+                                pl.status === 'failed' ? 'bg-destructive/10' :
+                                pl.status === 'success'  ? 'bg-success/10' : 'bg-blue-500/10',
+                              )}>
+                                {pl.status === 'failed'
+                                  ? <XCircle className="h-4 w-4 text-destructive" />
+                                  : pl.status === 'success'
+                                  ? <CheckCircle className="h-4 w-4 text-success" />
+                                  : <RefreshCw className="h-4 w-4 text-blue-500" />
+                                }
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold text-foreground capitalize">
+                                  Attempt {idx + 1} · {pl.status}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {pl.orderId && <span className="font-mono mr-2">{pl.orderId}</span>}
+                                  {pl.pinelabsTransactionId && <span className="font-mono mr-2">PL: {pl.pinelabsTransactionId}</span>}
+                                  {pl.razorpayPayoutId && <span className="font-mono mr-2">RZ: {pl.razorpayPayoutId}</span>}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-xs text-muted-foreground">
+                                {pl.attemptedAt ? formatDisplayDate(pl.attemptedAt) : '—'}
+                              </p>
+                              <span className={cn(
+                                'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize mt-0.5',
+                                pl.status === 'failed'    && 'bg-destructive/10 text-destructive',
+                                pl.status === 'success'   && 'bg-success/10 text-success',
+                                pl.status === 'pending'   && 'bg-muted text-muted-foreground',
+                                pl.status === 'initiated' && 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+                              )}>
+                                {pl.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          {pl.errorCode && (
+                            <div className="mt-2 rounded-md bg-destructive/5 border border-destructive/20 px-3 py-2">
+                              <p className="text-xs font-semibold text-destructive">
+                                {pl.errorCode}
+                              </p>
+                              {pl.errorMessage && (
+                                <p className="text-xs text-foreground mt-0.5">{pl.errorMessage}</p>
+                              )}
+                            </div>
+                          )}
+
+                          {pl.rawResponse && Object.keys(pl.rawResponse).length > 0 && (
+                            <details className="mt-2">
+                              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                                Raw response ({Object.keys(pl.rawResponse).length} fields)
+                              </summary>
+                              <pre className="mt-1 rounded bg-muted p-2 text-xs font-mono text-muted-foreground overflow-auto max-h-32">
+                                {JSON.stringify(pl.rawResponse, null, 2)}
+                              </pre>
+                            </details>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -579,6 +660,7 @@ export function WithdrawalDetailModal({
                     open: true, mode: 'fail',
                     amount: w.amount,
                     userName: w.user?.name ?? w.user?.mobileNumber ?? '',
+                    initialReason: w.failureReason ?? undefined,
                   })}
                   disabled={processing}
                 >
@@ -608,6 +690,7 @@ export function WithdrawalDetailModal({
           mode={reasonDialog.mode}
           amount={reasonDialog.amount}
           userName={reasonDialog.userName}
+          initialReason={reasonDialog.initialReason}
           onConfirm={(reason) => {
             const mode = reasonDialog!.mode
             setReasonDialog(null)
