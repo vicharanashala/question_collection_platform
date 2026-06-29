@@ -1,4 +1,4 @@
-export type UserRole = 'user' | 'admin' | 'super_admin' | 'curator';
+export type UserRole = "user" | "admin" | "super_admin" | "curator" | "finance";
 export type PaymentDetailStatus = 'pending' | 'in_progress' | 'verified' | 'failed';
 export type PayoutMethod = 'upi' | 'bank_transfer';
 export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'suspended' | 'banned';
@@ -410,6 +410,8 @@ export interface AuditLogQuery {
   limit?: number
   actorId?: string
   actorType?: string
+  /** Filter actors by role: admin | curator | finance — super_admin can see any role */
+  role?: 'admin' | 'curator' | 'finance'
   action?: string
   actions?: string[]
   entityType?: string
@@ -419,4 +421,15 @@ export interface AuditLogQuery {
   search?: string
   sortBy?: 'createdAt' | 'action' | 'actorId'
   sortOrder?: 'ASC' | 'DESC'
+}
+
+export interface AuditUserSummary {
+  id: string
+  name: string
+  mobileNumber: string
+  role: string
+}
+
+export interface AuditUsersByRoleResponse {
+  users: AuditUserSummary[]
 }

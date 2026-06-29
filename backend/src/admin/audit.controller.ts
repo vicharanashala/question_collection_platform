@@ -6,36 +6,59 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { AuditService } from './audit.service';
 import { QueryAuditLogsDto, AuditStatsDto } from './dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
 
 @Controller('admin/audit-logs')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard)
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async queryAuditLogs(@Query() dto: QueryAuditLogsDto) {
-    return this.auditService.queryAuditLogs(dto);
+  async queryAuditLogs(
+    @Query() dto: QueryAuditLogsDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id: string; role: string };
+    return this.auditService.queryAuditLogs(
+      dto,
+      user.id,
+      user.role as UserRole,
+    );
   }
 
   @Get('stats')
   @HttpCode(HttpStatus.OK)
-  async getActorStats(@Query() dto: AuditStatsDto) {
-    return this.auditService.getActorStats(dto);
+  async getActorStats(
+    @Query() dto: AuditStatsDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id: string; role: string };
+    return this.auditService.getActorStats(
+      dto,
+      user.id,
+      user.role as UserRole,
+    );
   }
 
   @Get('summary')
   @HttpCode(HttpStatus.OK)
-  async getSummary(@Query() dto: AuditStatsDto & { granularity?: string }) {
-    return this.auditService.getSummary(dto);
+  async getSummary(
+    @Query() dto: AuditStatsDto & { granularity?: string },
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id: string; role: string };
+    return this.auditService.getSummary(
+      dto,
+      user.id,
+      user.role as UserRole,
+    );
   }
 
   @Get('entity/:entityType/:entityId')
@@ -43,7 +66,29 @@ export class AuditController {
   async getEntityHistory(
     @Param('entityType') entityType: string,
     @Param('entityId') entityId: string,
+    @Req() req: Request,
   ) {
-    return this.auditService.getEntityHistory(entityType, entityId);
+    const user = req.user as { id: string; role: string };
+    return this.auditService.getEntityHistory(
+      entityType,
+      entityId,
+      user.id,
+      user.role as UserRole,
+    );
+  }
+
+  /** List users (name + email) belonging to a given role — for the filter dropdown */
+  @Get('users-by-role')
+  @HttpCode(HttpStatus.OK)
+  async getUsersByRole(
+    @Query('role') role: string,
+    @Req() req: Request,
+  ) {
+    const user = req.user as { id: string; role: string };
+    return this.auditService.getUsersByRole(
+      role as UserRole,
+      user.id,
+      user.role as UserRole,
+    );
   }
 }

@@ -27,6 +27,7 @@ import type {
   AuditStatsResponse,
   AuditSummaryResponse,
   AuditEntityHistoryResponse,
+  AuditUsersByRoleResponse,
 } from '@/types'
 
 const BASE = '/api/v1'
@@ -600,17 +601,21 @@ export const auditApi = {
     return request<AuditLogsResponse>(`/admin/audit-logs${qs ? `?${qs}` : ''}`, {}, false)
   },
 
-  getAuditStats: (params: { fromDate?: string; toDate?: string; actorType?: string } = {}) => {
+  getAuditStats: (params: { fromDate?: string; toDate?: string; actorType?: string; role?: string } = {}) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
     return request<AuditStatsResponse>(`/admin/audit-logs/stats${qs ? `?${qs}` : ''}`, {}, false)
   },
 
-  getAuditSummary: (params: { fromDate?: string; toDate?: string; granularity?: string } = {}) => {
+  getAuditSummary: (params: { fromDate?: string; toDate?: string; granularity?: string; role?: string } = {}) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
     return request<AuditSummaryResponse>(`/admin/audit-logs/summary${qs ? `?${qs}` : ''}`, {}, false)
   },
+
+  /** List users belonging to a given role (for the filter dropdown) */
+  getAuditUsersByRole: (role: string) =>
+    request<AuditUsersByRoleResponse>(`/admin/audit-logs/users-by-role?role=${encodeURIComponent(role)}`, {}, false),
 
   getEntityHistory: (entityType: string, entityId: string) =>
     request<AuditEntityHistoryResponse>(

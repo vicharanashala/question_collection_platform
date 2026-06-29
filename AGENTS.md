@@ -11,12 +11,76 @@ That context may already include:
 - `AGENTS.md`, `SOUL.md`, and `USER.md`
 - recent daily memory such as `memory/YYYY-MM-DD.md`
 - `MEMORY.md` when this is the main session
+- Session summary files from `.sessions/` referencing prior work
+
+**Before doing anything else**, check `.sessions/` and identify the most recent session file. Read it and, **as your very first message to the user**, ask:
+
+> "I found a prior session (`<filename.md>`). Should I treat it as context for this session? Say yes to load it and continue where we left off, or no to start fresh."
+
+Wait for the user's response. Only proceed with the user's actual request after they confirm or decline.
 
 Do not manually reread startup files unless:
 
 1. The user explicitly asks
 2. The provided context is missing something you need
 3. You need a deeper follow-up read beyond the provided startup context
+
+## Session Persistence (.sessions/)
+
+Every session should be documented in `.sessions/` — both to allow future sessions to resume work seamlessly and to keep the team aligned on what was done.
+
+### Taking Context from the Last Session
+
+On session startup, always read the most recent session file from `.sessions/` before doing anything else. Use it to understand prior work, pending tasks, and decisions made. If the user confirms, incorporate that context into your understanding and pick up where you left off.
+
+### When to Write a Session File
+
+- **New session with prior work:** Read `.sessions/` to catch up on what the last session did.
+- **Before ending:** Write a session summary if meaningful work was completed.
+- **Mid-session interruption:** Save the current state immediately so the next session can resume.
+
+### File Naming
+
+`YYYY-MM-DD_HH-MM-SS_<short-topic>.md`
+
+### Structure
+
+```markdown
+# Session: <Short Title> — YYYY-MM-DD
+
+## Request
+What the user asked for.
+
+## Files Changed
+
+### Backend
+| File | Change |
+|------|--------|
+| `path/to/file.ts` | What changed |
+
+### Frontend (Web)
+| File | Change |
+|------|--------|
+| `path/to/file.tsx` | What changed |
+
+### Frontend (Mobile)
+| File | Change |
+|------|--------|
+| `path/to/file.tsx` | What changed |
+
+## Pending Work
+- [ ] Remaining task 1
+- [ ] Remaining task 2
+
+## Notes
+Decisions, trade-offs, or important context.
+
+## Session Key
+`agent:main:<uuid>`
+
+## Timestamp
+Saved: YYYY-MM-DD HH:MM GMT+5:30
+```
 
 ## Memory
 

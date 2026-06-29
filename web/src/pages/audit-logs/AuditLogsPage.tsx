@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '@/context/AuthContext'
 import { auditApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,11 +10,15 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
   Tabs, TabsList, TabsTrigger, TabsContent,
 } from '@/components/ui/tabs'
 import {
   ChevronLeft, ChevronRight, Download, X,
   ScrollText, BarChart3, Activity as ActivityIcon,
+  Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDateTime } from '@/lib/utils'
@@ -33,6 +38,7 @@ import type {
   AuditStatsResponse,
   AuditSummaryResponse,
   AuditLogQuery,
+  AuditUserSummary,
 } from '@/types'
 
 // ─── Action badge color ───────────────────────────────────────────────────────
@@ -586,9 +592,26 @@ function ActivityTab({
   )
 }
 
+// ─── Role options helpers ─────────────────────────────────────────────────────
+
+const ALL_ROLE_OPTIONS = [
+  { value: 'curator', label: 'Curator' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'admin', label: 'Admin' },
+]
+
+const ADMIN_ROLE_OPTIONS = [
+  { value: 'curator', label: 'Curator' },
+  { value: 'finance', label: 'Finance' },
+]
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function AuditLogsPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'super_admin'
+  const roleOptions = isSuperAdmin ? ALL_ROLE_OPTIONS : ADMIN_ROLE_OPTIONS
+
   const [activeTab, setActiveTab] = useState<'overview' | 'activity'>('overview')
 
   // Overview state
@@ -605,8 +628,36 @@ export function AuditLogsPage() {
   const [activityLoading, setActivityLoading] = useState(false)
   const [filters, setFilters] = useState<AuditLogQuery>({ page: 1, limit: 50 })
 
+  // Role + user cascaded filter state
+  const [selectedRole, setSelectedRole] = useState<string>('')
+  const [selectedUserId, setSelectedUserId] = useState<string>('')
+  const [roleUsers, setRoleUsers] = useState<AuditUserSummary[]>([])
+  const [roleUsersLoading, setRoleUsersLoading] = useState(false)
+
   // Detail modal
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
+
+  // Fetch users when role changes
+  useEffect(() => {
+    if (!selectedRole) {
+      setRoleUsers([])
+      setSelectedUserId('')
+      return
+    }
+    setRoleUsersLoading(true)
+    auditApi.getAuditUsersByRole(selectedRole)
+      .then((res) => setRoleUsers(res.users))
+      .catch(() => setRoleUsers([]))
+      .finally(() => setRoleUsersLoading(false))
+  }, [selectedRole])
+
+  // Build effective filters: role + user selection cascade into filters
+  const effectiveFilters = useCallback((): AuditLogQuery => {
+    const base: AuditLogQuery = { ...filters }
+    if (selectedRole) base.role = selectedRole as 'admin' | 'curator' | 'finance'
+    if (selectedUserId) base.actorId = selectedUserId
+    return base
+  }, [filters, selectedRole, selectedUserId])
 
   const fetchOverview = useCallback(async () => {
     setOverviewLoading(true)
@@ -615,11 +666,13 @@ export function AuditLogsPage() {
         auditApi.getAuditStats({
           fromDate: dateFilter.fromDate || undefined,
           toDate: dateFilter.toDate || undefined,
+          role: selectedRole || undefined,
         }),
         auditApi.getAuditSummary({
           fromDate: dateFilter.fromDate || undefined,
           toDate: dateFilter.toDate || undefined,
           granularity: 'day',
+          role: selectedRole || undefined,
         }),
       ])
       setStats(s)
@@ -629,12 +682,12 @@ export function AuditLogsPage() {
     } finally {
       setOverviewLoading(false)
     }
-  }, [dateFilter])
+  }, [dateFilter, selectedRole])
 
   const fetchActivity = useCallback(async () => {
     setActivityLoading(true)
     try {
-      const res: AuditLogsResponse = await auditApi.getAuditLogs(filters)
+      const res: AuditLogsResponse = await auditApi.getAuditLogs(effectiveFilters())
       setLogs(res.items)
       setTotal(res.total)
       setCurrentPage(res.page)
@@ -644,18 +697,41 @@ export function AuditLogsPage() {
     } finally {
       setActivityLoading(false)
     }
-  }, [filters])
+  }, [effectiveFilters])
 
   useEffect(() => { fetchOverview() }, [fetchOverview])
   useEffect(() => { fetchActivity() }, [fetchActivity])
 
   function handleActorClick(actorId: string) {
+    // Clear role/user cascade when clicking an actor from overview leaderboard
+    setSelectedRole('')
+    setSelectedUserId('')
     setFilters((f) => ({ ...f, actorId, page: 1 }))
     setActiveTab('activity')
   }
 
+  function handleRoleChange(role: string) {
+    setSelectedRole(role)
+    setSelectedUserId('')
+    setFilters((f) => ({ ...f, role: role as 'admin' | 'curator' | 'finance' | undefined, actorId: undefined, page: 1 }))
+  }
+
+  function handleUserChange(userId: string) {
+    setSelectedUserId(userId)
+    setFilters((f) => ({ ...f, actorId: userId, page: 1 }))
+  }
+
+  function handleClearFilters() {
+    setSelectedRole('')
+    setSelectedUserId('')
+    setRoleUsers([])
+    setFilters({ page: 1, limit: 50 })
+  }
+
+  const hasRoleFilter = !!(selectedRole || selectedUserId)
+
   function handleExport() {
-    toast.promise(auditApi.exportCSV(filters as unknown as Record<string, string | number | undefined | string[]>), {
+    toast.promise(auditApi.exportCSV(effectiveFilters() as unknown as Record<string, string | number | undefined | string[]>), {
       loading: 'Exporting...',
       success: 'Audit logs exported successfully',
       error: 'Export failed',
@@ -676,6 +752,73 @@ export function AuditLogsPage() {
           </p>
         </div>
       </div>
+
+      {/* Role + User cascaded filter */}
+      <Card className="shadow-xs">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-text-secondary whitespace-nowrap">Filter by Role</Label>
+              <Select value={selectedRole} onValueChange={handleRoleChange}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roleOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedRole && (
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-text-secondary whitespace-nowrap">
+                  {roleUsersLoading ? 'Loading users...' : 'Filter by User'}
+                </Label>
+                <Select value={selectedUserId} onValueChange={handleUserChange} disabled={roleUsersLoading}>
+                  <SelectTrigger className="w-56">
+                    <SelectValue placeholder="All users in role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All users in role</SelectItem>
+                    {roleUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        <span className="flex items-center gap-2">
+                          <Users className="h-3 w-3" />
+                          <span>{u.name}</span>
+                          <span className="text-text-tertiary text-xs">{u.mobile}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {hasRoleFilter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="gap-1 text-destructive hover:text-destructive"
+              >
+                <X className="h-3 w-3" /> Clear filters
+              </Button>
+            )}
+
+            {selectedRole && (
+              <span className="ml-auto text-sm text-text-tertiary">
+                {selectedUserId
+                  ? `Showing logs for: ${roleUsers.find(u => u.id === selectedUserId)?.name ?? selectedUserId}`
+                  : `Showing consolidated logs for all ${selectedRole} users`}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'overview' | 'activity')}>

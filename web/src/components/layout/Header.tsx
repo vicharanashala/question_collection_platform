@@ -15,7 +15,6 @@ const titles: Record<string, string> = {
   '/questions': 'Questions',
   '/reviews': 'Review Queue',
   '/profile': 'Profile',
-  '/notifications': 'Notifications',
 }
 
 interface HeaderProps {

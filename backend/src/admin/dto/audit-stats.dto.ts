@@ -1,4 +1,6 @@
-import { IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsDateString, IsIn } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { UserRole } from '../../common/enums';
 
 export class AuditStatsDto {
   @IsOptional()
@@ -16,4 +18,10 @@ export class AuditStatsDto {
   @IsOptional()
   @IsString()
   state?: string;
+
+  /** Filter by role: admin | curator | finance */
+  @IsOptional()
+  @IsIn(['admin', 'curator', 'finance'])
+  @Transform(({ value }) => value?.toLowerCase())
+  role?: UserRole;
 }

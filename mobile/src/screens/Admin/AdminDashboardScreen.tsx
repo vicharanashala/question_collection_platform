@@ -861,7 +861,7 @@ export function AdminDashboardScreen() {
             themeColors={c}
           />
 
-          {user?.role === 'super_admin' && (
+          {(user?.role === 'super_admin' || user?.role === 'admin') && (
             <>
               <QuickCard
                 label="Audit Logs"
@@ -871,14 +871,16 @@ export function AdminDashboardScreen() {
                 onPress={() => navigation.navigate('AdminAuditLogs')}
                 themeColors={c}
               />
-              <QuickCard
-                label="Config"
-                sub="System settings"
-                icon="settings"
-                color="#6B7280"
-                onPress={() => navigation.navigate('AdminConfig')}
-                themeColors={c}
-              />
+              {user?.role === 'super_admin' && (
+                <QuickCard
+                  label="Config"
+                  sub="System settings"
+                  icon="settings"
+                  color="#6B7280"
+                  onPress={() => navigation.navigate('AdminConfig')}
+                  themeColors={c}
+                />
+              )}
             </>
           )}
         </View>

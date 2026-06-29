@@ -1,5 +1,6 @@
-import { IsOptional, IsString, IsDateString, IsInt, Min, Max, IsArray } from 'class-validator';
+import { IsOptional, IsString, IsDateString, IsInt, Min, Max, IsArray, IsIn } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { UserRole } from '../../common/enums';
 
 export class QueryAuditLogsDto {
   @IsOptional()
@@ -15,13 +16,21 @@ export class QueryAuditLogsDto {
   @Max(200)
   limit?: number = 50;
 
+  /** Filter by a specific actor's ID */
   @IsOptional()
   @IsString()
   actorId?: string;
 
+  /** Filter by actor type: admin | curator | user | system */
   @IsOptional()
   @IsString()
   actorType?: string;
+
+  /** Filter by role of actors to include: admin | curator | finance */
+  @IsOptional()
+  @IsIn(['admin', 'curator', 'finance'])
+  @Transform(({ value }) => value?.toLowerCase())
+  role?: UserRole;
 
   @IsOptional()
   @IsString()

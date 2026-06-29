@@ -151,7 +151,83 @@ Each task file contains:
 1. Read `SOUL.md` and `USER.md` for context
 2. Check `MEMORY.md` for prior decisions and long-term memory
 3. Review `docs/product/product_requirements_document.md` to understand the project
-4. Proceed with the task at hand
+4. Check `.sessions/` for the most recent session file (see Session Management below)
+5. **Before doing anything else**, as your very first message to the user, ask:
+   > "I found a prior session (`<filename.md>`). Should I treat it as context for this session? Say yes to load it and continue where we left off, or no to start fresh."
+   Wait for the user's response. Only proceed with the user's actual request after they confirm or decline.
+6. Proceed with the task at hand
+
+---
+
+## 9. Session Management
+
+Every session is persisted to `.sessions/` as a standalone markdown summary. This allows any future session — or any team member — to understand what was done and what is pending without re-reading full transcripts.
+
+### Taking Context from the Last Session
+
+Always read the most recent session file from `.sessions/` at startup. Use it to understand prior work, pending tasks, and decisions made. Incorporate that context when the user confirms they want to continue from where you left off.
+
+### Session File Naming
+
+Format: `YYYY-MM-DD_HH-MM-SS_<short-topic>.md`
+
+Examples:
+- `2026-06-29_15-35-07_audit-logs-role-filter.md`
+- `2026-06-23_pinelabs-upi-payout-debugging.md`
+
+### When to Create a Session File
+
+- At the **start** of a new session when prior session history exists (to reference back)
+- At the **end** of a session if meaningful work was done (before logging off or switching context)
+- When the session is **interrupted** (e.g., user closes, agent is paused) — save state immediately so the next session can resume
+
+### Session File Structure
+
+```markdown
+# Session: <Short Title> — YYYY-MM-DD
+
+## Request
+What the user asked for.
+
+## Files Changed
+
+### Backend
+| File | Change |
+|------|--------|
+| `path/to/file.ts` | What changed |
+
+### Frontend (Web)
+| File | Change |
+|------|--------|
+| `path/to/file.tsx` | What changed |
+
+### Frontend (Mobile)
+| File | Change |
+|------|--------|
+| `path/to/file.tsx` | What changed |
+
+## Pending Work
+- [ ] Remaining task 1
+- [ ] Remaining task 2
+
+## Notes
+Any decisions made, trade-offs considered, or important context.
+
+## Session Key
+`agent:main:<uuid>`
+
+## Timestamp
+Saved: YYYY-MM-DD HH:MM GMT+5:30
+```
+
+### In-Session Updates
+
+If work spans multiple turns, update the session file mid-session to reflect:
+- Newly completed items (move from Pending to Files Changed)
+- Changed scope or direction
+- Decisions made along the way
+
+This keeps the file accurate even if the session is never formally closed.
 
 ---
 
