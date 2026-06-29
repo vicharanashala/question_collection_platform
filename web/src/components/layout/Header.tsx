@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { LogOut, User, Menu } from 'lucide-react'
+import { useTheme } from '@/context/ThemeContext'
+import { LogOut, User, Menu, Sun, Moon } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -25,6 +26,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -69,6 +71,20 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+        </button>
+
         <div className="h-6 w-px bg-border-subtle" />
 
         {/* Profile dropdown */}
@@ -95,6 +111,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
               {/* Menu items */}
               <div className="py-1">
+                <button
+                  onClick={() => { toggleTheme(); setProfileOpen(false) }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
+                >
+                  {theme === 'dark' ? (
+                    <><Sun className="h-4 w-4 text-text-tertiary" />Light mode</>
+                  ) : (
+                    <><Moon className="h-4 w-4 text-text-tertiary" />Dark mode</>
+                  )}
+                </button>
                 <Link
                   to="/profile"
                   onClick={() => setProfileOpen(false)}
