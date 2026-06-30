@@ -59,6 +59,7 @@ We use the information we collect to:
 - Send you service-related notifications (e.g., OTP, account alerts)
 - Respond to your support requests and queries
 - Improve, test, and monitor the performance of the Platform
+- Use your voice and audio recordings (where you choose to submit them) to train, improve, and evaluate our AI models and speech recognition systems
 - Comply with legal obligations
 
 ---
