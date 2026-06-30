@@ -171,12 +171,12 @@ Metadata Captured Per Submission:
 
 The system shall:
 
-- Perform on-device AI-based agriculture relevance detection.
-- Perform server-side AI and human validation for final approval.
-- Generate a confidence score with a threshold of 90%.
-- Perform duplicate detection using a combination of exact match and semantic similarity — both on-device and server-side.
-- Detect and flag spam submissions.
-- Route low-confidence cases for human review.
+- Perform server-side AI-based agriculture relevance detection (Gemma model, GCP Vertex AI).
+- Generate a confidence score; threshold 90% — above this, auto-approve; below, route to human review.
+- Perform semantic duplicate detection using vector embeddings (ChromaDB, similarity threshold 0.9).
+- Generate question text embeddings on submit (text-embeddings-004, GCP Vertex AI).
+- Route low-confidence cases to the human review queue (admin/curator dashboard).
+- Flag spam through audit log review by admins (no automatic spam detection).
 
 ## Reward System
 
@@ -186,13 +186,15 @@ The system shall:
 |---|---|
 | 1 – 25 | ₹1 |
 | 26 – 250 | ₹5 |
-| 251 – 500 | ₹10 |
+| 251+ | ₹10 |
+
+**Note:** Tier 3 applies to all approved questions beyond 250 (no upper cap).
 
 ### Reward Criteria
 
-- Question must be approved by server-side AI and human review.
+- Question must be approved (auto by Gemma confidence >= 0.9, or manually by a curator/admin).
 - Reward is based on question quality, uniqueness, and final approval.
-- No maximum daily reward limit.
+- No maximum daily reward limit (rewards are per approved question, unlimited per day).
 
 ### Wallet
 
@@ -212,8 +214,9 @@ The system shall:
 ### Duplicate Submissions
 
 - Rejected immediately on-device.
-- In-app notification sent to the user upon duplicate detection.
-- Rejected from server-side after review; no reward issued.
+- Exact-match duplicate: rejected immediately at submit time.
+- Semantic duplicate (GDB similarity >= 0.9): rejected, no reward, user notified in-app.
+- Low-confidence (Gemma < 0.9) but not duplicate: routed to human review queue.
 
 ### Spam Submissions
 

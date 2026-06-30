@@ -108,7 +108,9 @@ Reward based on question quality, uniqueness, and approval from server-side AI a
 |---|---|
 | 1 - 25 | Rs. 1 |
 | 26 - 250 | Rs. 5 |
-| 251 - 500 | Rs. 10 |
+| 251+ | Rs. 10 |
+
+**Note:** Tier 3 applies to all approved questions beyond 250 (no upper cap).
 
 ## What should be the maximum daily reward limit?
 
