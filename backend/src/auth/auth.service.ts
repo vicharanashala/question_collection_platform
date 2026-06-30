@@ -91,9 +91,15 @@ export class AuthService {
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  /** Strip country code prefix so +91 / 91 / 0 are not stored in DB */
+  /**
+   * Strip country code prefix so +91 / 0 prefix are not stored in DB.
+   * The leading 9 of an Indian mobile is NOT stripped — it is part of the number.
+   * e.g. +91 9111111111 → 9111111111
+   *      09111111111 → 91111111111
+   *      9111111111 → 9111111111
+   */
   normalizePhone(mobile: string): string {
-    return mobile.replace(/^\+?91 ?/, '').replace(/^0/, '');
+    return mobile.replace(/^\+91 ?/, '').replace(/^0/, '');
   }
 
   // ─── OTP Flow ───────────────────────────────────────────────────────────────

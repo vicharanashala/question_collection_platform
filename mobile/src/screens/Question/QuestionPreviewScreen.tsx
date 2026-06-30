@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
@@ -14,7 +15,7 @@ import { cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
-import { AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone } from '../../utils/agro-climatic-zones';
+import { AGRO_CLIMATIC_ZONE_LABELS, AgroClimaticZone, deriveAgroClimaticZone } from '../../utils/agro-climatic-zones';
 import { RootStackParamList } from '../../navigation/types';
 import { adminApi } from '../../api/client';
 
@@ -104,6 +105,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const { theme } = useTheme();
   const { showToast } = useToast();
   const navigation = useNavigation();
+  const { user } = useAuth();
 
   const preview = route.params;
   const [editWindowSec, setEditWindowSec] = useState(0);
@@ -118,7 +120,10 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [selectedStateCode, setSelectedStateCode] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState(preview.district);
   const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
-  const [block, setBlock] = useState(preview.block ?? '');
+  const [block, setBlock] = useState(user?.block ?? preview.block ?? '');
+  const [selectedAgroZone, setSelectedAgroZone] = useState<AgroClimaticZone>(
+    (preview.agroClimaticZone as AgroClimaticZone) ?? AgroClimaticZone.OTHER,
+  );
   const [domains, setDomains] = useState<string[]>(preview.domains ?? []);
   const [season, setSeason] = useState(preview.season || 'Kharif');
   const [cropType, setCropType] = useState(preview.cropType ?? '');
@@ -214,7 +219,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         season,
         cropType,
         questionText: questionText.trim(),
-        agroClimaticZone: preview.agroClimaticZone,
+        agroClimaticZone: selectedAgroZone,
         mediaType,
         mediaUrls,
       };
@@ -277,8 +282,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                 setSelectedDistrict('');
                 setSelectedDistrictCode('');
                 setBlockList([]);
-                setBlock('');
+                setBlock(user?.block ?? '');
                 setErrors({});
+                setSelectedAgroZone(deriveAgroClimaticZone(v));
                 setLoadingDistricts(true);
                 try {
                   const code = stateList.find((s) => s.name === v)?.code ?? '';
@@ -302,14 +308,24 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                 setSelectedDistrict(v);
                 setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
                 setBlockList([]);
-                setBlock('');
+                setBlock(user?.block ?? '');
                 setErrors({});
                 const code = districtList.find((d) => d.name === v)?.code ?? '';
                 if (!code) return;
                 setLoadingBlocks(true);
                 try {
                   const res = await lgdApi.getSubDistricts(code);
-                  setBlockList(res.data.subdistricts);
+                  const lgdBlocks = res.data.subdistricts ?? [];
+                  // Always include the user's profile block if present and not in LGD list
+                  // (municipalities / ULBs may not appear in LGD sub-districts)
+                  const profileBlock = user?.block;
+                  const alreadyHasProfileBlock = lgdBlocks.some(
+                    (b: { code: string; name: string }) => b.name === profileBlock,
+                  );
+                  const mergedBlocks = profileBlock && !alreadyHasProfileBlock
+                    ? [{ code: '__profile__', name: profileBlock }, ...lgdBlocks]
+                    : lgdBlocks;
+                  setBlockList(mergedBlocks);
                 } catch { setBlockList([]); }
                 finally { setLoadingBlocks(false); }
               }}
@@ -334,7 +350,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>Agro-Climatic Zone</Text>
               <View style={[styles.zoneBadge, { backgroundColor: theme.colors.primary + '18' }]}>
                 <Text style={[styles.zoneBadgeText, { color: theme.colors.primary }]}>
-                  {AGRO_CLIMATIC_ZONE_LABELS[preview.agroClimaticZone as AgroClimaticZone] ?? preview.agroClimaticZone}
+                  {AGRO_CLIMATIC_ZONE_LABELS[selectedAgroZone] ?? preview.agroClimaticZone}
                 </Text>
               </View>
             </View>

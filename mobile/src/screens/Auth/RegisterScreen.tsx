@@ -66,6 +66,7 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
   const [block, setBlock] = useState('');
+  const [blockCode, setBlockCode] = useState('');
   const [showOtherBlock, setShowOtherBlock] = useState(false);
   const [village, setVillage] = useState('');
   const [showOtherVillage, setShowOtherVillage] = useState(false);
@@ -405,6 +406,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                     setSelectedDistrict(v);
                     setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
                     setBlock('');
+                    setBlockCode('');
                     setShowOtherBlock(false);
                     setVillage('');
                     setShowOtherVillage(false);
@@ -441,15 +443,18 @@ export function RegisterScreen({ navigation, route }: Props) {
                     if (v === '__other__') {
                       setShowOtherBlock(true);
                       setBlock('');
+                      setBlockCode('');
                     } else {
+                      const subdistrict = subdistrictList.find((s) => s.code === v);
                       setShowOtherBlock(false);
-                      setBlock(v);
+                      setBlock(subdistrict?.name ?? v); // store name, not code
+                      setBlockCode(v); // keep code for village API
                       setVillage('');
                       setShowOtherVillage(false);
                       setVillageList([]);
                       setErrors({});
                       setLoadingVillages(true);
-                      lgdApi.getVillages(v)
+                      lgdApi.getVillages(blockCode)
                         .then((res) => setVillageList(res.data.villages))
                         .catch(() => setVillageList([]))
                         .finally(() => setLoadingVillages(false));
@@ -478,7 +483,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   placeholder={t('selectVillage')}
                   value={showOtherVillage ? '__other__' : village}
                   options={[
-                    ...villageList.map((v) => ({ value: v.code, label: v.name })),
+                    ...villageList.map((v) => ({ value: v.name, label: v.name })),
                     { value: '__other__', label: t('others') },
                   ]}
                   onChange={(v) => {
@@ -487,7 +492,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       setVillage('');
                     } else {
                       setShowOtherVillage(false);
-                      setVillage(v);
+                      setVillage(v); // store name, not code
                     }
                     setErrors({});
                   }}
