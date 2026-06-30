@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,28 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import { tokens } from '../utils/theme';
 
-/** Props for the DuplicateFoundModal */
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const ANSWER_PREVIEW_CHARS = 280;
+
 export interface DuplicateFoundModalProps {
   visible: boolean;
   /** The text of the matching question that already exists */
   matchedQuestion: string;
   /** The answer / stored text for the matched question */
   matchedAnswer: string | null;
-  /** Similarity score from the GDB (0–1), displayed if provided */
+  /** Similarity score from the GDB (0–1) */
   similarityScore: number | null;
   onDismiss: () => void;
 }
@@ -35,73 +43,111 @@ export function DuplicateFoundModal({
   const c = theme.colors;
   const { t } = useTranslation();
 
+  const [answerExpanded, setAnswerExpanded] = useState(false);
+
+  // Reset accordion state when modal opens
+  React.useEffect(() => {
+    if (visible) setAnswerExpanded(false);
+  }, [visible]);
+
   const scorePct = similarityScore != null ? Math.round(similarityScore * 100) : null;
+  const hasAnswer = Boolean(matchedAnswer?.trim());
+  const answerLong = (matchedAnswer?.length ?? 0) > ANSWER_PREVIEW_CHARS;
+  const answerPreview = hasAnswer
+    ? answerLong && !answerExpanded
+      ? matchedAnswer!.slice(0, ANSWER_PREVIEW_CHARS).trim() + '…'
+      : matchedAnswer!.trim()
+    : '';
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onDismiss}>
-      <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+      <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.55)' }]}>
         <View style={[styles.dialog, { backgroundColor: c.background }]}>
-          {/* Header icon */}
-          <View style={[styles.iconWrap, { backgroundColor: '#FACC15' + '20' }]}>
-            <Ionicons name="search" size={28} color="#B45309" />
+
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={[styles.iconWrap, { backgroundColor: '#FACC15' + '22' }]}>
+              <Ionicons name="search" size={22} color="#B45309" />
+            </View>
+            <View style={styles.headerText}>
+              <Text style={[styles.title, { color: c.text }]}>
+                {t('question.duplicateFoundTitle')}
+              </Text>
+              {scorePct != null && (
+                <View style={[styles.scoreBadge, { backgroundColor: '#FACC15' + '18', borderColor: '#FACC15' + '60' }]}>
+                  <Text style={[styles.scoreText, { color: '#92400E' }]}>{scorePct}% match</Text>
+                </View>
+              )}
+            </View>
           </View>
 
-          {/* Title */}
-          <Text style={[styles.title, { color: c.text }]}>
-            {t('question.duplicateFoundTitle')}
+          {/* Appreciation note */}
+          <Text style={[styles.appreciation, { color: c.textSecondary }]}>
+            Thank you for taking the time to submit a question! A similar question has already been answered by our experts — please review it below.
           </Text>
 
-          {/* Score badge */}
-          {scorePct != null && (
-            <View style={[styles.scoreBadge, { backgroundColor: '#FACC15' + '18', borderColor: '#FACC15' }]}>
-              <Text style={[styles.scoreText, { color: '#92400E' }]}>
-                {scorePct}% match
-              </Text>
+          <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />
+
+          {/* Question */}
+          <View style={styles.qaSection}>
+            <View style={styles.qaLabelRow}>
+              <Ionicons name="help-circle" size={14} color={c.primary} />
+              <Text style={[styles.qaLabel, { color: c.primary }]}>Question</Text>
+            </View>
+            <Text style={[styles.questionText, { color: c.text }]}>{matchedQuestion}</Text>
+          </View>
+
+          {/* Answer — accordion */}
+          {hasAnswer && (
+            <View style={styles.qaSection}>
+              <View style={styles.qaLabelRow}>
+                <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
+                <Text style={[styles.qaLabel, { color: '#16a34a' }]}>Answer</Text>
+              </View>
+
+              <ScrollView
+                style={[
+                  styles.answerScroll,
+                  answerExpanded && styles.answerScrollExpanded,
+                ]}
+                contentContainerStyle={styles.answerScrollContent}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled
+              >
+                <Text style={[styles.answerText, { color: c.textSecondary }]}>
+                  {answerPreview}
+                </Text>
+              </ScrollView>
+
+              {answerLong && (
+                <TouchableOpacity
+                  onPress={() => {
+                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                    setAnswerExpanded((p) => !p);
+                  }}
+                  activeOpacity={0.65}
+                >
+                  <Text style={[styles.readMore, { color: c.primary }]}>
+                    {answerExpanded
+                      ? 'Read less ▲'
+                      : 'Read more ▼'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
-          {/* Description */}
-          <Text style={[styles.message, { color: c.textSecondary }]}>
-            {t('question.duplicateFoundMessage')}
-          </Text>
+          <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />
 
-          {/* Matched question card */}
-          {/* <View style={[styles.card, { backgroundColor: c.surfaceVariant, borderColor: c.border }]}>
-            <Text style={[styles.cardLabel, { color: c.textTertiary }]}>
-              {matchedQuestion.length > 60
-                ? matchedQuestion.slice(0, 60) + '…'
-                : matchedQuestion}
-            </Text>
-          </View> */}
-
-          {/* Answer section */}
-          {/* {matchedAnswer && (
-            <View style={styles.answerSection}>
-              <View style={styles.answerHeader}>
-                <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
-                <Text style={[styles.answerLabel, { color: '#16a34a' }]}>
-                  {t('question.duplicateFoundAnswer')}
-                </Text>
-              </View>
-              <ScrollView
-                style={[styles.answerScroll, { backgroundColor: '#16a34a' + '10', borderColor: '#16a34a' + '30' }]}
-                nestedScrollEnabled
-              >
-                <Text style={[styles.answerText, { color: c.text }]}>
-                  {matchedAnswer}
-                </Text>
-              </ScrollView>
-            </View>
-          )} */}
-
-          {/* Dismiss button */}
+          {/* Actions */}
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: '#B45309' }]}
             onPress={onDismiss}
             activeOpacity={0.8}
           >
-            <Ionicons name="arrow-back" size={16} color="#fff" style={{ marginRight: tokens.spacing2 }} />
-            <Text style={styles.btnText}>{t('question.duplicateDismiss')}</Text>
+            <Text style={[styles.btnText, { color: '#fff' }]}>
+              {t('question.tryAnotherQuestion', 'Try Another Question')}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -121,84 +167,102 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     borderRadius: tokens.radiusXl,
     padding: tokens.spacing6,
-    alignItems: 'center',
+    gap: tokens.spacing4,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: tokens.spacing3,
   },
   iconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: tokens.spacing1,
+    flexShrink: 0,
+  },
+  headerText: {
+    flex: 1,
+    gap: tokens.spacing1,
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
-    textAlign: 'center',
     letterSpacing: -0.3,
+    lineHeight: 22,
   },
   scoreBadge: {
+    alignSelf: 'flex-start',
     borderWidth: 1,
-    borderRadius: tokens.radiusMd,
-    paddingVertical: tokens.spacing1,
-    paddingHorizontal: tokens.spacing3,
+    borderRadius: tokens.radiusSm,
+    paddingVertical: 2,
+    paddingHorizontal: tokens.spacing2,
   },
   scoreText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
   },
-  message: {
-    fontSize: 13.5,
-    textAlign: 'center',
-    lineHeight: 19,
-  },
-  card: {
+  divider: {
+    height: 1,
     width: '100%',
-    borderWidth: 1,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
+    marginVertical: tokens.spacing1,
   },
-  cardLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    fontStyle: 'italic',
-  },
-  answerSection: {
-    width: '100%',
+  qaSection: {
     gap: tokens.spacing2,
   },
-  answerHeader: {
+  qaLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.spacing1,
   },
-  answerLabel: {
-    fontSize: 12,
+  qaLabel: {
+    fontSize: 11.5,
     fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
-  answerScroll: {
-    maxHeight: 100,
-    borderWidth: 1,
-    borderRadius: tokens.radiusMd,
-    padding: tokens.spacing3,
+  questionText: {
+    fontSize: 14.5,
+    lineHeight: 21,
+    fontWeight: '500',
+  },
+  appreciation: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   answerText: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  answerScroll: {
+    maxHeight: 120,
+    borderRadius: tokens.radiusMd,
+    backgroundColor: '#16a34a08',
+  },
+  answerScrollExpanded: {
+    maxHeight: 260,
+  },
+  answerScrollContent: {
+    padding: tokens.spacing3,
+    paddingTop: tokens.spacing2,
+  },
+  readMore: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    marginTop: tokens.spacing1,
   },
   btn: {
     width: '100%',
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: tokens.spacing3 + 2,
     borderRadius: tokens.radiusMd,
-    marginTop: tokens.spacing1,
   },
   btnText: {
-    color: '#fff',
-    fontSize: 15,
+    fontSize: 15.5,
     fontWeight: '700',
   },
 });

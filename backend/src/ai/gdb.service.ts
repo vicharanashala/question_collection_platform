@@ -22,6 +22,7 @@ import { AdminService } from '../admin/admin.service';
 export interface GdbSearchResult {
   question_id: string;
   retrieved_question: string;
+  answer: string;
   similarity_score: number;
   relevance_decision: string;
   relevance_reason: string;
@@ -35,7 +36,13 @@ export interface GdbSearchResponse {
   crop: string;
   state: string;
   exact_match: Record<string, unknown>;
-  selected_match: string | null;
+  selected_match: {
+    question_id: string;
+    retrieved_question: string;
+    answer: string;
+    similarity_score: number;
+    retrieval_source: string;
+  } | null;
   classification_audit: {
     status: string;
     model: string;
@@ -172,18 +179,30 @@ export class GdbService {
 
     // ── Fetch the matched question from our DB using the retrieved question text ──
     //    (GDB question_ids are short-format identifiers, not our UUIDs)
+    //    Used as fallback when GDB doesn't carry a retrieved_answer.
     const matchedQuestionEntity = await this.questionRepo.findOne({
       where: { questionText: bestMatch.retrieved_question },
       select: ['id', 'questionText'],
     });
+
+    // ── Resolve the answer ───────────────────────────────────────────────────
+    //    Priority:
+    //    1. `selected_match.answer` from GDB (the canonical answer for the top match)
+    //    2. `bestMatch.answer` from the evaluation entry (chosen_for_answer=true path)
+    //    3. retrieved_question as last resort
+    const selectedMatchAnswer = raw.selected_match?.answer?.trim() || null;
+    const evalAnswer = bestMatch.answer?.trim() || null;
+    const matchedAnswer = selectedMatchAnswer ?? evalAnswer ?? bestMatch.retrieved_question;
+    this.logger.debug(
+      `[GDB] answer resolved: selected_match=${selectedMatchAnswer ? 'yes (' + selectedMatchAnswer.slice(0, 50) + '...)' : 'no'} eval_answer=${evalAnswer ? 'yes' : 'no'} fallback=${matchedAnswer === bestMatch.retrieved_question}`,
+    );
 
     return {
       isDuplicate: true,
       // GDB's question_id is not our UUID — use the DB id if found, otherwise null
       matchedQuestionId: matchedQuestionEntity?.id ?? null,
       matchedQuestion: bestMatch.retrieved_question,
-      // Use the stored question text as the "answer" the farmer can read
-      matchedAnswer: matchedQuestionEntity?.questionText ?? bestMatch.retrieved_question,
+      matchedAnswer,
       similarityScore: bestMatch.similarity_score,
       rawResponse: raw,
     };

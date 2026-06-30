@@ -124,6 +124,29 @@ export class QuestionService {
     const cropType = dto.cropType?.trim() || inferred.crop;
     const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
 
+    // 4b. GDB semantic duplicate check — run before saving so we can return early with
+    //     the matched Q&A pair for the mobile app to display instead of blocking silently.
+    const duplicateResult = await this.gdbService.checkDuplicate({
+      questionText: dto.questionText,
+      crop: cropType,
+      state: dto.state ?? '',
+    });
+    if (duplicateResult.isDuplicate) {
+      return {
+        id: '',
+        status: 'DUPLICATE',
+        editWindowClosesAt: new Date().toISOString(),
+        message: 'Similar question found',
+        duplicate: {
+          isDuplicate: true,
+          matchedQuestionId: duplicateResult.matchedQuestionId,
+          matchedQuestion: duplicateResult.matchedQuestion,
+          matchedAnswer: duplicateResult.matchedAnswer,
+          similarityScore: duplicateResult.similarityScore,
+        },
+      };
+    }
+
     // 5. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
 

@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Tou
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AudioPlayer } from 'expo-audio';
 import { Button } from '../../components/Button';
+import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
@@ -109,6 +110,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
   const preview = route.params;
   const [editWindowSec, setEditWindowSec] = useState(0);
+  const [duplicateModal, setDuplicateModal] = useState<{
+    visible: boolean;
+    matchedQuestion: string;
+    matchedAnswer: string | null;
+    similarityScore: number | null;
+  }>({ visible: false, matchedQuestion: '', matchedAnswer: null, similarityScore: null });
 
   useEffect(() => {
     adminApi.getConfig().then((res) => {
@@ -226,6 +233,18 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
       const { data } = await questionApi.submit(payload);
 
+      // ── GDB found a near-duplicate on submit — show modal and stay on preview ──
+      if (data.duplicate?.isDuplicate) {
+        setLoading(false);
+        setDuplicateModal({
+          visible: true,
+          matchedQuestion: data.duplicate.matchedQuestion ?? '',
+          matchedAnswer: data.duplicate.matchedAnswer ?? null,
+          similarityScore: data.duplicate.similarityScore ?? null,
+        });
+        return;
+      }
+
       await cacheQuestionForDuplicateDetection(data.id, questionText.trim());
 
       showToast(t('question.submitSuccess'), 'success');
@@ -274,6 +293,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* State */}
             <Select
               label={t('question.state')}
+              required
               value={selectedState}
               options={stateList.map((s) => ({ value: s.name, label: s.name }))}
               onChange={async (v) => {
@@ -301,6 +321,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* District */}
             <Select
               label={t('question.district')}
+              required
               placeholder={t('selectDistrict')}
               value={selectedDistrict}
               options={districtList.map((d) => ({ value: d.name, label: d.name }))}
@@ -347,7 +368,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
             {/* Agro-Climatic Zone (read-only) */}
             <View style={styles.zoneBadgeWrap}>
-              <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>Agro-Climatic Zone</Text>
+              <Text style={[styles.zoneLabel, { color: theme.colors.textSecondary }]}>
+                Agro-Climatic Zone<Text style={{ color: theme.colors.error }}> *</Text>
+              </Text>
               <View style={[styles.zoneBadge, { backgroundColor: theme.colors.primary + '18' }]}>
                 <Text style={[styles.zoneBadgeText, { color: theme.colors.primary }]}>
                   {AGRO_CLIMATIC_ZONE_LABELS[selectedAgroZone] ?? preview.agroClimaticZone}
@@ -360,7 +383,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* Domains */}
             <View style={styles.domainSection}>
               <Text style={[styles.domainLabel, { color: theme.colors.text }]}>
-                {t('question.domain') ?? 'Agriculture Domain'}
+                {t('question.domain') ?? 'Agriculture Domain'}{
+                  <Text style={{ color: theme.colors.error }}> *</Text>
+                }
               </Text>
               <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>Select one or more</Text>
               <View style={styles.domainPills}>
@@ -405,6 +430,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* Season */}
             <Select
               label={t('question.season')}
+              required
               placeholder={t('question.seasonPlaceholder')}
               value={season}
               options={seasonOptions}
@@ -415,6 +441,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* Crop */}
             <Select
               label={t('question.cropType')}
+              required
               placeholder={t('question.cropTypePlaceholder')}
               value={cropType}
               options={CROP_OPTIONS}
@@ -426,10 +453,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
             {/* Question text */}
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-              {t('question.yourQuestion') ?? 'Your Question'}
-            </Text>
             <Input
+              label={t('question.yourQuestion') ?? 'Your Question'}
+              required
               placeholder={t('question.questionPlaceholder') ?? 'Type your agriculture question here…'}
               value={questionText}
               onChangeText={(t) => { setQuestionText(t); setErrors({}); }}
@@ -492,6 +518,18 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* GDB duplicate-check modal — shown when backend found a similar question on submit */}
+      <DuplicateFoundModal
+        visible={duplicateModal.visible}
+        matchedQuestion={duplicateModal.matchedQuestion}
+        matchedAnswer={duplicateModal.matchedAnswer}
+        similarityScore={duplicateModal.similarityScore}
+        onDismiss={() => {
+          setDuplicateModal((p) => ({ ...p, visible: false }));
+          navigation.goBack();
+        }}
+      />
     </SafeAreaView>
   );
 }
