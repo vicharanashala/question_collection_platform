@@ -11,7 +11,7 @@ import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { User, Wallet, AuditLog } from '../database/entities';
 import {
   UserCategory,

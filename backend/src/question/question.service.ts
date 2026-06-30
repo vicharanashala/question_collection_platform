@@ -74,6 +74,7 @@ export class QuestionService {
   }
 
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
+    console.log('[SUBMIT DEBUG] dto.state=', dto.state, '| dto.district=', dto.district, '| dto.block=', dto.block);
     // 0. User must be verified to submit questions
     const user = await this.userService.getProfile(userId);
     if (!user) throw new NotFoundException('User not found');
