@@ -250,7 +250,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
   // ── On-device AI validation ───────────────────────────────────────────────
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
-  const [aiValidationOverride, setAiValidationOverride] = useState(false);
   const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevTextRef = useRef('');
 
@@ -262,7 +261,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       aiDebounceRef.current = setTimeout(async () => {
         const result = await runOnDeviceValidation({ text, ownId: editingQuestionId });
         setAiValidation(result);
-        if (result.verdict !== 'warn') setAiValidationOverride(false);
+
       }, 600);
     },
     [editingQuestionId],
@@ -333,7 +332,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail') ?? t('onDeviceAI.defaultFail'), 'error');
       return;
     }
-    if (validation.verdict === 'warn' && !aiValidationOverride) return;
+    if (validation.verdict === 'warn') return;
 
     setPreviewLoading(true);
     try {
@@ -457,7 +456,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   setErrors({});
                   if (!v.length) {
                     setAiValidation(null);
-                    setAiValidationOverride(false);
+
                     if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
                   } else {
                     scheduleValidation(v);
@@ -525,8 +524,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             {/* AI warning banner */}
             <AIValidationBanner
               result={aiValidation ?? { verdict: 'pass', message: null, reasonKey: null, stages: { relevance: { pass: true, confidence: 1 }, duplicate: { pass: true, confidence: 1 }, spam: { pass: true, confidence: 1 } }, ran: false }}
-              onOverride={() => { setAiValidationOverride(true); handlePreview(); }}
-              onDismiss={() => { setAiValidation(null); setAiValidationOverride(false); }}
+              onDismiss={() => { setAiValidation(null); }}
             />
 
             {/* Submit button */}
@@ -535,7 +533,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 title={previewLoading ? t('question.submitting') : relevanceFailed ? (t('question.notRelevant') ?? 'Not Relevant') : t('continue')}
                 onPress={handlePreview}
                 loading={previewLoading}
-                disabled={!canSubmit || relevanceFailed}
+                disabled={!canSubmit || relevanceFailed || aiValidation?.verdict === 'warn'}
                 icon="arrow-forward"
                 iconPosition="right"
               />
@@ -606,7 +604,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   setQuestionText('');
                   setErrors({});
                   setAiValidation(null);
-                  setAiValidationOverride(false);
                 }}
               />
             </View>
@@ -624,7 +621,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           setDuplicateModal((p) => ({ ...p, visible: false }));
           setQuestionText('');
           setAiValidation(null);
-          setAiValidationOverride(false);
         }}
       />
     </SafeAreaView>

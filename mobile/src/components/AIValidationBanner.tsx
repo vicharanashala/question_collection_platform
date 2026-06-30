@@ -21,8 +21,6 @@ import { useTheme } from '../hooks/useTheme';
 
 interface AIValidationBannerProps {
   result: AIValidationResult;
-  /** Called when user taps "Submit Anyway" — only when verdict === 'warn' */
-  onOverride?: () => void;
   /** Called when user taps "Dismiss" */
   onDismiss?: () => void;
 }
@@ -49,7 +47,6 @@ function resolveMessageKey(reasonKey: string | null): string {
 
 export function AIValidationBanner({
   result,
-  onOverride,
   onDismiss,
 }: AIValidationBannerProps) {
   const { t } = useTranslation();
@@ -102,19 +99,7 @@ export function AIValidationBanner({
         )}
       </View>
 
-      {result.verdict === 'warn' && onOverride && (
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.overrideBtn, { borderColor: textColor }]}
-            onPress={onOverride}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.overrideBtnText, { color: textColor }]}>
-              {t('onDeviceAI.submitAnyway') ?? 'Submit Anyway'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Submit Anyway button removed — all AI warnings are hard-blocked */}
 
       {/* Stage-by-stage confidence strip — only shown in warn mode */}
       {result.verdict === 'warn' && (
