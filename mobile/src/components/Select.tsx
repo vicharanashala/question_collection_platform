@@ -25,6 +25,8 @@ interface SelectProps {
   disabledMessage?: string;
   /** Render as multi-select with checkboxes and chip summary in trigger */
   multi?: boolean;
+  /** When true, appends a red asterisk to the label */
+  required?: boolean;
 }
 
 export const Select = React.memo(function Select({
@@ -39,6 +41,7 @@ export const Select = React.memo(function Select({
   disabled = false,
   disabledMessage,
   multi = false,
+  required = false,
 }: SelectProps) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -85,7 +88,7 @@ export const Select = React.memo(function Select({
 
   return (
     <View style={styles.wrapper}>
-      {label && <Text style={[styles.label, { color: c.text }]}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: c.text }]}>{label}{required && <Text style={{ color: c.error }}> *</Text>}</Text>}
       <TouchableOpacity
         style={[
           styles.trigger,

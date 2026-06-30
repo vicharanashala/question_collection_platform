@@ -396,6 +396,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   loading={loadingStates}
                   disabled={loadingStates}
                   disabledMessage={t('stateLoadingMessage')}
+                  required
                 />
                 <Select
                   label={t('district')}
@@ -430,6 +431,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   disabledMessage={
                     !selectedState ? t('selectStateBeforeDistrict') : t('districtLoadingMessage')
                   }
+                  required
                 />
                 <Select
                   label={category === UserCategory.FARMER ? t('block') : t('blockOptional')}
@@ -468,6 +470,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   disabledMessage={
                     !selectedDistrict ? t('selectDistrictBeforeBlock') : t('blockLoadingMessage')
                   }
+                  required={category === UserCategory.FARMER}
                 />
                 {showOtherBlock && (
                   <Input
@@ -476,6 +479,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                     value={block}
                     onChangeText={(txt) => { setBlock(txt); setErrors({}); }}
                     error={errors.blockOther}
+                    required={category === UserCategory.FARMER}
                   />
                 )}
                 <Select
@@ -505,6 +509,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       ? t('selectBlockBeforeVillage')
                       : t('villageLoadingMessage')
                   }
+                  required={category === UserCategory.FARMER}
                 />
                 {showOtherVillage && (
                   <Input
@@ -513,6 +518,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                     value={village}
                     onChangeText={(txt) => { setVillage(txt); setErrors({}); }}
                     error={errors.villageOther}
+                    required={category === UserCategory.FARMER}
                   />
                 )}
                 <Select
@@ -537,6 +543,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   searchable
                   disabled={category === UserCategory.FARMER && !selectedDistrict}
                   disabledMessage={t('selectVillageBeforeKvk')}
+                  required={category === UserCategory.FARMER}
                 />
                 {showOtherKvk && (
                   <Input
@@ -545,6 +552,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                     value={kvk}
                     onChangeText={(txt) => { setKvk(txt); setErrors({}); }}
                     error={errors.kvkOther}
+                    required={category === UserCategory.FARMER}
                   />
                 )}
                 <Button title={t('continue')} onPress={next} />
@@ -562,6 +570,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   onChangeText={(txt) => { setName(txt); setErrors({}); }}
                   error={errors.name}
                   autoCapitalize="words"
+                  required
                 />
                 <Text style={[styles.fieldLabel, { color: c.text }]}>{t('gender')} <Text style={{ color: c.error }}>*</Text></Text>
                 <View style={styles.radioGroup}>
@@ -586,6 +595,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   error={errors.age}
                   keyboardType="number-pad"
                   maxLength={3}
+                  required
                 />
                 {category === UserCategory.FARMER && (
                   <>
@@ -604,6 +614,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       error={errors.cropType}
                       searchable
                       multi
+                      required
                     />
                   </>
                 )}
@@ -617,6 +628,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       onChange={(v) => { setCourseName(v); setErrors({}); }}
                       error={errors.courseName}
                       searchable
+                      required
                     />
                     {courseName === '__other__' && (
                       <Input
@@ -625,6 +637,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                         value={courseNameOther}
                         onChangeText={(txt) => { setCourseNameOther(txt); setErrors({}); }}
                         error={errors.courseNameOther}
+                        required
                       />
                     )}
                     <Input
@@ -633,6 +646,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       value={collegeName}
                       onChangeText={(txt) => { setCollegeName(txt); setErrors({}); }}
                       error={errors.collegeName}
+                      required
                     />
                     <Input
                       label={t('university')}
@@ -640,6 +654,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       value={universityName}
                       onChangeText={(txt) => { setUniversityName(txt); setErrors({}); }}
                       error={errors.universityName}
+                      required
                     />
                   </>
                 )}
@@ -673,6 +688,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           onChange={(v) => { setOrganisationType(v); if (v !== '__other__') setOrganisationTypeOther(''); setErrors({}); }}
                           error={errors.organisationType}
                           searchable
+                          required
                         />
                         {organisationType === '__other__' && (
                           <Input
@@ -681,6 +697,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                             value={organisationTypeOther}
                             onChangeText={(txt) => { setOrganisationTypeOther(txt); setErrors({}); }}
                             error={errors.organisationTypeOther}
+                            required
                           />
                         )}
                         <Input
@@ -689,6 +706,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           value={organizationName}
                           onChangeText={(txt) => { setOrganizationName(txt); setErrors({}); }}
                           error={errors.organizationName}
+                          required
                         />
                         <Input
                           label={t('yourRole')}
@@ -696,6 +714,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           value={role}
                           onChangeText={(txt) => { setRole(txt); setErrors({}); }}
                           error={errors.role}
+                          required
                         />
                         <Input
                           label={t('editProfile.numberOfFarmers')}
@@ -704,6 +723,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           onChangeText={(txt) => { setNumberOfFarmers(txt); setErrors({}); }}
                           keyboardType="numeric"
                           error={errors.numberOfFarmers}
+                          required
                         />
                         <Select
                           label={t('editProfile.orgLocationState')}
@@ -731,6 +751,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           error={errors.orgState}
                           searchable
                           loading={loadingOrgStates}
+                          required
                         />
                         <Select
                           label={t('editProfile.orgLocationDistrict')}
@@ -757,6 +778,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           error={errors.orgDistrict}
                           searchable
                           loading={loadingOrgDistricts}
+                          required
                         />
                         <Select
                           label={t('question.blockOptional')}
@@ -861,6 +883,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   onChange={(v) => { setLanguage(v); setErrors({}); }}
                   error={errors.language}
                   searchable
+                  required
                 />
                 <Button title={t('completeRegistration')} onPress={handleSubmit} loading={loading} />
               </>

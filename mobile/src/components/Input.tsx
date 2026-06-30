@@ -18,16 +18,20 @@ interface InputProps extends TextInputProps {
   hint?: string;
   leftIcon?: React.ReactNode;
   rightElement?: React.ReactNode;
+  /** When true, appends a red asterisk to the label */
+  required?: boolean;
 }
 
-export const Input = React.memo(function Input({ label, error, hint, leftIcon, rightElement, style, ...props }: InputProps) {
+export const Input = React.memo(function Input({ label, error, hint, leftIcon, rightElement, required, style, ...props }: InputProps) {
   const { theme } = useThemed();
   const c = theme.colors;
 
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text style={[styles.label, { color: c.text }]}>{label}</Text>
+        <Text style={[styles.label, { color: c.text }]}>
+          {label}{required && <Text style={{ color: c.error }}> *</Text>}
+        </Text>
       )}
       <View
         style={[
