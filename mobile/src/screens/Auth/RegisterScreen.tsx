@@ -436,7 +436,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   placeholder={t('selectBlock')}
                   value={showOtherBlock ? '__other__' : block}
                   options={[
-                    ...subdistrictList.map((s) => ({ value: s.code, label: s.name })),
+                    ...subdistrictList.map((s) => ({ value: s.name, label: s.name })),
                     { value: '__other__', label: t('others') },
                   ]}
                   onChange={(v) => {
@@ -445,16 +445,16 @@ export function RegisterScreen({ navigation, route }: Props) {
                       setBlock('');
                       setBlockCode('');
                     } else {
-                      const subdistrict = subdistrictList.find((s) => s.code === v);
+                      const subdistrict = subdistrictList.find((s) => s.name === v);
                       setShowOtherBlock(false);
-                      setBlock(subdistrict?.name ?? v); // store name, not code
-                      setBlockCode(v); // keep code for village API
+                      setBlock(v); // store name
+                      setBlockCode(subdistrict?.code ?? ''); // keep code for village API
                       setVillage('');
                       setShowOtherVillage(false);
                       setVillageList([]);
                       setErrors({});
                       setLoadingVillages(true);
-                      lgdApi.getVillages(blockCode)
+                      lgdApi.getVillages(subdistrict?.code ?? '')
                         .then((res) => setVillageList(res.data.villages))
                         .catch(() => setVillageList([]))
                         .finally(() => setLoadingVillages(false));
@@ -763,7 +763,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           placeholder={t('selectBlock')}
                           value={orgShowOtherBlock ? '__other__' : orgBlock}
                           options={[
-                            ...orgBlockList.map((b) => ({ value: b.code, label: b.name })),
+                            ...orgBlockList.map((b) => ({ value: b.name, label: b.name })),
                             { value: '__other__', label: t('others') },
                           ]}
                           onChange={(v) => {
@@ -771,14 +771,15 @@ export function RegisterScreen({ navigation, route }: Props) {
                               setOrgShowOtherBlock(true);
                               setOrgBlock('');
                             } else {
+                              const blockObj = orgBlockList.find((b) => b.name === v);
                               setOrgShowOtherBlock(false);
-                              setOrgBlock(v);
+                              setOrgBlock(v); // store name
                               setOrgVillage('');
                               setOrgShowOtherVillage(false);
                               setOrgVillageList([]);
                               setErrors({});
                               setLoadingOrgVillages(true);
-                              lgdApi.getVillages(v)
+                              lgdApi.getVillages(blockObj?.code ?? '')
                                 .then((res) => setOrgVillageList(res.data.villages))
                                 .catch(() => setOrgVillageList([]))
                                 .finally(() => setLoadingOrgVillages(false));
@@ -805,7 +806,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                           placeholder={t('selectVillage')}
                           value={orgShowOtherVillage ? '__other__' : orgVillage}
                           options={[
-                            ...orgVillageList.map((v) => ({ value: v.code, label: v.name })),
+                            ...orgVillageList.map((v) => ({ value: v.name, label: v.name })),
                             { value: '__other__', label: t('others') },
                           ]}
                           onChange={(v) => {

@@ -8,8 +8,8 @@ const env: Record<string, string | undefined> = process.env as any;
 
 export const config = {
   support: {
-    email: env.EXPO_PUBLIC_SUPPORT_EMAIL ?? 'support@kisandekho.com',
-    whatsapp: env.EXPO_PUBLIC_SUPPORT_WHATSAPP ?? '919876543210',
+    email: env.EXPO_PUBLIC_SUPPORT_EMAIL,
+    whatsapp: env.EXPO_PUBLIC_SUPPORT_WHATSAPP,
   },
   dev: {
     /** When true, auto-approves UPI and bank payment methods without any real verification. */

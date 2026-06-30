@@ -43,22 +43,12 @@ export function VerificationPendingScreen() {
   }
 
   function handleContactAdmin() {
-    const message = encodeURIComponent(
-      `Hello, I have registered on the Farmer Question Platform and my account is pending verification. Please verify my account.\n\nThank you.`,
+    if (!config.support.email) return;
+    const subject = encodeURIComponent('Account Verification Help');
+    const body = encodeURIComponent(
+      `Hello,\n\nI have registered on the Farmer Question Platform and my account is pending verification. Please verify my account.\n\nThank you.`,
     );
-    const whatsappUrl = Platform.select({
-      ios: `whatsapp://send?phone=${config.support.whatsapp}&text=${message}`,
-      android: `whatsapp://send?phone=${config.support.whatsapp}&text=${message}`,
-    }) ?? `https://wa.me/${config.support.whatsapp}?text=${message}`;
-
-    Linking.canOpenURL(whatsappUrl).then((supported) => {
-      if (supported) {
-        Linking.openURL(whatsappUrl);
-      } else {
-        // Fallback to web WhatsApp
-        Linking.openURL(`https://wa.me/${config.support.whatsapp}?text=${message}`);
-      }
-    });
+    Linking.openURL(`mailto:${config.support.email}?subject=${subject}&body=${body}`).catch(() => {});
   }
 
   return (
@@ -106,6 +96,8 @@ export function VerificationPendingScreen() {
             title={t('verificationPending.contactAdmin')}
             onPress={handleContactAdmin}
             variant="secondary"
+            icon="mail-outline"
+            iconPosition="left"
           />
 
           <TouchableOpacity style={styles.logoutRow} onPress={handleLogoutPress}>

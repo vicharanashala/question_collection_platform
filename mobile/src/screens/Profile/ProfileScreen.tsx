@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,  } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -411,6 +411,21 @@ export function ProfileScreen() {
                 <Ionicons name="wallet-outline" size={16} color={c.primary} />
               </View>
               <Text style={[styles.actionLabel, { color: c.text }]}>Payment Methods</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => {
+                const email = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
+                if (email) Linking.openURL(`mailto:${email}`).catch(() => {});
+              }}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="mail-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>Contact Admin</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
