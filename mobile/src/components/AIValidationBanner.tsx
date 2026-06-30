@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AIValidationResult } from '../utils/onDeviceAI';
@@ -99,48 +99,7 @@ export function AIValidationBanner({
         )}
       </View>
 
-      {/* Submit Anyway button removed — all AI warnings are hard-blocked */}
 
-      {/* Stage-by-stage confidence strip — only shown in warn mode */}
-      {result.verdict === 'warn' && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.stageScrollContent}
-        >
-          <View style={styles.stageStrip}>
-            {(
-              [
-                { key: 'relevance', label: t('onDeviceAI.stage.relevance') ?? 'Relevance' },
-                { key: 'duplicate', label: t('onDeviceAI.stage.duplicate') ?? 'Duplicate' },
-                { key: 'spam',      label: t('onDeviceAI.stage.spam')      ?? 'Spam' },
-              ] as const
-            ).map(({ key, label }) => {
-              const stage = result.stages[key];
-              const pass = stage.pass;
-              return (
-                <View key={key} style={styles.stageItem}>
-                  <View
-                    style={[
-                      styles.stageDot,
-                      { backgroundColor: pass ? '#16A34A' : '#DC2626' },
-                    ]}
-                  />
-                  <Text style={[styles.stageLabel, { color: textColor }]}>{label}</Text>
-                  <Text
-                    style={[
-                      styles.stageScore,
-                      { color: pass ? '#16A34A' : '#DC2626' },
-                    ]}
-                  >
-                    {Math.round(stage.confidence * 100)}%
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        </ScrollView>
-      )}
     </View>
   );
 }
@@ -173,53 +132,5 @@ const styles = StyleSheet.create({
   dismissBtn: {
     padding: tokens.spacing1,
     flexShrink: 0,
-  },
-  actions: {
-    marginTop: tokens.spacing3,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  overrideBtn: {
-    borderWidth: 1,
-    borderRadius: tokens.radiusMd,
-    paddingHorizontal: tokens.spacing4,
-    paddingVertical: tokens.spacing2,
-  },
-  overrideBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  // Stage confidence strip
-  stageStrip: {
-    flexDirection: 'row',
-    gap: tokens.spacing3,
-    alignItems: 'center',
-    marginTop: tokens.spacing3,
-    paddingTop: tokens.spacing3,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.08)',
-  },
-  stageScrollContent: {
-    flexDirection: 'row',
-    paddingRight: tokens.spacing2,
-    marginBottom: tokens.spacing2,
-  },
-  stageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing1,
-  },
-  stageDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  stageLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  stageScore: {
-    fontSize: 12,
-    fontWeight: '700',
   },
 });
