@@ -221,6 +221,8 @@ export enum NotificationType {
   REWARD_CREDITED = 'reward_credited',
   WITHDRAWAL_APPROVED = 'withdrawal_approved',
   WITHDRAWAL_REJECTED = 'withdrawal_rejected',
+  REPORT_REPLY = 'report_reply',
+  REPORT_CLOSED = 'report_closed',
   ACCOUNT_SUSPENDED = 'account_suspended',
   ACCOUNT_BANNED = 'account_banned',
 }
@@ -235,7 +237,7 @@ export interface AppNotification {
   id: string;
   userId: string;
   notificationType: NotificationType;
-  /** 'question' | 'withdraw' — which feature area triggered this notification */
+  /** 'question' | 'withdraw' | 'report' — which feature area triggered this notification */
   triggerType: NotificationTriggerType;
   title: string;
   body: string;

@@ -224,7 +224,53 @@ export class ReportsService {
       { oldStatus, newStatus: status },
     );
 
+    // Notify user when report is closed
+    if (status === ReportStatus.CLOSED) {
+      await this.sendReportClosedNotification(report, report.title);
+    }
+
     return saved;
+  }
+
+  /**
+   * Notify the reporter that their report has been closed.
+   */
+  private async sendReportClosedNotification(
+    report: Report,
+    reportTitle: string,
+  ): Promise<void> {
+    const title = 'Your report has been closed';
+    const body =
+      reportTitle.length > 80
+        ? reportTitle.slice(0, 77) + '...'
+        : reportTitle;
+
+    const notification = this.notificationRepo.create({
+      userId: report.userId,
+      type: NotificationType.REPORT_CLOSED,
+      triggerType: NotificationTriggerType.REPORT,
+      title,
+      body,
+      data: { reportId: report.id },
+    });
+    await this.notificationRepo.save(notification);
+
+    const user = await this.userRepo.findOne({
+      where: { id: report.userId },
+      select: ['expoPushToken'],
+    });
+    if (user?.expoPushToken) {
+      try {
+        const axios = (await import('axios')).default;
+        await axios.post(
+          'https://exp.host/--/api/v2/push/send',
+          { title, body, data: { reportId: report.id }, to: user.expoPushToken },
+          { headers: { 'Content-Type': 'application/json' }, timeout: 8_000 },
+        );
+      } catch {
+        // Silently ignore push failures; in-app notification is already persisted.
+      }
+    }
   }
 
   /**

@@ -35,6 +35,8 @@ function notifIcon(type: NotificationType): { name: keyof typeof Ionicons.glyphM
     case NotificationType.REWARD_CREDITED:       return { name: 'cash', color: '#22c55e' };
     case NotificationType.WITHDRAWAL_APPROVED:   return { name: 'wallet', color: '#22c55e' };
     case NotificationType.WITHDRAWAL_REJECTED:   return { name: 'wallet', color: '#ef4444' };
+    case NotificationType.REPORT_REPLY:          return { name: 'chatbubbles', color: '#6366f1' };
+    case NotificationType.REPORT_CLOSED:         return { name: 'checkmark-circle', color: '#22c55e' };
     case NotificationType.ACCOUNT_SUSPENDED:     return { name: 'alert-circle', color: '#f59e0b' };
     case NotificationType.ACCOUNT_BANNED:        return { name: 'shield-outline', color: '#ef4444' };
     default:                                     return { name: 'notifications', color: '#6366f1' };

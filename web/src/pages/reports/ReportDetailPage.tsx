@@ -9,7 +9,10 @@ import {
 } from '@/components/ui/select'
 import { Card } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/utils'
-import { ArrowLeft, Send, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Send, Sparkles, CheckCircle2 } from 'lucide-react'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import type { Report } from '@/types'
 
@@ -36,6 +39,52 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Other',
 }
 
+const REPLY_SUGGESTIONS: Record<string, string[]> = {
+  bug: [
+    'Thank you for reporting this bug. We are looking into it and will fix it shortly.',
+    'We have identified the bug and our team is working on a fix. Expected resolution: 2-3 business days.',
+    'This bug has been reported to our development team. We will notify you once it is resolved.',
+    'We apologize for the inconvenience. The bug has been logged and prioritised for the next release.',
+  ],
+  payout_issue: [
+    'We are reviewing your payout issue and will get back to you within 24-48 hours.',
+    'Your payout has been flagged for review. Our finance team will process it manually and update you shortly.',
+    'We noticed a delay in your payout. Please share your transaction ID so we can trace it faster.',
+    'Your payout is being processed. Expected credit within 2-3 business days.',
+  ],
+  question_issue: [
+    'Thank you for reaching out. We have reviewed your query and here is the resolution.',
+    'Your question has been answered. If you need further assistance, please let us know.',
+    'We have clarified the issue on our end. The relevant section has been updated for better understanding.',
+    'Your concern has been noted and the team has been informed. Expected response within 48 hours.',
+  ],
+  abuse: [
+    'We have reviewed your report and found a violation of our community guidelines. Appropriate action has been taken.',
+    'Thank you for reporting this. We take abuse reports seriously and are investigating further.',
+    'This content has been reviewed and removed for violating our terms. The user has been warned.',
+    'We have escalated this report to our moderation team. We will keep you updated on the action taken.',
+  ],
+  feature_request: [
+    'Thank you for your suggestion! We have noted it and will consider it for a future update.',
+    'Your feature request has been logged. We appreciate your feedback and will evaluate it for upcoming releases.',
+    'Great suggestion! We have forwarded this to our product team for consideration.',
+    'We value your input. While we cannot commit to a timeline, this is being tracked for future planning.',
+  ],
+  other: [
+    'Thank you for contacting us. We are looking into your concern and will respond shortly.',
+    'We have received your report and our team is reviewing it. Expected response within 48 hours.',
+    'We appreciate you bringing this to our attention. Please let us know if you need further assistance.',
+    'Your message has been noted. We will get back to you with a resolution shortly.',
+  ],
+}
+
+const GENERAL_SUGGESTIONS = [
+  'Thank you for contacting us. We have noted your concern and will respond shortly.',
+  'We are looking into your report. You can expect an update within 48 hours.',
+  'We appreciate your patience. Please reach out again if you do not hear back within 5 business days.',
+  'Your request has been escalated to the relevant team. We will keep you updated.',
+]
+
 const PRIORITY_COLORS: Record<string, string> = {
   low:    'bg-surface-variant text-text',
   medium: 'bg-warning text-white',
@@ -59,6 +108,8 @@ export default function ReportDetailPage() {
   const [sending, setSending] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [updatingPriority, setUpdatingPriority] = useState(false)
+  const [markingClosed, setMarkingClosed] = useState(false)
+  const [showCloseModal, setShowCloseModal] = useState(false)
 
   const fetchReport = useCallback(async () => {
     if (!reportId) return
@@ -115,6 +166,26 @@ export default function ReportDetailPage() {
       toast.error(getErrorMessage(e, 'Failed to update priority'))
     } finally {
       setUpdatingPriority(false)
+    }
+  }
+
+  const handleMarkClosed = () => {
+    if (report.status === 'closed') return
+    setShowCloseModal(true)
+  }
+
+  const confirmMarkClosed = async () => {
+    if (!reportId) return
+    setShowCloseModal(false)
+    setMarkingClosed(true)
+    try {
+      await reportsApi.updateStatus(reportId, 'closed')
+      toast.success('Report marked as closed')
+      await fetchReport()
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to close report'))
+    } finally {
+      setMarkingClosed(false)
     }
   }
 
@@ -193,6 +264,51 @@ export default function ReportDetailPage() {
               </SelectContent>
             </Select>
           </div>
+          {report.status !== 'closed' && (
+            <Button
+              variant="success"
+              onClick={handleMarkClosed}
+              disabled={markingClosed}
+              className="gap-1.5"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {markingClosed ? 'Closing...' : 'Mark as Closed'}
+            </Button>
+          )}
+
+          {/* Close confirmation modal */}
+          <Dialog open={showCloseModal} onOpenChange={setShowCloseModal}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Close this report?</DialogTitle>
+                <DialogDescription>
+                  Marking this report as closed will notify the user that their issue has been resolved. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCloseModal(false)}
+                  disabled={markingClosed}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={confirmMarkClosed}
+                  disabled={markingClosed}
+                  className="gap-1.5"
+                >
+                  {markingClosed ? 'Closing...' : (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Yes, Close Report
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -273,8 +389,34 @@ export default function ReportDetailPage() {
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Add Reply
           </h3>
+
+          {/* Suggestions */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground font-medium">Suggestions</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(REPLY_SUGGESTIONS[report.category] ?? GENERAL_SUGGESTIONS).map((suggestion, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    setReplyText(suggestion)
+                    // scroll textarea into view smoothly
+                    document.getElementById('reply-textarea')?.focus()
+                  }}
+                  className="text-left text-xs px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-surface-variant hover:border-primary/40 transition-colors text-foreground shadow-sm"
+                >
+                  {suggestion.length > 60 ? suggestion.slice(0, 57) + '...' : suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Textarea
-            placeholder="Type your reply to the user..."
+            id="reply-textarea"
+            placeholder="Type your reply to the user, or select a suggestion above..."
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             rows={4}
