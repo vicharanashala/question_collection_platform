@@ -546,6 +546,12 @@ export const notificationApi = {
 // ─── Curator API ───────────────────────────────────────────────────────────
 
 export const curatorApi = {
+  getCuratorStats: () =>
+    request<import('@/types').CuratorStats>('/curator/stats'),
+
+  getMyStats: (userId: string) =>
+    request<import('@/types').CuratorReviewerStats>(`/curator/my-stats?userId=${encodeURIComponent(userId)}`),
+
   getReviewQueue: (params = {} as Record<string, string | string[] | number | undefined>) => {
     // Backend expects status as an array: ?status[]=pending&status[]=ai_review
     const sp = new URLSearchParams()

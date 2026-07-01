@@ -2,16 +2,20 @@
  * Curator Dashboard — Question Review Focused
  * Role: curator
  *
- * Fetches only curator-appropriate data:
- *   - Question metrics (getQuestionMetrics) — no user verification data
- *   - Review queue counts (adminApi.listReviewQueue)
+ * Uses curatorApi.getCuratorStats() — a single efficient endpoint returning:
+ *   - Queue breakdown by status
+ *   - Submission volume (today / this week / this month)
+ *   - Approval rate with prior-period comparison
+ *   - Average review turnaround
+ *   - Daily volume trend (last 30 days)
+ *   - Crop / state / domain breakdowns
  *
  * Excludes: user stats, finance data, wallet data, audit logs.
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi, curatorApi, getErrorMessage } from '@/api/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { curatorApi, getErrorMessage } from '@/api/client'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChartCard } from '@/components/charts/ChartCard'
@@ -19,16 +23,14 @@ import { AreaChartComponent } from '@/components/charts/AreaChartComponent'
 import { BarChartComponent } from '@/components/charts/BarChartComponent'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber } from '@/lib/utils'
-import { format, parseISO } from 'date-fns'
 import {
-  MessageSquare, CheckCircle, Ban, Clock, TrendingUp, TrendingDown,
-  Minus, ArrowRight, CheckSquare, AlertTriangle, BarChart3, Sparkles,
-  Activity, Users,
+  CheckSquare, CheckCircle, Ban, TrendingUp, TrendingDown,
+  Minus, ArrowRight, AlertTriangle, MessageSquare,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Question } from '@/types'
+import type { CuratorStats } from '@/types'
 
-// ─── StatCard (reused from DashboardPage) ─────────────────────────────────────
+// ─── StatCard ─────────────────────────────────────────────────────────────
 
 interface StatCardProps {
   label: string
@@ -76,83 +78,63 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
   )
 }
 
-// ─── Types for curator metrics ─────────────────────────────────────────────────
-
-interface CuratorMetrics {
-  period: { from: string; to: string }
-  summary: {
-    total: number
-    approved: number
-    rejected: number
-    pending: number
-    aiReview: number
-    humanReview: number
-    duplicates: number
-    approvalRate: number
-    avgTurnaroundMinutes: number
-  }
-  dailyVolume: Array<{ date: string; total: number; approved: number; rejected: number }>
-  cropBreakdown: Array<{ cropType: string; count: number }>
-  stateBreakdown: Array<{ state: string; count: number }>
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────
 
 const TIME_RANGES: { value: string; label: string; days: number }[] = [
-  { value: '7d', label: '7D', days: 7 },
   { value: '30d', label: '30D', days: 30 },
+  { value: '7d', label: '7D', days: 7 },
   { value: '90d', label: '90D', days: 90 },
 ]
 
 export function CuratorDashboardPage() {
   const [timeRange, setTimeRange] = useState('30d')
-  const [metrics, setMetrics] = useState<CuratorMetrics | null>(null)
-  const [metricsLoading, setMetricsLoading] = useState(true)
-  const [queueCount, setQueueCount] = useState(0)
-  const [queueLoading, setQueueLoading] = useState(true)
+  const [stats, setStats] = useState<CuratorStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const days = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
-  const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
-  const toDate = new Date().toISOString()
-
-  // Load question metrics
+  // Load curator stats (backend computes all period breakdowns internally)
   useEffect(() => {
-    adminApi.getQuestionMetrics({ fromDate, toDate })
-      .then(setMetrics)
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load question metrics')))
-      .finally(() => setMetricsLoading(false))
-  }, [fromDate, toDate])
-
-  // Load review queue count (only pending + ai_review + human_review for curator's view)
-  useEffect(() => {
-    curatorApi.getReviewQueue({ status: ['pending', 'ai_review', 'human_review'], limit: 1 })
-      .then((res) => setQueueCount(res.total))
-      .catch(() => setQueueCount(0))
-      .finally(() => setQueueLoading(false))
+    curatorApi.getCuratorStats()
+      .then(setStats)
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load curator stats')))
+      .finally(() => setLoading(false))
   }, [])
 
-  const s = metrics?.summary
+  if (loading) return <DashboardSkeleton />
+  if (!stats) return null
 
-  // Derived chart data
-  const qStatusData = [
-    { name: 'Pending', value: s?.pending ?? 0 },
-    { name: 'AI Review', value: s?.aiReview ?? 0 },
-    { name: 'Human Review', value: s?.humanReview ?? 0 },
-    { name: 'Approved', value: s?.approved ?? 0 },
-    { name: 'Rejected', value: s?.rejected ?? 0 },
-  ]
+  const { queue, performance } = stats
 
-  const stateBarData = (metrics?.stateBreakdown ?? []).slice(0, 8).map((st) => ({
-    name: st.state,
-    value: st.count,
+  // Derive queue pending total (non-terminal statuses)
+  const pendingTotal = queue.breakdown.reduce((sum, b) => {
+    if (b.status !== 'approved' && b.status !== 'rejected') return sum + b.count
+    return sum
+  }, 0)
+
+  // SLA breach: avg turnaround > 60 min
+  const slaBreach = performance.avgReviewTurnaroundMinutes != null && performance.avgReviewTurnaroundMinutes > 60
+
+  // Chart data — daily volume uses Submitted (all submitted) + Approved + Rejected
+  const dailyVolume = (stats.dailyVolume ?? []).map((d) => ({
+    date: d.date,
+    Submitted: d.submitted,
+    Approved: d.approved,
+    Rejected: d.rejected,
   }))
 
-  const cropDonutData = (metrics?.cropBreakdown ?? []).slice(0, 7).map((c) => ({
+  const stateBarData = (stats.stateBreakdown ?? []).slice(0, 8).map((s) => ({
+    name: s.state,
+    value: s.count,
+  }))
+
+  const cropBarData = (stats.cropBreakdown ?? []).slice(0, 7).map((c) => ({
     name: c.cropType,
     value: c.count,
   }))
 
-  if (metricsLoading) return <DashboardSkeleton />
+  const queueBarData = queue.breakdown.map((b) => ({
+    name: b.label,
+    value: b.count,
+  }))
 
   return (
     <div className="space-y-6">
@@ -161,7 +143,7 @@ export function CuratorDashboardPage() {
         <div>
           <h2 className="text-2xl font-extrabold text-text">Review Dashboard</h2>
           <p className="text-sm text-text-tertiary">
-            Question review metrics · {TIME_RANGES.find((r) => r.value === timeRange)?.label} period
+            Curator overview · last 30 days
           </p>
         </div>
         <div className="flex items-center rounded-lg border border-border-subtle bg-surface p-1 shadow-xs">
@@ -184,44 +166,29 @@ export function CuratorDashboardPage() {
         <StatCard
           icon={CheckSquare}
           label="Review Queue"
-          value={queueLoading ? '—' : formatNumber(queueCount)}
-          sub="awaiting review"
+          value={formatNumber(queue.total)}
+          sub={`${formatNumber(pendingTotal)} awaiting action`}
           variant="warning"
         />
         <StatCard
           icon={CheckCircle}
           label="Approved"
-          value={formatNumber(s?.approved ?? 0)}
-          sub={`${s?.approvalRate ?? 0}% approval rate`}
+          value={formatNumber(performance.approved30Days)}
+          sub={`${performance.approvalRate}% approval rate`}
+          change={performance.approvalRateChange}
           variant="success"
         />
         <StatCard
           icon={Ban}
           label="Rejected"
-          value={formatNumber(s?.rejected ?? 0)}
-          sub={`${s?.duplicates ?? 0} duplicates`}
+          value={formatNumber(performance.rejected30Days)}
+          sub={`${stats.volume.last30Days} total submitted`}
           variant="danger"
         />
-        <StatCard
-          icon={Clock}
-          label="Avg Review Time"
-          value={s?.avgTurnaroundMinutes != null ? `${s.avgTurnaroundMinutes}m` : '—'}
-          sub="submission to decision"
-          variant="info"
-        />
       </div>
 
-      {/* Secondary stats */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <StatCard icon={MessageSquare} label="Total Submitted" value={formatNumber(s?.total ?? 0)} variant="primary" />
-        <StatCard icon={AlertTriangle} label="Pending" value={formatNumber(s?.pending ?? 0)} variant="warning" />
-        <StatCard icon={Sparkles} label="AI Review" value={formatNumber(s?.aiReview ?? 0)} variant="info" />
-        <StatCard icon={Activity} label="Human Review" value={formatNumber(s?.humanReview ?? 0)} variant="info" />
-        <StatCard icon={TrendingUp} label="Growth Rate" value={`${s?.approvalRate ?? 0}%`} variant="success" />
-      </div>
-
-      {/* SLA Warning — only shows if avg turnaround > 60 minutes */}
-      {s?.avgTurnaroundMinutes != null && s.avgTurnaroundMinutes > 60 && (
+      {/* SLA breach alert */}
+      {slaBreach && (
         <Card className="shadow-xs border-destructive/30 bg-destructive/5">
           <CardContent className="flex items-start gap-3 p-4">
             <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -230,9 +197,11 @@ export function CuratorDashboardPage() {
             <div>
               <p className="text-sm font-semibold text-destructive">SLA Breach Warning</p>
               <p className="text-xs text-text-secondary mt-0.5">
-                Average review turnaround is <span className="font-semibold">{s.avgTurnaroundMinutes}m</span> — above the 60-minute target.
-                {queueCount > 0 && (
-                  <span> <span className="font-semibold">{formatNumber(queueCount)}</span> questions pending review.</span>
+                Average review turnaround is{' '}
+                <span className="font-semibold">{performance.avgReviewTurnaroundMinutes}m</span> —
+                above the 60-minute target.
+                {queue.total > 0 && (
+                  <span> <span className="font-semibold">{formatNumber(queue.total)}</span> questions in queue.</span>
                 )}
               </p>
             </div>
@@ -240,12 +209,12 @@ export function CuratorDashboardPage() {
         </Card>
       )}
 
-      {/* Charts row 1: Daily volume + Status breakdown */}
+      {/* Charts row 1: Daily volume + Queue breakdown */}
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard
           className="xl:col-span-2"
           title="Daily Submission Volume"
-          subtitle={`Last ${days} days — submitted, approved, rejected`}
+          subtitle={`Last 30 days — submitted, approved, rejected`}
           action={
             <div className="flex gap-4 text-xs">
               <span className="flex items-center gap-1.5">
@@ -260,39 +229,27 @@ export function CuratorDashboardPage() {
             </div>
           }
         >
-          {metrics?.dailyVolume && metrics.dailyVolume.length > 0 ? (
-            <>
-              <AreaChartComponent
-                data={metrics.dailyVolume.map((v) => ({ date: v.date, Submitted: v.total, Approved: v.approved, Rejected: v.rejected }))}
-                dataKey="Submitted"
-                color="hsl(var(--primary))"
-                gradientId="curatorVolume"
-                height={200}
-                valueFormatter={(v) => formatNumber(v)}
-              />
-              <div className="flex gap-6 mt-2 px-1 pb-4 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
-                  Approved: {formatNumber(s?.approved ?? 0)}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-destructive inline-block" />
-                  Rejected: {formatNumber(s?.rejected ?? 0)}
-                </span>
-              </div>
-            </>
+          {dailyVolume.length > 0 ? (
+            <AreaChartComponent
+              data={dailyVolume}
+              dataKey="Submitted"
+              color="hsl(var(--primary))"
+              gradientId="curatorVolume"
+              height={200}
+              valueFormatter={(v) => formatNumber(v)}
+            />
           ) : (
-            <div className="h-56 flex items-center justify-center text-sm text-text-tertiary">
+            <div className="h-48 flex items-center justify-center text-sm text-text-tertiary">
               No volume data available
             </div>
           )}
         </ChartCard>
 
-        <ChartCard title="Questions by Status" subtitle="Current distribution">
+        <ChartCard title="Queue by Status" subtitle="Current distribution">
           <BarChartComponent
-            data={qStatusData}
+            data={queueBarData}
             dataKey="value"
-            color="hsl(var(--primary))"
+            color="hsl(var(--warning))"
             height={260}
             valueFormatter={(v) => formatNumber(v)}
           />
@@ -313,7 +270,7 @@ export function CuratorDashboardPage() {
 
         <ChartCard title="Top Crops" subtitle="Question distribution by crop type">
           <BarChartComponent
-            data={cropDonutData}
+            data={cropBarData}
             dataKey="value"
             color="hsl(var(--chart-3))"
             height={220}
@@ -333,8 +290,8 @@ export function CuratorDashboardPage() {
               <CheckSquare className="h-4 w-4 text-primary" />
               Review Queue
             </span>
-            {queueCount > 0 ? (
-              <Badge variant="destructive">{formatNumber(queueCount)}</Badge>
+            {queue.total > 0 ? (
+              <Badge variant="destructive">{formatNumber(queue.total)}</Badge>
             ) : (
               <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             )}
