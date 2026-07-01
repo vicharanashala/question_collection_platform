@@ -719,7 +719,52 @@ const resources = {
       "villageLoadingMessage": "Please wait, villages are being loaded.",
       "college": "College",
       "collegeNamePlaceholder": "Enter your college name",
-      "collegeNameRequired": "College name is required"
+      "collegeNameRequired": "College name is required",
+      "report": {
+        "title": "Help & Support",
+        "newReport": "New Report",
+        "myReports": "My Reports",
+        "category": "Category",
+        "categoryPlaceholder": "Select a category",
+        "titleField": "Title",
+        "titlePlaceholder": "Brief summary of the issue",
+        "titleMinLength": "Title must be at least 5 characters",
+        "descriptionField": "Description",
+        "descriptionPlaceholder": "Describe the issue in detail (min 10 characters)",
+        "descriptionMinLength": "Description must be at least 10 characters",
+        "submit": "Submit Report",
+        "submitting": "Submitting...",
+        "cancel": "Cancel",
+        "submitSuccess": "Report submitted successfully",
+        "submitError": "Failed to submit report",
+        "loadError": "Failed to load your reports",
+        "noReports": "No Reports Yet",
+        "noReportsHint": "If you encounter an issue, submit a report and we'll get back to you.",
+        "categories": {
+          "bug": "Bug Report",
+          "payout_issue": "Payout Issue",
+          "question_issue": "Question Issue",
+          "abuse": "Abuse / Harassment",
+          "feature_request": "Feature Request",
+          "other": "Other"
+        },
+        "status": {
+          "open": "Open",
+          "in_progress": "In Progress",
+          "resolved": "Resolved",
+          "closed": "Closed"
+        },
+        "priority": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "urgent": "Urgent"
+        },
+        "replyCount": "{{count}} {{one:reply, other:replies}}",
+        "noReplies": "No replies yet. We'll respond soon.",
+        "submittedOn": "Submitted on {{date}}",
+        "replies": "Replies"
+      }
     }
   },
   "as": {

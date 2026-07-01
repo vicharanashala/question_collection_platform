@@ -23,6 +23,7 @@ export enum NotificationType {
   ACCOUNT_SUSPENDED = 'account_suspended',
   ACCOUNT_BANNED = 'account_banned',
   GENERAL = 'general',
+  REPORT_REPLY = 'report_reply',
 }
 
 export enum NotificationTriggerType {

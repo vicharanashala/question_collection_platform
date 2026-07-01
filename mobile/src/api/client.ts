@@ -544,4 +544,61 @@ export const lgdApi = {
     }),
 };
 
+// ─── Reports API ─────────────────────────────────────────────────────────────────
+
+export interface Report {
+  id: string
+  userId: string
+  title: string
+  description: string
+  category: 'bug' | 'payout_issue' | 'question_issue' | 'abuse' | 'feature_request' | 'other'
+  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  relatedEntityId: string | null
+  relatedEntityType: string | null
+  createdAt: string
+  updatedAt: string
+  user?: { id: string; name: string; mobileNumber: string }
+  replies?: Array<{
+    id: string
+    reportId: string
+    adminId: string
+    message: string
+    createdAt: string
+    admin?: { id: string; name: string }
+  }>
+}
+
+export interface PaginatedReports {
+  items: Report[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export const reportsApi = {
+  /** Submit a new report */
+  create: (body: {
+    title: string
+    description: string
+    category: string
+    relatedEntityId?: string
+    relatedEntityType?: string
+  }) =>
+    api.post<{ id: string; message: string }>('/reports', body),
+
+  /** Get the current user's own reports */
+  getMyReports: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedReports>('/reports/my', { params }),
+
+  /** Get a single report with replies (admin) */
+  get: (reportId: string) =>
+    api.get<Report>(`/reports/${reportId}`),
+
+  /** Get current user's own single report with replies */
+  getMyReport: (reportId: string) =>
+    api.get<Report>(`/reports/my/${reportId}`),
+}
+
 export default api;

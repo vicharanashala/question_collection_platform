@@ -509,3 +509,32 @@ export interface CuratorReviewerStats {
     pending: number
   }
 }
+
+export type ReportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type ReportCategory = 'bug' | 'payout_issue' | 'question_issue' | 'abuse' | 'feature_request' | 'other';
+export type ReportPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface Report {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  category: ReportCategory;
+  status: ReportStatus;
+  priority: ReportPriority;
+  relatedEntityId: string | null;
+  relatedEntityType: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: Pick<User, 'id' | 'name' | 'mobileNumber'>;
+  replies?: ReportReply[];
+}
+
+export interface ReportReply {
+  id: string;
+  reportId: string;
+  adminId: string;
+  message: string;
+  createdAt: string;
+  admin?: Pick<User, 'id' | 'name'>;
+}

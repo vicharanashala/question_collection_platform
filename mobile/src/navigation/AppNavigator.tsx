@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -44,6 +44,8 @@ import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen
 import { QuestionDetailScreen } from '../screens/Question/QuestionDetailScreen';
 import { TransactionDetailScreen } from '../screens/Transaction/TransactionDetailScreen';
 import { LeaderboardScreen } from '../screens/Leaderboard/LeaderboardScreen';
+import { ReportScreen } from '../screens/Report/ReportScreen';
+import { ReportDetailScreen } from '../screens/Report/ReportDetailScreen';
 
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
@@ -466,7 +468,11 @@ function PendingNavigator() {
 
 // ─── Root Navigator ───────────────────────────────────────────────────────────
 
-export function AppNavigator() {
+interface AppNavigatorProps {
+  navigationRef?: NavigationContainerRef<RootStackParamList> | null;
+}
+
+export function AppNavigator({ navigationRef }: AppNavigatorProps) {
   const { theme, isDark } = useTheme();
   const { user, isLoading, isReady } = useAuth();
 
@@ -498,7 +504,7 @@ export function AppNavigator() {
   const activeAdminNav = isFinance(user?.role) ? FinanceNavigator : AdminNavigator;
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef as unknown as React.Ref<NavigationContainerRef<RootStackParamList>>} theme={navTheme}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
@@ -548,6 +554,16 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="Leaderboard"
                   component={LeaderboardScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="ReportScreen"
+                  component={ReportScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="ReportDetail"
+                  component={ReportDetailScreen}
                   options={{ presentation: 'modal' }}
                 />
               </>

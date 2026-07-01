@@ -56,6 +56,8 @@ export type RootStackParamList = {
   };
   PaymentDetails: undefined;
   Leaderboard: undefined;
+  ReportScreen: undefined;
+  ReportDetail: { reportId: string };
   QuestionDetail: {
     /** ID of the question to display */
     questionId: string;

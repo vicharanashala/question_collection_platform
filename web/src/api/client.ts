@@ -28,6 +28,8 @@ import type {
   AuditSummaryResponse,
   AuditEntityHistoryResponse,
   AuditUsersByRoleResponse,
+  Report,
+  ReportReply,
 } from '@/types'
 
 const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
@@ -655,6 +657,70 @@ export const auditApi = {
       URL.revokeObjectURL(url)
     })
   },
+}
+
+// ─── Reports API ────────────────────────────────────────────────────────────────
+
+export const reportsApi = {
+  /** Submit a new report (any authenticated user) */
+  create: (body: {
+    title: string
+    description: string
+    category: string
+    relatedEntityId?: string
+    relatedEntityType?: string
+  }) =>
+    request<{ id: string; message: string }>('/reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  /** List all reports (admin/curator/finance) — with optional filters */
+  list: (params: {
+    status?: string
+    category?: string
+    priority?: string
+    page?: number
+    limit?: number
+  } = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    return request<{
+      items: Report[]
+      total: number
+      page: number
+      limit: number
+      pages: number
+    }>(`/reports${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  /** Get a single report with replies */
+  get: (reportId: string) =>
+    request<Report>(`/reports/${reportId}`, {}, false),
+
+  /** Update report status */
+  updateStatus: (reportId: string, status: string) =>
+    request<{ id: string; status: string; message: string }>(
+      `/reports/${reportId}/status`,
+      { method: 'PATCH', body: JSON.stringify({ status }) },
+      false,
+    ),
+
+  /** Update report priority */
+  updatePriority: (reportId: string, priority: string) =>
+    request<{ id: string; priority: string; message: string }>(
+      `/reports/${reportId}/priority`,
+      { method: 'PATCH', body: JSON.stringify({ priority }) },
+      false,
+    ),
+
+  /** Add a reply to a report */
+  addReply: (reportId: string, message: string) =>
+    request<{ id: string; message: string }>(
+      `/reports/${reportId}/replies`,
+      { method: 'POST', body: JSON.stringify({ message }) },
+      false,
+    ),
 }
 
 // ─── Error helper ──────────────────────────────────────────────────────────
