@@ -212,9 +212,9 @@ export function ProfileScreen() {
               <Ionicons name="person-circle-outline" size={13} color={c.primary} />
               <Text style={[styles.accountCardTitle, { color: c.primary }]}>Personal Info</Text>
             </View>
-            <View style={styles.accountRows}>
+            <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
               {user?.category && (
-                <View style={styles.accountRow}>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="pricetag-outline" size={13} color={c.textTertiary} />
                     <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Category</Text>
@@ -223,7 +223,7 @@ export function ProfileScreen() {
                 </View>
               )}
               {user?.gender && (
-                <View style={styles.accountRow}>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="male-female-outline" size={13} color={c.textTertiary} />
                     <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Gender</Text>
@@ -249,9 +249,9 @@ export function ProfileScreen() {
               <Ionicons name="location-outline" size={13} color={c.primary} />
               <Text style={[styles.accountCardTitle, { color: c.primary }]}>Location</Text>
             </View>
-            <View style={styles.accountRows}>
+            <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
               {user?.state && (
-                <View style={styles.accountRow}>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="map-outline" size={13} color={c.textTertiary} />
                     <Text style={[styles.accountLabel, { color: c.textTertiary }]}>State</Text>
@@ -260,7 +260,7 @@ export function ProfileScreen() {
                 </View>
               )}
               {user?.district && (
-                <View style={styles.accountRow}>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="business-outline" size={13} color={c.textTertiary} />
                     <Text style={[styles.accountLabel, { color: c.textTertiary }]}>District</Text>
@@ -269,7 +269,7 @@ export function ProfileScreen() {
                 </View>
               )}
               {user?.block && (
-                <View style={styles.accountRow}>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
                     <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Block</Text>
@@ -278,7 +278,7 @@ export function ProfileScreen() {
                 </View>
               )}
               {user?.village && (
-                <View style={styles.accountRow}>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="home-outline" size={13} color={c.textTertiary} />
                     <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Village</Text>
@@ -305,9 +305,9 @@ export function ProfileScreen() {
                 <Ionicons name="school-outline" size={13} color={c.primary} />
                 <Text style={[styles.accountCardTitle, { color: c.primary }]}>Education</Text>
               </View>
-              <View style={styles.accountRows}>
+              <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                 {user?.courseName && (
-                  <View style={styles.accountRow}>
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="book-outline" size={13} color={c.textTertiary} />
                       <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Course</Text>
@@ -316,7 +316,7 @@ export function ProfileScreen() {
                   </View>
                 )}
                 {user?.collegeName && (
-                  <View style={styles.accountRow}>
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="business-outline" size={13} color={c.textTertiary} />
                       <Text style={[styles.accountLabel, { color: c.textTertiary }]}>College</Text>
@@ -344,9 +344,9 @@ export function ProfileScreen() {
                 <Ionicons name="leaf-outline" size={13} color={c.primary} />
                 <Text style={[styles.accountCardTitle, { color: c.primary }]}>Farming</Text>
               </View>
-              <View style={styles.accountRows}>
+              <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                 {user?.farmSize && (
-                  <View style={styles.accountRow}>
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="resize-outline" size={13} color={c.textTertiary} />
                       <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Farm Size</Text>
@@ -355,7 +355,7 @@ export function ProfileScreen() {
                   </View>
                 )}
                 {user?.cropType && (
-                  <View style={styles.accountRow}>
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
                       <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Crop</Text>
@@ -395,9 +395,9 @@ export function ProfileScreen() {
 
               {/* Org Info */}
               <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-                <View style={styles.accountRows}>
+                <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                   {u.organisationType && (
-                    <View style={styles.accountRow}>
+                    <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
                         <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Org. Type</Text>
@@ -406,7 +406,7 @@ export function ProfileScreen() {
                     </View>
                   )}
                   {u.organizationName && (
-                    <View style={styles.accountRow}>
+                    <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="business-outline" size={13} color={c.textTertiary} />
                         <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Name</Text>
@@ -415,7 +415,7 @@ export function ProfileScreen() {
                     </View>
                   )}
                   {u.organizationRole && (
-                    <View style={styles.accountRow}>
+                    <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
                         <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Role</Text>
@@ -442,9 +442,9 @@ export function ProfileScreen() {
                     <Ionicons name="location-outline" size={13} color={c.primary} />
                     <Text style={[styles.accountCardTitle, { color: c.primary }]}>Organisation Location</Text>
                   </View>
-                  <View style={styles.accountRows}>
+                  <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                     {u.organizationState && (
-                      <View style={styles.accountRow}>
+                      <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="map-outline" size={13} color={c.textTertiary} />
                           <Text style={[styles.accountLabel, { color: c.textTertiary }]}>State</Text>
@@ -453,7 +453,7 @@ export function ProfileScreen() {
                       </View>
                     )}
                     {u.organizationDistrict && (
-                      <View style={styles.accountRow}>
+                      <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="business-outline" size={13} color={c.textTertiary} />
                           <Text style={[styles.accountLabel, { color: c.textTertiary }]}>District</Text>
@@ -462,7 +462,7 @@ export function ProfileScreen() {
                       </View>
                     )}
                     {u.organizationBlock && (
-                      <View style={styles.accountRow}>
+                      <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
                           <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Block</Text>
@@ -675,8 +675,7 @@ const styles = StyleSheet.create({
   },
   accountRows: {
     borderTopWidth: 1,
-    // c.borderSubtle resolves to '#E5E7EB' (light) / '#334155' (dark) — inline to avoid runtime access in StyleSheet.create
-    borderTopColor: '#E5E7EB',
+    borderTopColor: 'transparent', // overridden inline via [styles.accountRows, { borderTopColor: c.borderSubtle }]
   },
   accountRow: {
     flexDirection: 'row', alignItems: 'center',
@@ -684,8 +683,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing4,
     paddingVertical: tokens.spacing3,
     borderBottomWidth: 1,
-    // c.borderSubtle resolves to '#E5E7EB' (light) / '#334155' (dark) — inline to avoid runtime access in StyleSheet.create
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'transparent', // overridden inline via [styles.accountRow, { borderBottomColor: c.borderSubtle }]
   },
   accountRowLast: { borderBottomWidth: 0 },
   accountRowLeft: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
