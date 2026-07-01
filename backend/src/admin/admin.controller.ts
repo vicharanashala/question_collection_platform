@@ -172,11 +172,11 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 4: Analytics Dashboard — curator allowed (metrics only)
+  // Section 4: Analytics Dashboard — curator uses dedicated question-metrics endpoint
   // ─────────────────────────────────────────────────────────────
 
   @Get('analytics/dashboard')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
@@ -184,21 +184,21 @@ export class AdminController {
 
   /** Full stats for the admin dashboard */
   @Get('stats')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async getStats(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getStats(dto);
   }
 
   @Get('analytics/rewards')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getRewardSummary(dto);
   }
 
   @Get('analytics/reward-logs')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.listRewardLogs(dto);
@@ -355,22 +355,4 @@ export class AdminController {
     return this.adminService.updateWithdrawalFailureReason(req.user.id, id, dto.reason);
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Section 7: Withdrawals (global list) — curator blocked
-  // ─────────────────────────────────────────────────────────────
-
-  @Get('export')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-  @HttpCode(HttpStatus.OK)
-  async exportData(@Query() dto: ExportQueryDto, @Res() res: Response) {
-    const result = await this.adminService.exportData(dto);
-
-    if (result.format === 'csv') {
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename="export_${dto.dataType}_${Date.now()}.csv"`);
-      return res.send(result.data);
-    }
-
-    return res.json(result);
-  }
 }

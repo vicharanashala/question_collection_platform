@@ -68,5 +68,5 @@ export const gdbConfig = registerAs('gdb', () => ({
 }));
 
 export const embedConfig = registerAs('embed', () => ({
-  baseUrl: process.env.EMBED_BASE_URL || 'http://100.100.108.44:6001',
+  baseUrl: `${required('VM_SERVER_URL')}:${required('EMBED_PORT')}`,
 }));

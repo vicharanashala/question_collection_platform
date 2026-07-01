@@ -7,7 +7,7 @@ export class EmbedService {
   private readonly baseUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>('embed.baseUrl') ?? 'http://100.100.108.44:6001';
+    this.baseUrl = this.configService.get<string>('embed.baseUrl')!;
   }
 
   /**

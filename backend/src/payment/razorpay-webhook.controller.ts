@@ -70,7 +70,7 @@ export class RazorpayWebhookController {
   ) {}
 
   private verifySignature(rawBody: string, signature: string): boolean {
-    const secret = this.configService.get<string>('RAZORPAY_WEBHOOK_SECRET');
+    const secret = this.configService.get<string>('payment.razorpay.webhookSecret');
     if (!secret) {
       this.logger.warn('[Webhook] No RAZORPAY_WEBHOOK_SECRET configured — skipping verification');
       return true; // Skip in dev if not configured

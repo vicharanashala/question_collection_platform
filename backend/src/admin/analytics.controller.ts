@@ -15,9 +15,16 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
 
+/**
+ * Analytics controller — shared dashboard data endpoints.
+ * Class-level: ADMIN and SUPER_ADMIN only (user/question analytics are
+ * platform operations; finance and curator have their own dashboards).
+ *
+ * getRewardAnalytics has a method-level override to also allow FINANCE.
+ */
 @Controller('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class AnalyticsController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -54,9 +61,11 @@ export class AnalyticsController {
   /**
    * Reward and payout totals.
    * GET /analytics/rewards
+   *
+   * Method-level override: also allows FINANCE role.
    */
   @Get('rewards')
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getRewardAnalytics(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getRewardAnalytics(dto);
@@ -64,8 +73,8 @@ export class AnalyticsController {
 }
 
 /**
- * Export controller — separate route prefix.
-   * GET /export/csv
+ * Export controller — consistent RBAC for all export formats.
+ * GET /export/csv
  * GET /export/excel
  */
 @Controller('export')
@@ -92,7 +101,6 @@ export class ExportController {
   async exportExcel(@Query() dto: ExportQueryDto, @Res() res: Response) {
     dto.format = 'excel';
     const result = await this.adminService.exportData(dto);
-    // json2xls returns a string (UTF-8 encoded XLSX binary), not a Buffer
     const xlsString = (result as { xls: string }).xls;
     res.setHeader(
       'Content-Type',

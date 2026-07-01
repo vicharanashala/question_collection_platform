@@ -5,30 +5,30 @@ import { PrefetchProvider } from '@/context/PrefetchContext'
 import { lazyRoute } from '@/components/LazyRoute'
 import type { UserRole } from '@/types'
 
-const LoginPage      = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
-const DashboardPage  = lazyRoute(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
-const UsersPage      = lazyRoute(() => import('@/pages/users/UsersPage').then(m => ({ default: m.UsersPage })))
-const UserDetailPage = lazyRoute(() => import('@/pages/users/UserDetailPage').then(m => ({ default: m.UserDetailPage })))
-const QuestionsPage  = lazyRoute(() => import('@/pages/questions/QuestionsPage').then(m => ({ default: m.QuestionsPage })))
-const ReviewsPage    = lazyRoute(() => import('@/pages/reviews/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
-const ProfilePage    = lazyRoute(() => import('@/pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })))
-const SettingsPage   = lazyRoute(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const LoginPage       = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
+const DashboardRouter = lazyRoute(() => import('@/pages/dashboard/DashboardRouter').then(m => ({ default: m.DashboardRouter })))
+const UsersPage       = lazyRoute(() => import('@/pages/users/UsersPage').then(m => ({ default: m.UsersPage })))
+const UserDetailPage  = lazyRoute(() => import('@/pages/users/UserDetailPage').then(m => ({ default: m.UserDetailPage })))
+const QuestionsPage   = lazyRoute(() => import('@/pages/questions/QuestionsPage').then(m => ({ default: m.QuestionsPage })))
+const ReviewsPage     = lazyRoute(() => import('@/pages/reviews/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
+const ProfilePage     = lazyRoute(() => import('@/pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })))
+const SettingsPage    = lazyRoute(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const WithdrawalsPage = lazyRoute(() => import('@/pages/withdrawals/WithdrawalsPage').then(m => ({ default: m.WithdrawalsPage })))
-const WalletsPage       = lazyRoute(() => import('@/pages/wallets/WalletsPage').then(m => ({ default: m.WalletsPage })))
-const AuditLogsPage     = lazyRoute(() => import('@/pages/audit-logs/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })))
+const WalletsPage     = lazyRoute(() => import('@/pages/wallets/WalletsPage').then(m => ({ default: m.WalletsPage })))
+const AuditLogsPage   = lazyRoute(() => import('@/pages/audit-logs/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })))
 
 /** Pages visible per role */
 const PAGE_ROLES: Record<string, UserRole[]> = {
-  dashboard:    ['user', 'curator', 'finance', 'admin', 'super_admin'],
-  users:        ['finance', 'admin', 'super_admin'],
-  userDetail:   ['admin', 'super_admin', 'finance'],
-  questions:    ['user', 'curator', 'admin', 'super_admin'],
-  reviews:      ['curator', 'super_admin'],
-  profile:      ['user', 'curator', 'finance', 'admin', 'super_admin'],
-  settings:     ['super_admin'],
-  withdrawals:   ['finance', 'admin', 'super_admin'],
-  wallets:       ['finance', 'admin', 'super_admin'],
-auditLogs:     ['super_admin', 'admin'],
+  dashboard:   ['admin', 'super_admin', 'curator', 'finance'],
+  users:       ['finance', 'admin', 'super_admin'],
+  userDetail:  ['admin', 'super_admin', 'finance'],
+  questions:   ['user', 'curator', 'admin', 'super_admin'],
+  reviews:     ['curator', 'super_admin'],
+  profile:     ['user', 'curator', 'finance', 'admin', 'super_admin'],
+  settings:    ['super_admin'],
+  withdrawals: ['finance', 'admin', 'super_admin'],
+  wallets:     ['finance', 'admin', 'super_admin'],
+  auditLogs:   ['super_admin', 'admin'],
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -71,7 +71,7 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard"  element={<><RoleRoute pageKey="dashboard" /><DashboardPage /></>} />
+          <Route path="dashboard" element={<><RoleRoute pageKey="dashboard" /><DashboardRouter /></>} />
           <Route path="users"      element={<><RoleRoute pageKey="users" /><UsersPage /></>} />
           <Route path="users/:userId" element={<><RoleRoute pageKey="userDetail" /><UserDetailPage /></>} />
           <Route path="questions"  element={<><RoleRoute pageKey="questions" /><QuestionsPage /></>} />
@@ -80,7 +80,7 @@ export default function App() {
           <Route path="settings"   element={<><RoleRoute pageKey="settings" /><SettingsPage /></>} />
           <Route path="withdrawals" element={<><RoleRoute pageKey="withdrawals" /><WithdrawalsPage /></>} />
           <Route path="wallets"        element={<><RoleRoute pageKey="wallets"      /><WalletsPage    /></>} />
-<Route path="audit-logs"     element={<><RoleRoute pageKey="auditLogs" /><AuditLogsPage /></>} />
+          <Route path="audit-logs" element={<><RoleRoute pageKey="auditLogs" /><AuditLogsPage /></>} />
         </Route>
       </Routes>
     </PrefetchProvider>

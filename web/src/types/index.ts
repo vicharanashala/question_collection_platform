@@ -162,6 +162,7 @@ export interface AdminStats {
   roleDistribution: { role: UserRole; count: number }[];
   categoryDistribution: { category: UserCategory; count: number }[];
   historical?: DailyStat[];
+  avgReviewTurnaroundMinutes: number | null;
 }
 
 export interface ActivityLogEntry {

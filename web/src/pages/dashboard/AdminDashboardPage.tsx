@@ -14,7 +14,7 @@ import { TreemapChartComponent } from '@/components/charts/TreemapChartComponent
 import { RankedBarList } from '@/components/charts/RankedBarList'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatINR } from '@/lib/utils'
-import { isFinance } from '@/lib/roles'
+import { isAdmin } from '@/lib/roles'
 import { format, parseISO } from 'date-fns'
 import {
   Users, MessageSquare, CheckCircle, AlertTriangle, Ban, CreditCard,
@@ -186,7 +186,7 @@ function timeRangeDays(tr: TimeRange) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function DashboardPage() {
+export function AdminDashboardPage() {
   const { user } = useAuth()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null)
@@ -195,31 +195,7 @@ export function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [tab, setTab] = useState<'questions' | 'users' | 'rewards'>('questions')
 
-  // Finance role specific state
-  const [finSummary, setFinSummary] = useState<{
-    totalPaidOut: number
-    pendingWithdrawals: { count: number; amount: number }
-    completedWithdrawals: { count: number; amount: number }
-    failedWithdrawals: { count: number }
-    totalWalletBalance: number
-    today: { payoutCount: number; payoutAmount: number }
-    dailyPayoutTrend: Array<{ date: string; count: number; amount: number }>
-  } | null>(null)
-  const [finLoading, setFinLoading] = useState(true)
-
-  // ── Finance role: load financial summary ─────────────────────────────────
-  useEffect(() => {
-    if (!isFinance(user)) {
-      setFinLoading(false)
-      return
-    }
-    adminApi.getFinancialSummary({ days: timeRangeDays(timeRange) })
-      .then(setFinSummary)
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load financial summary')))
-      .finally(() => setFinLoading(false))
-  }, [user, timeRange])
-
-  // ── Standard role: load both legacy stats and new analytics in parallel ──
+  // ── Admin+: load both legacy stats and new analytics in parallel ──
   useEffect(() => {
     Promise.all([
       adminApi.getStats().catch((e) => {
@@ -326,176 +302,19 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Finance role: financial summary dashboard ────────────────────────── */}
-      {isFinance(user) && !finLoading && finSummary && (
-        <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              icon={IndianRupee}
-              label="Total Paid Out"
-              value={`₹${formatINR(finSummary.totalPaidOut)}`}
-              variant="success"
-            />
-            <StatCard
-              icon={Clock}
-              label="Pending Withdrawals"
-              value={finSummary.pendingWithdrawals.count}
-              sub={`₹${formatINR(finSummary.pendingWithdrawals.amount)}`}
-              variant="warning"
-            />
-            <StatCard
-              icon={Wallet}
-              label="Total Wallet Balance"
-              value={`₹${formatINR(finSummary.totalWalletBalance)}`}
-              variant="primary"
-            />
-            <StatCard
-              icon={CheckCircle}
-              label="Completed Withdrawals"
-              value={finSummary.completedWithdrawals.count}
-              sub={`₹${formatINR(finSummary.completedWithdrawals.amount)}`}
-              variant="success"
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              icon={Activity}
-              label="Today's Payouts"
-              value={finSummary.today.payoutCount}
-              sub={`₹${formatINR(finSummary.today.payoutAmount)}`}
-              variant="info"
-            />
-            <StatCard
-              icon={Ban}
-              label="Failed Withdrawals"
-              value={finSummary.failedWithdrawals.count}
-              variant="danger"
-            />
-            <StatCard
-              icon={AlertTriangle}
-              label="Pending Amount"
-              value={`₹${formatINR(finSummary.pendingWithdrawals.amount)}`}
-              variant="warning"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="Total Rewarded"
-              value={`₹${formatINR(finSummary.totalPaidOut + finSummary.pendingWithdrawals.amount)}`}
-              variant="primary"
-            />
-          </div>
-
-          <ChartCard
-            title="Daily Payout Trend"
-            subtitle={`Last ${rangeDays} days`}
-            action={
-              <div className="flex gap-4 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-primary" /> Count
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-success" /> Amount
-                </span>
-              </div>
-            }
-          >
-            {finSummary.dailyPayoutTrend.length > 0 ? (
-              <>
-                <AreaChartComponent
-                  data={finSummary.dailyPayoutTrend.map((v) => ({
-                    date: v.date,
-                    Count: v.count,
-                    Amount: v.amount,
-                  }))}
-                  dataKey="Amount"
-                  color="hsl(var(--success))"
-                  gradientId="finPayoutTrend"
-                  height={200}
-                  valueFormatter={(v) => formatNumber(v)}
-                />
-                <div className="flex gap-6 mt-2 px-1 pb-4 text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
-                    Count: {formatNumber(finSummary.dailyPayoutTrend.reduce((s, v) => s + v.count, 0))}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-success inline-block" />
-                    Total: ₹{formatINR(finSummary.dailyPayoutTrend.reduce((s, v) => s + v.amount, 0))}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="h-56 flex items-center justify-center text-sm text-text-tertiary">
-                No payout data available
-              </div>
-            )}
-          </ChartCard>
-        </>
-      )}
-
-      {/* ── Finance role loading skeleton ─────────────────────────────────── */}
-      {isFinance(user) && finLoading && (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-28 animate-pulse rounded-xl bg-surface" />)}
-        </div>
-      )}
-
-      {/* ── Finance role: quick access nav ──────────────────────────────────── */}
-      {isFinance(user) && !finLoading && finSummary && (
-        <ChartCard title="Quick Access" subtitle="Navigate the platform">
-          <div className="grid gap-3 md:grid-cols-3 pt-1">
-            <Link
-              to="/users"
-              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
-            >
-              <span className="flex items-center gap-3">
-                <Users className="h-4 w-4 text-primary" />
-                View all users
-              </span>
-              <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
-            </Link>
-            <Link
-              to="/withdrawals"
-              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
-            >
-              <span className="flex items-center gap-3">
-                <CreditCard className="h-4 w-4 text-primary" />
-                {finSummary.pendingWithdrawals.count > 0
-                  ? `${finSummary.pendingWithdrawals.count} pending withdrawals`
-                  : 'Withdrawals'}
-              </span>
-              <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
-            </Link>
-            <Link
-              to="/wallets"
-              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
-            >
-              <span className="flex items-center gap-3">
-                <Wallet className="h-4 w-4 text-primary" />
-                All wallets
-              </span>
-              <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
-            </Link>
-          </div>
-        </ChartCard>
-      )}
-
-      {/* ── Primary metric cards (non-finance only) ─────────────────────────── */}
-      {!isFinance(user) && (
+      {/* ── Primary metric cards (admin+) ─────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Users}
           label="Registered Users"
           value={analytics?.totalRegisteredUsers ?? d?.totalUsers ?? 0}
-          sub={`${analytics?.monthlyActiveUsers ?? 0} MAU`}
+          sub={`${analytics?.monthlyActiveUsers ?? 0} Monthly Active Users`}
           variant="primary"
         />
         <StatCard
           icon={MessageSquare}
           label="Total Approved Questions"
           value={analytics?.totalApprovedQuestions ?? d?.approvedQuestions ?? 0}
-          change={analytics?.datasetGrowthRate}
           sub={`${analytics?.stateParticipationRate ?? 0}% state coverage`}
           variant="info"
         />
@@ -514,7 +333,6 @@ export function DashboardPage() {
           variant="success"
         />
       </div>
-      )}
 
       {/* ── Secondary metric cards ─────────────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -533,17 +351,17 @@ export function DashboardPage() {
           variant="info"
         />
         <StatCard
-          icon={Sparkles}
-          label="Avg AI Confidence"
-          value={analytics?.avgQuestionQualityScore != null ? `${analytics.avgQuestionQualityScore}%` : '—'}
-          sub={`${qAnalytics?.summary.approvalRate ?? 0}% approval rate`}
-          variant="success"
-        />
-        <StatCard
           icon={Clock}
           label="Pending Questions"
           value={d?.pendingQuestions ?? 0}
           variant="warning"
+        />
+        <StatCard
+          icon={Activity}
+          label="Avg Review Turnaround"
+          value={stats?.avgReviewTurnaroundMinutes != null ? `${stats.avgReviewTurnaroundMinutes}m` : '—'}
+          sub="submission to decision"
+          variant="info"
         />
       </div>
 
@@ -797,7 +615,6 @@ export function DashboardPage() {
       </Card>
 
       {/* ── Charts row 3: Role + Category donuts ──────────────────────────── */}
-      {!isFinance(user) && (
       <div className="grid gap-4 md:grid-cols-2">
         <ChartCard
           title="Users by Role"
@@ -830,10 +647,8 @@ export function DashboardPage() {
           )}
         </ChartCard>
       </div>
-      )}
 
       {/* ── Quick actions + Recent Activity ────────────────────────────────── */}
-      {!isFinance(user) && (
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard title="Quick Actions" subtitle="Navigate the platform">
           <div className="space-y-2 pt-1">
@@ -874,32 +689,29 @@ export function DashboardPage() {
           </div>
         </ChartCard>
 
-        <Card className="shadow-xs lg:col-span-2">
-          <ChartCard title="Recent Activity" subtitle="Latest platform actions">
-            <div className="space-y-3 max-h-56 overflow-y-auto">
-              {(stats?.recentActivity ?? []).length === 0 ? (
-                <p className="text-sm text-text-tertiary py-4 text-center">No recent activity</p>
-              ) : (
-                (stats?.recentActivity ?? []).slice(0, 10).map((entry) => (
-                  <div key={entry.id} className="flex items-start gap-3 text-sm">
-                    <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-text leading-snug">{entry.description}</p>
-                      <p className="text-xs text-text-tertiary mt-0.5">
-                        {entry.performedBy} &middot;{' '}
-                        {entry.performedAt
-                          ? format(parseISO(entry.performedAt), 'MMM d, h:mm a')
-                          : entry.performedAt}
-                      </p>
-                    </div>
+        <ChartCard title="Recent Activity" subtitle="Latest platform actions" className="lg:col-span-2">
+          <div className="space-y-3 max-h-56 overflow-y-auto">
+            {(stats?.recentActivity ?? []).length === 0 ? (
+              <p className="text-sm text-text-tertiary py-4 text-center">No recent activity</p>
+            ) : (
+              (stats?.recentActivity ?? []).slice(0, 10).map((entry) => (
+                <div key={entry.id} className="flex items-start gap-3 text-sm">
+                  <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-text leading-snug">{entry.description}</p>
+                    <p className="text-xs text-text-tertiary mt-0.5">
+                      {entry.performedBy} &middot;{' '}
+                      {entry.performedAt
+                        ? format(parseISO(entry.performedAt), 'MMM d, h:mm a')
+                        : entry.performedAt}
+                    </p>
                   </div>
-                ))
-              )}
-            </div>
-          </ChartCard>
-        </Card>
+                </div>
+              ))
+            )}
+          </div>
+        </ChartCard>
       </div>
-      )}
     </div>
   )
 }

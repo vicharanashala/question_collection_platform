@@ -78,7 +78,7 @@ export function AreaChartComponent({
             tick={{ fontSize: 11, fill: 'hsl(var(--text-tertiary))' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}
+            tickFormatter={(v) => typeof v === 'number' ? v.toLocaleString() : v}
           />
         )}
         <Tooltip
