@@ -81,6 +81,23 @@ export default function ReportsPage() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
 
+  const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null)
+
+  const handlePriorityChange = async (reportId: string, priority: string) => {
+    setUpdatingPriorityId(reportId)
+    try {
+      await reportsApi.updatePriority(reportId, priority)
+      setItems((prev) =>
+        prev.map((r) => (r.id === reportId ? { ...r, priority: priority as Report['priority'] } : r)),
+      )
+      toast.success('Priority updated')
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to update priority'))
+    } finally {
+      setUpdatingPriorityId(null)
+    }
+  }
+
   const limit = 20
 
   const fetchReports = useCallback(async () => {
@@ -237,9 +254,20 @@ export default function ReportsPage() {
                   </Badge>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge className={PRIORITY_COLORS[report.priority] ?? 'bg-surface-variant text-text'}>
-                    {report.priority}
-                  </Badge>
+                  <Select
+                    value={report.priority}
+                    onValueChange={(p) => handlePriorityChange(report.id, p)}
+                    disabled={updatingPriorityId === report.id}
+                  >
+                    <SelectTrigger className={`w-24 h-6 text-xs ${PRIORITY_COLORS[report.priority] ?? 'bg-surface-variant text-text'}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRIORITY_OPTIONS.filter((o) => o.value).map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </td>
                 <td className="px-4 py-3">
                   <Badge className={STATUS_COLORS[report.status] ?? 'bg-surface-variant text-text'}>

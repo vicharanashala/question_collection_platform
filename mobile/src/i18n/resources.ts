@@ -721,7 +721,7 @@ const resources = {
       "collegeNamePlaceholder": "Enter your college name",
       "collegeNameRequired": "College name is required",
       "report": {
-        "title": "Help & Support",
+        "title": "Report an Issue",
         "newReport": "New Report",
         "myReports": "My Reports",
         "category": "Category",

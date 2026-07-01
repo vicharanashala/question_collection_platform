@@ -422,7 +422,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="flag-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Help & Support</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('report.title')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
