@@ -228,6 +228,7 @@ export enum NotificationType {
 export enum NotificationTriggerType {
   QUESTION = 'question',
   WITHDRAW = 'withdraw',
+  REPORT = 'report',
 }
 
 export interface AppNotification {

@@ -293,7 +293,7 @@ export class ReportsService {
     const notification = this.notificationRepo.create({
       userId: report.userId,
       type: NotificationType.REPORT_REPLY,
-      triggerType: NotificationTriggerType.SYSTEM,
+      triggerType: NotificationTriggerType.REPORT,
       title: 'Your report has been replied to',
       body,
       data: { reportId, replyId: savedReply.id },

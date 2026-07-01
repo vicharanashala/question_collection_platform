@@ -31,6 +31,8 @@ export enum NotificationTriggerType {
   QUESTION = 'question',
   /** Notification triggered by a withdrawal request action */
   WITHDRAW = 'withdraw',
+  /** Notification triggered by a report reply */
+  REPORT = 'report',
   /** System-generated notification (e.g. payment failure alert) */
   SYSTEM = 'system',
 }

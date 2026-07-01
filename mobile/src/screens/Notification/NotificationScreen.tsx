@@ -151,6 +151,8 @@ export function NotificationScreen() {
               initialStatus: item.data.status as string | undefined,
               initialReason: item.data.reason as string | undefined,
             });
+          } else if (item.triggerType === NotificationTriggerType.REPORT && item.data?.reportId) {
+            navigation.navigate('ReportDetail', { reportId: String(item.data.reportId) });
           }
           return;
         }
@@ -171,12 +173,13 @@ export function NotificationScreen() {
           if (item.triggerType === NotificationTriggerType.QUESTION && item.data?.questionId) {
             navigation.navigate('QuestionDetail', { questionId: String(item.data.questionId) });
           } else if (item.triggerType === NotificationTriggerType.WITHDRAW && item.data?.withdrawalId) {
-            // Navigate directly to the transaction detail screen for this withdrawal
             navigation.navigate('TransactionDetail', {
               withdrawalId: String(item.data.withdrawalId),
               initialStatus: item.data.status as string | undefined,
               initialReason: item.data.reason as string | undefined,
             });
+          } else if (item.triggerType === NotificationTriggerType.REPORT && item.data?.reportId) {
+            navigation.navigate('ReportDetail', { reportId: String(item.data.reportId) });
           }
         } catch {}
       }}
