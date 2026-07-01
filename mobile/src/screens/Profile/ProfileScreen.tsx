@@ -196,187 +196,295 @@ export function ProfileScreen() {
               <Ionicons name="person-outline" size={14} color={c.primary} />
             </View>
             <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
+            <TouchableOpacity
+              style={[styles.editBtn, { backgroundColor: c.primary + '14' }]}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Ionicons name="pencil-outline" size={11} color={c.primary} />
+              <Text style={[styles.editBtnText, { color: c.primary }]}>Edit</Text>
+            </TouchableOpacity>
           </View>
-          <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
 
-            {/* Personal Info */}
-            <Text style={[styles.groupLabel, { color: c.textTertiary }]}>Personal Info</Text>
-            <View style={styles.fieldGrid}>
+          {/* Personal Info */}
+          <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={styles.accountCardHeader}>
+              <Ionicons name="person-circle-outline" size={13} color={c.primary} />
+              <Text style={[styles.accountCardTitle, { color: c.primary }]}>Personal Info</Text>
+            </View>
+            <View style={styles.accountRows}>
               {user?.category && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Category</Text>
-                  <Text style={[styles.fieldValue, { color: c.text, textTransform: 'uppercase' }]}>{user.category}</Text>
+                <View style={styles.accountRow}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="pricetag-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Category</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{categoryLabels[user.category] ?? user.category}</Text>
                 </View>
               )}
               {user?.gender && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Gender</Text>
-                  <Text style={[styles.fieldValue, { color: c.text, textTransform: 'uppercase' }]}>{user.gender}</Text>
+                <View style={styles.accountRow}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="male-female-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Gender</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text, textTransform: 'capitalize' }]}>{user.gender}</Text>
                 </View>
               )}
               {user?.age && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Age</Text>
-                  <Text style={[styles.fieldValue, { color: c.text }]}>{user.age}</Text>
+                <View style={[styles.accountRow, styles.accountRowLast]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="calendar-number-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Age</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.age} yrs</Text>
                 </View>
               )}
             </View>
-
-            <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-
-            {/* Location */}
-            <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Location</Text>
-            <View style={styles.fieldGrid}>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>State</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.state ?? '—'}</Text>
-              </View>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>District</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.district ?? '—'}</Text>
-              </View>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Block</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.block ?? '—'}</Text>
-              </View>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Village</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.village ?? '—'}</Text>
-              </View>
-              {user?.kvk && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>KVK</Text>
-                  <Text style={[styles.fieldValue, { color: c.text }]}>{user.kvk}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Education — students only */}
-            {user?.category === 'student' && (
-              <>
-                <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-                <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Education</Text>
-                <View style={styles.fieldGrid}>
-                  {user?.courseName && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Course</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.courseName}</Text>
-                    </View>
-                  )}
-                  {user?.collegeName && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>College</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.collegeName}</Text>
-                    </View>
-                  )}
-                  {user?.universityName && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>University</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.universityName}</Text>
-                    </View>
-                  )}
-                </View>
-              </>
-            )}
-
-            {/* Farming — farmers only */}
-            {user?.category === 'farmer' && (
-              <>
-                <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-                <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Farming</Text>
-                <View style={styles.fieldGrid}>
-                  {user?.farmSize && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Farm Size</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.farmSize} acres</Text>
-                    </View>
-                  )}
-                  {user?.cropType && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Crop</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.cropType}</Text>
-                    </View>
-                  )}
-                  {user?.season && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Season</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.season}</Text>
-                    </View>
-                  )}
-                </View>
-              </>
-            )}
           </View>
+
+          {/* Location */}
+          <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={styles.accountCardHeader}>
+              <Ionicons name="location-outline" size={13} color={c.primary} />
+              <Text style={[styles.accountCardTitle, { color: c.primary }]}>Location</Text>
+            </View>
+            <View style={styles.accountRows}>
+              {user?.state && (
+                <View style={styles.accountRow}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="map-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>State</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.state}</Text>
+                </View>
+              )}
+              {user?.district && (
+                <View style={styles.accountRow}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>District</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.district}</Text>
+                </View>
+              )}
+              {user?.block && (
+                <View style={styles.accountRow}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Block</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.block}</Text>
+                </View>
+              )}
+              {user?.village && (
+                <View style={styles.accountRow}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="home-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Village</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.village}</Text>
+                </View>
+              )}
+              {user?.kvk && (
+                <View style={[styles.accountRow, styles.accountRowLast]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="school-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>KVK</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.kvk}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Education — students only */}
+          {user?.category === 'student' && (
+            <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+              <View style={styles.accountCardHeader}>
+                <Ionicons name="school-outline" size={13} color={c.primary} />
+                <Text style={[styles.accountCardTitle, { color: c.primary }]}>Education</Text>
+              </View>
+              <View style={styles.accountRows}>
+                {user?.courseName && (
+                  <View style={styles.accountRow}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="book-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Course</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.courseName}</Text>
+                  </View>
+                )}
+                {user?.collegeName && (
+                  <View style={styles.accountRow}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>College</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.collegeName}</Text>
+                  </View>
+                )}
+                {user?.universityName && (
+                  <View style={[styles.accountRow, styles.accountRowLast]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>University</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.universityName}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Farming — farmers only */}
+          {user?.category === 'farmer' && (
+            <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+              <View style={styles.accountCardHeader}>
+                <Ionicons name="leaf-outline" size={13} color={c.primary} />
+                <Text style={[styles.accountCardTitle, { color: c.primary }]}>Farming</Text>
+              </View>
+              <View style={styles.accountRows}>
+                {user?.farmSize && (
+                  <View style={styles.accountRow}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="resize-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Farm Size</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.farmSize} acres</Text>
+                  </View>
+                )}
+                {user?.cropType && (
+                  <View style={styles.accountRow}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Crop</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.cropType}</Text>
+                  </View>
+                )}
+                {user?.season && (
+                  <View style={[styles.accountRow, styles.accountRowLast]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="partly-sunny-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Season</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.season}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* ── Organisation details ──────────────────────────── */}
-        {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage || user?.organisationType || user?.organizationName || user?.organizationRole || user?.numberOfFarmers) && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
-                <Ionicons name="business-outline" size={14} color={c.primary} />
+        {(() => {
+          const u = user as any;
+          const hasAny = !!(u.organisationType || u.organizationName || u.organizationRole ||
+            u.numberOfFarmers != null || u.organizationState || u.organizationDistrict ||
+            u.organizationBlock || u.organizationVillage);
+          if (!hasAny) return false;
+          return (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
+                  <Ionicons name="business-outline" size={14} color={c.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
               </View>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
-            </View>
-            <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
 
               {/* Org Info */}
-              <Text style={[styles.groupLabel, { color: c.textTertiary }]}>Organisation</Text>
-              <View style={styles.fieldGrid}>
-                {user?.organisationType && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Org. Type</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organisationType}</Text>
-                  </View>
-                )}
-                {user?.organizationName && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Name</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organizationName}</Text>
-                  </View>
-                )}
-                {user?.organizationRole && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Role</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organizationRole}</Text>
-                  </View>
-                )}
-                {user?.numberOfFarmers != null && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Members</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.numberOfFarmers}</Text>
-                  </View>
-                )}
+              <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                <View style={styles.accountRows}>
+                  {u.organisationType && (
+                    <View style={styles.accountRow}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Org. Type</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.organisationType}</Text>
+                    </View>
+                  )}
+                  {u.organizationName && (
+                    <View style={styles.accountRow}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Name</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationName}</Text>
+                    </View>
+                  )}
+                  {u.organizationRole && (
+                    <View style={styles.accountRow}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Role</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationRole}</Text>
+                    </View>
+                  )}
+                  {u.numberOfFarmers != null && (
+                    <View style={[styles.accountRow, styles.accountRowLast]}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="people-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Members</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.numberOfFarmers}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
 
               {/* Org Location */}
-              {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage) && (
-                <>
-                  <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-                  <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Organisation Location</Text>
-                  <View style={styles.fieldGrid}>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>State</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationState ?? '—'}</Text>
-                    </View>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>District</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationDistrict ?? '—'}</Text>
-                    </View>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Block</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationBlock ?? '—'}</Text>
-                    </View>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Village</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationVillage ?? '—'}</Text>
-                    </View>
+              {(u.organizationState || u.organizationDistrict || u.organizationBlock || u.organizationVillage) && (
+                <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <View style={styles.accountCardHeader}>
+                    <Ionicons name="location-outline" size={13} color={c.primary} />
+                    <Text style={[styles.accountCardTitle, { color: c.primary }]}>Organisation Location</Text>
                   </View>
-                </>
+                  <View style={styles.accountRows}>
+                    {u.organizationState && (
+                      <View style={styles.accountRow}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="map-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>State</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationState}</Text>
+                      </View>
+                    )}
+                    {u.organizationDistrict && (
+                      <View style={styles.accountRow}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>District</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationDistrict}</Text>
+                      </View>
+                    )}
+                    {u.organizationBlock && (
+                      <View style={styles.accountRow}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Block</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationBlock}</Text>
+                      </View>
+                    )}
+                    {u.organizationVillage && (
+                      <View style={[styles.accountRow, styles.accountRowLast]}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="home-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Village</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationVillage}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
               )}
             </View>
-          </View>
-        )}
+          );
+        })()}
 
         {/* ── Crops ──────────────────────────────────────────── */}
         {userCrops.length > 0 && (
@@ -479,7 +587,7 @@ const styles = StyleSheet.create({
 
   // ── Shared
   section: { paddingHorizontal: tokens.spacing4, marginBottom: tokens.spacing5 },
-  sectionTitle: { fontSize: 14, fontWeight: '700' },
+  sectionTitle: { fontSize: 14, fontWeight: '700', flex: 1 },
   sectionTitleRow: {
     flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2,
     marginBottom: tokens.spacing3, paddingLeft: 2,
@@ -537,6 +645,52 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+
+  // ── Account section (new)
+  editBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: tokens.spacing1 + 1,
+    borderRadius: tokens.radiusFull,
+    gap: 4,
+  },
+  editBtnText: { fontSize: 12, fontWeight: '700' },
+
+  accountCard: {
+    borderRadius: tokens.radiusMd,
+    marginBottom: tokens.spacing3,
+    overflow: 'hidden',
+  },
+  accountCardHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: tokens.spacing2,
+    paddingHorizontal: tokens.spacing4,
+    paddingTop: tokens.spacing4,
+    paddingBottom: tokens.spacing3,
+  },
+  accountCardTitle: {
+    fontSize: 13, fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  accountRows: {
+    borderTopWidth: 1,
+    // c.borderSubtle resolves to '#E5E7EB' (light) / '#334155' (dark) — inline to avoid runtime access in StyleSheet.create
+    borderTopColor: '#E5E7EB',
+  },
+  accountRow: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: tokens.spacing3,
+    borderBottomWidth: 1,
+    // c.borderSubtle resolves to '#E5E7EB' (light) / '#334155' (dark) — inline to avoid runtime access in StyleSheet.create
+    borderBottomColor: '#E5E7EB',
+  },
+  accountRowLast: { borderBottomWidth: 0 },
+  accountRowLeft: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
+  accountLabel: { fontSize: 13, fontWeight: '500' },
+  accountValue: { fontSize: 13, fontWeight: '600', textAlign: 'right', flex: 1, marginLeft: tokens.spacing3 },
 
   // ── Hero
   heroCard: {
