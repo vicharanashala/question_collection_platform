@@ -40,9 +40,9 @@ services:
       --appendonly yes
       --maxmemory 2gb
       --maxmemory-policy allkeys-lru
-      --requirepass ${REDIS_PASSWORD:***
+      --requirepass ${REDIS_PASSWORD:-redis_default_pass}
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:***', 'ping']
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-redis_default_pass}', 'ping']
       interval: 30s
       timeout: 5s
       retries: 3
