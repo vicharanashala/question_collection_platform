@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
 import {
   databaseConfig,
@@ -47,6 +47,9 @@ import { AiModule } from './ai/ai.module';
 import { ReportsModule } from './reports/reports.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
+import { CacheModule } from './cache/cache.module';
+import { CacheInterceptor } from './cache/interceptors/cache.interceptor';
+import { CacheInvalidationInterceptor } from './cache/interceptors/cache-invalidation.interceptor';
 
 @Module({
   imports: [
@@ -106,6 +109,7 @@ import { HealthController } from './health/health.controller';
     }),
 
     // Feature modules
+    CacheModule,
     AuthModule,
     UserModule,
     QuestionModule,
@@ -135,6 +139,9 @@ import { HealthController } from './health/health.controller';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    // Global cache interceptors
+    { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: CacheInvalidationInterceptor },
   ],
 })
 export class AppModule {}

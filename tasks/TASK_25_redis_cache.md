@@ -1,7 +1,7 @@
 # Task 25: Redis Integration — Caching & In-Memory Data Store
 
 **Module:** Infrastructure  
-**Status:** Pending  
+**Status:** In Progress  
 **Developer:** —  
 **Started:** —  
 **Completed:** —

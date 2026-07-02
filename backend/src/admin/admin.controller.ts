@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Req,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AdminService } from './admin.service';
@@ -37,6 +38,8 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums';
+import { CacheInvalidate } from '../cache/decorators/cache-invalidate.decorator';
+import { Cacheable } from '../cache/decorators/cacheable.decorator';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
@@ -55,6 +58,7 @@ export class AdminController {
   @Post("users")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.CREATED)
+  @CacheInvalidate('analytics:*', 'hot:*')
   async createUser(
     @Body() dto: CreateUserDto,
     @Req() req: AuthenticatedRequest,
@@ -69,6 +73,7 @@ export class AdminController {
   @Get("users")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('admin_users', 60)
   async listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
   }
@@ -76,6 +81,7 @@ export class AdminController {
   @Get("users/:id")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable((args) => `admin_user:${args[0]}`, 120)
   async getUserDetail(@Param("id") id: string) {
     return this.adminService.getUserDetail(id);
   }
@@ -83,6 +89,7 @@ export class AdminController {
   @Post("users/:id/suspend")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
   async suspendUser(
     @Param("id") id: string,
     @Body() body: SuspendUserDto,
@@ -100,6 +107,7 @@ export class AdminController {
   @Post("users/:id/unsuspend")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
   async unsuspendUser(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -110,6 +118,7 @@ export class AdminController {
   @Post("users/:id/verify")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
   async verifyUser(@Param("id") id: string, @Req() req: AuthenticatedRequest) {
     return this.adminService.verifyUser(req.user.id, id);
   }
@@ -120,6 +129,7 @@ export class AdminController {
 
   @Get("questions/queue")
   @HttpCode(HttpStatus.OK)
+  @Cacheable('review_queue', 60)
   async listReviewQueue(@Query() dto: ListReviewQueueDto) {
     return this.adminService.listReviewQueue(dto);
   }
@@ -127,6 +137,7 @@ export class AdminController {
   /** Question quality and volume metrics — curator read-only */
   @Get("questions/metrics")
   @HttpCode(HttpStatus.OK)
+  @Cacheable('question_metrics', 120)
   async getQuestionMetrics(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getQuestionMetrics(dto);
   }
@@ -134,6 +145,7 @@ export class AdminController {
   @Get("questions/:id")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable((args) => `admin_question:${args[0]}`, 120)
   async getQuestion(@Param("id") id: string) {
     return this.adminService.getQuestionForReview(id);
   }
@@ -141,6 +153,7 @@ export class AdminController {
   @Post("questions/:id/review")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('leaderboard:top_users', 'hot:*', 'analytics:*')
   async reviewQuestion(
     @Param("id") id: string,
     @Body() dto: ReviewActionDto,
@@ -157,6 +170,7 @@ export class AdminController {
   @Get("config")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('config', 300)
   async listConfig() {
     return this.adminService.listConfig();
   }
@@ -164,6 +178,7 @@ export class AdminController {
   @Post("config")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.CREATED)
+  @CacheInvalidate('meta:*')
   async createConfig(
     @Body() dto: CreateConfigDto,
     @Req() req: AuthenticatedRequest,
@@ -174,6 +189,7 @@ export class AdminController {
   @Patch("config")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('meta:*', 'hot:reward_tiers')
   async updateConfig(
     @Body() dto: UpdateConfigDto,
     @Req() req: AuthenticatedRequest,
@@ -188,6 +204,7 @@ export class AdminController {
   @Get("analytics/dashboard")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('dashboard', 60)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
   }
@@ -196,6 +213,7 @@ export class AdminController {
   @Get("stats")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('admin_stats', 60)
   async getStats(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getStats(dto);
   }
@@ -203,6 +221,7 @@ export class AdminController {
   @Get("analytics/rewards")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('reward_summary', 120)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getRewardSummary(dto);
   }
@@ -210,6 +229,7 @@ export class AdminController {
   @Get("analytics/reward-logs")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('reward_logs', 60)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.listRewardLogs(dto);
   }
@@ -221,6 +241,7 @@ export class AdminController {
   @Get("fraud")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('fraud_stats', 60)
   async getFraudStats(
     @Query() dto: { page?: number; limit?: number; state?: string },
   ) {
@@ -235,6 +256,7 @@ export class AdminController {
   @Get("wallets")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('admin_wallets', 60)
   async listAllWallets(@Query() dto: ListAllWalletsDto) {
     return this.adminService.listAllWallets(dto);
   }
@@ -243,6 +265,7 @@ export class AdminController {
   @Get("wallets/user/:userId")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable((args) => `admin_wallet:${args[0]}`, 60)
   async getUserWallet(@Param("userId") userId: string) {
     return this.adminService.getUserWallet(userId);
   }
@@ -251,6 +274,7 @@ export class AdminController {
   @Get("wallets/user/:userId/transactions")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable((args) => `admin_user_transactions:${args[0]}`, 60)
   async listUserTransactions(
     @Param("userId") userId: string,
     @Query() dto: ListUserTransactionsDto,
@@ -262,6 +286,7 @@ export class AdminController {
   @Get("wallets/user/:userId/withdrawals")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable((args) => `admin_user_withdrawals:${args[0]}`, 60)
   async listUserWithdrawals(
     @Param("userId") userId: string,
     @Query() dto: ListUserWithdrawalsDto,
@@ -273,6 +298,7 @@ export class AdminController {
   @Post("wallets/adjust")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('wallet:*')
   async adjustWalletBalance(
     @Body() dto: AdjustWalletDto,
     @Req() req: AuthenticatedRequest,
@@ -284,6 +310,7 @@ export class AdminController {
   @Get("analytics/financial-summary")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('financial_summary', 60)
   async getFinancialSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getFinancialSummary(dto);
   }
@@ -295,6 +322,7 @@ export class AdminController {
   @Get("withdrawals")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable('withdrawals_list', 60)
   async listWithdrawals(@Query() dto: ListWithdrawalsDto) {
     return this.adminService.listWithdrawals(dto);
   }
@@ -302,6 +330,7 @@ export class AdminController {
   @Get("withdrawals/:id")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @Cacheable((args) => `admin_withdrawal:${args[0]}`, 60)
   async getWithdrawalWithTransactions(@Param("id") id: string) {
     return this.adminService.getWithdrawalWithTransactions(id);
   }
@@ -309,6 +338,7 @@ export class AdminController {
   @Post("withdrawals/:id/process")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('wallet:*')
   async processWithdrawal(
     @Param("id") id: string,
     @Body() dto: ProcessWithdrawalDto,
@@ -326,6 +356,7 @@ export class AdminController {
   @Post("withdrawals/:id/retry")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('wallet:*')
   async retryWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -341,6 +372,7 @@ export class AdminController {
   @Post("withdrawals/:id/retry-refund")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('wallet:*')
   async retryFailedWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -352,6 +384,7 @@ export class AdminController {
   @Post("withdrawals/:id/fail")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('wallet:*')
   async markWithdrawalFailed(
     @Param("id") id: string,
     @Body() dto: MarkWithdrawalFailedDto,
@@ -364,6 +397,7 @@ export class AdminController {
   @Patch("withdrawals/:id/failure-reason")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('wallet:*')
   async updateWithdrawalFailureReason(
     @Param("id") id: string,
     @Body() dto: UpdateWithdrawalFailureReasonDto,
@@ -374,5 +408,19 @@ export class AdminController {
       id,
       dto.reason,
     );
+  }
+
+  /** Super admin only: flush cache keys matching a pattern. */
+  @Post('cache/flush')
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async flushCache(
+    @Body() body: { keyPattern: string },
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (!body.keyPattern || !body.keyPattern.trim()) {
+      throw new BadRequestException('keyPattern is required');
+    }
+    return this.adminService.flushCache(body.keyPattern.trim());
   }
 }

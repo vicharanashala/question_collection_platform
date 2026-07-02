@@ -18,6 +18,14 @@ export const redisConfig = registerAs('redis', () => ({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || undefined,
+  db: parseInt(process.env.REDIS_DB || '0', 10),
+  tls: process.env.REDIS_TLS === 'true',
+  // Rate limits (environment-specific, kept configurable)
+  rateLimitOtpPerMin: parseInt(process.env.RATE_LIMIT_OTP_PER_MIN || '3', 10),
+  rateLimitSubmissionPerMin: parseInt(process.env.RATE_LIMIT_SUBMISSION_PER_MIN || '10', 10),
+  rateLimitLoginPerMin: parseInt(process.env.RATE_LIMIT_LOGIN_PER_MIN || '5', 10),
+  rateLimitAdminPerMin: parseInt(process.env.RATE_LIMIT_ADMIN_PER_MIN || '100', 10),
+  rateLimitPublicPerMin: parseInt(process.env.RATE_LIMIT_PUBLIC_PER_MIN || '60', 10),
 }));
 
 export const smsConfig = registerAs('sms', () => ({

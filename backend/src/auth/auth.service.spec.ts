@@ -7,7 +7,7 @@ import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
-import { RedisService } from './redis.service';
+import { RedisService } from '../cache/redis.service';
 import { AdminService } from '../admin/admin.service';
 import { User, Wallet, AuditLog } from '../database/entities';
 import {

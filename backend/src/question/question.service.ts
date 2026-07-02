@@ -20,6 +20,9 @@ import { StorageService } from '../storage/storage.service';
 import { GemmaService } from '../ai/gemma.service';
 import { GdbService } from '../ai/gdb.service';
 import { EmbedService } from '../ai/embed.service';
+import { DuplicateDetectionService } from '../cache/duplicate-detection.service';
+import { AnalyticsCacheService } from '../cache/analytics-cache.service';
+import { HotDataService } from '../cache/hot-data.service';
 
 @Injectable()
 export class QuestionService {
@@ -37,6 +40,9 @@ export class QuestionService {
     private readonly gemmaService: GemmaService,
     private readonly gdbService: GdbService,
     private readonly embedService: EmbedService,
+    private readonly duplicateDetectionService: DuplicateDetectionService,
+    private readonly analyticsCacheService: AnalyticsCacheService,
+    private readonly hotDataService: HotDataService,
   ) {}
 
   // ─── Submit ──────────────────────────────────────────────────────────────────
@@ -110,19 +116,20 @@ export class QuestionService {
     const now = new Date();
     const editWindowClosesAt = new Date(now.getTime() + editWindowSec * 1000);
 
-    // 3. Check for exact-duplicate question
-    const existingDuplicate = await this.questionRepo.findOne({
-      where: { questionText: dto.questionText },
-      select: ['id'],
-    });
-    const isDuplicate = !!existingDuplicate;
-
-    // 4. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
+    // 3. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
-
-    // Use Gemma-inferred crop/domains as defaults when not supplied by the user
     const cropType = dto.cropType?.trim() || inferred.crop;
     const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
+
+    // 4. Fast exact-duplicate gate via Redis — throws ConflictException (HTTP 409) if exact dup found.
+    //    cropType must be resolved above first.
+    const userIdNum = parseInt(userId, 10);
+    await this.duplicateDetectionService.checkDuplicate(
+      userIdNum,
+      dto.state ?? '',
+      cropType,
+      dto.questionText,
+    );
 
     // 4b. GDB semantic duplicate check — run before saving so we can return early with
     //     the matched Q&A pair for the mobile app to display instead of blocking silently.
@@ -147,13 +154,24 @@ export class QuestionService {
       };
     }
 
-    // 5. Derive agro-climatic zone from state when not provided
+    // 5. Record in Redis dup index (only after all duplicate checks pass).
+    await this.duplicateDetectionService.recordQuestion(
+      userIdNum,
+      dto.state ?? '',
+      cropType,
+      dto.questionText,
+    );
+
+    // 6. Update real-time analytics counters
+    await this.analyticsCacheService.onQuestionSubmitted().catch(() => {/* best-effort */});
+
+    // 7. Derive agro-climatic zone from state when not provided
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
 
-    // 6. Low-confidence submissions go to human review
+    // 8. Low-confidence submissions go to human review
     const status: QuestionStatus = inferred.confidence < 0.9
       ? QuestionStatus.HUMAN_REVIEW
-      : (isDuplicate ? QuestionStatus.REJECTED : QuestionStatus.PENDING);
+      : QuestionStatus.PENDING;
 
     // 7. Validate domains against allowed list
     const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));
@@ -202,15 +220,19 @@ export class QuestionService {
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
-    // 11. Send duplicate notification after saving
-    if (isDuplicate) {
+    // 11. Send semantic-duplicate notification after saving (Redis exact-dup throws before this)
+    if (duplicateResult.isDuplicate) {
       await this.notifRepo.save(
         this.notifRepo.create({
           userId,
           type: NotificationType.DUPLICATE_QUESTION,
-          title: 'Duplicate Question Rejected',
-          body: `Your question "${dto.questionText.slice(0, 80)}" was rejected because an identical question already exists in our system.`,
-          data: { questionId: saved.id, duplicateOf: existingDuplicate?.id },
+          title: 'Similar Question Found',
+          body: `Your question "${dto.questionText.slice(0, 80)}" was flagged as similar to an existing question.`,
+          data: {
+            questionId: saved.id,
+            matchedQuestionId: duplicateResult.matchedQuestionId,
+            similarityScore: duplicateResult.similarityScore,
+          },
           triggerType: NotificationTriggerType.QUESTION,
         }),
       );
@@ -220,7 +242,7 @@ export class QuestionService {
       id: saved.id,
       status: saved.status,
       editWindowClosesAt: editWindowClosesAt.toISOString(),
-      message: isDuplicate ? 'Duplicate question rejected' : 'Question submitted successfully',
+      message: duplicateResult.isDuplicate ? 'Duplicate question flagged' : 'Question submitted successfully',
     };
   }
 

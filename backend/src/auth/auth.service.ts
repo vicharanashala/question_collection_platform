@@ -22,7 +22,7 @@ import {
 } from '../common/enums';
 import { RequestOtpDto, VerifyOtpDto, RegisterDto } from './dto';
 import { SmsService } from './sms.service';
-import { RedisService } from './redis.service';
+import { RedisService } from '../cache/redis.service';
 import { AdminService } from '../admin/admin.service';
 
 export interface AuthTokens {

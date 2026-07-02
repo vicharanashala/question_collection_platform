@@ -10,6 +10,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, ILike, Between, In, DataSource } from 'typeorm';
+import { RedisService } from '../cache/redis.service';
+import { HotDataService } from '../cache/hot-data.service';
+import { AnalyticsCacheService } from '../cache/analytics-cache.service';
 import {
   User,
   Question,
@@ -170,6 +173,9 @@ export class AdminService implements OnModuleInit {
     private readonly notificationsService: NotificationsService,
     private readonly pinelabsService: PinelabsService,
     private readonly razorpayPayoutService: RazorpayPayoutService,
+    private readonly redisService: RedisService,
+    private readonly hotDataService: HotDataService,
+    private readonly analyticsCacheService: AnalyticsCacheService,
   ) {}
 
   private readonly logger = new Logger(AdminService.name);
@@ -664,6 +670,13 @@ export class AdminService implements OnModuleInit {
         approvedCount: rewardTierCount,
       });
 
+      // Update Redis caches: leaderboard score + analytics counters
+      await Promise.all([
+        this.hotDataService.incrementLeaderboardScore(Number(question.userId), 1),
+        this.analyticsCacheService.onQuestionApproved(),
+        this.hotDataService.incrementTodayApprovals(),
+      ]).catch((err) => this.logger.warn(`Redis cache update failed after approval: ${err.message}`));
+
       await this.logAudit({
         actorType,
         actorId: reviewerId,
@@ -705,6 +718,9 @@ export class AdminService implements OnModuleInit {
         reviewedAt: new Date(),
         rejectionReason: dto.reason ?? null,
       });
+      await this.analyticsCacheService.onQuestionRejected().catch(
+        (err) => this.logger.warn(`Redis cache update failed after rejection: ${err.message}`),
+      );
       await this.logAudit({
         actorType,
         actorId: reviewerId,
@@ -3280,5 +3296,12 @@ export class AdminService implements OnModuleInit {
       newValue: params.newValue ?? null,
       metadata: params.metadata ?? null,
     });
+  }
+
+  /** Flush cache keys matching a pattern. Super admin only. */
+  async flushCache(keyPattern: string): Promise<{ flushed: number }> {
+    const count = await this.redisService.delByPattern(keyPattern);
+    this.logger.log(`Cache flush: ${count} keys deleted matching "${keyPattern}"`);
+    return { flushed: count };
   }
 }
