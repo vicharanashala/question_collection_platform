@@ -40,6 +40,7 @@ All four client surfaces share the same Redis infrastructure:
 - Cache invalidation is explicit and triggered on write operations (no TTL-only expiry reliance for business-critical data)
 - No cross-tenant data leakage — Redis `SELECT` or key-namespacing per tenant when applicable
 - The system degrades gracefully if Redis is unavailable (fallback to direct DB/ computation)
+- **Hosting recommendation:** Self-hosted Redis on your own server is recommended over GCP Memorystore — zero extra cost, same network, no cross-cloud latency. See sub-task 12 for setup guide.
 
 ---
 
@@ -47,7 +48,8 @@ All four client surfaces share the same Redis infrastructure:
 
 ### 1. Infrastructure & Configuration
 > **Note:** An existing `RedisService` already lives in `backend/src/auth/redis.service.ts`. Move it to `backend/src/cache/redis.service.ts` and extend it — do not rewrite it. OTP rate limiting in `auth/` depends on it.
-> **Dev vs Prod:** In-memory fallback already exists and stays intact. Add `REDIS_ENABLED=false` to `.env` for development so the app never attempts a Redis connection and always uses `InMemoryStore`. Production (no flag or `REDIS_ENABLED=true`) uses `ioredis`. The `InMemoryStore` class must not be removed.
+> **Dev vs Prod:** In-memory fallback already exists and stays intact. Set `REDIS_ENABLED=false` in dev `.env` so the app never attempts a Redis connection and always uses `InMemoryStore`. Production (no flag or `REDIS_ENABLED=true`) uses `ioredis`. The `InMemoryStore` class must not be removed.
+> **Self-hosted Redis:** Recommended over GCP Memorystore if the app runs on your own server — saves cost, same network, no latency penalty. See section "Redis Server Setup Guide" below for deployment instructions.
 - [ ] Move `backend/src/auth/redis.service.ts` → `backend/src/cache/redis.service.ts`
 - [ ] Add `REDIS_ENABLED` env flag: when `false`, skip `ioredis` connection entirely and use `InMemoryStore` from the start (no warning log). When `true` or unset, attempt `ioredis` connection.
 - [ ] Extend `RedisService` with missing methods:
@@ -162,6 +164,80 @@ All four client surfaces share the same Redis infrastructure:
 - [ ] Add Redis error handling: on connection failure, log error and fall back to direct DB (never block the request)
 - [ ] Add `X-Cache-Key` and `X-Cache-TTL` response headers for debugging
 
+### 12. Redis Server Setup Guide (Self-Hosted)
+> For teams running the app on their own server. Skip if using GCP Memorystore.
+
+#### Docker (recommended)
+```bash
+docker run -d \
+  --name redis \
+  -p 127.0.0.1:6379:6379 \
+  -v /opt/redis/data:/data \
+  redis:7-alpine \
+  redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
+```
+
+#### Docker Compose (production)
+```yaml
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - /opt/redis/data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass "${REDIS_PASSWORD}"
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --bind 127.0.0.1 <your-private-ip>
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+```
+
+#### Security Checklist (mandatory before production)
+```conf
+# /etc/redis/redis.conf
+bind 127.0.0.1 <your-private-ip>    # NOT 0.0.0.0
+requirepass <strong-password>
+rename-command FLUSHALL ""
+rename-command FLUSHDB ""
+rename-command CONFIG ""
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+appendonly yes
+```
+
+#### TLS (only if app connects from a different network)
+```conf
+tls-port 6380
+port 0
+tls-cert-file /etc/redis/redis.crt
+tls-key-file /etc/redis/redis.key
+tls-ca-cert-file /etc/redis/ca.crt
+```
+Update `.env` when TLS is enabled:
+```env
+REDIS_PORT=6380
+REDIS_TLS=true
+```
+
+#### Connecting the app
+```env
+REDIS_ENABLED=true
+REDIS_HOST=<your-server-private-ip>
+REDIS_PORT=6379
+REDIS_PASSWORD=<your-password>
+REDIS_TLS=false
+```
+
 ---
 
 ## Configuration Reference
@@ -229,6 +305,8 @@ config/docker-compose.yml            # Redis service
 - [ ] No cross-tenant data access (if multi-tenant later)
 - [ ] TypeScript builds clean (`tsc --noEmit`) in backend
 - [ ] Docker Compose brings up Redis with persistence enabled
+- [ ] Self-hosted Redis server accessible from backend with correct `REDIS_HOST` / `REDIS_PASSWORD` / `REDIS_TLS` settings
+- [ ] Redis passes security checklist (password, bind to private IP, `appendonly yes`, maxmemory set)
 
 ---
 
