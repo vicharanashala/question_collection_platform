@@ -12,6 +12,15 @@ export class RedisService implements OnModuleDestroy {
   private client: Redis | InMemoryStore;
 
   constructor(private readonly configService: ConfigService) {
+    const redisEnabled = this.configService.get<boolean>('redis.redisEnabled') ?? true;
+
+    if (!redisEnabled) {
+      // Dev mode: skip Redis entirely, use in-memory store from the start.
+      this.logger.log('REDIS_ENABLED=false — using in-memory store');
+      this.client = new InMemoryStore();
+      return;
+    }
+
     const host = this.configService.get<string>('redis.host') ?? 'localhost';
     const port = this.configService.get<number>('redis.port') ?? 6379;
     const password = this.configService.get<string>('redis.password');

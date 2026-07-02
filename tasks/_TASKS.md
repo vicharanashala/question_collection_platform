@@ -23,6 +23,7 @@ Each task file represents a deliverable to be completed. Task files use the form
 | 16 | Sarvam Audio-to-Text Integration | AI/Transcription | Pending |
 | 17 | Fast2SMS OTP Integration | Auth | Completed |
 | 20 | GCP Bucket (Nearline) + Image Upload | Storage + Question | Pending |
+| 25 | Redis Integration (Caching + Session Store) | Infrastructure | Pending |
 
 ## Progress
 
