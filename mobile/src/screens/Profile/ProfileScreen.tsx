@@ -196,14 +196,14 @@ export function ProfileScreen() {
               <Ionicons name="person-outline" size={14} color={c.primary} />
             </View>
             <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.editBtn, { backgroundColor: c.primary + '14' }]}
               activeOpacity={0.7}
               onPress={() => navigation.navigate('EditProfile')}
             >
               <Ionicons name="pencil-outline" size={11} color={c.primary} />
               <Text style={[styles.editBtnText, { color: c.primary }]}>Edit</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Personal Info */}
