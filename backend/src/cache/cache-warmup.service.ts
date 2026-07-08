@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RedisService } from './redis.service';
@@ -9,10 +9,14 @@ import { Question } from '../database/entities/question.entity';
 import { QuestionStatus } from '../common/enums';
 
 @Injectable()
-export class CacheWarmupService implements OnModuleInit {
+export class CacheWarmupService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CacheWarmupService.name);
   private readonly metadataTtl: number;
   private readonly leaderboardTtl: number;
+  private refreshInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Reconnect warmup — registered on the Redis client
+  private reconnectHandler: () => void;
 
   constructor(
     private readonly redis: RedisService,
@@ -23,10 +27,32 @@ export class CacheWarmupService implements OnModuleInit {
   ) {
     this.metadataTtl = CacheTTL.METADATA;
     this.leaderboardTtl = CacheTTL.LEADERBOARD;
+
+    // Re-run warmup when Redis reconnects (handles Redis restarts)
+    this.reconnectHandler = () => {
+      this.logger.log('Redis reconnected — re-running cache warmup');
+      this.warmAll().catch((err) => this.logger.warn(`Warmup on reconnect failed: ${err.message}`));
+    };
   }
 
   async onModuleInit(): Promise<void> {
     await this.warmAll();
+
+    // Register reconnect handler
+    this.redis.onReconnect(this.reconnectHandler);
+
+    // Periodic refresh every 5 minutes
+    this.refreshInterval = setInterval(() => {
+      if (!this.redis.isBypassed()) {
+        this.refreshHotData().catch((err) =>
+          this.logger.warn(`Periodic warmup failed: ${err.message}`),
+        );
+      }
+    }, 5 * 60 * 1000);
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
   async warmAll(): Promise<void> {
@@ -99,5 +125,17 @@ export class CacheWarmupService implements OnModuleInit {
   /** Called externally when admin updates config — invalidates all metadata cache. */
   async invalidateMetadataCache(): Promise<void> {
     await this.redis.delByPattern('meta:*');
+  }
+
+  /**
+   * Refresh hot/real-time data on a periodic interval (every 5 min).
+   * Skips metadata — only refreshes leaderboard and reward tiers since those
+   * are the data most likely to become stale without a full app restart.
+   */
+  async refreshHotData(): Promise<void> {
+    await Promise.allSettled([
+      this.warmLeaderboard(),
+      this.warmRewardTiers(),
+    ]);
   }
 }

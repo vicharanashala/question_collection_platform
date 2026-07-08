@@ -26,6 +26,9 @@ export const CacheTTL = {
   // ─── Leaderboard ───────────────────────────────────────
   LEADERBOARD:          300,   // 5 minutes
 
+  // ─── Duplicate detection ──────────────────────────────
+  DUPLICATE_DETECTION:  2592000, // 30 days in seconds (30 * 24 * 60 * 60)
+
   // ─── Metadata (admin config, reward tiers) ─────────────
   METADATA:             3600,  // 1 hour
 

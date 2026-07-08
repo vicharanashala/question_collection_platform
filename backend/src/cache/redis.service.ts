@@ -13,6 +13,25 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
   private readonly logger = new Logger(RedisService.name);
   private readonly client: Redis;
 
+  // ─── Circuit breaker state ────────────────────────────────────────────────
+  private readonly CIRCUIT_FAILURE_THRESHOLD = 5;   // open after 5 consecutive failures
+  private readonly CIRCUIT_RECOVERY_TIMEOUT_MS = 30_000; // try again after 30s
+  private _circuitFailures = 0;
+  private _circuitOpenAt = 0;   // timestamp when circuit opened (0 = closed)
+  private _bypassCache = false; // true when circuit is open
+
+  private get circuitOpen(): boolean {
+    if (this._circuitOpenAt === 0) return false;
+    if (Date.now() - this._circuitOpenAt > this.CIRCUIT_RECOVERY_TIMEOUT_MS) {
+      this.logger.log('Circuit breaker: attempting reset after timeout');
+      this._circuitOpenAt = 0;
+      this._circuitFailures = 0;
+      this._bypassCache = false;
+      return false;
+    }
+    return true;
+  }
+
   constructor(private readonly configService: ConfigService) {
     const host = this.configService.get<string>('redis.host') ?? 'localhost';
     const port = this.configService.get<number>('redis.port') ?? 6379;
@@ -43,7 +62,15 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
 
     this.client.on('error', (err) => {
       this.logger.error(`Redis error: ${err.message}`);
-      throw err; // Fail fast — let the process crash so Docker Compose can detect the failure
+      this._circuitFailures++;
+      if (this._circuitFailures >= this.CIRCUIT_FAILURE_THRESHOLD && this._circuitOpenAt === 0) {
+        this._circuitOpenAt = Date.now();
+        this._bypassCache = true;
+        this.logger.warn(
+          `Circuit breaker OPEN — Redis disabled for ${this.CIRCUIT_RECOVERY_TIMEOUT_MS / 1000}s after ${this._circuitFailures} failures`,
+        );
+      }
+      // No longer throwing — circuit breaker handles failure gracefully
     });
 
     this.client.on('connect', () => {
@@ -52,11 +79,16 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
 
     this.client.on('ready', () => {
       this.logger.log('Redis ready');
+      // Reset circuit on clean reconnect
+      this._circuitFailures = 0;
+      this._circuitOpenAt = 0;
+      this._bypassCache = false;
     });
 
     this.client.on('close', () => {
       this.logger.error('Redis connection closed');
-      throw new Error('Redis connection closed unexpectedly');
+      this._circuitFailures++;
+      this._bypassCache = true;
     });
   }
 
@@ -68,17 +100,121 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     await this.client.quit().catch(() => {/* ignore */});
   }
 
+  // ─── Circuit breaker helpers ────────────────────────────────────────────────
+
+  private recordFailure(err: any): void {
+    this._circuitFailures++;
+    if (this._circuitFailures >= this.CIRCUIT_FAILURE_THRESHOLD && this._circuitOpenAt === 0) {
+      this._circuitOpenAt = Date.now();
+      this._bypassCache = true;
+      this.logger.warn(
+        `Circuit breaker OPEN — Redis disabled for ${this.CIRCUIT_RECOVERY_TIMEOUT_MS / 1000}s after ${this._circuitFailures} failures: ${err.message}`,
+      );
+    }
+  }
+
+  /** Whether cache reads/writes are currently being bypassed due to Redis being down. */
+  isBypassed(): boolean {
+    return this._bypassCache;
+  }
+
+  /** Current circuit state for health monitoring. */
+  getCircuitState(): { open: boolean; failures: number; since: number } {
+    return {
+      open: this.circuitOpen,
+      failures: this._circuitFailures,
+      since: this._circuitOpenAt,
+    };
+  }
+
+  /**
+   * Register a callback to run every time the Redis client reconnects.
+   * Used by CacheWarmupService to re-run warmup on Redis restarts.
+   */
+  onReconnect(handler: () => void): void {
+    this.client.on('reconnecting', handler);
+  }
+
+  // ─── Stampede protection ─────────────────────────────────────────────────────
+
+  /**
+   * Get a value from cache, or compute and cache it with stampede protection.
+   *
+   * If the key is missing, only one caller will compute the value (via SETNX lock).
+   * All other callers wait and then read the newly cached result.
+   *
+   * @param key          Redis key
+   * @param factory      Async function to compute the value on cache miss
+   * @param ttlSeconds   TTL for the cached value
+   * @param lockTtlSec   TTL for the lock key (default 30s, prevents deadlock)
+   * @param waitMs       How long to wait before re-reading cache (default 100ms)
+   */
+  async getOrSet<T = string>(
+    key: string,
+    factory: () => Promise<T>,
+    ttlSeconds: number,
+    lockTtlSec = 30,
+    waitMs = 100,
+  ): Promise<T> {
+    const cached = await this.get(key);
+    if (cached !== null) return JSON.parse(cached) as T;
+
+    const lockKey = `lock:${key}`;
+    const acquired = await this.setnx(lockKey, '1');
+
+    if (acquired) {
+      try {
+        // Set expiry on lock so it auto-releases if holder crashes
+        await this.client.expire(lockKey, lockTtlSec);
+        const value = await factory();
+        await this.set(key, JSON.stringify(value), ttlSeconds);
+        return value;
+      } finally {
+        // Release lock — ignore errors if Redis is already closing
+        await this.del(lockKey).catch(() => {/* ignore */});
+      }
+    }
+
+    // Another process is rebuilding — wait and read again
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    const retry = await this.get(key);
+    if (retry !== null) return JSON.parse(retry) as T;
+
+    // Still missing — fall back to factory (degraded but functional)
+    return factory();
+  }
+
   // ─── Core operations ─────────────────────────────────────────────────────────
 
   async get(key: string): Promise<string | null> {
-    return this.client.get(key);
+    if (this.circuitOpen) {
+      this.logger.debug(`Circuit open — bypassing Redis GET for "${key}"`);
+      return null;
+    }
+    try {
+      const result = await this.client.get(key);
+      this._circuitFailures = 0;
+      return result;
+    } catch (err: any) {
+      this.recordFailure(err);
+      return null;
+    }
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (ttlSeconds !== undefined) {
-      await this.client.set(key, value, 'EX', ttlSeconds);
-    } else {
-      await this.client.set(key, value);
+    if (this.circuitOpen) {
+      this.logger.debug(`Circuit open — bypassing Redis SET for "${key}"`);
+      return;
+    }
+    try {
+      if (ttlSeconds !== undefined) {
+        await this.client.set(key, value, 'EX', ttlSeconds);
+      } else {
+        await this.client.set(key, value);
+      }
+      this._circuitFailures = 0;
+    } catch (err: any) {
+      this.recordFailure(err);
     }
   }
 
@@ -126,6 +262,10 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
 
   async ping(): Promise<string> {
     return this.client.ping();
+  }
+
+  async dbsize(): Promise<number> {
+    return this.client.dbsize();
   }
 
   // ─── Batch helpers ───────────────────────────────────────────────────────────

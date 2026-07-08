@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { RedisService } from './redis.service';
 import { dupKey } from './cache.keys';
+import { CacheTTL } from '../config/cache-ttl.constants';
 
 /**
  * Fast exact-duplicate question detection using Redis.
@@ -49,6 +50,7 @@ export class DuplicateDetectionService {
   /**
    * Record a newly created question in Redis.
    * Uses SETNX so it does NOT overwrite if a key somehow already exists.
+   * Key auto-expires after DUPLICATE_DETECTION_TTL (30 days) to prevent unbounded growth.
    */
   async recordQuestion(
     userId: number,
@@ -58,8 +60,8 @@ export class DuplicateDetectionService {
   ): Promise<void> {
     const normalized = this.normalize(questionText);
     const key = dupKey(userId, state, crop, normalized);
-    // NX = only set if not exists; permanent key (no TTL)
-    await this.redis.setnx(key, '1');
+    // NX = only set if not exists; TTL = 30 days
+    await this.redis.setnxWithTTL(key, '1', CacheTTL.DUPLICATE_DETECTION);
   }
 
   /**

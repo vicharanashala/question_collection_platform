@@ -3,8 +3,49 @@
  * All Redis keys across the application must go through these functions
  * to prevent collisions and enforce a consistent naming convention.
  *
- * Pattern: {domain}:{entity}:{id}:{variant}
+ * ─── Namespace map ────────────────────────────────────────────────────────────
+ *  http:*     → HTTP response caches (written by CacheInterceptor)
+ *  leaderboard:* / hot:* / meta:* / session:* / etc.
+ *              → domain data (written by application code directly)
+ *
+ * CacheInvalidate decorators targeting HTTP caches must use the 'http:' prefix.
+ * The CacheInvalidationInterceptor auto-prefixes patterns, but being explicit
+ * in decorators makes the intent unambiguous.
  */
+
+/** Namespace prefix for HTTP response caches written by CacheInterceptor. */
+export const HTTP_CACHE_PREFIX = 'http:' as const;
+
+/**
+ * Build an HTTP cache key prefix.
+ * @example httpKey('leaderboard')         → 'http:leaderboard'
+ * @example httpKey('admin_users', ':u42') → 'http:admin_users:u42'
+ */
+export function httpKey(prefix: string, suffix = ''): string {
+  return `${HTTP_CACHE_PREFIX}${prefix}${suffix}`;
+}
+
+// ─── HTTP response cache keys ─────────────────────────────────────────────────
+// Used in @Cacheable() and @CacheInvalidate() decorators.
+// CacheInterceptor builds full keys as: http:{prefix}:u{userId}:?{queryParams}
+// CacheInvalidationInterceptor auto-prefixes patterns with 'http:' to match.
+// Using these constants in decorators makes the intent explicit.
+export const HTTP_CACHE = {
+  LEADERBOARD:          'http:leaderboard',
+  ADMIN_USERS:          'http:admin_users',
+  REVIEW_QUEUE:         'http:review_queue',
+  QUESTION_METRICS:     'http:question_metrics',
+  CONFIG:               'http:config',
+  DASHBOARD:            'http:dashboard',
+  ADMIN_STATS:          'http:admin_stats',
+  FINANCIAL_SUMMARY:    'http:financial_summary',
+  REWARD_SUMMARY:       'http:reward_summary',
+  REWARD_LOGS:          'http:reward_logs',
+  FRAUD_STATS:          'http:fraud_stats',
+  ADMIN_WALLETS:        'http:admin_wallets',
+  WITHDRAWALS_LIST:     'http:withdrawals_list',
+} as const;
+export type HttpCacheKey = (typeof HTTP_CACHE)[keyof typeof HTTP_CACHE];
 
 // ─── Session keys ─────────────────────────────────────────────────────────────
 
@@ -74,7 +115,7 @@ export const LEADERBOARD_KEY = 'leaderboard:top_users';
 /**
  * Per-user exact-duplicate question gate.
  * Scope: per-user so one user cannot block another.
- * Key is permanent (no TTL) — cleared only on question deletion.
+ * Key auto-expires after DUPLICATE_DETECTION_TTL (30 days) — cleared on question deletion.
  *
  * @param userId  Submitting user
  * @param state   State code (e.g. KA, MH)
