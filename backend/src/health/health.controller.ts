@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { SkipJwtAuth } from '../auth/decorators/skip-jwt-auth.decorator';
 import { RedisService } from '../cache/redis.service';
 
@@ -21,16 +21,12 @@ export class HealthController {
     let redisStatus = 'unavailable';
     let redisMemory: Record<string, string> = {};
 
-    if (this.redisService.isLive()) {
-      try {
-        await this.redisService.ping();
-        redisStatus = 'connected';
-        redisMemory = await this.redisService.infoMemory();
-      } catch {
-        redisStatus = 'error';
-      }
-    } else {
-      redisStatus = 'using-in-memory-fallback';
+    try {
+      await this.redisService.ping();
+      redisStatus = 'connected';
+      redisMemory = await this.redisService.infoMemory();
+    } catch {
+      redisStatus = 'error';
     }
 
     return {

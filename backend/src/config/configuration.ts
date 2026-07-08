@@ -14,13 +14,12 @@ export const jwtConfig = registerAs('jwt', () => ({
 }));
 
 export const redisConfig = registerAs('redis', () => ({
-  redisEnabled: process.env.REDIS_ENABLED !== 'false', // defaults to true (prod), false in dev .env
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || undefined,
   db: parseInt(process.env.REDIS_DB || '0', 10),
   tls: process.env.REDIS_TLS === 'true',
-  // Rate limits (environment-specific, kept configurable)
+  // Rate limits — set via env vars for each environment
   rateLimitOtpPerMin: parseInt(process.env.RATE_LIMIT_OTP_PER_MIN || '3', 10),
   rateLimitSubmissionPerMin: parseInt(process.env.RATE_LIMIT_SUBMISSION_PER_MIN || '10', 10),
   rateLimitLoginPerMin: parseInt(process.env.RATE_LIMIT_LOGIN_PER_MIN || '5', 10),

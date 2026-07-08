@@ -7,6 +7,8 @@ import {
 } from './cache.keys';
 import { CacheTTL } from '../config/cache-ttl.constants';
 
+type DailyStatField = 'submissions' | 'approvals' | 'rejections' | 'signups';
+
 interface DailyStats {
   date: string;
   submissions: number;
@@ -63,25 +65,33 @@ export class AnalyticsCacheService {
   // ─── Daily aggregates ────────────────────────────────────────────────────────
 
   async getDailyStats(date: string): Promise<DailyStats | null> {
-    const raw = await this.redis.get(analyticsDailyKey(date));
-    return raw ? JSON.parse(raw) : null;
+    const key = analyticsDailyKey(date);
+    const hash = await this.redis.hgetall(key);
+    if (!hash || Object.keys(hash).length === 0) return null;
+    return {
+      date,
+      submissions: parseInt(hash['submissions'] ?? '0', 10),
+      approvals: parseInt(hash['approvals'] ?? '0', 10),
+      rejections: parseInt(hash['rejections'] ?? '0', 10),
+      signups: parseInt(hash['signups'] ?? '0', 10),
+    };
   }
 
   async setDailyStats(stats: DailyStats): Promise<void> {
-    await this.redis.set(analyticsDailyKey(stats.date), JSON.stringify(stats), this.dailyTtl);
+    const key = analyticsDailyKey(stats.date);
+    await this.redis.hset(key, 'submissions', String(stats.submissions));
+    await this.redis.hset(key, 'approvals', String(stats.approvals));
+    await this.redis.hset(key, 'rejections', String(stats.rejections));
+    await this.redis.hset(key, 'signups', String(stats.signups));
+    await this.redis.expire(key, this.dailyTtl);
   }
 
-  async updateDailyStat(date: string, field: keyof Omit<DailyStats, 'date'>, delta = 1): Promise<void> {
+  async updateDailyStat(date: string, field: DailyStatField, delta = 1): Promise<void> {
     const key = analyticsDailyKey(date);
-    const raw = await this.redis.get(key);
-    const stats: DailyStats = raw
-      ? JSON.parse(raw)
-      : { date, submissions: 0, approvals: 0, rejections: 0, signups: 0 };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ((stats as unknown as Record<string, number>)[field] ?? 0) + delta;
-    stats[field] = (stats[field] ?? 0) + delta;
-    await this.redis.set(key, JSON.stringify(stats), this.dailyTtl);
+    // HINCRBY is atomic — no read-modify-write race.  Always reset TTL to keep the
+    // key alive as long as it's being actively written.
+    await this.redis.hincrby(key, field, delta);
+    await this.redis.expire(key, this.dailyTtl);
   }
 
   // ─── Monthly aggregates ──────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
-import { Module, Global, forwardRef } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisService } from './redis.service';
 import { SessionService } from './session.service';
 import { CacheWarmupService } from './cache-warmup.service';
@@ -12,10 +13,11 @@ import { RateLimitGuard } from './guards/rate-limit.guard';
 import { AdminConfig } from '../database/entities/admin-config.entity';
 import { User } from '../database/entities/user.entity';
 import { Question } from '../database/entities/question.entity';
+import { getRateLimitPresets } from './rate-limit-presets';
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminConfig, User, Question])],
+  imports: [TypeOrmModule.forFeature([AdminConfig, User, Question]), ConfigModule],
   providers: [
     RedisService,
     SessionService,
@@ -26,6 +28,13 @@ import { Question } from '../database/entities/question.entity';
     DuplicateDetectionService,
     CacheInterceptor,
     RateLimitGuard,
+    // Pre-configured rate limit presets wired to ConfigService env vars.
+    // Controllers inject this via @Inject('RATE_LIMIT_PRESETS') to use in decorators.
+    {
+      provide: 'RATE_LIMIT_PRESETS',
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => getRateLimitPresets(configService),
+    },
   ],
   exports: [
     RedisService,
@@ -37,6 +46,7 @@ import { Question } from '../database/entities/question.entity';
     DuplicateDetectionService,
     CacheInterceptor,
     RateLimitGuard,
+    'RATE_LIMIT_PRESETS',
   ],
 })
 export class CacheModule {}

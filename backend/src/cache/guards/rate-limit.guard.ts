@@ -29,23 +29,28 @@ export class RateLimitGuard implements CanActivate {
     const response = context.switchToHttp().getResponse() as Response;
 
     const key = this.buildKey(keyPrefix, request, limit, windowSeconds);
-    const ttl = windowSeconds;
 
     try {
       const current = await this.redis.incr(key);
 
       // Set TTL on first request in the window
       if (current === 1) {
-        await this.redis.expire(key, ttl);
+        await this.redis.expire(key, windowSeconds);
       }
 
-      // Expose remaining in headers
+      // Get actual TTL remaining so reset time is accurate regardless of when the window started
+      const ttlRemaining = await this.redis.ttl(key);
+      const resetEpoch = ttlRemaining > 0
+        ? Math.ceil(Date.now() / 1000) + ttlRemaining
+        : Math.ceil(Date.now() / 1000) + windowSeconds;
+
+      // Expose headers
       response.setHeader('X-RateLimit-Limit', String(limit));
       response.setHeader('X-RateLimit-Remaining', String(Math.max(0, limit - current)));
-      response.setHeader('X-RateLimit-Reset', String(Math.ceil(Date.now() / 1000) + ttl));
+      response.setHeader('X-RateLimit-Reset', String(resetEpoch));
 
       if (current > limit) {
-        response.setHeader('Retry-After', String(ttl));
+        response.setHeader('Retry-After', String(ttlRemaining > 0 ? ttlRemaining : windowSeconds));
         throw new HttpException(
           'Too many requests. Please slow down.',
           HttpStatus.TOO_MANY_REQUESTS,

@@ -5,7 +5,6 @@ import { RedisService } from './redis.service';
 import { metaKey, HOT_REWARD_TIERS_KEY, LEADERBOARD_KEY } from './cache.keys';
 import { CacheTTL } from '../config/cache-ttl.constants';
 import { AdminConfig } from '../database/entities/admin-config.entity';
-import { User } from '../database/entities/user.entity';
 import { Question } from '../database/entities/question.entity';
 import { QuestionStatus } from '../common/enums';
 
@@ -19,8 +18,6 @@ export class CacheWarmupService implements OnModuleInit {
     private readonly redis: RedisService,
     @InjectRepository(AdminConfig)
     private readonly adminConfigRepo: Repository<AdminConfig>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
     @InjectRepository(Question)
     private readonly questionRepo: Repository<Question>,
   ) {
@@ -29,11 +26,6 @@ export class CacheWarmupService implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    // Only warm up when Redis is live (skip in-memory dev mode)
-    if (!this.redis.isLive()) {
-      this.logger.log('CacheWarmupService: using in-memory store, skipping warmup');
-      return;
-    }
     await this.warmAll();
   }
 
@@ -47,13 +39,17 @@ export class CacheWarmupService implements OnModuleInit {
     this.logger.log('Cache warmup complete');
   }
 
-  /** Pre-load admin config metadata into Redis. */
+  /** Pre-load admin config metadata into Redis, one key per config entry. */
   private async warmMetadata(): Promise<void> {
     try {
       const configs = await this.adminConfigRepo.find();
+      // Store each config under its own key so none overwrite each other.
+      // Key format: meta:admin_config:{config.key}
+      const pipeline = this.redis.pipeline();
       for (const config of configs) {
-        await this.redis.set(metaKey('admin_config'), JSON.stringify(config), this.metadataTtl);
+        pipeline.set(metaKey(`admin_config:${config.key}`), JSON.stringify(config.value), this.metadataTtl);
       }
+      await pipeline.exec();
       this.logger.debug(`CacheWarmup: cached ${configs.length} admin config entries`);
     } catch (err: any) {
       this.logger.warn(`CacheWarmup: failed to warm metadata: ${err.message}`);
@@ -73,12 +69,15 @@ export class CacheWarmupService implements OnModuleInit {
         .limit(100)
         .getRawMany();
 
-      // Clear and rebuild
-      await this.redis.del(LEADERBOARD_KEY);
+      // Batch all writes into a single pipeline round-trip.
+      const pipeline = this.redis.pipeline();
+      pipeline.del(LEADERBOARD_KEY);
       for (const { userId, approvedCount } of results) {
-        await this.redis.zadd(LEADERBOARD_KEY, approvedCount, userId.toString());
+        pipeline.zadd(LEADERBOARD_KEY, approvedCount, userId.toString());
       }
-      await this.redis.expire(LEADERBOARD_KEY, this.leaderboardTtl);
+      pipeline.expire(LEADERBOARD_KEY, this.leaderboardTtl);
+      await pipeline.exec();
+
       this.logger.debug(`CacheWarmup: leaderboard seeded with ${results.length} users`);
     } catch (err: any) {
       this.logger.warn(`CacheWarmup: failed to warm leaderboard: ${err.message}`);

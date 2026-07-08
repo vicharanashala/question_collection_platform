@@ -48,10 +48,16 @@ export class HotDataService {
 
   /** Decrement on question rejection/un-approval (if applicable). */
   async decrementLeaderboardScore(userId: number, delta = 1): Promise<void> {
-    const newScore = await this.redis.zincrby(LEADERBOARD_KEY, -delta, userId.toString());
-    if (parseFloat(newScore) <= 0) {
-      await this.redis.zrem(LEADERBOARD_KEY, userId.toString());
-    }
+    // Atomic Lua script: decrement and remove only if score drops to <= 0.
+    // Two concurrent decrements can no longer both miss the remove condition.
+    const script = `
+      local newScore = redis.call('ZINCRBY', KEYS[1], -ARGV[1], ARGV[2])
+      if tonumber(newScore) <= 0 then
+        redis.call('ZREM', KEYS[1], ARGV[2])
+      end
+      return newScore
+    `;
+    await (this.redis as RedisService).eval(script, 1, LEADERBOARD_KEY, String(delta), userId.toString()).catch(() => {/* best-effort */});
   }
 
   /** Get top N users from the leaderboard with their scores. */
