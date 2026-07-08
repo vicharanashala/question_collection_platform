@@ -1,6 +1,6 @@
-import { Injectable, Logger, ConsoleLogger } from '@nestjs/common';
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { parseStringPromise } from 'xml2js';
+import axios, { AxiosError } from 'axios';
 
 interface CachedData<T> {
   data: T;
@@ -8,7 +8,7 @@ interface CachedData<T> {
 }
 
 interface LgdRecord {
-  [key: string]: string;
+  [key: string]: string | number;
 }
 
 @Injectable()
@@ -20,9 +20,8 @@ export class LgdService {
   private readonly subdistrictsUrl: string;
   private readonly villagesUrl: string;
   private readonly cacheTtlMs: number;
-  private readonly pageSize = 1000;
 
-  // In-memory caches (Keyed by state code / district code)
+  // In-memory caches
   private readonly statesCache = new Map<string, CachedData<LgdRecord[]>>();
   private readonly districtsCache = new Map<string, CachedData<LgdRecord[]>>();
   private readonly subdistrictsCache = new Map<string, CachedData<LgdRecord[]>>();
@@ -38,6 +37,52 @@ export class LgdService {
     this.logger.log(`LGD API configured — cache TTL: ${this.cacheTtlMs / 86_400_000}d`);
   }
 
+  /**
+   * Make a single LGD API request with optional server-side filters.
+   * Uses filters[key]=value params so data.gov.in returns only matching records.
+   */
+  private async makeLGDRequest(
+    apiUrl: string,
+    filters?: Record<string, string | number>,
+  ): Promise<LgdRecord[]> {
+    if (!this.apiKey) {
+      throw new InternalServerErrorException('LGD_API_KEY is not configured');
+    }
+
+    const params: Record<string, string | number> = {
+      'api-key': this.apiKey,
+      format: 'json',
+      limit: 10_000,
+      offset: 0,
+    };
+
+    if (filters) {
+      for (const [key, value] of Object.entries(filters)) {
+        params[`filters[${key}]`] = value;
+      }
+    }
+
+    try {
+      const response = await axios.get(apiUrl, { params, timeout: 30_000 });
+
+      if (!response?.data?.records) {
+        throw new InternalServerErrorException('Invalid LGD API response: records missing');
+      }
+
+      return response.data.records;
+    } catch (err) {
+      if (err instanceof InternalServerErrorException) throw err;
+
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const message =
+        axiosErr?.response?.data?.message ??
+        axiosErr?.message ??
+        'Failed to fetch LGD locations';
+
+      throw new InternalServerErrorException(`LGD service error: ${message}`);
+    }
+  }
+
   /** Returns all villages for a given subdistrict (block) code, sorted by name */
   async getVillages(subdistrictCode: string): Promise<LgdRecord[]> {
     const cached = this.villagesCache.get(subdistrictCode);
@@ -45,14 +90,18 @@ export class LgdService {
       return cached!.data;
     }
 
-    // LGD API ignores the subdistrict_code filter server-side, so fetch all and filter client-side
-    const allRecords = await this.fetchAllPages(this.villagesUrl, {});
-    const filtered = allRecords.filter(
-      (r) => String(r['subdistrict_code'] ?? '').trim() === subdistrictCode,
+    // Use server-side filter so the API returns only villages for this subdistrict
+    // Villages API uses camelCase for both filter keys and response fields
+    const records = await this.makeLGDRequest(this.villagesUrl, {
+      subdistrictCode,
+    });
+
+    // No normalization needed — villages API already uses camelCase keys
+
+    const sorted = records.sort((a, b) =>
+      String(a['villageNameEnglish'] ?? '').localeCompare(String(b['villageNameEnglish'] ?? '')),
     );
-    const sorted = filtered.sort((a, b) =>
-      (a['village_name_english'] ?? '').localeCompare(b['village_name_english'] ?? ''),
-    );
+
     this.villagesCache.set(subdistrictCode, { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} villages for subdistrict ${subdistrictCode}`);
     return sorted;
@@ -65,50 +114,50 @@ export class LgdService {
       return cached!.data;
     }
 
-    const records = await this.fetchAllPages(this.statesUrl, {});
+    const records = await this.makeLGDRequest(this.statesUrl);
+
     const sorted = records.sort((a, b) =>
-      (a['state_name_english'] ?? '').localeCompare(b['state_name_english'] ?? ''),
+      String(a['state_name_english'] ?? '').localeCompare(String(b['state_name_english'] ?? '')),
     );
+
     this.statesCache.set('all', { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} states`);
     return sorted;
   }
 
-  /** Returns all districts for a given state_code, sorted by name */
+  /** Returns all districts for a given state code, sorted by name */
   async getDistricts(stateCode: string): Promise<LgdRecord[]> {
     const cached = this.districtsCache.get(stateCode);
     if (this.isValid(cached)) {
       return cached!.data;
     }
 
-    // LGD API ignores the state_code filter server-side, so fetch all and filter client-side
-    const allRecords = await this.fetchAllPages(this.districtsUrl, {});
-    const filtered = allRecords.filter(
-      (r) => String(r['state_code'] ?? '').trim() === stateCode,
+    // Districts API uses snake_case filter keys and response fields
+    const records = await this.makeLGDRequest(this.districtsUrl, { state_code: stateCode });
+
+    const sorted = records.sort((a, b) =>
+      String(a['district_name_english'] ?? '').localeCompare(String(b['district_name_english'] ?? '')),
     );
-    const sorted = filtered.sort((a, b) =>
-      (a['district_name_english'] ?? '').localeCompare(b['district_name_english'] ?? ''),
-    );
+
     this.districtsCache.set(stateCode, { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} districts for state ${stateCode}`);
     return sorted;
   }
 
-  /** Returns all sub-districts (blocks) for a given district_code, sorted by name */
+  /** Returns all sub-districts (blocks) for a given district code, sorted by name */
   async getSubDistricts(districtCode: string): Promise<LgdRecord[]> {
     const cached = this.subdistrictsCache.get(districtCode);
     if (this.isValid(cached)) {
       return cached!.data;
     }
 
-    // LGD API ignores the subdistrict_code filter server-side, so fetch all and filter client-side
-    const allRecords = await this.fetchAllPages(this.subdistrictsUrl, {});
-    const filtered = allRecords.filter(
-      (r) => String(r['district_code'] ?? '').trim() === districtCode,
+    // Subdistricts API uses snake_case filter keys and response fields
+    const records = await this.makeLGDRequest(this.subdistrictsUrl, { district_code: districtCode });
+
+    const sorted = records.sort((a, b) =>
+      String(a['subdistrict_name_english'] ?? '').localeCompare(String(b['subdistrict_name_english'] ?? '')),
     );
-    const sorted = filtered.sort((a, b) =>
-      (a['subdistrict_name_english'] ?? '').localeCompare(b['subdistrict_name_english'] ?? ''),
-    );
+
     this.subdistrictsCache.set(districtCode, { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} sub-districts for district ${districtCode}`);
     return sorted;
@@ -119,83 +168,17 @@ export class LgdService {
     return Date.now() - cached.fetchedAt < this.cacheTtlMs;
   }
 
-  private async fetchAllPages(url: string, filters: Record<string, string>): Promise<LgdRecord[]> {
-    const records: LgdRecord[] = [];
-    let offset = 0;
-    while (true) {
-      const page = await this.fetchPage(url, filters, offset);
-      records.push(...page.records);
-      if (records.length >= page.total) break;
-      offset += this.pageSize;
+  /**
+   * Convert camelCase keys to snake_case.
+   * Needed because the villages API returns camelCase while all other LGD
+   * APIs return snake_case field names.
+   */
+  private normalizeKeys(record: LgdRecord): LgdRecord {
+    const normalized: LgdRecord = {};
+    for (const [k, v] of Object.entries(record)) {
+      const snakeKey = k.replace(/([A-Z])/g, (_, c) => `_${c.toLowerCase()}`);
+      normalized[snakeKey] = v;
     }
-    return records;
-  }
-
-  private async fetchPage(
-    url: string,
-    filters: Record<string, string>,
-    offset: number,
-  ): Promise<{ records: LgdRecord[]; total: number }> {
-    const params = new URLSearchParams({
-      'api-key': this.apiKey,
-      limit: String(this.pageSize),
-      offset: String(offset),
-      format: 'json',
-      ...filters,
-    });
-
-    const fullUrl = `${url}?${params.toString()}`;
-    const text = await this.httpGet(fullUrl);
-    let parsed: any;
-    try {
-      // LGD returns JSON by default (format=json param is set above)
-      parsed = JSON.parse(text);
-    } catch {
-      // Fall back to XML if the API ignores the format param
-      parsed = await parseStringPromise(text, { explicitArray: false, trim: true });
-    }
-
-    // JSON: top-level { records, total, ... }  |  XML: { result: { records, total, ... } }
-    const result = parsed?.result ?? parsed;
-    if (!result) {
-      this.logger.warn(`LGD: unexpected response from ${url}`, text.slice(0, 200));
-      return { records: [], total: 0 };
-    }
-
-    const rawRecords = result.records;
-    let records: LgdRecord[] = [];
-    if (Array.isArray(rawRecords)) {
-      records = rawRecords;
-    } else if (rawRecords) {
-      records = [rawRecords];
-    }
-
-    return {
-      records,
-      total: parseInt(result.total ?? '0', 10),
-    };
-  }
-
-  private httpGet(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const mod = url.startsWith('https') ? require('https') : require('http');
-      const u = new URL(url);
-      const opts = {
-        hostname: u.hostname,
-        port: u.port,
-        path: u.pathname + u.search,
-        method: 'GET',
-        headers: { 'User-Agent': 'question-collection-platform/1.0' },
-        timeout: 15_000,
-      };
-      const req = mod.request(opts, (res: any) => {
-        let data = '';
-        res.on('data', (chunk: string) => (data += chunk));
-        res.on('end', () => resolve(data));
-      });
-      req.on('error', reject);
-      req.on('timeout', () => reject(new Error(`LGD request timed out: ${url}`)));
-      req.end();
-    });
+    return normalized;
   }
 }
