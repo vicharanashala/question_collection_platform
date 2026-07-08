@@ -379,7 +379,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
           {tx.source === 'withdrawal' && wd && tx.status === 'reversed' && (
             <View style={{ backgroundColor: c.surfaceHighlight ?? '#FEF3E7', borderRadius: 10, padding: 12, marginBottom: 16 }}>
               <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>
-                Your payment was reversed by the bank and the amount has been credited back to your wallet. Please add a different payment detail and try again.
+                Your payment was reversed and the amount has been credited back to your wallet. Please add a different payment detail and try again.
               </Text>
             </View>
           )}

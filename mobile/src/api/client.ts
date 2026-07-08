@@ -19,10 +19,11 @@ import { Platform } from 'react-native';
 const isProduction = process.env.EXPO_PUBLIC_ENV === 'production';
 
 const BASE_URL = isProduction
-  ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api/v1')
-  : (Platform.OS === 'android'
-      ? 'http://10.0.2.2:3000/api/v1'
-      : 'http://localhost:3000/api/v1');
+  ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1")
+  : Platform.OS === "android"
+    ? "https://epiphany-query-same.ngrok-free.dev/api/v1"
+    : // ? 'http://10.0.2.2:3000/api/v1'
+      "http://localhost:3000/api/v1";
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
