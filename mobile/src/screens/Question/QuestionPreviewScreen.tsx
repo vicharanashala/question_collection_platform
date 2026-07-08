@@ -301,8 +301,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                 setSelectedStateCode(stateList.find((s) => s.name === v)?.code ?? '');
                 setSelectedDistrict('');
                 setSelectedDistrictCode('');
+                setBlock('');
                 setBlockList([]);
-                setBlock(user?.block ?? '');
                 setErrors({});
                 setSelectedAgroZone(deriveAgroClimaticZone(v));
                 setLoadingDistricts(true);
@@ -328,8 +328,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               onChange={async (v) => {
                 setSelectedDistrict(v);
                 setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
+                setBlock('');
                 setBlockList([]);
-                setBlock(user?.block ?? '');
                 setErrors({});
                 const code = districtList.find((d) => d.name === v)?.code ?? '';
                 if (!code) return;
@@ -337,8 +337,6 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                 try {
                   const res = await lgdApi.getSubDistricts(code);
                   const lgdBlocks = res.data.subdistricts ?? [];
-                  // Always include the user's profile block if present and not in LGD list
-                  // (municipalities / ULBs may not appear in LGD sub-districts)
                   const profileBlock = user?.block;
                   const alreadyHasProfileBlock = lgdBlocks.some(
                     (b: { code: string; name: string }) => b.name === profileBlock,
@@ -352,7 +350,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               }}
               error={errors.district}
               searchable
-              loading={loadingDistricts}
+              disabled={loadingDistricts || !selectedState}
+              disabledMessage={
+                loadingDistricts
+                  ? t('question.districtLoadingMessage') ?? 'Loading districts…'
+                  : t('question.selectStateFirst') ?? 'Select a state first'
+              }
             />
 
             {/* Block (optional) */}
@@ -363,7 +366,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               options={blockList.map((b) => ({ value: b.name, label: b.name }))}
               onChange={setBlock}
               searchable
-              loading={loadingBlocks}
+              disabled={loadingBlocks || !selectedDistrict}
+              disabledMessage={
+                loadingBlocks
+                  ? t('question.blockLoadingMessage') ?? 'Loading blocks…'
+                  : t('question.selectDistrictFirst') ?? 'Select a district first'
+              }
             />
 
             {/* Agro-Climatic Zone (read-only) */}
