@@ -93,7 +93,11 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    await this.client.connect();
+    try {
+      await this.client.connect();
+    } catch (err: any) {
+      this.logger.error(`Redis connect failed (non-fatal): ${err.message}`);
+    }
   }
 
   async onModuleDestroy(): Promise<void> {

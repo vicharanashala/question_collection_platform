@@ -50,6 +50,7 @@ import { HealthController } from './health/health.controller';
 import { CacheModule } from './cache/cache.module';
 import { CacheInterceptor } from './cache/interceptors/cache.interceptor';
 import { CacheInvalidationInterceptor } from './cache/interceptors/cache-invalidation.interceptor';
+import { EndpointLoggerModule } from './common/endpoint-logger/endpoint-logger.module';
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import { CacheInvalidationInterceptor } from './cache/interceptors/cache-invalid
     }),
 
     // Feature modules
+    EndpointLoggerModule,
     CacheModule,
     AuthModule,
     UserModule,
