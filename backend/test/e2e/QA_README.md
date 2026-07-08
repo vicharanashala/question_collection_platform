@@ -101,7 +101,7 @@ Per-test overrides use `vi.mocked(service.method).mockResolvedValueOnce(...)`.
 
 ## Test Files
 
-### Layer 1 — QuestionSubmit.e2e.test.ts (10 tests ✅)
+### Layer 1 — QuestionSubmit.e2e.test.ts (23 tests ✅)
 
 | # | Test | What it covers |
 |---|---|---|
@@ -112,9 +112,22 @@ Per-test overrides use `vi.mocked(service.method).mockResolvedValueOnce(...)`.
 | 5 | Missing auth → 401 | JWT guard |
 | 6 | Text > 1000 chars → 400 | Validation |
 | 7 | Image without URL → 400 | Media validation |
-| 8 | Edit within 30s → 200 | Edit window |
+| 8 | Edit within 30s → 200 | Edit window open |
 | 9 | Daily limit enforcement | 20th passes, 21st blocked |
 | 10 | Get own questions only | Data isolation |
+| 11 | Edit after window closes → 400 | Edit window expired |
+| 12 | Non-owner edit → 403 | Ownership guard |
+| 13 | GET /questions/:id by owner → 200 | Owner read access |
+| 14 | GET /questions/:id non-owner non-approved → 403 | Non-owner read guard |
+| 15 | GET /questions/:id approved → 200 any user | Approved questions are public |
+| 16 | Pagination (page/limit) | Correct page size and totals |
+| 17 | Status filter | Only matching-status questions returned |
+| 18 | GET /questions/stats/me | dailyCount + remaining = dailyLimit |
+| 19 | Submit video mediaType → 201 | Video media allowed |
+| 20 | Missing required field (state) → 400 | Required field validation |
+| 21 | Empty domains array → 400 | ArrayMinSize(1) validation |
+| 22 | Preview with GDB duplicate in response | Duplicate flag surfaces in preview |
+| 23 | Admin sees all users' questions | Role-based list scope |
 
 
 ---

@@ -1,4 +1,5 @@
 import { config as loadEnv } from 'dotenv';
+import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
 loadEnv({ path: '.env.test' });
@@ -12,4 +13,9 @@ export default defineConfig({
     testTimeout: 30_000,
     setupFiles: ['test/e2e/setup.ts'],
   },
+  plugins: [
+    swc.vite({
+      module: { type: 'es6' },
+    }),
+  ],
 });

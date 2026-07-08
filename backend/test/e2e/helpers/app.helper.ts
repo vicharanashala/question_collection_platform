@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { vi } from 'vitest';
