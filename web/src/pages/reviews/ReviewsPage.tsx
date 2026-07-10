@@ -12,7 +12,7 @@ import {
   Clock, Star,
   MapPin, Wheat, Film, Eye, Hash,
   User, ThumbsUp, Ban, ListFilter,
-  Globe, X,
+  Globe, X, Mic,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question, QuestionStatus } from '@/types'
@@ -153,22 +153,36 @@ function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, sele
             </div>
           )}
 
-          {/* Media */}
-          {q.mediaUrls && q.mediaUrls.length > 0 && (
+          {/* Images */}
+          {q.mediaUrls && q.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Media ({q.mediaUrls.length})</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Images</p>
               <div className="grid grid-cols-3 gap-2">
-                {q.mediaUrls.map((url, i) => (
+                {q.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).map((url, i) => (
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
                     {url.match(/\.(mp4|mov|avi|m4v)$/i) ? (
                       <div className="rounded-lg border bg-muted flex items-center justify-center h-24 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5"><Film className="h-4 w-4" /> Video</span>
                       </div>
                     ) : (
-                      <img src={url} alt={`media-${i}`} className="rounded-lg border w-full h-24 object-cover hover:opacity-80 transition-opacity" />
+                      <img src={url} alt={`img-${i}`} className="rounded-lg border w-full h-24 object-cover hover:opacity-80 transition-opacity" />
                     )}
                   </a>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Audio */}
+          {q.mediaUrls && q.mediaUrls.filter(u => u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Audio</p>
+              <div className="space-y-2">
+                {q.mediaUrls.filter(u => u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                    <Mic className="h-3 w-3" />Audio uploaded successfully
+                  </span>
+                )}
               </div>
             </div>
           )}
