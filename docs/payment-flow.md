@@ -237,6 +237,7 @@ Every payment attempt — successful, failed, or retried — is recorded in `pay
 | Payout method must be verified | Before withdrawal can be requested |
 | Max retries per withdrawal | 3 (manual via `/admin/withdrawals/:id/retry`) |
 | Refund on failure/reversal | Automatic wallet credit (source=`refund`) |
+| REJECTED status | Set when a payout is rejected by the bank after processing; wallet debit stands, no refund issued automatically (admin reviews manually) |
 
 ---
 
@@ -274,4 +275,4 @@ The `decrypt()` utility is called **only** in `RazorpayPayoutService.createPayou
 
 ---
 
-*Last Updated: 2026-06-30*
+*Last Updated: 2026-07-10*

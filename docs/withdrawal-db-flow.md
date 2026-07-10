@@ -18,8 +18,9 @@ users ──1:1── wallets ──1:N── transactions
 
 `PENDING` → `PROCESSING` → `COMPLETED`
                                │
-                               └──→ `FAILED` (payout rejected/reversed)
-                                    → CANCELLED (admin rejected)
+                               ├──→ `FAILED` (payout rejected/reversed)
+                               ├──→ `REJECTED` (payout rejected after processing — distinct from FAILED)
+                               └──→ `CANCELLED` (admin rejected before payout — refund issued immediately)
 
 ---
 
@@ -53,7 +54,7 @@ users ──1:1── wallets ──1:N── transactions
 
 ### 3. `withdrawal_requests`
 
-| column | PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED |
+| column | PENDING | PROCESSING | COMPLETED | FAILED | REJECTED | CANCELLED |
 |---|---|---|---|---|---|
 | id | `fcf843b6-a183-470b-845a-b304e641df97` | *(same)* | *(same)* | *(same)* | *(same)* |
 | user_id | `a1b2c3d4-...` | *(same)* | *(same)* | *(same)* | *(same)* |
@@ -61,7 +62,7 @@ users ──1:1── wallets ──1:N── transactions
 | amount | `1500.00` | *(same)* | *(same)* | *(same)* | *(same)* |
 | payout_method | `bank_transfer` | *(same)* | *(same)* | *(same)* | *(same)* |
 | payout_details | `{"bank":"HDFC","account":"****4521","ifsc":"HDFC0001234"}` | *(same)* | *(same)* | *(same)* | *(same)* |
-| status | `PENDING` | `PROCESSING` | `COMPLETED` | `FAILED` | `CANCELLED` |
+| status | `PENDING` | `PROCESSING` | `COMPLETED` | `FAILED` | `REJECTED` | `CANCELLED` |
 | razorpay_payout_id | `NULL` | set at approve | *(same)* | *(same)* | `NULL` |
 | utr_number | `NULL` | `NULL` | set by webhook | `NULL` | `NULL` |
 | processed_at | `NULL` | set at approve | set by webhook | set by fail/reversal | set at cancel |
@@ -232,6 +233,7 @@ The source of truth for payout instrument. Not joined directly to `withdrawal_re
 | **Admin approve** | status=PROCESSING, processed_at=now | unchanged | status=completed | — | `WITHDRAWAL_PROCESSING` |
 | **Admin reject (cancel)** | status=CANCELLED, cancelled_at=now | +=amount | status=failed | +1 credit, source=refund, status=completed | `WITHDRAWAL_CANCELLED` |
 | **Payout success** | status=COMPLETED, utr_number=set | unchanged | status=completed | — | `WITHDRAWAL_COMPLETED` |
+| **Payout rejected** | status=REJECTED, failure_reason=set | unchanged (debit stands) | status=completed | — | `WITHDRAWAL_REJECTED` |
 | **Payout failed** | status=FAILED, failure_reason=set | unchanged (debit stands) | status=failed | — | `WITHDRAWAL_FAILED` |
 | **Payout reversed** | status=FAILED | +=amount (refund) | status=failed | +1 credit, source=refund, status=completed | `WITHDRAWAL_FAILED` |
 | **Admin mark fail** | status=FAILED, failure_reason=set | +=amount (refund) | status=failed | +1 credit, source=refund, status=completed | `WITHDRAWAL_FAILED` |
@@ -251,4 +253,4 @@ The source of truth for payout instrument. Not joined directly to `withdrawal_re
 
 ---
 
-*Last Updated: 2026-06-30*
+*Last Updated: 2026-07-10*

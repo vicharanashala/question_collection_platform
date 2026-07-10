@@ -127,7 +127,25 @@ classification_audit.evaluations[]:
 
 ---
 
-## 3. Embed Service
+## 4. Duplicate Detection Service
+
+**File:** `backend/src/cache/duplicate-detection.service.ts`
+
+**Purpose:** Exact-text duplicate check against the user's own recent questions (not GDB). Runs as a fast pre-filter before the semantic GDB check.
+
+```typescript
+checkExactDuplicate(userId: string, questionText: string): Promise<Question | null>
+```
+
+Returns the matched question if the same user submitted an identical (or near-identical) question within the last 30 days. If found, the question is flagged as a duplicate and the user is notified — but it is **not** auto-rejected; it enters the human review queue.
+
+**Called at:**
+- `POST /questions/preview` — fast pre-filter
+- `POST /questions` (submit) — before calling GDBService
+
+---
+
+## 5. Embed Service
 
 **Provider:** On-premise embedding service — called via HTTP at `{embed.baseUrl}/embed` (default: `http://100.100.108.44:6001`)
 
@@ -158,7 +176,7 @@ Returns the embedding vector as `number[]`. Returns `null` when the service is u
 
 ---
 
-## 5. Sarvam AI Speech-to-Text
+## 6. Sarvam AI Speech-to-Text
 
 **Provider:** Sarvam AI API
 
@@ -205,7 +223,7 @@ Returns the embedding vector as `number[]`. Returns `null` when the service is u
 
 ---
 
-## 6. LGD Service (Location Data)
+## 7. LGD Service (Location Data)
 
 **Provider:** Local Government Directory (LGD) API
 
@@ -221,7 +239,7 @@ Returns the embedding vector as `number[]`. Returns `null` when the service is u
 
 ---
 
-## 7. Question Preview Flow
+## 8. Question Preview Flow
 
 The `/questions/preview` endpoint runs the full AI pipeline **without persisting** to the database. This allows the mobile app to show the user what the processed question looks like (derived crop, domain, season, agro-climatic zone) before they commit:
 
@@ -255,4 +273,4 @@ If the user confirms the preview, the full `POST /questions` is called, which ad
 
 ---
 
-*Last Updated: 2026-06-30*
+*Last Updated: 2026-07-10*
