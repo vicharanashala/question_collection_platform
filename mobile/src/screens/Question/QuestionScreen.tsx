@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator, ScrollView, Image, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
 import { AudioModule, requestRecordingPermissionsAsync, setAudioModeAsync, AudioQuality, IOSOutputFormat, createAudioPlayer, AudioPlayer } from 'expo-audio';
@@ -238,6 +238,15 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   // AudioRecorder owns the audio recording UI; QuestionScreen keeps the URI so it
   // can be passed to QuestionPreview and used for mediaType detection.
   const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
+
+  // ── Keyboard visibility ───────────────────────────────────────────────────
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
+    return () => { showSub.remove(); hideSub.remove(); };
+  }, []);
 
   // ── GDB duplicate-check modal ─────────────────────────────────────────────
   const [duplicateModal, setDuplicateModal] = useState<{
@@ -566,49 +575,51 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           </View>
         </ScrollView>
 
-        {/* ── Mic dock — pinned to bottom ─────────────────────────────────── */}
-        <View style={[styles.micDock, { backgroundColor: c.background }]}>
-          <View style={[styles.micDockDivider, { backgroundColor: c.borderSubtle }]} />
-          <View style={styles.micInstructionCenter}>
-            {remainingToday <= 0 && !isEditMode ? (
-              <Text style={[styles.micHintText, { color: c.textTertiary }]}>
-                {t('question.dailyLimitReached', { total: 20 })}
-              </Text>
-            ) : (
-              <Text style={[styles.micHintText, { color: c.textSecondary }]}>
-                {t('question.tapMicHint') ?? 'Tap the mic to speak your question'}
-              </Text>
-            )}
-          </View>
-          <View style={styles.micButtonCenter}>
-            <AudioRecorder
-              onTranscribed={(text) => {
-                setQuestionText(text);
-                setErrors({});
-                scheduleValidation(text);
-              }}
-              onRecordingComplete={(uri) => {
-                setPendingAudioUri(uri);
-              }}
-              disabled={remainingToday <= 0 && !isEditMode}
-            />
-          </View>
-
-          {/* ── AudioPreview dock — full-width card below the mic button ── */}
-          {pendingAudioUri && (
-            <View style={styles.audioPreviewDock}>
-              <AudioPreview
-                uri={pendingAudioUri}
-                onDelete={() => {
-                  setPendingAudioUri(null);
-                  setQuestionText('');
+        {/* ── Mic dock — hidden when keyboard is open ───────────────────────── */}
+        {!isKeyboardVisible && (
+          <View style={[styles.micDock, { backgroundColor: c.background }]}>
+            <View style={[styles.micDockDivider, { backgroundColor: c.borderSubtle }]} />
+            <View style={styles.micInstructionCenter}>
+              {remainingToday <= 0 && !isEditMode ? (
+                <Text style={[styles.micHintText, { color: c.textTertiary }]}>
+                  {t('question.dailyLimitReached', { total: 20 })}
+                </Text>
+              ) : (
+                <Text style={[styles.micHintText, { color: c.textSecondary }]}>
+                  {t('question.tapMicHint') ?? 'Tap the mic to speak your question'}
+                </Text>
+              )}
+            </View>
+            <View style={styles.micButtonCenter}>
+              <AudioRecorder
+                onTranscribed={(text) => {
+                  setQuestionText(text);
                   setErrors({});
-                  setAiValidation(null);
+                  scheduleValidation(text);
                 }}
+                onRecordingComplete={(uri) => {
+                  setPendingAudioUri(uri);
+                }}
+                disabled={remainingToday <= 0 && !isEditMode}
               />
             </View>
-          )}
-        </View>
+
+            {/* ── AudioPreview dock — full-width card below the mic button ── */}
+            {pendingAudioUri && (
+              <View style={styles.audioPreviewDock}>
+                <AudioPreview
+                  uri={pendingAudioUri}
+                  onDelete={() => {
+                    setPendingAudioUri(null);
+                    setQuestionText('');
+                    setErrors({});
+                    setAiValidation(null);
+                  }}
+                />
+              </View>
+            )}
+          </View>
+        )}
       </KeyboardAvoidingView>
 
       {/* GDB duplicate-check modal — shown when backend found a similar question */}
