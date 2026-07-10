@@ -566,6 +566,16 @@ export function AppNavigator({ navigationRef }: AppNavigatorProps) {
                   component={ReportDetailScreen}
                   options={{ presentation: 'modal' }}
                 />
+                <RootStack.Screen
+                  name="TermsOfService"
+                  component={TermsOfServiceScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="PrivacyPolicy"
+                  component={PrivacyPolicyScreen}
+                  options={{ presentation: 'modal' }}
+                />
               </>
             )}
           </>

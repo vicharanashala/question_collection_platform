@@ -577,6 +577,7 @@ const resources = {
       "question.submitSuccess": "Question Submitted",
       "question.successBody": "Your question is under review. You will be notified once it is approved.",
       "question.submitAnother": "Submit Another Question",
+      "question.audioModelDisclaimer": "Voice recording saved to improve AI models",
       "submissions.backToSubmissions": "Back to Submissions",
       "myQuestions.editWindowClosedTitle": "Edit Window Closed",
       "common.error": "Error",
