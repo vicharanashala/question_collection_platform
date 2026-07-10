@@ -122,9 +122,15 @@ function AudioPlaybackCard({
   const { theme } = useTheme();
   const c = theme.colors;
   const [playing, setPlaying] = useState(false);
-  const [currentMs, setCurrentMs] = useState(0);
-  const [totalMs, setTotalMs] = useState(0);
+  const [currentSec, setCurrentSec] = useState(0);
+  const [totalSec, setTotalSec] = useState(0);
   const playerRef = useRef<AudioPlayer | null>(null);
+
+  // Set duration immediately from URI on mount
+  useEffect(() => {
+    const m = uri.match(/\?dur=(\d+)/);
+    if (m) setTotalSec(parseInt(m[1], 10) / 1000);
+  }, [uri]);
 
   useEffect(() => {
     return () => { playerRef.current?.remove(); playerRef.current = null; };
@@ -137,18 +143,25 @@ function AudioPlaybackCard({
       return;
     }
     if (!playerRef.current) {
-      const player = createAudioPlayer(uri, { updateInterval: 100 });
+      // Parse pre-known duration from URI query string (?dur=xxx)
+      const durMatch = uri.match(/\?dur=(\d+)/);
+      const knownDur = durMatch ? parseInt(durMatch[1], 10) / 1000 : 0;
+
+      const cleanUri = uri.replace(/\?dur=\d+$/, '');
+      const player = createAudioPlayer(cleanUri, { updateInterval: 50 });
       player.addListener('playbackStatusUpdate', (status) => {
-        setCurrentMs(status.currentTime);
-        if (status.totalDuration) setTotalMs(status.totalDuration);
+        setCurrentSec(status.currentTime);
+        if (status.duration > 0 && knownDur === 0) setTotalSec(status.duration);
         if (status.didJustFinish) {
           player.remove();
           playerRef.current = null;
           setPlaying(false);
-          setCurrentMs(0);
+          setCurrentSec(0);
         }
       });
       await player.play();
+      // Seed currentTime from player instance immediately after play starts
+      setCurrentSec(player.currentTime);
       playerRef.current = player;
       setPlaying(true);
       return;
@@ -157,11 +170,10 @@ function AudioPlaybackCard({
     setPlaying(true);
   }
 
-  const progress = totalMs > 0 ? currentMs / totalMs : 0;
+  const progress = totalSec > 0 ? currentSec / totalSec : 0;
 
-  function fmt(ms: number) {
-    const s = Math.floor(ms / 1000);
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  function fmt(s: number) {
+    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   }
 
   return (
@@ -177,14 +189,14 @@ function AudioPlaybackCard({
         </TouchableOpacity>
 
         <View style={playStyles.timeWrap}>
-          <Text style={[playStyles.timeElap, { color: c.text }]}>{fmt(currentMs)}</Text>
+          <Text style={[playStyles.timeElap, { color: c.text }]}>{fmt(currentSec)}</Text>
           <Text style={[playStyles.timeSep, { color: c.textTertiary }]}> / </Text>
-          <Text style={[playStyles.timeTot, { color: c.textSecondary }]}>{fmt(totalMs)}</Text>
+          <Text style={[playStyles.timeTot, { color: c.textSecondary }]}>{fmt(totalSec)}</Text>
         </View>
 
         <TouchableOpacity
           style={playStyles.delBtn}
-          onPress={() => { playerRef.current?.remove(); playerRef.current = null; onDelete(); }}
+          onPress={() => { playerRef.current?.pause(); playerRef.current?.remove(); playerRef.current = null; onDelete(); }}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="close-circle" size={22} color={c.error} />
@@ -646,7 +658,9 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   setErrors({});
                   scheduleValidation(text);
                 }}
-                onRecordingComplete={(uri) => setPendingAudioUri(uri)}
+                onRecordingComplete={(uri, durationMs) =>
+                  setPendingAudioUri(uri + '?dur=' + Math.round(durationMs))
+                }
                 onRecordingStart={() => {
                   setPendingAudioUri(null);
                   setErrors({});
