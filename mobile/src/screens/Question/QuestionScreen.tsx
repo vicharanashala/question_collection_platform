@@ -10,6 +10,7 @@ import {
   Keyboard,
   TextInput,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
@@ -71,32 +72,63 @@ const pillStyles = StyleSheet.create({
   },
 });
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+// ─── AudioPlayback Card ────────────────────────────────────────────────────
 
-function formatTime(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+const WAVE_BARS = 28;
+
+function WaveformBar({ index, progress, isPlaying }: { index: number; progress: number; isPlaying: boolean }) {
+  const anim = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (!isPlaying) {
+      Animated.timing(anim, { toValue: 0.3, duration: 300, useNativeDriver: true }).start();
+      return;
+    }
+    const delay = index * 40;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, { toValue: Math.random() * 0.7 + 0.3, duration: 300 + Math.random() * 200, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0.3, duration: 300 + Math.random() * 200, useNativeDriver: true }),
+      ]),
+    );
+    const t = setTimeout(() => loop.start(), delay);
+    return () => { loop.stop(); clearTimeout(t); };
+  }, [isPlaying, index, anim]);
+
+  const barProgress = index / WAVE_BARS;
+  const filled = barProgress <= progress;
+
+  return (
+    <Animated.View
+      style={[
+        waveStyles.bar,
+        {
+          height: 16,
+          backgroundColor: filled ? '#16a34a' : '#d1d5db',
+          transform: [{ scaleY: anim }],
+        },
+      ]}
+    />
+  );
 }
 
-// ─── AudioPreview Inline ──────────────────────────────────────────────────────
-
-function AudioInlineBar({
+function AudioPlaybackCard({
   uri,
   onDelete,
-  duration,
 }: {
   uri: string;
   onDelete: () => void;
-  duration: number;
 }) {
   const { theme } = useTheme();
   const c = theme.colors;
-  const { t } = useTranslation();
   const [playing, setPlaying] = useState(false);
-  const [currentSec, setCurrentSec] = useState(0);
+  const [currentMs, setCurrentMs] = useState(0);
+  const [totalMs, setTotalMs] = useState(0);
   const playerRef = useRef<AudioPlayer | null>(null);
-  const totalSec = duration;
+
+  useEffect(() => {
+    return () => { playerRef.current?.remove(); playerRef.current = null; };
+  }, []);
 
   async function togglePlay() {
     if (playing) {
@@ -104,58 +136,126 @@ function AudioInlineBar({
       setPlaying(false);
       return;
     }
-    const player = createAudioPlayer(uri, { updateInterval: 250 });
-    player.addListener('playbackStatusUpdate', (status) => {
-      setCurrentSec(status.currentTime);
-      if (status.didJustFinish) {
-        player.remove();
-        playerRef.current = null;
-        setPlaying(false);
-        setCurrentSec(0);
-      }
-    });
-    await player.play();
-    playerRef.current = player;
+    if (!playerRef.current) {
+      const player = createAudioPlayer(uri, { updateInterval: 100 });
+      player.addListener('playbackStatusUpdate', (status) => {
+        setCurrentMs(status.currentTime);
+        if (status.totalDuration) setTotalMs(status.totalDuration);
+        if (status.didJustFinish) {
+          player.remove();
+          playerRef.current = null;
+          setPlaying(false);
+          setCurrentMs(0);
+        }
+      });
+      await player.play();
+      playerRef.current = player;
+      setPlaying(true);
+      return;
+    }
+    await playerRef.current.play();
     setPlaying(true);
   }
 
-  useEffect(() => {
-    return () => { playerRef.current?.remove(); playerRef.current = null; };
-  }, []);
+  const progress = totalMs > 0 ? currentMs / totalMs : 0;
 
-  const progress = totalSec > 0 ? Math.min(currentSec / totalSec, 1) : 0;
+  function fmt(ms: number) {
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
 
   return (
-    <View style={[audioStyles.bar, { backgroundColor: c.surfaceVariant, borderColor: c.borderSubtle }]}>
-      {/* Play button */}
-      <TouchableOpacity
-        style={[audioStyles.playBtn, { backgroundColor: c.primary }]}
-        onPress={togglePlay}
-      >
-        <Ionicons name={playing ? 'pause' : 'play'} size={16} color="#fff" />
-      </TouchableOpacity>
+    <View style={[playStyles.card, { backgroundColor: c.surfaceVariant, borderColor: c.borderSubtle }]}>
+      {/* Top row: play button + time + delete */}
+      <View style={playStyles.topRow}>
+        <TouchableOpacity
+          style={[playStyles.playBtn, { backgroundColor: c.primary }]}
+          onPress={togglePlay}
+          activeOpacity={0.8}
+        >
+          <Ionicons name={playing ? 'pause' : 'play'} size={20} color="#fff" />
+        </TouchableOpacity>
 
-      {/* Progress + time */}
-      <View style={audioStyles.progressWrap}>
-        <View style={[audioStyles.track, { backgroundColor: c.borderSubtle }]}>
-          <View style={[audioStyles.fill, { width: `${progress * 100}%`, backgroundColor: c.primary }]} />
+        <View style={playStyles.timeWrap}>
+          <Text style={[playStyles.timeElap, { color: c.text }]}>{fmt(currentMs)}</Text>
+          <Text style={[playStyles.timeSep, { color: c.textTertiary }]}> / </Text>
+          <Text style={[playStyles.timeTot, { color: c.textSecondary }]}>{fmt(totalMs)}</Text>
         </View>
-        <Text style={[audioStyles.time, { color: c.textSecondary }]}>
-          {formatTime(currentSec)} / {formatTime(totalSec)}
-        </Text>
+
+        <TouchableOpacity
+          style={playStyles.delBtn}
+          onPress={() => { playerRef.current?.remove(); playerRef.current = null; onDelete(); }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="close-circle" size={22} color={c.error} />
+        </TouchableOpacity>
       </View>
 
-      {/* Delete */}
-      <TouchableOpacity
-        style={audioStyles.deleteBtn}
-        onPress={() => { playerRef.current?.remove(); playerRef.current = null; onDelete(); }}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      >
-        <Ionicons name="close" size={16} color={c.error} />
-      </TouchableOpacity>
+      {/* Waveform */}
+      <View style={playStyles.waveRow}>
+        {Array.from({ length: WAVE_BARS }, (_, i) => (
+          <WaveformBar key={i} index={i} progress={progress} isPlaying={playing} />
+        ))}
+      </View>
     </View>
   );
 }
+
+const waveStyles = StyleSheet.create({
+  bar: {
+    width: 3,
+    borderRadius: 2,
+  },
+});
+
+const playStyles = StyleSheet.create({
+  card: {
+    borderRadius: tokens.radiusLg,
+    borderWidth: 1,
+    padding: tokens.spacing4,
+    gap: tokens.spacing3,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing3,
+  },
+  playBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  timeWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  timeElap: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  timeSep: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  timeTot: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  delBtn: {
+    flexShrink: 0,
+  },
+  waveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 20,
+    gap: 2,
+  },
+});
 
 const audioStyles = StyleSheet.create({
   bar: {
@@ -525,9 +625,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             {/* Audio bar — shown when recording exists */}
             {pendingAudioUri && (
               <View style={styles.audioBarWrap}>
-                <AudioInlineBar
+                <AudioPlaybackCard
                   uri={pendingAudioUri}
-                  duration={0}
                   onDelete={() => {
                     setPendingAudioUri(null);
                     setQuestionText('');
