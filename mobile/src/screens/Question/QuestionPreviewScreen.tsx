@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AudioPlayer } from 'expo-audio';
 import { Button } from '../../components/Button';
 import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
 import { Input } from '../../components/Input';
@@ -23,77 +22,6 @@ import { adminApi } from '../../api/client';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
-
-// ─── AudioPreviewPlayer ────────────────────────────────────────────────────────
-
-function AudioPreviewPlayer({ uri }: { uri: string }) {
-  const { theme } = useTheme();
-  const c = theme.colors;
-  const { t } = useTranslation();
-  const [playing, setPlaying] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const playerRef = useRef<AudioPlayer | null>(null);
-
-  async function togglePlay() {
-    try {
-      if (playing) {
-        playerRef.current?.pause();
-        playerRef.current?.remove();
-        playerRef.current = null;
-        setPlaying(false);
-        return;
-      }
-      setLoading(true);
-      const player = new AudioPlayer({ uri });
-      player.addListener('playbackStatusUpdate', (status) => {
-        if (status.positionSec >= status.durationSec && status.durationSec > 0) {
-          player.remove();
-          playerRef.current = null;
-          setPlaying(false);
-        }
-      });
-      player.play();
-      playerRef.current = player;
-      setPlaying(true);
-      setLoading(false);
-    } catch {
-      setPlaying(false);
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => () => { playerRef.current?.remove(); }, []);
-
-  return (
-    <View style={audioPlayerStyles.wrap}>
-      <TouchableOpacity
-        style={[audioPlayerStyles.btn, { backgroundColor: c.primary + '20' }]}
-        onPress={togglePlay}
-        disabled={loading}
-        accessibilityLabel={playing ? t('audio.stop') ?? 'Stop' : t('audio.play') ?? 'Play'}
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color={c.primary} />
-        ) : (
-          <Ionicons
-            name={playing ? 'stop' : 'play'}
-            size={20}
-            color={c.primary}
-          />
-        )}
-      </TouchableOpacity>
-      <Text style={[audioPlayerStyles.label, { color: c.text }]}>
-        {playing ? (t('audio.playing') ?? 'Playing…') : (t('audio.yourRecording') ?? 'Your recording — tap to play')}
-      </Text>
-    </View>
-  );
-}
-
-const audioPlayerStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing2 },
-  btn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  label: { flex: 1, fontSize: 13, fontWeight: '500' },
-});
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -479,17 +407,6 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               </View>
             ) : null}
 
-            {/* ── Audio player preview ───────────────────────────────────────── */}
-            {preview.pendingAudioUri ? (
-              <View style={[styles.audioWrap, { backgroundColor: theme.colors.muted }]}>
-                <Ionicons name="mic" size={20} color={theme.colors.primary} style={{ marginRight: tokens.spacing2 }} />
-                <Text style={[styles.audioWrapLabel, { color: theme.colors.text }]}>
-                  {t('question.attachMedia') ?? 'Voice recording attached'}
-                </Text>
-                <AudioPreviewPlayer uri={preview.pendingAudioUri} />
-              </View>
-            ) : null}
-
             <View style={[styles.divider, { backgroundColor: theme.colors.borderSubtle }]} />
 
             {/* Submission stats */}
@@ -499,6 +416,16 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                 {preview.remainingToday} of {preview.dailyLimit} submissions remaining today
               </Text>
             </View>
+
+            {/* Audio model disclaimer */}
+            {preview.pendingAudioUri ? (
+              <View style={[styles.statsRow, { backgroundColor: theme.colors.muted, marginTop: tokens.spacing2 }]}>
+                <Ionicons name="mic" size={16} color={theme.colors.textSecondary} />
+                <Text style={[styles.statsText, { color: theme.colors.textSecondary }]}>
+                  {t('question.audioModelDisclaimer') ?? 'Your voice recording will be saved to help improve our AI models'}
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           {/* Actions */}
@@ -574,12 +501,6 @@ const styles = StyleSheet.create({
   domainError: { fontSize: 12, marginTop: tokens.spacing2 },
   mediaPreviewWrap: { marginBottom: tokens.spacing4 },
   previewImage: { width: '100%', height: 160, borderRadius: tokens.radiusMd, marginTop: tokens.spacing2 },
-  audioWrap: {
-    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap',
-    borderRadius: tokens.radiusMd, padding: tokens.spacing3,
-    marginBottom: tokens.spacing4, gap: tokens.spacing1,
-  },
-  audioWrapLabel: { fontSize: 13, fontWeight: '500', width: '100%', marginBottom: tokens.spacing1 },
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
     gap: tokens.spacing2, borderRadius: tokens.radiusMd, padding: tokens.spacing3,
