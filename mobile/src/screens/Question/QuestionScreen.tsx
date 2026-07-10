@@ -635,7 +635,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         {!isKeyboardVisible && (
           <View style={[styles.bottomDock, { backgroundColor: c.background, borderTopColor: c.borderSubtle }]}>
             {/* Audio bar — shown when recording exists */}
-            {pendingAudioUri && (
+            {/* {pendingAudioUri && (
               <View style={styles.audioBarWrap}>
                 <AudioPlaybackCard
                   uri={pendingAudioUri}
@@ -647,7 +647,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   }}
                 />
               </View>
-            )}
+            )} */}
 
             {/* Mic row */}
             <View style={styles.micRow}>
