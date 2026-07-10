@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
+  Text,
   TouchableOpacity,
   StyleSheet,
-  Text,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import {
   AudioModule,
@@ -31,6 +32,8 @@ interface AudioRecorderProps {
   onTranscribed: (text: string) => void;
   /** Called when recording stops — provides the file URI for playback preview. */
   onRecordingComplete?: (uri: string) => void;
+  /** Called when a new recording starts — use to clear any prior playback. */
+  onRecordingStart?: () => void;
   /** Show a label below the button */
   label?: string;
   /** Disable the recorder */
@@ -52,6 +55,7 @@ interface PendingChunk {
 export function AudioRecorder({
   onTranscribed,
   onRecordingComplete,
+  onRecordingStart,
   label,
   disabled,
 }: AudioRecorderProps) {
@@ -63,15 +67,21 @@ export function AudioRecorder({
 
   const [state, setState] = useState<RecorderState>('idle');
   const [transcriptSoFar, setTranscriptSoFar] = useState('');
+  const [recordingMsec, setRecordingMsec] = useState(0);
 
-  // Keep onRecordingComplete ref fresh so it always calls the latest callback
+  // Deferred callbacks — stored in refs so they survive re-renders without
+  // triggering state in the parent during the current render pass.
   const onRecordingCompleteRef = useRef(onRecordingComplete);
+  const onTranscribedRef = useRef(onTranscribed);
+  const onRecordingStartRef = useRef(onRecordingStart);
   onRecordingCompleteRef.current = onRecordingComplete;
+  onTranscribedRef.current = onTranscribed;
+  onRecordingStartRef.current = onRecordingStart;
 
   // Active recorder instance
   const recorderRef = useRef<InstanceType<typeof AudioModule.AudioRecorder> | null>(null);
   // 5-second chunk timer
-  const chunkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chunkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Auto-stop timer
   const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -81,8 +91,41 @@ export function AudioRecorder({
   const sequenceRef = useRef(0);
   // Whether a stop is in progress (prevents new chunks)
   const stoppingRef = useRef(false);
+  // Elapsed time ticker
+  const tickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Recording start timestamp (ms)
+  const startTimeRef = useRef<number | null>(null);
 
-  const languageCode = language; // e.g. 'hi', 'ta', 'en'
+  // ── Pulse scale animation ────────────────────────────────────────────────
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const startPulseAnimation = useCallback(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.12,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [pulseAnim]);
+
+  const stopPulseAnimation = useCallback(() => {
+    pulseAnim.stopAnimation();
+    Animated.timing(pulseAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [pulseAnim]);
+
+  const languageCode = language;
 
   // ── Language code → Sarvam locale ────────────────────────────────────────
   const toSarvamLang = (code: string) => {
@@ -116,7 +159,6 @@ export function AudioRecorder({
           { headers: { 'Content-Type': 'multipart/form-data' } },
         );
 
-        // Resolve the pending promise for this sequence
         const pending = pendingChunksRef.current.find((p) => p.sequenceNumber === seq);
         if (pending) {
           pending.resolve(data.text ?? '');
@@ -125,11 +167,11 @@ export function AudioRecorder({
           );
         }
 
-        // Append transcript in order
         if (data.text) {
           setTranscriptSoFar((prev) => {
             const next = prev ? `${prev} ${data.text}` : data.text;
-            onTranscribed(next);
+            // Defer callback to avoid setState-in-render
+            setTimeout(() => onTranscribedRef.current?.(next), 0);
             return next;
           });
         }
@@ -144,7 +186,7 @@ export function AudioRecorder({
         }
       }
     },
-    [languageCode, onTranscribed],
+    [languageCode],
   );
 
   // ── Stop current chunk, upload it, start a new recording ─────────────────
@@ -152,29 +194,21 @@ export function AudioRecorder({
     const recorder = recorderRef.current;
     if (!recorder || stoppingRef.current) return;
 
-    // Stop this chunk
     await recorder.stop();
     const uri = recorder.uri;
     if (!uri) {
-      // Restart without uploading
-      try {
-        recorder.record();
-      } catch { /* ignore */ }
+      try { recorder.record(); } catch { /* ignore */ }
       return;
     }
 
-    // Assign sequence number and upload
     const seq = sequenceRef.current++;
-    const pending: PendingChunk = {
+    pendingChunksRef.current.push({
       sequenceNumber: seq,
       resolve: () => {},
       reject: () => {},
-    };
-    // Create a deferred promise
-    pendingChunksRef.current.push(pending);
+    });
     uploadChunk(uri, seq);
 
-    // Start next chunk immediately
     try {
       await recorder.prepareToRecordAsync();
       recorder.record();
@@ -183,18 +217,19 @@ export function AudioRecorder({
     }
   }, [uploadChunk]);
 
-  // ── Cleanup on unmount ────────────────────────────────────────────────────
+  // ── Cleanup on unmount ───────────────────────────────────────────────────
   useEffect(() => {
     return () => {
       if (chunkTimerRef.current) clearInterval(chunkTimerRef.current);
       if (autoStopRef.current) clearTimeout(autoStopRef.current);
+      if (tickerRef.current) clearInterval(tickerRef.current);
       if (recorderRef.current) {
         recorderRef.current.stop().catch(() => {});
       }
     };
   }, []);
 
-  // ── Start continuous recording ────────────────────────────────────────────
+  // ── Start continuous recording ───────────────────────────────────────────
   async function startRecording() {
     try {
       const { granted } = await requestRecordingPermissionsAsync();
@@ -241,13 +276,21 @@ export function AudioRecorder({
       pendingChunksRef.current = [];
       setTranscriptSoFar('');
       setState('recording');
+      setRecordingMsec(0);
+      startTimeRef.current = Date.now();
+      if (tickerRef.current) clearInterval(tickerRef.current);
+      startPulseAnimation();
+      tickerRef.current = setInterval(() => {
+        if (startTimeRef.current !== null) {
+          setRecordingMsec(Date.now() - startTimeRef.current);
+        }
+      }, 250);
+      setTimeout(() => onRecordingStartRef.current?.(), 0);
 
-      // Cut and upload a chunk every 5 seconds
       chunkTimerRef.current = setInterval(() => {
         cutChunkAndRestart();
       }, CHUNK_INTERVAL_MS);
 
-      // Hard auto-stop after MAX_RECORDING_SECONDS
       autoStopRef.current = setTimeout(() => {
         stopRecording();
       }, MAX_RECORDING_SECONDS * 1000);
@@ -260,10 +303,11 @@ export function AudioRecorder({
     }
   }
 
-  // ── Stop recording: cancel timer, upload remaining audio, resolve all ─────
+  // ── Stop recording ───────────────────────────────────────────────────────
   async function stopRecording() {
     if (stoppingRef.current) return;
     stoppingRef.current = true;
+    stopPulseAnimation();
 
     const recorder = recorderRef.current;
     if (!recorder) return;
@@ -273,18 +317,21 @@ export function AudioRecorder({
     if (autoStopRef.current) clearTimeout(autoStopRef.current);
     autoStopRef.current = null;
 
+    startTimeRef.current = null;
+    if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
+
     setState('uploading');
 
     try {
-      // Stop and upload the final chunk
       await recorder.stop();
       const uri = recorder.uri;
 
       if (uri) {
-        // Notify parent so it can show AudioPreview for playback
-        onRecordingCompleteRef.current?.(uri);
+        // Defer the callback so this setState settles before the parent updates
+        setTimeout(() => {
+          onRecordingCompleteRef.current?.(uri);
+        }, 0);
 
-        // Upload final chunk with a high sequence number
         const seq = sequenceRef.current++;
         const formData = new (globalThis.FormData)();
         formData.append('audio', {
@@ -304,7 +351,7 @@ export function AudioRecorder({
         if (data.text) {
           setTranscriptSoFar((prev) => {
             const next = prev ? `${prev} ${data.text}` : data.text;
-            onTranscribed(next);
+            setTimeout(() => onTranscribedRef.current?.(next), 0);
             return next;
           });
         } else if (data.error) {
@@ -313,6 +360,8 @@ export function AudioRecorder({
       }
 
       setState('done');
+      startTimeRef.current = null;
+      setRecordingMsec(0);
       setTimeout(() => setState('idle'), 2000);
     } catch (err: unknown) {
       console.error('[AudioRecorder] stopRecording error:', err);
@@ -322,6 +371,9 @@ export function AudioRecorder({
           'Transcription failed. Please try again.',
         'error',
       );
+      startTimeRef.current = null;
+      if (tickerRef.current) { clearInterval(tickerRef.current); tickerRef.current = null; }
+      setRecordingMsec(0);
       setState('idle');
     } finally {
       recorderRef.current = null;
@@ -336,39 +388,48 @@ export function AudioRecorder({
     } else if (state === 'recording') {
       stopRecording();
     }
-    // uploading — button disabled
   }
 
   const isRecording = state === 'recording';
   const isUploading = state === 'uploading';
   const isDisabled = disabled || isUploading;
-  const iconName = isRecording ? 'stop' : 'mic';
 
   return (
     <View style={styles.container}>
-      <View style={styles.pulseWrap}>
+      {/* Pulse + button */}
+      <Animated.View
+        style={[
+          styles.pulseWrap,
+          { transform: [{ scale: isRecording ? pulseAnim : 1 }] },
+        ]}
+      >
+        {/* Outer pulse ring — animates when recording */}
         {isRecording && (
-          <View
+          <Animated.View
             style={[
               styles.pulseRing,
               styles.pulseRingOuter,
-              { borderColor: c.primary + '20' },
+              {
+                borderColor: c.primary + '30',
+                opacity: pulseAnim.interpolate({
+                  inputRange: [1, 1.12],
+                  outputRange: [0.6, 0],
+                }),
+              },
             ]}
           />
         )}
-        {isRecording && (
-          <View
-            style={[
-              styles.pulseRing,
-              styles.pulseRingInner,
-              { borderColor: c.primary + '40' },
-            ]}
-          />
-        )}
+
         <TouchableOpacity
           style={[
             styles.voiceBtn,
-            { backgroundColor: isDisabled ? c.muted : c.primary },
+            {
+              backgroundColor: isDisabled
+                ? c.muted
+                : isRecording
+                ? c.error
+                : c.primary,
+            },
           ]}
           onPress={handlePress}
           disabled={isDisabled}
@@ -377,28 +438,32 @@ export function AudioRecorder({
           {isUploading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Ionicons name={iconName as 'mic' | 'stop'} size={28} color="#fff" />
+            <>
+              <Ionicons
+                name={isRecording ? 'stop' : 'mic'}
+                size={28}
+                color="#fff"
+              />
+              {/* Elapsed duration badge */}
+              {isRecording && (
+                <View style={styles.durationBadge}>
+                  <Text style={styles.durationText}>
+                    {Math.floor(recordingMsec / 60000)}:{String(Math.floor((recordingMsec % 60000) / 1000)).padStart(2, '0')}
+                  </Text>
+                </View>
+              )}
+            </>
           )}
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
-      {label !== '' && (
+      {/* Label — only shown when not recording */}
+      {!isRecording && label !== '' && (
         <Text style={[styles.label, { color: c.textSecondary }]}>
           {isUploading
             ? t('audio.transcribing') ?? 'Transcribing…'
-            : isRecording
-            ? t('audio.recording') ?? 'Recording — tap to stop'
             : label ?? t('audio.record') ?? 'Tap to record'}
         </Text>
-      )}
-
-      {isRecording && (
-        <View style={[styles.recordingBadge, { backgroundColor: c.error + '20' }]}>
-          <View style={[styles.recordingDot, { backgroundColor: c.error }]} />
-          <Text style={[styles.recordingText, { color: c.error }]}>
-            {t('audio.recording') ?? 'Recording'}
-          </Text>
-        </View>
       )}
     </View>
   );
@@ -416,15 +481,11 @@ const styles = StyleSheet.create({
   pulseRing: {
     position: 'absolute',
     borderRadius: 999,
-    borderWidth: 1.5,
+    borderWidth: 2,
   },
   pulseRingOuter: {
     width: 96,
     height: 96,
-  },
-  pulseRingInner: {
-    width: 80,
-    height: 80,
   },
   voiceBtn: {
     width: 68,
@@ -439,28 +500,25 @@ const styles = StyleSheet.create({
     elevation: 8,
     zIndex: 1,
   },
+  durationBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#DC2626',
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    zIndex: 2,
+  },
+  durationText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
   label: {
     marginTop: tokens.spacing2,
     fontSize: 13,
     fontWeight: '500',
     textAlign: 'center',
-  },
-  recordingBadge: {
-    marginTop: tokens.spacing2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 6,
-  },
-  recordingDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  recordingText: {
-    fontSize: 12,
-    fontWeight: '700',
   },
 });

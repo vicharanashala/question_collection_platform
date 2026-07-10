@@ -548,6 +548,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   scheduleValidation(text);
                 }}
                 onRecordingComplete={(uri) => setPendingAudioUri(uri)}
+                onRecordingStart={() => {
+                  setPendingAudioUri(null);
+                  setErrors({});
+                  setAiValidation(null);
+                }}
                 disabled={remainingToday <= 0 && !isEditMode}
               />
               <MicHintPill remaining={remainingToday} isEditMode={isEditMode} />
