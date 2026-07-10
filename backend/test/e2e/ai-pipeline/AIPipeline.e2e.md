@@ -49,14 +49,13 @@ Per-test overrides use `mockResolvedValueOnce`.
 
 ```mermaid
 flowchart TD
-  classDef entry  fill:#ede9fe,stroke:#7c3aed,color:#3b0764,font-weight:bold
-  classDef ok     fill:#d1fae5,stroke:#059669,color:#064e3b
-  classDef warn   fill:#fef9c3,stroke:#d97706,color:#78350f
-  classDef err    fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+  classDef entry fill:#ede9fe,stroke:#7c3aed,color:#3b0764
+  classDef ok    fill:#d1fae5,stroke:#059669,color:#064e3b
+  classDef warn  fill:#fef9c3,stroke:#d97706,color:#78350f
+  classDef err   fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
   classDef decide fill:#faf5ff,stroke:#7c3aed,color:#3b0764
 
-  ROOT["AI Pipeline E2E — 10 tests
-  farmerToken / adminToken"]:::entry
+  ROOT["AIPipeline E2E - 10 tests"]:::entry
 
   ROOT --> ROUTES["Authenticated routes"]:::entry
 
@@ -64,51 +63,26 @@ flowchart TD
   ROUTES --> CONF
   ROUTES --> ADM
 
-  %% ── 1. PREVIEW ──────────────────────────────────────────────────────────────
   subgraph PREVIEW ["1. POST /questions/preview"]
     PV{"Gemma + GDB mocks"}:::decide
-
-    PV -- "T1: Gemma unknown crop" --> PR_UNKNOWN["200 — cropType = Unknown
-    domains = Others"]:::warn
-
-    PV -- "T9: GDB duplicate match" --> PR_DUP["200 — duplicate.isDuplicate = true
-    matchedQuestion + score present"]:::warn
-
-    PV -- "T10: Gemma 2 domains" --> PR_MULTI["200 — both inferred domains
-    in response body"]:::ok
+    PV -- "T1: unknown crop" --> PR_UNKNOWN["200 cropType=Unknown, domains=Others"]:::warn
+    PV -- "T9: GDB duplicate" --> PR_DUP["200 isDuplicate=true, score present"]:::warn
+    PV -- "T10: 2 domains" --> PR_MULTI["200 both domains in body"]:::ok
   end
 
-  %% ── 2. SUBMIT ────────────────────────────────────────────────────────────────
   subgraph SUBMIT ["2. POST /questions"]
     CONF{"Gemma confidence"}:::decide
-
-    CONF -- "T2: confidence = 0.9 exactly" --> PEND["201 — PENDING
-    at threshold boundary"]:::ok
-
-    CONF -- "T3: confidence = 0.899" --> HRV["201 — HUMAN_REVIEW
-    just below threshold"]:::warn
-
-    CONF -- "high confidence — GDB check" --> GDBD{"GDB result"}:::decide
-
-    GDBD -- "T4: isDuplicate false, score 0.5" --> NOT_DUP["201 — PENDING
-    duplicateFlag = false in DB"]:::ok
-
-    GDBD -- "T5: isDuplicate true, score 0.95" --> DUP["201 — DUPLICATE
-    id is empty string
-    matchedQuestion + matchedAnswer returned"]:::warn
-
-    CONF -- "T6: embed returns null" --> EMBED_NULL["201 — saves successfully
-    embedding = null in DB"]:::ok
-
-    CONF -- "T7: two domains in payload" --> MULTI_DOM["201 — both domains
-    persisted on question row"]:::ok
+    CONF -- "T2: conf=0.9 exactly" --> PEND["201 PENDING at threshold"]:::ok
+    CONF -- "T3: conf=0.899" --> HRV["201 HUMAN_REVIEW below threshold"]:::warn
+    CONF -- "high conf" --> GDBD{"GDB result"}:::decide
+    GDBD -- "T4: not dup, score=0.5" --> NOT_DUP["201 PENDING, duplicateFlag=false"]:::ok
+    GDBD -- "T5: dup, score=0.95" --> DUP["201 DUPLICATE, id empty"]:::warn
+    CONF -- "T6: embed null" --> EMBED_NULL["201 saved, embedding=null"]:::ok
+    CONF -- "T7: 2 domains" --> MULTI_DOM["201 both domains persisted"]:::ok
   end
 
-  %% ── 3. ADMIN CONFIG ─────────────────────────────────────────────────────────
   subgraph CONFIG ["3. PATCH + GET /admin/config"]
-    ADM["T8: update threshold to 0.99
-    GET confirms new value
-    restore to 0.9 after test"]:::ok
+    ADM["T8: set threshold=0.99, GET confirms, restore after"]:::ok
   end
 ```
 

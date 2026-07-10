@@ -60,17 +60,16 @@ implementations.
 
 ```mermaid
 flowchart TD
-  classDef entry  fill:#ede9fe,stroke:#7c3aed,color:#3b0764,font-weight:bold
-  classDef ok     fill:#d1fae5,stroke:#059669,color:#064e3b
-  classDef warn   fill:#fef9c3,stroke:#d97706,color:#78350f
-  classDef err    fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+  classDef entry fill:#ede9fe,stroke:#7c3aed,color:#3b0764
+  classDef ok    fill:#d1fae5,stroke:#059669,color:#064e3b
+  classDef warn  fill:#fef9c3,stroke:#d97706,color:#78350f
+  classDef err   fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
   classDef decide fill:#faf5ff,stroke:#7c3aed,color:#3b0764
 
-  ROOT["Question Submit E2E — 23 tests
-  farmerToken / studentToken / adminToken"]:::entry
+  ROOT["QuestionSubmit E2E - 23 tests"]:::entry
 
   ROOT --> AUTH{"JWT present?"}:::decide
-  AUTH -- "no token — T5" --> E401["401 Unauthorized"]:::err
+  AUTH -- "no token - T5" --> E401["401 Unauthorized"]:::err
   AUTH -- "valid JWT" --> ROUTES["Authenticated routes"]:::entry
 
   ROUTES --> PR1
@@ -80,66 +79,51 @@ flowchart TD
   ROUTES --> L1
   ROUTES --> S1
 
-  %% ── 1. PREVIEW ───────────────────────────────────────────────────────────
   subgraph PREVIEW ["1. POST /questions/preview"]
-    PR1["T1: happy path
-    Gemma default mock
-    200 — cropType + domains present"]:::ok
-
-    PR2["T22: GDB isDuplicate=true, score=0.97
-    200 — duplicate object in body"]:::warn
+    PR1["T1: happy path - 200, cropType + domains"]:::ok
+    PR2["T22: GDB isDuplicate=true - 200, duplicate in body"]:::warn
   end
 
-  %% ── 2. SUBMIT ────────────────────────────────────────────────────────────
   subgraph SUBMIT ["2. POST /questions"]
     PVAL{"payload valid?"}:::decide
-    PVAL -- "T6: questionText > 1000 chars" --> PV400a["400"]:::err
-    PVAL -- "T7: mediaType=IMAGE, mediaUrls=[]" --> PV400b["400"]:::err
+    PVAL -- "T6: text over 1000 chars" --> PV400a["400"]:::err
+    PVAL -- "T7: IMAGE, no mediaUrls" --> PV400b["400"]:::err
     PVAL -- "T20: state missing" --> PV400c["400"]:::err
-    PVAL -- "T21: domains=[]" --> PV400d["400"]:::err
-    PVAL -- "valid payload" --> DLIM{"daily count < limit?"}:::decide
-    DLIM -- "T9: 21st submission" --> DL400["400 — daily limit message"]:::err
-    DLIM -- "under limit" --> AIPATH{"AI routing"}:::decide
-    AIPATH -- "T2: Gemma conf=0.95, GDB no dup" --> PEND["201 — PENDING"]:::ok
-    AIPATH -- "T3: Gemma conf=0.7" --> HRV["201 — HUMAN_REVIEW"]:::warn
-    AIPATH -- "T4: GDB isDuplicate=true" --> DUP["201 — DUPLICATE"]:::warn
-    AIPATH -- "T19: mediaType=VIDEO + URL" --> VID["201"]:::ok
+    PVAL -- "T21: domains empty" --> PV400d["400"]:::err
+    PVAL -- "valid" --> DLIM{"under daily limit?"}:::decide
+    DLIM -- "T9: 21st submission" --> DL400["400 daily limit"]:::err
+    DLIM -- "ok" --> AIPATH{"AI routing"}:::decide
+    AIPATH -- "T2: conf=0.95, no dup" --> PEND["201 PENDING"]:::ok
+    AIPATH -- "T3: conf=0.7" --> HRV["201 HUMAN_REVIEW"]:::warn
+    AIPATH -- "T4: GDB duplicate" --> DUP["201 DUPLICATE"]:::warn
+    AIPATH -- "T19: VIDEO + URL" --> VID["201"]:::ok
   end
 
-  %% ── 3. EDIT ──────────────────────────────────────────────────────────────
   subgraph EDIT ["3. PATCH /questions/:id"]
-    OWN1{"caller is owner?"}:::decide
-    OWN1 -- "T12: studentToken edits farmer question" --> E403["403 Forbidden"]:::err
-    OWN1 -- "owner" --> WIN{"edit window open?"}:::decide
-    WIN -- "T11: window expired" --> W400["400"]:::err
-    WIN -- "T8: within 30 s" --> W200["200 — updated"]:::ok
+    OWN1{"owner?"}:::decide
+    OWN1 -- "T12: student edits farmer Q" --> E403["403"]:::err
+    OWN1 -- "yes" --> WIN{"window open?"}:::decide
+    WIN -- "T11: expired" --> W400["400"]:::err
+    WIN -- "T8: within 30s" --> W200["200 updated"]:::ok
   end
 
-  %% ── 4. READ SINGLE ───────────────────────────────────────────────────────
   subgraph READ ["4. GET /questions/:id"]
-    OWN2{"caller is owner?"}:::decide
-    OWN2 -- "T13: farmerToken reads own PENDING" --> R200["200 — id + text match"]:::ok
-    OWN2 -- "non-owner" --> APPR{"status = APPROVED?"}:::decide
-    APPR -- "T14: PENDING" --> R403["403 Forbidden"]:::err
-    APPR -- "T15: admin approved first" --> R200b["200 — status=APPROVED"]:::ok
+    OWN2{"owner?"}:::decide
+    OWN2 -- "T13: own PENDING" --> R200["200"]:::ok
+    OWN2 -- "no" --> APPR{"APPROVED?"}:::decide
+    APPR -- "T14: PENDING" --> R403["403"]:::err
+    APPR -- "T15: admin approved" --> R200b["200 APPROVED"]:::ok
   end
 
-  %% ── 5. LIST ──────────────────────────────────────────────────────────────
   subgraph LIST ["5. GET /questions"]
-    L1["T10: ownership isolation
-    studentToken sees only own questions"]:::ok
-    L2["T16: pagination — page=1 limit=2
-    items.length=2, total>=3, pages>=2"]:::ok
-    L3["T17: status filter — status=human_review
-    every item.status = HUMAN_REVIEW"]:::ok
-    L4["T23: admin sees all users questions"]:::ok
+    L1["T10: student sees own only"]:::ok
+    L2["T16: page=1 limit=2, total>=3"]:::ok
+    L3["T17: status=human_review filter"]:::ok
+    L4["T23: admin sees all users"]:::ok
   end
 
-  %% ── 6. STATS ─────────────────────────────────────────────────────────────
   subgraph STATS ["6. GET /questions/stats/me"]
-    S1["T18: farmerToken
-    dailyCount + remainingToday + dailyLimit present
-    remainingToday = max(0, limit - count)"]:::ok
+    S1["T18: dailyCount + remainingToday + dailyLimit"]:::ok
   end
 ```
 
