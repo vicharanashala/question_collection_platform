@@ -382,13 +382,15 @@ export function AudioRecorder({
         </TouchableOpacity>
       </View>
 
-      <Text style={[styles.label, { color: c.textSecondary }]}>
-        {isUploading
-          ? t('audio.transcribing') ?? 'Transcribing…'
-          : isRecording
-          ? t('audio.recording') ?? 'Recording — tap to stop'
-          : label ?? t('audio.record') ?? 'Tap to record'}
-      </Text>
+      {label !== '' && (
+        <Text style={[styles.label, { color: c.textSecondary }]}>
+          {isUploading
+            ? t('audio.transcribing') ?? 'Transcribing…'
+            : isRecording
+            ? t('audio.recording') ?? 'Recording — tap to stop'
+            : label ?? t('audio.record') ?? 'Tap to record'}
+        </Text>
+      )}
 
       {isRecording && (
         <View style={[styles.recordingBadge, { backgroundColor: c.error + '20' }]}>
