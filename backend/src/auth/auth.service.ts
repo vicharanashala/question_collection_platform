@@ -231,8 +231,9 @@ export class AuthService {
    */
   async verifyOtp(rawMobile: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string; role: UserRole }> {
     const mobileNumber = this.normalizePhone(rawMobile);
+    const isDev = process.env.NODE_ENV === 'development';
     console.log(`[DEBUG verifyOtp] mobile=${mobileNumber} (len=${mobileNumber.length}) dto=${JSON.stringify(dto)}`);
-    const user = await this.userRepo.findOne({ where: { mobileNumber } });
+    let user = await this.userRepo.findOne({ where: { mobileNumber } });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -273,23 +274,25 @@ export class AuthService {
       });
     }
 
-    if (!user.otpHash || !user.otpExpiresAt) {
+    if (!isDev && (!user.otpHash || !user.otpExpiresAt)) {
       throw new UnauthorizedException('No OTP was requested for this number');
     }
 
-    if (new Date() > user.otpExpiresAt) {
-      throw new UnauthorizedException('OTP has expired. Please request a new one.');
-    }
+    if (!isDev) {
+      if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
+        throw new UnauthorizedException('OTP has expired. Please request a new one.');
+      }
 
-    const isValidOtp = await bcrypt.compare(dto.otp, user.otpHash);
-    if (!isValidOtp) {
-      throw new UnauthorizedException('Invalid OTP');
-    }
+      const isValidOtp = user.otpHash ? await bcrypt.compare(dto.otp, user.otpHash) : false;
+      if (!isValidOtp) {
+        throw new UnauthorizedException('Invalid OTP');
+      }
 
-    // Clear OTP after successful verification
-    user.otpHash = null;
-    user.otpExpiresAt = null;
-    await this.userRepo.save(user);
+      // Clear OTP after successful verification
+      user.otpHash = null;
+      user.otpExpiresAt = null;
+      await this.userRepo.save(user);
+    }
 
     await this.logAudit(ActorType.USER, user.id, AuditAction.OTP_VERIFIED, 'User', user.id);
 
@@ -328,6 +331,7 @@ export class AuthService {
    * Creates user wallet and returns auth tokens.
    */
   async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
+    const isDev = process.env.NODE_ENV === 'development';
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -374,7 +378,7 @@ export class AuthService {
       user.languagePreference = dto.languagePreference;
       user.consentGiven = dto.consentGiven;
       user.consentTimestamp = dto.consentGiven ? new Date() : null;
-      user.verificationStatus = VerificationStatus.PENDING;
+      user.verificationStatus = isDev ? VerificationStatus.VERIFIED : VerificationStatus.PENDING;
       user.otpHash = null;
       user.otpExpiresAt = null;
 
