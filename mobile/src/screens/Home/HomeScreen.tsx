@@ -116,7 +116,7 @@ export function HomeScreen() {
           <View style={styles.heroTop}>
             <View style={styles.heroLeft}>
               <Text style={[styles.heroGreeting, { color: c.heroFg + 'cc' }]}>{greeting},</Text>
-              <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
+              <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? t('home.farmer')}</Text>
               <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
                 <Ionicons
                   name={(user?.category ? categoryIcons[user.category] : 'leaf-outline') as keyof typeof Ionicons.glyphMap}
@@ -124,7 +124,7 @@ export function HomeScreen() {
                   color={c.heroFg}
                 />
                 <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
-                  {user?.category ? categoryLabels[user.category] : 'Farmer'}
+                  {user?.category ? categoryLabels[user.category] : t('home.farmer')}
                 </Text>
               </View>
             </View>
@@ -250,7 +250,7 @@ export function HomeScreen() {
             {REWARD_TIERS.map((tier, i) => {
               const colors = [c.warning, c.textSecondary, c.success];
               const icons = ['leaf', 'leaf', 'leaf'];
-              const labels = ['Bronze', 'Silver', 'Gold'];
+              const labels = [t('home.bronze'), t('home.silver'), t('home.gold')];
               const color = colors[i];
               const next = REWARD_TIERS[i + 1];
 
@@ -277,10 +277,10 @@ export function HomeScreen() {
                   <View style={styles.tierStepLabel}>
                     <Text style={[styles.tierStepName, { color }]}>{labels[i]}</Text>
                     <Text style={[styles.tierStepRange, { color: c.textSecondary }]}>
-                      {tier.min}–{tier.max}Qs
+                      {tier.min}–{tier.max}{t('home.questions')}
                     </Text>
                     <Text style={[styles.tierStepReward, { color: c.text }]}>
-                      ₹{tier.reward}/Q
+                      {t('common.rupee', 'Rs.')}{tier.reward}{t('home.perQuestion')}
                     </Text>
                   </View>
                 </View>
@@ -297,7 +297,7 @@ export function HomeScreen() {
             activeOpacity={0.75}
             onPress={() => {
               if (stats && stats.remainingToday <= 0) {
-                showToast(`You've used all your submissions for today. Try again tomorrow!`, 'warning');
+                showToast(t('home.allSubmissionsUsed'), 'warning');
               } else {
                 navigation.navigate('AskQuestion');
               }
@@ -328,22 +328,22 @@ export function HomeScreen() {
             {[
               {
                 icon: 'videocam-outline',
-                text: `Video — Max ${EDIT_WINDOW_SEC}s, ${10}MB`,
+                text: t('home.videoTip', { seconds: EDIT_WINDOW_SEC, size: 10 }),
                 color: '#0891B2',
               },
               {
                 icon: 'calendar-outline',
-                text: `Daily limit — ${stats?.dailyLimit ?? 20} questions per day`,
+                text: t('home.dailyLimitTip', { count: stats?.dailyLimit ?? 20 }),
                 color: c.primary,
               },
               {
                 icon: 'pencil-outline',
-                text: `Edit window — ${EDIT_WINDOW_SEC} seconds after submission`,
+                text: t('home.editWindowTip', { seconds: EDIT_WINDOW_SEC }),
                 color: c.warning,
               },
               {
                 icon: 'bulb-outline',
-                text: 'AI relevance check runs automatically before posting',
+                text: t('home.aiCheckTip'),
                 color: '#7C3AED',
               },
             ].map((item, i) => (

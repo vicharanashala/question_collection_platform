@@ -148,7 +148,7 @@ export function ReportDetailScreen({ route, navigation }: Props) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.replyAdminName, { color: c.text }]}>
-                      {reply.admin?.name ?? 'Admin'}
+                      {reply.admin?.name ?? t('report.adminName')}
                     </Text>
                     <Text style={[styles.replyDate, { color: c.textTertiary }]}>
                       {new Date(reply.createdAt).toLocaleDateString('en-IN', {

@@ -7,6 +7,7 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import i18n from '../i18n';
 
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
@@ -81,6 +82,8 @@ interface TabIconProps {
 function TabIcon({ icon, label, focused }: TabIconProps) {
   const { theme } = useTheme();
   const c = theme.colors;
+  // i18n.t() is synchronous and stable — safe to call directly in static UI components
+  const $t = (k: string) => i18n.t(k);
   return (
     <View style={tabStyles.container}>
       <Ionicons
@@ -95,7 +98,7 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
           focused && tabStyles.labelActive,
         ]}
       >
-        {label}
+        {$t(label)}
       </Text>
     </View>
   );
@@ -373,19 +376,20 @@ function MainNavigator() {
         tabBarShowLabel: false,
       }}
     >
+      {/* ── Bottom Tab Navigator ── */}
       <MainTab.Screen
         name="HomeTab"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="Home" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="nav.home" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Submissions"
         component={SubmissionsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="Submissions" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="nav.submissions" focused={focused} /> }}
       />
       <MainTab.Screen
         name="AskQuestion"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Submit" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="nav.submit" focused={focused} /> }}
       >
         {() => {
           const route = useRoute<RouteProp<MainTabParamList, 'AskQuestion'>>();
@@ -395,12 +399,12 @@ function MainNavigator() {
       <MainTab.Screen
         name="Wallet"
         component={WalletScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="wallet" label="Wallet" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="wallet" label="nav.wallet" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="person" label="Profile" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="person" label="nav.profile" focused={focused} /> }}
       />
     </MainTab.Navigator>
     </>

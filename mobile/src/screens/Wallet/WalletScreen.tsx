@@ -108,7 +108,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
             {/* Amount + Status */}
             <View style={[txModalStyles.amountCard, { backgroundColor: isCredit ? c.success + '12' : c.error + '12' }]}>
               <Text style={[txModalStyles.amountLabel, { color: isCredit ? c.success : c.error }]}>
-                {isCredit ? 'Credit' : 'Debit'}
+                {isCredit ? t('wallet.credit') : t('wallet.debit')}
               </Text>
               <Text style={[txModalStyles.amountValue, { color: isCredit ? c.success : c.error }]}>
                 {isCredit ? '+' : '−'}₹{Number(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -139,7 +139,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
               {tx.rejectionReason ? (
                 <View style={txModalStyles.rejectionRow}>
                   <Text style={[txModalStyles.rejectionLabel, { color: c.error }]}>
-                    {t('wallet.rejectionReason', 'Rejection Reason')}
+                    {t('wallet.rejectionReason')}
                   </Text>
                   <Text style={[txModalStyles.rejectionValue, { color: c.error }]} selectable>
                     {tx.rejectionReason}
@@ -620,7 +620,7 @@ export function WalletScreen() {
       const verified = items.find((i) => i.status === 'verified');
       setSelectedPaymentDetailId(verified?.id ?? (items[0]?.id ?? null));
     } catch {
-      showToast('Failed to load payment methods', 'error');
+      showToast(t('wallet.loadPaymentDetailsError'), 'error');
     } finally {
       setLoadingDetails(false);
     }
@@ -649,11 +649,11 @@ export function WalletScreen() {
   async function handleWithdraw() {
     const selected = paymentDetails.find((d) => d.id === selectedPaymentDetailId);
     if (!selected) {
-      setPayoutError('Please select a payment method first');
+      setPayoutError(t('wallet.paymentMethodRequired'));
       return;
     }
     if (selected.status !== 'verified') {
-      setPayoutError(`Payment method is not verified yet (status: ${selected.status})`);
+      setPayoutError(`${t('wallet.paymentMethodNotVerified')} (${selected.status})`);
       return;
     }
     setWithdrawing(true);
@@ -663,7 +663,7 @@ export function WalletScreen() {
         amount: parsedAmount,
         paymentDetailId: selectedPaymentDetailId!,
       });
-      showToast(t('wallet.success') ?? 'Withdrawal request submitted', 'success');
+      showToast(t('wallet.success'), 'success');
       resetWithdrawForm();
       fetchData();
     } catch (err: unknown) {

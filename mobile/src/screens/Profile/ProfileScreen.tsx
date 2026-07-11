@@ -15,11 +15,11 @@ import type { WalletBalance } from '../../types';
 const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 
 const categoryLabels: Record<string, string> = {
-  farmer: 'Farmer',
-  fpo: 'FPO Member',
-  student: 'Student',
-  volunteer: 'Volunteer',
-  ngo: 'NGO Partner',
+  farmer: 'cat.farmer',
+  fpo: 'cat.fpo',
+  student: 'cat.student',
+  volunteer: 'cat.volunteer',
+  ngo: 'cat.ngo',
 };
 
 const categoryIcons: Record<string, string> = {
@@ -31,11 +31,11 @@ const categoryIcons: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  verified:      { label: 'Verified',     color: '#22C55E', icon: 'checkmark-circle' },
-  pending:       { label: 'Pending',      color: '#F59E0B', icon: 'time-outline' },
-  manual_review: { label: 'Under Review', color: '#3B82F6', icon: 'eye-outline' },
-  suspended:     { label: 'Suspended',    color: '#EF4444', icon: 'alert-circle-outline' },
-  banned:        { label: 'Banned',       color: '#991B1B', icon: 'close-circle-outline' },
+  verified:      { label: 'status.verified',      color: '#22C55E', icon: 'checkmark-circle' },
+  pending:       { label: 'status.pending',       color: '#F59E0B', icon: 'time-outline' },
+  manual_review: { label: 'status.manual_review', color: '#3B82F6', icon: 'eye-outline' },
+  suspended:     { label: 'status.suspended',     color: '#EF4444', icon: 'alert-circle-outline' },
+  banned:        { label: 'status.banned',        color: '#991B1B', icon: 'close-circle-outline' },
 };
 
 export function ProfileScreen() {
@@ -113,7 +113,7 @@ export function ProfileScreen() {
             {/* Name + meta */}
             <View style={styles.heroInfo}>
               <Text style={[styles.heroName, { color: c.text }]} numberOfLines={1}>
-                {user?.name ?? 'Farmer'}
+                {user?.name ?? t('cat.farmer')}
               </Text>
               {user?.mobileNumber && (
                 <View style={styles.heroContactRow}>
@@ -129,7 +129,7 @@ export function ProfileScreen() {
                     color={c.primary}
                   />
                   <Text style={[styles.categoryText, { color: c.primary }]}>
-                    {categoryLabels[user.category] ?? ''}
+                    {t(categoryLabels[user.category] ?? '')}
                   </Text>
                 </View>
               )}
@@ -144,7 +144,7 @@ export function ProfileScreen() {
                   color={statusColor}
                 />
                 <Text style={[styles.verificationText, { color: statusColor }]}>
-                  {STATUS_CONFIG[user.verificationStatus!]?.label ?? user.verificationStatus}
+                  {t(STATUS_CONFIG[user.verificationStatus!]?.label ?? user.verificationStatus ?? '')}
                 </Text>
               </View>
             )}
@@ -195,14 +195,14 @@ export function ProfileScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
               <Ionicons name="person-outline" size={14} color={c.primary} />
             </View>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.account')}</Text>
             {/* <TouchableOpacity
               style={[styles.editBtn, { backgroundColor: c.primary + '14' }]}
               activeOpacity={0.7}
               onPress={() => navigation.navigate('EditProfile')}
             >
               <Ionicons name="pencil-outline" size={11} color={c.primary} />
-              <Text style={[styles.editBtnText, { color: c.primary }]}>Edit</Text>
+              <Text style={[styles.editBtnText, { color: c.primary }]}>{t('profile.editProfile')}</Text>
             </TouchableOpacity> */}
           </View>
 
@@ -210,23 +210,23 @@ export function ProfileScreen() {
           <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <View style={styles.accountCardHeader}>
               <Ionicons name="person-circle-outline" size={13} color={c.primary} />
-              <Text style={[styles.accountCardTitle, { color: c.primary }]}>Personal Info</Text>
+              <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.personalInfo')}</Text>
             </View>
             <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
               {user?.category && (
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="pricetag-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Category</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.category')}</Text>
                   </View>
-                  <Text style={[styles.accountValue, { color: c.text }]}>{categoryLabels[user.category] ?? user.category}</Text>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{t(categoryLabels[user.category] ?? user.category)}</Text>
                 </View>
               )}
               {user?.gender && (
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="male-female-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Gender</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.gender')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text, textTransform: 'capitalize' }]}>{user.gender}</Text>
                 </View>
@@ -235,9 +235,9 @@ export function ProfileScreen() {
                 <View style={[styles.accountRow, styles.accountRowLast]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="calendar-number-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Age</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.age')}</Text>
                   </View>
-                  <Text style={[styles.accountValue, { color: c.text }]}>{user.age} yrs</Text>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.age} {t('profile.years')}</Text>
                 </View>
               )}
             </View>
@@ -247,14 +247,14 @@ export function ProfileScreen() {
           <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <View style={styles.accountCardHeader}>
               <Ionicons name="location-outline" size={13} color={c.primary} />
-              <Text style={[styles.accountCardTitle, { color: c.primary }]}>Location</Text>
+              <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.location')}</Text>
             </View>
             <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
               {user?.state && (
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="map-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>State</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.state')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text }]}>{user.state}</Text>
                 </View>
@@ -263,7 +263,7 @@ export function ProfileScreen() {
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="business-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>District</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.district')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text }]}>{user.district}</Text>
                 </View>
@@ -272,7 +272,7 @@ export function ProfileScreen() {
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Block</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.block')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text }]}>{user.block}</Text>
                 </View>
@@ -281,7 +281,7 @@ export function ProfileScreen() {
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="home-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Village</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.village')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text }]}>{user.village}</Text>
                 </View>
@@ -290,7 +290,7 @@ export function ProfileScreen() {
                 <View style={[styles.accountRow, styles.accountRowLast]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="school-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>KVK</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.kvk')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text }]}>{user.kvk}</Text>
                 </View>
@@ -303,14 +303,14 @@ export function ProfileScreen() {
             <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
               <View style={styles.accountCardHeader}>
                 <Ionicons name="school-outline" size={13} color={c.primary} />
-                <Text style={[styles.accountCardTitle, { color: c.primary }]}>Education</Text>
+                <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.education')}</Text>
               </View>
               <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                 {user?.courseName && (
                   <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="book-outline" size={13} color={c.textTertiary} />
-                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Course</Text>
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.course')}</Text>
                     </View>
                     <Text style={[styles.accountValue, { color: c.text }]}>{user.courseName}</Text>
                   </View>
@@ -319,7 +319,7 @@ export function ProfileScreen() {
                   <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="business-outline" size={13} color={c.textTertiary} />
-                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>College</Text>
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.college')}</Text>
                     </View>
                     <Text style={[styles.accountValue, { color: c.text }]}>{user.collegeName}</Text>
                   </View>
@@ -328,7 +328,7 @@ export function ProfileScreen() {
                   <View style={[styles.accountRow, styles.accountRowLast]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
-                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>University</Text>
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.university')}</Text>
                     </View>
                     <Text style={[styles.accountValue, { color: c.text }]}>{user.universityName}</Text>
                   </View>
@@ -342,23 +342,23 @@ export function ProfileScreen() {
             <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
               <View style={styles.accountCardHeader}>
                 <Ionicons name="leaf-outline" size={13} color={c.primary} />
-                <Text style={[styles.accountCardTitle, { color: c.primary }]}>Farming</Text>
+                <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.farming')}</Text>
               </View>
               <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                 {user?.farmSize && (
                   <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="resize-outline" size={13} color={c.textTertiary} />
-                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Farm Size</Text>
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.farmSize')}</Text>
                     </View>
-                    <Text style={[styles.accountValue, { color: c.text }]}>{user.farmSize} acres</Text>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.farmSize} {t('profile.acres')}</Text>
                   </View>
                 )}
                 {user?.cropType && (
                   <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
-                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Crop</Text>
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.crop')}</Text>
                     </View>
                     <Text style={[styles.accountValue, { color: c.text }]}>{user.cropType}</Text>
                   </View>
@@ -367,7 +367,7 @@ export function ProfileScreen() {
                   <View style={[styles.accountRow, styles.accountRowLast]}>
                     <View style={styles.accountRowLeft}>
                       <Ionicons name="partly-sunny-outline" size={13} color={c.textTertiary} />
-                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Season</Text>
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.season')}</Text>
                     </View>
                     <Text style={[styles.accountValue, { color: c.text }]}>{user.season}</Text>
                   </View>
@@ -390,7 +390,7 @@ export function ProfileScreen() {
                 <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
                   <Ionicons name="business-outline" size={14} color={c.primary} />
                 </View>
-                <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.organisationDetails')}</Text>
               </View>
 
               {/* Org Info */}
@@ -400,7 +400,7 @@ export function ProfileScreen() {
                     <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
-                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Org. Type</Text>
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.orgType')}</Text>
                       </View>
                       <Text style={[styles.accountValue, { color: c.text }]}>{u.organisationType}</Text>
                     </View>
@@ -409,7 +409,7 @@ export function ProfileScreen() {
                     <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="business-outline" size={13} color={c.textTertiary} />
-                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Name</Text>
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.orgName')}</Text>
                       </View>
                       <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationName}</Text>
                     </View>
@@ -418,7 +418,7 @@ export function ProfileScreen() {
                     <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
-                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Role</Text>
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.orgRole')}</Text>
                       </View>
                       <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationRole}</Text>
                     </View>
@@ -427,7 +427,7 @@ export function ProfileScreen() {
                     <View style={[styles.accountRow, styles.accountRowLast]}>
                       <View style={styles.accountRowLeft}>
                         <Ionicons name="people-outline" size={13} color={c.textTertiary} />
-                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Members</Text>
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.members')}</Text>
                       </View>
                       <Text style={[styles.accountValue, { color: c.text }]}>{u.numberOfFarmers}</Text>
                     </View>
@@ -440,14 +440,14 @@ export function ProfileScreen() {
                 <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                   <View style={styles.accountCardHeader}>
                     <Ionicons name="location-outline" size={13} color={c.primary} />
-                    <Text style={[styles.accountCardTitle, { color: c.primary }]}>Organisation Location</Text>
+                    <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.organisationLocation')}</Text>
                   </View>
                   <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
                     {u.organizationState && (
                       <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="map-outline" size={13} color={c.textTertiary} />
-                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>State</Text>
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.state')}</Text>
                         </View>
                         <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationState}</Text>
                       </View>
@@ -456,7 +456,7 @@ export function ProfileScreen() {
                       <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="business-outline" size={13} color={c.textTertiary} />
-                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>District</Text>
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.district')}</Text>
                         </View>
                         <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationDistrict}</Text>
                       </View>
@@ -465,7 +465,7 @@ export function ProfileScreen() {
                       <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
-                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Block</Text>
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.block')}</Text>
                         </View>
                         <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationBlock}</Text>
                       </View>
@@ -474,7 +474,7 @@ export function ProfileScreen() {
                       <View style={[styles.accountRow, styles.accountRowLast]}>
                         <View style={styles.accountRowLeft}>
                           <Ionicons name="home-outline" size={13} color={c.textTertiary} />
-                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Village</Text>
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.village')}</Text>
                         </View>
                         <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationVillage}</Text>
                       </View>
@@ -489,7 +489,7 @@ export function ProfileScreen() {
         {/* ── Crops ──────────────────────────────────────────── */}
         {userCrops.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Crops</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.crops')}</Text>
             <View style={styles.cropTags}>
               {userCrops.map((crop) => (
                 <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.primary + '14', borderColor: c.primary + '30' }]}>
@@ -507,7 +507,7 @@ export function ProfileScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
               <Ionicons name="flash-outline" size={14} color={c.primary} />
             </View>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Actions</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.actions')}</Text>
           </View>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <TouchableOpacity
@@ -518,7 +518,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="wallet-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Payment Methods</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.paymentMethods')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
@@ -542,7 +542,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="document-text-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Terms of Service</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.termsOfService')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
@@ -554,7 +554,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="shield-checkmark-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Privacy Policy</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.privacyPolicy')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
@@ -569,7 +569,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="mail-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Contact Admin</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.contactAdmin')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 

@@ -281,8 +281,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               disabled={loadingDistricts || !selectedState}
               disabledMessage={
                 loadingDistricts
-                  ? t('question.districtLoadingMessage') ?? 'Loading districts…'
-                  : t('question.selectStateFirst') ?? 'Select a state first'
+                  ? t('question.districtLoadingMessage')
+                  : t('question.selectStateFirst')
               }
             />
 
@@ -297,8 +297,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               disabled={loadingBlocks || !selectedDistrict}
               disabledMessage={
                 loadingBlocks
-                  ? t('question.blockLoadingMessage') ?? 'Loading blocks…'
-                  : t('question.selectDistrictFirst') ?? 'Select a district first'
+                  ? t('question.blockLoadingMessage')
+                  : t('question.selectDistrictFirst')
               }
             />
 
@@ -319,7 +319,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             {/* Domains */}
             <View style={styles.domainSection}>
               <Text style={[styles.domainLabel, { color: theme.colors.text }]}>
-                {t('question.domain') ?? 'Agriculture Domain'}{
+                {t('question.domainSelect')}{
                   <Text style={{ color: theme.colors.error }}> *</Text>
                 }
               </Text>
@@ -390,9 +390,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
             {/* Question text */}
             <Input
-              label={t('question.yourQuestion') ?? 'Your Question'}
+              label={t('question.yourQuestion')}
               required
-              placeholder={t('question.questionPlaceholder') ?? 'Type your agriculture question here…'}
+              placeholder={t('question.questionPlaceholder')}
               value={questionText}
               onChangeText={(t) => { setQuestionText(t); setErrors({}); }}
               error={errors.questionText}
@@ -421,7 +421,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             <View style={[styles.statsRow, { backgroundColor: theme.colors.muted }]}>
               <Ionicons name="reload-circle" size={18} color={theme.colors.textSecondary} />
               <Text style={[styles.statsText, { color: theme.colors.textSecondary }]}>
-                {preview.remainingToday} of {preview.dailyLimit} submissions remaining today
+                {t('question.dailyRemaining', { remaining: preview.remainingToday, total: preview.dailyLimit })}
               </Text>
             </View>
 
@@ -430,7 +430,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
               <View style={[styles.statsRow, { backgroundColor: theme.colors.muted, marginTop: tokens.spacing2 }]}>
                 <Ionicons name="mic" size={16} color={theme.colors.textSecondary} />
                 <Text style={[styles.statsText, { color: theme.colors.textSecondary }]}>
-                  {t('question.audioModelDisclaimer') ?? 'Your voice recording will be saved to help improve our AI models'}
+                  {t('question.audioModelDisclaimer')}
                 </Text>
               </View>
             ) : null}
@@ -439,12 +439,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
           {/* Actions */}
           <View style={styles.actions}>
             <Button
-              title={t('question.submitQuestion') ?? 'Submit'}
+              title={t('question.submitQuestion')}
               onPress={handleConfirm}
               loading={loading}
             />
             <Button
-              title="Go Back"
+              title={t('goBack')}
               variant="secondary"
               onPress={() => navigation.goBack()}
               disabled={loading}

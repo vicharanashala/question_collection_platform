@@ -6,7 +6,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import { useToast } from '../../components/Toast';
-import { Trnscber } from '../../components/Trnscber';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import { questionApi, getMediaUrl } from '../../api/client';
@@ -320,12 +319,10 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
               </View>
             </View>
 
-            {/* Full question text */}
-            <Trnscber
-              text={question.questionText}
-              sourceLanguage={question.language ?? 'en'}
-              style={[styles.viewQuestionText, { color: c.text }]}
-            />
+            {/* Full question text — always show original, never auto-translate */}
+            <Text style={[styles.viewQuestionText, { color: c.text }]}>
+              {question.questionText}
+            </Text>
 
             {/* Details list */}
             <View style={[styles.detailsCard, { backgroundColor: c.input, borderColor: c.borderSubtle }]}>

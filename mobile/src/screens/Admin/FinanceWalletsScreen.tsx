@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
   RefreshControl, TextInput,
@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../components/Toast';
+import { useTranslation } from 'react-i18next';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { WalletDetailModal } from '../../components/WalletDetailModal';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
@@ -25,48 +26,7 @@ const EMPTY_FILTERS: ActiveFilters = {
   sortBy: 'createdAt:DESC',
 };
 
-const FILTERS: FilterOption[] = [
-  {
-    key: 'search',
-    label: 'Search',
-    type: 'text',
-    placeholder: 'Name, mobile, district…',
-  },
-  {
-    key: 'state',
-    label: 'State',
-    type: 'select',
-    options: [
-      { value: '', label: 'All States' },
-      { value: 'Maharashtra', label: 'Maharashtra' },
-      { value: 'Karnataka', label: 'Karnataka' },
-      { value: 'Rajasthan', label: 'Rajasthan' },
-      { value: 'Uttar Pradesh', label: 'Uttar Pradesh' },
-      { value: 'Madhya Pradesh', label: 'Madhya Pradesh' },
-      { value: 'Gujarat', label: 'Gujarat' },
-      { value: 'Tamil Nadu', label: 'Tamil Nadu' },
-      { value: 'Andhra Pradesh', label: 'Andhra Pradesh' },
-      { value: 'Telangana', label: 'Telangana' },
-      { value: 'Bihar', label: 'Bihar' },
-      { value: 'West Bengal', label: 'West Bengal' },
-      { value: 'Punjab', label: 'Punjab' },
-      { value: 'Haryana', label: 'Haryana' },
-      { value: 'Other', label: 'Other' },
-    ],
-  },
-  {
-    key: 'sortBy',
-    label: 'Sort By',
-    type: 'select',
-    options: [
-      { value: 'createdAt:DESC', label: 'Newest First' },
-      { value: 'createdAt:ASC', label: 'Oldest First' },
-      { value: 'balance:DESC', label: 'Highest Balance' },
-      { value: 'balance:ASC', label: 'Lowest Balance' },
-      { value: 'totalEarned:DESC', label: 'Most Earned' },
-    ],
-  },
-];
+
 
 function buildQueryParams(filters: ActiveFilters, page: number) {
   const { sortBy, ...rest } = filters as typeof filters & { sortBy?: string };
@@ -115,6 +75,7 @@ export function FinanceWalletsScreen() {
   const c = theme.colors;
   const nav = useNavigation<Nav>();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [items, setItems] = useState<WalletItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +87,49 @@ export function FinanceWalletsScreen() {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({ ...EMPTY_FILTERS });
   const [walletModal, setWalletModal] = useState<{ userId: string; userName: string } | null>(null);
   const [searchInput, setSearchInput] = useState('');
+
+  const FILTERS: FilterOption[] = useMemo(() => [
+    {
+      key: 'search',
+      label: t('admin.search'),
+      type: 'text',
+      placeholder: t('question.searchPlaceholder', 'Search name, mobile, district…'),
+    },
+    {
+      key: 'state',
+      label: t('admin.state'),
+      type: 'select',
+      options: [
+        { value: '', label: t('admin.allStates') },
+        { value: 'Maharashtra', label: 'Maharashtra' },
+        { value: 'Karnataka', label: 'Karnataka' },
+        { value: 'Rajasthan', label: 'Rajasthan' },
+        { value: 'Uttar Pradesh', label: 'Uttar Pradesh' },
+        { value: 'Madhya Pradesh', label: 'Madhya Pradesh' },
+        { value: 'Gujarat', label: 'Gujarat' },
+        { value: 'Tamil Nadu', label: 'Tamil Nadu' },
+        { value: 'Andhra Pradesh', label: 'Andhra Pradesh' },
+        { value: 'Telangana', label: 'Telangana' },
+        { value: 'Bihar', label: 'Bihar' },
+        { value: 'West Bengal', label: 'West Bengal' },
+        { value: 'Punjab', label: 'Punjab' },
+        { value: 'Haryana', label: 'Haryana' },
+        { value: 'Other', label: 'Other' },
+      ],
+    },
+    {
+      key: 'sortBy',
+      label: t('common.sortBy'),
+      type: 'select',
+      options: [
+        { value: 'createdAt:DESC', label: t('admin.newestFirst') },
+        { value: 'createdAt:ASC', label: t('admin.oldestFirst') },
+        { value: 'balance:DESC', label: t('admin.highestBalance') },
+        { value: 'balance:ASC', label: t('admin.lowestBalance') },
+        { value: 'totalEarned:DESC', label: t('admin.mostEarned') },
+      ],
+    },
+  ], [t]);
 
   const fetch = useCallback(async (pageNum = 1, refresh = false, filters: ActiveFilters = activeFilters) => {
     try {
@@ -191,7 +195,7 @@ export function FinanceWalletsScreen() {
   }
 
   function renderItem({ item }: { item: WalletItem }) {
-    const displayName = item.user?.name ?? item.user?.mobileNumber ?? 'Unknown';
+    const displayName = item.user?.name ?? item.user?.mobileNumber ?? t('common.unknown');
     const statusColor =
       item.user?.verificationStatus === 'verified' ? '#22c55e' :
       item.user?.verificationStatus === 'pending' ? '#f59e0b' : '#9ca3af';
@@ -212,10 +216,10 @@ export function FinanceWalletsScreen() {
               <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
             </View>
             <Text style={[styles.userMeta, { color: c.textSecondary }]}>
-              {item.user?.mobileNumber ?? ''} · {item.user?.category ?? ''}
+              {item.user?.mobileNumber ?? ''}{t('common.separator')}{item.user?.category ?? ''}
             </Text>
             <Text style={[styles.userMeta, { color: c.textTertiary }]}>
-              {item.user?.state ?? ''}{item.user?.district ? ` · ${item.user.district}` : ''}
+              {item.user?.state ?? ''}{item.user?.district ? t('common.separator') + item.user.district : ''}
             </Text>
           </View>
           <View style={[styles.balanceBox, { backgroundColor: c.primary + '12' }]}>
@@ -273,7 +277,7 @@ export function FinanceWalletsScreen() {
         <Ionicons name="search" size={16} color={c.mutedForeground} />
         <TextInput
           style={[styles.searchInput, { color: c.text }]}
-          placeholder="Search name, mobile, district…"
+          placeholder={t('question.searchPlaceholder')}
           placeholderTextColor={c.mutedForeground}
           value={searchInput}
           onChangeText={handleSearch}
@@ -329,7 +333,7 @@ export function FinanceWalletsScreen() {
         active={activeFilters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
-        title="Filter Wallets"
+        title={t('admin.filterWallets')}
       />
 
       {/* ── Wallet detail modal ── */}

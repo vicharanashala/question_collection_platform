@@ -44,7 +44,7 @@ export function VerificationPendingScreen() {
 
   function handleContactAdmin() {
     if (!config.support.email) return;
-    const subject = encodeURIComponent('Account Verification Help');
+    const subject = encodeURIComponent(t('verificationPending.accountVerificationHelp'));
     const body = encodeURIComponent(
       `Hello,\n\nI have registered on the Farmer Question Platform and my account is pending verification. Please verify my account.\n\nThank you.`,
     );

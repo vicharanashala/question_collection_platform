@@ -50,7 +50,7 @@ function MicHintPill({ remaining, isEditMode }: { remaining: number; isEditMode:
       <Text style={[pillStyles.pillText, { color: c.primary }]}>
         {remaining <= 0 && !isEditMode
           ? t('question.dailyLimitReached', { total: 20 })
-          : t('question.tapMicHint') ?? 'Tap mic to speak'}
+          : t('question.tapMicHint')}
       </Text>
     </TouchableOpacity>
   );
@@ -410,7 +410,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     const validation = await runOnDeviceValidation({ text: questionText.trim(), ownId: editingQuestionId });
     setAiValidation(validation);
     if (validation.verdict === 'fail') {
-      showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail') ?? t('onDeviceAI.defaultFail'), 'error');
+      showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail'), 'error');
       return;
     }
     if (validation.verdict === 'warn') return;
@@ -505,7 +505,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <View style={styles.limitBlock}>
                 <View style={styles.limitLabelRow}>
                   <Text style={[styles.limitLabel, { color: c.textSecondary }]}>
-                    {remainingToday} of {dailyLimit} left today
+                    {t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
                   </Text>
                   <Ionicons name="checkmark-circle" size={14} color={c.success} />
                 </View>
@@ -526,7 +526,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <View style={[styles.editBadge, { backgroundColor: c.primary + '15' }]}>
                 <Ionicons name="pencil" size={13} color={c.primary} />
                 <Text style={[styles.editBadgeText, { color: c.primary }]}>
-                  {t('question.editSubtitle') ?? 'Update within the edit window'}
+                  {t('question.editSubtitle')}
                 </Text>
               </View>
             )}
@@ -598,7 +598,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                 previewLoading
                   ? t('question.submitting')
                   : relevanceFailed
-                  ? (t('question.notRelevant') ?? 'Not Relevant')
+                  ? t('question.notRelevant')
                   : t('continue')
               }
               onPress={handlePreview}
@@ -611,7 +611,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             />
 
             <Text style={[styles.reviewHint, { color: c.textTertiary }]}>
-              {t('question.reviewHint') ?? 'Reviewed within 24 hours'}
+              {t('question.reviewHint')}
             </Text>
           </View>
 
@@ -619,8 +619,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           {!questionText.trim() && (
             <View style={styles.tipsSection}>
               {[
-                { icon: 'bulb-outline', tip: 'Be specific — mention crop name, symptoms & soil type' },
-                { icon: 'shield-checkmark-outline', tip: 'Avoid personal info — stay farming-related' },
+                { icon: 'bulb-outline' as const, tip: t('question.tipSpecific') },
+                { icon: 'shield-checkmark-outline' as const, tip: t('question.tipPersonalInfo') },
               ].map((item, i) => (
                 <View key={i} style={[styles.tipRow, { backgroundColor: c.surfaceVariant + '80' }]}>
                   <Ionicons name={item.icon as any} size={15} color={c.textTertiary} />

@@ -29,7 +29,7 @@ const MEDALS = {
     ring: "#FCD34D",
     glow: "#FBBF24",
     icon: "trophy" as const,
-    label: "1st",
+    label: 'leaderboard.podium.rank1',
   },
   silver: {
     color: "#64748B",
@@ -37,7 +37,7 @@ const MEDALS = {
     ring: "#CBD5E1",
     glow: "#94A3B8",
     icon: "medal" as const,
-    label: "2nd",
+    label: 'leaderboard.podium.rank2',
   },
   bronze: {
     color: "#B45309",
@@ -45,7 +45,7 @@ const MEDALS = {
     ring: "#FBBF24",
     glow: "#D97706",
     icon: "medal" as const,
-    label: "3rd",
+    label: 'leaderboard.podium.rank3',
   },
 };
 
@@ -106,7 +106,7 @@ function Avatar({
 
 // ─── Podium (Top 3 hero) ──────────────────────────────────────────────────────
 
-function Podium({ top3, c }: { top3: LeaderboardEntry[]; c: ThemeColors }) {
+function Podium({ top3, c, t }: { top3: LeaderboardEntry[]; c: ThemeColors; t: (k: string) => string }) {
   if (top3.length === 0) return null;
 
   // Order: 2nd, 1st, 3rd for visual podium
@@ -179,6 +179,9 @@ function Podium({ top3, c }: { top3: LeaderboardEntry[]; c: ThemeColors }) {
                 >
                   {entry!.rank}
                 </Text>
+                <Text style={[podStyles.rankLabel, { color: m.color, fontSize: 9 }]}>
+                  {t(m.label)}
+                </Text>
               </View>
             </View>
           );
@@ -213,6 +216,7 @@ const podStyles = StyleSheet.create({
     gap: 2,
   },
   rankNum: { fontWeight: "900", letterSpacing: -0.5 },
+  rankLabel: { fontWeight: "700", letterSpacing: 0.5, textAlign: "center", marginTop: 2 },
 });
 
 // ─── Stat pill ────────────────────────────────────────────────────────────────
@@ -285,7 +289,7 @@ const statStyles = StyleSheet.create({
 
 // ─── Section label ────────────────────────────────────────────────────────────
 
-function SectionLabel({ label, c }: { label: string; c: ThemeColors }) {
+function SectionLabel({ label, c, t }: { label: string; c: ThemeColors; t: (k: string) => string }) {
   return (
     <View style={slStyles.wrap}>
       <View style={[slStyles.line, { backgroundColor: c.borderSubtle }]} />
@@ -318,9 +322,11 @@ const slStyles = StyleSheet.create({
 function YourRankCard({
   entry,
   c,
+  t,
 }: {
   entry: LeaderboardEntry;
   c: ThemeColors;
+  t: (k: string) => string;
 }) {
   return (
     <View
@@ -333,7 +339,7 @@ function YourRankCard({
       ]}
     >
       <View style={yrStyles.rankBox}>
-        <Text style={yrStyles.rankLabel}>RANK</Text>
+        <Text style={yrStyles.rankLabel}>{t('leaderboard.rankLabel')}</Text>
         <Text style={yrStyles.rankNum}>#{entry.rank}</Text>
       </View>
 
@@ -347,7 +353,7 @@ function YourRankCard({
       />
 
       <View style={yrStyles.mid}>
-        <Text style={yrStyles.youLabel}>YOUR POSITION</Text>
+        <Text style={yrStyles.youLabel}>{t('leaderboard.yourPosition')}</Text>
         <Text style={yrStyles.name} numberOfLines={1}>
           {entry.name || "Unknown"}
         </Text>
@@ -420,7 +426,7 @@ const yrStyles = StyleSheet.create({
 
 // ─── List row (rank 4+) ───────────────────────────────────────────────────────
 
-function ListRow({ entry, c }: { entry: LeaderboardEntry; c: ThemeColors }) {
+function ListRow({ entry, c, t }: { entry: LeaderboardEntry; c: ThemeColors; t: (k: string) => string }) {
   const isMe = entry.isCurrentUser;
   return (
     <View
@@ -456,7 +462,7 @@ function ListRow({ entry, c }: { entry: LeaderboardEntry; c: ThemeColors }) {
           {entry.name || "Unknown"}
         </Text>
         {isMe && (
-          <Text style={[rowStyles.youTag, { color: c.primary }]}>You</Text>
+          <Text style={[rowStyles.youTag, { color: c.primary }]}>{t('leaderboard.you')}</Text>
         )}
       </View>
 
@@ -573,12 +579,12 @@ export function LeaderboardScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: c.text }]}>
-            Leaderboard
+            {t('leaderboard.title')}
           </Text>
           <Text style={[styles.headerSub, { color: c.textTertiary }]}>
             {response?.total
-              ? `${response.total} farmers competing`
-              : "Loading…"}
+              ? `${response.total} ${t('leaderboard.participants')}`
+              : t('leaderboard.loading')}
           </Text>
         </View>
       </View>
@@ -607,44 +613,42 @@ export function LeaderboardScreen() {
                     icon="cash"
                     iconColor="#F59E0B"
                     value={formatINR(totalEarningsAll)}
-                    label="Total Rewards"
+                    label={t('leaderboard.stats.totalRewards')}
                     c={c}
                   />
                   <StatCard
                     icon="help-circle"
                     iconColor={c.primary}
                     value={totalQuestionsAll > 0 ? `${totalQuestionsAll}` : "—"}
-                    label="Approved Qs"
+                    label={t('leaderboard.stats.approvedQs')}
                     c={c}
                   />
                   <StatCard
                     icon="ribbon"
                     iconColor={c.success}
                     value={response.userRank ? `#${response.userRank}` : "—"}
-                    label="Your Rank"
+                    label={t('leaderboard.stats.yourRank')}
                     c={c}
                   />
                 </View>
               )}
 
               {/* Podium */}
-              {top3.length > 0 && <Podium top3={top3} c={c} />}
+              {top3.length > 0 && <Podium top3={top3} c={c} t={t} />}
 
               {/* Your rank (if outside top 3 AND not in rest list) */}
               {showUserCard && (
                 <>
-                  <SectionLabel label="Your Position" c={c} />
-                  <YourRankCard entry={userEntry!} c={c} />
+                  <SectionLabel label={t('leaderboard.section.yourPosition')} c={c} t={t} />
+                  <YourRankCard entry={userEntry!} c={c} t={t} />
                 </>
               )}
 
               {/* Rest header */}
-              {rest.length > 0 && (
-                <SectionLabel label="All Participants" c={c} />
-              )}
+              {rest.length > 0 && <SectionLabel label={t('leaderboard.section.allParticipants')} c={c} t={t} />}
             </>
           }
-          renderItem={({ item }) => <ListRow entry={item} c={c} />}
+          renderItem={({ item }) => <ListRow entry={item} c={c} t={t} />}
           ListEmptyComponent={
             top3.length === 0 ? (
               <View style={styles.emptyWrap}>
@@ -656,10 +660,10 @@ export function LeaderboardScreen() {
                   />
                 </View>
                 <Text style={[styles.emptyTitle, { color: c.text }]}>
-                  No rankings yet
+                  {t('leaderboard.empty.title')}
                 </Text>
                 <Text style={[styles.emptySub, { color: c.textTertiary }]}>
-                  Start submitting questions to appear on the leaderboard
+                  {t('leaderboard.empty.subtitle')}
                 </Text>
               </View>
             ) : null

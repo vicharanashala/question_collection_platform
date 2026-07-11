@@ -108,7 +108,7 @@ function ReportCard({ report, onPress }: ReportCardProps) {
             <View style={[cardStyles.replyBadge, { backgroundColor: c.primary + '15' }]}>
               <Ionicons name="chatbubble-ellipses" size={11} color={c.primary} />
               <Text style={[cardStyles.replyText, { color: c.primary }]}>
-                {report.replies!.length} {report.replies!.length === 1 ? 'reply' : 'replies'}
+                {t('report.replyCount', { count: report.replies!.length })}
               </Text>
             </View>
           ) : (
