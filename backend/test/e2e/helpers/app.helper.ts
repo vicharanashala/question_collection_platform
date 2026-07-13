@@ -7,6 +7,7 @@ import { GemmaService } from '../../../src/ai/gemma.service';
 import { GdbService } from '../../../src/ai/gdb.service';
 import { EmbedService } from '../../../src/ai/embed.service';
 import { SarvamService } from '../../../src/speech/sarvam.service';
+import { RazorpayPayoutService } from '../../../src/payment/razorpay-payout.service';
 
 type CreateTestAppResult = {
   app: INestApplication;
@@ -14,6 +15,7 @@ type CreateTestAppResult = {
   gdbService: GdbService;
   embedService: EmbedService;
   sarvamService: SarvamService;
+  razorpayPayoutService: RazorpayPayoutService;
 };
 
 export async function createTestApp(): Promise<CreateTestAppResult> {
@@ -53,6 +55,22 @@ export async function createTestApp(): Promise<CreateTestAppResult> {
     }),
   } as unknown as SarvamService;
 
+  const razorpayPayoutService = {
+    createFundAccount: vi.fn().mockResolvedValue({
+      fundAccountId: 'fa_test_default',
+      contactId: 'ct_test_default',
+      active: true,
+    }),
+    initiatePayout: vi.fn().mockResolvedValue({
+      payoutId: 'po_test_default',
+      status: 'processing',
+      utrNumber: null,
+    }),
+    createContact: vi.fn().mockResolvedValue({ contactId: 'ct_test_default', active: true }),
+    validateFundAccount: vi.fn().mockResolvedValue({ validationId: 'val_default', fundAccountId: 'fa_test_default', status: 'completed', active: true }),
+    getFundAccountValidationStatus: vi.fn().mockResolvedValue({ validationId: 'val_default', status: 'completed', active: true }),
+  } as unknown as RazorpayPayoutService;
+
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
   })
@@ -64,6 +82,8 @@ export async function createTestApp(): Promise<CreateTestAppResult> {
     .useValue(embedService)
     .overrideProvider(SarvamService)
     .useValue(sarvamService)
+    .overrideProvider(RazorpayPayoutService)
+    .useValue(razorpayPayoutService)
     .compile();
 
   const app = moduleRef.createNestApplication();
@@ -71,5 +91,5 @@ export async function createTestApp(): Promise<CreateTestAppResult> {
   await app.init();
   globalThis.nestApp = app;
 
-  return { app, gemmaService, gdbService, embedService, sarvamService };
+  return { app, gemmaService, gdbService, embedService, sarvamService, razorpayPayoutService };
 }
