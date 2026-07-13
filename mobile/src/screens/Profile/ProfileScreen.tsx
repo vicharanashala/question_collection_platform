@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { VerificationStatus, UserCategory, UserRole } from '../../types';
+import { REWARD_TIERS } from '../../utils/constants';
 import type { WalletBalance } from '../../types';
 
 const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
@@ -38,6 +39,18 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
   banned:        { label: 'status.banned',        color: '#991B1B', icon: 'close-circle-outline' },
 };
 
+const TIER_CONFIG: Record<string, { color: string }> = {
+  bronze: { color: '#CD7F32' },
+  silver: { color: '#A8A8A8' },
+  gold:   { color: '#F59E0B' },
+};
+
+function getRewardTier(approved: number): { label: string; tier: string } {
+  if (approved >= 251) return { label: 'Gold', tier: 'gold' };
+  if (approved >= 26)  return { label: 'Silver', tier: 'silver' };
+  return { label: 'Bronze', tier: 'bronze' };
+}
+
 export function ProfileScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -47,6 +60,7 @@ export function ProfileScreen() {
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
+  const [totalApproved, setTotalApproved] = useState<number | null>(null);
   const [userCrops, setUserCrops] = useState<{ id: string; cropName: string; season: string | null }[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -59,6 +73,7 @@ export function ProfileScreen() {
         userApi.getProfile(),
         walletApi.getBalance(),
         questionApi.list({ page: 1, limit: 1 }),
+        questionApi.getStats(),
       ]);
 
       if (results[0].status === 'fulfilled') {
@@ -71,6 +86,10 @@ export function ProfileScreen() {
       if (results[2].status === 'fulfilled') {
         const d = results[2].value.data as { total?: number };
         setTotalQuestions(d.total ?? null);
+      }
+      if (results[3].status === 'fulfilled') {
+        const d = results[3].value.data as { totalApproved?: number };
+        setTotalApproved(d.totalApproved ?? null);
       }
     } catch { /* non-fatal */ }
     finally { setLoadingData(false); }
@@ -132,6 +151,20 @@ export function ProfileScreen() {
                     {t(categoryLabels[user.category] ?? '')}
                   </Text>
                 </View>
+              )}
+              {totalApproved != null && (
+                (() => {
+                  const { label, tier } = getRewardTier(totalApproved);
+                  const tierColor = TIER_CONFIG[tier].color;
+                  return (
+                    <View style={[styles.categoryBadge, { backgroundColor: tierColor + '20' }]}>
+                      <Ionicons name="medal-outline" size={10} color={tierColor} />
+                      <Text style={[styles.categoryText, { color: tierColor }]}>
+                        {label} · {totalApproved} approved
+                      </Text>
+                    </View>
+                  );
+                })()
               )}
             </View>
 

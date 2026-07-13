@@ -88,14 +88,16 @@ export class QuestionController {
   @Get('stats/me')
   @Cacheable('question_stats', 60)
   async getMyStats(@Req() req: AuthenticatedRequest) {
-    const [dailyCount, limits] = await Promise.all([
+    const [dailyCount, limits, totalApproved] = await Promise.all([
       this.questionService.getDailyCount(req.user.id),
       this.questionService.getLimits(),
+      this.questionService.getApprovedCount(req.user.id),
     ]);
 
     return {
       dailyCount,
       remainingToday: Math.max(0, limits.dailyLimit - dailyCount),
+      totalApproved,
       ...limits,
     };
   }

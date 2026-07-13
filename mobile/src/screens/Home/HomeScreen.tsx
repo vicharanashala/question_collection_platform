@@ -8,8 +8,8 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, A
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { walletApi, questionApi } from '../../api/client';
-import { REWARD_TIERS, EDIT_WINDOW_SEC } from '../../utils/constants';
+import { walletApi, questionApi, adminApi } from '../../api/client';
+import { REWARD_TIERS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
 import { VerificationStatus } from '../../types';
@@ -45,6 +45,7 @@ export function HomeScreen() {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [editWindowSec, setEditWindowSec] = useState(0);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -76,6 +77,10 @@ export function HomeScreen() {
 
   useEffect(() => {
     fetchDashboardData();
+    adminApi.getConfig().then((res) => {
+      const found = (res.data.items ?? []).find((c: { key: string; value: number }) => c.key === 'question_edit_window_seconds');
+      setEditWindowSec(found?.value ?? 0);
+    }).catch(() => {});
   }, []);
 
   async function onRefresh() {
@@ -248,10 +253,10 @@ export function HomeScreen() {
             <View style={[styles.tierTrack, { backgroundColor: c.borderSubtle }]} />
 
             {REWARD_TIERS.map((tier, i) => {
-              const colors = [c.warning, c.textSecondary, c.success];
+              const medalColors = [c.bronze, c.silver, c.gold];
               const icons = ['leaf', 'leaf', 'leaf'];
               const labels = [t('home.bronze'), t('home.silver'), t('home.gold')];
-              const color = colors[i];
+              const color = medalColors[i];
               const next = REWARD_TIERS[i + 1];
 
               return (
@@ -325,33 +330,33 @@ export function HomeScreen() {
             <TooltipIcon description="Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight." />
           </View>
           <View style={[styles.guideCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            {[
-              {
-                icon: 'videocam-outline',
-                text: t('home.videoTip', { seconds: EDIT_WINDOW_SEC, size: 10 }),
-                color: '#0891B2',
-              },
-              {
-                icon: 'calendar-outline',
-                text: t('home.dailyLimitTip', { count: stats?.dailyLimit ?? 20 }),
-                color: c.primary,
-              },
-              {
+            {(() => {
+              const rows: { icon: string; text: string; color: string }[] = [
+                {
+                  icon: 'calendar-outline',
+                  text: t('home.dailyLimitTip', { count: stats?.dailyLimit ?? 20 }),
+                  color: c.primary,
+                },
+                {
+                  icon: 'bulb-outline',
+                  text: t('home.aiCheckTip'),
+                  color: '#7C3AED',
+                },
+              ];
+              rows.splice(1, 0, {
                 icon: 'pencil-outline',
-                text: t('home.editWindowTip', { seconds: EDIT_WINDOW_SEC }),
+                text: editWindowSec === 0
+                  ? 'Questions cannot be edited after submission'
+                  : t('home.editWindowTip', { seconds: editWindowSec }),
                 color: c.warning,
-              },
-              {
-                icon: 'bulb-outline',
-                text: t('home.aiCheckTip'),
-                color: '#7C3AED',
-              },
-            ].map((item, i) => (
+              });
+              return rows;
+            })().map((item, i, all) => (
               <View
                 key={i}
                 style={[
                   styles.guideRow,
-                  i < 3 && { borderBottomWidth: 1, borderBottomColor: c.borderSubtle },
+                  i < all.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.borderSubtle },
                 ]}
               >
                 <View style={[styles.guideIcon, { backgroundColor: item.color + '18' }]}>

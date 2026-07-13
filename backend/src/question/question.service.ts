@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
 import { Question, AuditLog, Notification } from '../database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../common/enums';
+import { MoreThanOrEqual } from 'typeorm';
 import { NotificationType, NotificationTriggerType } from '../database/entities/notification.entity';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -470,6 +471,10 @@ export class QuestionService {
         `Daily limit of ${dailyLimit} questions reached. Please try again tomorrow.`,
       );
     }
+  }
+
+  async getApprovedCount(userId: string): Promise<number> {
+    return this.questionRepo.count({ where: { userId, status: QuestionStatus.APPROVED } });
   }
 
   async getLimits() {
