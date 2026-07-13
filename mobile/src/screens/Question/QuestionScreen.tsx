@@ -128,6 +128,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     matchedQuestion: '',
     matchedAnswer: null as string | null,
     similarityScore: null as number | null,
+    submissionStatus: undefined as 'rejected' | 'found' | undefined,
   });
 
   // ── AI validation debounce ─────────────────────────────────────────────
@@ -186,11 +187,19 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
       const duplicate = res.data?.duplicate;
       if (duplicate?.isDuplicate) {
+        // The preview endpoint already saved this question as REJECTED (counts as a
+        // submission). Show the duplicate modal immediately — no submit call needed.
         setDuplicateModal({
           visible: true,
           matchedQuestion: duplicate.matchedQuestion ?? '',
           matchedAnswer: duplicate.matchedAnswer ?? null,
           similarityScore: duplicate.similarityScore ?? null,
+          submissionStatus: 'rejected',
+        });
+        // Refresh remaining count
+        questionApi.getStats().then((r) => {
+          const d = r.data as { remainingToday: number };
+          setRemainingToday(d.remainingToday);
         });
         setPreviewLoading(false);
         return;
@@ -471,6 +480,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         matchedQuestion={duplicateModal.matchedQuestion}
         matchedAnswer={duplicateModal.matchedAnswer}
         similarityScore={duplicateModal.similarityScore}
+        submissionStatus={duplicateModal.submissionStatus}
         onDismiss={() => {
           setDuplicateModal((p) => ({ ...p, visible: false }));
           setQuestionText("");

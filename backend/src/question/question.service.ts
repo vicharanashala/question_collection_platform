@@ -138,18 +138,64 @@ export class QuestionService {
       crop: cropType,
       state: dto.state ?? '',
     });
+
+    // Derive agro-climatic zone early — needed inside the duplicate block below.
+    const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
+
+    // Fetch embedding upfront — needed regardless of which branch we take below.
+    const [embedding] = await Promise.all([
+      this.embedService.embed(dto.questionText),
+    ]);
+
     if (duplicateResult.isDuplicate) {
+      // Save the question as REJECTED so it counts as a submission against the daily limit,
+      // then return the matched Q&A pair so the mobile can display DuplicateFoundModal.
+      // Cast is safe: inside this guard duplicateResult is always DuplicateCheckResult.
+      const dup = duplicateResult as { isDuplicate: true; matchedQuestionId: string | null; matchedQuestion: string | null; matchedAnswer: string | null; similarityScore: number | null };
+      let duplicateQuestion = this.questionRepo.create({
+        userId,
+        domains,
+        season: dto.season,
+        cropType,
+        agroClimaticZone,
+        questionText: dto.questionText,
+        state: dto.state ?? '',
+        district: dto.district ?? '',
+        block: dto.block ?? null,
+        mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+        mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+        deviceInfo: dto.deviceInfo ?? null,
+        status: QuestionStatus.REJECTED,
+        rejectionReason: 'Question is already present in our golden database',
+        editWindowClosesAt,
+        submittedAt: now,
+        embedding: [0], // zero embedding — saved to satisfy FK, not for search
+      });
+      // Capture the saved entity so we have its ID for audit metadata.
+      duplicateQuestion = await this.dataSource.transaction(async (em) => {
+        const repo = em.getRepository(Question);
+        return repo.save(duplicateQuestion) as Promise<Question>;
+      });
+      await this.auditRepo.save({
+        actorType: ActorType.USER,
+        actorId: userId,
+        action: AuditAction.QUESTION_REJECTED,
+        entityType: 'question',
+        entityId: duplicateQuestion.id,
+        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
+      });
       return {
-        id: '',
+        id: duplicateQuestion.id,
         status: 'DUPLICATE',
         editWindowClosesAt: new Date().toISOString(),
         message: 'Similar question found',
         duplicate: {
           isDuplicate: true,
-          matchedQuestionId: duplicateResult.matchedQuestionId,
-          matchedQuestion: duplicateResult.matchedQuestion,
-          matchedAnswer: duplicateResult.matchedAnswer,
-          similarityScore: duplicateResult.similarityScore,
+          matchedQuestionId: dup.matchedQuestionId,
+          matchedQuestion: dup.matchedQuestion,
+          matchedAnswer: dup.matchedAnswer,
+          similarityScore: dup.similarityScore,
         },
       };
     }
@@ -165,10 +211,7 @@ export class QuestionService {
     // 6. Update real-time analytics counters
     await this.analyticsCacheService.onQuestionSubmitted().catch(() => {/* best-effort */});
 
-    // 7. Derive agro-climatic zone from state when not provided
-    const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
-
-    // 8. Low-confidence submissions go to human review
+    // 7. Low-confidence submissions go to human review
     const status: QuestionStatus = inferred.confidence < 0.9
       ? QuestionStatus.HUMAN_REVIEW
       : QuestionStatus.PENDING;
@@ -179,12 +222,7 @@ export class QuestionService {
       throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
     }
 
-    // 8. Fetch embedding for the question text
-    const [embedding] = await Promise.all([
-      this.embedService.embed(dto.questionText),
-    ]);
-
-    // 9. Persist question in a transaction
+    // 8. Persist question in a transaction
     const question = this.questionRepo.create({
       userId,
       domains,
@@ -220,29 +258,11 @@ export class QuestionService {
       metadata: { cropType: saved.cropType, season: saved.season },
     });
 
-    // 11. Send semantic-duplicate notification after saving (Redis exact-dup throws before this)
-    if (duplicateResult.isDuplicate) {
-      await this.notifRepo.save(
-        this.notifRepo.create({
-          userId,
-          type: NotificationType.DUPLICATE_QUESTION,
-          title: 'Similar Question Found',
-          body: `Your question "${dto.questionText.slice(0, 80)}" was flagged as similar to an existing question.`,
-          data: {
-            questionId: saved.id,
-            matchedQuestionId: duplicateResult.matchedQuestionId,
-            similarityScore: duplicateResult.similarityScore,
-          },
-          triggerType: NotificationTriggerType.QUESTION,
-        }),
-      );
-    }
-
     return {
       id: saved.id,
       status: saved.status,
       editWindowClosesAt: editWindowClosesAt.toISOString(),
-      message: duplicateResult.isDuplicate ? 'Duplicate question flagged' : 'Question submitted successfully',
+      message: 'Question submitted successfully',
     };
   }
 
@@ -468,13 +488,16 @@ export class QuestionService {
 
   /**
    * Validates the step-1 payload and returns enriched field values.
-   * Does NOT write anything to the database.
    *
    * - Location (state, district, block) comes from the user's profile.
    * - domains / cropType come from Gemma inference.
    * - season is derived from the current month.
    * - agroClimaticZone is derived from the user's state.
    * - suggestedDistricts / suggestedBlocks come from the LGD master-data service.
+   *
+   * When GDB finds a semantic duplicate, the question is immediately saved as
+   * REJECTED (counting against the daily limit) so the user sees the result
+   * without needing a separate submit call.
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
     // 1. Load user profile for location
@@ -487,8 +510,6 @@ export class QuestionService {
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
 
     // 3. Check for semantically similar questions via GDB semantic search
-    //    If a match above the similarity threshold is found, the response carries
-    //    the matched question + answer so the mobile app can show it to the user.
     const duplicateResult = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
       crop: inferred.crop,
@@ -507,6 +528,79 @@ export class QuestionService {
       this.getDailyCount(userId),
     ]);
 
+    // 7. If GDB found a duplicate: save as REJECTED (counts as a submission) and
+    //    return early so the mobile can show DuplicateFoundModal immediately.
+    if (duplicateResult.isDuplicate) {
+      const dup = duplicateResult as {
+        isDuplicate: true;
+        matchedQuestionId: string | null;
+        matchedQuestion: string | null;
+        matchedAnswer: string | null;
+        similarityScore: number | null;
+      };
+      const now = new Date();
+      const editWindowSeconds = await this.adminService.getConfigValue('question_edit_window_seconds') ?? 300;
+      const editWindowClosesAt = new Date(now.getTime() + editWindowSeconds * 1000);
+
+      let duplicateQuestion = this.questionRepo.create({
+        userId,
+        domains: inferred.domains,
+        season,
+        cropType: inferred.crop,
+        agroClimaticZone,
+        questionText: dto.questionText,
+        state,
+        district,
+        block: block ?? null,
+        mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+        mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+        status: QuestionStatus.REJECTED,
+        rejectionReason: 'Question is already present in our golden database',
+        editWindowClosesAt,
+        submittedAt: now,
+        embedding: [0], // zero embedding — saved to satisfy FK, not for search
+      });
+      duplicateQuestion = await this.dataSource.transaction(async (em) => {
+        const repo = em.getRepository(Question);
+        return repo.save(duplicateQuestion) as Promise<Question>;
+      });
+      await this.auditRepo.save({
+        actorType: ActorType.USER,
+        actorId: userId,
+        action: AuditAction.QUESTION_REJECTED,
+        entityType: 'question',
+        entityId: duplicateQuestion.id,
+        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
+      });
+
+      return {
+        state,
+        district,
+        block: block ?? null,
+        domains: inferred.domains,
+        cropType: inferred.crop,
+        season,
+        questionText: dto.questionText,
+        mediaType: dto.mediaType ?? 'none',
+        mediaUrls: dto.mediaUrls ?? [],
+        agroClimaticZone,
+        suggestedDistricts: [],
+        suggestedBlocks: [],
+        remainingToday: Math.max(0, dailyLimit - dailyCount - 1),
+        dailyLimit,
+        duplicate: {
+          isDuplicate: true,
+          matchedQuestionId: dup.matchedQuestionId,
+          matchedQuestion: dup.matchedQuestion,
+          matchedAnswer: dup.matchedAnswer,
+          similarityScore: dup.similarityScore,
+          // Signal to mobile that this was saved as REJECTED — no need to call submit
+          submissionStatus: 'rejected' as const,
+        },
+      };
+    }
+
     return {
       state,
       district,
@@ -522,7 +616,7 @@ export class QuestionService {
       mediaUrls: dto.mediaUrls ?? [],
 
       agroClimaticZone,
-      suggestedDistricts: [],   // populated from user profile; no LGD lookup needed for preview
+      suggestedDistricts: [],
       suggestedBlocks: [],
 
       remainingToday: Math.max(0, dailyLimit - dailyCount),
