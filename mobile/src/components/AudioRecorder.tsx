@@ -138,7 +138,7 @@ export function AudioRecorder({
   async function uploadChunk(uri: string, seq: number) {
     try {
       const formData = new (globalThis.FormData)();
-      formData.append('audio', { uri, name: `chunk-${seq}.aac`, type: 'audio/aac' } as unknown as string);
+      formData.append('audio', { uri, name: `chunk-${seq}.m4a`, type: 'audio/mp4' } as unknown as string);
       formData.append('languageCode', toSarvamLang(languageCode));
       formData.append('sequenceNumber', String(seq));
 
@@ -184,7 +184,7 @@ export function AudioRecorder({
 
       const makeRecorder = () =>
         new AudioModule.AudioRecorder({
-          extension: '.aac',
+          extension: '.m4a',
           sampleRate: 44100,
           numberOfChannels: 1,
           bitRate: 128000,
@@ -195,7 +195,7 @@ export function AudioRecorder({
             linearPCMIsBigEndian: false,
             linearPCMIsFloat: false,
           },
-          android: { outputFormat: 'aac', audioEncoder: 'aac' },
+          android: { outputFormat: 'mpeg4', audioEncoder: 'aac' },
           web: { mimeType: 'audio/webm', bitsPerSecond: 128000 },
         });
 
@@ -298,7 +298,7 @@ export function AudioRecorder({
         if (chunkUri) {
           const seq = sequenceRef.current++;
           const formData = new (globalThis.FormData)();
-          formData.append('audio', { uri: chunkUri, name: `final-${seq}.aac`, type: 'audio/aac' } as unknown as string);
+          formData.append('audio', { uri: chunkUri, name: `final-${seq}.m4a`, type: 'audio/mp4' } as unknown as string);
           formData.append('languageCode', toSarvamLang(languageCode));
           formData.append('sequenceNumber', String(seq));
 

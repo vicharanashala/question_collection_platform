@@ -48,7 +48,7 @@ export function getMediaUrl(relativePath: string | null | undefined): string {
     return relativePath; // already absolute (e.g. GCP bucket URL, or local file URI)
   }
   // Strip /api/v1 (or any /api/{version}) suffix from BASE_URL, then append the path
-  const base = BASE_URL.replace(/\/api\/v\d+\/.*$/, '');
+  const base = BASE_URL.replace(/\/api\/v\d+($|\/).*/, '');
   return `${base}${relativePath}`;
 }
 

@@ -14,8 +14,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useIsFocused } from '@react-navigation/native';
-import { createAudioPlayer, AudioPlayer } from 'expo-audio';
-import { AudioRecorder } from '../../components/AudioRecorder';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { TooltipIcon } from '../../components/TooltipIcon';
@@ -23,10 +21,12 @@ import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { questionApi } from '../../api/client';
+import { questionApi, storageApi } from '../../api/client';
 import { runOnDeviceValidation } from '../../utils/onDeviceAI';
 import { AIValidationResult } from '../../utils/onDeviceAI';
 import { AIValidationBanner } from '../../components/AIValidationBanner';
+import { SttMicButton } from '../../components/SttMicButton';
+import { AudioPlaybackCard } from '../../components/AudioPlaybackCard';
 import { useTranslation } from 'react-i18next';
 
 import { MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
@@ -69,245 +69,6 @@ const pillStyles = StyleSheet.create({
   pillText: {
     fontSize: 13,
     fontWeight: '600',
-  },
-});
-
-// ─── AudioPlayback Card ────────────────────────────────────────────────────
-
-const WAVE_BARS = 28;
-
-function WaveformBar({ index, progress, isPlaying }: { index: number; progress: number; isPlaying: boolean }) {
-  const anim = useRef(new Animated.Value(0.3)).current;
-
-  useEffect(() => {
-    if (!isPlaying) {
-      Animated.timing(anim, { toValue: 0.3, duration: 300, useNativeDriver: true }).start();
-      return;
-    }
-    const delay = index * 40;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, { toValue: Math.random() * 0.7 + 0.3, duration: 300 + Math.random() * 200, useNativeDriver: true }),
-        Animated.timing(anim, { toValue: 0.3, duration: 300 + Math.random() * 200, useNativeDriver: true }),
-      ]),
-    );
-    const t = setTimeout(() => loop.start(), delay);
-    return () => { loop.stop(); clearTimeout(t); };
-  }, [isPlaying, index, anim]);
-
-  const barProgress = index / WAVE_BARS;
-  const filled = barProgress <= progress;
-
-  return (
-    <Animated.View
-      style={[
-        waveStyles.bar,
-        {
-          height: 16,
-          backgroundColor: filled ? '#16a34a' : '#d1d5db',
-          transform: [{ scaleY: anim }],
-        },
-      ]}
-    />
-  );
-}
-
-function AudioPlaybackCard({
-  uri,
-  onDelete,
-}: {
-  uri: string;
-  onDelete: () => void;
-}) {
-  const { theme } = useTheme();
-  const c = theme.colors;
-  const [playing, setPlaying] = useState(false);
-  const [currentSec, setCurrentSec] = useState(0);
-  const [totalSec, setTotalSec] = useState(0);
-  const playerRef = useRef<AudioPlayer | null>(null);
-
-  // Set duration immediately from URI on mount
-  useEffect(() => {
-    const m = uri.match(/\?dur=(\d+)/);
-    if (m) setTotalSec(parseInt(m[1], 10) / 1000);
-  }, [uri]);
-
-  useEffect(() => {
-    return () => { playerRef.current?.remove(); playerRef.current = null; };
-  }, []);
-
-  async function togglePlay() {
-    if (playing) {
-      playerRef.current?.pause();
-      setPlaying(false);
-      return;
-    }
-    if (!playerRef.current) {
-      // Parse pre-known duration from URI query string (?dur=xxx)
-      const durMatch = uri.match(/\?dur=(\d+)/);
-      const knownDur = durMatch ? parseInt(durMatch[1], 10) / 1000 : 0;
-
-      const cleanUri = uri.replace(/\?dur=\d+$/, '');
-      const player = createAudioPlayer(cleanUri, { updateInterval: 50 });
-      player.addListener('playbackStatusUpdate', (status) => {
-        setCurrentSec(status.currentTime);
-        if (status.duration > 0 && knownDur === 0) setTotalSec(status.duration);
-        if (status.didJustFinish) {
-          player.remove();
-          playerRef.current = null;
-          setPlaying(false);
-          setCurrentSec(0);
-        }
-      });
-      await player.play();
-      // Seed currentTime from player instance immediately after play starts
-      setCurrentSec(player.currentTime);
-      playerRef.current = player;
-      setPlaying(true);
-      return;
-    }
-    await playerRef.current.play();
-    setPlaying(true);
-  }
-
-  const progress = totalSec > 0 ? currentSec / totalSec : 0;
-
-  function fmt(s: number) {
-    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-  }
-
-  return (
-    <View style={[playStyles.card, { backgroundColor: c.surfaceVariant, borderColor: c.borderSubtle }]}>
-      {/* Top row: play button + time + delete */}
-      <View style={playStyles.topRow}>
-        <TouchableOpacity
-          style={[playStyles.playBtn, { backgroundColor: c.primary }]}
-          onPress={togglePlay}
-          activeOpacity={0.8}
-        >
-          <Ionicons name={playing ? 'pause' : 'play'} size={20} color="#fff" />
-        </TouchableOpacity>
-
-        <View style={playStyles.timeWrap}>
-          <Text style={[playStyles.timeElap, { color: c.text }]}>{fmt(currentSec)}</Text>
-          <Text style={[playStyles.timeSep, { color: c.textTertiary }]}> / </Text>
-          <Text style={[playStyles.timeTot, { color: c.textSecondary }]}>{fmt(totalSec)}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={playStyles.delBtn}
-          onPress={() => { playerRef.current?.pause(); playerRef.current?.remove(); playerRef.current = null; onDelete(); }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="close-circle" size={22} color={c.error} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Waveform */}
-      <View style={playStyles.waveRow}>
-        {Array.from({ length: WAVE_BARS }, (_, i) => (
-          <WaveformBar key={i} index={i} progress={progress} isPlaying={playing} />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-const waveStyles = StyleSheet.create({
-  bar: {
-    width: 3,
-    borderRadius: 2,
-  },
-});
-
-const playStyles = StyleSheet.create({
-  card: {
-    borderRadius: tokens.radiusLg,
-    borderWidth: 1,
-    padding: tokens.spacing4,
-    gap: tokens.spacing3,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing3,
-  },
-  playBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  timeWrap: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  timeElap: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  timeSep: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  timeTot: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  delBtn: {
-    flexShrink: 0,
-  },
-  waveRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 20,
-    gap: 2,
-  },
-});
-
-const audioStyles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: tokens.radiusFull,
-    paddingVertical: tokens.spacing2,
-    paddingLeft: tokens.spacing2,
-    paddingRight: tokens.spacing3,
-    gap: tokens.spacing2,
-  },
-  playBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  progressWrap: {
-    flex: 1,
-    gap: 4,
-  },
-  track: {
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: 4,
-    borderRadius: 2,
-  },
-  time: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  deleteBtn: {
-    padding: tokens.spacing1,
-    flexShrink: 0,
   },
 });
 
@@ -358,8 +119,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [remainingToday, setRemainingToday] = useState(dailyLimit);
   const [maxChars, setMaxChars] = useState(MAX_QUESTION_CHARS_FALLBACK);
-  const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
+  const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
 
   // GDB duplicate modal
   const [duplicateModal, setDuplicateModal] = useState({
@@ -435,7 +196,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         return;
       }
 
-      const hasAudio = Boolean(pendingAudioUri);
       (navigation as any).navigate('QuestionPreview', {
         state: res.data.state ?? user?.state ?? '',
         district: res.data.district ?? user?.district ?? '',
@@ -444,11 +204,11 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         season: res.data.season ?? '',
         cropType: res.data.cropType ?? '',
         questionText: questionText.trim(),
-        mediaType: hasAudio ? 'audio' : 'none',
+        mediaType: 'none',
         mediaUrls: [],
         pendingImageUri: null,
         pendingImageCompressed: false,
-        pendingAudioUri,
+        pendingAudioUri: null,
         agroClimaticZone: res.data.agroClimaticZone ?? 'other',
         suggestedDistricts: res.data.suggestedDistricts ?? [],
         suggestedBlocks: res.data.suggestedBlocks ?? [],
@@ -479,9 +239,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView
+      edges={["left", "right"]}
+      style={[styles.container, { backgroundColor: c.background }]}
+    >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         <ScrollView
@@ -494,10 +257,16 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           <View style={styles.heroHeader}>
             <View style={styles.heroTitleRow}>
               <Text style={[styles.heroTitle, { color: c.text }]}>
-                {isEditMode ? t('question.editQuestion') : t('question.askQuestion')}
+                {isEditMode
+                  ? t("question.editQuestion")
+                  : t("question.askQuestion")}
               </Text>
               <TooltipIcon
-                description={isEditMode ? t('question.tooltipEdit') : t('question.tooltipAsk')}
+                description={
+                  isEditMode
+                    ? t("question.tooltipEdit")
+                    : t("question.tooltipAsk")
+                }
                 size={20}
               />
             </View>
@@ -505,17 +274,30 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               <View style={styles.limitBlock}>
                 <View style={styles.limitLabelRow}>
                   <Text style={[styles.limitLabel, { color: c.textSecondary }]}>
-                    {t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
+                    {t("question.dailyLeftToday", {
+                      remaining: remainingToday,
+                      total: dailyLimit,
+                    })}
                   </Text>
-                  <Ionicons name="checkmark-circle" size={14} color={c.success} />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={14}
+                    color={c.success}
+                  />
                 </View>
-                <View style={[styles.limitTrack, { backgroundColor: c.borderSubtle }]}>
+                <View
+                  style={[
+                    styles.limitTrack,
+                    { backgroundColor: c.borderSubtle },
+                  ]}
+                >
                   <View
                     style={[
                       styles.limitFill,
                       {
                         width: `${limitPercent * 100}%`,
-                        backgroundColor: limitPercent > 0.3 ? c.primary : c.error,
+                        backgroundColor:
+                          limitPercent > 0.3 ? c.primary : c.error,
                       },
                     ]}
                   />
@@ -523,119 +305,115 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               </View>
             )}
             {isEditMode && (
-              <View style={[styles.editBadge, { backgroundColor: c.primary + '15' }]}>
+              <View
+                style={[
+                  styles.editBadge,
+                  { backgroundColor: c.primary + "15" },
+                ]}
+              >
                 <Ionicons name="pencil" size={13} color={c.primary} />
                 <Text style={[styles.editBadgeText, { color: c.primary }]}>
-                  {t('question.editSubtitle')}
+                  {t("question.editSubtitle")}
                 </Text>
               </View>
             )}
           </View>
 
-          {/* ── Input Card ───────────────────────────────────────────────── */}
-          <View style={[styles.inputCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-            {/* Question textarea */}
-            <View style={styles.textareaWrap}>
-              <TextInput
-                placeholder={t('question.questionPlaceholder')}
-                placeholderTextColor={c.textTertiary}
-                value={questionText}
-                onChangeText={(v) => {
-                  setQuestionText(v);
-                  setErrors({});
-                  if (!v.trim()) {
-                    setAiValidation(null);
-                    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
-                  } else {
-                    scheduleValidation(v);
-                  }
-                }}
-                multiline
-                textAlignVertical="top"
-                style={[
-                  styles.textarea,
-                  {
-                    color: c.text,
-                    backgroundColor: c.surfaceVariant,
-                    borderColor: errors.questionText ? c.error : c.borderSubtle,
-                  },
-                ]}
-              />
-            </View>
-
-            {/* Character count */}
-            <View style={styles.charRow}>
+          {/* ── Question Input ─────────────────────────────────────────────── */}
+          <View style={styles.inputWrap}>
+            <TextInput
+              placeholder={t("question.questionPlaceholder")}
+              placeholderTextColor={c.textTertiary}
+              value={questionText}
+              onChangeText={(v) => {
+                setQuestionText(v);
+                setErrors({});
+                if (!v.trim()) {
+                  setAiValidation(null);
+                  if (aiDebounceRef.current)
+                    clearTimeout(aiDebounceRef.current);
+                } else {
+                  scheduleValidation(v);
+                }
+              }}
+              multiline
+              textAlignVertical="top"
+              style={[
+                styles.textarea,
+                {
+                  color: c.text,
+                  backgroundColor: c.surfaceVariant,
+                  borderColor: errors.questionText ? c.error : c.borderSubtle,
+                },
+              ]}
+            />
+            <View style={styles.inputMeta}>
+              {questionText.length > maxChars && (
+                <Text style={[styles.overLimit, { color: c.error }]}>
+                  {t("question.textTooLong", { max: maxChars })}
+                </Text>
+              )}
               {questionText.trim().length > 0 && (
                 <Text style={[styles.charCount, { color: charCountColor }]}>
                   {questionText.trim().length} / {maxChars}
                 </Text>
               )}
             </View>
-
-            {questionText.length > maxChars && (
-              <Text style={[styles.overLimit, { color: c.error }]}>
-                {t('question.textTooLong', { max: maxChars })}
-              </Text>
-            )}
-
-            {/* AI validation banner */}
-            <AIValidationBanner
-              result={
-                aiValidation ?? {
-                  verdict: 'pass',
-                  message: null,
-                  reasonKey: null,
-                  stages: { relevance: { pass: true, confidence: 1 }, duplicate: { pass: true, confidence: 1 }, spam: { pass: true, confidence: 1 } },
-                  ran: false,
-                }
-              }
-              onDismiss={() => setAiValidation(null)}
-            />
-
-            {/* Continue button */}
-            <Button
-              title={
-                previewLoading
-                  ? t('question.submitting')
-                  : relevanceFailed
-                  ? t('question.notRelevant')
-                  : t('continue')
-              }
-              onPress={handlePreview}
-              loading={previewLoading}
-              disabled={!canSubmit || relevanceFailed || aiValidation?.verdict === 'warn'}
-              icon="arrow-forward"
-              iconPosition="right"
-              size="lg"
-              style={styles.continueBtn}
-            />
-
-            <Text style={[styles.reviewHint, { color: c.textTertiary }]}>
-              {t('question.reviewHint')}
-            </Text>
           </View>
 
-          {/* ── Quick tips ───────────────────────────────────────────────── */}
-          {!questionText.trim() && (
-            <View style={styles.tipsSection}>
-              {[
-                { icon: 'bulb-outline' as const, tip: t('question.tipSpecific') },
-                { icon: 'shield-checkmark-outline' as const, tip: t('question.tipPersonalInfo') },
-              ].map((item, i) => (
-                <View key={i} style={[styles.tipRow, { backgroundColor: c.surfaceVariant + '80' }]}>
-                  <Ionicons name={item.icon as any} size={15} color={c.textTertiary} />
-                  <Text style={[styles.tipText, { color: c.textSecondary }]}>{item.tip}</Text>
-                </View>
-              ))}
-            </View>
-          )}
+          {/* ── AI Validation ─────────────────────────────────────────── */}
+          <AIValidationBanner
+            result={
+              aiValidation ?? {
+                verdict: "pass",
+                message: null,
+                reasonKey: null,
+                stages: {
+                  relevance: { pass: true, confidence: 1 },
+                  duplicate: { pass: true, confidence: 1 },
+                  spam: { pass: true, confidence: 1 },
+                },
+                ran: false,
+              }
+            }
+            onDismiss={() => setAiValidation(null)}
+          />
+
+          {/* ── Continue ───────────────────────────────────────────────── */}
+          <Button
+            title={
+              previewLoading
+                ? t("question.submitting")
+                : relevanceFailed
+                  ? t("question.notRelevant")
+                  : t("continue")
+            }
+            onPress={handlePreview}
+            loading={previewLoading}
+            disabled={
+              !canSubmit ||
+              relevanceFailed ||
+              aiValidation?.verdict === "warn"
+            }
+            icon="arrow-forward"
+            iconPosition="right"
+            size="lg"
+            style={styles.continueBtn}
+          />
+
+
         </ScrollView>
 
         {/* ── Bottom Dock — hidden when keyboard open ─────────────────────── */}
         {!isKeyboardVisible && (
-          <View style={[styles.bottomDock, { backgroundColor: c.background, borderTopColor: c.borderSubtle }]}>
+          <View
+            style={[
+              styles.bottomDock,
+              { backgroundColor: c.background, borderTopColor: c.borderSubtle },
+            ]}
+          >
             {/* Audio bar — shown when recording exists */}
-            {/* {pendingAudioUri && (
+            {pendingAudioUri && (
               <View style={styles.audioBarWrap}>
                 <AudioPlaybackCard
                   uri={pendingAudioUri}
@@ -647,24 +425,38 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   }}
                 />
               </View>
-            )} */}
+            )}
 
             {/* Mic row */}
             <View style={styles.micRow}>
-              <AudioRecorder
-                label=""
+              <SttMicButton
                 onTranscribed={(text) => {
-                  setQuestionText(text);
-                  setErrors({});
-                  scheduleValidation(text);
+                  setQuestionText((prev) => {
+                    const next = prev.trim() ? `${prev.trim()} ${text}` : text;
+                    setErrors({});
+                    scheduleValidation(next);
+                    return next;
+                  });
                 }}
-                onRecordingComplete={(uri, durationMs) =>
-                  setPendingAudioUri(uri + '?dur=' + Math.round(durationMs))
-                }
                 onRecordingStart={() => {
                   setPendingAudioUri(null);
                   setErrors({});
                   setAiValidation(null);
+                }}
+                onRecordingComplete={async (uri, durationMs) => {
+                  console.log('[QuestionScreen] onRecordingComplete called with uri:', uri, 'durationMs:', durationMs);
+                  setPendingAudioUri(null); // clear while uploading
+                  try {
+                    const filename = `question-audio-${Date.now()}.aac`;
+                    console.log('[QuestionScreen] uploading audio uri:', uri, 'filename:', filename);
+                    const { url } = await storageApi.uploadAudio(uri, filename);
+                    console.log('[QuestionScreen] upload success, url:', url);
+                    setPendingAudioUri(url + '?dur=' + Math.round(durationMs));
+                  } catch (err) {
+                    // upload failed — store local URI as fallback
+                    console.error('[QuestionScreen] upload failed, using local URI:', err);
+                    setPendingAudioUri(uri + '?dur=' + Math.round(durationMs));
+                  }
                 }}
                 disabled={remainingToday <= 0 && !isEditMode}
               />
@@ -681,7 +473,8 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         similarityScore={duplicateModal.similarityScore}
         onDismiss={() => {
           setDuplicateModal((p) => ({ ...p, visible: false }));
-          setQuestionText('');
+          setQuestionText("");
+          setPendingAudioUri(null);
           setAiValidation(null);
         }}
       />
@@ -759,27 +552,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Input card
-  inputCard: {
-    borderRadius: tokens.radiusXl,
-    padding: tokens.spacing5,
+  // Question input
+  inputWrap: {
+    marginBottom: tokens.spacing3,
   },
-  textareaWrap: { marginBottom: tokens.spacing2 },
   textarea: {
-    minHeight: 140,
+    minHeight: 240,
     maxHeight: SCREEN_H * 0.35,
     borderWidth: 1.5,
     borderRadius: tokens.radiusLg,
-    paddingHorizontal: tokens.spacing4,
-    paddingVertical: tokens.spacing4,
-    fontSize: 16,
-    lineHeight: 24,
+    paddingHorizontal: tokens.spacing5,
+    paddingVertical: tokens.spacing5,
+    fontSize: 18,
+    lineHeight: 28,
     textAlignVertical: 'top',
   },
-  charRow: {
+  inputMeta: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: tokens.spacing2,
+    alignItems: 'center',
+    marginTop: tokens.spacing2,
+    gap: tokens.spacing3,
   },
   charCount: {
     fontSize: 12,
@@ -788,39 +581,12 @@ const styles = StyleSheet.create({
   overLimit: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: tokens.spacing2,
   },
 
   continueBtn: {
-    marginTop: tokens.spacing2,
     borderRadius: tokens.radiusMd,
-  },
-  reviewHint: {
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: tokens.spacing3,
-    lineHeight: 17,
   },
 
-  // Quick tips
-  tipsSection: {
-    marginTop: tokens.spacing5,
-    gap: tokens.spacing2,
-  },
-  tipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: tokens.spacing4,
-    paddingVertical: tokens.spacing3,
-    borderRadius: tokens.radiusMd,
-    gap: tokens.spacing3,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 12.5,
-    fontWeight: '500',
-    lineHeight: 18,
-  },
 
   // Bottom dock
   bottomDock: {
@@ -830,10 +596,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   audioBarWrap: {
-    marginBottom: tokens.spacing3,
+    marginBottom: tokens.spacing5,
   },
   micRow: {
     alignItems: 'center',
-    gap: 2,
+    gap: tokens.spacing3,
   },
 });

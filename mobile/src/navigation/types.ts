@@ -86,6 +86,7 @@ export type RootStackParamList = {
     /** Set to true after a successful submission so the ask screen clears the input */
     resetForm?: boolean;
   };
+  SpeechToText: undefined;
 };
 
 // Screen props for useNavigation hooks

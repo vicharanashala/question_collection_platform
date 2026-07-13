@@ -47,6 +47,19 @@ const resources = {
         "stop": "Stop",
         "playing": "Playing…"
       },
+      "speech": {
+        "stt": {
+          "title": "Speech to Text",
+          "result": "Transcribed Text",
+          "copy": "Copy Text",
+          "copied": "Copied!",
+          "errorPermission": "Microphone permission required",
+          "errorTooShort": "Audio is too short. Please record a longer message.",
+          "errorFailed": "Transcription failed. Please try again.",
+          "language": "Language",
+          "languageHint": "Select the language you will speak in"
+        }
+      },
       "agreeToConsent": "I have read and agree to the Terms of Service and Privacy Policy",
       "agreeToTerms": "By continuing, you agree to our",
       "and": "and",
@@ -443,7 +456,12 @@ const resources = {
           "tapToPlay": "Tap to play",
           "delete": "Delete",
           "stop": "Stop",
-          "playing": "Playing…"
+          "playing": "Playing…",
+          "micButtonIdle": "Tap to speak your question",
+          "micButtonRecording": "Recording… tap to stop",
+          "micButtonUploading": "Transcribing…",
+          "micButtonDone": "Text added! Tap to record again",
+          "micButtonDisabled": "Daily limit reached"
         },
         "textPlaceholder": "Write your agriculture-related question...",
         "addMedia": "Add Media",
@@ -4317,7 +4335,12 @@ const resources = {
           "tapToPlay": "सुनने के लिए टैप करें",
           "delete": "हटाएं",
           "stop": "रोकें",
-          "playing": "चल रहा है…"
+          "playing": "चल रहा है…",
+          "micButtonIdle": "अपना प्रश्न बोलें",
+          "micButtonRecording": "रिकॉर्डिंग… रोकने के लिए टैप करें",
+          "micButtonUploading": "ट्रांसक्राइब हो रहा है…",
+          "micButtonDone": "टेक्स्ट जोड़ा गया! फिर से रिकॉर्ड करने के लिए टैप करें",
+          "micButtonDisabled": "दैनिक सीमा पूरी हुई"
         },
         "textPlaceholder": "अपना कृषि संबंधी प्रश्न लिखें...",
         "addMedia": "मीडिया जोड़ें",
@@ -4704,7 +4727,25 @@ const resources = {
         "tapToPlay": "सुनने के लिए टैप करें",
         "delete": "हटाएं",
         "stop": "रोकें",
-        "playing": "चल रहा है…"
+        "playing": "चल रहा है…",
+        "micButtonIdle": "अपना प्रश्न बोलें",
+        "micButtonRecording": "रिकॉर्डिंग… रोकने के लिए टैप करें",
+        "micButtonUploading": "ट्रांसक्राइब हो रहा है…",
+        "micButtonDone": "टेक्स्ट जोड़ा गया! फिर से रिकॉर्ड करने के लिए टैप करें",
+        "micButtonDisabled": "दैनिक सीमा पूरी हुई"
+      },
+      "speech": {
+        "stt": {
+          "title": "भाषण से पाठ",
+          "result": "ट्रांसक्राइब किया गया पाठ",
+          "copy": "पाठ कॉपी करें",
+          "copied": "कॉपी हो गया!",
+          "errorPermission": "माइक्रोफ़ोन की अनुमति आवश्यक है",
+          "errorTooShort": "ऑडियो बहुत छोटा है। कृपया एक लंबा संदेश रिकॉर्ड करें।",
+          "errorFailed": "ट्रांसक्रिप्शन विफल। कृपया पुनः प्रयास करें।",
+          "language": "भाषा",
+          "languageHint": "वह भाषा चुनें जिसमें आप बोलेंगे"
+        }
       },
       "selectState": "राज्य चुनें",
       "selectDistrict": "जिला चुनें",

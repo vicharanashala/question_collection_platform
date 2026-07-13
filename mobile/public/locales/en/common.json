@@ -42,6 +42,20 @@
     "stop": "Stop",
     "playing": "Playing…"
   },
+
+  "speech": {
+    "stt": {
+      "title": "Speech to Text",
+      "result": "Transcribed Text",
+      "copy": "Copy Text",
+      "copied": "Copied!",
+      "errorPermission": "Microphone permission required",
+      "errorTooShort": "Audio is too short. Please record a longer message.",
+      "errorFailed": "Transcription failed. Please try again.",
+      "language": "Language",
+      "languageHint": "Select the language you will speak in"
+    }
+  },
   "agreeToConsent": "I have read and agree to the Terms of Service and Privacy Policy",
   "agreeToTerms": "By continuing, you agree to our",
   "and": "and",
@@ -438,7 +452,12 @@
       "tapToPlay": "Tap to play",
       "delete": "Delete",
       "stop": "Stop",
-      "playing": "Playing…"
+      "playing": "Playing…",
+      "micButtonIdle": "Tap to speak your question",
+      "micButtonRecording": "Recording… tap to stop",
+      "micButtonUploading": "Transcribing…",
+      "micButtonDone": "Text added! Tap to record again",
+      "micButtonDisabled": "Daily limit reached"
     },
     "textPlaceholder": "Write your agriculture-related question...",
     "addMedia": "Add Media",

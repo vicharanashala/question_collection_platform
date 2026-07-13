@@ -47,6 +47,7 @@ import { TransactionDetailScreen } from '../screens/Transaction/TransactionDetai
 import { LeaderboardScreen } from '../screens/Leaderboard/LeaderboardScreen';
 import { ReportScreen } from '../screens/Report/ReportScreen';
 import { ReportDetailScreen } from '../screens/Report/ReportDetailScreen';
+import { SpeechToTextScreen } from '../screens/Speech/SpeechToTextScreen';
 
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
@@ -578,6 +579,11 @@ export function AppNavigator({ navigationRef }: AppNavigatorProps) {
                 <RootStack.Screen
                   name="PrivacyPolicy"
                   component={PrivacyPolicyScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="SpeechToText"
+                  component={SpeechToTextScreen}
                   options={{ presentation: 'modal' }}
                 />
               </>
