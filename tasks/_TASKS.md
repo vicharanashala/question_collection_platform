@@ -24,6 +24,7 @@ Each task file represents a deliverable to be completed. Task files use the form
 | 17 | Fast2SMS OTP Integration | Auth | Completed |
 | 20 | GCP Bucket (Nearline) + Image Upload | Storage + Question | Pending |
 | 25 | Redis Integration (Caching + Session Store) | Infrastructure | Pending |
+| 26 | FAQ Feature (Admin + User FAQ Screen) | FAQ | Pending |
 
 ## Progress
 
