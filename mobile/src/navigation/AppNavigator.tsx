@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
@@ -480,6 +480,17 @@ function PendingNavigator() {
 
 // ─── Root Navigator ───────────────────────────────────────────────────────────
 
+/** Keeps Android status bar text/icon colour in sync with the app's resolved theme. */
+function StatusBarManager() {
+  const { isDark } = useTheme();
+  return (
+    <StatusBar
+      backgroundColor="#0D9488"
+      barStyle={isDark ? 'light-content' : 'dark-content'}
+    />
+  );
+}
+
 interface AppNavigatorProps {
   navigationRef?: NavigationContainerRef<RootStackParamList> | null;
 }
@@ -517,6 +528,7 @@ export function AppNavigator({ navigationRef }: AppNavigatorProps) {
 
   return (
     <NavigationContainer ref={navigationRef as unknown as React.Ref<NavigationContainerRef<RootStackParamList>>} theme={navTheme}>
+      <StatusBarManager />
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>

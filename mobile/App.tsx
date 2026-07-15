@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
@@ -71,7 +70,6 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
       <ThemeProvider>
         <AuthProvider>
           <LanguageProvider>
