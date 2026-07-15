@@ -871,6 +871,14 @@ export function AdminDashboardScreen() {
                 onPress={() => navigation.navigate('AdminAuditLogs')}
                 themeColors={c}
               />
+              <QuickCard
+                label="FAQ Management"
+                sub="Manage help content"
+                icon="help-circle"
+                color="#0891b2"
+                onPress={() => navigation.navigate('AdminFaqs')}
+                themeColors={c}
+              />
               {user?.role === 'super_admin' && (
                 <QuickCard
                   label="Config"

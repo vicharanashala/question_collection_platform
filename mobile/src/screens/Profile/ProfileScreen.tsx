@@ -570,6 +570,18 @@ export function ProfileScreen() {
             <TouchableOpacity
               style={styles.actionRow}
               activeOpacity={0.7}
+              onPress={() => navigation.navigate('FaqsList')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="help-circle-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>Help & FAQ</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate('TermsOfService')}
             >
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>

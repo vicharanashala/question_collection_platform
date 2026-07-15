@@ -12,6 +12,7 @@ import type {
   AdminStats,
   User,
   Question,
+  Faq,
   ConfigItem,
   Withdrawal,
   WalletSummary,
@@ -721,6 +722,45 @@ export const reportsApi = {
       { method: 'POST', body: JSON.stringify({ message }) },
       false,
     ),
+}
+
+// ─── FAQ API ──────────────────────────────────────────────────────────────────
+
+export const faqApi = {
+  /** User-facing: visible FAQs only, optionally filtered */
+  getVisible: (filters?: { category?: string }) => {
+    const params: Record<string, string> = {}
+    if (filters?.category) params.category = filters.category
+    return request<Faq[]>('/faqs', { params }, false)
+  },
+
+  /** Admin: all FAQs including hidden, optionally filtered */
+  getAll: (filters?: { category?: string }) => {
+    const params: Record<string, string> = {};
+    if (filters?.category) params.category = filters.category;
+    return request<Faq[]>('/admin/faqs', { params }, false);
+  },
+
+  create: (body: { question: string; answer: string; category?: string; isVisible?: boolean }) =>
+    request<Faq>('/admin/faqs', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  update: (id: string, body: { question?: string; answer?: string; category?: string; isVisible?: boolean }) =>
+    request<Faq>(`/admin/faqs/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }, false),
+
+  toggleVisibility: (id: string, isVisible: boolean) =>
+    request<Faq>(`/admin/faqs/${id}/visibility`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isVisible }),
+    }, false),
+
+  remove: (id: string) =>
+    request<void>(`/admin/faqs/${id}`, { method: 'DELETE' }, false),
 }
 
 // ─── Error helper ──────────────────────────────────────────────────────────

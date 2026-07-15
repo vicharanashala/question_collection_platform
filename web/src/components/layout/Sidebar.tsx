@@ -13,6 +13,7 @@ import {
   Wallet,
 ScrollText,
   Flag,
+  HelpCircle,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/settings',    label: 'Settings',     icon: Settings2,      roles: ['super_admin'] },
   { to: '/audit-logs',  label: 'Audit Logs',   icon: ScrollText,     roles: ['super_admin', 'admin'] },
   { to: '/reports',     label: 'Reports',      icon: Flag,           roles: ['admin', 'super_admin', 'curator'] },
+  { to: '/admin/faqs', label: 'FAQ Management', icon: HelpCircle,    roles: ['admin', 'super_admin'] },
 ]
 
 export function Sidebar() {

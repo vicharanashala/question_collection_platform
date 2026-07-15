@@ -42,7 +42,6 @@
     "stop": "Stop",
     "playing": "Playing…"
   },
-
   "speech": {
     "stt": {
       "title": "Speech to Text",
@@ -1059,5 +1058,41 @@
   "nav.submissions": "Submissions",
   "nav.submit": "Submit",
   "nav.wallet": "Wallet",
-  "nav.profile": "Profile"
+  "nav.profile": "Profile",
+  "faq": {
+    "title": "Help & FAQ",
+    "subtitle": "Find answers to common questions",
+    "emptyTitle": "No FAQs available",
+    "emptySubtitle": "Check back later for help content",
+    "videoSectionTitle": "Watch Video Guide",
+    "videoLoadError": "Video unavailable",
+    "tapToWatch": "Tap to watch video",
+    "opensInYoutube": "Tap to play"
+  },
+  "faqAdmin": {
+    "title": "FAQ Management",
+    "subtitle": "Manage frequently asked questions",
+    "addBtn": "Add FAQ",
+    "addTitle": "Add FAQ",
+    "editTitle": "Edit FAQ",
+    "emptyTitle": "No FAQs yet",
+    "emptySubtitle": "Create your first FAQ to get started",
+    "visible": "Visible",
+    "hidden": "Hidden",
+    "deleteConfirm": "Are you sure you want to delete this FAQ? This cannot be undone.",
+    "deleteTitle": "Delete FAQ?",
+    "success.created": "FAQ created",
+    "success.updated": "FAQ updated",
+    "success.deleted": "FAQ deleted",
+    "success.visible": "FAQ is now visible",
+    "success.hidden": "FAQ is now hidden",
+    "formQuestion": "Question",
+    "formQuestionPlaceholder": "Enter the question…",
+    "formAnswer": "Answer",
+    "formAnswerPlaceholder": "Enter the full answer…",
+    "formVisibleLabel": "Visible to users",
+    "formVisibleDesc": "Hidden FAQs are not shown on the public FAQ page",
+    "validationQuestion": "Question is required",
+    "validationAnswer": "Answer is required"
+  }
 }

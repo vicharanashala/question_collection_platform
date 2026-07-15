@@ -631,5 +631,39 @@
     "statusNote": "You will be able to submit questions once your account is verified.",
     "contactAdmin": "Contact Admin",
     "logout": "Log out and sign in with a different account"
+  },
+  "faq": {
+    "title": "मदद और FAQ",
+    "subtitle": "सामान्य प्रश्नों के उत्तर खोजें",
+    "emptyTitle": "कोई FAQ उपलब्ध नहीं",
+    "emptySubtitle": "मदद सामग्री के लिए बाद में जांचें",
+    "videoSectionTitle": "वीडियो गाइड देखें",
+    "videoLoadError": "वीडियो उपलब्ध नहीं"
+  },
+  "faqAdmin": {
+    "title": "FAQ प्रबंधन",
+    "subtitle": "अक्सर पूछे जाने वाले प्रश्नों का प्रबंधन करें",
+    "addBtn": "FAQ जोड़ें",
+    "addTitle": "FAQ जोड़ें",
+    "editTitle": "FAQ संपादित करें",
+    "emptyTitle": "अभी कोई FAQ नहीं",
+    "emptySubtitle": "शुरू करने के लिए अपना पहला FAQ बनाएं",
+    "visible": "दृश्य",
+    "hidden": "छिपा",
+    "deleteConfirm": "क्या आप वाकई इस FAQ को हटाना चाहते हैं? इसे पूर्ववत नहीं किया जा सकता।",
+    "deleteTitle": "FAQ हटाएं?",
+    "success.created": "FAQ बनाया गया",
+    "success.updated": "FAQ अपडेट किया गया",
+    "success.deleted": "FAQ हटाया गया",
+    "success.visible": "FAQ अब दृश्यमान है",
+    "success.hidden": "FAQ अब छिपा है",
+    "formQuestion": "प्रश्न",
+    "formQuestionPlaceholder": "प्रश्न दर्ज करें…",
+    "formAnswer": "उत्तर",
+    "formAnswerPlaceholder": "पूरा उत्तर दर्ज करें…",
+    "formVisibleLabel": "उपयोगकर्ताओं के लिए दृश्य",
+    "formVisibleDesc": "छिपे हुए FAQ उपयोगकर्ताओं को नहीं दिखाए जाते",
+    "validationQuestion": "प्रश्न आवश्यक है",
+    "validationAnswer": "उत्तर आवश्यक है"
   }
 }

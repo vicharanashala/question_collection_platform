@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import { getInitials } from '@/lib/utils'
-import { Phone, Shield, MapPin, Calendar, Globe } from 'lucide-react'
+import { Phone, Shield, MapPin, Calendar, Globe, HelpCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { authApi, getErrorMessage } from '@/api/client'
 
@@ -22,6 +24,7 @@ const LANGUAGES = [
 
 export function ProfilePage() {
   const { user, updateUser } = useAuth()
+  const navigate = useNavigate()
   const [savingLang, setSavingLang] = useState(false)
 
   if (!user) return null
@@ -133,6 +136,22 @@ export function ProfilePage() {
           )}
 
           <Separator />
+
+          {/* Help & FAQ */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-sm text-text-tertiary">
+              <HelpCircle className="h-4 w-4" />
+              Help & FAQ
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:text-primary"
+              onClick={() => navigate('/faqs')}
+            >
+              View
+            </Button>
+          </div>
 
           {/* Language preference */}
           <div className="flex items-center justify-between">

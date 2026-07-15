@@ -18,6 +18,8 @@ const WalletsPage     = lazyRoute(() => import('@/pages/wallets/WalletsPage').th
 const AuditLogsPage   = lazyRoute(() => import('@/pages/audit-logs/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })))
 const ReportsPage     = lazyRoute(() => import('@/pages/reports/ReportsPage').then(m => ({ default: m.default })))
 const ReportDetailPage = lazyRoute(() => import('@/pages/reports/ReportDetailPage').then(m => ({ default: m.default })))
+const FaqListPage   = lazyRoute(() => import('@/pages/faqs/FaqListPage').then(m => ({ default: m.FaqListPage })))
+const FaqsPage      = lazyRoute(() => import('@/pages/faqs/FaqsPage').then(m => ({ default: m.FaqsPage })))
 
 /** Pages visible per role */
 const PAGE_ROLES: Record<string, UserRole[]> = {
@@ -33,6 +35,8 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   auditLogs:   ['super_admin', 'admin'],
   reports:     ['admin', 'super_admin', 'curator'],
   reportDetail: ['admin', 'super_admin', 'curator'],
+  faqs:        ['user', 'curator', 'admin', 'super_admin', 'finance'],
+  faqAdmin:    ['admin', 'super_admin'],
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -87,6 +91,8 @@ export default function App() {
           <Route path="audit-logs" element={<><RoleRoute pageKey="auditLogs" /><AuditLogsPage /></>} />
           <Route path="reports"    element={<><RoleRoute pageKey="reports" /><ReportsPage /></>} />
           <Route path="reports/:reportId" element={<><RoleRoute pageKey="reportDetail" /><ReportDetailPage /></>} />
+          <Route path="faqs"           element={<><RoleRoute pageKey="faqs"     /><FaqListPage  /></>} />
+          <Route path="admin/faqs"     element={<><RoleRoute pageKey="faqAdmin" /><FaqsPage     /></>} />
         </Route>
       </Routes>
     </PrefetchProvider>

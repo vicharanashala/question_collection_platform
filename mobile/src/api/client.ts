@@ -2,6 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { accountLockedEmitter } from '../events/accountLockedEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import type { Faq } from '../types';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 //
@@ -624,6 +625,34 @@ export const reportsApi = {
   /** Get current user's own single report with replies */
   getMyReport: (reportId: string) =>
     api.get<Report>(`/reports/my/${reportId}`),
+}
+
+// ─── FAQ API ────────────────────────────────────────────────────────────────────
+
+export const faqApi = {
+  /** User-facing: visible FAQs only, optionally filtered */
+  getVisible: (filters?: { search?: string; category?: string }) => {
+    const params: Record<string, string> = {};
+    if (filters?.search) params.search = filters.search;
+    if (filters?.category) params.category = filters.category;
+    return api.get<Faq[]>('/faqs', { params, requiresAuth: false } as any);
+  },
+
+  /** Admin: all FAQs including hidden */
+  getAll: () =>
+    api.get<Faq[]>('/admin/faqs'),
+
+  create: (body: { question: string; answer: string; category?: string; isVisible?: boolean }) =>
+    api.post<Faq>('/admin/faqs', body),
+
+  update: (id: string, body: { question?: string; answer?: string; category?: string; isVisible?: boolean }) =>
+    api.patch<Faq>(`/admin/faqs/${id}`, body),
+
+  toggleVisibility: (id: string, isVisible: boolean) =>
+    api.patch<Faq>(`/admin/faqs/${id}/visibility`, { isVisible }),
+
+  remove: (id: string) =>
+    api.delete<void>(`/admin/faqs/${id}`),
 }
 
 export default api;

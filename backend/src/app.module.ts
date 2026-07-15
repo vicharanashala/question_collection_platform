@@ -32,6 +32,7 @@ import {
   UserPaymentDetail,
   Report,
   ReportReply,
+  Faq,
 } from './database/entities';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -45,6 +46,7 @@ import { PaymentModule } from './payment/payment.module';
 import { StorageModule } from './storage/storage.module';
 import { AiModule } from './ai/ai.module';
 import { ReportsModule } from './reports/reports.module';
+import { FaqsModule } from './faqs/faqs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 import { CacheModule } from './cache/cache.module';
@@ -102,6 +104,7 @@ import { EndpointLoggerModule } from './common/endpoint-logger/endpoint-logger.m
           UserPaymentDetail,
           Report,
           ReportReply,
+          Faq,
         ],
         migrations: [],
         synchronize: process.env.NODE_ENV !== 'production',
@@ -124,6 +127,7 @@ import { EndpointLoggerModule } from './common/endpoint-logger/endpoint-logger.m
     StorageModule,
     AiModule,
     ReportsModule,
+    FaqsModule,
   ],
   controllers: [HealthController],
   providers: [

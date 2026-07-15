@@ -32,6 +32,7 @@ export type AdminStackParamList = {
   AdminWithdrawals: undefined;
   AdminProfile: undefined;
   AdminAuditLogs: undefined;
+  AdminFaqs: undefined;
   // Finance role screens (subset of admin screens)
   FinanceDashboard: undefined;
   FinanceWithdrawals: undefined;
@@ -58,6 +59,7 @@ export type RootStackParamList = {
   Leaderboard: undefined;
   ReportScreen: undefined;
   ReportDetail: { reportId: string };
+  FaqsList: undefined;
   QuestionDetail: {
     /** ID of the question to display */
     questionId: string;

@@ -1,7 +1,7 @@
 # Task 26: FAQ Feature
 
 **Module:** FAQ  
-**Status:** Pending  
+**Status:** In Progress  
 **Developer:** —  
 **Started:** —  
 **Completed:** —

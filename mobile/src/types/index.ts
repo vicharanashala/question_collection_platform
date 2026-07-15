@@ -407,3 +407,18 @@ export interface LeaderboardResponse {
   userRank: number | null;
   total: number;
 }
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+
+export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  isVisible: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}

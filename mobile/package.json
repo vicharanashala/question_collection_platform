@@ -30,7 +30,8 @@
     "react-native-razorpay": "^3.0.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "^4.25.2",
-    "react-native-svg": "15.15.4"
+    "react-native-svg": "15.15.4",
+    "react-native-webview": "^16.0.0"
   },
   "devDependencies": {
     "@react-native/jest-preset": "^0.85.3",

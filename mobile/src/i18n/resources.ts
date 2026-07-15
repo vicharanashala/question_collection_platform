@@ -1063,7 +1063,43 @@ const resources = {
       "nav.submissions": "Submissions",
       "nav.submit": "Submit",
       "nav.wallet": "Wallet",
-      "nav.profile": "Profile"
+      "nav.profile": "Profile",
+      "faq": {
+        "title": "Help & FAQ",
+        "subtitle": "Find answers to common questions",
+        "emptyTitle": "No FAQs available",
+        "emptySubtitle": "Check back later for help content",
+        "videoSectionTitle": "Watch Video Guide",
+        "videoLoadError": "Video unavailable",
+        "tapToWatch": "Tap to watch video",
+        "opensInYoutube": "Tap to play"
+      },
+      "faqAdmin": {
+        "title": "FAQ Management",
+        "subtitle": "Manage frequently asked questions",
+        "addBtn": "Add FAQ",
+        "addTitle": "Add FAQ",
+        "editTitle": "Edit FAQ",
+        "emptyTitle": "No FAQs yet",
+        "emptySubtitle": "Create your first FAQ to get started",
+        "visible": "Visible",
+        "hidden": "Hidden",
+        "deleteConfirm": "Are you sure you want to delete this FAQ? This cannot be undone.",
+        "deleteTitle": "Delete FAQ?",
+        "success.created": "FAQ created",
+        "success.updated": "FAQ updated",
+        "success.deleted": "FAQ deleted",
+        "success.visible": "FAQ is now visible",
+        "success.hidden": "FAQ is now hidden",
+        "formQuestion": "Question",
+        "formQuestionPlaceholder": "Enter the question…",
+        "formAnswer": "Answer",
+        "formAnswerPlaceholder": "Enter the full answer…",
+        "formVisibleLabel": "Visible to users",
+        "formVisibleDesc": "Hidden FAQs are not shown on the public FAQ page",
+        "validationQuestion": "Question is required",
+        "validationAnswer": "Answer is required"
+      }
     }
   },
   "as": {
@@ -4764,6 +4800,40 @@ const resources = {
         "statusNote": "You will be able to submit questions once your account is verified.",
         "contactAdmin": "Contact Admin",
         "logout": "Log out and sign in with a different account"
+      },
+      "faq": {
+        "title": "मदद और FAQ",
+        "subtitle": "सामान्य प्रश्नों के उत्तर खोजें",
+        "emptyTitle": "कोई FAQ उपलब्ध नहीं",
+        "emptySubtitle": "मदद सामग्री के लिए बाद में जांचें",
+        "videoSectionTitle": "वीडियो गाइड देखें",
+        "videoLoadError": "वीडियो उपलब्ध नहीं"
+      },
+      "faqAdmin": {
+        "title": "FAQ प्रबंधन",
+        "subtitle": "अक्सर पूछे जाने वाले प्रश्नों का प्रबंधन करें",
+        "addBtn": "FAQ जोड़ें",
+        "addTitle": "FAQ जोड़ें",
+        "editTitle": "FAQ संपादित करें",
+        "emptyTitle": "अभी कोई FAQ नहीं",
+        "emptySubtitle": "शुरू करने के लिए अपना पहला FAQ बनाएं",
+        "visible": "दृश्य",
+        "hidden": "छिपा",
+        "deleteConfirm": "क्या आप वाकई इस FAQ को हटाना चाहते हैं? इसे पूर्ववत नहीं किया जा सकता।",
+        "deleteTitle": "FAQ हटाएं?",
+        "success.created": "FAQ बनाया गया",
+        "success.updated": "FAQ अपडेट किया गया",
+        "success.deleted": "FAQ हटाया गया",
+        "success.visible": "FAQ अब दृश्यमान है",
+        "success.hidden": "FAQ अब छिपा है",
+        "formQuestion": "प्रश्न",
+        "formQuestionPlaceholder": "प्रश्न दर्ज करें…",
+        "formAnswer": "उत्तर",
+        "formAnswerPlaceholder": "पूरा उत्तर दर्ज करें…",
+        "formVisibleLabel": "उपयोगकर्ताओं के लिए दृश्य",
+        "formVisibleDesc": "छिपे हुए FAQ उपयोगकर्ताओं को नहीं दिखाए जाते",
+        "validationQuestion": "प्रश्न आवश्यक है",
+        "validationAnswer": "उत्तर आवश्यक है"
       }
     }
   },

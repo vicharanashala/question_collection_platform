@@ -47,6 +47,7 @@ import { TransactionDetailScreen } from '../screens/Transaction/TransactionDetai
 import { LeaderboardScreen } from '../screens/Leaderboard/LeaderboardScreen';
 import { ReportScreen } from '../screens/Report/ReportScreen';
 import { ReportDetailScreen } from '../screens/Report/ReportDetailScreen';
+import { FaqsListScreen } from '../screens/Faqs/FaqsListScreen';
 import { SpeechToTextScreen } from '../screens/Speech/SpeechToTextScreen';
 
 // Admin screens
@@ -61,6 +62,7 @@ import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
 import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
 import { AdminProfileScreen } from '../screens/Admin/AdminProfileScreen';
 import { AdminAuditLogsScreen } from '../screens/Admin/AdminAuditLogsScreen';
+import { AdminFaqsScreen } from '../screens/Admin/AdminFaqsScreen';
 import { AdminUsersScreen as FinanceUsersScreen } from '../screens/Admin/AdminUsersScreen';
 import { FinanceDashboardScreen } from '../screens/Admin/FinanceDashboardScreen';
 import { FinanceWalletsScreen } from '../screens/Admin/FinanceWalletsScreen';
@@ -207,6 +209,11 @@ function AdminNavigator() {
       <AdminStackNav.Screen
         name="AdminAuditLogs"
         component={AdminAuditLogsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminFaqs"
+        component={AdminFaqsScreen}
         options={{ headerShown: false }}
       />
     </AdminStackNav.Navigator>
@@ -579,6 +586,11 @@ export function AppNavigator({ navigationRef }: AppNavigatorProps) {
                 <RootStack.Screen
                   name="PrivacyPolicy"
                   component={PrivacyPolicyScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="FaqsList"
+                  component={FaqsListScreen}
                   options={{ presentation: 'modal' }}
                 />
                 <RootStack.Screen

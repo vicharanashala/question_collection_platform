@@ -538,3 +538,16 @@ export interface ReportReply {
   createdAt: string;
   admin?: Pick<User, 'id' | 'name'>;
 }
+
+export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  isVisible: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
