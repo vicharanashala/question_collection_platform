@@ -23,7 +23,6 @@ From the stakeholder requirement: Users need access to frequently asked question
 ### FAQ List Screen (User)
 - [ ] Display all visible (non-hidden) FAQs in a clean list/accordion format
 - [ ] Each FAQ item shows: Question (title) and Answer (expandable content)
-- [ ] If an FAQ has an associated video, display an inline video player or video thumbnail with play option
 - [ ] FAQs are sorted by creation order or a display_order field
 - [ ] Empty state when no FAQs are available
 
@@ -35,7 +34,6 @@ From the stakeholder requirement: Users need access to frequently asked question
 - [ ] FAQ form fields:
   - Question (required, text)
   - Answer (required, textarea or rich text)
-  - Video URL (optional, URL field — supports YouTube, Vimeo, or hosted video links)
   - Visibility toggle (visible/hidden, default: visible)
 - [ ] Inline hide/unhide toggle per FAQ item (no need for edit modal just to toggle visibility)
 - [ ] Edit FAQ (open form pre-filled)
@@ -51,7 +49,6 @@ From the stakeholder requirement: Users need access to frequently asked question
 | id | UUID | PK, default gen_random_uuid() | Primary key |
 | question | VARCHAR(500) | NOT NULL | FAQ question/title |
 | answer | TEXT | NOT NULL | FAQ answer content |
-| video_url | VARCHAR(1000) | NULLABLE | Optional video URL |
 | is_visible | BOOLEAN | NOT NULL DEFAULT true | Visibility flag — hidden FAQs not shown to users |
 | display_order | INTEGER | NOT NULL DEFAULT 0 | Sort order |
 | created_at | TIMESTAMPTZ | NOT NULL DEFAULT now() | Creation timestamp |
@@ -69,25 +66,62 @@ From the stakeholder requirement: Users need access to frequently asked question
 | GET | /faqs | Public (or user auth) | List all visible FAQs (user-facing) |
 | GET | /admin/faqs | Admin | List all FAQs (including hidden) |
 | POST | /admin/faqs | Admin | Create a new FAQ |
-| PATCH | /admin/faqs/:id | Admin | Update an FAQ (question, answer, video_url) |
+| PATCH | /admin/faqs/:id | Admin | Update an FAQ (question, answer) |
 | PATCH | /admin/faqs/:id/visibility | Admin | Toggle is_visible flag |
 | DELETE | /admin/faqs/:id | Admin | Delete an FAQ |
 
 ---
 
-## Web Frontend (Admin Panel — `/web`)
+## Web Frontend (`/web`)
 
-### New Pages
+### User-Facing FAQ Screen
+- [ ] `web/src/pages/faqs/FaqListPage.tsx` — Public/user-facing FAQ list page
+- [ ] Display all visible FAQs in a list or accordion format
+- [ ] Each FAQ item shows: Question (title) and Answer (expandable/collapsible content)
+- [ ] Empty state when no FAQs are available
+
+### Admin-Facing Requirements (Web)
+
+#### Admin Navigation
+- [ ] Add "FAQ Management" sidebar link (visible to admin, super_admin roles)
+- [ ] Route: `/admin/faqs` (or `/faqs` within the admin section)
+- [ ] Add PAGE_ROLES entry for the FAQs page
+
+#### App.tsx changes
+- [ ] Add route `/faqs` (user-facing FAQ list, public or authenticated)
+- [ ] Add route `/admin/faqs` (admin panel, admin/super_admin only)
+- [ ] Add PAGE_ROLES entry for faqs page (user-facing) and admin faqs page (admin)
+
+#### Admin FAQ Management Page
 - [ ] `web/src/pages/faqs/FaqsPage.tsx` — Admin FAQ management list + add/edit dialog
+- [ ] Accessible only to admin and super_admin roles
 
-### App.tsx changes
-- [ ] Add route `/faqs` for admin panel (visible to admin, super_admin)
-- [ ] Add PAGE_ROLES entry for faqs page
+#### FAQ Table/List (Admin)
+- [ ] Table with columns: Question, Status (Visible/Hidden badge), Actions
+- [ ] Display all FAQs (both visible and hidden)
+- [ ] "Add FAQ" button opens add/edit dialog
+- [ ] Edit button per row opens pre-filled dialog
+- [ ] Inline visibility toggle per row (switch or icon button)
+- [ ] Delete button per row with confirmation dialog
 
-### Components
-- [ ] FaqsPage: table/list of FAQs with columns: Question, Has Video, Status (Visible/Hidden), Actions
-- [ ] Add/Edit FAQ dialog: question, answer (textarea), video_url (input), is_visible toggle
-- [ ] Confirm delete dialog
+#### Add/Edit FAQ Dialog
+- [ ] Modal dialog with fields:
+  - Question (required, text input)
+  - Answer (required, textarea or rich text editor)
+  - Visibility toggle (visible/hidden switch, default: visible)
+- [ ] Validation: question and answer required before submit
+- [ ] On submit: POST (create) or PATCH (edit) to respective API endpoints
+- [ ] On successful save: close dialog, refresh list, show success toast
+
+#### Inline Visibility Toggle
+- [ ] Toggle switch or icon button per FAQ item in the table
+- [ ] Calls `PATCH /admin/faqs/:id/visibility`
+- [ ] Optimistic UI update + rollback on API failure
+
+#### Delete FAQ
+- [ ] Delete button per row triggers confirmation dialog
+- [ ] Confirmation dialog: "Are you sure you want to delete this FAQ?"
+- [ ] On confirm: remove from table, call DELETE `/admin/faqs/:id`, show success toast
 
 ---
 
@@ -102,8 +136,42 @@ From the stakeholder requirement: Users need access to frequently asked question
 
 ### FAQ List Item
 - [ ] Accordion-style expansion for answer
-- [ ] Video player (use expo-av or a webview for video URLs) shown when FAQ has video_url
+- [ ] If the FAQ screen has a video section, render it alongside the answer (see Video Rendering below)
 - [ ] Only visible FAQs are fetched/displayed
+
+### Admin-Facing Requirements (Mobile)
+
+#### Admin Navigation
+- [ ] Add "FAQ Management" entry in the admin sidebar/bottom tabs (matching other admin section items like Users, Reports, etc.)
+- [ ] Route: `/admin/faqs` (or nested under `(admin)/faqs`)
+
+#### Admin FAQ Management Screen
+- [ ] `mobile/src/app/(admin)/faqs/` — Admin FAQ management list screen (accessible to admin/super_admin roles only)
+- [ ] Stack navigator or nested route under `(admin)` tab/layout
+- [ ] Add route guard to restrict access to admin users
+
+#### FAQ List (Admin)
+- [ ] Display all FAQs (both visible and hidden) in a list or table format
+- [ ] Show status indicator per item (Visible / Hidden badge)
+- [ ] Floating action button (FAB) or header button for "Add FAQ"
+- [ ] Pull-to-refresh to reload FAQ list
+
+#### Add/Edit FAQ Form
+- [ ] Bottom sheet or full-screen modal form
+- [ ] Fields: Question (required, text input), Answer (required, multiline text area), Visibility toggle (visible/hidden switch)
+- [ ] Validation: question and answer required before submit
+- [ ] On submit: POST (create) or PATCH (edit) to respective API endpoints
+- [ ] On successful save: close form, refresh list, show success toast
+
+#### Inline Visibility Toggle
+- [ ] Toggle switch or icon button per FAQ item to toggle visibility without opening edit form
+- [ ] Calls `PATCH /admin/faqs/:id/visibility`
+- [ ] Optimistic UI update + rollback on failure
+
+#### Delete FAQ
+- [ ] Swipe-to-delete or long-press menu with "Delete" option
+- [ ] Confirmation alert/dialog before calling DELETE endpoint
+- [ ] On confirm: remove from list with animation, call DELETE API
 
 ---
 
@@ -121,18 +189,26 @@ From the stakeholder requirement: Users need access to frequently asked question
 - [ ] `delete(id)` — removes FAQ
 
 ### DTOs
-- [ ] CreateFaqDto: question, answer, video_url (optional), is_visible (optional, default true)
+- [ ] CreateFaqDto: question, answer, is_visible (optional, default true)
 - [ ] UpdateFaqDto: all fields optional
 - [ ] ToggleVisibilityDto: is_visible (boolean)
 
 ---
 
-## Video Support Notes
+## Video Rendering
 
-- Video URL field accepts direct URLs (MP4), YouTube, Vimeo links
-- On mobile: use `expo-av` Video component for direct MP4 URLs; for YouTube/Vimeo, use InAppBrowser or WebView
-- On web admin: video URL can be validated and previewed before saving
-- Videos in FAQ list are shown as collapsible/expandable inline players or thumbnails
+The video section is a standalone UI element rendered on the FAQ screen. It is independent of any individual FAQ record. No video URL or asset is stored in the backend.
+
+### Mobile Video Rendering
+- [ ] Dedicated video section rendered below the FAQ answer area
+- [ ] YouTube URL played via WebView or InAppBrowser
+- [ ] Video playback controls: play/pause, seek, fullscreen
+- [ ] Video thumbnail shown before play
+- [ ] Graceful fallback: if video fails to load, show a placeholder instead of crashing
+
+### Web Video Rendering
+- [ ] YouTube embed via iframe or embed component
+- [ ] Video thumbnail/play button overlay before playback
 
 ---
 
