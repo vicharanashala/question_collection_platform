@@ -35,26 +35,53 @@ export class FaqsService {
       .getMany();
   }
 
-  /** Admin: return all FAQs, optionally filtered */
-  async findAll(query: ListFaqsQueryDto): Promise<Faq[]> {
+  /** Admin: FAQ counts (used for stats row) */
+  async getStats(category?: string): Promise<{ total: number; visible: number; hidden: number }> {
+    const qb = this.faqRepo.createQueryBuilder('faq');
+    if (category) qb.andWhere('faq.category = :category', { category });
+    const all = await qb.getMany();
+    return {
+      total: all.length,
+      visible: all.filter((f) => f.isVisible).length,
+      hidden: all.filter((f) => !f.isVisible).length,
+    };
+  }
+
+  /** Admin: return paginated FAQ list */
+  async findAllPaginated(query: ListFaqsQueryDto): Promise<{
+    items: Faq[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }> {
+    const { page = 1, limit = 20, category, search, sortBy = 'displayOrder', sortOrder = 'ASC' } = query;
+
     const qb = this.faqRepo.createQueryBuilder('faq');
 
-    if (query.category) {
-      qb.andWhere('faq.category = :category', { category: query.category });
+    if (category) {
+      qb.andWhere('faq.category = :category', { category });
     }
 
-    if (query.search) {
-      const term = `%${query.search}%`;
+    if (search) {
+      const term = `%${search}%`;
       qb.andWhere(
         '(faq.question ILIKE :term OR faq.answer ILIKE :term)',
         { term },
       );
     }
 
-    return qb
-      .orderBy('faq.displayOrder', 'ASC')
-      .addOrderBy('faq.createdAt', 'ASC')
-      .getMany();
+    const sortCol =
+      sortBy === 'question' ? 'faq.question'
+        : sortBy === 'createdAt' ? 'faq.createdAt'
+        : sortBy === 'updatedAt' ? 'faq.updatedAt'
+        : 'faq.displayOrder';
+    qb.orderBy(sortCol, sortOrder ?? 'ASC');
+
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [items, total] = await qb.getManyAndCount();
+    return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
   async create(dto: CreateFaqDto): Promise<Faq> {

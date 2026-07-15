@@ -734,11 +734,36 @@ export const faqApi = {
     return request<Faq[]>('/faqs', { params }, false)
   },
 
-  /** Admin: all FAQs including hidden, optionally filtered */
-  getAll: (filters?: { category?: string }) => {
+  /** Admin: paginated FAQ list */
+  getAll: (filters?: {
+    category?: string
+    search?: string
+    page?: number
+    limit?: number
+    sortBy?: 'displayOrder' | 'createdAt' | 'updatedAt' | 'question'
+    sortOrder?: 'ASC' | 'DESC'
+  }) => {
+    const p: Record<string, string> = {};
+    if (filters?.category)  p.category   = filters.category;
+    if (filters?.search)    p.search     = filters.search;
+    if (filters?.page)      p.page       = String(filters.page);
+    if (filters?.limit)     p.limit      = String(filters.limit);
+    if (filters?.sortBy)    p.sortBy     = filters.sortBy;
+    if (filters?.sortOrder) p.sortOrder  = filters.sortOrder;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<Faq>>(`/admin/faqs${qs ? `?${qs}` : ''}`, {}, false);
+  },
+
+  /** Admin: FAQ stats */
+  getStats: (category?: string) => {
     const params: Record<string, string> = {};
-    if (filters?.category) params.category = filters.category;
-    return request<Faq[]>('/admin/faqs', { params }, false);
+    if (category) params.category = category;
+    const qs = new URLSearchParams(params).toString();
+    return request<{ total: number; visible: number; hidden: number }>(
+      `/admin/faqs/stats${qs ? `?${qs}` : ''}`,
+      {},
+      false,
+    );
   },
 
   create: (body: { question: string; answer: string; category?: string; isVisible?: boolean }) =>

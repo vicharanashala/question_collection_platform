@@ -88,10 +88,17 @@ export class FaqsController {
   // ─── Admin ───────────────────────────────────────────────────────────────
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Get('admin/faqs/stats')
+  async getStats(@Query('category') category?: string) {
+    return this.faqsService.getStats(category);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Get('admin/faqs')
   async listAll(@Query() query: ListFaqsQueryDto) {
-    return this.faqsService.findAll(query);
+    return this.faqsService.findAllPaginated(query);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
