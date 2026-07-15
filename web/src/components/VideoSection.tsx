@@ -3,7 +3,15 @@ import { Play, X } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 /// <reference types="vite/client" />
 
+/**
+ * YouTube embed URL (e.g. https://www.youtube.com/embed/VIDEO_ID?rel=0&modestbranding=1)
+ * Set VITE_PUBLIC_FAQ_VIDEO_URL in web/.env
+ */
 const VIDEO_URL = (import.meta as any).env?.VITE_PUBLIC_FAQ_VIDEO_URL as string | undefined
+
+function isYouTubeEmbedUrl(url: string): boolean {
+  return /youtube\.com\/embed\//.test(url)
+}
 
 export function VideoSection() {
   const [open, setOpen] = useState(false)
@@ -42,13 +50,24 @@ export function VideoSection() {
 
           {/* Video player */}
           <div className="relative bg-black" style={{ aspectRatio: '16/9' }}>
-            <video
-              className="w-full h-full"
-              src={VIDEO_URL}
-              controls
-              autoPlay
-              preload="metadata"
-            />
+            {isYouTubeEmbedUrl(VIDEO_URL) ? (
+              <iframe
+                className="w-full h-full"
+                src={VIDEO_URL}
+                title="FAQ Video Guide"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                className="w-full h-full"
+                src={VIDEO_URL}
+                controls
+                autoPlay
+                preload="metadata"
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

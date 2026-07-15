@@ -15,7 +15,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { FaqsService } from './faqs.service';
 import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
@@ -41,19 +41,48 @@ export class FaqsController {
 
   @Public()
   @Get('videos/:filename')
-  streamVideo(@Param('filename') filename: string, @Res({ passthrough: true }) res: Response) {
+  streamVideo(
+    @Param('filename') filename: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const filePath = join(__dirname, '..', 'public', 'videos', filename);
     if (!existsSync(filePath)) {
       throw new NotFoundException(`Video '${filename}' not found`);
     }
+
+    const stat = statSync(filePath);
+    const fileSize = stat.size;
+    const range = res.req.headers['range'];
+
+    if (range) {
+      // Partial content (range request) — required for <video> seek/play
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = end - start + 1;
+
+      res.set({
+        'Content-Type': 'video/mp4',
+        'Content-Length': String(chunkSize),
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=31536000',
+      });
+      res.status(HttpStatus.PARTIAL_CONTENT);
+      return new StreamableFile(createReadStream(filePath, { start, end }));
+    }
+
+    // Full file response
     res.set({
       'Content-Type': 'video/mp4',
-      'Content-Disposition': `inline; filename="${filename}"`,
+      'Content-Length': String(fileSize),
+      'Accept-Ranges': 'bytes',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges',
       'Cache-Control': 'public, max-age=31536000',
     });
-    const stream = createReadStream(filePath);
-    return new StreamableFile(stream);
+    return new StreamableFile(createReadStream(filePath));
   }
 
   // ─── Admin ───────────────────────────────────────────────────────────────
