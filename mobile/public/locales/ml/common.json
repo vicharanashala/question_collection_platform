@@ -502,7 +502,8 @@
     "videoAttached": "വീഡിയോ അറ്റാച്ചുചെയ്‌തു",
     "audioAttached": "ഓഡിയോ അറ്റാച്ചുചെയ്‌തു",
     "mediaCount": "+{{count}} കൂടുതൽ",
-    "searchPlaceholder": "പേര്, മൊബൈൽ, ജില്ല തിരയുക..."
+    "searchPlaceholder": "പേര്, മൊബൈൽ, ജില്ല തിരയുക...",
+    "tryAnotherQuestion": "Try Another Question"
   },
   "readFullPolicy": "പൂർണ്ണമായ സ്വകാര്യതാ നയം വായിക്കുക →",
   "resendOtp": "OTP വീണ്ടും അയക്കുക",
@@ -977,11 +978,13 @@
       "urgent": "അടിയന്തരമായത്"
     },
     "reply": "മറുപടി",
-    "replyCount": "{{count}} {{one:മറുപടി, other:മറുപടികൾ}}",
+    "replyCount": "{{count}} മറുപടി",
     "noReplies": "ഇതുവരെ മറുപടികളില്ല. ഞങ്ങൾ ഉടൻ പ്രതികരിക്കും.",
     "submittedOn": "{{date}} -ൽ സമർപ്പിച്ചു",
     "replies": "മറുപടികൾ",
-    "adminName": "അഡ്മിൻ"
+    "adminName": "അഡ്മിൻ",
+    "replyCount_one": "{{count}} മറുപടി",
+    "replyCount_other": "{{count}} മറുപടികൾ"
   },
   "profile.account": "അക്കൗണ്ട്",
   "profile.personalInfo": "വ്യക്തിഗത വിവരങ്ങൾ",

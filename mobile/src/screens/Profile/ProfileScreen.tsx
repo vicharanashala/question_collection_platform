@@ -152,20 +152,6 @@ export function ProfileScreen() {
                   </Text>
                 </View>
               )}
-              {totalApproved != null && (
-                (() => {
-                  const { label, tier } = getRewardTier(totalApproved);
-                  const tierColor = TIER_CONFIG[tier].color;
-                  return (
-                    <View style={[styles.categoryBadge, { backgroundColor: tierColor + '20' }]}>
-                      <Ionicons name="medal-outline" size={10} color={tierColor} />
-                      <Text style={[styles.categoryText, { color: tierColor }]}>
-                        {label} · {totalApproved} approved
-                      </Text>
-                    </View>
-                  );
-                })()
-              )}
             </View>
 
             {/* Verification pill — top right */}
@@ -183,6 +169,82 @@ export function ProfileScreen() {
             )}
           </View>
         </View>
+
+        {/* ── Tier card ─────────────────────────────────────── */}
+        {totalApproved != null && (
+          (() => {
+            const { label, tier } = getRewardTier(totalApproved);
+            const tierColor = TIER_CONFIG[tier].color;
+
+            // thresholds: bronze 0–25, silver 26–250, gold 251+
+            const nextTierThresholds: Record<string, number> = { bronze: 26, silver: 251, gold: Infinity };
+            const currentMin: Record<string, number> = { bronze: 0, silver: 26, gold: 251 };
+            const next = nextTierThresholds[tier];
+            const progress = next === Infinity ? 1 : Math.min((totalApproved - currentMin[tier]) / (next - currentMin[tier]), 1);
+
+            return (
+              <View style={[styles.tierCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
+                {/* Header row */}
+                <View style={styles.tierHeader}>
+                  <View style={[styles.tierIconWrap, { backgroundColor: tierColor + '20' }]}>
+                    <Ionicons name="medal" size={20} color={tierColor} />
+                  </View>
+                  <View style={styles.tierMeta}>
+                    <Text style={[styles.tierLabel, { color: tierColor }]}>{label} Member</Text>
+                    <Text style={[styles.tierApproved, { color: c.textSecondary }]}>
+                      {totalApproved} approved questions
+                    </Text>
+                  </View>
+                  {tier !== 'gold' && (
+                    <View style={[styles.nextTierPill, { backgroundColor: tierColor + '15' }]}>
+                      <Text style={[styles.nextTierText, { color: tierColor }]}>
+                        {next - totalApproved} to {tier === 'bronze' ? 'Silver' : 'Gold'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Progress bar */}
+                {tier !== 'gold' && (
+                  <View style={styles.tierProgressWrap}>
+                    <View style={[styles.tierProgressTrack, { backgroundColor: tierColor + '20' }]}>
+                      <View
+                        style={[
+                          styles.tierProgressFill,
+                          { width: `${Math.round(progress * 100)}%`, backgroundColor: tierColor },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.tierProgressLabel, { color: c.textTertiary }]}>
+                      {next - totalApproved} more to {tier === 'bronze' ? 'Silver' : 'Gold'}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Tier milestones */}
+                <View style={[styles.tierMilestones, { borderTopColor: c.borderSubtle }]}>
+                  {(['bronze', 'silver', 'gold'] as const).map((t) => {
+                    const reached = totalApproved >= (t === 'bronze' ? 0 : t === 'silver' ? 26 : 251);
+                    const mc = TIER_CONFIG[t].color;
+                    return (
+                      <View key={t} style={styles.tierMilestone}>
+                        <View style={[styles.milestoneDot, { backgroundColor: reached ? mc : c.borderSubtle }]}>
+                          {reached && <Ionicons name="checkmark" size={8} color="#fff" />}
+                        </View>
+                        <Text style={[styles.milestoneLabel, { color: reached ? mc : c.textTertiary }]}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </Text>
+                        <Text style={[styles.milestoneThreshold, { color: c.textTertiary }]}>
+                          {t === 'bronze' ? '0' : t === 'silver' ? '26' : '251'}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })()
+        )}
 
         {/* ── Stats row ─────────────────────────────────────── */}
         <View style={styles.statsRow}>
@@ -767,6 +829,67 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radiusLg,
     overflow: 'hidden',
   },
+
+  // ── Tier card
+  tierCard: {
+    marginHorizontal: tokens.spacing4,
+    marginBottom: tokens.spacing4,
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing4,
+    overflow: 'hidden',
+  },
+  tierHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing3,
+  },
+  tierIconWrap: {
+    width: 44, height: 44,
+    borderRadius: tokens.radiusMd,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  tierMeta: { flex: 1 },
+  tierLabel: { fontSize: 17, fontWeight: '800' },
+  tierApproved: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+  nextTierPill: {
+    paddingHorizontal: tokens.spacing2 + 2,
+    paddingVertical: 4,
+    borderRadius: tokens.radiusFull,
+    flexShrink: 0,
+  },
+  nextTierText: { fontSize: 11, fontWeight: '700' },
+  tierProgressWrap: { marginTop: tokens.spacing3 },
+  tierProgressTrack: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  tierProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  tierProgressLabel: {
+    fontSize: 11, fontWeight: '500', marginTop: tokens.spacing1 + 1,
+    textAlign: 'center',
+  },
+  tierMilestones: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: tokens.spacing3,
+    paddingTop: tokens.spacing3,
+    borderTopWidth: 1,
+    borderTopColor: 'transparent', // overridden inline via [styles.tierMilestones, { borderTopColor: c.borderSubtle }]
+  },
+  tierMilestone: { alignItems: 'center', flex: 1 },
+  milestoneDot: {
+    width: 20, height: 20,
+    borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 4,
+  },
+  milestoneLabel: { fontSize: 11, fontWeight: '700' },
+  milestoneThreshold: { fontSize: 10, fontWeight: '500', marginTop: 1 },
   heroTop: {
     flexDirection: 'row',
     alignItems: 'center',
