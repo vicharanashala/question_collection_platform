@@ -14,9 +14,9 @@ import {
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
+import { Response } from 'express';
 import { FaqsService } from './faqs.service';
 import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -31,12 +31,71 @@ export class FaqsController {
 
   // ─── Public/user-facing ──────────────────────────────────────────────────
 
-  // ─── Public/user-facing ──────────────────────────────────────────────────
-
   @Public()
   @Get('faqs')
   async listVisible(@Query() query: ListFaqsQueryDto) {
     return this.faqsService.findAllVisible(query);
+  }
+
+  /**
+   * Serves the FAQ video embed page from the API origin so YouTube accepts
+   * the embed request (YouTube requires a valid HTTPS referer).
+   *
+   * YouTube iframe parameters:
+   *   autoplay=1        — starts immediately when the page loads
+   *   playsinline=1     — prevents fullscreen takeover on iOS
+   *   rel=0             — hides related videos from other channels
+   *   modestbranding=1  — reduces YouTube logo in corner
+   */
+  @Public()
+  @Get('embed/faq-video')
+  getFaqVideoEmbed(@Query('videoId') videoId: string, @Res() res: Response) {
+    const id = videoId || 'dQw4w9WgXcQ';
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Referrer-Policy', 'origin');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>FAQ Video</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:100%;height:100%;background:#000;overflow:hidden;}
+    #player{position:absolute;top:0;left:0;width:100%;height:100%;}
+  </style>
+</head>
+<body>
+  <div id="player"></div>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    var player;
+    YT.ready(function() {
+      player = new YT.Player('player', {
+        videoId: '${id}',
+        playerVars: {
+          autoplay: 1,
+          playsinline: 1,
+          modestbranding: 1,
+          rel: 0,
+          fs: 1,
+        },
+        events: {
+          onStateChange: function(event) {
+            // When video ends, loop it back to prevent the related-videos overlay
+            if (event.data === YT.PlayerState.ENDED) {
+              player.stopVideo();
+              player.playVideo();
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>`);
   }
 
   @Public()
@@ -52,7 +111,7 @@ export class FaqsController {
 
     const stat = statSync(filePath);
     const fileSize = stat.size;
-    const range = res.req.headers['range'];
+    const range = (res as any).req?.headers['range'];
 
     if (range) {
       // Partial content (range request) — required for <video> seek/play
@@ -61,27 +120,23 @@ export class FaqsController {
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
       const chunkSize = end - start + 1;
 
-      res.set({
-        'Content-Type': 'video/mp4',
-        'Content-Length': String(chunkSize),
-        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=31536000',
-      });
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Content-Length', String(chunkSize));
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.status(HttpStatus.PARTIAL_CONTENT);
       return new StreamableFile(createReadStream(filePath, { start, end }));
     }
 
     // Full file response
-    res.set({
-      'Content-Type': 'video/mp4',
-      'Content-Length': String(fileSize),
-      'Accept-Ranges': 'bytes',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges',
-      'Cache-Control': 'public, max-age=31536000',
-    });
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Length', String(fileSize));
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
     return new StreamableFile(createReadStream(filePath));
   }
 

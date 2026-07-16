@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator,
-  Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import { useTheme } from '../hooks/useTheme';
@@ -10,13 +10,16 @@ import { config } from '../config';
 import { tokens } from '../utils/theme';
 import i18n from '../i18n';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PLAYER_H = (SCREEN_WIDTH * 9) / 16;
-
 const $t = (k: string) => i18n.t(k);
 
-/** YouTube embed URL (e.g. https://www.youtube.com/embed/VIDEO_ID?rel=0&modestbranding=1) */
-const VIDEO_URL = config.faq.videoUrl;
+/**
+ * videoUrl         — raw YouTube embed URL (used by web)
+ * videoEmbedUrl    — backend HTML page that wraps the iframe (used by mobile)
+ *
+ * On mobile, loading an HTML blob from file:// means YouTube sees no valid
+ * referer and throws Error 152. Serving from our HTTPS API origin fixes this.
+ */
+const { videoUrl, videoEmbedUrl } = config.faq;
 
 function isYouTubeEmbedUrl(url: string): boolean {
   return url.includes('youtube.com/embed/');
@@ -26,12 +29,13 @@ export function VideoSection() {
   const { theme } = useTheme();
   const c = theme.colors;
   const webViewRef = useRef<WebView>(null);
+  const insets = useSafeAreaInsets();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const openPlayer = useCallback(() => {
-    if (!VIDEO_URL) return;
+    if (!videoEmbedUrl && !videoUrl) return;
     setModalVisible(true);
     setLoading(true);
   }, []);
@@ -41,10 +45,55 @@ export function VideoSection() {
     setLoading(false);
   }, []);
 
-  if (!VIDEO_URL) return null;
+  if (!videoEmbedUrl && !videoUrl) return null;
 
-  // YouTube embed via WebView
-  if (isYouTubeEmbedUrl(VIDEO_URL)) {
+  function VideoModal({ webViewSource }: { webViewSource: { uri: string } }) {
+    return (
+      <Modal
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={closePlayer}
+        statusBarTranslucent
+      >
+        <View style={[styles.modalBackdrop, { paddingTop: insets.top }]}>
+          {/* Header */}
+          <View style={[styles.modalHeader, { backgroundColor: c.surface, paddingTop: tokens.spacing3 }]}>
+            <Text style={[styles.modalTitle, { color: c.text }]}>
+              {$t('faq.videoSectionTitle')}
+            </Text>
+            <TouchableOpacity onPress={closePlayer} style={styles.closeBtn}>
+              <Ionicons name="close" size={22} color={c.text} />
+            </TouchableOpacity>
+          </View>
+
+          {/* WebView player */}
+          <View style={styles.playerWrap}>
+            {loading && (
+              <View style={styles.loader}>
+                <ActivityIndicator size="large" color={c.primary} />
+              </View>
+            )}
+            <WebView
+              ref={webViewRef}
+              source={webViewSource}
+              style={styles.webview}
+              originWhitelist={['*']}
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+              onLoadEnd={() => setLoading(false)}
+              onError={() => setLoading(false)}
+              javaScriptEnabled
+              domStorageEnabled
+              scrollEnabled={false}
+            />
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
+  // YouTube embed via WebView — prefer the backend embed page on mobile
+  if (isYouTubeEmbedUrl(videoUrl) || videoEmbedUrl) {
     return (
       <>
         {/* Floating pill button */}
@@ -57,49 +106,18 @@ export function VideoSection() {
           <Text style={styles.pillText}>{$t('faq.videoSectionTitle')}</Text>
         </TouchableOpacity>
 
-        {/* Video modal */}
-        <Modal
-          visible={modalVisible}
-          animationType="fade"
-          onRequestClose={closePlayer}
-          statusBarTranslucent
-        >
-          <View style={styles.modalBackdrop}>
-            {/* Header */}
-            <View style={[styles.modalHeader, { backgroundColor: c.surface }]}>
-              <Text style={[styles.modalTitle, { color: c.text }]}>
-                {$t('faq.videoSectionTitle')}
-              </Text>
-              <TouchableOpacity onPress={closePlayer} style={styles.closeBtn}>
-                <Ionicons name="close" size={22} color={c.text} />
-              </TouchableOpacity>
-            </View>
-
-            {/* WebView player */}
-            <View style={{ flex: 1 }}>
-              {loading && (
-                <View style={[styles.loader, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 1 }]}>
-                  <ActivityIndicator size="large" color={c.primary} />
-                </View>
-              )}
-              <WebView
-                ref={webViewRef}
-                source={{ uri: VIDEO_URL }}
-                style={[styles.webview, { aspectRatio: 16 / 9 }]}
-                allowsInlineMediaPlayback
-                mediaPlaybackRequiresUserAction={false}
-                onLoadEnd={() => setLoading(false)}
-                javaScriptEnabled
-                domStorageEnabled
-              />
-            </View>
-          </View>
-        </Modal>
+        <VideoModal
+          webViewSource={
+            videoEmbedUrl
+              ? { uri: videoEmbedUrl }
+              : { uri: videoUrl }
+          }
+        />
       </>
     );
   }
 
-  // Fallback: direct MP4 via video tag (not recommended on mobile)
+  // Fallback: direct MP4
   return (
     <>
       <TouchableOpacity
@@ -111,41 +129,7 @@ export function VideoSection() {
         <Text style={styles.pillText}>{$t('faq.videoSectionTitle')}</Text>
       </TouchableOpacity>
 
-      <Modal
-        visible={modalVisible}
-        animationType="fade"
-        onRequestClose={closePlayer}
-        statusBarTranslucent
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalHeader, { backgroundColor: c.surface }]}>
-            <Text style={[styles.modalTitle, { color: c.text }]}>
-              {$t('faq.videoSectionTitle')}
-            </Text>
-            <TouchableOpacity onPress={closePlayer} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color={c.text} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.playerArea}>
-            {loading && (
-              <View style={styles.loader}>
-                <ActivityIndicator size="large" color={c.primary} />
-              </View>
-            )}
-            <View style={styles.nativeVideoWrap}>
-              <WebView
-                ref={webViewRef}
-                source={{ uri: VIDEO_URL }}
-                style={styles.webview}
-                allowsInlineMediaPlayback
-                mediaPlaybackRequiresUserAction={false}
-                onLoadEnd={() => setLoading(false)}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <VideoModal webViewSource={{ uri: videoUrl }} />
     </>
   );
 }
@@ -184,7 +168,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: tokens.spacing4,
-    paddingTop: tokens.spacing6,
     paddingBottom: tokens.spacing3,
   },
   modalTitle: {
@@ -194,21 +177,14 @@ const styles = StyleSheet.create({
   closeBtn: {
     padding: tokens.spacing1,
   },
-  playerArea: {
+  playerWrap: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   loader: {
-    position: 'absolute',
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-  },
-  nativeVideoWrap: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-    backgroundColor: '#111',
   },
   webview: {
     flex: 1,

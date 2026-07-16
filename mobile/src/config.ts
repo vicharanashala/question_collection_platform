@@ -16,7 +16,9 @@ export const config = {
     autoVerifyPaymentMethods: env.EXPO_PUBLIC_AUTO_VERIFY_PAYMENT_METHODS === 'true',
   },
   faq: {
-    /** YouTube embed URL for the FAQ video section (e.g. https://www.youtube.com/embed/VIDEO_ID). */
+    /** YouTube embed URL (e.g. https://www.youtube.com/embed/VIDEO_ID). */
     videoUrl: env.EXPO_PUBLIC_FAQ_VIDEO_URL ?? '',
+    /** Backend embed page URL — used by mobile WebView to avoid file:// origin issues. */
+    videoEmbedUrl: env.EXPO_PUBLIC_FAQ_VIDEO_EMBED_URL ?? '',
   },
 } as const;
