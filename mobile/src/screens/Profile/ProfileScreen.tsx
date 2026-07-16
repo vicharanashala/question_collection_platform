@@ -637,7 +637,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="help-circle-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Help & FAQ</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.helpAndFeedback')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 

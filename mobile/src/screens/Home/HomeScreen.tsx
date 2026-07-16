@@ -196,7 +196,7 @@ export function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.quickActions')}</Text>
-            <TooltipIcon description="Jump straight to Submit a Question or view your Wallet balance and recent activity." />
+            <TooltipIcon description={t('home.quickActionsTip')} />
           </View>
 
           <View style={styles.actionGrid}>
@@ -239,7 +239,7 @@ export function HomeScreen() {
             <View>
               <View style={styles.sectionTitleRow}>
                 <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.earnRewards')}</Text>
-                <TooltipIcon description="Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates." />
+                <TooltipIcon description={t('home.rewardsTip')} />
               </View>
               <Text style={[styles.sectionSub, { color: c.textSecondary }]}>
                 {t('home.rewardSubtitle')}
@@ -327,7 +327,7 @@ export function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={[styles.sectionTitle, { color: c.text }]}>{t("home.submissionTips")}</Text>
-            <TooltipIcon description="Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight." />
+            <TooltipIcon description={t('home.guidelinesTip')} />
           </View>
           <View style={[styles.guideCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             {(() => {
@@ -346,8 +346,8 @@ export function HomeScreen() {
               rows.splice(1, 0, {
                 icon: 'pencil-outline',
                 text: editWindowSec === 0
-                  ? 'Questions cannot be edited after submission'
-                  : t('home.editWindowTip', { seconds: editWindowSec }),
+                  ? t('home.editWindowClosed')
+                  : t('home.editWindowTip').replace('{seconds}', editWindowSec),
                 color: c.warning,
               });
               return rows;

@@ -12,6 +12,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { UserRole } from '../../types';
 import { tokens } from '../../utils/theme';
 import { parseAccountLocked, AccountLockedInfo } from '../../api/client';
+import { useTranslation } from 'react-i18next';
 
 const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 
@@ -26,6 +27,7 @@ export function OtpScreen({ navigation, route }: Props) {
   const colors = theme.colors;
   const { verifyOtp, login } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ export function OtpScreen({ navigation, route }: Props) {
 
   async function handleVerify() {
     if (verifyInFlight.current) return;
-    if (otp.length < 6) { setError('Enter the complete 6-digit code'); return; }
+    if (otp.length < 6) { setError(t('otp.invalidOtp')); return; }
     verifyInFlight.current = true;
     setLoading(true);
     setError('');
@@ -78,7 +80,7 @@ export function OtpScreen({ navigation, route }: Props) {
         setError('');
         setOtp('');
       } else {
-        const msg = getErrorMessage(err, 'Enter a valid OTP');
+        const msg = getErrorMessage(err, t('otp.invalidOtp'));
         setError(msg);
         setOtp('');
       }
@@ -100,7 +102,7 @@ export function OtpScreen({ navigation, route }: Props) {
     login(mobileNumber)
       .catch(() => { /* proceed; user can retry from login screen */ });
     const masked = mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1 ···· ··$3');
-    showToast(`A 6-digit code has been sent to ${masked}`, 'success');
+    showToast(`${t('otp.otpSentMessage')} ${masked}`, 'success');
   }
 
   const masked = mobileNumber.replace(/(\+\d{2})(\d{6})(\d)/, '$1 ···· ··$3');
@@ -117,7 +119,7 @@ export function OtpScreen({ navigation, route }: Props) {
       <View style={styles.content}>
         {/* Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backText, { color: colors.primary }]}>← Back</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>← {t('back')}</Text>
         </TouchableOpacity>
 
         {/* Header */}
@@ -125,9 +127,9 @@ export function OtpScreen({ navigation, route }: Props) {
           <View style={[styles.iconBadge, { backgroundColor: colors.primary + '18' }]}>
             <Ionicons name="lock-closed-outline" size={28} color={colors.primary} />
           </View>
-          <Text style={[styles.title, { color: colors.text }]}>Verify OTP</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('otp.verifyOtpTitle')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            A 6-digit code has been sent to{'\n'}{masked}
+            {t('otp.otpSentMessage')}{'\n'}{masked}
           </Text>
         </View>
 
@@ -148,51 +150,46 @@ export function OtpScreen({ navigation, route }: Props) {
                 styles.lockedBannerTitle,
                 { color: lockedInfo.status === 'banned' ? colors.error : colors.warning },
               ]}>
-                {lockedInfo.status === 'banned' ? 'Account Permanently Banned' : 'Account Suspended'}
+                {lockedInfo.status === 'banned' ? t('otp.accountBanned') : t('otp.accountSuspended')}
               </Text>
             </View>
             {lockedInfo.reason && (
               <Text style={[styles.lockedBannerReason, { color: colors.text }]}>
-                Reason: {lockedInfo.reason}
+                {t('otp.reason')}: {lockedInfo.reason}
               </Text>
             )}
             {(lockedInfo.suspendedAt ?? lockedInfo.bannedAt) && (
               <Text style={[styles.lockedBannerDate, { color: colors.textSecondary }]}>
-                Since: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
+                {t('otp.since')}: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
               </Text>
             )}
             <Text style={[styles.lockedBannerHelp, { color: colors.textSecondary }]}>
-              Contact support for more information.
+              {t('otp.contactSupportSuspended')}
             </Text>
           </View>
         )}
 
         {/* OTP Card */}
         <View style={[styles.card, { backgroundColor: colors.surface, ...tokens.shadowMd }]}>
-          {lockedInfo && (
-            <Text style={[styles.lockedCardLabel, { color: colors.textSecondary }]}>
-              You cannot log in while your account is {lockedInfo.status}.
-            </Text>
-          )}
-          <Text style={[styles.label, { color: colors.textSecondary }]}>Enter OTP</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('otp.enterOtp')}</Text>
           <OtpInput value={otp} onChange={setOtp} error={error} />
 
           <View style={styles.expiryRow}>
             <Text style={[styles.expiryText, { color: countdown === 0 ? colors.error : colors.textTertiary }]}>
-              {countdown === 0 ? 'Code expired — request a new one' : `Resend in ${countdown} seconds`}
+              {countdown === 0 ? t('otp.expiryExpired') : t('otp.expiryWithin').replace('{seconds}', countdown)}
             </Text>
           </View>
 
           <View style={styles.resendRow}>
             <Text style={[styles.resendPrompt, { color: colors.textSecondary }]}>
-              Didn't receive the code?
+              {t('otp.resendPrompt')}
             </Text>
             {countdown === 0 ? (
               <TouchableOpacity onPress={handleResend}>
-                <Text style={[styles.resendLink, { color: colors.primary }]}>Resend OTP</Text>
+                <Text style={[styles.resendLink, { color: colors.primary }]}>{t('otp.resendLink')}</Text>
               </TouchableOpacity>
             ) : (
-              <Text style={[styles.resendWait, { color: colors.textTertiary }]}>Resend in {countdown}s</Text>
+              <Text style={[styles.resendWait, { color: colors.textTertiary }]}>{t('otp.resendIn').replace('{seconds}', countdown)}</Text>
             )}
           </View>
         </View>
@@ -214,7 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing4,
   },
   icon: { fontSize: 32 },
-  title: { fontSize: 26, fontWeight: '800', marginBottom: tokens.spacing2 },
+  title: { fontSize: 26, fontWeight: '800', marginBottom: tokens.spacing2, textAlign: 'center' },
   subtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   lockedBanner: {
     borderRadius: tokens.radiusMd,
@@ -225,11 +222,11 @@ const styles = StyleSheet.create({
   },
   lockedBannerIconRow: { flexDirection: 'row', alignItems: 'center', marginBottom: tokens.spacing2 },
   lockedBannerIcon: { fontSize: 18, marginRight: tokens.spacing2 },
-  lockedBannerTitle: { fontSize: 15, fontWeight: '800' },
-  lockedBannerReason: { fontSize: 13, marginTop: 2 },
-  lockedBannerDate: { fontSize: 12, marginTop: 2 },
-  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing2 },
-  lockedCardLabel: { fontSize: 12, textAlign: 'center', marginBottom: tokens.spacing3 },
+  lockedBannerTitle: { fontSize: 15, fontWeight: '800', flexShrink: 1 },
+  lockedBannerReason: { fontSize: 13, marginTop: 2, flexShrink: 1 },
+  lockedBannerDate: { fontSize: 12, marginTop: 2, flexShrink: 1 },
+  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing2, flexShrink: 1 },
+  lockedCardLabel: { fontSize: 12, textAlign: 'center', marginBottom: tokens.spacing3, flexShrink: 1 },
   card: {
     borderRadius: tokens.radiusXl,
     padding: tokens.spacing6,
@@ -240,12 +237,12 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing3,
   },
   expiryRow: { alignItems: 'center', marginBottom: tokens.spacing5, marginTop: tokens.spacing1 },
-  expiryText: { fontSize: 12, letterSpacing: 0.01 * 12 },
+  expiryText: { fontSize: 12, letterSpacing: 0.01 * 12, flexShrink: 1, textAlign: 'center' },
   resendRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    marginTop: tokens.spacing5, gap: tokens.spacing1,
+    marginTop: tokens.spacing5, gap: tokens.spacing1, flexWrap: 'wrap',
   },
-  resendPrompt: { fontSize: 13 },
-  resendLink: { fontSize: 13, fontWeight: '700' },
-  resendWait: { fontSize: 13 },
+  resendPrompt: { fontSize: 13, flexShrink: 1 },
+  resendLink: { fontSize: 13, fontWeight: '700', flexShrink: 0 },
+  resendWait: { fontSize: 13, flexShrink: 1, minHeight: 20 },
 });

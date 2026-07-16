@@ -123,7 +123,7 @@
     "enterOtp": "Enter OTP",
     "invalidOtp": "Enter the complete 6-digit code",
     "expiryExpired": "Code expired — request a new one",
-    "resendIn": "Resend in {{count}} seconds",
+    "resendIn": "Resend in {seconds} seconds",
     "resendPrompt": "Didn't receive the code?",
     "resendLink": "Resend OTP",
     "accountBanned": "Account Permanently Banned",
@@ -132,7 +132,8 @@
     "contactSupportSuspended": "Contact support for more information.",
     "since": "Since",
     "reason": "Reason",
-    "cannotLogin": "You cannot log in while your account is {{status}}."
+    "cannotLogin": "You cannot log in while your account is {status}.",
+    "expiryWithin": "This code will expire within {seconds}s"
   },
   "block": "Block",
   "blockOptional": "Block (Optional)",
@@ -276,13 +277,17 @@
     "questions": "Qs",
     "perQuestion": "/Q",
     "videoTip": "Video — Max {{seconds}}s, {{size}}MB",
-    "editWindowTip": "Edit window — {{seconds}} seconds after submission",
+    "editWindowTip": "Edit window — {seconds} seconds after submission",
     "aiCheckTip": "AI relevance check runs automatically before posting",
     "dailyLimitTip": "Daily limit — {{count}} questions per day",
     "allSubmissionsUsed": "You've used all your submissions for today. Try again tomorrow!",
     "bronzeDesc": "{{min}}–{{max}} approved questions",
     "silverDesc": "{{min}}–{{max}} approved questions",
-    "goldDesc": "{{min}}+ approved questions"
+    "goldDesc": "{{min}}+ approved questions",
+    "editWindowClosed": "Questions cannot be edited after submission",
+    "quickActionsTip": "Jump straight to Submit a Question or view your Wallet balance and recent activity.",
+    "rewardsTip": "Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates.",
+    "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight."
   },
   "iAcceptContinue": "I Accept & Continue",
   "invalidOtp": "Enter the complete 6-digit code",
@@ -887,8 +892,8 @@
     "universityNameRequired": "University name is required for students",
     "organisationNameRequired": "Organisation name is required",
     "roleRequired": "Role is required",
-    "numberOfFarmers": "Number of Farmers",
-    "numberOfFarmersPlaceholder": "e.g., 500",
+    "numberOfFarmers": "No. of Farmers",
+    "numberOfFarmersPlaceholder": "Enter number of farmer members",
     "numberOfFarmersRequired": "Number of farmers is required",
     "numberOfFarmersInvalid": "Enter a valid number of farmers",
     "orgStateRequired": "Organisation state is required",
@@ -1070,7 +1075,11 @@
     "videoSectionTitle": "Watch Video Guide",
     "videoLoadError": "Video unavailable",
     "tapToWatch": "Tap to watch video",
-    "opensInYoutube": "Tap to play"
+    "opensInYoutube": "Tap to play",
+    "group": {
+      "article_one": "article",
+      "article_other": "articles"
+    }
   },
   "faqAdmin": {
     "title": "FAQ Management",
@@ -1096,6 +1105,86 @@
     "formVisibleLabel": "Visible to users",
     "formVisibleDesc": "Hidden FAQs are not shown on the public FAQ page",
     "validationQuestion": "Question is required",
-    "validationAnswer": "Answer is required"
+    "validationAnswer": "Answer is required",
+    "save": "Save",
+    "updated": "Updated"
+  },
+  "faqCategory": {
+    "account": "Account",
+    "payment": "Payments",
+    "question": "Questions",
+    "general": "General"
+  },
+  "help": {
+    "title": "Help & Support",
+    "subtitle": "Get help or contact our support team",
+    "searchPlaceholder": "Search help articles...",
+    "contactUs": "Contact Us",
+    "email": "Email Support",
+    "emailDesc": "Get a response within 24 hours",
+    "phone": "Call Support",
+    "phoneDesc": "Available Mon–Sat, 9AM–6PM",
+    "whatsapp": "WhatsApp",
+    "whatsappDesc": "Quick responses on WhatsApp",
+    "raiseTicket": "Raise a Ticket",
+    "ticketSubject": "Subject",
+    "ticketSubjectPlaceholder": "Brief summary of your issue",
+    "ticketCategory": "Category",
+    "ticketMessage": "Message",
+    "ticketMessagePlaceholder": "Describe your issue in detail...",
+    "ticketEmail": "Your Email",
+    "ticketEmailPlaceholder": "Enter your email address",
+    "ticketSubmit": "Submit Ticket",
+    "ticketSuccess": "Your ticket has been submitted. We'll respond within 24 hours.",
+    "loadingError": "Failed to load. Check your connection.",
+    "retry": "Retry",
+    "validationSubject": "Subject is required",
+    "validationMessage": "Please describe your issue",
+    "validationEmail": "Enter a valid email address"
+  },
+  "adminHelp": {
+    "title": "Support Tickets",
+    "subtitle": "Manage user support requests",
+    "tickets": "Tickets",
+    "emptyTitle": "No tickets yet",
+    "emptySubtitle": "User support tickets will appear here",
+    "ticketDetail": "Ticket Detail",
+    "markResolved": "Mark Resolved",
+    "resolved": "Resolved",
+    "reply": "Reply",
+    "replySuccess": "Reply sent successfully",
+    "replyError": "Failed to send reply",
+    "replyPlaceholder": "Type your reply...",
+    "categories": {
+      "bug": "Bug Report",
+      "payout_issue": "Payout Issue",
+      "question_issue": "Question Issue",
+      "abuse": "Abuse / Harassment",
+      "feature_request": "Feature Request",
+      "other": "Other"
+    },
+    "status": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "noReplies": "No replies yet. We'll respond soon.",
+    "submittedOn": "Submitted on {{date}}",
+    "replies": "Replies",
+    "adminName": "Admin",
+    "replyCount_one": "{{count}} reply",
+    "replyCount_other": "{{count}} replies"
+  },
+  "profile.helpAndFeedback": "Help & Feedback",
+  "tooltip": {
+    "info": "Info",
+    "gotIt": "Got it"
   }
 }

@@ -32,31 +32,27 @@ interface Category {
   keywords: string[];
 }
 
-const CATEGORIES: Category[] = [
+const BASE_CATEGORIES = [
   {
     key: 'account',
-    label: 'Account',
     icon: 'person-outline',
     color: '#4A90D9',
     keywords: ['account', 'login', 'password', 'register', 'signup', 'profile', 'email', 'phone'],
   },
   {
     key: 'payment',
-    label: 'Payments',
     icon: 'wallet-outline',
     color: '#27AE60',
     keywords: ['payment', 'pay', 'withdraw', 'withdrawal', 'money', 'wallet', 'reward', 'incentive', 'kisan', 'coin'],
   },
   {
     key: 'question',
-    label: 'Questions',
     icon: 'help-circle-outline',
     color: '#E67E22',
     keywords: ['question', 'ask', 'submit', 'crop', 'report', 'issue', 'problem', 'farming', 'crop'],
   },
   {
     key: 'general',
-    label: 'General',
     icon: 'information-circle-outline',
     color: '#8E44AD',
     keywords: [],
@@ -65,11 +61,11 @@ const CATEGORIES: Category[] = [
 
 function detectCategory(item: Faq): Category {
   const text = `${item.question} ${item.answer}`.toLowerCase();
-  for (const cat of CATEGORIES) {
+  for (const cat of BASE_CATEGORIES) {
     if (cat.key === 'general') continue;
-    if (cat.keywords.some((kw) => text.includes(kw))) return cat;
+    if (cat.keywords.some((kw) => text.includes(kw))) return { ...cat, label: cat.key } as Category;
   }
-  return CATEGORIES.find((c) => c.key === 'general')!;
+  return { ...BASE_CATEGORIES.find((c) => c.key === 'general')!, label: 'general' } as Category;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -204,6 +200,11 @@ export function FaqsListScreen() {
   }
 
   // Group results by category
+  const CATEGORIES: Category[] = BASE_CATEGORIES.map((cat) => ({
+    ...cat,
+    label: $t(`faqCategory.${cat.key}`),
+  }));
+
   const grouped = useMemo<GroupedFaqs[]>(() => {
     if (items.length === 0) return [];
     const groups: Map<string, Faq[]> = new Map();
@@ -299,7 +300,7 @@ export function FaqsListScreen() {
                     {category.label}
                   </Text>
                   <Text style={[styles.groupCount, { color: c.textTertiary }]}>
-                    {catItems.length} {catItems.length === 1 ? 'article' : 'articles'}
+                    {catItems.length} {i18n.t('faq.group.article', { count: catItems.length })}
                   </Text>
                 </View>
 

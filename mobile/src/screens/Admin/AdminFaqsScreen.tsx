@@ -88,7 +88,7 @@ function EditModal({ visible, faq, onClose, onSave }: EditModalProps) {
             <TouchableOpacity onPress={handleSave} disabled={saving}>
               {saving
                 ? <ActivityIndicator size="small" color={c.primary} />
-                : <Text style={[styles.saveBtn, { color: c.primary }]}>Save</Text>}
+                : <Text style={[styles.saveBtn, { color: c.primary }]}>{$t('faqAdmin.save')}</Text>}
             </TouchableOpacity>
           </View>
 
@@ -238,7 +238,7 @@ export function AdminFaqsScreen() {
           {item.answer}
         </Text>
         <Text style={[styles.meta, { color: c.textTertiary }]}>
-          Updated {fmt(item.updatedAt)}
+          {$t('faqAdmin.updated')} {fmt(item.updatedAt)}
         </Text>
       </View>
 
