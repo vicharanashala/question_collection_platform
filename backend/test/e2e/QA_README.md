@@ -145,6 +145,21 @@ Per-test overrides use `vi.mocked(service.method).mockResolvedValueOnce(...)`.
 
 ---
 
+## Known Failing Tests
+
+**As of 2026-07-17**, 3 tests fail on a full `vitest run` — reproduce standalone too, not
+investigated (root cause not determined; flagged for a separate look):
+
+| Suite | Test | Failure |
+|---|---|---|
+| `ai-pipeline/AIPipeline.e2e.test.ts` | Admin config - duplicate_similarity_threshold update persists | `expected undefined to be 0.99` |
+| `wallet-reward/WalletReward.e2e.test.ts` | T8: GET /wallets/me/config — returns minWithdrawalAmount from admin config | `expected '50' to be 50` (string vs number) |
+| `wallet-reward/WalletReward.e2e.test.ts` | T18: GET /wallets/me/withdrawals — pending withdrawal from T10 appears in list | `expected 200 "OK", got 500` |
+
+See each suite's own `.md` file (`AIPipeline.e2e.md`, `WalletReward.e2e.md`) for the full error output.
+
+---
+
 ## Running in Staging
 
 On every deployment to staging, the following script should be triggered by GitHub Actions:

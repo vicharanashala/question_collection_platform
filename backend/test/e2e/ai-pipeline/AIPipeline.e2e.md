@@ -157,4 +157,16 @@ flowchart TD
 
 ## Last run
 
-**Date:** — | **Result:** pending first run
+**Date:** 2026-07-17 | **Result:** 1 failing (not investigated — see below)
+
+**Known failure:** `Admin config - duplicate_similarity_threshold update persists`
+
+```
+AssertionError: expected undefined to be 0.99 // Object.is equality
+- Expected: 0.99
++ Received: undefined
+  at test/e2e/ai-pipeline/AIPipeline.e2e.test.ts:227:35
+```
+
+Reproduces identically standalone and inside the full suite run. Root cause not investigated —
+flagged for a separate look.

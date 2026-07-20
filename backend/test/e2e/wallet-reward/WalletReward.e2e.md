@@ -210,4 +210,23 @@ setWalletBalance(200) + seedVerifiedDetail()
 
 ## Last run
 
-**Date:** — | **Result:** pending first run
+**Date:** 2026-07-17 | **Result:** 2 failing (not investigated — see below)
+
+**Known failure 1:** `T8: GET /wallets/me/config — returns minWithdrawalAmount from admin config`
+
+```
+AssertionError: expected '50' to be 50 // Object.is equality
+- Expected: 50
++ Received: "50"
+  at test/e2e/wallet-reward/WalletReward.e2e.test.ts:173:42
+```
+
+**Known failure 2:** `T18: GET /wallets/me/withdrawals — pending withdrawal from T10 appears in list`
+
+```
+Error: expected 200 "OK", got 500 "Internal Server Error"
+  at test/e2e/wallet-reward/WalletReward.e2e.test.ts:263:8
+```
+
+Both reproduce identically standalone and inside the full suite run. Root cause not
+investigated — flagged for a separate look.
