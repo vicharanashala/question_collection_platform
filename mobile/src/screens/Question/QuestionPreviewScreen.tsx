@@ -10,7 +10,7 @@ import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
-import { questionApi, lgdApi, storageApi } from '../../api/client';
+import { questionApi, storageApi } from '../../api/client';
 import { cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
@@ -22,6 +22,28 @@ import { adminApi } from '../../api/client';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const seasonOptions = SEASONS.map((s) => ({ value: s.value, label: s.label }));
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function LocationRow({ label, value, textColor }: { label: string; value: string; textColor: string }) {
+  return (
+    <View style={locationRow.row}>
+      <Text style={[locationRow.label, { color: textColor }]}>{label}</Text>
+      <Text style={[locationRow.value, { color: textColor }]}>{value}</Text>
+    </View>
+  );
+}
+
+const locationRow = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: tokens.spacing2,
+  },
+  label: { fontSize: 13, fontWeight: '500' },
+  value: { fontSize: 13, fontWeight: '600', textAlign: 'right', flex: 1, marginLeft: tokens.spacing2 },
+});
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -51,11 +73,9 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     }).catch(() => {});
   }, []);
 
-  const [selectedState, setSelectedState] = useState(preview.state);
-  const [selectedStateCode, setSelectedStateCode] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState(preview.district);
-  const [selectedDistrictCode, setSelectedDistrictCode] = useState('');
-  const [block, setBlock] = useState(user?.block ?? preview.block ?? '');
+  const [selectedState] = useState(preview.state);
+  const [selectedDistrict] = useState(preview.district ?? '');
+  const [block] = useState(user?.block ?? preview.block ?? '');
   const [selectedAgroZone, setSelectedAgroZone] = useState<AgroClimaticZone>(
     (preview.agroClimaticZone as AgroClimaticZone) ?? AgroClimaticZone.OTHER,
   );
@@ -65,48 +85,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const [questionText, setQuestionText] = useState(preview.questionText);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-
-  const [stateList, setStateList] = useState<{ code: string; name: string }[]>([]);
-  const [districtList, setDistrictList] = useState<{ code: string; name: string }[]>([]);
-  const [blockList, setBlockList] = useState<{ code: string; name: string }[]>([]);
-  const [loadingStates, setLoadingStates] = useState(false);
-  const [loadingDistricts, setLoadingDistricts] = useState(false);
-  const [loadingBlocks, setLoadingBlocks] = useState(false);
-
-  // Load states + pre-fill districts/blocks
-  useEffect(() => {
-    setLoadingStates(true);
-    lgdApi.getStates()
-      .then((res) => {
-        setStateList(res.data.states);
-        if (preview.state) {
-          const match = res.data.states.find((s) => s.name === preview.state);
-          if (match) {
-            setSelectedStateCode(match.code);
-            return lgdApi.getDistricts(match.code);
-          }
-        }
-        return null;
-      })
-      .then((res) => {
-        if (!res) return;
-        setDistrictList(res.data.districts);
-        if (preview.district) {
-          const dm = res.data.districts.find((d: any) => d.name === preview.district);
-          if (dm) {
-            setSelectedDistrictCode(dm.code);
-            return lgdApi.getSubDistricts(dm.code);
-          }
-        }
-        return null;
-      })
-      .then((res) => {
-        if (!res) return;
-        setBlockList(res.data.subdistricts);
-      })
-      .catch(() => {})
-      .finally(() => setLoadingStates(false));
-  }, []);
+  const [locationCollapsed, setLocationCollapsed] = useState(true);
 
   // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -147,9 +126,10 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
       }
 
       const payload = {
-        state: selectedState,
-        district: selectedDistrict.trim(),
-        block: block.trim() || null,
+        // Location is locked to the user's profile — do not send editable values
+        state: preview.state,
+        district: preview.district ?? '',
+        block: preview.block ?? null,
         domains,
         season,
         cropType,
@@ -218,89 +198,40 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
           {/* Form card */}
           <View style={[styles.card, { backgroundColor: theme.colors.surface, ...tokens.shadowMd }]}>
 
-            {/* State */}
-            <Select
-              label={t('question.state')}
-              required
-              value={selectedState}
-              options={stateList.map((s) => ({ value: s.name, label: s.name }))}
-              onChange={async (v) => {
-                setSelectedState(v);
-                setSelectedStateCode(stateList.find((s) => s.name === v)?.code ?? '');
-                setSelectedDistrict('');
-                setSelectedDistrictCode('');
-                setBlock('');
-                setBlockList([]);
-                setErrors({});
-                setSelectedAgroZone(deriveAgroClimaticZone(v));
-                setLoadingDistricts(true);
-                try {
-                  const code = stateList.find((s) => s.name === v)?.code ?? '';
-                  const res = await lgdApi.getDistricts(code);
-                  setDistrictList(res.data.districts);
-                } catch { setDistrictList([]); }
-                finally { setLoadingDistricts(false); }
-              }}
-              error={errors.state}
-              searchable
-              loading={loadingStates}
-            />
+            {/* Location (collapsible, read-only — locked to profile) */}
+            <View style={[styles.locationCard, { backgroundColor: theme.colors.input, borderColor: theme.colors.border, borderWidth: 1 }]}>
+              <TouchableOpacity
+                style={styles.locationHeader}
+                onPress={() => setLocationCollapsed((v) => !v)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.locationHeaderLeft}>
+                  <Ionicons name="location" size={16} color={theme.colors.primary} />
+                  <Text style={[styles.locationHeaderText, { color: theme.colors.text }]}>
+                    {t('question.location')}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={locationCollapsed ? 'chevron-down' : 'chevron-up'}
+                  size={18}
+                  color={theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
 
-            {/* District */}
-            <Select
-              label={t('question.district')}
-              required
-              placeholder={t('selectDistrict')}
-              value={selectedDistrict}
-              options={districtList.map((d) => ({ value: d.name, label: d.name }))}
-              onChange={async (v) => {
-                setSelectedDistrict(v);
-                setSelectedDistrictCode(districtList.find((d) => d.name === v)?.code ?? '');
-                setBlock('');
-                setBlockList([]);
-                setErrors({});
-                const code = districtList.find((d) => d.name === v)?.code ?? '';
-                if (!code) return;
-                setLoadingBlocks(true);
-                try {
-                  const res = await lgdApi.getSubDistricts(code);
-                  const lgdBlocks = res.data.subdistricts ?? [];
-                  const profileBlock = user?.block;
-                  const alreadyHasProfileBlock = lgdBlocks.some(
-                    (b: { code: string; name: string }) => b.name === profileBlock,
-                  );
-                  const mergedBlocks = profileBlock && !alreadyHasProfileBlock
-                    ? [{ code: '__profile__', name: profileBlock }, ...lgdBlocks]
-                    : lgdBlocks;
-                  setBlockList(mergedBlocks);
-                } catch { setBlockList([]); }
-                finally { setLoadingBlocks(false); }
-              }}
-              error={errors.district}
-              searchable
-              disabled={loadingDistricts || !selectedState}
-              disabledMessage={
-                loadingDistricts
-                  ? t('question.districtLoadingMessage')
-                  : t('question.selectStateFirst')
-              }
-            />
-
-            {/* Block (optional) */}
-            <Select
-              label={t('question.blockOptional')}
-              placeholder={t('selectBlock')}
-              value={block}
-              options={blockList.map((b) => ({ value: b.name, label: b.name }))}
-              onChange={setBlock}
-              searchable
-              disabled={loadingBlocks || !selectedDistrict}
-              disabledMessage={
-                loadingBlocks
-                  ? t('question.blockLoadingMessage')
-                  : t('question.selectDistrictFirst')
-              }
-            />
+              {!locationCollapsed && (
+                <View style={styles.locationBody}>
+                  <LocationRow label={t('question.state')} value={selectedState} textColor={theme.colors.text} />
+                  <LocationRow label={t('question.district')} value={selectedDistrict} textColor={theme.colors.text} />
+                  {block ? <LocationRow label={t('question.blockOptional')} value={block} textColor={theme.colors.text} /> : null}
+                  <View style={[styles.locationNote, { borderTopColor: theme.colors.border }]}>
+                    <Ionicons name="lock-closed" size={12} color={theme.colors.textSecondary} />
+                    <Text style={[styles.locationNoteText, { color: theme.colors.textSecondary }]}>
+                      {t('question.locationLockedNote')}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
             {/* Agro-Climatic Zone (read-only) */}
             <View style={styles.zoneBadgeWrap}>
@@ -515,4 +446,35 @@ const styles = StyleSheet.create({
   },
   statsText: { fontSize: 13 },
   actions: { gap: tokens.spacing3, marginBottom: tokens.spacing6 },
+  locationCard: {
+    borderRadius: tokens.radiusMd,
+    marginBottom: tokens.spacing4,
+    overflow: 'hidden',
+  },
+  locationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: tokens.spacing3,
+    paddingHorizontal: tokens.spacing3,
+  },
+  locationHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing2,
+  },
+  locationHeaderText: { fontSize: 14, fontWeight: '600' },
+  locationBody: {
+    paddingHorizontal: tokens.spacing3,
+    paddingBottom: tokens.spacing3,
+  },
+  locationNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing1,
+    borderTopWidth: 1,
+    paddingTop: tokens.spacing2,
+    marginTop: tokens.spacing1,
+  },
+  locationNoteText: { fontSize: 12 },
 });

@@ -80,10 +80,14 @@ export class QuestionService {
   }
 
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
-    console.log('[SUBMIT DEBUG] dto.state=', dto.state, '| dto.district=', dto.district, '| dto.block=', dto.block);
-    // 0. User must be verified to submit questions
+    // 0. User must be verified and location must be set in profile
     const user = await this.userService.getProfile(userId);
     if (!user) throw new NotFoundException('User not found');
+    if (!user.state || !user.district) {
+      throw new BadRequestException(
+        'Your profile is missing state or district. Please update your profile before submitting a question.',
+      );
+    }
     if (user.verificationStatus !== VerificationStatus.VERIFIED) {
       throw new ForbiddenException(
         'Your account has not been verified by an admin yet. You can submit questions only after verification.',
@@ -126,7 +130,7 @@ export class QuestionService {
     const userIdNum = parseInt(userId, 10);
     await this.duplicateDetectionService.checkDuplicate(
       userIdNum,
-      dto.state ?? '',
+      user.state,
       cropType,
       dto.questionText,
     );
@@ -136,11 +140,11 @@ export class QuestionService {
     const duplicateResult = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
       crop: cropType,
-      state: dto.state ?? '',
+      state: user.state,
     });
 
-    // Derive agro-climatic zone early — needed inside the duplicate block below.
-    const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(dto.state ?? '');
+    // Derive agro-climatic zone from user's profile state.
+    const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state);
 
     // Fetch embedding upfront — needed regardless of which branch we take below.
     const [embedding] = await Promise.all([
@@ -159,9 +163,9 @@ export class QuestionService {
         cropType,
         agroClimaticZone,
         questionText: dto.questionText,
-        state: dto.state ?? '',
-        district: dto.district ?? '',
-        block: dto.block ?? null,
+        state: user.state,
+        district: user.district,
+        block: user.block ?? null,
         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
         deviceInfo: dto.deviceInfo ?? null,
@@ -203,7 +207,7 @@ export class QuestionService {
     // 5. Record in Redis dup index (only after all duplicate checks pass).
     await this.duplicateDetectionService.recordQuestion(
       userIdNum,
-      dto.state ?? '',
+      user.state,
       cropType,
       dto.questionText,
     );
@@ -230,9 +234,9 @@ export class QuestionService {
       cropType,
       agroClimaticZone,
       questionText: dto.questionText,
-      state: dto.state ?? '',
-      district: dto.district ?? '',
-      block: dto.block ?? null,
+      state: user.state,
+      district: user.district,
+      block: user.block ?? null,
       mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
       mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
       deviceInfo: dto.deviceInfo ?? null,
