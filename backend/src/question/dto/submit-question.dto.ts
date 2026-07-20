@@ -75,7 +75,6 @@ export class SubmitQuestionDto {
 export class SubmitQuestionResponseDto {
   id: string;
   status: string;
-  editWindowClosesAt: string;
   message: string;
   /** Present when GDB found a near-duplicate — mobile should show DuplicateFoundModal */
   duplicate?: DuplicateQuestionResultDto;

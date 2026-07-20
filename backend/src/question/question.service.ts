@@ -94,11 +94,8 @@ export class QuestionService {
       );
     }
 
-    // 1. Enforce live config: daily_question_limit + question_edit_window_seconds
-    const [dailyLimit, editWindowSec] = await Promise.all([
-      this.adminService.getConfigValue('daily_question_limit'),
-      this.adminService.getConfigValue('question_edit_window_seconds'),
-    ]);
+    // 1. Enforce daily_question_limit
+    const dailyLimit = await this.adminService.getConfigValue('daily_question_limit');
     await this.checkDailyLimit(userId, dailyLimit);
 
     // 2. Validate image submission: when mediaType is 'image' exactly 1 URL is required
@@ -118,9 +115,8 @@ export class QuestionService {
     }
 
     const now = new Date();
-    const editWindowClosesAt = new Date(now.getTime() + editWindowSec * 1000);
 
-    // 3. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
+    // 2. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
     const cropType = dto.cropType?.trim() || inferred.crop;
     const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
@@ -171,7 +167,6 @@ export class QuestionService {
         deviceInfo: dto.deviceInfo ?? null,
         status: QuestionStatus.REJECTED,
         rejectionReason: 'Question is already present in our golden database',
-        editWindowClosesAt,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
@@ -192,7 +187,6 @@ export class QuestionService {
       return {
         id: duplicateQuestion.id,
         status: 'DUPLICATE',
-        editWindowClosesAt: new Date().toISOString(),
         message: 'Similar question found',
         duplicate: {
           isDuplicate: true,
@@ -241,7 +235,6 @@ export class QuestionService {
       mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
       deviceInfo: dto.deviceInfo ?? null,
       status,
-      editWindowClosesAt,
       submittedAt: now,
       embedding,
     });
@@ -265,21 +258,18 @@ export class QuestionService {
     return {
       id: saved.id,
       status: saved.status,
-      editWindowClosesAt: editWindowClosesAt.toISOString(),
       message: 'Question submitted successfully',
     };
   }
 
-  // ─── Update (edit window only) ──────────────────────────────────────────────
+  // ─── Update ──────────────────────────────────────────────────────────────────
 
   async update(userId: string, questionId: string, dto: UpdateQuestionDto): Promise<Question> {
     const question = await this.questionRepo.findOne({ where: { id: questionId } });
 
     if (!question) throw new NotFoundException('Question not found');
     if (question.userId !== userId) throw new ForbiddenException('Not your question');
-    if (question.editWindowClosesAt && new Date() > question.editWindowClosesAt) {
-      throw new BadRequestException('Edit window has closed');
-    }
+    throw new ForbiddenException('Question editing is no longer available');
 
     const oldValue = {
       questionText: question.questionText,
@@ -382,7 +372,7 @@ export class QuestionService {
         'mediaType', 'mediaUrls', 'status', 'duplicateFlag',
         'submittedAt', 'reviewedAt', 'rejectionReason', 'heldReason', 'approvalReason',
         'state', 'district', 'block', 'language',
-        'editWindowClosesAt', 'createdAt',
+        'createdAt',
       ],
     });
 
@@ -481,15 +471,14 @@ export class QuestionService {
   }
 
   async getLimits() {
-    const [dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb] = await Promise.all([
+    const [dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb] = await Promise.all([
       this.adminService.getConfigValue('daily_question_limit'),
-      this.adminService.getConfigValue('question_edit_window_seconds'),
       this.adminService.getConfigValue('video_max_size_mb'),
       this.adminService.getConfigValue('video_max_duration_seconds'),
       this.adminService.getConfigValue('max_question_chars'),
       this.adminService.getConfigValue('max_image_size_mb'),
     ]);
-    return { dailyLimit, editWindowSec, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb };
+    return { dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb };
   }
 
   // ─── Preview ────────────────────────────────────────────────────────────────
@@ -547,8 +536,6 @@ export class QuestionService {
         similarityScore: number | null;
       };
       const now = new Date();
-      const editWindowSeconds = await this.adminService.getConfigValue('question_edit_window_seconds') ?? 300;
-      const editWindowClosesAt = new Date(now.getTime() + editWindowSeconds * 1000);
 
       let duplicateQuestion = this.questionRepo.create({
         userId,
@@ -564,7 +551,6 @@ export class QuestionService {
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
         status: QuestionStatus.REJECTED,
         rejectionReason: 'Question is already present in our golden database',
-        editWindowClosesAt,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });

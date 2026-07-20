@@ -93,17 +93,6 @@ export class StorageController {
       );
     }
 
-    // 10 MB default; override with max_audio_size_mb config or QUESTION_AUDIO_MAX_SIZE_MB env var
-    // const maxSizeMb =
-    //   (await this.adminService.getConfigValue('max_audio_size_mb')) ?? 10;
-    // const maxSizeBytes = maxSizeMb * 1024 * 1024;
-
-    // if (file.size > maxSizeBytes) {
-    //   throw new PayloadTooLargeException(
-    //     `Audio exceeds maximum allowed size of ${maxSizeMb} MB`,
-    //   );
-    // }
-
 
     const url = await this.storageService.upload(
       file.buffer,

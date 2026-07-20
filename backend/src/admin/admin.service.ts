@@ -67,7 +67,7 @@ import { decrypt } from '../common/utils/encryption.util';
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   max_users_per_state: { value: 100, description: 'Maximum registered users per state' },
   min_withdrawal_amount: { value: 50, description: 'Minimum withdrawal threshold (INR)' },
-  question_edit_window_seconds: { value: 30, description: 'Edit window after submission (seconds)' },
+
   daily_question_limit: { value: 20, description: 'Max questions per user per day' },
   duplicate_similarity_threshold: { value: 0.9, description: 'Semantic similarity threshold for duplicate detection' },
   video_max_duration_seconds: { value: 10, description: 'Maximum video duration (seconds)' },

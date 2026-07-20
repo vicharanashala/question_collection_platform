@@ -36,6 +36,7 @@ export class QuestionController {
   // POST /questions — Submit a new question
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @CacheInvalidate('questions:u*')
   async submit(
     @Body() dto: SubmitQuestionDto,
     @Req() req: AuthenticatedRequest,

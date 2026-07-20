@@ -70,11 +70,6 @@ const getDomainSummary = (domains: string[] | undefined): string => {
   return `${visible} +${domains.length - MAX_VISIBLE_DOMAINS} more`;
 };
 
-function isWithinEditWindow(q: Question): boolean {
-  if (!q.editWindowClosesAt) return false;
-  return new Date(q.editWindowClosesAt) > new Date();
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function MyQuestionsScreen() {
@@ -124,47 +119,21 @@ export function MyQuestionsScreen() {
     await fetchQuestions(page + 1);
   }
 
-  function handleEdit(question: Question) {
-    if (!isWithinEditWindow(question)) {
-      setAlertModal({ visible: true, variant: 'info', title: t('myQuestions.editWindowClosedTitle') ?? t('common.error'), message: t('myQuestions.editWindowClosed') });
-      return;
-    }
-    // Navigate to AskQuestion tab with the questionId — QuestionScreen will open in edit mode
-    navigation.navigate('AskQuestion', { questionId: question.id } as never);
-  }
-
   // ─── List Item ──────────────────────────────────────────────────────────────
 
   function renderItem({ item: q }: { item: Question }) {
     const statusMeta = STATUS_META[q.status] ?? STATUS_META.pending;
-    const withinEditWindow = isWithinEditWindow(q);
     const catLabel = getDomainSummary(q.domains);
     const seasonLabel = SEASON_LABELS[q.season] ?? q.season;
 
     return (
       <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-        {/* Header row: status badge + edit button */}
+        {/* Header row: status badge */}
         <View style={styles.cardHeader}>
           <View style={[styles.statusBadge, { backgroundColor: statusMeta.color + '18' }]}>
             <Ionicons name={statusMeta.icon as keyof typeof Ionicons.glyphMap} size={13} color={statusMeta.color} />
             <Text style={[styles.statusBadgeText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
           </View>
-          {q.status === 'pending' && (
-            <TouchableOpacity
-              style={[styles.editBtn, { backgroundColor: withinEditWindow ? c.primary : c.muted }]}
-              onPress={() => handleEdit(q)}
-              disabled={!withinEditWindow}
-            >
-              <Ionicons
-                name="pencil"
-                size={14}
-                color={withinEditWindow ? '#fff' : c.textTertiary}
-              />
-              <Text style={[styles.editBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>
-                {t('myQuestions.edit')}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Question text */}
@@ -295,8 +264,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: tokens.spacing3 },
   statusBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusFull, paddingHorizontal: tokens.spacing2, paddingVertical: 3, gap: 4 },
   statusBadgeText: { fontSize: 12, fontWeight: '600' },
-  editBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusMd, paddingHorizontal: tokens.spacing3, paddingVertical: 5, gap: 4 },
-  editBtnText: { fontSize: 12, fontWeight: '600' },
+
   questionText: { fontSize: 14, lineHeight: 20, fontWeight: '500', marginBottom: tokens.spacing3 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing1, marginBottom: tokens.spacing1 },
   metaChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },

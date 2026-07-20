@@ -27,6 +27,8 @@ const HIDDEN_CONFIG_KEYS = new Set([
   'video_max_duration_seconds',
   'video_max_size_mb',
   'ai_confidence_threshold',
+  'question_edit_window_seconds',
+  'max_audio_size_mb',
 ])
 
 export function SettingsPage() {
