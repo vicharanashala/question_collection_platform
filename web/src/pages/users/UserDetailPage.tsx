@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { adminApi, getErrorMessage } from '@/api/client'
+import { adminApi, getErrorMessage, cache } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -316,15 +316,30 @@ export function UserDetailPage() {
     [filteredQuestions, qPage, activePageSize]
   )
 
+  // Centralized user refetch — bust the user detail cache so fresh data always loads
+  async function refreshUser() {
+    cache.invalidate(`/admin/users/${userId}`)
+    try {
+      const r = await adminApi.getUserDetail(userId)
+setUser(r.user as UserType)
+      setQuestions(r.questions as Question[])
+      setPaymentDetails((r as any).paymentDetails ?? [])
+      setCrops((r.user as any)?.crops ?? [])
+    } catch {
+      setTimeout(async () => {
+        try {
+          const r = await adminApi.getUserDetail(userId)
+          setUser(r.user as UserType)
+          setQuestions(r.questions as Question[])
+        } catch { /* give up */ }
+      }, 500)
+    }
+  }
+
   useEffect(() => {
     if (!userId) return
     setLoading(true)
-    adminApi.getUserDetail(userId)
-      .then((res) => {
-        setUser(res.user as UserType)
-        setQuestions(res.questions as Question[])
-        setPaymentDetails((res as any).paymentDetails ?? [])
-        setCrops((res.user as any)?.crops ?? [])      })
+    refreshUser()
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user')))
       .finally(() => setLoading(false))
   }, [userId])
@@ -385,8 +400,7 @@ export function UserDetailPage() {
       await adminApi.suspendUser(userId, { action: suspendAction, reason: suspendReason, suspendedUntil: suspendUntil || undefined })
       toast.success(suspendAction === 'ban' ? 'User banned' : 'User suspended')
       setSuspendModalOpen(false)
-      const r = await adminApi.getUserDetail(userId)
-      setUser(r.user as UserType)
+      await refreshUser()
     } catch (e) {
       toast.error(getErrorMessage(e, `Failed to ${suspendAction}`))
     } finally {
@@ -420,10 +434,11 @@ export function UserDetailPage() {
       await adminApi.unsuspendUser(userId)
       toast.success(isBanned ? 'User unbanned' : 'Suspension lifted')
       setConfirmOpen(false)
-      const r = await adminApi.getUserDetail(userId)
-      setUser(r.user as UserType)
+      await refreshUser()
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to reinstate'))
+      // Backend succeeded but state update failed — force a fresh fetch
+      await refreshUser()
     } finally {
       setActionLoading(false)
     }

@@ -132,9 +132,18 @@ api.interceptors.response.use(
       }
     }
 
-    // 423 Locked — user was suspended/banned mid-session (token refresh path).
+    // 423 Locked — user was suspended/banned.
+    // Fires for both direct 423 responses (JWT valid but account locked)
+    // and 423 on the token-refresh retry path.
     // For unauthenticated requests (e.g. /auth/otp sign-in) the caller handles
     // the 423 inline; skip the modal emitter to avoid double-display.
+    if (error.response?.status === 423 && !originalRequest._retry) {
+      const locked = parseAccountLocked(error);
+      if (locked) {
+        accountLockedEmitter.emit(locked);
+      }
+    }
+    // 423 on the token-refresh retry path (token was refreshed but user is locked)
     if (error.response?.status === 423 && originalRequest._retry) {
       const locked = parseAccountLocked(error);
       if (locked) {

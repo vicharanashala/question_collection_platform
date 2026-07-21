@@ -71,16 +71,16 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <LanguageProvider>
-            <ToastProvider>
-              <AccountLockedProvider>
+        <AccountLockedProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              <ToastProvider>
                 <AppNavigator navigationRef={rootNavigationRef} />
                 <AccountLockedModal />
-              </AccountLockedProvider>
-            </ToastProvider>
-          </LanguageProvider>
-        </AuthProvider>
+              </ToastProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </AccountLockedProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

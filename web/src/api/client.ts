@@ -32,6 +32,7 @@ import type {
   Report,
   ReportReply,
 } from '@/types'
+import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
 const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -166,6 +167,13 @@ export async function request<T>(
                   ...options,
                   headers: { ...headers, Authorization: `Bearer ${refreshed.accessToken}` },
                 })
+                // Check 423 on retry response before general handleResponse so the
+                // lock event fires even when handleResponse throws.
+                if (retryRes.status === 423) {
+                  const data = await retryRes.json().catch(() => ({}))
+                  const locked = parseAccountLocked(data)
+                  if (locked) accountLockedEmitter.emit(locked)
+                }
                 return handleResponse(retryRes)
               }
             } catch { /* refresh failed */ }
@@ -202,6 +210,14 @@ async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     const msg = (data as { message?: string })?.message
+
+    // 423 Locked — user was suspended/banned. Emit event so the auth layer can
+    // auto-logout and show the locked modal.
+    if (res.status === 423) {
+      const locked = parseAccountLocked(data)
+      if (locked) accountLockedEmitter.emit(locked)
+    }
+
     const err: Error & { status: number; data: unknown } = Object.assign(new Error(msg ?? `Request failed with ${res.status}`), {
       status: res.status,
       data,
@@ -245,7 +261,8 @@ export const authApi = {
     }, false),
 
   me: () =>
-    request<{ user: AuthUser }>('/auth/me', {}, true),
+    // Never cache me() — it is the authoritative source of current user state including locks
+    request<{ user: AuthUser }>('/auth/me', {}, false),
 
   updateMe: (body: { name?: string; languagePreference?: string }) =>
     request<{ user: AuthUser }>('/auth/me', {

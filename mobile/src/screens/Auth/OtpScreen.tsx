@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity,  } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +12,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { UserRole } from '../../types';
 import { tokens } from '../../utils/theme';
 import { parseAccountLocked, AccountLockedInfo } from '../../api/client';
+import { config } from '../../config';
 import { useTranslation } from 'react-i18next';
 
 const ADMIN_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
@@ -163,9 +164,33 @@ export function OtpScreen({ navigation, route }: Props) {
                 {t('otp.since')}: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
               </Text>
             )}
-            <Text style={[styles.lockedBannerHelp, { color: colors.textSecondary }]}>
-              {t('otp.contactSupportSuspended')}
-            </Text>
+            <View style={styles.lockedBannerEmailRow}>
+              <Text style={[styles.lockedBannerContactLabel, { color: colors.textSecondary }]}>
+                If you believe this was a mistake, contact support
+              </Text>
+              <TouchableOpacity
+                style={[styles.lockedBannerEmailBtn, {
+                  borderColor: lockedInfo.status === 'banned' ? colors.error + '88' : colors.warning + '88',
+                }]}
+                onPress={() => {
+                  if (!config.support.email) return;
+                  const subject = encodeURIComponent(lockedInfo.status === 'banned'
+                    ? t('otp.contactSupportBannedSubject')
+                    : t('otp.contactSupportSuspendedSubject'));
+                  Linking.openURL(`mailto:${config.support.email}?subject=${subject}`).catch(() => {});
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={14}
+                  color={lockedInfo.status === 'banned' ? colors.error : colors.warning}
+                />
+                <Text style={[styles.lockedBannerEmailLabel, {
+                  color: lockedInfo.status === 'banned' ? colors.error : colors.warning,
+                }]}>Send email</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -225,7 +250,18 @@ const styles = StyleSheet.create({
   lockedBannerTitle: { fontSize: 15, fontWeight: '800', flexShrink: 1 },
   lockedBannerReason: { fontSize: 13, marginTop: 2, flexShrink: 1 },
   lockedBannerDate: { fontSize: 12, marginTop: 2, flexShrink: 1 },
-  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing2, flexShrink: 1 },
+  lockedBannerEmailRow: { marginTop: tokens.spacing2 },
+  lockedBannerContactLabel: { fontSize: 11, marginBottom: tokens.spacing2 },
+  lockedBannerEmailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing1,
+    paddingVertical: 5,
+    paddingHorizontal: tokens.spacing3,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 1,
+  },
+  lockedBannerEmailLabel: { fontSize: 12, fontWeight: '700' },
   lockedCardLabel: { fontSize: 12, textAlign: 'center', marginBottom: tokens.spacing3, flexShrink: 1 },
   card: {
     borderRadius: tokens.radiusXl,

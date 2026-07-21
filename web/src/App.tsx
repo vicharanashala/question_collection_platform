@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PrefetchProvider } from '@/context/PrefetchContext'
 import { lazyRoute } from '@/components/LazyRoute'
+import { LockedAccountModal } from '@/components/LockedAccountModal'
 import type { UserRole } from '@/types'
 
 const LoginPage       = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -67,6 +68,10 @@ function RoleRoute({ pageKey }: { pageKey: string }) {
 export default function App() {
   return (
     <PrefetchProvider>
+      {/* Locked account modal rendered outside the protected layout so it
+          survives navigation to /login after a 423 lock response. */}
+      <LockedAccountModal />
+
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 

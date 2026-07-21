@@ -422,6 +422,18 @@ export class AdminService implements OnModuleInit {
       throw new ForbiddenException('Cannot suspend or ban a super admin');
     }
 
+    // Guard: cannot suspend an already suspended user, or ban an already banned user
+    if (action === 'suspend' && user.verificationStatus === VerificationStatus.SUSPENDED) {
+      throw new BadRequestException('User is already suspended');
+    }
+    if (action === 'ban' && user.verificationStatus === VerificationStatus.BANNED) {
+      throw new BadRequestException('User is already banned');
+    }
+    // Also guard against banning an already-suspended user (must unsuspend first)
+    if (action === 'ban' && user.verificationStatus === VerificationStatus.SUSPENDED) {
+      throw new BadRequestException('User is currently suspended — lift the suspension before banning');
+    }
+
     const newStatus = action === 'ban' ? VerificationStatus.BANNED : VerificationStatus.SUSPENDED;
     const oldStatus = user.verificationStatus;
     const now = new Date();
