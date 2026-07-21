@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsInt,
   Min,
+  Matches,
 } from 'class-validator';
 import { UserCategory } from '../../common/enums';
 
@@ -38,6 +39,13 @@ export class RegisterDto {
   @MinLength(2)
   @MaxLength(255)
   name: string;
+
+  @IsNotEmpty({ message: 'Username is required' })
+  @IsString()
+  @MinLength(3, { message: 'Username must be at least 3 characters' })
+  @MaxLength(30, { message: 'Username must be at most 30 characters' })
+  @Matches(/^[a-zA-Z0-9_]+$/, { message: 'Username can only contain letters, numbers, and underscores' })
+  username: string;
 
   @IsNotEmpty()
   @IsString()

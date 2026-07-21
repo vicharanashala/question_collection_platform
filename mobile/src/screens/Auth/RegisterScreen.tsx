@@ -15,7 +15,7 @@ import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, KVKS, ORG_TYPE_OPTIONS } from 
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
 import { useTranslation } from 'react-i18next';
-import { lgdApi } from '../../api/client';
+import { lgdApi, authApi } from '../../api/client';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;
@@ -59,6 +59,9 @@ export function RegisterScreen({ navigation, route }: Props) {
 
   const [category, setCategory] = useState<UserCategory | ''>('');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
   const [age, setAge] = useState('');
   const [selectedState, setSelectedState] = useState('');
@@ -102,6 +105,31 @@ export function RegisterScreen({ navigation, route }: Props) {
       .catch(() => setStateList([]))
       .finally(() => setLoadingStates(false));
   }, []);
+
+  // Debounced username availability check (fires 600ms after user stops typing)
+  useEffect(() => {
+    if (username.trim().length < 3) {
+      setUsernameStatus('idle');
+      setUsernameSuggestions([]);
+      return;
+    }
+    setUsernameStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        const res = await authApi.checkUsername(username.trim());
+        if (res.data.available) {
+          setUsernameStatus('available');
+          setUsernameSuggestions([]);
+        } else {
+          setUsernameStatus('taken');
+          setUsernameSuggestions(res.data.suggestions ?? []);
+        }
+      } catch {
+        setUsernameStatus('idle');
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [username]);
 
   const [farmSize, setFarmSize] = useState('');
   const [cropType, setCropType] = useState<string[]>([]);
@@ -161,6 +189,10 @@ export function RegisterScreen({ navigation, route }: Props) {
     }
     if (s === 3) {
       if (!name.trim() || name.trim().length < 2) errs.name = t('nameMinLength');
+      if (!username.trim() || username.trim().length < 3) errs.username = t('usernameMinLength');
+      else if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) errs.username = t('usernameInvalidChars');
+      else if (usernameStatus === 'taken') errs.username = t('usernameTaken');
+      else if (usernameStatus === 'checking') errs.username = t('usernameStillChecking');
       if (!gender) errs.gender = t('genderRequired');
       if (!age.trim() || isNaN(Number(age)) || Number(age) < 18 || Number(age) > 120) errs.age = t('ageRequired');
       if (category === UserCategory.FARMER) {
@@ -210,6 +242,7 @@ export function RegisterScreen({ navigation, route }: Props) {
     try {
       await register({
         name: name.trim(),
+        username: username.trim(),
         mobileNumber,
         state: selectedState,
         district: selectedDistrict.trim(),
@@ -572,6 +605,65 @@ export function RegisterScreen({ navigation, route }: Props) {
                   autoCapitalize="words"
                   required
                 />
+                <Input
+                  label={t('username')}
+                  placeholder={t('usernamePlaceholder')}
+                  value={username}
+                  onChangeText={(txt) => {
+                    // Only allow alphanumeric + underscore
+                    setUsername(txt.replace(/[^a-zA-Z0-9_]/g, ''));
+                    setErrors((prev) => { const e = { ...prev }; delete e.username; return e; });
+                  }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={30}
+                  error={errors.username}
+                />
+                {usernameStatus === 'checking' && (
+                  <Text style={[styles.usernameHint, { color: c.textTertiary }]}>
+                    {t('checkingUsername')}
+                  </Text>
+                )}
+                {usernameStatus === 'available' && username.trim().length >= 3 && (
+                  <View style={styles.usernameStatusRow}>
+                    <Ionicons name="checkmark-circle" size={16} color={c.primary} />
+                    <Text style={[styles.usernameHint, { color: c.primary }]}>
+                      {t('usernameAvailable')}
+                    </Text>
+                  </View>
+                )}
+                {usernameStatus === 'taken' && (
+                  <>
+                    <View style={styles.usernameStatusRow}>
+                      <Ionicons name="close-circle" size={16} color={c.error} />
+                      <Text style={[styles.usernameHint, { color: c.error }]}>
+                        {t('usernameTaken')}
+                      </Text>
+                    </View>
+                    {usernameSuggestions.length > 0 && (
+                      <View style={styles.suggestionsContainer}>
+                        <Text style={[styles.suggestionsLabel, { color: c.textSecondary }]}>
+                          {t('suggestionsLabel')}
+                        </Text>
+                        <View style={styles.suggestionsRow}>
+                          {usernameSuggestions.slice(0, 4).map((s) => (
+                            <TouchableOpacity
+                              key={s}
+                              style={[styles.suggestionChip, { borderColor: c.borderSubtle, backgroundColor: c.background }]}
+                              onPress={() => {
+                                setUsername(s);
+                                setUsernameStatus('idle');
+                                setUsernameSuggestions([]);
+                              }}
+                            >
+                              <Text style={[styles.suggestionChipText, { color: c.text }]}>{s}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                  </>
+                )}
                 <Text style={[styles.fieldLabel, { color: c.text }]}>{t('gender')} <Text style={{ color: c.error }}>*</Text></Text>
                 <View style={styles.radioGroup}>
                   {(['male', 'female', 'other'] as const).map((g) => (
@@ -986,4 +1078,16 @@ const styles = StyleSheet.create({
   },
   switchLabel: { fontSize: 14, fontWeight: '600', flex: 1, marginRight: tokens.spacing3 },
   switchYesLabel: { fontSize: 12, fontWeight: '600', marginRight: tokens.spacing2 },
+  usernameHint: { fontSize: 12, marginTop: tokens.spacing1, marginBottom: tokens.spacing2, marginLeft: 2 },
+  usernameStatusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: tokens.spacing2 },
+  suggestionsContainer: { marginBottom: tokens.spacing3 },
+  suggestionsLabel: { fontSize: 12, marginBottom: tokens.spacing2 },
+  suggestionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing2 },
+  suggestionChip: {
+    paddingVertical: tokens.spacing1,
+    paddingHorizontal: tokens.spacing3,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 1,
+  },
+  suggestionChipText: { fontSize: 12, fontWeight: '600' },
 });

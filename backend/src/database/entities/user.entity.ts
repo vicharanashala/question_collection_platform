@@ -25,6 +25,10 @@ export class User {
   @Index('idx_users_mobile')
   mobileNumber: string;
 
+  @Column({ name: 'username', type: 'varchar', length: 50, unique: true, nullable: true })
+  @Index('idx_users_username')
+  username: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 

@@ -9,6 +9,7 @@ export interface User {
   id: string;
   mobileNumber: string;
   name: string;
+  username: string | null;
   role: UserRole;
   category: UserCategory | null;
   state: string;

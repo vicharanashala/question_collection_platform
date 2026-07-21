@@ -373,6 +373,7 @@ describe('AuthService', () => {
         service.register(
           {
             name: 'Ramesh',
+            username: 'ramesh_farmer42',
             mobileNumber: '+919876543210',
             state: 'Maharashtra',
             district: 'Pune',
@@ -394,6 +395,7 @@ describe('AuthService', () => {
         service.register(
           {
             name: 'Ramesh',
+            username: 'ramesh_farmer42',
             mobileNumber: '+919876543210',
             state: 'Maharashtra',
             district: 'Pune',
@@ -419,6 +421,7 @@ describe('AuthService', () => {
       const result = await service.register(
         {
           name: 'Ramesh Kumar',
+          username: 'ramesh_farmer42',
           mobileNumber: '+919876543210',
           state: 'Maharashtra',
           district: 'Pune',
@@ -445,6 +448,7 @@ describe('AuthService', () => {
         service.register(
           {
             name: 'Ramesh',
+            username: 'ramesh_farmer42',
             mobileNumber: '+919876543210',
             state: 'Maharashtra',
             district: 'Pune',
@@ -471,6 +475,7 @@ describe('AuthService', () => {
       await service.register(
         {
           name: 'Ramesh',
+          username: 'ramesh_farmer42',
           mobileNumber: '+919876543210',
           state: 'Maharashtra',
           district: 'Pune',

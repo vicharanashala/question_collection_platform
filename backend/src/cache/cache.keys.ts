@@ -157,6 +157,11 @@ export function userKey(userId: number): string {
   return `user:${userId}`;
 }
 
+/** e.g. username:rakesh_farmer42 — value is the userId, used for fast existence checks */
+export function usernameKey(username: string): string {
+  return `username:${username.toLowerCase()}`;
+}
+
 /** e.g. wallet:123 */
 export function walletKey(userId: number): string {
   return `wallet:${userId}`;

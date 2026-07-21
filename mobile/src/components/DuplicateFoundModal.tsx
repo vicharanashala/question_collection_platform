@@ -30,6 +30,11 @@ export interface DuplicateFoundModalProps {
   /** Similarity score from the GDB (0–1) */
   similarityScore: number | null;
   /**
+   * Display name of the user who originally submitted the matched question.
+   * Falls back to the literal string `'user name not available'` when unknown.
+   */
+  matchedUserName: string | null;
+  /**
    * When 'rejected', shows a "Submitted — Rejected" badge so the user knows
    * this counted as their daily submission.  When omitted, shows no status label.
    */
@@ -42,6 +47,7 @@ export function DuplicateFoundModal({
   matchedQuestion,
   matchedAnswer,
   similarityScore,
+  matchedUserName,
   submissionStatus,
   onDismiss,
 }: DuplicateFoundModalProps) {
@@ -99,8 +105,8 @@ export function DuplicateFoundModal({
           {/* Appreciation note */}
           <Text style={[styles.appreciation, { color: c.textSecondary }]}>
             {submissionStatus === 'rejected'
-              ? 'Your question has been submitted and marked as a duplicate. It will not be reviewed further. Please check the existing answer below.'
-              : 'Thank you for taking the time to submit a question! A similar question has already been answered by our experts — please review it below.'}
+              ? `Your question has been submitted and marked as a duplicate. It will not be reviewed further. A similar question was previously submitted by ${matchedUserName ?? 'another user'}.`
+              : `Thank you for taking the time to submit a question! A similar question has already been answered by ${matchedUserName ?? 'our experts'}. Please review it below.`}
           </Text>
 
           <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />

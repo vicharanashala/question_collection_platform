@@ -39,6 +39,7 @@ export class UserController {
       id: user.id,
       mobileNumber: user.mobileNumber,
       name: user.name,
+      username: user.username,
       category: user.category,
       state: user.state,
       district: user.district,

@@ -308,6 +308,15 @@ export function ProfileScreen() {
               <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.personalInfo')}</Text>
             </View>
             <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+              {user?.username && (
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="at-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Username</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.username}</Text>
+                </View>
+              )}
               {user?.category && (
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>

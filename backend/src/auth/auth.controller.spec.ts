@@ -79,6 +79,7 @@ describe('AuthController', () => {
   describe('POST /auth/register', () => {
     const registerDto = {
       name: 'Ramesh Kumar',
+      username: 'ramesh_farmer42',
       mobileNumber: '+919876543210',
       state: 'Maharashtra',
       district: 'Pune',

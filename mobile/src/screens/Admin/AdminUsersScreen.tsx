@@ -55,6 +55,7 @@ interface UserItem {
   id: string;
   mobileNumber: string;
   name: string;
+  username: string | null;
   category: string;
   state: string;
   district: string;
@@ -190,7 +191,7 @@ export function AdminUsersScreen() {
 
   function renderItem({ item }: { item: UserItem }) {
     const statusColor = STATUS_COLORS[item.verificationStatus] ?? c.textTertiary;
-    const displayName = item.name || item.mobileNumber || 'Unknown user';
+    const displayName = item.name || item.username || item.mobileNumber || 'Unknown user';
     const isCurrentUser = item.id === currentUser?.id;
 
     return (
@@ -210,7 +211,7 @@ export function AdminUsersScreen() {
                 {displayName}
               </Text>
               <Text style={[styles.userMeta, { color: c.textSecondary }]}>
-                {item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorised'}
+                {item.username ? `@${item.username}  ·  ` : ''}{item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorised'}
               </Text>
             </View>
             <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>

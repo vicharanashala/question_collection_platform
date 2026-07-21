@@ -65,7 +65,8 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     matchedQuestion: string;
     matchedAnswer: string | null;
     similarityScore: number | null;
-  }>({ visible: false, matchedQuestion: '', matchedAnswer: null, similarityScore: null });
+    matchedUserName: string | null;
+  }>({ visible: false, matchedQuestion: '', matchedAnswer: null, similarityScore: null, matchedUserName: null });
 
   useEffect(() => {
     adminApi.getConfig().then((res) => {
@@ -149,6 +150,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
           matchedQuestion: data.duplicate.matchedQuestion ?? '',
           matchedAnswer: data.duplicate.matchedAnswer ?? null,
           similarityScore: data.duplicate.similarityScore ?? null,
+          matchedUserName: data.duplicate.matchedUserName ?? null,
         });
         return;
       }
@@ -391,6 +393,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         matchedQuestion={duplicateModal.matchedQuestion}
         matchedAnswer={duplicateModal.matchedAnswer}
         similarityScore={duplicateModal.similarityScore}
+        matchedUserName={duplicateModal.matchedUserName}
         onDismiss={() => {
           setDuplicateModal((p) => ({ ...p, visible: false }));
           navigation.goBack();

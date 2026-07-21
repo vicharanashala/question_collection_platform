@@ -45,6 +45,56 @@ export class QuestionService {
     private readonly hotDataService: HotDataService,
   ) {}
 
+  // ─── Exact Duplicate Check (Our DB) ────────────────────────────────────────
+
+  /**
+   * Checks whether an exact (case-insensitive, trimmed) copy of the questionText
+   * already exists in our own question collection, submitted by any user.
+   *
+   * Runs before the GDB semantic check so we can return a human-readable
+   * "submitted by {name}" message when we already have the exact question.
+   *
+   * Returns null if no exact match found.
+   * Returns the matched question with its submitter's display name if found.
+   */
+  private async findExactDuplicate(
+    questionText: string,
+    userId: string,
+  ): Promise<{ matchedQuestion: Question; matchedUserName: string | null } | null> {
+    const normalized = questionText.trim().toLowerCase();
+    const existing = await this.questionRepo
+      .createQueryBuilder('q')
+      .innerJoinAndSelect('q.user', 'u')
+      .where('LOWER(TRIM(q.question_text)) = :normalized', { normalized })
+      .andWhere('q.user_id != :userId', { userId })
+      .orderBy('q.submittedAt', 'DESC')
+      .getOne();
+
+    if (!existing) return null;
+
+    // Resolve submitter name: prefer username > name > mobileNumber (masked)
+    let displayName: string | null = 'user name not available';
+    if (existing.user) {
+      if (existing.user.username) {
+        displayName = existing.user.username;
+      } else if (existing.user.name && existing.user.name.trim()) {
+        displayName = existing.user.name.trim();
+      } else if (existing.user.mobileNumber) {
+        displayName = this.maskMobile(existing.user.mobileNumber);
+      }
+    }
+
+    return { matchedQuestion: existing, matchedUserName: displayName };
+  }
+
+  private maskMobile(mobile: string): string {
+    // Show only last 4 digits: +91****7654
+    const digits = mobile.replace(/\D/g, '');
+    return digits.length >= 4
+      ? `${'*'.repeat(digits.length - 4)}${digits.slice(-4)}`
+      : mobile;
+  }
+
   // ─── Submit ──────────────────────────────────────────────────────────────────
 
   /** Derives agro-climatic zone from state. Mirrors mobile/src/utils/agro-climatic-zones.ts */
@@ -131,8 +181,60 @@ export class QuestionService {
       dto.questionText,
     );
 
-    // 4b. GDB semantic duplicate check — run before saving so we can return early with
-    //     the matched Q&A pair for the mobile app to display instead of blocking silently.
+    // 4b. Check our own DB first — exact text match (case-insensitive, trimmed).
+    //     If found, we already know the submitter and can show a user-friendly message
+    //     ("submitted by rakesh_farmer42") without needing the GDB semantic check.
+    const dbDup = await this.findExactDuplicate(dto.questionText, userId);
+    if (dbDup) {
+      const dup = dbDup.matchedQuestion;
+      let duplicateQuestion = this.questionRepo.create({
+        userId,
+        domains,
+        season: dto.season,
+        cropType,
+        agroClimaticZone: dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state),
+        questionText: dto.questionText,
+        state: user.state,
+        district: user.district,
+        block: user.block ?? null,
+        mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+        mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+        deviceInfo: dto.deviceInfo ?? null,
+        status: QuestionStatus.REJECTED,
+        rejectionReason: 'Question is already present in our database',
+        submittedAt: now,
+        embedding: [0],
+      });
+      duplicateQuestion = await this.dataSource.transaction(async (em) => {
+        const repo = em.getRepository(Question);
+        return repo.save(duplicateQuestion) as Promise<Question>;
+      });
+      await this.auditRepo.save({
+        actorType: ActorType.USER,
+        actorId: userId,
+        action: AuditAction.QUESTION_REJECTED,
+        entityType: 'question',
+        entityId: duplicateQuestion.id,
+        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+      });
+      return {
+        id: duplicateQuestion.id,
+        status: 'DUPLICATE',
+        message: 'This question already exists in our database',
+        duplicate: {
+          isDuplicate: true,
+          matchedQuestionId: dup.id,
+          matchedQuestion: dup.questionText,
+          matchedAnswer: null,
+          similarityScore: null,
+          matchedUserName: dbDup.matchedUserName,
+        },
+      };
+    }
+
+    // 4c. GDB semantic duplicate check — run after our DB check; may add additional
+    //     context (matchedAnswer, similarityScore) if GDB has a confident match.
     const duplicateResult = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
       crop: cropType,
@@ -150,8 +252,7 @@ export class QuestionService {
     if (duplicateResult.isDuplicate) {
       // Save the question as REJECTED so it counts as a submission against the daily limit,
       // then return the matched Q&A pair so the mobile can display DuplicateFoundModal.
-      // Cast is safe: inside this guard duplicateResult is always DuplicateCheckResult.
-      const dup = duplicateResult as { isDuplicate: true; matchedQuestionId: string | null; matchedQuestion: string | null; matchedAnswer: string | null; similarityScore: number | null };
+      const dup = duplicateResult as { isDuplicate: true; matchedQuestionId: string | null; matchedQuestion: string | null; matchedAnswer: string | null; similarityScore: number | null; matchedUserName: string | null };
       let duplicateQuestion = this.questionRepo.create({
         userId,
         domains,
@@ -194,6 +295,7 @@ export class QuestionService {
           matchedQuestion: dup.matchedQuestion,
           matchedAnswer: dup.matchedAnswer,
           similarityScore: dup.similarityScore,
+          matchedUserName: dup.matchedUserName ?? 'user name not available',
         },
       };
     }
@@ -270,50 +372,6 @@ export class QuestionService {
     if (!question) throw new NotFoundException('Question not found');
     if (question.userId !== userId) throw new ForbiddenException('Not your question');
     throw new ForbiddenException('Question editing is no longer available');
-
-    const oldValue = {
-      questionText: question.questionText,
-      domains: question.domains,
-      season: question.season,
-      cropType: question.cropType,
-      mediaType: question.mediaType,
-      mediaUrls: question.mediaUrls,
-    };
-
-    // Apply updates
-    if (dto.questionText !== undefined) question.questionText = dto.questionText;
-    if (dto.domains !== undefined) {
-      const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));
-      if (invalidDomains.length > 0) {
-        throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
-      }
-      question.domains = dto.domains;
-    }
-    if (dto.season !== undefined) question.season = dto.season;
-    if (dto.cropType !== undefined) question.cropType = dto.cropType;
-    if (dto.mediaType !== undefined) question.mediaType = dto.mediaType as MediaType;
-    if (dto.mediaUrls !== undefined) question.mediaUrls = dto.mediaUrls;
-
-    const saved = await this.questionRepo.save(question);
-
-    await this.auditRepo.save({
-      actorType: ActorType.USER,
-      actorId: userId,
-      action: 'question_edited',
-      entityType: 'question',
-      entityId: questionId,
-      oldValue,
-      newValue: {
-        questionText: saved.questionText,
-        domains: saved.domains,
-        season: saved.season,
-        cropType: saved.cropType,
-        mediaType: saved.mediaType,
-        mediaUrls: saved.mediaUrls,
-      },
-    });
-
-    return saved;
   }
 
   // ─── Get single ─────────────────────────────────────────────────────────────
@@ -506,34 +564,104 @@ export class QuestionService {
     // 2. Gemma inference: domains + cropType  (run first so we have crop for GDB call)
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
 
-    // 3. Check for semantically similar questions via GDB semantic search
-    const duplicateResult = await this.gdbService.checkDuplicate({
+    // 3. Check our own DB first — exact text match (case-insensitive, trimmed).
+    //     Preferred over GDB because we know the exact submitter's display name.
+    const dbDup = await this.findExactDuplicate(dto.questionText, userId);
+
+    // 4. GDB semantic search runs second — may add matchedAnswer + similarityScore
+    //    if GDB has a confident match beyond what our DB found.
+    const gdbDup = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
       crop: inferred.crop,
       state,
     });
 
-    // 4. Derive season from current month (India-centric calendar)
+    // 5. Derive season from current month (India-centric calendar)
     const season = deriveSeasonFromMonth(new Date().getMonth()); // 0-indexed
 
-    // 5. Derive agro-climatic zone from state
+    // 6. Derive agro-climatic zone from state
     const agroClimaticZone = this.deriveAgroClimaticZone(state);
 
-    // 6. Daily-limit counters
+    // 7. Daily-limit counters
     const [dailyLimit, dailyCount] = await Promise.all([
       this.adminService.getConfigValue('daily_question_limit'),
       this.getDailyCount(userId),
     ]);
 
-    // 7. If GDB found a duplicate: save as REJECTED (counts as a submission) and
-    //    return early so the mobile can show DuplicateFoundModal immediately.
-    if (duplicateResult.isDuplicate) {
-      const dup = duplicateResult as {
+    // 8. If our DB found an exact match: save as REJECTED (counts as a submission)
+    //    and return immediately with the submitter's display name.
+    if (dbDup) {
+      const dup = dbDup.matchedQuestion;
+      const now = new Date();
+
+      let duplicateQuestion = this.questionRepo.create({
+        userId,
+        domains: inferred.domains,
+        season,
+        cropType: inferred.crop,
+        agroClimaticZone,
+        questionText: dto.questionText,
+        state,
+        district,
+        block: block ?? null,
+        mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+        mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+        status: QuestionStatus.REJECTED,
+        rejectionReason: 'Question is already present in our database',
+        submittedAt: now,
+        embedding: [0], // zero embedding — saved to satisfy FK, not for search
+      });
+      duplicateQuestion = await this.dataSource.transaction(async (em) => {
+        const repo = em.getRepository(Question);
+        return repo.save(duplicateQuestion) as Promise<Question>;
+      });
+      await this.auditRepo.save({
+        actorType: ActorType.USER,
+        actorId: userId,
+        action: AuditAction.QUESTION_REJECTED,
+        entityType: 'question',
+        entityId: duplicateQuestion.id,
+        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+      });
+
+      return {
+        state,
+        district,
+        block: block ?? null,
+        domains: inferred.domains,
+        cropType: inferred.crop,
+        season,
+        questionText: dto.questionText,
+        mediaType: dto.mediaType ?? 'none',
+        mediaUrls: dto.mediaUrls ?? [],
+        agroClimaticZone,
+        suggestedDistricts: [],
+        suggestedBlocks: [],
+        remainingToday: Math.max(0, dailyLimit - dailyCount - 1),
+        dailyLimit,
+        duplicate: {
+          isDuplicate: true,
+          matchedQuestionId: dup.id,
+          matchedQuestion: dup.questionText,
+          matchedAnswer: null,
+          similarityScore: null,
+          matchedUserName: dbDup.matchedUserName,
+          submissionStatus: 'rejected' as const,
+        },
+      };
+    }
+
+    // 9. If GDB found a semantic duplicate: save as REJECTED and return with its
+    //    matchedAnswer + similarityScore (may have a better answer than our DB).
+    if (gdbDup.isDuplicate) {
+      const dup = gdbDup as {
         isDuplicate: true;
         matchedQuestionId: string | null;
         matchedQuestion: string | null;
         matchedAnswer: string | null;
         similarityScore: number | null;
+        matchedUserName: string | null;
       };
       const now = new Date();
 
@@ -589,7 +717,7 @@ export class QuestionService {
           matchedQuestion: dup.matchedQuestion,
           matchedAnswer: dup.matchedAnswer,
           similarityScore: dup.similarityScore,
-          // Signal to mobile that this was saved as REJECTED — no need to call submit
+          matchedUserName: dup.matchedUserName ?? 'user name not available',
           submissionStatus: 'rejected' as const,
         },
       };
@@ -616,8 +744,8 @@ export class QuestionService {
       remainingToday: Math.max(0, dailyLimit - dailyCount),
       dailyLimit,
 
-      // Duplicate-check result — present when GDB found a similar question
-      duplicate: duplicateResult,
+      // No duplicate found — pass through for normal preview flow
+      duplicate: gdbDup,
     };
   }
 }

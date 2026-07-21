@@ -332,6 +332,7 @@ export class AdminService implements OnModuleInit {
         'u.id',
         'u.mobileNumber',
         'u.name',
+        'u.username',
         'u.category',
         'u.state',
         'u.district',
@@ -348,7 +349,7 @@ export class AdminService implements OnModuleInit {
     if (status) qb.andWhere('u.verificationStatus = :status', { status });
     if (search) {
       qb.andWhere(
-        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search)`,
+        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search OR u.username ILIKE :search)`,
         { search: `%${search}%` },
       );
     }
@@ -366,7 +367,7 @@ export class AdminService implements OnModuleInit {
       where: { id: userId },
       relations: ['wallet'],
       select: [
-        'id', 'mobileNumber', 'name', 'role', 'verificationStatus',
+        'id', 'mobileNumber', 'name', 'username', 'role', 'verificationStatus',
         'category', 'district', 'state', 'block', 'village', 'kvk', 'numberOfFarmers',
         'organisationType',
         'languagePreference',

@@ -64,6 +64,12 @@ export interface DuplicateCheckResult {
   matchedAnswer: string | null;
   /** Similarity score of the top match (null when not a duplicate) */
   similarityScore: number | null;
+  /**
+   * Display name of the user who submitted the matched question.
+   * Populated when the duplicate was found in our own DB (exact or GDB-assisted).
+   * Falls back to the literal string `'user name not available'` when unknown.
+   */
+  matchedUserName: string | null;
   /** Raw GDB response for auditing — always populated even on non-duplicate */
   rawResponse: GdbSearchResponse | null;
 }
@@ -179,10 +185,11 @@ export class GdbService {
 
     // ── Fetch the matched question from our DB using the retrieved question text ──
     //    (GDB question_ids are short-format identifiers, not our UUIDs)
-    //    Used as fallback when GDB doesn't carry a retrieved_answer.
+    //    Load the user relation to resolve the submitter's display name for the mobile UI.
     const matchedQuestionEntity = await this.questionRepo.findOne({
       where: { questionText: bestMatch.retrieved_question },
       select: ['id', 'questionText'],
+      relations: ['user'],
     });
 
     // ── Resolve the answer ───────────────────────────────────────────────────
@@ -204,6 +211,7 @@ export class GdbService {
       matchedQuestion: bestMatch.retrieved_question,
       matchedAnswer,
       similarityScore: bestMatch.similarity_score,
+      matchedUserName: this.resolveDisplayName(matchedQuestionEntity?.user ?? null),
       rawResponse: raw,
     };
   }
@@ -217,7 +225,28 @@ export class GdbService {
       matchedQuestion: null,
       matchedAnswer: null,
       similarityScore: null,
+      matchedUserName: null,
       rawResponse: raw,
     };
+  }
+
+  /**
+   * Resolves the best display name from a User entity, using the same priority
+   * as QuestionService.findExactDuplicate:
+   *   1. username  2. name  3. masked mobile  4. 'user name not available'
+   */
+  private resolveDisplayName(user: { username?: string | null; name?: string | null; mobileNumber?: string | null } | null): string | null {
+    if (!user) return null;
+    if (user.username) return user.username;
+    if (user.name?.trim()) return user.name.trim();
+    if (user.mobileNumber) return this.maskMobile(user.mobileNumber);
+    return null;
+  }
+
+  private maskMobile(mobile: string): string {
+    const digits = mobile.replace(/\D/g, '');
+    return digits.length >= 4
+      ? `${'*'.repeat(digits.length - 4)}${digits.slice(-4)}`
+      : mobile;
   }
 }

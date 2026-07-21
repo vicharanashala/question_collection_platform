@@ -338,6 +338,12 @@ export const authApi = {
     api.post('/auth/refresh', { refreshToken }),
 
   me: () => api.get('/auth/me'),
+
+  checkUsername: (username: string) =>
+    api.get('/auth/check-username', { params: { username } }),
+
+  suggestUsernames: (base: string, limit = 5) =>
+    api.get('/auth/suggest-usernames', { params: { base, limit } }),
 };
 
 export const userApi = {

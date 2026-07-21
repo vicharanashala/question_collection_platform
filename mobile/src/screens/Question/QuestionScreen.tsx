@@ -128,6 +128,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     matchedQuestion: '',
     matchedAnswer: null as string | null,
     similarityScore: null as number | null,
+    matchedUserName: null as string | null,
     submissionStatus: undefined as 'rejected' | 'found' | undefined,
   });
 
@@ -169,13 +170,14 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       return;
     }
 
-    const validation = await runOnDeviceValidation({ text: questionText.trim(), ownId: editingQuestionId });
-    setAiValidation(validation);
-    if (validation.verdict === 'fail') {
-      showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail'), 'error');
-      return;
-    }
-    if (validation.verdict === 'warn') return;
+    // on-device validation disabled
+    // const validation = await runOnDeviceValidation({ text: questionText.trim(), ownId: editingQuestionId });
+    // setAiValidation(validation);
+    // if (validation.verdict === 'fail') {
+    //   showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail'), 'error');
+    //   return;
+    // }
+    // if (validation.verdict === 'warn') return;
 
     setPreviewLoading(true);
     try {
@@ -194,6 +196,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           matchedQuestion: duplicate.matchedQuestion ?? '',
           matchedAnswer: duplicate.matchedAnswer ?? null,
           similarityScore: duplicate.similarityScore ?? null,
+          matchedUserName: duplicate.matchedUserName ?? null,
           submissionStatus: 'rejected',
         });
         // Refresh remaining count
@@ -232,12 +235,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     }
   }
 
-  const relevanceFailed = aiValidation?.verdict === 'fail' && aiValidation?.reasonKey === 'onDeviceAI.relevance.low';
+  // relevanceFailed — left as no-op since on-device AI is disabled
+  const relevanceFailed = false;
   const canSubmit =
     questionText.trim().length > 0 &&
     questionText.length <= maxChars &&
     (isEditMode || remainingToday > 0) &&
-    !relevanceFailed;
+    !relevanceFailed; // no-op: aiValidation disabled
 
   const charCountColor =
     questionText.length > maxChars ? c.error
@@ -370,23 +374,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             </View>
           </View>
 
-          {/* ── AI Validation ─────────────────────────────────────────── */}
-          <AIValidationBanner
-            result={
-              aiValidation ?? {
-                verdict: "pass",
-                message: null,
-                reasonKey: null,
-                stages: {
-                  relevance: { pass: true, confidence: 1 },
-                  duplicate: { pass: true, confidence: 1 },
-                  spam: { pass: true, confidence: 1 },
-                },
-                ran: false,
-              }
-            }
-            onDismiss={() => setAiValidation(null)}
-          />
+
 
           {/* ── Continue ───────────────────────────────────────────────── */}
           <Button
@@ -400,9 +388,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             onPress={handlePreview}
             loading={previewLoading}
             disabled={
-              !canSubmit ||
-              relevanceFailed ||
-              aiValidation?.verdict === "warn"
+              !canSubmit
             }
             icon="arrow-forward"
             iconPosition="right"
@@ -480,6 +466,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         matchedQuestion={duplicateModal.matchedQuestion}
         matchedAnswer={duplicateModal.matchedAnswer}
         similarityScore={duplicateModal.similarityScore}
+        matchedUserName={duplicateModal.matchedUserName}
         submissionStatus={duplicateModal.submissionStatus}
         onDismiss={() => {
           setDuplicateModal((p) => ({ ...p, visible: false }));

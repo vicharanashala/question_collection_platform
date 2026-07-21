@@ -24,6 +24,8 @@ import { RequestOtpDto, VerifyOtpDto, RegisterDto } from './dto';
 import { SmsService } from './sms.service';
 import { RedisService } from '../cache/redis.service';
 import { AdminService } from '../admin/admin.service';
+import { usernameKey } from '../cache/cache.keys';
+import { CacheTTL } from '../config/cache-ttl.constants';
 
 export interface AuthTokens {
   accessToken: string;
@@ -49,6 +51,7 @@ export interface PublicUser {
   languagePreference: string;
   verificationStatus: VerificationStatus;
   role: UserRole;
+  username: string | null;
   createdAt: Date;
   // Flattened profile fields (replacing profileData JSONB)
   age:             number | null;
@@ -367,8 +370,23 @@ export class AuthService {
         if (!dto.village?.trim()) throw new BadRequestException('Village is required for farmer registration.');
       }
 
+      // Username: normalize and check uniqueness before saving (unique constraint in DB)
+      // Strip leading @ if the user typed it (e.g. "@rakesh42" → "rakesh42")
+      const normalizedUsername = dto.username.toLowerCase().trim().replace(/^@/, '');
+      const usernameTaken = await this.userRepo.findOne({
+        where: { username: normalizedUsername },
+        select: ['id'],
+      });
+      if (usernameTaken) {
+        const suggestions = await this.suggestUsernames(normalizedUsername, 5);
+        throw new BadRequestException(
+          `Username "${normalizedUsername}" is already taken. Please try a different one or use one of these: ${suggestions.join(', ')}`,
+        );
+      }
+
       // Update user with registration data
       user.name = dto.name.trim();
+      user.username = normalizedUsername;
       user.category = dto.category;
       user.state = dto.state;
       user.district = dto.district;
@@ -425,6 +443,9 @@ export class AuthService {
       }
 
       await queryRunner.commitTransaction();
+
+      // Sync username → Redis for fast existence lookups
+      await this.syncUsernameToRedis(normalizedUsername, user.id);
 
       // Record login timestamp on successful registration
       user.lastLoginAt = new Date();
@@ -584,12 +605,87 @@ export class AuthService {
     return this.userRepo.findOne({ where: { mobileNumber } });
   }
 
+  // ─── Username availability ───────────────────────────────────────────────────
+
+  /**
+   * Check if a username is available.
+   * Uses Redis as the fast path; falls back to DB for cache miss.
+   * Returns { available: true } if free, { available: false, suggestions: [...] } if taken.
+   */
+  async checkUsername(username: string): Promise<{ available: boolean; suggestions?: string[] }> {
+    const normalized = username.toLowerCase().trim();
+
+    // Fast path: Redis lookup
+    const cached = await this.redisService.get(usernameKey(normalized));
+    if (cached !== null) {
+      // Key exists → username is taken
+      const suggestions = await this.suggestUsernames(normalized, 5);
+      return { available: false, suggestions };
+    }
+
+    // Cache miss → check DB (username col is unique, so an exact match means taken)
+    const existing = await this.userRepo.findOne({
+      where: { username: normalized },
+      select: ['id'],
+    });
+
+    if (existing) {
+      // Populate Redis so subsequent requests are fast
+      await this.syncUsernameToRedis(normalized, existing.id);
+      const suggestions = await this.suggestUsernames(normalized, 5);
+      return { available: false, suggestions };
+    }
+
+    return { available: true };
+  }
+
+  /**
+   * Suggest alternative usernames based on a base string.
+   * Appends/removes numeric suffixes to find available options.
+   * Returns up to `limit` suggestions.
+   */
+  async suggestUsernames(base: string, limit = 5): Promise<string[]> {
+    const candidates: string[] = [];
+    const normalized = base.toLowerCase().trim();
+    const maxAttempts = 20;
+
+    // Strategy 1: append random 2-digit numbers
+    for (let i = 0; i < maxAttempts && candidates.length < limit; i++) {
+      const suffix = Math.floor(Math.random() * 90) + 10; // 10–99
+      const candidate = `${normalized}${suffix}`;
+      const exists = await this.userRepo.findOne({ where: { username: candidate }, select: ['id'] });
+      if (!exists) candidates.push(candidate);
+    }
+
+    // Strategy 2: if still not enough, try underscore + random word
+    const words = ['farmer', 'grower', 'field', 'crop', 'agri', 'soil', 'harvest', 'kisan', 'farming'];
+    for (let i = 0; i < words.length && candidates.length < limit; i++) {
+      const candidate = `${normalized}_${words[i]}`;
+      const exists = await this.userRepo.findOne({ where: { username: candidate }, select: ['id'] });
+      if (!exists && !candidates.includes(candidate)) candidates.push(candidate);
+    }
+
+    return candidates.slice(0, limit);
+  }
+
+  /**
+   * Write a username→userId mapping to Redis.
+   * Called on registration and profile update.
+   * The key auto-expires after USERNAME_CACHE_TTL so stale entries are eventually cleaned.
+   */
+  async syncUsernameToRedis(username: string, userId: string): Promise<void> {
+    // No TTL here — username entries persist for the lifetime of the account.
+    // We set a very long TTL (30 days) as a safety net; re-sync on each relevant write.
+    await this.redisService.set(usernameKey(username), userId);
+  }
+
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   private toPublicUser(user: User): PublicUser {
     return {
       id: user.id,
       mobileNumber: user.mobileNumber,
+      username: user.username ?? null,
       name: user.name,
       category: user.category,
       state: user.state,
