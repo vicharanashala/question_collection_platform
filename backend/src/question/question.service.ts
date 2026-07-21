@@ -201,7 +201,7 @@ export class QuestionService {
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
         deviceInfo: dto.deviceInfo ?? null,
         status: QuestionStatus.REJECTED,
-        rejectionReason: 'Question is already present in our database',
+        rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
         submittedAt: now,
         embedding: [0],
       });
@@ -267,7 +267,7 @@ export class QuestionService {
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
         deviceInfo: dto.deviceInfo ?? null,
         status: QuestionStatus.REJECTED,
-        rejectionReason: 'Question is already present in our golden database',
+        rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
@@ -607,7 +607,7 @@ export class QuestionService {
         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
         status: QuestionStatus.REJECTED,
-        rejectionReason: 'Question is already present in our database',
+        rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
@@ -678,7 +678,7 @@ export class QuestionService {
         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
         status: QuestionStatus.REJECTED,
-        rejectionReason: 'Question is already present in our golden database',
+        rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
