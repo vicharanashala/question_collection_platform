@@ -42,6 +42,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
   function handleChangeText(text: string) {
     const newMobile = text.replace(/\D/g, '');
     setMobile(newMobile);
+    setLockedInfo(null);
     const newValid = /^[6-9]\d{9}$/.test(newMobile);
     const isShort = newMobile.length > 0 && !newValid;
     setError(isShort ? t('errors.invalidPhone') : '');
