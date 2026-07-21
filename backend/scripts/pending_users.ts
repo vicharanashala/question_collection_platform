@@ -1,5 +1,5 @@
 import { AppDataSource } from '../src/config/typeorm.config';
-import { User, VerificationStatus } from '../src/database/entities/user.entity';
+import { User, VerificationStatus } from '../src/shared/database/entities/user.entity';
 
 async function main() {
   await AppDataSource.initialize();

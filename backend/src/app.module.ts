@@ -33,26 +33,26 @@ import {
   Report,
   ReportReply,
   Faq,
-} from './database/entities';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { QuestionModule } from './question/question.module';
-import { AdminModule } from './admin/admin.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { WalletsModule } from './wallets/wallets.module';
-import { SpeechModule } from './speech/speech.module';
-import { LgdModule } from './lgd/lgd.module';
-import { PaymentModule } from './payment/payment.module';
-import { StorageModule } from './storage/storage.module';
-import { AiModule } from './ai/ai.module';
-import { ReportsModule } from './reports/reports.module';
-import { FaqsModule } from './faqs/faqs.module';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
-import { HealthController } from './health/health.controller';
-import { CacheModule } from './cache/cache.module';
-import { CacheInterceptor } from './cache/interceptors/cache.interceptor';
-import { CacheInvalidationInterceptor } from './cache/interceptors/cache-invalidation.interceptor';
-import { EndpointLoggerModule } from './common/endpoint-logger/endpoint-logger.module';
+} from './shared/database/entities';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
+import { QuestionModule } from './modules/question/question.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { NotificationsModule } from './modules/notification/notifications.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
+import { SpeechModule } from './modules/speech/speech.module';
+import { LgdModule } from './modules/lgd/lgd.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { StorageModule } from './modules/storage/storage.module';
+import { AiModule } from './modules/ai/ai.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { FaqsModule } from './modules/faqs/faqs.module';
+import { JwtAuthGuard } from './shared/middleware/guards/jwt-auth.guard';
+import { HealthController } from './modules/health/health.controller';
+import { CacheModule } from './shared/database/cache/cache.module';
+import { CacheInterceptor } from './shared/database/cache/interceptors/cache.interceptor';
+import { CacheInvalidationInterceptor } from './shared/database/cache/interceptors/cache-invalidation.interceptor';
+import { EndpointLoggerModule } from './shared/services/endpoint-logger/endpoint-logger.module';
 
 @Module({
   imports: [

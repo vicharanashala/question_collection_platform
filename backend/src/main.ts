@@ -7,7 +7,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 import { AppModule } from './app.module';
-import { EndpointLoggerService } from './common/endpoint-logger/endpoint-logger.service';
+import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
