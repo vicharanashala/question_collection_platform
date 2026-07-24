@@ -8,3 +8,6 @@ export * from './question.entity';
 export * from './audit-log.entity';
 export * from './admin-config.entity';
 export * from './notification.entity';
+export * from './report.entity';
+export * from './report-reply.entity';
+export * from './faq.entity';

@@ -201,12 +201,13 @@ export function UsersPage() {
                       <td className="px-4 py-3">
                         <Link to={`/users/${u.id}`} className="flex items-center gap-3 group">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                            {(u.name || u.mobileNumber).slice(0, 2).toUpperCase()}
+                            {(u.name || u.username || u.mobileNumber).slice(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <p className="font-semibold text-text group-hover:text-primary transition-colors">
                               {u.name || '—'}
                             </p>
+                            {u.username && <p className="text-xs text-text-tertiary">@{u.username}</p>}
                             <p className="text-xs text-text-tertiary">{u.mobileNumber}</p>
                           </div>
                         </Link>

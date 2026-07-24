@@ -14,6 +14,8 @@ import { UserService } from './user.service';
 import { UpdateProfileDto, UpdateCropDetailsDto } from './dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Request } from 'express';
+import { CacheInvalidate } from '../cache/decorators/cache-invalidate.decorator';
+import { Cacheable } from '../cache/decorators/cacheable.decorator';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
@@ -30,12 +32,14 @@ export class UserController {
    */
   @Get('me')
   @HttpCode(HttpStatus.OK)
+  @Cacheable('user', 180)
   async getProfile(@Req() req: AuthenticatedRequest) {
     const user = await this.userService.getProfile(req.user.id);
     return {
       id: user.id,
       mobileNumber: user.mobileNumber,
       name: user.name,
+      username: user.username,
       category: user.category,
       state: user.state,
       district: user.district,
@@ -69,6 +73,7 @@ export class UserController {
    */
   @Get('me/leaderboard')
   @HttpCode(HttpStatus.OK)
+  @Cacheable('leaderboard', 300)
   async getLeaderboard(
     @Req() req: AuthenticatedRequest,
     @Query('limit') limit?: string,
@@ -86,6 +91,7 @@ export class UserController {
    */
   @Patch('me')
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
   async updateProfile(
     @Req() req: AuthenticatedRequest,
     @Body() dto: UpdateProfileDto,
@@ -100,6 +106,7 @@ export class UserController {
    */
   @Get('me/notifications')
   @HttpCode(HttpStatus.OK)
+  @Cacheable('notifications', 60)
   async getNotifications(
     @Req() req: AuthenticatedRequest,
     @Query('page') page?: string,
@@ -117,6 +124,7 @@ export class UserController {
    */
   @Patch('me/notifications/read-all')
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
   async markAllRead(@Req() req: AuthenticatedRequest) {
     await this.userService.markAllNotificationsRead(req.user.id);
     return { success: true };
@@ -142,6 +150,7 @@ export class UserController {
    */
   @Patch('me/crops')
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
   async updateCropDetails(
     @Req() req: AuthenticatedRequest,
     @Body() dto: UpdateCropDetailsDto,

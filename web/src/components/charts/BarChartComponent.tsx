@@ -74,7 +74,7 @@ export function BarChartComponent({
             tickLine={false}
             axisLine={false}
             type={layout === 'vertical' ? 'category' : 'number'}
-            tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}
+            tickFormatter={(v) => typeof v === 'number' ? v.toLocaleString() : v}
           />
         )}
         <Tooltip

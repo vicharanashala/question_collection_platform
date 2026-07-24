@@ -75,7 +75,6 @@ export class SubmitQuestionDto {
 export class SubmitQuestionResponseDto {
   id: string;
   status: string;
-  editWindowClosesAt: string;
   message: string;
   /** Present when GDB found a near-duplicate — mobile should show DuplicateFoundModal */
   duplicate?: DuplicateQuestionResultDto;
@@ -113,5 +112,10 @@ export class DuplicateQuestionResultDto {
   matchedQuestion: string | null;
   matchedAnswer: string | null;
   similarityScore: number | null;
+  /**
+   * Display name of the user who submitted the matched question.
+   * Falls back to the literal string `'user name not available'` when unknown.
+   */
+  matchedUserName: string | null;
 }
 

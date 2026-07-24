@@ -32,6 +32,7 @@ export type AdminStackParamList = {
   AdminWithdrawals: undefined;
   AdminProfile: undefined;
   AdminAuditLogs: undefined;
+  AdminFaqs: undefined;
   // Finance role screens (subset of admin screens)
   FinanceDashboard: undefined;
   FinanceWithdrawals: undefined;
@@ -56,6 +57,9 @@ export type RootStackParamList = {
   };
   PaymentDetails: undefined;
   Leaderboard: undefined;
+  ReportScreen: undefined;
+  ReportDetail: { reportId: string };
+  FaqsList: undefined;
   QuestionDetail: {
     /** ID of the question to display */
     questionId: string;
@@ -84,6 +88,7 @@ export type RootStackParamList = {
     /** Set to true after a successful submission so the ask screen clears the input */
     resetForm?: boolean;
   };
+  SpeechToText: undefined;
 };
 
 // Screen props for useNavigation hooks

@@ -35,6 +35,8 @@ function notifIcon(type: NotificationType): { name: keyof typeof Ionicons.glyphM
     case NotificationType.REWARD_CREDITED:       return { name: 'cash', color: '#22c55e' };
     case NotificationType.WITHDRAWAL_APPROVED:   return { name: 'wallet', color: '#22c55e' };
     case NotificationType.WITHDRAWAL_REJECTED:   return { name: 'wallet', color: '#ef4444' };
+    case NotificationType.REPORT_REPLY:          return { name: 'chatbubbles', color: '#6366f1' };
+    case NotificationType.REPORT_CLOSED:         return { name: 'checkmark-circle', color: '#22c55e' };
     case NotificationType.ACCOUNT_SUSPENDED:     return { name: 'alert-circle', color: '#f59e0b' };
     case NotificationType.ACCOUNT_BANNED:        return { name: 'shield-outline', color: '#ef4444' };
     default:                                     return { name: 'notifications', color: '#6366f1' };
@@ -151,6 +153,8 @@ export function NotificationScreen() {
               initialStatus: item.data.status as string | undefined,
               initialReason: item.data.reason as string | undefined,
             });
+          } else if (item.triggerType === NotificationTriggerType.REPORT && item.data?.reportId) {
+            navigation.navigate('ReportDetail', { reportId: String(item.data.reportId) });
           }
           return;
         }
@@ -171,12 +175,13 @@ export function NotificationScreen() {
           if (item.triggerType === NotificationTriggerType.QUESTION && item.data?.questionId) {
             navigation.navigate('QuestionDetail', { questionId: String(item.data.questionId) });
           } else if (item.triggerType === NotificationTriggerType.WITHDRAW && item.data?.withdrawalId) {
-            // Navigate directly to the transaction detail screen for this withdrawal
             navigation.navigate('TransactionDetail', {
               withdrawalId: String(item.data.withdrawalId),
               initialStatus: item.data.status as string | undefined,
               initialReason: item.data.reason as string | undefined,
             });
+          } else if (item.triggerType === NotificationTriggerType.REPORT && item.data?.reportId) {
+            navigation.navigate('ReportDetail', { reportId: String(item.data.reportId) });
           }
         } catch {}
       }}

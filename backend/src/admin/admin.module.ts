@@ -5,6 +5,8 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AuditController } from './audit.controller';
 import { AuditService } from './audit.service';
+import { CuratorController } from './curator.controller';
+import { CuratorService } from './curator.service';
 import { AnalyticsController, ExportController } from './analytics.controller';
 import {
   User,
@@ -40,8 +42,8 @@ import { PaymentModule } from '../payment/payment.module';
     NotificationsModule,
     PaymentModule,
   ],
-  controllers: [AdminController, AnalyticsController, ExportController, AuditController],
-  providers: [AdminService, AuditService],
+  controllers: [AdminController, AnalyticsController, ExportController, AuditController, CuratorController],
+  providers: [AdminService, AuditService, CuratorService],
   exports: [AdminService],
 })
 export class AdminModule {}

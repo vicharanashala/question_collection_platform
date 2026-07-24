@@ -20,13 +20,13 @@ const { width } = Dimensions.get('window');
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  pending:      { label: 'Pending Review',     color: '#92400e', bg: '#fef3c7', icon: 'time-outline' },
-  ai_review:    { label: 'AI Review',          color: '#1d4ed8', bg: '#dbeafe', icon: 'bulb-outline' },
-  human_review: { label: 'Under Review',       color: '#5b21b6', bg: '#ede9fe', icon: 'eye-outline' },
-  held:         { label: 'On Hold',            color: '#b45309', bg: '#fef3c7', icon: 'pause-circle-outline' },
-  approved:     { label: 'Approved',           color: '#15803d', bg: '#dcfce7', icon: 'checkmark-circle' },
-  rejected:     { label: 'Not Approved',       color: '#b91c1c', bg: '#fee2e2', icon: 'close-circle' },
+const STATUS_CONFIG: Record<string, { color: string; bg: string; icon: keyof typeof Ionicons.glyphMap; statusKey: string }> = {
+  pending:      { color: '#92400e', bg: '#fef3c7', icon: 'time-outline',         statusKey: 'notifications.status.pending' },
+  ai_review:    { color: '#1d4ed8', bg: '#dbeafe', icon: 'bulb-outline',         statusKey: 'notifications.status.ai_review' },
+  human_review: { color: '#5b21b6', bg: '#ede9fe', icon: 'eye-outline',          statusKey: 'notifications.status.human_review' },
+  held:         { color: '#b45309', bg: '#fef3c7', icon: 'pause-circle-outline', statusKey: 'notifications.status.held' },
+  approved:     { color: '#15803d', bg: '#dcfce7', icon: 'checkmark-circle',     statusKey: 'notifications.status.approved' },
+  rejected:     { color: '#b91c1c', bg: '#fee2e2', icon: 'close-circle',         statusKey: 'notifications.status.rejected' },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ export function QuestionDetailScreen() {
         </View>
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={48} color={c.textTertiary} />
-          <Text style={[styles.errorText, { color: c.textSecondary }]}>{error ?? 'Question not found'}</Text>
+          <Text style={[styles.errorText, { color: c.textSecondary }]}>{error ?? t('question.notFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -122,7 +122,7 @@ export function QuestionDetailScreen() {
               color={statusCfg.color}
             />
             <Text style={[styles.statusLabel, { color: statusCfg.color }]}>
-              {statusCfg.label}
+              {t(statusCfg.statusKey)}
             </Text>
           </View>
           <Text style={[styles.submittedAt, { color: c.textTertiary }]}>
@@ -137,13 +137,9 @@ export function QuestionDetailScreen() {
           <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
             {t('notifications.yourQuestion', 'Your Question')}
           </Text>
-          <TranslatableTextReadOnly
-            text={q.questionText}
-            selectedLang={selectedLang}
-            onLangChange={setSelectedLang}
-            sourceLanguage={q.language ?? 'en'}
-            style={styles.questionText}
-          />
+          <Text style={[styles.questionText, { color: c.text }]}>
+            {q.questionText}
+          </Text>
         </View>
 
         {/* Media */}
@@ -156,7 +152,7 @@ export function QuestionDetailScreen() {
             />
             {q.mediaUrls!.length > 1 && (
               <Text style={[styles.mediaCount, { color: c.textSecondary }]}>
-                +{q.mediaUrls!.length - 1} more
+                {t('question.mediaCount', { count: q.mediaUrls!.length - 1 })}
               </Text>
             )}
           </View>
@@ -166,7 +162,7 @@ export function QuestionDetailScreen() {
           <View style={[styles.mediaPlaceholder, { backgroundColor: c.muted }]}>
             <Ionicons name="videocam" size={40} color={c.textTertiary} />
             <Text style={[styles.mediaPlaceholderText, { color: c.textSecondary }]}>
-              Video attached
+              {t('question.videoAttached')}
             </Text>
           </View>
         )}
@@ -175,7 +171,7 @@ export function QuestionDetailScreen() {
           <View style={[styles.mediaPlaceholder, { backgroundColor: c.muted }]}>
             <Ionicons name="mic" size={40} color={c.textTertiary} />
             <Text style={[styles.mediaPlaceholderText, { color: c.textSecondary }]}>
-              Audio attached
+              {t('question.audioAttached')}
             </Text>
           </View>
         )}
@@ -187,13 +183,13 @@ export function QuestionDetailScreen() {
           </Text>
           <View style={styles.metaGrid}>
             {[
-              [t('question.domain') ?? 'Category', (q.domains ?? []).join(', ') || '—'],
-              [t('question.season') ?? 'Season',    q.season],
-              [t('question.cropType') ?? 'Crop',    q.cropType],
-              [t('question.state') ?? 'State',      q.state],
-              [t('question.district') ?? 'District', q.district],
-              q.block ? [t('question.block') ?? 'Block', q.block] : null,
-              [t('question.language') ?? 'Language', q.language],
+              [t('question.domain'), (q.domains ?? []).join(', ') || '—'],
+              [t('question.season'),    q.season],
+              [t('question.cropType'),  q.cropType],
+              [t('question.state'),     q.state],
+              [t('question.district'),  q.district],
+              q.block ? [t('question.block'), q.block] : null,
+              [t('question.language'), q.language],
             ]
               .filter((row): row is [string, string] => row !== null)
               .map(([k, v]) => (
@@ -245,7 +241,7 @@ export function QuestionDetailScreen() {
               </Text>
             </View>
             <Text style={[styles.reasonBody, { color: '#1e40af' }]}>
-              Our team needs more details to process your question. Please update your question or submit a new one with more information.
+              {t('notifications.infoRequestedBody')}
             </Text>
           </View>
         )}
@@ -271,9 +267,11 @@ export function QuestionDetailScreen() {
         {/* Reviewed by */}
         {q.reviewedAt && q.reviewedByName && (
           <Text style={[styles.reviewedBy, { color: c.textTertiary }]}>
-            Reviewed by {q.reviewedByName} on{' '}
-            {new Date(q.reviewedAt).toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'short', year: 'numeric',
+            {t('notifications.reviewedBy', {
+              name: q.reviewedByName,
+              date: new Date(q.reviewedAt).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric',
+              }),
             })}
           </Text>
         )}

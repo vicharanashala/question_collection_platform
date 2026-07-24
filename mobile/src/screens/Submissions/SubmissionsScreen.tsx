@@ -6,7 +6,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import { useToast } from '../../components/Toast';
-import { Trnscber } from '../../components/Trnscber';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import { questionApi, getMediaUrl } from '../../api/client';
@@ -82,20 +81,6 @@ const STATE_OPTIONS = [
   ...INDIAN_STATES.map((s) => ({ value: s, label: s })),
 ];
 
-function isWithinEditWindow(q: Question): boolean {
-  if (!q.editWindowClosesAt) return false;
-  return new Date(q.editWindowClosesAt) > new Date();
-}
-
-function getEditTimeRemaining(q: Question, now: number): string | null {
-  if (!q.editWindowClosesAt) return null;
-  const remainingMs = new Date(q.editWindowClosesAt).getTime() - now;
-  if (remainingMs <= 0) return null;
-  const seconds = Math.floor(remainingMs / 1000);
-  if (seconds < 60) return `${seconds}s left`;
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}m ${seconds % 60}s left`;
-}
 
 // ─── Filter Modal ─────────────────────────────────────────────────────────────
 
@@ -253,11 +238,9 @@ function FilterModal({ visible, filters, onChange, onClose, onReset }: FilterMod
 interface QuestionViewModalProps {
   question: Question | null;
   onClose: () => void;
-  onEdit: (q: Question) => void;
-  now: number;
 }
 
-function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModalProps) {
+function QuestionViewModal({ question, onClose }: QuestionViewModalProps) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { t } = useTranslation();
@@ -265,8 +248,6 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
   if (!question) return null;
 
   const statusMeta = STATUS_META[question.status] ?? STATUS_META.pending;
-  const withinEditWindow = isWithinEditWindow(question);
-  const editTimeRemaining = getEditTimeRemaining(question, now);
   const submittedDate = new Date(question.submittedAt).toLocaleString('en-IN', {
     day: 'numeric', month: 'long', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -320,12 +301,10 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
               </View>
             </View>
 
-            {/* Full question text */}
-            <Trnscber
-              text={question.questionText}
-              sourceLanguage={question.language ?? 'en'}
-              style={[styles.viewQuestionText, { color: c.text }]}
-            />
+            {/* Full question text — always show original, never auto-translate */}
+            <Text style={[styles.viewQuestionText, { color: c.text }]}>
+              {question.questionText}
+            </Text>
 
             {/* Details list */}
             <View style={[styles.detailsCard, { backgroundColor: c.input, borderColor: c.borderSubtle }]}>
@@ -348,20 +327,6 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
               )}
               <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
               <DetailRow icon="time-outline" label="Submitted" value={submittedDate} />
-              {question.editWindowClosesAt && (
-                <>
-                  <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
-                  <DetailRow
-                    icon="timer-outline"
-                    label="Edit window"
-                    value={
-                      withinEditWindow
-                        ? `${editTimeRemaining} remaining`
-                        : `Closed ${new Date(question.editWindowClosesAt!).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
-                    }
-                  />
-                </>
-              )}
             </View>
 
             {/* Image — shown when mediaType is 'image' */}
@@ -403,34 +368,7 @@ function QuestionViewModal({ question, onClose, onEdit, now }: QuestionViewModal
             )}
           </ScrollView>
 
-          {/* Actions */}
-          {question.status === 'pending' && (
-            <View style={[styles.viewModalFooter, { borderTopColor: c.borderSubtle }]}>
-              {editTimeRemaining ? (
-                <View style={styles.editWindowNote}>
-                  <Ionicons name="timer" size={14} color={c.textTertiary} />
-                  <Text style={[styles.editWindowNoteText, { color: c.textTertiary }]}>
-                    {t('submissions.editWindowNote', { time: editTimeRemaining })}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={[styles.editWindowExpired, { color: c.textTertiary }]}>{t('submissions.editWindowExpiredNote')}</Text>
-              )}
-              <TouchableOpacity
-                style={[
-                  styles.viewEditBtn,
-                  { backgroundColor: withinEditWindow ? c.primary : c.textTertiary + '40' },
-                ]}
-                onPress={() => { onClose(); onEdit(question); }}
-                disabled={!withinEditWindow}
-              >
-                <Ionicons name="pencil" size={16} color={withinEditWindow ? '#fff' : c.textTertiary} />
-                <Text style={[styles.viewEditBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>
-                  {t('submissions.editQuestion')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* No actions — edit window has been removed */}
         </SafeAreaView>
       </View>
     </Modal>
@@ -451,7 +389,7 @@ export function SubmissionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [now, setNow] = useState(Date.now());
+
   const [hasMore, setHasMore] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
@@ -507,12 +445,6 @@ export function SubmissionsScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
-  // Live ticker so edit timers count down in real-time
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
   async function handleRefresh() {
     await fetchQuestions(1, true);
   }
@@ -528,14 +460,6 @@ export function SubmissionsScreen() {
     } finally {
       setLoadingMore(false);
     }
-  }
-
-  function handleEdit(question: Question) {
-    if (!isWithinEditWindow(question)) {
-      showToast(t('submissions.editWindowClosed'), 'warning');
-      return;
-    }
-    navigation.navigate('AskQuestion', { questionId: question.id } as never);
   }
 
   function handleFilterChange(f: FilterState) {
@@ -605,9 +529,7 @@ export function SubmissionsScreen() {
 
   function renderItem({ item: q }: { item: Question }) {
     const statusMeta = STATUS_META[q.status] ?? STATUS_META.pending;
-    const withinEditWindow = isWithinEditWindow(q);
     const seasonLabel = SEASON_LABELS[q.season] ?? q.season;
-    const editTimeRemaining = getEditTimeRemaining(q, now);
     const submittedDate = new Date(q.submittedAt).toLocaleString('en-IN', {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
@@ -619,7 +541,26 @@ export function SubmissionsScreen() {
 
     return (
       <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
-        {/* Header row: status badge + edit button (outside Pressable so card tap ≠ edit tap) */}
+        {/* Translate button — absolute top-right corner */}
+        <TouchableOpacity
+          style={[styles.translateBtnAbsolute, { borderColor: c.border }]}
+          onPress={() => openLangPicker(q)}
+        >
+          {transState?.loading ? (
+            <ActivityIndicator size="small" color={c.primary} />
+          ) : (
+            <>
+              <Ionicons name="language-outline" size={12} color={c.primary} />
+              <Text style={[styles.langPickerText, { color: c.primary }]}>
+                {currentLang
+                  ? `${SUPPORTED_LANGUAGES.find((l) => l.code === currentLang)?.nativeName ?? ''}`
+                  : 'Translate'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Header row: status badge + show-original when active */}
         <View style={styles.cardHeader}>
           <Pressable onPress={() => setSelectedQuestion(q)} style={styles.statusBadgePressable}>
             <View style={[styles.statusBadge, { backgroundColor: statusMeta.color + '18' }]}>
@@ -627,23 +568,15 @@ export function SubmissionsScreen() {
               <Text style={[styles.statusBadgeText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
             </View>
           </Pressable>
-          {q.status === 'pending' && (
-            <View style={styles.editRow}>
-              {editTimeRemaining && (
-                <Text style={[styles.editTimer, { color: c.textTertiary }]}>{editTimeRemaining}</Text>
-              )}
-              <TouchableOpacity
-                style={[
-                  styles.editBtn,
-                  { backgroundColor: withinEditWindow ? c.primary : c.textTertiary + '40' },
-                ]}
-                onPress={() => handleEdit(q)}
-                disabled={!withinEditWindow}
-              >
-                <Ionicons name="pencil" size={14} color={withinEditWindow ? '#fff' : c.textTertiary} />
-                <Text style={[styles.editBtnText, { color: withinEditWindow ? '#fff' : c.textTertiary }]}>{t('submissions.editQuestion')}</Text>
-              </TouchableOpacity>
-            </View>
+
+          {currentLang && !transState?.loading && (
+            <TouchableOpacity
+              style={[styles.showOriginalBtn, { borderColor: c.borderSubtle }]}
+              onPress={() => clearTranslation(q.id)}
+            >
+              <Ionicons name="eye-off-outline" size={12} color={c.textTertiary} />
+              <Text style={[styles.showOriginalText, { color: c.textTertiary }]}>Original</Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -653,36 +586,6 @@ export function SubmissionsScreen() {
           <Text style={[styles.questionText, { color: c.text }]} numberOfLines={3}>
             {displayQuestion}
           </Text>
-
-          {/* Translation row: language picker trigger + clear / loading button */}
-          <View style={styles.translationRow}>
-            <TouchableOpacity
-              style={[styles.langPickerBtn, { borderColor: c.border }]}
-              onPress={() => openLangPicker(q)}
-            >
-              {transState?.loading ? (
-                <ActivityIndicator size="small" color={c.primary} />
-              ) : (
-                <>
-                  <Ionicons name="language-outline" size={12} color={c.primary} />
-                  <Text style={[styles.langPickerText, { color: c.primary }]}>
-                    {currentLang
-                      ? `${SUPPORTED_LANGUAGES.find((l) => l.code === currentLang)?.nativeName ?? ''}`
-                      : 'Translate'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-            {currentLang && !transState?.loading && (
-              <TouchableOpacity
-                style={[styles.showOriginalBtn, { borderColor: c.borderSubtle }]}
-                onPress={() => clearTranslation(q.id)}
-              >
-                <Ionicons name="eye-off-outline" size={12} color={c.textTertiary} />
-                <Text style={[styles.showOriginalText, { color: c.textTertiary }]}>Original</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
           {/* Meta row */}
           <View style={styles.metaRow}>
@@ -815,8 +718,6 @@ export function SubmissionsScreen() {
       <QuestionViewModal
         question={selectedQuestion}
         onClose={() => setSelectedQuestion(null)}
-        onEdit={handleEdit}
-        now={now}
       />
 
       {/* Language picker modal for card translations */}
@@ -901,12 +802,19 @@ const styles = StyleSheet.create({
   cardBody: { gap: 0 },
   statusBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusFull, paddingHorizontal: tokens.spacing2, paddingVertical: 3, gap: 4 },
   statusBadgeText: { fontSize: 12, fontWeight: '600' },
-  editRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
-  editTimer: { fontSize: 11, fontWeight: '500' },
-  editBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusMd, paddingHorizontal: tokens.spacing3, paddingVertical: 5, gap: 4 },
-  editBtnText: { fontSize: 12, fontWeight: '600' },
   questionText: { fontSize: 14, lineHeight: 20, fontWeight: '500', marginBottom: tokens.spacing2 },
   translationRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing3 },
+  translateBtnAbsolute: {
+    position: 'absolute',
+    top: tokens.spacing3,
+    right: tokens.spacing3,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderWidth: 1,
+    borderRadius: tokens.radius,
+    paddingHorizontal: tokens.spacing2 + 2,
+    paddingVertical: tokens.spacing1 + 1,
+    zIndex: 1,
+  },
   langPickerBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     borderWidth: 1, borderRadius: tokens.radius,
@@ -972,15 +880,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing6, paddingVertical: tokens.spacing4,
     borderTopWidth: 1, gap: tokens.spacing3,
   },
-  editWindowNote: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  editWindowNoteText: { fontSize: 12 },
-  editWindowExpired: { fontSize: 12, fontStyle: 'italic' },
-  viewEditBtn: {
-    flexDirection: 'row', alignItems: 'center', borderRadius: tokens.radiusMd,
-    paddingHorizontal: tokens.spacing5, paddingVertical: tokens.spacing3, gap: 6,
-  },
-  viewEditBtnText: { fontSize: 14, fontWeight: '700' },
-
   // Filter modal
   filterOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   filterModal: { borderTopLeftRadius: tokens.radiusXl, borderTopRightRadius: tokens.radiusXl, maxHeight: '85%' },

@@ -17,6 +17,14 @@ export const redisConfig = registerAs('redis', () => ({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || undefined,
+  db: parseInt(process.env.REDIS_DB || '0', 10),
+  tls: process.env.REDIS_TLS === 'true',
+  // Rate limits — set via env vars for each environment
+  rateLimitOtpPerMin: parseInt(process.env.RATE_LIMIT_OTP_PER_MIN || '3', 10),
+  rateLimitSubmissionPerMin: parseInt(process.env.RATE_LIMIT_SUBMISSION_PER_MIN || '10', 10),
+  rateLimitLoginPerMin: parseInt(process.env.RATE_LIMIT_LOGIN_PER_MIN || '5', 10),
+  rateLimitAdminPerMin: parseInt(process.env.RATE_LIMIT_ADMIN_PER_MIN || '100', 10),
+  rateLimitPublicPerMin: parseInt(process.env.RATE_LIMIT_PUBLIC_PER_MIN || '60', 10),
 }));
 
 export const smsConfig = registerAs('sms', () => ({
@@ -38,7 +46,7 @@ export const appConfig = registerAs('app', () => ({
 
 export const questionConfig = registerAs('question', () => ({
   dailyLimit: parseInt(process.env.QUESTION_DAILY_LIMIT || '20', 10),
-  editWindowSec: parseInt(process.env.QUESTION_EDIT_WINDOW_SEC || '30', 10),
+
   videoMaxSizeMb: parseInt(process.env.QUESTION_VIDEO_MAX_SIZE_MB || '10', 10),
   videoMaxDurationSec: parseInt(process.env.QUESTION_VIDEO_MAX_DURATION_SEC || '10', 10),
   maxImageSizeMb: parseInt(process.env.QUESTION_IMAGE_MAX_SIZE_MB || '5', 10),
@@ -68,5 +76,5 @@ export const gdbConfig = registerAs('gdb', () => ({
 }));
 
 export const embedConfig = registerAs('embed', () => ({
-  baseUrl: process.env.EMBED_BASE_URL || 'http://100.100.108.44:6001',
+  baseUrl: `${required('VM_SERVER_URL')}:${required('EMBED_PORT')}`,
 }));

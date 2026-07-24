@@ -49,3 +49,8 @@ export function canAccessAtLeast(user: AuthUser | null | undefined, minRole: Rol
 export function isFinance(user: AuthUser | null | undefined): boolean {
   return user?.role === 'finance'
 }
+
+/** Returns true if currentUser is curator role specifically */
+export function isCurator(user: AuthUser | null | undefined): boolean {
+  return user?.role === 'curator'
+}

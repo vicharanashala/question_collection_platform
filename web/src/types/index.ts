@@ -9,6 +9,7 @@ export interface User {
   id: string;
   mobileNumber: string;
   name: string;
+  username: string | null;
   role: UserRole;
   category: UserCategory | null;
   state: string;
@@ -162,6 +163,7 @@ export interface AdminStats {
   roleDistribution: { role: UserRole; count: number }[];
   categoryDistribution: { category: UserCategory; count: number }[];
   historical?: DailyStat[];
+  avgReviewTurnaroundMinutes: number | null;
 }
 
 export interface ActivityLogEntry {
@@ -450,4 +452,103 @@ export interface AuditUserSummary {
 
 export interface AuditUsersByRoleResponse {
   users: AuditUserSummary[]
+}
+
+// ─── Curator Dashboard ─────────────────────────────────────────────────────────
+
+export interface QueueStatusCount {
+  status: QuestionStatus
+  label: string
+  count: number
+}
+
+export interface CuratorStats {
+  queue: {
+    total: number
+    breakdown: QueueStatusCount[]
+  }
+  volume: {
+    today: number
+    thisWeek: number
+    thisMonth: number
+    last30Days: number
+  }
+  performance: {
+    approved30Days: number
+    rejected30Days: number
+    approvalRate: number
+    priorApprovalRate: number
+    approvalRateChange: number
+    avgReviewTurnaroundMinutes: number | null
+  }
+  growth: {
+    last30Days: number
+    prior30Days: number
+    growthRate: number
+  }
+  dailyVolume: Array<{
+    date: string
+    submitted: number
+    approved: number
+    rejected: number
+    held: number
+  }>
+  cropBreakdown: Array<{ cropType: string; count: number }>
+  stateBreakdown: Array<{ state: string; count: number }>
+  domainBreakdown: Array<{ domain: string; count: number }>
+}
+
+export interface CuratorReviewerStats {
+  week: {
+    from: string
+    to: string
+    approved: number
+    rejected: number
+    held: number
+    total: number
+    approvalRate: number
+    pending: number
+  }
+}
+
+export type ReportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type ReportCategory = 'bug' | 'payout_issue' | 'question_issue' | 'abuse' | 'feature_request' | 'other';
+export type ReportPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface Report {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  category: ReportCategory;
+  status: ReportStatus;
+  priority: ReportPriority;
+  relatedEntityId: string | null;
+  relatedEntityType: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: Pick<User, 'id' | 'name' | 'mobileNumber'>;
+  replies?: ReportReply[];
+}
+
+export interface ReportReply {
+  id: string;
+  reportId: string;
+  adminId: string;
+  message: string;
+  createdAt: string;
+  admin?: Pick<User, 'id' | 'name'>;
+}
+
+export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  isVisible: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }

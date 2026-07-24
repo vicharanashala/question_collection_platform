@@ -473,6 +473,7 @@ export function UserDetailPage() {
               <div className="flex items-start justify-between flex-wrap gap-3">
                 <div>
                   <h2 className="text-xl font-extrabold text-foreground">{user.name || 'Unnamed User'}</h2>
+                  {user.username && <p className="text-sm text-text-tertiary mt-0.5">@{user.username}</p>}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <VerificationBadge status={user.verificationStatus} />
                     <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
@@ -1097,6 +1098,7 @@ export function UserDetailPage() {
                 <div className="rounded-lg border border-border">
                   {[
                     { label: 'Name', value: user.name || '—' },
+                    ...(user.username ? [{ label: 'Username', value: '@' + user.username }] : []),
                     { label: 'Mobile', value: user.mobileNumber },
                     { label: 'Category', value: user.category || '—' },
                     { label: 'Language', value: user.languagePreference },

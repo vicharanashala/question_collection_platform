@@ -210,7 +210,7 @@ export function AdminUserDetailScreen() {
   }
 
   const { questions } = data;
-  const userName = String(user.name || user.mobileNumber || 'Unknown');
+  const userName = String(user.name || user.username || user.mobileNumber || 'Unknown');
   const initials = getInitials(String(user.name ?? ''), String(user.mobileNumber ?? ''));
 
   // Avatar background color from name hash
@@ -259,6 +259,12 @@ export function AdminUserDetailScreen() {
               <Ionicons name="call-outline" size={13} color={c.textTertiary} />
               <Text style={[styles.heroDetail, { color: c.textSecondary }]}>{String(user.mobileNumber)}</Text>
             </View>
+            {!!user.username && (
+              <View style={styles.heroDetailRow}>
+                <Ionicons name="at-outline" size={13} color={c.textTertiary} />
+                <Text style={[styles.heroDetail, { color: c.textSecondary }]}>@{String(user.username)}</Text>
+              </View>
+            )}
             {(!!user.district || !!user.state) && (
               <View style={styles.heroDetailRow}>
                 <Ionicons name="location-outline" size={13} color={c.textTertiary} />
@@ -527,7 +533,7 @@ export function AdminUserDetailScreen() {
                     {user.organizationName && (
                       <View style={styles.verifyInfoItem}>
                         <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Org Name</Text>
-                        <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organizationName)}</Text>
+                        <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organizationName ?? '')}</Text>
                       </View>
                     )}
                   </View>

@@ -2,6 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { accountLockedEmitter } from '../events/accountLockedEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import type { Faq } from '../types';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 //
@@ -19,10 +20,11 @@ import { Platform } from 'react-native';
 const isProduction = process.env.EXPO_PUBLIC_ENV === 'production';
 
 const BASE_URL = isProduction
-  ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api/v1')
-  : (Platform.OS === 'android'
-      ? 'http://10.0.2.2:3000/api/v1'
-      : 'http://localhost:3000/api/v1');
+  ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1")
+  : Platform.OS === "android"
+    ? "https://epiphany-query-same.ngrok-free.dev/api/v1"
+    : // ? 'http://10.0.2.2:3000/api/v1'
+      "http://localhost:3000/api/v1";
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -47,7 +49,7 @@ export function getMediaUrl(relativePath: string | null | undefined): string {
     return relativePath; // already absolute (e.g. GCP bucket URL, or local file URI)
   }
   // Strip /api/v1 (or any /api/{version}) suffix from BASE_URL, then append the path
-  const base = BASE_URL.replace(/\/api\/v\d+\/.*$/, '');
+  const base = BASE_URL.replace(/\/api\/v\d+($|\/).*/, '');
   return `${base}${relativePath}`;
 }
 
@@ -278,6 +280,30 @@ export const storageApi = {
    * Usage:
    *   const { url } = await storageApi.uploadImage(uri, 'photo.jpg');
    */
+  /**
+   * Upload an audio recording to backend storage (GCP Nearline in production).
+   * Returns the permanent CDN URL.
+   *
+   * Usage:
+   *   const { url } = await storageApi.uploadAudio(uri, 'recording.m4a');
+   */
+  uploadAudio: (
+    uri: string,
+    filename: string,
+  ): Promise<{ url: string; sizeBytes: number }> => {
+    const formData = new (globalThis.FormData)();
+    formData.append('file', {
+      uri,
+      name: filename,
+      type: 'audio/aac',
+    } as unknown as string);
+    return uploadApi
+      .post<{ url: string; sizeBytes: number }>('/storage/upload/audio', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res) => res.data);
+  },
+
   uploadImage: (
     uri: string,
     filename: string,
@@ -312,6 +338,12 @@ export const authApi = {
     api.post('/auth/refresh', { refreshToken }),
 
   me: () => api.get('/auth/me'),
+
+  checkUsername: (username: string) =>
+    api.get('/auth/check-username', { params: { username } }),
+
+  suggestUsernames: (base: string, limit = 5) =>
+    api.get('/auth/suggest-usernames', { params: { base, limit } }),
 };
 
 export const userApi = {
@@ -543,5 +575,90 @@ export const lgdApi = {
       params: { blockCode },
     }),
 };
+
+// ─── Reports API ─────────────────────────────────────────────────────────────────
+
+export interface Report {
+  id: string
+  userId: string
+  title: string
+  description: string
+  category: 'bug' | 'payout_issue' | 'question_issue' | 'abuse' | 'feature_request' | 'other'
+  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  relatedEntityId: string | null
+  relatedEntityType: string | null
+  createdAt: string
+  updatedAt: string
+  user?: { id: string; name: string; mobileNumber: string }
+  replies?: Array<{
+    id: string
+    reportId: string
+    adminId: string
+    message: string
+    createdAt: string
+    admin?: { id: string; name: string }
+  }>
+}
+
+export interface PaginatedReports {
+  items: Report[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export const reportsApi = {
+  /** Submit a new report */
+  create: (body: {
+    title: string
+    description: string
+    category: string
+    relatedEntityId?: string
+    relatedEntityType?: string
+  }) =>
+    api.post<{ id: string; message: string }>('/reports', body),
+
+  /** Get the current user's own reports */
+  getMyReports: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedReports>('/reports/my', { params }),
+
+  /** Get a single report with replies (admin) */
+  get: (reportId: string) =>
+    api.get<Report>(`/reports/${reportId}`),
+
+  /** Get current user's own single report with replies */
+  getMyReport: (reportId: string) =>
+    api.get<Report>(`/reports/my/${reportId}`),
+}
+
+// ─── FAQ API ────────────────────────────────────────────────────────────────────
+
+export const faqApi = {
+  /** User-facing: visible FAQs only, optionally filtered */
+  getVisible: (filters?: { search?: string; category?: string }) => {
+    const params: Record<string, string> = {};
+    if (filters?.search) params.search = filters.search;
+    if (filters?.category) params.category = filters.category;
+    return api.get<Faq[]>('/faqs', { params, requiresAuth: false } as any);
+  },
+
+  /** Admin: all FAQs including hidden */
+  getAll: () =>
+    api.get<Faq[]>('/admin/faqs'),
+
+  create: (body: { question: string; answer: string; category?: string; isVisible?: boolean }) =>
+    api.post<Faq>('/admin/faqs', body),
+
+  update: (id: string, body: { question?: string; answer?: string; category?: string; isVisible?: boolean }) =>
+    api.patch<Faq>(`/admin/faqs/${id}`, body),
+
+  toggleVisibility: (id: string, isVisible: boolean) =>
+    api.patch<Faq>(`/admin/faqs/${id}/visibility`, { isVisible }),
+
+  remove: (id: string) =>
+    api.delete<void>(`/admin/faqs/${id}`),
+}
 
 export default api;

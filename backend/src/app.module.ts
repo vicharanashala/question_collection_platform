@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
 import {
   databaseConfig,
@@ -30,6 +30,9 @@ import {
   AdminConfig,
   Notification,
   UserPaymentDetail,
+  Report,
+  ReportReply,
+  Faq,
 } from './database/entities';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -42,8 +45,14 @@ import { LgdModule } from './lgd/lgd.module';
 import { PaymentModule } from './payment/payment.module';
 import { StorageModule } from './storage/storage.module';
 import { AiModule } from './ai/ai.module';
+import { ReportsModule } from './reports/reports.module';
+import { FaqsModule } from './faqs/faqs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
+import { CacheModule } from './cache/cache.module';
+import { CacheInterceptor } from './cache/interceptors/cache.interceptor';
+import { CacheInvalidationInterceptor } from './cache/interceptors/cache-invalidation.interceptor';
+import { EndpointLoggerModule } from './common/endpoint-logger/endpoint-logger.module';
 
 @Module({
   imports: [
@@ -93,6 +102,9 @@ import { HealthController } from './health/health.controller';
           AdminConfig,
           Notification,
           UserPaymentDetail,
+          Report,
+          ReportReply,
+          Faq,
         ],
         migrations: [],
         synchronize: process.env.NODE_ENV !== 'production',
@@ -101,6 +113,8 @@ import { HealthController } from './health/health.controller';
     }),
 
     // Feature modules
+    EndpointLoggerModule,
+    CacheModule,
     AuthModule,
     UserModule,
     QuestionModule,
@@ -112,6 +126,8 @@ import { HealthController } from './health/health.controller';
     PaymentModule,
     StorageModule,
     AiModule,
+    ReportsModule,
+    FaqsModule,
   ],
   controllers: [HealthController],
   providers: [
@@ -129,6 +145,9 @@ import { HealthController } from './health/health.controller';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    // Global cache interceptors
+    { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: CacheInvalidationInterceptor },
   ],
 })
 export class AppModule {}

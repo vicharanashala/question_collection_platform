@@ -50,9 +50,9 @@ export class LgdController {
         const records = await this.lgdService.getVillages(blockCode);
         return {
             villages: records.map((r) => ({
-                code: String(r['village_code'] ?? '').trim(),
-                name: String(r['village_name_english'] ?? '').trim(),
-                blockCode: String(r['subdistrict_code'] ?? '').trim(),
+                code: String(r['villageCode'] ?? '').trim(),
+                name: String(r['villageNameEnglish'] ?? '').trim(),
+                blockCode: String(r['subdistrictCode'] ?? '').trim(),
             })),
         };
     }

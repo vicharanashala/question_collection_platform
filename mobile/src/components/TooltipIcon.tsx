@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -20,6 +21,7 @@ interface TooltipIconProps {
 
 export function TooltipIcon({ description, color, size = 15 }: TooltipIconProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const c = theme.colors;
   const [visible, setVisible] = useState(false);
 
@@ -41,7 +43,7 @@ export function TooltipIcon({ description, color, size = 15 }: TooltipIconProps)
               <View style={[styles.tooltip, { backgroundColor: c.surface, ...tokens.shadowLg }]}>
                 <View style={[styles.tooltipHeader, { borderBottomColor: c.borderSubtle }]}>
                   <Ionicons name="information-circle" size={18} color={c.primary} />
-                  <Text style={[styles.tooltipTitle, { color: c.text }]}>Info</Text>
+                  <Text style={[styles.tooltipTitle, { color: c.text }]}>{t('tooltip.info')}</Text>
                   <TouchableOpacity onPress={() => setVisible(false)} style={styles.closeBtn} hitSlop={8}>
                     <Ionicons name="close" size={16} color={c.textTertiary} />
                   </TouchableOpacity>
@@ -51,7 +53,7 @@ export function TooltipIcon({ description, color, size = 15 }: TooltipIconProps)
                   style={[styles.gotItBtn, { backgroundColor: c.primary }]}
                   onPress={() => setVisible(false)}
                 >
-                  <Text style={[styles.gotItBtnText, { color: c.primaryForeground }]}>Got it</Text>
+                  <Text style={[styles.gotItBtnText, { color: c.primaryForeground }]}>{t('tooltip.gotIt')}</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

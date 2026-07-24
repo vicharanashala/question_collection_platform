@@ -14,7 +14,7 @@ import {
   Clock, User, Eye,
   MapPin, Wheat, CloudRain, Globe, Film,
   Hash, AlertTriangle, PauseCircle, CheckCircle,
-  XCircle, ListFilter, Search, Info,
+  XCircle, ListFilter, Search, Info, Mic,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
@@ -352,16 +352,24 @@ export function QuestionsPage() {
                 {detailQuestion.approvalReason && <div className="col-span-2 mt-1"><InfoRow icon={CheckCircle} label="Approval Reason" value={detailQuestion.approvalReason} /></div>}
                 {detailQuestion.heldReason && <div className="col-span-2 mt-1"><InfoRow icon={PauseCircle} label="Hold Reason" value={detailQuestion.heldReason} /></div>}
               </div>
-              {detailQuestion.mediaUrls && detailQuestion.mediaUrls.length > 0 && (
+              {detailQuestion.mediaUrls && detailQuestion.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 mb-2 text-sm text-muted-foreground"><Film className="h-4 w-4" />Media ({detailQuestion.mediaUrls.length})</div>
+                  <div className="flex items-center gap-1.5 mb-2 text-sm text-muted-foreground"><Film className="h-4 w-4" />Images</div>
                   <div className="grid grid-cols-3 gap-2">
-                    {detailQuestion.mediaUrls.map((url, i) => (
+                    {detailQuestion.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).map((url, i) => (
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                        <img src={url} alt={`media-${i}`} className="rounded-md border w-full h-24 object-cover hover:opacity-80 transition-opacity" />
+                        <img src={url} alt={`img-${i}`} className="rounded-md border w-full h-24 object-cover hover:opacity-80 transition-opacity" />
                       </a>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {detailQuestion.mediaUrls && detailQuestion.mediaUrls.filter(u => u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                    <Mic className="h-3 w-3" />Audio uploaded successfully
+                  </span>
                 </div>
               )}
             </div>

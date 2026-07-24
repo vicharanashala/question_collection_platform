@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import i18n from '../i18n';
 
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
@@ -44,6 +45,10 @@ import { QuestionPreviewScreen } from '../screens/Question/QuestionPreviewScreen
 import { QuestionDetailScreen } from '../screens/Question/QuestionDetailScreen';
 import { TransactionDetailScreen } from '../screens/Transaction/TransactionDetailScreen';
 import { LeaderboardScreen } from '../screens/Leaderboard/LeaderboardScreen';
+import { ReportScreen } from '../screens/Report/ReportScreen';
+import { ReportDetailScreen } from '../screens/Report/ReportDetailScreen';
+import { FaqsListScreen } from '../screens/Faqs/FaqsListScreen';
+import { SpeechToTextScreen } from '../screens/Speech/SpeechToTextScreen';
 
 // Admin screens
 import { AdminDashboardScreen } from '../screens/Admin/AdminDashboardScreen';
@@ -57,6 +62,7 @@ import { AdminConfigScreen } from '../screens/Admin/AdminConfigScreen';
 import { AdminWithdrawalsScreen } from '../screens/Admin/AdminWithdrawalsScreen';
 import { AdminProfileScreen } from '../screens/Admin/AdminProfileScreen';
 import { AdminAuditLogsScreen } from '../screens/Admin/AdminAuditLogsScreen';
+import { AdminFaqsScreen } from '../screens/Admin/AdminFaqsScreen';
 import { AdminUsersScreen as FinanceUsersScreen } from '../screens/Admin/AdminUsersScreen';
 import { FinanceDashboardScreen } from '../screens/Admin/FinanceDashboardScreen';
 import { FinanceWalletsScreen } from '../screens/Admin/FinanceWalletsScreen';
@@ -79,6 +85,8 @@ interface TabIconProps {
 function TabIcon({ icon, label, focused }: TabIconProps) {
   const { theme } = useTheme();
   const c = theme.colors;
+  // i18n.t() is synchronous and stable — safe to call directly in static UI components
+  const $t = (k: string) => i18n.t(k);
   return (
     <View style={tabStyles.container}>
       <Ionicons
@@ -93,7 +101,7 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
           focused && tabStyles.labelActive,
         ]}
       >
-        {label}
+        {$t(label)}
       </Text>
     </View>
   );
@@ -201,6 +209,11 @@ function AdminNavigator() {
       <AdminStackNav.Screen
         name="AdminAuditLogs"
         component={AdminAuditLogsScreen}
+        options={{ headerShown: false }}
+      />
+      <AdminStackNav.Screen
+        name="AdminFaqs"
+        component={AdminFaqsScreen}
         options={{ headerShown: false }}
       />
     </AdminStackNav.Navigator>
@@ -371,19 +384,20 @@ function MainNavigator() {
         tabBarShowLabel: false,
       }}
     >
+      {/* ── Bottom Tab Navigator ── */}
       <MainTab.Screen
         name="HomeTab"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="Home" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="home" label="nav.home" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Submissions"
         component={SubmissionsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="Submissions" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="list" label="nav.submissions" focused={focused} /> }}
       />
       <MainTab.Screen
         name="AskQuestion"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="Submit" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="create" label="nav.submit" focused={focused} /> }}
       >
         {() => {
           const route = useRoute<RouteProp<MainTabParamList, 'AskQuestion'>>();
@@ -393,12 +407,12 @@ function MainNavigator() {
       <MainTab.Screen
         name="Wallet"
         component={WalletScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="wallet" label="Wallet" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="wallet" label="nav.wallet" focused={focused} /> }}
       />
       <MainTab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="person" label="Profile" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="person" label="nav.profile" focused={focused} /> }}
       />
     </MainTab.Navigator>
     </>
@@ -466,7 +480,22 @@ function PendingNavigator() {
 
 // ─── Root Navigator ───────────────────────────────────────────────────────────
 
-export function AppNavigator() {
+/** Keeps Android status bar text/icon colour in sync with the app's resolved theme. */
+function StatusBarManager() {
+  const { isDark } = useTheme();
+  return (
+    <StatusBar
+      backgroundColor="#0D9488"
+      barStyle={isDark ? 'light-content' : 'dark-content'}
+    />
+  );
+}
+
+interface AppNavigatorProps {
+  navigationRef?: NavigationContainerRef<RootStackParamList> | null;
+}
+
+export function AppNavigator({ navigationRef }: AppNavigatorProps) {
   const { theme, isDark } = useTheme();
   const { user, isLoading, isReady } = useAuth();
 
@@ -498,7 +527,8 @@ export function AppNavigator() {
   const activeAdminNav = isFinance(user?.role) ? FinanceNavigator : AdminNavigator;
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef as unknown as React.Ref<NavigationContainerRef<RootStackParamList>>} theme={navTheme}>
+      <StatusBarManager />
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
@@ -548,6 +578,36 @@ export function AppNavigator() {
                 <RootStack.Screen
                   name="Leaderboard"
                   component={LeaderboardScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="ReportScreen"
+                  component={ReportScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="ReportDetail"
+                  component={ReportDetailScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="TermsOfService"
+                  component={TermsOfServiceScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="PrivacyPolicy"
+                  component={PrivacyPolicyScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="FaqsList"
+                  component={FaqsListScreen}
+                  options={{ presentation: 'modal' }}
+                />
+                <RootStack.Screen
+                  name="SpeechToText"
+                  component={SpeechToTextScreen}
                   options={{ presentation: 'modal' }}
                 />
               </>

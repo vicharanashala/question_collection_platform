@@ -14,6 +14,7 @@ import { Wallet } from './wallet.entity';
 import { Question } from './question.entity';
 import { WithdrawalRequest } from './withdrawal-request.entity';
 import { Notification } from './notification.entity';
+import { Report } from './report.entity';
 
 @Entity('users')
 export class User {
@@ -23,6 +24,10 @@ export class User {
   @Column({ name: 'mobile_number', type: 'varchar', length: 15, unique: true })
   @Index('idx_users_mobile')
   mobileNumber: string;
+
+  @Column({ name: 'username', type: 'varchar', length: 50, unique: true, nullable: true })
+  @Index('idx_users_username')
+  username: string | null;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -191,4 +196,7 @@ export class User {
 
   @OneToMany(() => Notification, (n) => n.user)
   notifications: Notification[];
+
+  @OneToMany(() => Report, (r) => r.user)
+  reports: Report[];
 }

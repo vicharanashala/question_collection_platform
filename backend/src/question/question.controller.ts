@@ -21,6 +21,8 @@ import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
+import { CacheInvalidate } from '../cache/decorators/cache-invalidate.decorator';
+import { Cacheable } from '../cache/decorators/cacheable.decorator';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -34,6 +36,7 @@ export class QuestionController {
   // POST /questions — Submit a new question
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @CacheInvalidate('questions:u*')
   async submit(
     @Body() dto: SubmitQuestionDto,
     @Req() req: AuthenticatedRequest,
@@ -53,6 +56,7 @@ export class QuestionController {
 
   // GET /questions — List questions (own or all for admin)
   @Get()
+  @Cacheable('questions', 120)
   async list(
     @Query() dto: ListQuestionsDto,
     @Req() req: AuthenticatedRequest,
@@ -62,6 +66,7 @@ export class QuestionController {
 
   // GET /questions/:id — Get single question
   @Get(':id')
+  @Cacheable('question', 300)
   async getOne(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Req() req: AuthenticatedRequest,
@@ -71,6 +76,7 @@ export class QuestionController {
 
   // PATCH /questions/:id — Update question (edit window only)
   @Patch(':id')
+  @CacheInvalidate('hot:today:*', 'hot:total_approved')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateQuestionDto,
@@ -81,15 +87,18 @@ export class QuestionController {
 
   // GET /questions/stats/me — Daily submission count for current user
   @Get('stats/me')
+  @Cacheable('question_stats', 60)
   async getMyStats(@Req() req: AuthenticatedRequest) {
-    const [dailyCount, limits] = await Promise.all([
+    const [dailyCount, limits, totalApproved] = await Promise.all([
       this.questionService.getDailyCount(req.user.id),
       this.questionService.getLimits(),
+      this.questionService.getApprovedCount(req.user.id),
     ]);
 
     return {
       dailyCount,
       remainingToday: Math.max(0, limits.dailyLimit - dailyCount),
+      totalApproved,
       ...limits,
     };
   }
@@ -99,6 +108,7 @@ export class QuestionController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('leaderboard:top_users', 'hot:*', 'analytics:*', 'query:review_queue*')
   async approve(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body('reason') reason: string | undefined,
@@ -111,6 +121,7 @@ export class QuestionController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('hot:*', 'analytics:*')
   async reject(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body('reason') reason: string,

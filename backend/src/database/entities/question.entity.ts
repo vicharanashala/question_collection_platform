@@ -75,9 +75,6 @@ export class Question {
   @Index('idx_questions_duplicate_of')
   duplicateOfId: string | null;
 
-  @Column({ name: 'edit_window_closes_at', type: 'timestamp', nullable: true })
-  editWindowClosesAt: Date | null;
-
   @Column({ name: 'submitted_at', type: 'timestamp' })
   @Index('idx_questions_submitted_at')
   submittedAt: Date;

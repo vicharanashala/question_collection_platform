@@ -59,7 +59,6 @@ describe('QuestionController', () => {
       const mockResponse = {
         id: 'q-1',
         status: QuestionStatus.PENDING,
-        editWindowClosesAt: new Date(Date.now() + 30_000).toISOString(),
         message: 'Question submitted successfully',
       };
       service.submit.mockResolvedValue(mockResponse);
@@ -135,7 +134,6 @@ describe('QuestionController', () => {
       service.getDailyCount.mockResolvedValue(5);
       service.getLimits.mockResolvedValue({
         dailyLimit: 20,
-        editWindowSec: 30,
         videoMaxSizeMb: 10,
         videoMaxDurationSec: 10,
       });

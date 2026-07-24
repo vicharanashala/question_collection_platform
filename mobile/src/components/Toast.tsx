@@ -2,9 +2,9 @@ import React, {
   createContext,
   useContext,
   useState,
-  useCallback,
   useRef,
   useEffect,
+  useMemo,
 } from 'react';
 import {
   View,
@@ -40,16 +40,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  function showToast(message: string, type: ToastType = 'info') {
-    const id = `${Date.now()}-${Math.random()}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
-
-    // Auto-dismiss after 3.5 seconds
-    timers.current[id] = setTimeout(() => {
-      dismissToast(id);
-    }, 3500);
-  }
-
   function dismissToast(id: string) {
     if (timers.current[id]) {
       clearTimeout(timers.current[id]);
@@ -58,8 +48,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
 
+  function showToast(message: string, type: ToastType = 'info') {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    timers.current[id] = setTimeout(() => dismissToast(id), 3500);
+  }
+
+  const contextValue = useMemo(() => ({ showToast }), []);
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>

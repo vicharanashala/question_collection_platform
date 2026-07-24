@@ -87,10 +87,10 @@ export function TransactionDetailScreen() {
         <View style={styles.emptyWrap}>
           <Ionicons name="alert-circle-outline" size={56} color={c.textTertiary} />
           <Text style={[styles.emptyTitle, { color: c.text }]}>
-            Transaction not found
+            {t('wallet.txNotFound')}
           </Text>
           <Text style={[styles.emptySub, { color: c.textSecondary }]}>
-            The transaction may have been removed or is no longer available.
+            {t('wallet.notFoundSub')}
           </Text>
         </View>
       ) : (
@@ -116,7 +116,7 @@ export function TransactionDetailScreen() {
                 { color: displayTx.type === 'credit' ? c.success : c.error },
               ]}
             >
-              {displayTx.type === 'credit' ? 'Credit' : 'Debit'}
+              {displayTx.type === 'credit' ? t('wallet.credit') : t('wallet.debit')}
             </Text>
             <Text
               style={[
@@ -201,7 +201,7 @@ export function TransactionDetailScreen() {
                 ]}
               >
                 <Text style={[styles.rejectionLabel, { color: c.error }]}>
-                  {t('wallet.rejectionReason', 'Rejection Reason')}
+                  {t('wallet.rejectionReason')}
                 </Text>
                 <Text style={[styles.rejectionValue, { color: c.error }]} selectable>
                   {displayTx.rejectionReason ?? initialReason}
@@ -219,7 +219,7 @@ export function TransactionDetailScreen() {
             {/* Withdrawal reference ID */}
             {displayTx.referenceId && (
               <MetaRow
-                label={t('wallet.withdrawalRef', 'Withdrawal ID')}
+                label={t('wallet.withdrawalRef')}
                 value={displayTx.referenceId}
                 c={c}
                 mono
@@ -230,7 +230,7 @@ export function TransactionDetailScreen() {
               <View style={[styles.utrSection, { borderColor: c.success + '30', backgroundColor: c.success + '08' }]}>
                 {displayTx.utrNumber && (
                   <MetaRow
-                    label={t('wallet.utrNumber', 'UTR Number')}
+                    label={t('wallet.utrNumber')}
                     value={displayTx.utrNumber}
                     c={c}
                     mono
@@ -238,7 +238,7 @@ export function TransactionDetailScreen() {
                 )}
                 {displayTx.razorpayPayoutId && (
                   <MetaRow
-                    label={t('wallet.razorpayPayoutId', 'Razorpay Payout ID')}
+                    label={t('wallet.razorpayPayoutId')}
                     value={displayTx.razorpayPayoutId}
                     c={c}
                     mono

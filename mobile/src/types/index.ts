@@ -56,6 +56,7 @@ export interface PublicUser {
   id: string;
   mobileNumber: string;
   name: string;
+  username: string | null;
   category: UserCategory;
   state: string;
   district: string;
@@ -221,6 +222,8 @@ export enum NotificationType {
   REWARD_CREDITED = 'reward_credited',
   WITHDRAWAL_APPROVED = 'withdrawal_approved',
   WITHDRAWAL_REJECTED = 'withdrawal_rejected',
+  REPORT_REPLY = 'report_reply',
+  REPORT_CLOSED = 'report_closed',
   ACCOUNT_SUSPENDED = 'account_suspended',
   ACCOUNT_BANNED = 'account_banned',
 }
@@ -228,13 +231,14 @@ export enum NotificationType {
 export enum NotificationTriggerType {
   QUESTION = 'question',
   WITHDRAW = 'withdraw',
+  REPORT = 'report',
 }
 
 export interface AppNotification {
   id: string;
   userId: string;
   notificationType: NotificationType;
-  /** 'question' | 'withdraw' — which feature area triggered this notification */
+  /** 'question' | 'withdraw' | 'report' — which feature area triggered this notification */
   triggerType: NotificationTriggerType;
   title: string;
   body: string;
@@ -403,4 +407,19 @@ export interface LeaderboardResponse {
   entries: LeaderboardEntry[];
   userRank: number | null;
   total: number;
+}
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+
+export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  isVisible: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }

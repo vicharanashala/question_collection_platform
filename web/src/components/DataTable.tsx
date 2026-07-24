@@ -383,9 +383,9 @@ export function DataTable<T>({
             )}
           </div>
         ) : (
-          <>
+          <div className="overflow-x-auto">
             {/* Header row */}
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/60 border-b border-border-subtle overflow-x-auto">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/60 border-b border-border-subtle">
               {columns.map((col) => (
                 <div
                   key={col.key}
@@ -429,7 +429,7 @@ export function DataTable<T>({
                 ))}
               </div>
             ))}
-          </>
+          </div>
         )}
       </div>
 

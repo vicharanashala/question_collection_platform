@@ -8,8 +8,8 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, A
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { walletApi, questionApi } from '../../api/client';
-import { REWARD_TIERS, EDIT_WINDOW_SEC } from '../../utils/constants';
+import { walletApi, questionApi, adminApi } from '../../api/client';
+import { REWARD_TIERS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { MainTabParamList } from '../../navigation/types';
 import { VerificationStatus } from '../../types';
@@ -45,6 +45,7 @@ export function HomeScreen() {
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [editWindowSec, setEditWindowSec] = useState(0);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -76,6 +77,10 @@ export function HomeScreen() {
 
   useEffect(() => {
     fetchDashboardData();
+    adminApi.getConfig().then((res) => {
+      const found = (res.data.items ?? []).find((c: { key: string; value: number }) => c.key === 'question_edit_window_seconds');
+      setEditWindowSec(found?.value ?? 0);
+    }).catch(() => {});
   }, []);
 
   async function onRefresh() {
@@ -116,7 +121,7 @@ export function HomeScreen() {
           <View style={styles.heroTop}>
             <View style={styles.heroLeft}>
               <Text style={[styles.heroGreeting, { color: c.heroFg + 'cc' }]}>{greeting},</Text>
-              <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Farmer'}</Text>
+              <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? t('home.farmer')}</Text>
               <View style={[styles.categoryPill, { backgroundColor: c.heroFg + '22' }]}>
                 <Ionicons
                   name={(user?.category ? categoryIcons[user.category] : 'leaf-outline') as keyof typeof Ionicons.glyphMap}
@@ -124,7 +129,7 @@ export function HomeScreen() {
                   color={c.heroFg}
                 />
                 <Text style={[styles.categoryLabel, { color: c.heroFg + 'dd' }]}>
-                  {user?.category ? categoryLabels[user.category] : 'Farmer'}
+                  {user?.category ? categoryLabels[user.category] : t('home.farmer')}
                 </Text>
               </View>
             </View>
@@ -191,7 +196,7 @@ export function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.quickActions')}</Text>
-            <TooltipIcon description="Jump straight to Submit a Question or view your Wallet balance and recent activity." />
+            <TooltipIcon description={t('home.quickActionsTip')} />
           </View>
 
           <View style={styles.actionGrid}>
@@ -234,7 +239,7 @@ export function HomeScreen() {
             <View>
               <View style={styles.sectionTitleRow}>
                 <Text style={[styles.sectionTitle, { color: c.text }]}>{t('home.earnRewards')}</Text>
-                <TooltipIcon description="Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates." />
+                <TooltipIcon description={t('home.rewardsTip')} />
               </View>
               <Text style={[styles.sectionSub, { color: c.textSecondary }]}>
                 {t('home.rewardSubtitle')}
@@ -248,10 +253,10 @@ export function HomeScreen() {
             <View style={[styles.tierTrack, { backgroundColor: c.borderSubtle }]} />
 
             {REWARD_TIERS.map((tier, i) => {
-              const colors = [c.warning, c.textSecondary, c.success];
+              const medalColors = [c.bronze, c.silver, c.gold];
               const icons = ['leaf', 'leaf', 'leaf'];
-              const labels = ['Bronze', 'Silver', 'Gold'];
-              const color = colors[i];
+              const labels = [t('home.bronze'), t('home.silver'), t('home.gold')];
+              const color = medalColors[i];
               const next = REWARD_TIERS[i + 1];
 
               return (
@@ -277,10 +282,10 @@ export function HomeScreen() {
                   <View style={styles.tierStepLabel}>
                     <Text style={[styles.tierStepName, { color }]}>{labels[i]}</Text>
                     <Text style={[styles.tierStepRange, { color: c.textSecondary }]}>
-                      {tier.min}–{tier.max}Qs
+                      {tier.min}–{tier.max}{t('home.questions')}
                     </Text>
                     <Text style={[styles.tierStepReward, { color: c.text }]}>
-                      ₹{tier.reward}/Q
+                      {t('common.rupee', 'Rs.')}{tier.reward}{t('home.perQuestion')}
                     </Text>
                   </View>
                 </View>
@@ -297,7 +302,7 @@ export function HomeScreen() {
             activeOpacity={0.75}
             onPress={() => {
               if (stats && stats.remainingToday <= 0) {
-                showToast(`You've used all your submissions for today. Try again tomorrow!`, 'warning');
+                showToast(t('home.allSubmissionsUsed'), 'warning');
               } else {
                 navigation.navigate('AskQuestion');
               }
@@ -322,36 +327,36 @@ export function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={[styles.sectionTitle, { color: c.text }]}>{t("home.submissionTips")}</Text>
-            <TooltipIcon description="Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight." />
+            <TooltipIcon description={t('home.guidelinesTip')} />
           </View>
           <View style={[styles.guideCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
-            {[
-              {
-                icon: 'videocam-outline',
-                text: `Video — Max ${EDIT_WINDOW_SEC}s, ${10}MB`,
-                color: '#0891B2',
-              },
-              {
-                icon: 'calendar-outline',
-                text: `Daily limit — ${stats?.dailyLimit ?? 20} questions per day`,
-                color: c.primary,
-              },
-              {
+            {(() => {
+              const rows: { icon: string; text: string; color: string }[] = [
+                {
+                  icon: 'calendar-outline',
+                  text: t('home.dailyLimitTip', { count: stats?.dailyLimit ?? 20 }),
+                  color: c.primary,
+                },
+                {
+                  icon: 'bulb-outline',
+                  text: t('home.aiCheckTip'),
+                  color: '#7C3AED',
+                },
+              ];
+              rows.splice(1, 0, {
                 icon: 'pencil-outline',
-                text: `Edit window — ${EDIT_WINDOW_SEC} seconds after submission`,
+                text: editWindowSec === 0
+                  ? t('home.editWindowClosed')
+                  : t('home.editWindowTip').replace('{seconds}', editWindowSec),
                 color: c.warning,
-              },
-              {
-                icon: 'bulb-outline',
-                text: 'AI relevance check runs automatically before posting',
-                color: '#7C3AED',
-              },
-            ].map((item, i) => (
+              });
+              return rows;
+            })().map((item, i, all) => (
               <View
                 key={i}
                 style={[
                   styles.guideRow,
-                  i < 3 && { borderBottomWidth: 1, borderBottomColor: c.borderSubtle },
+                  i < all.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.borderSubtle },
                 ]}
               >
                 <View style={[styles.guideIcon, { backgroundColor: item.color + '18' }]}>

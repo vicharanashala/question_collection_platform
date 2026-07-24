@@ -146,13 +146,66 @@ Curators **cannot** approve/reject/hold, view user financial data, or process wi
 
 ---
 
-## 3. Withdrawal Management
+## 3. Reports Management
 
-### 3.1 Withdrawal Lifecycle
+### 3.1 Submitting a Report (Users)
 
-See [Payment Flow](./payment-flow.md) for the complete state machine.
+Users submit reports via `POST /reports`. Categories: `bug`, `payout_issue`, `question_issue`, `abuse`, `feature_request`, `other`. Optionally link a related entity (question ID, withdrawal ID) via `relatedEntityId` and `relatedEntityType`.
 
-### 3.2 Processing a Withdrawal
+### 3.2 Listing Reports
+
+```
+GET /reports?status=open&category=payout_issue&priority=high&page=1&limit=20
+```
+
+Available to `curator`, `finance`, `admin`, `super_admin`. Supports filtering by status, category, priority.
+
+### 3.3 Viewing a Report
+
+```
+GET /reports/:id
+```
+
+Returns the report with its full reply thread, user info, and admin replies.
+
+### 3.4 Updating Report Status
+
+```
+PATCH /reports/:id/status { "status": "in_progress" | "resolved" | "closed" }
+```
+
+When a report is **closed**, the user is notified in-app.
+
+### 3.5 Updating Report Priority
+
+```
+PATCH /reports/:id/priority { "priority": "low" | "medium" | "high" | "urgent" }
+```
+
+### 3.6 Replying to a Report
+
+```
+POST /reports/:id/replies { "message": "We are looking into this issue." }
+```
+
+Replies are visible to the user. When the first reply is added to an `open` report, its status automatically transitions to `in_progress`. The reporter receives an in-app notification and an Expo push notification.
+
+### 3.7 Users Viewing Their Own Reports
+
+```
+GET /reports/my       — paginated list of current user's reports
+GET /reports/my/:id   — single report with reply thread
+```
+
+---
+
+## 4. Withdrawal Management
+
+### 4.1 Withdrawal Lifecycle
+
+See [Payment Flow](./payment-flow.md) for the complete state machine. Valid statuses: `PENDING` → `PROCESSING` → `COMPLETED`, or `PENDING` → `CANCELLED` (admin reject), or `PROCESSING` → `FAILED` / `REJECTED` (payout failure/reversal).
+
+### 4.2 Processing a Withdrawal
 
 ```
 POST /admin/withdrawals/:id/process { action: "approve" }
@@ -171,7 +224,7 @@ POST /admin/withdrawals/:id/process { action: "reject", reason: "..." }
 - Wallet is credited (source: `refund`)
 - User notified
 
-### 3.3 Retrying a Failed Withdrawal
+### 4.3 Retrying a Failed Withdrawal
 
 ```
 POST /admin/withdrawals/:id/retry
@@ -185,7 +238,7 @@ POST /admin/withdrawals/:id/retry-refund
 
 Available when the withdrawal was already refunded (e.g. second payout attempt failed and was refunded). Resets to `PROCESSING`, debits the refund transaction, re-attempts payout.
 
-### 3.4 Marking as Failed Manually
+### 4.4 Marking as Failed Manually
 
 ```
 POST /admin/withdrawals/:id/fail { "reason": "Bank account closed" }
@@ -201,7 +254,7 @@ Allows updating the failure reason after the fact.
 
 ---
 
-## 4. Wallet Management
+## 5. Wallet Management
 
 ### 4.1 Viewing Any Wallet
 
@@ -235,11 +288,11 @@ Returns all wallets with user name and current balance, filterable and sortable.
 
 ---
 
-## 5. Configuration Management
+## 6. Configuration Management
 
 All runtime config is in `admin_config` table, editable from Settings page.
 
-### 5.1 Viewing Config
+### 6.1 Viewing Config
 
 ```
 GET /admin/config
@@ -247,14 +300,14 @@ GET /admin/config
 
 Returns all config keys with their current values, descriptions, and last-updated timestamp.
 
-### 5.2 Creating a New Config Key
+### 6.2 Creating a New Config Key
 
 ```
 POST /admin/config
 { "key": "custom_feature_flag", "value": true, "description": "Enables new flow" }
 ```
 
-### 5.3 Updating a Config Value
+### 6.3 Updating a Config Value
 
 ```
 PATCH /admin/config
@@ -263,7 +316,7 @@ PATCH /admin/config
 
 All config values are cached in-memory (30-second TTL). The service reads from cache first; a background refresh fetches from DB every 30 seconds.
 
-### 5.4 Live Config Keys
+### 6.4 Live Config Keys
 
 | Key | Default | Description |
 |---|---|---|
@@ -276,10 +329,11 @@ All config values are cached in-memory (30-second TTL). The service reads from c
 | `max_question_chars` | 1000 | Max question text length |
 | `max_image_size_mb` | 5 | Max image file size |
 | `min_withdrawal_amount` | 50 | Min withdrawal amount (INR) |
+| `max_audio_size_mb` | 10 | Maximum audio file size |
 
 ---
 
-## 6. Analytics & Reporting
+## 7. Analytics & Reporting
 
 ### 6.1 Dashboard Stats
 
@@ -337,7 +391,7 @@ Per-user violation counts by type (duplicate, spam, abuse), suspensions, bans.
 
 ---
 
-## 7. Audit Logging
+## 8. Audit Logging
 
 Every state-changing admin action is recorded:
 
@@ -357,7 +411,34 @@ The audit log service supports:
 
 ---
 
-## 8. Data Export
+
+## 9. Admin Operations
+
+### 9.1 Leaderboard
+
+```
+GET /admin/leaderboard?limit=50&offset=0
+```
+
+Returns users ranked by total earnings. Includes rank, user ID, name, state, and cumulative reward amount.
+
+### 9.2 User Crop Management
+
+```
+PATCH /admin/users/:id/crops
+```
+
+Updates a user's crop list (full upsert). Body: `{ crops: [{ cropName, season, farmSize }] }`.
+
+### 9.3 Notification Management
+
+```
+GET  /admin/users/:userId/notifications?page=1&limit=20
+PATCH /admin/users/:userId/notifications/read-all
+```
+
+---
+## 10. Data Export
 
 ```
 GET /admin/export?dataType=questions&format=csv&startDate=2026-06-01
@@ -374,4 +455,4 @@ GET /export/excel?dataType=withdrawals&status=COMPLETED
 
 ---
 
-*Last Updated: 2026-06-30*
+*Last Updated: 2026-07-10*

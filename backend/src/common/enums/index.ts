@@ -135,6 +135,29 @@ export enum VerificationTriggerType {
   WITHDRAWAL_VERIFY = 'withdrawal_verify',
 }
 
+export enum ReportStatus {
+  OPEN = 'open',
+  IN_PROGRESS = 'in_progress',
+  RESOLVED = 'resolved',
+  CLOSED = 'closed',
+}
+
+export enum ReportCategory {
+  BUG = 'bug',
+  PAYOUT_ISSUE = 'payout_issue',
+  QUESTION_ISSUE = 'question_issue',
+  ABUSE = 'abuse',
+  FEATURE_REQUEST = 'feature_request',
+  OTHER = 'other',
+}
+
+export enum ReportPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
 export enum AuditAction {
   // Auth
   OTP_REQUESTED = 'otp_requested',
@@ -156,6 +179,10 @@ export enum AuditAction {
   REWARD_CREDITED = 'reward_credited',
   WITHDRAWAL_REQUESTED = 'withdrawal_requested',
   WITHDRAWAL_COMPLETED = 'withdrawal_completed',
+  // Reports
+  REPORT_SUBMITTED = 'report_submitted',
+  REPORT_REPLIED = 'report_replied',
+  REPORT_STATUS_CHANGED = 'report_status_changed',
   // Admin
   ADMIN_CONFIG_UPDATED = 'admin_config_updated',
 }

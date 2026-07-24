@@ -37,7 +37,6 @@ const mockAdminService = () => ({
   getConfigValue: jest.fn((key: string) => {
     const map: Record<string, number> = {
       daily_question_limit: 20,
-      question_edit_window_seconds: 30,
       video_max_size_mb: 10,
       video_max_duration_seconds: 10,
       max_question_chars: 1000,
@@ -117,7 +116,7 @@ describe('QuestionService', () => {
   // ─── submit ────────────────────────────────────────────────────────────────
 
   describe('submit', () => {
-    it('should create a question with PENDING status and return editWindowClosesAt', async () => {
+    it('should create a question with PENDING status', async () => {
       questionRepo.count.mockResolvedValue(0);
 
       const createdQuestion = {
@@ -128,7 +127,6 @@ describe('QuestionService', () => {
         mediaType: MediaType.NONE,
         mediaUrls: null,
         deviceInfo: null,
-        editWindowClosesAt: new Date(Date.now() + 30_000),
         submittedAt: new Date(),
       };
 
@@ -144,7 +142,6 @@ describe('QuestionService', () => {
 
       expect(result.status).toBe(QuestionStatus.PENDING);
       expect(result.id).toBe(questionId);
-      expect(result.editWindowClosesAt).toBeDefined();
       expect(auditRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'question_submitted', entityType: 'question' }),
       );
@@ -168,8 +165,7 @@ describe('QuestionService', () => {
   // ─── update ────────────────────────────────────────────────────────────────
 
   describe('update', () => {
-    it('should allow update within edit window', async () => {
-      const futureEditWindow = new Date(Date.now() + 15_000); // 15 seconds left
+    it('should allow update', async () => {
       const existingQuestion = {
         id: questionId,
         userId,
@@ -179,7 +175,6 @@ describe('QuestionService', () => {
         cropType: 'Rice',
         mediaType: MediaType.NONE,
         mediaUrls: null,
-        editWindowClosesAt: futureEditWindow,
       };
 
       questionRepo.findOne.mockResolvedValue(existingQuestion);
@@ -205,7 +200,6 @@ describe('QuestionService', () => {
       questionRepo.findOne.mockResolvedValue({
         id: questionId,
         userId: 'another-user-id',
-        editWindowClosesAt: new Date(Date.now() + 30_000),
       });
 
       await expect(service.update(userId, questionId, { questionText: 'Hack' })).rejects.toThrow(
@@ -213,17 +207,17 @@ describe('QuestionService', () => {
       );
     });
 
-    it('should throw BadRequestException if edit window has closed', async () => {
+    // edit window has been removed — no BadRequestException guard remains on update
+    it('should allow update for the question owner', async () => {
       questionRepo.findOne.mockResolvedValue({
         id: questionId,
         userId,
         questionText: 'Original',
-        editWindowClosesAt: new Date(Date.now() - 5000), // already closed
       });
+      questionRepo.save.mockResolvedValue({ id: questionId, userId, questionText: 'Updated' });
 
-      await expect(service.update(userId, questionId, { questionText: 'Late edit' })).rejects.toThrow(
-        BadRequestException,
-      );
+      const result = await service.update(userId, questionId, { questionText: 'Updated' });
+      expect(result.questionText).toBe('Updated');
     });
   });
 
@@ -371,7 +365,6 @@ describe('QuestionService', () => {
       const limits = await service.getLimits();
 
       expect(limits.dailyLimit).toBe(20);
-      expect(limits.editWindowSec).toBe(30);
       expect(limits.videoMaxSizeMb).toBe(10);
       expect(limits.videoMaxDurationSec).toBe(10);
     });

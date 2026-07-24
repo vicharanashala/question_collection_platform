@@ -23,6 +23,8 @@ export enum NotificationType {
   ACCOUNT_SUSPENDED = 'account_suspended',
   ACCOUNT_BANNED = 'account_banned',
   GENERAL = 'general',
+  REPORT_REPLY = 'report_reply',
+  REPORT_CLOSED = 'report_closed',
 }
 
 export enum NotificationTriggerType {
@@ -30,6 +32,8 @@ export enum NotificationTriggerType {
   QUESTION = 'question',
   /** Notification triggered by a withdrawal request action */
   WITHDRAW = 'withdraw',
+  /** Notification triggered by a report reply */
+  REPORT = 'report',
   /** System-generated notification (e.g. payment failure alert) */
   SYSTEM = 'system',
 }

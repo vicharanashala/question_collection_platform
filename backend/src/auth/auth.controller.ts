@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -108,6 +109,40 @@ export class AuthController {
   async logout(@Req() req: AuthenticatedRequest) {
     await this.authService.incrementTokenVersion(req.user.id);
     return { message: 'Logged out successfully' };
+  }
+
+  /**
+   * GET /auth/check-username?username=rakesh42
+   * Returns whether the username is available and suggests alternatives if not.
+   * Redis-first for fast lookups; DB fallback on cache miss.
+   */
+  @Public()
+  @Get('check-username')
+  @HttpCode(HttpStatus.OK)
+  async checkUsername(@Query('username') username: string) {
+    if (!username || username.trim().length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters');
+    }
+    return this.authService.checkUsername(username);
+  }
+
+  /**
+   * GET /auth/suggest-usernames?base=rakesh&limit=5
+   * Returns suggested available usernames based on the given base string.
+   */
+  @Public()
+  @Get('suggest-usernames')
+  @HttpCode(HttpStatus.OK)
+  async suggestUsernames(
+    @Query('base') base: string,
+    @Query('limit') limit = '5',
+  ) {
+    if (!base || base.trim().length < 2) {
+      throw new BadRequestException('Base username must be at least 2 characters');
+    }
+    const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 10);
+    const suggestions = await this.authService.suggestUsernames(base, parsedLimit);
+    return { suggestions };
   }
 }
 

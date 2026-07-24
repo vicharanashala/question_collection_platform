@@ -16,11 +16,6 @@ const DEFAULT_CONFIG = [
     description: 'Minimum withdrawal threshold in INR',
   },
   {
-    key: 'question_edit_window_seconds',
-    value: 30,
-    description: 'Edit window duration after question submission (seconds)',
-  },
-  {
     key: 'daily_question_limit',
     value: 20,
     description: 'Maximum questions a user can submit per day',

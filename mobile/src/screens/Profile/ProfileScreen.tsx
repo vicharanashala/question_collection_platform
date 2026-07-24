@@ -10,16 +10,17 @@ import { useAuth } from '../../hooks/useAuth';
 import { userApi, walletApi, questionApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { VerificationStatus, UserCategory, UserRole } from '../../types';
+import { REWARD_TIERS } from '../../utils/constants';
 import type { WalletBalance } from '../../types';
 
 const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR];
 
 const categoryLabels: Record<string, string> = {
-  farmer: 'Farmer',
-  fpo: 'FPO Member',
-  student: 'Student',
-  volunteer: 'Volunteer',
-  ngo: 'NGO Partner',
+  farmer: 'cat.farmer',
+  fpo: 'cat.fpo',
+  student: 'cat.student',
+  volunteer: 'cat.volunteer',
+  ngo: 'cat.ngo',
 };
 
 const categoryIcons: Record<string, string> = {
@@ -31,12 +32,24 @@ const categoryIcons: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  verified:      { label: 'Verified',     color: '#22C55E', icon: 'checkmark-circle' },
-  pending:       { label: 'Pending',      color: '#F59E0B', icon: 'time-outline' },
-  manual_review: { label: 'Under Review', color: '#3B82F6', icon: 'eye-outline' },
-  suspended:     { label: 'Suspended',    color: '#EF4444', icon: 'alert-circle-outline' },
-  banned:        { label: 'Banned',       color: '#991B1B', icon: 'close-circle-outline' },
+  verified:      { label: 'status.verified',      color: '#22C55E', icon: 'checkmark-circle' },
+  pending:       { label: 'status.pending',       color: '#F59E0B', icon: 'time-outline' },
+  manual_review: { label: 'status.manual_review', color: '#3B82F6', icon: 'eye-outline' },
+  suspended:     { label: 'status.suspended',     color: '#EF4444', icon: 'alert-circle-outline' },
+  banned:        { label: 'status.banned',        color: '#991B1B', icon: 'close-circle-outline' },
 };
+
+const TIER_CONFIG: Record<string, { color: string }> = {
+  bronze: { color: '#CD7F32' },
+  silver: { color: '#A8A8A8' },
+  gold:   { color: '#F59E0B' },
+};
+
+function getRewardTier(approved: number): { label: string; tier: string } {
+  if (approved >= 251) return { label: 'Gold', tier: 'gold' };
+  if (approved >= 26)  return { label: 'Silver', tier: 'silver' };
+  return { label: 'Bronze', tier: 'bronze' };
+}
 
 export function ProfileScreen() {
   const { theme } = useTheme();
@@ -47,6 +60,7 @@ export function ProfileScreen() {
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
+  const [totalApproved, setTotalApproved] = useState<number | null>(null);
   const [userCrops, setUserCrops] = useState<{ id: string; cropName: string; season: string | null }[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -59,6 +73,7 @@ export function ProfileScreen() {
         userApi.getProfile(),
         walletApi.getBalance(),
         questionApi.list({ page: 1, limit: 1 }),
+        questionApi.getStats(),
       ]);
 
       if (results[0].status === 'fulfilled') {
@@ -71,6 +86,10 @@ export function ProfileScreen() {
       if (results[2].status === 'fulfilled') {
         const d = results[2].value.data as { total?: number };
         setTotalQuestions(d.total ?? null);
+      }
+      if (results[3].status === 'fulfilled') {
+        const d = results[3].value.data as { totalApproved?: number };
+        setTotalApproved(d.totalApproved ?? null);
       }
     } catch { /* non-fatal */ }
     finally { setLoadingData(false); }
@@ -113,7 +132,7 @@ export function ProfileScreen() {
             {/* Name + meta */}
             <View style={styles.heroInfo}>
               <Text style={[styles.heroName, { color: c.text }]} numberOfLines={1}>
-                {user?.name ?? 'Farmer'}
+                {user?.name ?? t('cat.farmer')}
               </Text>
               {user?.mobileNumber && (
                 <View style={styles.heroContactRow}>
@@ -129,7 +148,7 @@ export function ProfileScreen() {
                     color={c.primary}
                   />
                   <Text style={[styles.categoryText, { color: c.primary }]}>
-                    {categoryLabels[user.category] ?? ''}
+                    {t(categoryLabels[user.category] ?? '')}
                   </Text>
                 </View>
               )}
@@ -144,12 +163,88 @@ export function ProfileScreen() {
                   color={statusColor}
                 />
                 <Text style={[styles.verificationText, { color: statusColor }]}>
-                  {STATUS_CONFIG[user.verificationStatus!]?.label ?? user.verificationStatus}
+                  {t(STATUS_CONFIG[user.verificationStatus!]?.label ?? user.verificationStatus ?? '')}
                 </Text>
               </View>
             )}
           </View>
         </View>
+
+        {/* ── Tier card ─────────────────────────────────────── */}
+        {totalApproved != null && (
+          (() => {
+            const { label, tier } = getRewardTier(totalApproved);
+            const tierColor = TIER_CONFIG[tier].color;
+
+            // thresholds: bronze 0–25, silver 26–250, gold 251+
+            const nextTierThresholds: Record<string, number> = { bronze: 26, silver: 251, gold: Infinity };
+            const currentMin: Record<string, number> = { bronze: 0, silver: 26, gold: 251 };
+            const next = nextTierThresholds[tier];
+            const progress = next === Infinity ? 1 : Math.min((totalApproved - currentMin[tier]) / (next - currentMin[tier]), 1);
+
+            return (
+              <View style={[styles.tierCard, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
+                {/* Header row */}
+                <View style={styles.tierHeader}>
+                  <View style={[styles.tierIconWrap, { backgroundColor: tierColor + '20' }]}>
+                    <Ionicons name="medal" size={20} color={tierColor} />
+                  </View>
+                  <View style={styles.tierMeta}>
+                    <Text style={[styles.tierLabel, { color: tierColor }]}>{label} Member</Text>
+                    <Text style={[styles.tierApproved, { color: c.textSecondary }]}>
+                      {totalApproved} approved questions
+                    </Text>
+                  </View>
+                  {tier !== 'gold' && (
+                    <View style={[styles.nextTierPill, { backgroundColor: tierColor + '15' }]}>
+                      <Text style={[styles.nextTierText, { color: tierColor }]}>
+                        {next - totalApproved} to {tier === 'bronze' ? 'Silver' : 'Gold'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Progress bar */}
+                {tier !== 'gold' && (
+                  <View style={styles.tierProgressWrap}>
+                    <View style={[styles.tierProgressTrack, { backgroundColor: tierColor + '20' }]}>
+                      <View
+                        style={[
+                          styles.tierProgressFill,
+                          { width: `${Math.round(progress * 100)}%`, backgroundColor: tierColor },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.tierProgressLabel, { color: c.textTertiary }]}>
+                      {next - totalApproved} more to {tier === 'bronze' ? 'Silver' : 'Gold'}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Tier milestones */}
+                <View style={[styles.tierMilestones, { borderTopColor: c.borderSubtle }]}>
+                  {(['bronze', 'silver', 'gold'] as const).map((t) => {
+                    const reached = totalApproved >= (t === 'bronze' ? 0 : t === 'silver' ? 26 : 251);
+                    const mc = TIER_CONFIG[t].color;
+                    return (
+                      <View key={t} style={styles.tierMilestone}>
+                        <View style={[styles.milestoneDot, { backgroundColor: reached ? mc : c.borderSubtle }]}>
+                          {reached && <Ionicons name="checkmark" size={8} color="#fff" />}
+                        </View>
+                        <Text style={[styles.milestoneLabel, { color: reached ? mc : c.textTertiary }]}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </Text>
+                        <Text style={[styles.milestoneThreshold, { color: c.textTertiary }]}>
+                          {t === 'bronze' ? '0' : t === 'silver' ? '26' : '251'}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })()
+        )}
 
         {/* ── Stats row ─────────────────────────────────────── */}
         <View style={styles.statsRow}>
@@ -195,193 +290,310 @@ export function ProfileScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
               <Ionicons name="person-outline" size={14} color={c.primary} />
             </View>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Account</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.account')}</Text>
+            {/* <TouchableOpacity
+              style={[styles.editBtn, { backgroundColor: c.primary + '14' }]}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Ionicons name="pencil-outline" size={11} color={c.primary} />
+              <Text style={[styles.editBtnText, { color: c.primary }]}>{t('profile.editProfile')}</Text>
+            </TouchableOpacity> */}
           </View>
-          <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
 
-            {/* Personal Info */}
-            <Text style={[styles.groupLabel, { color: c.textTertiary }]}>Personal Info</Text>
-            <View style={styles.fieldGrid}>
+          {/* Personal Info */}
+          <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={styles.accountCardHeader}>
+              <Ionicons name="person-circle-outline" size={13} color={c.primary} />
+              <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.personalInfo')}</Text>
+            </View>
+            <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+              {user?.username && (
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="at-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Username</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.username}</Text>
+                </View>
+              )}
               {user?.category && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Category</Text>
-                  <Text style={[styles.fieldValue, { color: c.text, textTransform: 'uppercase' }]}>{user.category}</Text>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="pricetag-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.category')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{t(categoryLabels[user.category] ?? user.category)}</Text>
                 </View>
               )}
               {user?.gender && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Gender</Text>
-                  <Text style={[styles.fieldValue, { color: c.text, textTransform: 'uppercase' }]}>{user.gender}</Text>
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="male-female-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.gender')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text, textTransform: 'capitalize' }]}>{user.gender}</Text>
                 </View>
               )}
               {user?.age && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Age</Text>
-                  <Text style={[styles.fieldValue, { color: c.text }]}>{user.age}</Text>
+                <View style={[styles.accountRow, styles.accountRowLast]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="calendar-number-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.age')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.age} {t('profile.years')}</Text>
                 </View>
               )}
             </View>
-
-            <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-
-            {/* Location */}
-            <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Location</Text>
-            <View style={styles.fieldGrid}>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>State</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.state ?? '—'}</Text>
-              </View>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>District</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.district ?? '—'}</Text>
-              </View>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Block</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.block ?? '—'}</Text>
-              </View>
-              <View style={styles.fieldCell}>
-                <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Village</Text>
-                <Text style={[styles.fieldValue, { color: c.text }]}>{user?.village ?? '—'}</Text>
-              </View>
-              {user?.kvk && (
-                <View style={styles.fieldCell}>
-                  <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>KVK</Text>
-                  <Text style={[styles.fieldValue, { color: c.text }]}>{user.kvk}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Education — students only */}
-            {user?.category === 'student' && (
-              <>
-                <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-                <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Education</Text>
-                <View style={styles.fieldGrid}>
-                  {user?.courseName && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Course</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.courseName}</Text>
-                    </View>
-                  )}
-                  {user?.collegeName && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>College</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.collegeName}</Text>
-                    </View>
-                  )}
-                  {user?.universityName && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>University</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.universityName}</Text>
-                    </View>
-                  )}
-                </View>
-              </>
-            )}
-
-            {/* Farming — farmers only */}
-            {user?.category === 'farmer' && (
-              <>
-                <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-                <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Farming</Text>
-                <View style={styles.fieldGrid}>
-                  {user?.farmSize && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Farm Size</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.farmSize} acres</Text>
-                    </View>
-                  )}
-                  {user?.cropType && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Crop</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.cropType}</Text>
-                    </View>
-                  )}
-                  {user?.season && (
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Season</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user.season}</Text>
-                    </View>
-                  )}
-                </View>
-              </>
-            )}
           </View>
+
+          {/* Location */}
+          <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+            <View style={styles.accountCardHeader}>
+              <Ionicons name="location-outline" size={13} color={c.primary} />
+              <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.location')}</Text>
+            </View>
+            <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+              {user?.state && (
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="map-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.state')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.state}</Text>
+                </View>
+              )}
+              {user?.district && (
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.district')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.district}</Text>
+                </View>
+              )}
+              {user?.block && (
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.block')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.block}</Text>
+                </View>
+              )}
+              {user?.village && (
+                <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="home-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.village')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.village}</Text>
+                </View>
+              )}
+              {user?.kvk && (
+                <View style={[styles.accountRow, styles.accountRowLast]}>
+                  <View style={styles.accountRowLeft}>
+                    <Ionicons name="school-outline" size={13} color={c.textTertiary} />
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.kvk')}</Text>
+                  </View>
+                  <Text style={[styles.accountValue, { color: c.text }]}>{user.kvk}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Education — students only */}
+          {user?.category === 'student' && (
+            <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+              <View style={styles.accountCardHeader}>
+                <Ionicons name="school-outline" size={13} color={c.primary} />
+                <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.education')}</Text>
+              </View>
+              <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+                {user?.courseName && (
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="book-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.course')}</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.courseName}</Text>
+                  </View>
+                )}
+                {user?.collegeName && (
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.college')}</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.collegeName}</Text>
+                  </View>
+                )}
+                {user?.universityName && (
+                  <View style={[styles.accountRow, styles.accountRowLast]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.university')}</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.universityName}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Farming — farmers only */}
+          {user?.category === 'farmer' && (
+            <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+              <View style={styles.accountCardHeader}>
+                <Ionicons name="leaf-outline" size={13} color={c.primary} />
+                <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.farming')}</Text>
+              </View>
+              <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+                {user?.farmSize && (
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="resize-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.farmSize')}</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.farmSize} {t('profile.acres')}</Text>
+                  </View>
+                )}
+                {user?.cropType && (
+                  <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.crop')}</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.cropType}</Text>
+                  </View>
+                )}
+                {user?.season && (
+                  <View style={[styles.accountRow, styles.accountRowLast]}>
+                    <View style={styles.accountRowLeft}>
+                      <Ionicons name="partly-sunny-outline" size={13} color={c.textTertiary} />
+                      <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.season')}</Text>
+                    </View>
+                    <Text style={[styles.accountValue, { color: c.text }]}>{user.season}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* ── Organisation details ──────────────────────────── */}
-        {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage || user?.organisationType || user?.organizationName || user?.organizationRole || user?.numberOfFarmers) && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
-                <Ionicons name="business-outline" size={14} color={c.primary} />
+        {(() => {
+          const u = user as any;
+          const hasAny = !!(u.organisationType || u.organizationName || u.organizationRole ||
+            u.numberOfFarmers != null || u.organizationState || u.organizationDistrict ||
+            u.organizationBlock || u.organizationVillage);
+          if (!hasAny) return false;
+          return (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
+                  <Ionicons name="business-outline" size={14} color={c.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.organisationDetails')}</Text>
               </View>
-              <Text style={[styles.sectionTitle, { color: c.text }]}>Organisation Details</Text>
-            </View>
-            <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
 
               {/* Org Info */}
-              <Text style={[styles.groupLabel, { color: c.textTertiary }]}>Organisation</Text>
-              <View style={styles.fieldGrid}>
-                {user?.organisationType && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Org. Type</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organisationType}</Text>
-                  </View>
-                )}
-                {user?.organizationName && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Name</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organizationName}</Text>
-                  </View>
-                )}
-                {user?.organizationRole && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Role</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.organizationRole}</Text>
-                  </View>
-                )}
-                {user?.numberOfFarmers != null && (
-                  <View style={styles.fieldCell}>
-                    <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Members</Text>
-                    <Text style={[styles.fieldValue, { color: c.text }]}>{user.numberOfFarmers}</Text>
-                  </View>
-                )}
+              <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+                  {u.organisationType && (
+                    <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.orgType')}</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.organisationType}</Text>
+                    </View>
+                  )}
+                  {u.organizationName && (
+                    <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.orgName')}</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationName}</Text>
+                    </View>
+                  )}
+                  {u.organizationRole && (
+                    <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="ribbon-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.orgRole')}</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationRole}</Text>
+                    </View>
+                  )}
+                  {u.numberOfFarmers != null && (
+                    <View style={[styles.accountRow, styles.accountRowLast]}>
+                      <View style={styles.accountRowLeft}>
+                        <Ionicons name="people-outline" size={13} color={c.textTertiary} />
+                        <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.members')}</Text>
+                      </View>
+                      <Text style={[styles.accountValue, { color: c.text }]}>{u.numberOfFarmers}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
 
               {/* Org Location */}
-              {(user?.organizationState || user?.organizationDistrict || user?.organizationBlock || user?.organizationVillage) && (
-                <>
-                  <View style={[styles.dividerLine, { backgroundColor: c.borderSubtle }]} />
-                  <Text style={[styles.groupLabel, { color: c.textTertiary, marginTop: tokens.spacing3 }]}>Organisation Location</Text>
-                  <View style={styles.fieldGrid}>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>State</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationState ?? '—'}</Text>
-                    </View>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>District</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationDistrict ?? '—'}</Text>
-                    </View>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Block</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationBlock ?? '—'}</Text>
-                    </View>
-                    <View style={styles.fieldCell}>
-                      <Text style={[styles.fieldLabel, { color: c.textTertiary }]}>Village</Text>
-                      <Text style={[styles.fieldValue, { color: c.text }]}>{user?.organizationVillage ?? '—'}</Text>
-                    </View>
+              {(u.organizationState || u.organizationDistrict || u.organizationBlock || u.organizationVillage) && (
+                <View style={[styles.accountCard, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
+                  <View style={styles.accountCardHeader}>
+                    <Ionicons name="location-outline" size={13} color={c.primary} />
+                    <Text style={[styles.accountCardTitle, { color: c.primary }]}>{t('profile.organisationLocation')}</Text>
                   </View>
-                </>
+                  <View style={[styles.accountRows, { borderTopColor: c.borderSubtle }]}>
+                    {u.organizationState && (
+                      <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="map-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.state')}</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationState}</Text>
+                      </View>
+                    )}
+                    {u.organizationDistrict && (
+                      <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="business-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.district')}</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationDistrict}</Text>
+                      </View>
+                    )}
+                    {u.organizationBlock && (
+                      <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="grid-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.block')}</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationBlock}</Text>
+                      </View>
+                    )}
+                    {u.organizationVillage && (
+                      <View style={[styles.accountRow, styles.accountRowLast]}>
+                        <View style={styles.accountRowLeft}>
+                          <Ionicons name="home-outline" size={13} color={c.textTertiary} />
+                          <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('profile.village')}</Text>
+                        </View>
+                        <Text style={[styles.accountValue, { color: c.text }]}>{u.organizationVillage}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
               )}
             </View>
-          </View>
-        )}
+          );
+        })()}
 
         {/* ── Crops ──────────────────────────────────────────── */}
         {userCrops.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Crops</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.crops')}</Text>
             <View style={styles.cropTags}>
               {userCrops.map((crop) => (
                 <View key={crop.id} style={[styles.cropTag, { backgroundColor: c.primary + '14', borderColor: c.primary + '30' }]}>
@@ -399,7 +611,7 @@ export function ProfileScreen() {
             <View style={[styles.sectionIconWrap, { backgroundColor: c.primary + '15' }]}>
               <Ionicons name="flash-outline" size={14} color={c.primary} />
             </View>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>Actions</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('profile.actions')}</Text>
           </View>
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
             <TouchableOpacity
@@ -410,7 +622,55 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="wallet-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Payment Methods</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.paymentMethods')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('ReportScreen')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="flag-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('report.title')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('FaqsList')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="help-circle-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.helpAndFeedback')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('TermsOfService')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="document-text-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.termsOfService')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('PrivacyPolicy')}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+                <Ionicons name="shield-checkmark-outline" size={16} color={c.primary} />
+              </View>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.privacyPolicy')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
@@ -425,7 +685,7 @@ export function ProfileScreen() {
               <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
                 <Ionicons name="mail-outline" size={16} color={c.primary} />
               </View>
-              <Text style={[styles.actionLabel, { color: c.text }]}>Contact Admin</Text>
+              <Text style={[styles.actionLabel, { color: c.text }]}>{t('profile.contactAdmin')}</Text>
               <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
             </TouchableOpacity>
 
@@ -467,7 +727,7 @@ const styles = StyleSheet.create({
 
   // ── Shared
   section: { paddingHorizontal: tokens.spacing4, marginBottom: tokens.spacing5 },
-  sectionTitle: { fontSize: 14, fontWeight: '700' },
+  sectionTitle: { fontSize: 14, fontWeight: '700', flex: 1 },
   sectionTitleRow: {
     flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2,
     marginBottom: tokens.spacing3, paddingLeft: 2,
@@ -526,6 +786,50 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // ── Account section (new)
+  editBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: tokens.spacing3,
+    paddingVertical: tokens.spacing1 + 1,
+    borderRadius: tokens.radiusFull,
+    gap: 4,
+  },
+  editBtnText: { fontSize: 12, fontWeight: '700' },
+
+  accountCard: {
+    borderRadius: tokens.radiusMd,
+    marginBottom: tokens.spacing3,
+    overflow: 'hidden',
+  },
+  accountCardHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: tokens.spacing2,
+    paddingHorizontal: tokens.spacing4,
+    paddingTop: tokens.spacing4,
+    paddingBottom: tokens.spacing3,
+  },
+  accountCardTitle: {
+    fontSize: 13, fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  accountRows: {
+    borderTopWidth: 1,
+    borderTopColor: 'transparent', // overridden inline via [styles.accountRows, { borderTopColor: c.borderSubtle }]
+  },
+  accountRow: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tokens.spacing4,
+    paddingVertical: tokens.spacing3,
+    borderBottomWidth: 1,
+    borderBottomColor: 'transparent', // overridden inline via [styles.accountRow, { borderBottomColor: c.borderSubtle }]
+  },
+  accountRowLast: { borderBottomWidth: 0 },
+  accountRowLeft: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2 },
+  accountLabel: { fontSize: 13, fontWeight: '500' },
+  accountValue: { fontSize: 13, fontWeight: '600', textAlign: 'right', flex: 1, marginLeft: tokens.spacing3 },
+
   // ── Hero
   heroCard: {
     marginHorizontal: tokens.spacing4,
@@ -534,6 +838,67 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radiusLg,
     overflow: 'hidden',
   },
+
+  // ── Tier card
+  tierCard: {
+    marginHorizontal: tokens.spacing4,
+    marginBottom: tokens.spacing4,
+    borderRadius: tokens.radiusLg,
+    padding: tokens.spacing4,
+    overflow: 'hidden',
+  },
+  tierHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing3,
+  },
+  tierIconWrap: {
+    width: 44, height: 44,
+    borderRadius: tokens.radiusMd,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  tierMeta: { flex: 1 },
+  tierLabel: { fontSize: 17, fontWeight: '800' },
+  tierApproved: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+  nextTierPill: {
+    paddingHorizontal: tokens.spacing2 + 2,
+    paddingVertical: 4,
+    borderRadius: tokens.radiusFull,
+    flexShrink: 0,
+  },
+  nextTierText: { fontSize: 11, fontWeight: '700' },
+  tierProgressWrap: { marginTop: tokens.spacing3 },
+  tierProgressTrack: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  tierProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  tierProgressLabel: {
+    fontSize: 11, fontWeight: '500', marginTop: tokens.spacing1 + 1,
+    textAlign: 'center',
+  },
+  tierMilestones: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: tokens.spacing3,
+    paddingTop: tokens.spacing3,
+    borderTopWidth: 1,
+    borderTopColor: 'transparent', // overridden inline via [styles.tierMilestones, { borderTopColor: c.borderSubtle }]
+  },
+  tierMilestone: { alignItems: 'center', flex: 1 },
+  milestoneDot: {
+    width: 20, height: 20,
+    borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 4,
+  },
+  milestoneLabel: { fontSize: 11, fontWeight: '700' },
+  milestoneThreshold: { fontSize: 10, fontWeight: '500', marginTop: 1 },
   heroTop: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -5,7 +5,9 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+
 import { AppModule } from './app.module';
+import { EndpointLoggerService } from './common/endpoint-logger/endpoint-logger.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -55,6 +57,10 @@ async function bootstrap() {
 
   await app.listen(port);
   logger.log(`🚀 Server running on http://localhost:${port}/api/v1 [${environment}]`);
+
+  // Print the endpoint table — explicitly after listen() so the router is fully wired
+  const endpointLogger = app.get(EndpointLoggerService);
+  await endpointLogger.logEndpoints();
 }
 
 bootstrap().catch((err) => {

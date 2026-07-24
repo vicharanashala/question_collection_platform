@@ -92,6 +92,10 @@ export interface AppTheme {
     warning: string;      // warning / pending
     error: string;        // destructive / error
     primaryBg: string;    // card/hero background using primary color
+    // Medal colors (reward tiers)
+    bronze: string;
+    silver: string;
+    gold: string;
   };
 }
 
@@ -156,6 +160,10 @@ export const lightTheme: AppTheme = {
     success: '#059669',
     warning: '#D97706',
     error: '#DC2626',
+    // Medal colors
+    bronze: '#CD7F32',
+    silver: '#A8A8A8',
+    gold: '#F59E0B',
   },
 };
 
@@ -210,5 +218,9 @@ export const darkTheme: AppTheme = {
     success: '#34D399',
     warning: '#FBBF24',
     error: '#F87171',
+    // Medal colors
+    bronze: '#CD7F32',
+    silver: '#B0B0B0',
+    gold: '#FBBF24',
   },
 };

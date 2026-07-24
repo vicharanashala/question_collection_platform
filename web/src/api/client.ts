@@ -12,6 +12,7 @@ import type {
   AdminStats,
   User,
   Question,
+  Faq,
   ConfigItem,
   Withdrawal,
   WalletSummary,
@@ -28,9 +29,11 @@ import type {
   AuditSummaryResponse,
   AuditEntityHistoryResponse,
   AuditUsersByRoleResponse,
+  Report,
+  ReportReply,
 } from '@/types'
 
-const BASE = '/api/v1'
+const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
 
@@ -546,6 +549,12 @@ export const notificationApi = {
 // ─── Curator API ───────────────────────────────────────────────────────────
 
 export const curatorApi = {
+  getCuratorStats: () =>
+    request<import('@/types').CuratorStats>('/curator/stats'),
+
+  getMyStats: (userId: string) =>
+    request<import('@/types').CuratorReviewerStats>(`/curator/my-stats?userId=${encodeURIComponent(userId)}`),
+
   getReviewQueue: (params = {} as Record<string, string | string[] | number | undefined>) => {
     // Backend expects status as an array: ?status[]=pending&status[]=ai_review
     const sp = new URLSearchParams()
@@ -649,6 +658,134 @@ export const auditApi = {
       URL.revokeObjectURL(url)
     })
   },
+}
+
+// ─── Reports API ────────────────────────────────────────────────────────────────
+
+export const reportsApi = {
+  /** Submit a new report (any authenticated user) */
+  create: (body: {
+    title: string
+    description: string
+    category: string
+    relatedEntityId?: string
+    relatedEntityType?: string
+  }) =>
+    request<{ id: string; message: string }>('/reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  /** List all reports (admin/curator/finance) — with optional filters */
+  list: (params: {
+    status?: string
+    category?: string
+    priority?: string
+    page?: number
+    limit?: number
+  } = {}) => {
+    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+    const qs = new URLSearchParams(p).toString()
+    return request<{
+      items: Report[]
+      total: number
+      page: number
+      limit: number
+      pages: number
+    }>(`/reports${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  /** Get a single report with replies */
+  get: (reportId: string) =>
+    request<Report>(`/reports/${reportId}`, {}, false),
+
+  /** Update report status */
+  updateStatus: (reportId: string, status: string) =>
+    request<{ id: string; status: string; message: string }>(
+      `/reports/${reportId}/status`,
+      { method: 'PATCH', body: JSON.stringify({ status }) },
+      false,
+    ),
+
+  /** Update report priority */
+  updatePriority: (reportId: string, priority: string) =>
+    request<{ id: string; priority: string; message: string }>(
+      `/reports/${reportId}/priority`,
+      { method: 'PATCH', body: JSON.stringify({ priority }) },
+      false,
+    ),
+
+  /** Add a reply to a report */
+  addReply: (reportId: string, message: string) =>
+    request<{ id: string; message: string }>(
+      `/reports/${reportId}/replies`,
+      { method: 'POST', body: JSON.stringify({ message }) },
+      false,
+    ),
+}
+
+// ─── FAQ API ──────────────────────────────────────────────────────────────────
+
+export const faqApi = {
+  /** User-facing: visible FAQs only, optionally filtered */
+  getVisible: (filters?: { category?: string }) => {
+    const params: Record<string, string> = {}
+    if (filters?.category) params.category = filters.category
+    return request<Faq[]>('/faqs', { params }, false)
+  },
+
+  /** Admin: paginated FAQ list */
+  getAll: (filters?: {
+    category?: string
+    search?: string
+    page?: number
+    limit?: number
+    sortBy?: 'displayOrder' | 'createdAt' | 'updatedAt' | 'question'
+    sortOrder?: 'ASC' | 'DESC'
+  }) => {
+    const p: Record<string, string> = {};
+    if (filters?.category)  p.category   = filters.category;
+    if (filters?.search)    p.search     = filters.search;
+    if (filters?.page)      p.page       = String(filters.page);
+    if (filters?.limit)     p.limit      = String(filters.limit);
+    if (filters?.sortBy)    p.sortBy     = filters.sortBy;
+    if (filters?.sortOrder) p.sortOrder  = filters.sortOrder;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<Faq>>(`/admin/faqs${qs ? `?${qs}` : ''}`, {}, false);
+  },
+
+  /** Admin: FAQ stats */
+  getStats: (category?: string) => {
+    const params: Record<string, string> = {};
+    if (category) params.category = category;
+    const qs = new URLSearchParams(params).toString();
+    return request<{ total: number; visible: number; hidden: number }>(
+      `/admin/faqs/stats${qs ? `?${qs}` : ''}`,
+      {},
+      false,
+    );
+  },
+
+  create: (body: { question: string; answer: string; category?: string; isVisible?: boolean }) =>
+    request<Faq>('/admin/faqs', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  update: (id: string, body: { question?: string; answer?: string; category?: string; isVisible?: boolean }) =>
+    request<Faq>(`/admin/faqs/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }, false),
+
+  toggleVisibility: (id: string, isVisible: boolean) =>
+    request<Faq>(`/admin/faqs/${id}/visibility`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isVisible }),
+    }, false),
+
+  remove: (id: string) =>
+    request<void>(`/admin/faqs/${id}`, { method: 'DELETE' }, false),
 }
 
 // ─── Error helper ──────────────────────────────────────────────────────────

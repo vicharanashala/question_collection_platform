@@ -29,6 +29,16 @@ export interface DuplicateFoundModalProps {
   matchedAnswer: string | null;
   /** Similarity score from the GDB (0–1) */
   similarityScore: number | null;
+  /**
+   * Display name of the user who originally submitted the matched question.
+   * Falls back to the literal string `'user name not available'` when unknown.
+   */
+  matchedUserName: string | null;
+  /**
+   * When 'rejected', shows a "Submitted — Rejected" badge so the user knows
+   * this counted as their daily submission.  When omitted, shows no status label.
+   */
+  submissionStatus?: 'rejected' | 'found';
   onDismiss: () => void;
 }
 
@@ -37,6 +47,8 @@ export function DuplicateFoundModal({
   matchedQuestion,
   matchedAnswer,
   similarityScore,
+  matchedUserName,
+  submissionStatus,
   onDismiss,
 }: DuplicateFoundModalProps) {
   const { theme } = useTheme();
@@ -70,9 +82,18 @@ export function DuplicateFoundModal({
               <Ionicons name="search" size={22} color="#B45309" />
             </View>
             <View style={styles.headerText}>
-              <Text style={[styles.title, { color: c.text }]}>
-                {t('question.duplicateFoundTitle')}
-              </Text>
+              <View style={styles.titleRow}>
+                <Text style={[styles.title, { color: c.text }]}>
+                  {t('question.duplicateFoundTitle')}
+                </Text>
+                {submissionStatus === 'rejected' && (
+                  <View style={[styles.statusBadge, { backgroundColor: c.error + '18', borderColor: c.error + '40' }]}>
+                    <Text style={[styles.statusText, { color: c.error }]}>
+                      {t('question.submittedRejected', 'Submitted — Rejected')}
+                    </Text>
+                  </View>
+                )}
+              </View>
               {scorePct != null && (
                 <View style={[styles.scoreBadge, { backgroundColor: '#FACC15' + '18', borderColor: '#FACC15' + '60' }]}>
                   <Text style={[styles.scoreText, { color: '#92400E' }]}>{scorePct}% match</Text>
@@ -83,7 +104,9 @@ export function DuplicateFoundModal({
 
           {/* Appreciation note */}
           <Text style={[styles.appreciation, { color: c.textSecondary }]}>
-            Thank you for taking the time to submit a question! A similar question has already been answered by our experts — please review it below.
+            {submissionStatus === 'rejected'
+              ? `Your question has been submitted and marked as a duplicate. It will not be reviewed further. A similar question was previously submitted by ${matchedUserName ?? 'another user'}.`
+              : `Thank you for taking the time to submit a question! A similar question has already been answered by ${matchedUserName ?? 'our experts'}. Please review it below.`}
           </Text>
 
           <View style={[styles.divider, { backgroundColor: c.borderSubtle }]} />
@@ -141,12 +164,14 @@ export function DuplicateFoundModal({
 
           {/* Actions */}
           <TouchableOpacity
-            style={[styles.btn, { backgroundColor: '#B45309' }]}
+            style={[styles.btn, { backgroundColor: submissionStatus === 'rejected' ? c.primary : '#B45309' }]}
             onPress={onDismiss}
             activeOpacity={0.8}
           >
             <Text style={[styles.btnText, { color: '#fff' }]}>
-              {t('question.tryAnotherQuestion', 'Try Another Question')}
+              {submissionStatus === 'rejected'
+                ? t('question.gotIt', 'Got It')
+                : t('question.tryAnotherQuestion', 'Try Another Question')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -186,11 +211,27 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: tokens.spacing1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: tokens.spacing2,
+  },
   title: {
     fontSize: 17,
     fontWeight: '800',
     letterSpacing: -0.3,
     lineHeight: 22,
+  },
+  statusBadge: {
+    borderWidth: 1,
+    borderRadius: tokens.radiusMd,
+    paddingVertical: 2,
+    paddingHorizontal: tokens.spacing2,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   scoreBadge: {
     alignSelf: 'flex-start',

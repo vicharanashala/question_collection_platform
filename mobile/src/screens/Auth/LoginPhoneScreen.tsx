@@ -89,9 +89,9 @@ export function LoginPhoneScreen({ navigation }: Props) {
           {/* Phone card */}
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
             <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: c.text }]}>Sign In</Text>
+              <Text style={[styles.cardTitle, { color: c.text }]}>{t('loginPhone.signIn')}</Text>
               <Text style={[styles.cardSubtitle, { color: c.textSecondary }]}>
-                Enter your mobile number to continue
+                {t('loginPhone.signInDesc')}
               </Text>
             </View>
 
@@ -111,28 +111,32 @@ export function LoginPhoneScreen({ navigation }: Props) {
                     styles.lockedBannerTitle,
                     { color: lockedInfo.status === 'banned' ? c.error : c.warning },
                   ]}>
-                    {lockedInfo.status === 'banned' ? 'Account Permanently Banned' : 'Account Suspended'}
+                    {lockedInfo.status === 'banned'
+                      ? t('otp.accountBanned')
+                      : t('otp.accountSuspended')}
                   </Text>
                 </View>
                 {lockedInfo.reason && (
                   <Text style={[styles.lockedBannerReason, { color: c.text }]}>
-                    Reason: {lockedInfo.reason}
+                    {t('otp.reason')}: {lockedInfo.reason}
                   </Text>
                 )}
                 {(lockedInfo.suspendedAt ?? lockedInfo.bannedAt) && (
                   <Text style={[styles.lockedBannerDate, { color: c.textSecondary }]}>
-                    Since: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
+                    {t('otp.since')}: {formatDate(lockedInfo.suspendedAt ?? lockedInfo.bannedAt)}
                   </Text>
                 )}
                 <Text style={[styles.lockedBannerHelp, { color: c.textSecondary }]}>
-                  Contact support to resolve this issue.
+                  {lockedInfo.status === 'banned'
+                    ? t('otp.contactSupportBanned')
+                    : t('otp.contactSupportSuspended')}
                 </Text>
               </View>
             )}
 
             <Input
-              label="Mobile Number"
-              placeholder="Enter 10-digit mobile number"
+              label={t('loginPhone.mobileNumber')}
+              placeholder={t('auth.mobileNumberPlaceholder')}
               keyboardType="phone-pad"
               maxLength={10}
               value={mobile}
@@ -147,7 +151,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
             />
 
             <Button
-              title="Send OTP"
+              title={t('auth.sendOtp')}
               onPress={handleRequestOtp}
               disabled={!validMobile}
               loading={loading}
@@ -158,7 +162,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
             <View style={[styles.hintBox, { backgroundColor: c.muted }]}>
               <Ionicons name="shield-checkmark-outline" size={16} color={c.textTertiary} style={styles.hintIcon} />
               <Text style={[styles.hintText, { color: c.textTertiary }]}>
-                We'll send a 6-digit OTP to verify your number. No password needed.
+                {t('loginPhone.otpHint')}
               </Text>
             </View>
           </View>
@@ -166,23 +170,19 @@ export function LoginPhoneScreen({ navigation }: Props) {
           {/* Legal + links */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: c.textTertiary }]}>
-              By continuing, you agree to our{' '}
-              <Pressable onPress={() => navigation.navigate('TermsOfService')}>
-                <Text style={[styles.link, { color: c.primary }]}>Terms of Service</Text>
-              </Pressable>
-              {' '}and{' '}
-              <Pressable onPress={() => navigation.navigate('PrivacyPolicy')}>
-                <Text style={[styles.link, { color: c.primary }]}>Privacy Policy</Text>
-              </Pressable>
+              {t('loginPhone.footerTerms')}{' '}
+              <Text style={[styles.link, { color: c.primary }]} onPress={() => navigation.navigate('TermsOfService')}>{t('profile.termsOfService')}</Text>
+              {' '}{t('and')}{' '}
+              <Text style={[styles.link, { color: c.primary }]} onPress={() => navigation.navigate('PrivacyPolicy')}>{t('profile.privacyPolicy')}</Text>
             </Text>
           </View>
 
           {/* Steps preview */}
           <View style={styles.stepsSection}>
             {[
-              { num: '1', label: 'Enter mobile number' },
-              { num: '2', label: 'Verify with OTP' },
-              { num: '3', label: 'Create account' },
+              { num: '1', label: t('loginPhone.steps.enterMobile') },
+              { num: '2', label: t('loginPhone.steps.verifyOtp') },
+              { num: '3', label: t('loginPhone.steps.createAccount') },
             ].map(({ num, label }) => (
               <View key={num} style={styles.stepItem}>
                 <View style={[styles.stepDot, { borderColor: c.primary }]}>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing2,
   },
   brand: { fontSize: 24, fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 },
-  tagline: { fontSize: 14, letterSpacing: 0.2 },
+  tagline: { fontSize: 14, letterSpacing: 0.2, flexShrink: 1, textAlign: 'center' },
 
   // Card
   card: {
@@ -226,8 +226,8 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing5,
   },
   cardHeader: { marginBottom: tokens.spacing5 },
-  cardTitle: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  cardSubtitle: { fontSize: 14, lineHeight: 20 },
+  cardTitle: { fontSize: 22, fontWeight: '700', marginBottom: 4, flexShrink: 1 },
+  cardSubtitle: { fontSize: 14, lineHeight: 20, flexShrink: 1 },
 
   // Locked banner
   lockedBanner: {
@@ -236,10 +236,10 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing4,
   },
   lockedBannerHeader: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing2, marginBottom: tokens.spacing2 },
-  lockedBannerTitle: { fontSize: 15, fontWeight: '800' },
-  lockedBannerReason: { fontSize: 13, marginBottom: 2 },
+  lockedBannerTitle: { fontSize: 15, fontWeight: '800', flexShrink: 1 },
+  lockedBannerReason: { fontSize: 13, marginBottom: 2, flexShrink: 1 },
   lockedBannerDate: { fontSize: 12, marginBottom: tokens.spacing1 },
-  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing1 },
+  lockedBannerHelp: { fontSize: 12, marginTop: tokens.spacing1, flexShrink: 1 },
 
   countryCode: {
     flexDirection: 'row',
@@ -259,11 +259,11 @@ const styles = StyleSheet.create({
     gap: tokens.spacing2,
   },
   hintIcon: { marginTop: 1 },
-  hintText: { flex: 1, fontSize: 12, lineHeight: 18 },
+  hintText: { flex: 1, fontSize: 12, lineHeight: 18, flexShrink: 1 },
 
   // Footer
   footer: { paddingHorizontal: tokens.spacing2, marginBottom: tokens.spacing6 },
-  footerText: { fontSize: 12, textAlign: 'center', lineHeight: 18 },
+  footerText: { fontSize: 12, lineHeight: 18, flexShrink: 1, textAlign: 'center' },
   link: { fontSize: 12, fontWeight: '600' },
 
   // Steps
@@ -271,9 +271,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: tokens.spacing5,
   },
-  stepItem: { alignItems: 'center' },
+  stepItem: { alignItems: 'center', minWidth: 0 },
   stepDot: {
     width: 28,
     height: 28,
@@ -284,5 +285,5 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stepNum: { fontSize: 12, fontWeight: '700' },
-  stepLabel: { fontSize: 11, textAlign: 'center' },
+  stepLabel: { fontSize: 11, textAlign: 'center', flexShrink: 1, minWidth: 0 },
 });

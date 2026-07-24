@@ -21,8 +21,10 @@ All tables reside in a single **PostgreSQL 15** instance, managed by **TypeORM**
 | `notifications` | In-app notification events |
 | `audit_logs` | Immutable audit trail for all key system events |
 | `admin_config` | Runtime configuration key/value store |
+| `reports` | User-submitted support reports (bugs, payout issues, abuse, feature requests) |
+| `report_replies` | Admin/curator replies to a report |
 
-> **Tables not yet created** (as of 2026-06-30): `knowledge_repository`, `user_violations`, `daily_question_stats`, `reward_tier_summary`, `user_crop_details`. The knowledge repository use case is served directly from the `questions` table (filtered by `status = 'APPROVED'`). Fraud tracking and analytics are handled via `audit_logs` and direct queries.
+> **Tables not yet created** (as of 2026-07-10): `knowledge_repository`, `user_violations`, `daily_question_stats`, `reward_tier_summary`, `user_crop_details`. The knowledge repository use case is served directly from the `questions` table (filtered by `status = 'APPROVED'`). Fraud tracking and analytics are handled via `audit_logs` and direct queries.
 
 ---
 
@@ -71,7 +73,7 @@ All tables reside in a single **PostgreSQL 15** instance, managed by **TypeORM**
 | `organization_district` | VARCHAR(100) | | Org address district |
 | `organization_block` | VARCHAR(100) | | Org address block |
 | `organization_village` | VARCHAR(100) | | Org address village |
-| `crops` | TEXT[] | DEFAULT '{}' | Array of crop names selected by user |
+| `crops` | (relation) | OneToMany → user_crops table (via UserCropDetail entity, migrated separately) | Crop selections with season and farm size per crop |
 | `razorpay_contact_id` | VARCHAR(100) | | Razorpay Contact ID for this user |
 | `expo_push_token` | VARCHAR(255) | | Expo push token for mobile notifications |
 | `consent_given` | BOOLEAN | DEFAULT FALSE | Privacy consent flag |
@@ -197,7 +199,7 @@ All tables reside in a single **PostgreSQL 15** instance, managed by **TypeORM**
 | `amount` | DECIMAL(12,2) | NOT NULL | Requested payout amount |
 | `payout_method` | VARCHAR(20) | NOT NULL | `upi`, `bank_transfer` |
 | `payout_details` | JSONB | NOT NULL | UPI address or bank account info (display fields only — sensitive fields in `user_payment_details`) |
-| `status` | VARCHAR(20) | NOT NULL | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`, `CANCELLED` |
+| `status` | VARCHAR(20) | NOT NULL | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED`, `CANCELLED`, `REJECTED` |
 | `pinelabs_transaction_id` | VARCHAR(100) | | PineLabs transaction ID for micro-verification |
 | `order_id` | VARCHAR(100) | UNIQUE | Idempotency key for PineLabs |
 | `razorpay_payout_id` | VARCHAR(100) | | Razorpay payout ID after payout initiated |
@@ -287,8 +289,8 @@ All tables reside in a single **PostgreSQL 15** instance, managed by **TypeORM**
 | `body` | TEXT | NOT NULL | Notification body |
 | `data` | JSONB | | Additional payload (question ID, amount, etc.) |
 | `read` | BOOLEAN | DEFAULT FALSE | Read/unread flag |
-| `trigger_type` | VARCHAR(50) | | What triggered this: `system`, `admin_action`, `user_action`, `scheduled` |
-| `actor_type` | VARCHAR(20) | | `user`, `admin`, `system` |
+| `trigger_type` | VARCHAR(50) | | What triggered this: `question`, `withdraw`, `report`, `system` |
+| `actor_type` | VARCHAR(20) | | `user`, `admin`, `curator`, `finance`, `system` |
 | `actor_id` | UUID | | ID of the actor who caused this notification |
 | `created_at` | TIMESTAMP | DEFAULT NOW() | |
 
@@ -357,6 +359,44 @@ All tables reside in a single **PostgreSQL 15** instance, managed by **TypeORM**
 
 ---
 
+## 2.10 Report Schema
+
+**Table: `reports`**
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | UUID | PK | |
+| `user_id` | UUID | FK → users.id | Reporter |
+| `title` | VARCHAR(100) | NOT NULL | Report title |
+| `description` | TEXT | NOT NULL | Detailed description |
+| `category` | VARCHAR(50) | NOT NULL | `bug`, `payout_issue`, `question_issue`, `abuse`, `feature_request`, `other` |
+| `status` | VARCHAR(20) | DEFAULT `open` | `open`, `in_progress`, `resolved`, `closed` |
+| `priority` | VARCHAR(20) | DEFAULT `medium` | `low`, `medium`, `high`, `urgent` |
+| `related_entity_id` | UUID | | Optional linked entity (question, withdrawal, wallet) |
+| `related_entity_type` | VARCHAR(50) | | Type of linked entity: `question`, `withdrawal`, `wallet` |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | |
+| `updated_at` | TIMESTAMP | DEFAULT NOW() | |
+
+**Indexes:**
+- `idx_reports_user_id` on `user_id`
+- `idx_reports_status` on `status`
+
+**Table: `report_replies`**
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | UUID | PK | |
+| `report_id` | UUID | FK → reports.id | Parent report |
+| `admin_id` | UUID | FK → users.id | Admin/curator who replied |
+| `message` | TEXT | NOT NULL | Reply text |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | |
+
+**Indexes:**
+- `idx_report_replies_report_id` on `report_id`
+- `idx_report_replies_admin_id` on `admin_id`
+
+---
+
 # 3. Entity Relationship Diagram
 
 ```
@@ -399,9 +439,10 @@ withdrawal_requests (1) ──── (1..N) payment_logs
 
 | Version | Date | Changes |
 |---|---|---|
+| 2.1 | 2026-07-10 | Added `reports` and `report_replies` schemas; updated `withdrawal_requests` status to include `REJECTED`; corrected `notifications.trigger_type` values (`question`/`withdraw`/`report`/`system`); corrected `users.crops` as a separate relation entity; corrected `actor_type` enum values |
 | 2.0 | 2026-06-30 | Added `user_payment_details`, `payment_logs`, `notifications` tables; updated `questions` schema (domains[], embedding, new status values); updated `users` schema (role, organisation_type, village, kvk, token_version, crops, razorpay_contact_id, expo_push_token, extended profile fields); updated `withdrawal_requests` (PineLabs/Razorpay fields, CANCELLED status); removed aspirational tables (knowledge_repository, user_violations, daily_question_stats, reward_tier_summary, user_crop_details) |
 | 1.0 | 2026-06-11 | Initial document |
 
 ---
 
-*Last Updated: 2026-06-30*
+*Last Updated: 2026-07-10*

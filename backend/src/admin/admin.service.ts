@@ -10,6 +10,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder, ILike, Between, In, DataSource } from 'typeorm';
+import { RedisService } from '../cache/redis.service';
+import { HotDataService } from '../cache/hot-data.service';
+import { AnalyticsCacheService } from '../cache/analytics-cache.service';
 import {
   User,
   Question,
@@ -64,7 +67,7 @@ import { decrypt } from '../common/utils/encryption.util';
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   max_users_per_state: { value: 100, description: 'Maximum registered users per state' },
   min_withdrawal_amount: { value: 50, description: 'Minimum withdrawal threshold (INR)' },
-  question_edit_window_seconds: { value: 30, description: 'Edit window after submission (seconds)' },
+
   daily_question_limit: { value: 20, description: 'Max questions per user per day' },
   duplicate_similarity_threshold: { value: 0.9, description: 'Semantic similarity threshold for duplicate detection' },
   video_max_duration_seconds: { value: 10, description: 'Maximum video duration (seconds)' },
@@ -170,9 +173,52 @@ export class AdminService implements OnModuleInit {
     private readonly notificationsService: NotificationsService,
     private readonly pinelabsService: PinelabsService,
     private readonly razorpayPayoutService: RazorpayPayoutService,
+    private readonly redisService: RedisService,
+    private readonly hotDataService: HotDataService,
+    private readonly analyticsCacheService: AnalyticsCacheService,
   ) {}
 
   private readonly logger = new Logger(AdminService.name);
+
+  /** Maps an audit action + entity to a human-readable description string. */
+  private buildActivityDescription(
+    action: string,
+    entityType: string | null,
+    metadata: Record<string, unknown> | null,
+  ): string {
+    switch (action) {
+      case AuditAction.QUESTION_SUBMITTED:
+        return `Submitted a question${metadata?.cropType ? ` about ${metadata.cropType}` : ''}`;
+      case AuditAction.QUESTION_APPROVED:
+        return `Approved ${entityType ?? 'question'}`;
+      case AuditAction.QUESTION_REJECTED:
+        return `Rejected ${entityType ?? 'question'}`;
+      case AuditAction.USER_REGISTERED:
+        return 'Registered on the platform';
+      case AuditAction.USER_VERIFIED:
+        return `Verified user`;
+      case AuditAction.USER_SUSPENDED:
+        return `Suspended user`;
+      case AuditAction.USER_BANNED:
+        return `Banned user`;
+      case AuditAction.USER_UNSUSPENDED:
+        return `Unsuspended user`;
+      case AuditAction.USER_UNBANNED:
+        return `Unbanned user`;
+      case AuditAction.USER_PROFILE_UPDATED:
+        return `Updated user profile`;
+      case AuditAction.REWARD_CREDITED:
+        return `Credited reward${metadata?.amount ? ` of ₹${metadata.amount}` : ''}`;
+      case AuditAction.WITHDRAWAL_REQUESTED:
+        return `Requested withdrawal${metadata?.amount ? ` of ₹${metadata.amount}` : ''}`;
+      case AuditAction.WITHDRAWAL_COMPLETED:
+        return `Completed withdrawal${metadata?.amount ? ` of ₹${metadata.amount}` : ''}`;
+      case AuditAction.ADMIN_CONFIG_UPDATED:
+        return `Updated config: ${metadata?.key ?? action}`;
+      default:
+        return action.replace(/_/g, ' ');
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // Section 1: User Management
@@ -286,6 +332,7 @@ export class AdminService implements OnModuleInit {
         'u.id',
         'u.mobileNumber',
         'u.name',
+        'u.username',
         'u.category',
         'u.state',
         'u.district',
@@ -302,7 +349,7 @@ export class AdminService implements OnModuleInit {
     if (status) qb.andWhere('u.verificationStatus = :status', { status });
     if (search) {
       qb.andWhere(
-        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search)`,
+        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search OR u.username ILIKE :search)`,
         { search: `%${search}%` },
       );
     }
@@ -320,7 +367,7 @@ export class AdminService implements OnModuleInit {
       where: { id: userId },
       relations: ['wallet'],
       select: [
-        'id', 'mobileNumber', 'name', 'role', 'verificationStatus',
+        'id', 'mobileNumber', 'name', 'username', 'role', 'verificationStatus',
         'category', 'district', 'state', 'block', 'village', 'kvk', 'numberOfFarmers',
         'organisationType',
         'languagePreference',
@@ -624,6 +671,13 @@ export class AdminService implements OnModuleInit {
         approvedCount: rewardTierCount,
       });
 
+      // Update Redis caches: leaderboard score + analytics counters
+      await Promise.all([
+        this.hotDataService.incrementLeaderboardScore(Number(question.userId), 1),
+        this.analyticsCacheService.onQuestionApproved(),
+        this.hotDataService.incrementTodayApprovals(),
+      ]).catch((err) => this.logger.warn(`Redis cache update failed after approval: ${err.message}`));
+
       await this.logAudit({
         actorType,
         actorId: reviewerId,
@@ -665,6 +719,9 @@ export class AdminService implements OnModuleInit {
         reviewedAt: new Date(),
         rejectionReason: dto.reason ?? null,
       });
+      await this.analyticsCacheService.onQuestionRejected().catch(
+        (err) => this.logger.warn(`Redis cache update failed after rejection: ${err.message}`),
+      );
       await this.logAudit({
         actorType,
         actorId: reviewerId,
@@ -979,6 +1036,22 @@ export class AdminService implements OnModuleInit {
         .getRawMany<{ date: string; users: string; questions: string; approved: string; rejected: string }>(),
     ])
 
+    // Recent audit logs (last 20, joined with user for actor name)
+    const recentLogs: Array<AuditLog & { actorName?: string }> = await this.auditRepo
+      .createQueryBuilder('al')
+      .leftJoin('users', 'u', 'al.actor_id = u.id')
+      .select([
+        'al.id AS id',
+        'al.action AS action',
+        'al.entity_type AS "entityType"',
+        'al.metadata AS metadata',
+        'al.created_at AS "createdAt"',
+        'u.name AS "actorName"',
+      ])
+      .orderBy('al.created_at', 'DESC')
+      .take(20)
+      .getRawMany();
+
     // Signups per day from user registrations
     const signupRaw = await this.userRepo
       .createQueryBuilder('u')
@@ -1021,12 +1094,19 @@ export class AdminService implements OnModuleInit {
         questionsThisWeek,
         usersThisWeek,
       },
-      recentActivity: [],
+      recentActivity: recentLogs.map((log) => ({
+        id: log.id,
+        action: log.action,
+        description: this.buildActivityDescription(log.action, log.entityType as string | null, log.metadata as Record<string, unknown> | null),
+        performedBy: (log as any).actorName ?? 'System',
+        performedAt: (log as any).createdAt ? new Date((log as any).createdAt).toISOString() : new Date().toISOString(),
+      })),
       roleDistribution: roleDist.map((r) => ({ role: r.role as UserRole, count: Number(r.count) })),
       categoryDistribution: categoryDist
         .filter((c) => c.category != null)
         .map((c) => ({ category: c.category as UserCategory, count: Number(c.count) })),
       historical: historicalDays,
+      avgReviewTurnaroundMinutes: null, // populated separately via getQuestionMetrics for admin dashboard
     }
   }
 
@@ -2330,10 +2410,12 @@ export class AdminService implements OnModuleInit {
       ? parseFloat((totalRewarded / totalApproved).toFixed(2))
       : 0;
 
-    // State participation rate (states with at least 1 submission / total states)
+    // State participation rate (distinct user-profile states with approved questions / 37)
     const statesWithSubmissions = await this.questionRepo
       .createQueryBuilder('q')
-      .select('COUNT(DISTINCT q.state)', 'count')
+      .leftJoin('users', 'u', 'q.user_id = u.id')
+      .select('COUNT(DISTINCT u.state)', 'count')
+      .where('q.status = :status', { status: QuestionStatus.APPROVED })
       .getRawOne<{ count: string }>();
 
     // Indian states count reference (29 states + 8 UTs)
@@ -3215,5 +3297,12 @@ export class AdminService implements OnModuleInit {
       newValue: params.newValue ?? null,
       metadata: params.metadata ?? null,
     });
+  }
+
+  /** Flush cache keys matching a pattern. Super admin only. */
+  async flushCache(keyPattern: string): Promise<{ flushed: number }> {
+    const count = await this.redisService.delByPattern(keyPattern);
+    this.logger.log(`Cache flush: ${count} keys deleted matching "${keyPattern}"`);
+    return { flushed: count };
   }
 }

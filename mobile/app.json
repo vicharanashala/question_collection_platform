@@ -28,6 +28,11 @@
         "backgroundColor": "#0D9488",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
+      "statusBar": {
+        "backgroundColor": "#0D9488",
+        "barStyle": "dark-content",
+        "translucent": false
+      },
       "permissions": [
 "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",

@@ -6,10 +6,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
-import { RedisService } from './redis.service';
 import { User, Wallet, AuditLog } from '../database/entities';
 import { JwtStrategy } from '../common/guards/jwt.strategy';
 import { AdminModule } from '../admin/admin.module';
+import { CacheModule } from '../cache/cache.module';
 
 @Module({
   imports: [
@@ -26,9 +26,10 @@ import { AdminModule } from '../admin/admin.module';
       }),
     }),
     AdminModule,
+    CacheModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SmsService, RedisService, JwtStrategy],
+  providers: [AuthService, SmsService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}
