@@ -1,13 +1,7 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+
 import { UserAccountLockedException } from '../../shared/classes/exceptions/user-status.exception';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, MoreThanOrEqual } from 'typeorm';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, ForbiddenException, Inject, Optional } from '@nestjs/common';
+import { MoreThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
@@ -26,6 +20,12 @@ import { RedisService } from '../../shared/database/cache/redis.service';
 import { AdminService } from '../admin/admin.service';
 import { usernameKey } from '../../shared/database/cache/cache.keys';
 import { CacheTTL } from '../../config/cache-ttl.constants';
+import {
+  IUserRepository,
+  IWalletRepository,
+  IAuditLogRepository,
+} from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 export interface AuthTokens {
   accessToken: string;
@@ -78,13 +78,12 @@ export class AuthService {
   private readonly otpMaxRequestsPerWindow = 3; // per 15-minute window
 
   constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-    @InjectRepository(Wallet)
-    private readonly walletRepo: Repository<Wallet>,
-    @InjectRepository(AuditLog)
-    private readonly auditRepo: Repository<AuditLog>,
-    private readonly dataSource: DataSource,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
+    @Inject(REPOSITORY_TOKENS.Wallet)
+    private readonly walletRepo: IWalletRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly smsService: SmsService,
@@ -114,7 +113,6 @@ export class AuthService {
   async requestOtp(dto: RequestOtpDto): Promise<{ message: string }> {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     const rateLimitKey = `otp_rl:${mobileNumber}`;
-    console.log(`[DEBUG requestOtp] received mobile=${mobileNumber} (len=${mobileNumber.length}) client=${dto.client}`);
 
     // Web clients are restricted to registered admin/curator accounts only
     if (dto.client === 'web') {
@@ -155,9 +153,11 @@ export class AuthService {
 
     // Store hashed OTP in DB (upsert user record)
     let user = await this.userRepo.findOne({ where: { mobileNumber } });
+    let isNewUser = false;
 
     if (!user) {
-      user = this.userRepo.create({
+      isNewUser = true;
+      user = await this.userRepo.create({
         mobileNumber,
         name: '',
         role: UserRole.USER,
@@ -170,6 +170,7 @@ export class AuthService {
         otpHash,
         otpExpiresAt: expiresAt,
       });
+
     } else {
       // Auto-reinstate: suspension period has expired
       if (
@@ -210,7 +211,16 @@ export class AuthService {
       user.otpExpiresAt = expiresAt;
     }
 
-    await this.userRepo.save(user);
+    if (isNewUser) {
+      // create() only builds an in-memory doc — persist via raw insert
+      const repo = this.userRepo as any;
+      const coll = repo._model.db.collection(repo._model.collection.name);
+      const { Types } = await import('mongoose');
+      const docToInsert = { ...(user as unknown as Record<string, unknown>), _id: new Types.ObjectId(user.id) };
+      await coll.insertOne(docToInsert);
+    } else {
+      await this.userRepo.update(user.id, { otpHash, otpExpiresAt: expiresAt });
+    }
 
     // Increment rate-limit counter
     if (otpRateLimitEnabled) {
@@ -233,9 +243,8 @@ export class AuthService {
    * On subsequent verification of an existing user → return access + refresh tokens
    */
   async verifyOtp(rawMobile: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string; role: UserRole }> {
-    const mobileNumber = this.normalizePhone(rawMobile);
+    const mobileNumber = this.normalizePhone(dto.mobileNumber);
     const isDev = process.env.NODE_ENV === 'development';
-    console.log(`[DEBUG verifyOtp] mobile=${mobileNumber} (len=${mobileNumber.length}) dto=${JSON.stringify(dto)}`);
     let user = await this.userRepo.findOne({ where: { mobileNumber } });
 
     if (!user) {
@@ -319,7 +328,7 @@ export class AuthService {
     const walletExists = await this.walletRepo.count({ where: { userId: user.id } });
     if (walletExists === 0) {
       await this.walletRepo.save(
-        this.walletRepo.create({ userId: user.id, balance: 0, currency: 'INR' }),
+        await this.walletRepo.create({ userId: user.id, balance: 0, currency: 'INR' }),
       );
     }
 
@@ -335,140 +344,125 @@ export class AuthService {
    */
   async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
     const isDev = process.env.NODE_ENV === 'development';
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
 
-    try {
-      const user = await queryRunner.manager.findOne(User, { where: { id: userId } });
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      if (user.name && user.name.trim().length > 0) {
-        throw new BadRequestException('User is already registered');
-      }
-
-      if (dto.consentGiven !== true) {
-        throw new BadRequestException('Consent must be accepted to register on the platform.');
-      }
-
-      // Enforce max_users_per_state from system config
-      const maxPerState = await this.adminService.getConfigValue('max_users_per_state');
-      const stateCount = await this.userRepo.count({
-        where: { state: dto.state, verificationStatus: MoreThanOrEqual(VerificationStatus.PENDING) },
-      });
-      if (stateCount >= maxPerState) {
-        throw new BadRequestException(
-          `Registration for ${dto.state} is currently full (${stateCount}/${maxPerState} users). Please try again later or contact support.`,
-        );
-      }
-
-      // Block, village, kvk are only required for farmers — validate server-side
-      if (dto.category === UserCategory.FARMER) {
-        if (!dto.block?.trim())   throw new BadRequestException('Block is required for farmer registration.');
-        if (!dto.village?.trim()) throw new BadRequestException('Village is required for farmer registration.');
-      }
-
-      // Username: normalize and check uniqueness before saving (unique constraint in DB)
-      // Strip leading @ if the user typed it (e.g. "@rakesh42" → "rakesh42")
-      const normalizedUsername = dto.username.toLowerCase().trim().replace(/^@/, '');
-      const usernameTaken = await this.userRepo.findOne({
-        where: { username: normalizedUsername },
-        select: ['id'],
-      });
-      if (usernameTaken) {
-        const suggestions = await this.suggestUsernames(normalizedUsername, 5);
-        throw new BadRequestException(
-          `Username "${normalizedUsername}" is already taken. Please try a different one or use one of these: ${suggestions.join(', ')}`,
-        );
-      }
-
-      // Update user with registration data
-      user.name = dto.name.trim();
-      user.username = normalizedUsername;
-      user.category = dto.category;
-      user.state = dto.state;
-      user.district = dto.district;
-      user.block = dto.block ?? null;
-      user.village = dto.village ?? null;
-      user.kvk = dto.kvk ?? null;
-      user.languagePreference = dto.languagePreference;
-      user.consentGiven = dto.consentGiven;
-      user.consentTimestamp = dto.consentGiven ? new Date() : null;
-      user.verificationStatus = isDev ? VerificationStatus.VERIFIED : VerificationStatus.PENDING;
-      user.otpHash = null;
-      user.otpExpiresAt = null;
-
-      // Flat top-level fields (replacing profileData JSONB)
-      user.age             = dto.age ?? null;
-      user.gender          = dto.gender ?? null;
-      user.farmSize        = dto.farmSize ?? null;
-      user.season          = dto.season ?? null;
-      user.cropType        = dto.cropType ?? null;
-      user.courseName      = dto.courseName ?? null;
-      user.collegeName     = dto.collegeName ?? null;
-      user.universityName  = dto.universityName ?? null;
-      user.organisationType  = dto.organisationType ?? null;
-      user.organizationName  = dto.organizationName ?? null;
-      user.organizationRole  = dto.organizationRole ?? null;
-      user.numberOfFarmers     = dto.numberOfFarmers ?? null;
-      user.organizationState   = dto.organizationState ?? null;
-      user.organizationDistrict = dto.organizationDistrict ?? null;
-      user.organizationBlock   = dto.organizationBlock ?? null;
-      user.organizationVillage = dto.organizationVillage ?? null;
-
-      // Volunteer has volunteerCropType alias for cropType
-      if (dto.category === UserCategory.VOLUNTEER && dto.volunteerCropType) {
-        user.cropType = dto.volunteerCropType;
-      }
-
-      await queryRunner.manager.save(user);
-
-      // Create wallet (guard against duplicate if registration was partially completed before)
-      const existingWallet = await queryRunner.manager.count(Wallet, { where: { userId: user.id } });
-      if (existingWallet === 0) {
-        const wallet = queryRunner.manager.create(Wallet, {
-          userId: user.id,
-          balance: 0,
-          currency: 'INR',
-        });
-        await queryRunner.manager.save(wallet);
-      }
-
-      // Store crops directly on the user record as a text[] (comma-separated string)
-      const cropInput = dto.cropType ?? dto.volunteerCropType;
-      if (cropInput && typeof cropInput === 'string' && cropInput.trim()) {
-        user.crops = cropInput.split(',').map((c: string) => c.trim()).filter(Boolean);
-      }
-
-      await queryRunner.commitTransaction();
-
-      // Sync username → Redis for fast existence lookups
-      await this.syncUsernameToRedis(normalizedUsername, user.id);
-
-      // Record login timestamp on successful registration
-      user.lastLoginAt = new Date();
-      await this.userRepo.save(user);
-
-      await this.logAudit(
-        ActorType.USER,
-        user.id,
-        AuditAction.USER_REGISTERED,
-        'User',
-        user.id,
-        null,
-        { category: dto.category, state: dto.state, district: dto.district },
-      );
-
-      const tokens = await this.issueTokens(user);
-      return { tokens, user: this.toPublicUser(user) };
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
+
+    if (user.name && user.name.trim().length > 0) {
+      throw new BadRequestException('User is already registered');
+    }
+
+    if (dto.consentGiven !== true) {
+      throw new BadRequestException('Consent must be accepted to register on the platform.');
+    }
+
+    // Enforce max_users_per_state from system config
+    const maxPerState = await this.adminService.getConfigValue('max_users_per_state');
+    const stateCount = await this.userRepo.count({
+      where: { state: dto.state, verificationStatus: MoreThanOrEqual(VerificationStatus.PENDING) },
+    });
+    if (stateCount >= maxPerState) {
+      throw new BadRequestException(
+        `Registration for ${dto.state} is currently full (${stateCount}/${maxPerState} users). Please try again later or contact support.`,
+      );
+    }
+
+    // Block, village, kvk are only required for farmers — validate server-side
+    if (dto.category === UserCategory.FARMER) {
+      if (!dto.block?.trim())   throw new BadRequestException('Block is required for farmer registration.');
+      if (!dto.village?.trim()) throw new BadRequestException('Village is required for farmer registration.');
+    }
+
+    // Username: normalize and check uniqueness before saving (unique constraint in DB)
+    // Strip leading @ if the user typed it (e.g. "@rakesh42" → "rakesh42")
+    const normalizedUsername = dto.username.toLowerCase().trim().replace(/^@/, '');
+    const usernameTaken = await this.userRepo.findOne({
+      where: { username: normalizedUsername },
+    });
+    if (usernameTaken) {
+      const suggestions = await this.suggestUsernames(normalizedUsername, 5);
+      throw new BadRequestException(
+        `Username "${normalizedUsername}" is already taken. Please try a different one or use one of these: ${suggestions.join(', ')}`,
+      );
+    }
+
+    // Store crops directly on the user record
+    const cropInput = dto.cropType ?? dto.volunteerCropType;
+    const crops: string[] = (cropInput && typeof cropInput === 'string' && cropInput.trim())
+      ? cropInput.split(',').map((c: string) => c.trim()).filter(Boolean)
+      : [];
+
+    // Volunteer has volunteerCropType alias for cropType
+    const actualCropType = dto.category === UserCategory.VOLUNTEER && dto.volunteerCropType
+      ? dto.volunteerCropType
+      : dto.cropType;
+
+    // Build updated user record
+    const updated: Partial<User> = {
+      name: dto.name.trim(),
+      username: normalizedUsername,
+      category: dto.category,
+      state: dto.state,
+      district: dto.district,
+      block: dto.block ?? null,
+      village: dto.village ?? null,
+      kvk: dto.kvk ?? null,
+      languagePreference: dto.languagePreference,
+      consentGiven: dto.consentGiven,
+      consentTimestamp: dto.consentGiven ? new Date() : null,
+      verificationStatus: isDev ? VerificationStatus.VERIFIED : VerificationStatus.PENDING,
+      otpHash: null,
+      otpExpiresAt: null,
+      age: dto.age ?? null,
+      gender: dto.gender ?? null,
+      farmSize: dto.farmSize ?? null,
+      season: dto.season ?? null,
+      cropType: actualCropType ?? null,
+      courseName: dto.courseName ?? null,
+      collegeName: dto.collegeName ?? null,
+      universityName: dto.universityName ?? null,
+      organisationType: dto.organisationType ?? null,
+      organizationName: dto.organizationName ?? null,
+      organizationRole: dto.organizationRole ?? null,
+      numberOfFarmers: dto.numberOfFarmers ?? null,
+      organizationState: dto.organizationState ?? null,
+      organizationDistrict: dto.organizationDistrict ?? null,
+      organizationBlock: dto.organizationBlock ?? null,
+      organizationVillage: dto.organizationVillage ?? null,
+      crops,
+      lastLoginAt: new Date(),
+    };
+
+    await this.userRepo.update(userId, updated);
+
+    // Create wallet if it doesn't exist (idempotent — safe to call multiple times)
+    const existingWalletCount = await this.walletRepo.count({ where: { userId } });
+    if (existingWalletCount === 0) {
+      const wallet = await this.walletRepo.create({
+        userId,
+        balance: 0,
+        currency: 'INR',
+      });
+    }
+
+    // Sync username → Redis for fast existence lookups
+    await this.syncUsernameToRedis(normalizedUsername, userId);
+
+    await this.logAudit(
+      ActorType.USER,
+      userId,
+      AuditAction.USER_REGISTERED,
+      'User',
+      userId,
+      null,
+      { category: dto.category, state: dto.state, district: dto.district },
+    );
+
+    const freshUser = await this.userRepo.findOne({ where: { id: userId } });
+    const tokens = await this.issueTokens(freshUser!);
+    return { tokens, user: this.toPublicUser(freshUser!) };
   }
 
   // ─── Token Management ───────────────────────────────────────────────────────
@@ -597,7 +591,6 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    console.log(`[DEBUG getProfile] orgState=${user.organizationState} orgDistrict=${user.organizationDistrict} orgBlock=${user.organizationBlock} orgVillage=${user.organizationVillage}`);
     return this.toPublicUser(user);
   }
 
@@ -725,7 +718,7 @@ export class AuthService {
     oldValue?: Record<string, unknown> | null,
     newValue?: Record<string, unknown> | null,
   ): Promise<void> {
-    const log = this.auditRepo.create({
+    const log = await this.auditRepo.create({
       actorType,
       actorId,
       action,

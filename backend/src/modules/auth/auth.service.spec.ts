@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
@@ -10,6 +9,7 @@ import { SmsService } from './sms.service';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { AdminService } from '../admin/admin.service';
 import { User, Wallet, AuditLog } from '../../shared/database/entities';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import {
   UserCategory,
   VerificationStatus,
@@ -109,9 +109,9 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: getRepositoryToken(User), useFactory: mockUserRepo },
-        { provide: getRepositoryToken(Wallet), useFactory: mockWalletRepo },
-        { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
+        { provide: REPOSITORY_TOKENS.User, useFactory: mockUserRepo },
+        { provide: REPOSITORY_TOKENS.Wallet, useFactory: mockWalletRepo },
+        { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
         { provide: DataSource, useFactory: mockDataSource },
         { provide: JwtService, useFactory: mockJwtService },
         { provide: ConfigService, useFactory: mockConfigService },
@@ -122,7 +122,7 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    userRepo = module.get(getRepositoryToken(User));
+    userRepo = module.get(REPOSITORY_TOKENS.User);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
     smsService = module.get(SmsService);

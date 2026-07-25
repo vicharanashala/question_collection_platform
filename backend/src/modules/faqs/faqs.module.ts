@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Faq } from '../../shared/database/entities/faq.entity';
+import { DbModule } from '../../shared/database/db.module';
 import { FaqsController } from './faqs.controller';
 import { FaqsService } from './faqs.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Faq])],
+  imports: [DbModule],
   controllers: [FaqsController],
   providers: [FaqsService],
   exports: [FaqsService],

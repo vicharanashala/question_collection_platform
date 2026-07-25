@@ -1,0 +1,135 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { MongoRepository } from '../../../abstractions/mongo.repository';
+import { IUserRepository } from '../../IUser.repository';
+import { User } from '../../../entities';
+import { Question } from '../../../entities';
+import { Wallet } from '../../../entities';
+import { QuestionStatus, UserCategory } from '../../../../classes/enums';
+import type { LeaderboardEntry } from '../../IUser.repository';
+
+@Injectable()
+export class MongoUserRepository
+  extends MongoRepository<User>
+  implements IUserRepository
+{
+  constructor(
+    @InjectModel('User') protected readonly _model: Model<User>,
+    @InjectModel('Question') private readonly _questionModel: Model<Question>,
+    @InjectModel('Wallet') private readonly _walletModel: Model<Wallet>,
+  ) {
+    super(_model);
+  }
+
+  async findByMobile(mobileNumber: string): Promise<User | null> {
+    return this._model.findOne({ mobileNumber } as Record<string, unknown>).exec() as Promise<User | null>;
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    return this._model.findOne({ username } as Record<string, unknown>).exec() as Promise<User | null>;
+  }
+
+  async updateOtpHash(mobileNumber: string, hash: string): Promise<void> {
+    await this._model.updateOne({ mobileNumber } as Record<string, unknown>, { $set: { otpHash: hash } }).exec();
+  }
+
+  async clearOtpHash(mobileNumber: string): Promise<void> {
+    await this._model.updateOne({ mobileNumber } as Record<string, unknown>, { $unset: { otpHash: 1 } }).exec();
+  }
+
+  async findWithWallet(
+    userId: string,
+  ): Promise<(User & { wallet?: unknown }) | null> {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    const user = await this._model.findById(userId).exec();
+    if (!user) return null;
+
+    const wallet = await this._walletModel.findOne({ userId } as Record<string, unknown>).exec();
+
+    const u = user as unknown as Record<string, unknown>;
+    const result = { ...u, id: String(u._id), _id: undefined, wallet: wallet ?? undefined };
+    return result as unknown as User & { wallet?: unknown };
+  }
+
+  async getLeaderboard(opts: {
+    limit?: number;
+    skip?: number;
+    state?: string;
+    category?: UserCategory;
+  }): Promise<LeaderboardEntry[]> {
+    const { limit = 20, skip = 0, state, category } = opts;
+
+    // Build user-set filter (state and/or category)
+    const userFilter: Record<string, unknown> = {};
+    if (state) userFilter.state = state;
+    if (category) userFilter.category = category;
+
+    // Step 1: resolve eligible user IDs (avoids running aggregation over the entire collection)
+    let eligibleUserIds: string[] | null = null;
+    if (Object.keys(userFilter).length > 0) {
+      const eligibleUsers = await this._model
+        .find(userFilter as Record<string, unknown>, { _id: 1 } as Record<string, unknown>)
+        .exec();
+      eligibleUserIds = eligibleUsers.map((u) => String((u as unknown as Record<string, unknown>)._id));
+      if (eligibleUserIds.length === 0) return []; // no matching users — empty leaderboard
+    }
+
+    // Step 2: count approved questions per user, ranked correctly
+    const matchStage: Record<string, unknown> = { status: QuestionStatus.APPROVED };
+    if (eligibleUserIds !== null) matchStage.userId = { $in: eligibleUserIds };
+
+    const rankedCounts = await this._questionModel
+      .aggregate([
+        { $match: matchStage },
+        { $group: { _id: '$userId', approvedCount: { $sum: 1 } } },
+        { $sort: { approvedCount: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+      ])
+      .exec();
+
+    if (rankedCounts.length === 0) return [];
+
+    // Step 3: hydrate user details for the ranked user IDs
+    const rankedUserIds = rankedCounts.map((r) => r._id as string);
+    const userDocs = await this._model
+      .find({ _id: { $in: rankedUserIds.map((id) => new Types.ObjectId(id)) } } as Record<string, unknown>)
+      .exec();
+
+    const userMap = new Map<string, Record<string, unknown>>();
+    for (const doc of userDocs) {
+      const d = doc as unknown as Record<string, unknown>;
+      userMap.set(String(d._id), d);
+    }
+
+    // Step 4: assemble leaderboard entries preserving aggregation order
+    const result: LeaderboardEntry[] = [];
+    for (const row of rankedCounts) {
+      const userId = row._id as string;
+      const doc = userMap.get(userId);
+      if (!doc) continue; // user deleted after aggregation
+      result.push({
+        id: userId,
+        username: (doc.username as string | null) ?? null,
+        name: doc.name as string,
+        mobileNumber: doc.mobileNumber as string,
+        profilePicUrl: (doc.profilePicUrl as string) ?? null,
+        crops: (doc.crops as string[]) ?? [],
+        approvedCount: row.approvedCount,
+      });
+    }
+
+    return result;
+  }
+
+  async getApprovedQuestionCount(userId: string): Promise<number> {
+    const result = await this._questionModel
+      .aggregate([
+        { $match: { userId, status: QuestionStatus.APPROVED } },
+        { $count: 'approvedCount' },
+      ])
+      .exec();
+    return result[0]?.approvedCount ?? 0;
+  }
+}

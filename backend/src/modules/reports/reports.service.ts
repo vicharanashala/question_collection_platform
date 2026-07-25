@@ -1,18 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Repository as TypeOrmRepo } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
 import {
-  Report,
-  ReportReply,
-  Notification,
-  AuditLog,
-  User,
-} from '../../shared/database/entities';
-import {
-  CreateReportDto,
-  ReplyReportDto,
-  ListReportsDto,
-} from './dto';
+  IReportRepository,
+  IReportReplyRepository,
+  INotificationRepository,
+  IAuditLogRepository,
+  IUserRepository,
+  REPOSITORY_TOKENS,
+} from '../../shared/database/repositories';
+import { CreateReportDto, ReplyReportDto, ListReportsDto } from './dto';
 import {
   ActorType,
   AuditAction,
@@ -20,24 +15,23 @@ import {
   ReportPriority,
   UserRole,
 } from '../../shared/classes/enums';
-import {
-  NotificationType,
-  NotificationTriggerType,
-} from '../../shared/database/entities/notification.entity';
+import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
+import { Report } from '../../shared/database/entities/report.entity';
+import { ReportReply } from '../../shared/database/entities/report-reply.entity';
 
 @Injectable()
 export class ReportsService {
   constructor(
-    @InjectRepository(Report)
-    private readonly reportRepo: Repository<Report>,
-    @InjectRepository(ReportReply)
-    private readonly replyRepo: Repository<ReportReply>,
-    @InjectRepository(Notification)
-    private readonly notificationRepo: Repository<Notification>,
-    @InjectRepository(AuditLog)
-    private readonly auditRepo: Repository<AuditLog>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @Inject(REPOSITORY_TOKENS.Report)
+    private readonly reportRepo: IReportRepository,
+    @Inject(REPOSITORY_TOKENS.ReportReply)
+    private readonly replyRepo: IReportReplyRepository,
+    @Inject(REPOSITORY_TOKENS.Notification)
+    private readonly notificationRepo: INotificationRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -50,13 +44,13 @@ export class ReportsService {
     entityId: string,
     metadata?: Record<string, unknown>,
   ): Promise<void> {
-    let actorType: ActorType
+    let actorType: ActorType;
     if (actorRole === UserRole.FINANCE) {
-      actorType = ActorType.FINANCE
+      actorType = ActorType.FINANCE;
     } else if (actorRole === UserRole.CURATOR) {
-      actorType = ActorType.CURATOR
+      actorType = ActorType.CURATOR;
     } else {
-      actorType = ActorType.ADMIN
+      actorType = ActorType.ADMIN;
     }
 
     await this.auditRepo.save({
@@ -71,59 +65,41 @@ export class ReportsService {
 
   // ─── User-facing ──────────────────────────────────────────────────────────
 
-  /**
-   * Any authenticated user submits a new report.
-   */
-  async createReport(
-    userId: string,
-    dto: CreateReportDto,
-  ): Promise<Report> {
-    const report = this.reportRepo.create({
+  async createReport(userId: string, dto: CreateReportDto): Promise<Report> {
+    const saved = await this.reportRepo.create({
       userId,
       title: dto.title,
       description: dto.description,
       category: dto.category,
       relatedEntityId: dto.relatedEntityId ?? null,
       relatedEntityType: dto.relatedEntityType ?? null,
-    });
-
-    const saved = await this.reportRepo.save(report);
+    } as never);
 
     await this.logAudit(
       userId,
       UserRole.USER,
       AuditAction.REPORT_SUBMITTED,
       'report',
-      saved.id,
+      (saved as { id: string }).id,
       { category: dto.category },
     );
 
     return saved;
   }
 
-  /**
-   * User fetches their own single report with replies.
-   */
-  async getMyReport(userId: string, reportId: string): Promise<Report | null> {
-    return this.reportRepo.findOne({
-      where: { id: reportId, userId },
-      relations: ['replies'],
-    });
+  async getMyReport(userId: string, reportId: string): Promise<unknown | null> {
+    const qb = this.reportRepo.createQueryBuilder('report')
+      .leftJoinAndSelect('report.replies', 'reply')
+      .where('report.id = :reportId AND report.userId = :userId', { reportId, userId });
+    return qb.getOne();
   }
 
-  /**
-   * User fetches their own reports (paginated).
-   */
   async getMyReports(userId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    const [items, total] = await this.reportRepo.findAndCount({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-      skip: offset,
-      take: limit,
-      relations: ['replies'],
-    });
-
+    const { data: items, total } = await this.reportRepo.findAndCount(
+      { userId } as never,
+      { pagination: { page, limit, sort: { createdAt: -1 } } },
+    );
     return {
       items,
       total,
@@ -135,84 +111,182 @@ export class ReportsService {
 
   // ─── Admin-facing ─────────────────────────────────────────────────────────
 
-  /**
-   * List all reports with optional filters (admin/curator).
-   */
   async listReports(dto: ListReportsDto) {
     const page = dto.page ?? 1;
     const limit = Math.min(dto.limit ?? 20, 100);
     const offset = (page - 1) * limit;
 
-    const qb = this.reportRepo
-      .createQueryBuilder('r')
-      .leftJoinAndSelect('r.user', 'user')
-      .leftJoinAndSelect('r.replies', 'replies')
-      .leftJoinAndSelect('replies.admin', 'admin')
-      .select([
-        'r.id',
-        'r.title',
-        'r.category',
-        'r.status',
-        'r.priority',
-        'r.createdAt',
-        'user.id',
-        'user.name',
-        'user.mobileNumber',
-        'replies.id',
-        'replies.message',
-        'replies.createdAt',
-        'admin.id',
-        'admin.name',
-      ]);
+    // Build the base filter
+    const match: Record<string, unknown> = {};
+    if (dto.status) match.status = dto.status;
+    if (dto.category) match.category = dto.category;
+    if (dto.priority) match.priority = dto.priority;
 
-    if (dto.status) {
-      qb.andWhere('r.status = :status', { status: dto.status });
-    }
-    if (dto.category) {
-      qb.andWhere('r.category = :category', { category: dto.category });
-    }
-    if (dto.priority) {
-      qb.andWhere('r.priority = :priority', { priority: dto.priority });
-    }
+    // MongoDB aggregation pipeline with $lookup for user
+    // NOTE: reports.userId is stored as a string while users._id is ObjectId,
+    // so we must $convert to ObjectId before the $lookup.
+    const pipeline: Record<string, unknown>[] = [
+      { $match: match },
+      { $addFields: { userIdOid: { $toObjectId: '$userId' } } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userIdOid',
+          foreignField: '_id',
+          as: 'userArr',
+        },
+      },
+      { $unwind: { path: '$userArr', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          id: { $toString: '$_id' },
+          userId: 1,
+          title: 1,
+          description: 1,
+          category: 1,
+          status: 1,
+          priority: 1,
+          relatedEntityId: 1,
+          relatedEntityType: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          'user.id': { $toString: '$userArr._id' },
+          'user.name': '$userArr.name',
+          'user.mobileNumber': '$userArr.mobileNumber',
+        },
+      },
+      { $sort: { createdAt: -1 } as Record<string, 1 | -1> },
+      { $skip: offset },
+      { $limit: limit },
+    ];
 
-    qb.orderBy('r.createdAt', 'DESC').skip(offset).take(limit);
+    // Run pipeline + count separately
+    const [items, total] = await Promise.all([
+      (this.reportRepo as unknown as { _model: { aggregate: (p: unknown) => { exec: () => Promise<unknown[]> } } })
+        ._model.aggregate(pipeline).exec(),
+      this.reportRepo.count(match),
+    ]);
 
-    const [items, total] = await qb.getManyAndCount();
+    // Normalise _id → id
+    const normalised = (items as Record<string, unknown>[]).map((r) => ({
+      ...r,
+      id: String(r._id),
+      _id: undefined,
+    }));
 
-    return {
-      items,
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit),
-    };
+    return { items: normalised, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
-  /**
-   * Get a single report with its reply thread.
-   */
-  async getReport(reportId: string) {
-    return this.reportRepo.findOne({
-      where: { id: reportId },
-      relations: ['user', 'replies', 'replies.admin'],
-      order: { createdAt: 'ASC' },
-    });
+  async getReport(reportId: string): Promise<unknown | null> {
+    const { Types } = require('mongoose');
+    const oid = new Types.ObjectId(reportId);
+
+    // NOTE: reports.userId is stored as a string while users._id is ObjectId.
+    // report_replies.reportId is an ObjectId (not a string).
+    const pipeline: Record<string, unknown>[] = [
+      { $match: { _id: oid } },
+      { $addFields: { userIdOid: { $toObjectId: '$userId' } } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userIdOid',
+          foreignField: '_id',
+          as: 'userArr',
+        },
+      },
+      { $unwind: { path: '$userArr', preserveNullAndEmptyArrays: true } },
+      { $addFields: { idStr: { $toString: '$_id' } } },
+      {
+        $lookup: {
+          from: 'report_replies',
+          localField: 'idStr',
+          foreignField: 'reportId',
+          as: 'repliesArr',
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'repliesArr.adminId',
+          foreignField: '_id',
+          as: 'repliesAdminArr',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          title: 1,
+          description: 1,
+          category: 1,
+          status: 1,
+          priority: 1,
+          relatedEntityId: 1,
+          relatedEntityType: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          'user.id': { $toString: '$userArr._id' },
+          'user.name': '$userArr.name',
+          'user.mobileNumber': '$userArr.mobileNumber',
+          replies: {
+            $map: {
+              input: '$repliesArr',
+              as: 'r',
+              in: {
+                id: { $toString: '$$r._id' },
+                message: '$$r.message',
+                createdAt: '$$r.createdAt',
+                admin: {
+                  $let: {
+                    vars: {
+                      adminMatch: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$repliesAdminArr',
+                              cond: { $eq: [{ $toString: '$$this._id' }, '$$r.adminId'] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: {
+                      id: { $toString: '$$adminMatch._id' },
+                      name: '$$adminMatch.name',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      { $sort: { createdAt: 1 } as Record<string, 1 | -1> },
+    ];
+
+    const results = await (this.reportRepo as unknown as { _model: { aggregate: (p: unknown) => { exec: () => Promise<unknown[]> } } })
+      ._model.aggregate(pipeline).exec();
+
+    if (!results.length) return null;
+
+    const r = results[0] as Record<string, unknown>;
+    // id is already in the projection; clean up _id
+    const { _id, ...rest } = r;
+    return { ...rest, id: String(_id) };
   }
 
-  /**
-   * Update report status.
-   */
   async updateStatus(
     reportId: string,
     status: ReportStatus,
     actorId: string,
     actorRole: UserRole,
   ): Promise<Report> {
-    const report = await this.reportRepo.findOne({ where: { id: reportId } });
+    const report = await this.reportRepo.findOne({ id: reportId } as never);
     if (!report) throw new Error('Report not found');
-
-    const oldStatus = report.status;
-    report.status = status;
+    const oldStatus = (report as { status: ReportStatus }).status;
+    (report as { status: ReportStatus }).status = status;
     const saved = await this.reportRepo.save(report);
 
     await this.logAudit(
@@ -224,75 +298,50 @@ export class ReportsService {
       { oldStatus, newStatus: status },
     );
 
-    // Notify user when report is closed
     if (status === ReportStatus.CLOSED) {
-      await this.sendReportClosedNotification(report, report.title);
+      await this.sendReportClosedNotification(saved as never, (saved as { title: string }).title);
     }
 
     return saved;
   }
 
-  /**
-   * Notify the reporter that their report has been closed.
-   */
   private async sendReportClosedNotification(
-    report: Report,
+    report: unknown,
     reportTitle: string,
   ): Promise<void> {
     const title = 'Your report has been closed';
-    const body =
-      reportTitle.length > 80
-        ? reportTitle.slice(0, 77) + '...'
-        : reportTitle;
+    const body = reportTitle.length > 80 ? reportTitle.slice(0, 77) + '...' : reportTitle;
+    const reportId = (report as { id: string }).id;
+    const userId = (report as { userId: string }).userId;
 
-    const notification = this.notificationRepo.create({
-      userId: report.userId,
+    await this.notificationRepo.create({
+      userId,
       type: NotificationType.REPORT_CLOSED,
       triggerType: NotificationTriggerType.REPORT,
       title,
       body,
-      data: { reportId: report.id },
-    });
-    await this.notificationRepo.save(notification);
+      data: { reportId },
+    } as never);
 
-    const user = await this.userRepo.findOne({
-      where: { id: report.userId },
-      select: ['expoPushToken'],
-    });
-    if (user?.expoPushToken) {
-      try {
-        const axios = (await import('axios')).default;
-        await axios.post(
-          'https://exp.host/--/api/v2/push/send',
-          { title, body, data: { reportId: report.id }, to: user.expoPushToken },
-          { headers: { 'Content-Type': 'application/json' }, timeout: 8_000 },
-        );
-      } catch {
-        // Silently ignore push failures; in-app notification is already persisted.
-      }
-    }
+    await this.sendPushNotification(userId, { title, body, data: { reportId } });
   }
 
-  /**
-   * Update report priority.
-   */
   async updatePriority(
     reportId: string,
     priority: ReportPriority,
     actorId: string,
     actorRole: UserRole,
   ): Promise<Report> {
-    const report = await this.reportRepo.findOne({ where: { id: reportId } });
+    const report = await this.reportRepo.findOne({ id: reportId } as never);
     if (!report) throw new Error('Report not found');
-
-    const oldPriority = report.priority;
-    report.priority = priority;
+    const oldPriority = (report as { priority: ReportPriority }).priority;
+    (report as { priority: ReportPriority }).priority = priority;
     const saved = await this.reportRepo.save(report);
 
     await this.logAudit(
       actorId,
       actorRole,
-      AuditAction.REPORT_STATUS_CHANGED, // reuse — no REPORT_PRIORITY_CHANGED in the enum
+      AuditAction.REPORT_STATUS_CHANGED,
       'report',
       reportId,
       { oldPriority, newPriority: priority },
@@ -301,56 +350,42 @@ export class ReportsService {
     return saved;
   }
 
-  /**
-   * Add an admin reply to a report.
-   * - Persists the reply
-   * - Notifies the original reporter (in-app + Expo push)
-   * - Updates report status to in_progress if it was 'open'
-   */
   async addReply(
     reportId: string,
     adminId: string,
     adminRole: UserRole,
     dto: ReplyReportDto,
   ): Promise<ReportReply> {
-    const report = await this.reportRepo.findOne({ where: { id: reportId } });
+    const report = await this.reportRepo.findOne({ id: reportId } as never);
     if (!report) throw new Error('Report not found');
 
-    // Persist the reply
-    const reply = this.replyRepo.create({
+    const savedReply = await this.replyRepo.create({
       reportId,
       adminId,
       message: dto.message,
-    });
-    const savedReply = await this.replyRepo.save(reply);
+    } as never);
 
-    // Update status to in_progress if open
-    if (report.status === ReportStatus.OPEN) {
-      report.status = ReportStatus.IN_PROGRESS;
+    if ((report as { status: ReportStatus }).status === ReportStatus.OPEN) {
+      (report as { status: ReportStatus }).status = ReportStatus.IN_PROGRESS;
       await this.reportRepo.save(report);
     }
 
-    // Send notification to the reporter
-    const body =
-      dto.message.length > 100
-        ? dto.message.slice(0, 97) + '...'
-        : dto.message;
+    const body = dto.message.length > 100 ? dto.message.slice(0, 97) + '...' : dto.message;
+    const userId = (report as { userId: string }).userId;
 
-    const notification = this.notificationRepo.create({
-      userId: report.userId,
+    await this.notificationRepo.create({
+      userId,
       type: NotificationType.REPORT_REPLY,
       triggerType: NotificationTriggerType.REPORT,
       title: 'Your report has been replied to',
       body,
-      data: { reportId, replyId: savedReply.id },
-    });
-    await this.notificationRepo.save(notification);
+      data: { reportId, replyId: (savedReply as { id: string }).id },
+    } as never);
 
-    // Send Expo push notification
-    await this.sendPushNotification(report.userId, {
+    await this.sendPushNotification(userId, {
       title: 'Your report has been replied to',
       body,
-      data: { reportId, replyId: savedReply.id },
+      data: { reportId, replyId: (savedReply as { id: string }).id },
     });
 
     await this.logAudit(
@@ -359,7 +394,7 @@ export class ReportsService {
       AuditAction.REPORT_REPLIED,
       'report',
       reportId,
-      { replyId: savedReply.id },
+      { replyId: (savedReply as { id: string }).id },
     );
 
     return savedReply;
@@ -369,21 +404,20 @@ export class ReportsService {
     userId: string,
     payload: { title: string; body: string; data: Record<string, unknown> },
   ): Promise<void> {
-    const user = await this.userRepo.findOne({
-      where: { id: userId },
-      select: ['expoPushToken'],
-    });
-    if (!user?.expoPushToken) return;
+    const user = await this.userRepo.findById(userId);
+    if (!user) return;
+    const expoPushToken = (user as unknown as { expoPushToken?: string }).expoPushToken;
+    if (!expoPushToken) return;
 
     try {
       const axios = (await import('axios')).default;
       await axios.post(
         'https://exp.host/--/api/v2/push/send',
-        { ...payload, to: user.expoPushToken },
+        { ...payload, to: expoPushToken },
         { headers: { 'Content-Type': 'application/json' }, timeout: 8_000 },
       );
     } catch {
-      // Silently ignore push failures; in-app notification is already persisted.
+      // Silently ignore.
     }
   }
 }

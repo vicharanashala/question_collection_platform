@@ -167,10 +167,11 @@ export function PaymentDetailsScreen() {
 
   async function handleDeleteConfirm() {
     if (!deletingDetail) return;
-    setDeletingId(deletingDetail.id);
+    const detailId = deletingDetail.id;
+    setDeletingId(detailId);
     setDeletingDetail(null);
     try {
-      await walletApi.deletePaymentDetail(deletingDetail.id);
+      await walletApi.deletePaymentDetail(detailId);
       setApiError('');
       await fetchDetails();
     } catch (e) {

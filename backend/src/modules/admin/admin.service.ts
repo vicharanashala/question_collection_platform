@@ -7,9 +7,9 @@ import {
   Inject,
   forwardRef,
   Logger,
+  Optional,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder, ILike, Between, In, DataSource } from 'typeorm';
+import { SelectQueryBuilder, ILike, Between, In, DataSource } from 'typeorm';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { HotDataService } from '../../shared/database/cache/hot-data.service';
 import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
@@ -62,6 +62,19 @@ import { NotificationsService } from '../notification/notifications.service';
 import { PinelabsService } from '../payment/pinelabs.service';
 import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
 import { decrypt } from '../../shared/functions/utils/encryption.util';
+import {
+  IUserRepository,
+  IQuestionRepository,
+  IWalletRepository,
+  ITransactionRepository,
+  IWithdrawalRequestRepository,
+  IAuditLogRepository,
+  IAdminConfigRepository,
+  INotificationRepository,
+  IPaymentLogRepository,
+  IUserPaymentDetailRepository,
+} from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
@@ -146,27 +159,26 @@ export class AdminService implements OnModuleInit {
     return result;
   }
   constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-    @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>,
-    @InjectRepository(Wallet)
-    private readonly walletRepo: Repository<Wallet>,
-    @InjectRepository(Transaction)
-    private readonly transactionRepo: Repository<Transaction>,
-    @InjectRepository(WithdrawalRequest)
-    private readonly withdrawalRepo: Repository<WithdrawalRequest>,
-    @InjectRepository(AuditLog)
-    private readonly auditRepo: Repository<AuditLog>,
-    @InjectRepository(AdminConfig)
-    private readonly configRepo: Repository<AdminConfig>,
-    @InjectRepository(Notification)
-    private readonly notificationRepo: Repository<Notification>,
-    @InjectRepository(PaymentLog)
-    private readonly paymentLogRepo: Repository<PaymentLog>,
-    @InjectRepository(UserPaymentDetail)
-    private readonly paymentDetailRepo: Repository<UserPaymentDetail>,
-    private readonly dataSource: DataSource,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.Wallet)
+    private readonly walletRepo: IWalletRepository,
+    @Inject(REPOSITORY_TOKENS.Transaction)
+    private readonly transactionRepo: ITransactionRepository,
+    @Inject(REPOSITORY_TOKENS.WithdrawalRequest)
+    private readonly withdrawalRepo: IWithdrawalRequestRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(REPOSITORY_TOKENS.AdminConfig)
+    private readonly configRepo: IAdminConfigRepository,
+    @Inject(REPOSITORY_TOKENS.Notification)
+    private readonly notificationRepo: INotificationRepository,
+    @Inject(REPOSITORY_TOKENS.PaymentLog)
+    private readonly paymentLogRepo: IPaymentLogRepository,
+    @Inject(REPOSITORY_TOKENS.UserPaymentDetail)
+    private readonly paymentDetailRepo: IUserPaymentDetailRepository,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WalletsService))
     private readonly walletsService: WalletsService,
@@ -176,7 +188,15 @@ export class AdminService implements OnModuleInit {
     private readonly redisService: RedisService,
     private readonly hotDataService: HotDataService,
     private readonly analyticsCacheService: AnalyticsCacheService,
+    @Inject(DataSource) @Optional()
+    private readonly dataSource?: DataSource,
   ) {}
+
+  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
+  private get ds(): DataSource {
+    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
+    return this.dataSource;
+  }
 
   private readonly logger = new Logger(AdminService.name);
 
@@ -216,7 +236,7 @@ export class AdminService implements OnModuleInit {
       case AuditAction.ADMIN_CONFIG_UPDATED:
         return `Updated config: ${metadata?.key ?? action}`;
       default:
-        return action.replace(/_/g, ' ');
+        return (action ?? '').replace(/_/g, ' ') || action;
     }
   }
 
@@ -280,7 +300,7 @@ export class AdminService implements OnModuleInit {
 
     const isPrivilegedRole = dto.role === UserRole.ADMIN || dto.role === UserRole.CURATOR;
 
-    const user = this.userRepo.create({
+    const user = await this.userRepo.create({
       name: dto.name.trim(),
       mobileNumber: mobile,
       role: dto.role,
@@ -700,8 +720,7 @@ export class AdminService implements OnModuleInit {
         newValue: { status: QuestionStatus.APPROVED, reward: rewardResult.transaction.amount },
       });
 
-      await this.notificationRepo.save(
-        this.notificationRepo.create({
+      await this.notificationRepo.save(await this.notificationRepo.create({
           userId: question.userId,
           type: NotificationType.QUESTION_APPROVED,
           title: 'Question Approved',
@@ -743,8 +762,7 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: oldStatus },
         newValue: { status: QuestionStatus.REJECTED, reason: dto.reason },
       });
-      await this.notificationRepo.save(
-        this.notificationRepo.create({
+      await this.notificationRepo.save(await this.notificationRepo.create({
           userId: question.userId,
           type: NotificationType.QUESTION_REJECTED,
           title: 'Question Not Approved',
@@ -777,8 +795,7 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: oldStatus },
         newValue: { status: QuestionStatus.HELD, reason: dto.heldReason },
       });
-      await this.notificationRepo.save(
-        this.notificationRepo.create({
+      await this.notificationRepo.save(await this.notificationRepo.create({
           userId: question.userId,
           type: NotificationType.QUESTION_HELD,
           title: 'Question Under Review',
@@ -803,8 +820,7 @@ export class AdminService implements OnModuleInit {
       oldValue: { status: oldStatus },
       newValue: { status: QuestionStatus.HUMAN_REVIEW },
     });
-    await this.notificationRepo.save(
-      this.notificationRepo.create({
+    await this.notificationRepo.save(await this.notificationRepo.create({
         userId: question.userId,
         type: NotificationType.QUESTION_INFO_REQUESTED,
         title: 'More Information Needed',
@@ -843,7 +859,7 @@ export class AdminService implements OnModuleInit {
 
     const oldValue = config.value;
 
-    await this.configRepo.update({ key: dto.key }, {
+    await this.configRepo.updateMany({ key: dto.key }, {
       value: dto.value,
       description: dto.description ?? config.description,
       updatedBy: adminId,
@@ -1464,7 +1480,7 @@ export class AdminService implements OnModuleInit {
       });
 
       // ── Step 5: Log the payment attempt ─────────────────────────────────────
-      const paymentLog = this.paymentLogRepo.create({
+      const paymentLog = await this.paymentLogRepo.create({
         withdrawalRequestId: withdrawalId,
         adminId,
         orderId: referenceId,
@@ -1509,8 +1525,7 @@ export class AdminService implements OnModuleInit {
         });
       } else {
         // Send notification (PROCESSING or COMPLETED)
-        await this.notificationRepo.save(
-          this.notificationRepo.create({
+        await this.notificationRepo.save(await this.notificationRepo.create({
             userId: withdrawal.userId,
             type: NotificationType.WITHDRAWAL_APPROVED,
             title: 'Withdrawal Approved',
@@ -1541,12 +1556,11 @@ export class AdminService implements OnModuleInit {
         status: WithdrawalStatus.REJECTED,
         processedAt: new Date(),
       });
-      await this.transactionRepo.update(
+      await this.transactionRepo.updateMany(
         { referenceId: withdrawalId, status: TransactionStatus.PENDING },
         { status: TransactionStatus.REJECTED, rejectionReason },
       );
-      await this.transactionRepo.save(
-        this.transactionRepo.create({
+      await this.transactionRepo.save(await this.transactionRepo.create({
           walletId: withdrawal.walletId,
           amount: Number(withdrawal.amount),
           type: TransactionType.CREDIT,
@@ -1566,8 +1580,7 @@ export class AdminService implements OnModuleInit {
         oldValue: { status: WithdrawalStatus.PENDING },
         newValue: { status: WithdrawalStatus.REJECTED, reason: rejectionReason },
       });
-      const notification = await this.notificationRepo.save(
-        this.notificationRepo.create({
+      const notification = await this.notificationRepo.save(await this.notificationRepo.create({
           userId: withdrawal.userId,
           type: NotificationType.WITHDRAWAL_REJECTED,
           title: 'Withdrawal Rejected',
@@ -1768,7 +1781,7 @@ export class AdminService implements OnModuleInit {
     // Use existing referenceId if present, otherwise build a new one
     const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner = this.ds.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -1941,8 +1954,7 @@ export class AdminService implements OnModuleInit {
     const { withdrawal, orderId, adminId, result } = params;
 
     // 1. Log failure to payment_logs
-    await this.paymentLogRepo.save(
-      this.paymentLogRepo.create({
+    await this.paymentLogRepo.save(await this.paymentLogRepo.create({
         withdrawalRequestId: withdrawal.id,
         adminId,
         orderId,
@@ -1987,11 +1999,11 @@ export class AdminService implements OnModuleInit {
     if (withdrawal.status === WithdrawalStatus.FAILED) {
       // Idempotent: already failed — update the DEBIT and CREDIT (refund) transaction reasons
       if (reason) {
-        await this.transactionRepo.update(
+        await this.transactionRepo.updateMany(
           { referenceId: withdrawalId, type: TransactionType.DEBIT },
           { rejectionReason: reason },
         );
-        await this.transactionRepo.update(
+        await this.transactionRepo.updateMany(
           { referenceId: withdrawalId, type: TransactionType.CREDIT, source: TransactionSource.REFUND },
           { rejectionReason: reason },
         );
@@ -2003,7 +2015,7 @@ export class AdminService implements OnModuleInit {
       throw new BadRequestException(`Cannot mark withdrawal as failed in '${withdrawal.status}' status. Only PROCESSING withdrawals can be marked failed.`);
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner = this.ds.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -2073,8 +2085,7 @@ export class AdminService implements OnModuleInit {
         )
 
         // 6a. Notify: withdrawal failed
-        const failedNotification = await this.notificationRepo.save(
-          this.notificationRepo.create({
+        const failedNotification = await this.notificationRepo.save(await this.notificationRepo.create({
             userId: withdrawalForNotify.userId,
             type: NotificationType.WITHDRAWAL_FAILED,
             title: 'Withdrawal Failed',
@@ -2096,8 +2107,7 @@ export class AdminService implements OnModuleInit {
         })
 
         // 6b. Notify: refund completed
-        const refundNotification = await this.notificationRepo.save(
-          this.notificationRepo.create({
+        const refundNotification = await this.notificationRepo.save(await this.notificationRepo.create({
             userId: withdrawalForNotify.userId,
             type: NotificationType.REFUND_COMPLETED,
             title: 'Refund Processed',
@@ -2156,7 +2166,7 @@ export class AdminService implements OnModuleInit {
     const debitTx = await this.transactionRepo.findOne({
       where: { referenceId: withdrawalId, type: TransactionType.DEBIT },
     });
-    await this.transactionRepo.update(
+    await this.transactionRepo.updateMany(
       { referenceId: withdrawalId, type: TransactionType.DEBIT },
       { rejectionReason: reason },
     );
@@ -2528,7 +2538,7 @@ export class AdminService implements OnModuleInit {
     // State breakdown
     let stateQb = this.userRepo.createQueryBuilder('u').select('u.state', 'state').addSelect('COUNT(*)', 'count').groupBy('u.state').orderBy('count', 'DESC');
     if (state) stateQb = stateQb.andWhere('u.state = :state', { state });
-    const stateBreakdown: Array<{ state: string; count: number }> = (await stateQb.getRawMany()).map((r) => ({ state: r.state, count: Number(r.count) }));
+    const stateBreakdown: Array<{ state: string; count: number }> = (await stateQb.getRawMany()).map((r) => ({ state: r.state as string, count: Number(r.count) }));
 
     // District breakdown (top 20 per state if filtered, else overall top 20)
     let districtQb = this.userRepo.createQueryBuilder('u')
@@ -2629,7 +2639,7 @@ export class AdminService implements OnModuleInit {
     if (state) stateQb = stateQb.andWhere('q.state = :state', { state });
     const stateBreakdown: Array<{ state: string; count: number; approved: number }> = (
       await stateQb.getRawMany()
-    ).map((r) => ({ state: r.state, count: Number(r.count), approved: Number(r.approved) }));
+    ).map((r) => ({ state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
 
     // Crop-type breakdown (top 15)
     let cropQb = this.questionRepo
@@ -2644,7 +2654,7 @@ export class AdminService implements OnModuleInit {
     if (cropType) cropQb = cropQb.andWhere('q.cropType = :cropType', { cropType });
     const cropBreakdown: Array<{ cropType: string; count: number; approved: number }> = (
       await cropQb.getRawMany()
-    ).map((r) => ({ cropType: r.cropType, count: Number(r.count), approved: Number(r.approved) }));
+    ).map((r) => ({ cropType: r.cropType as string, count: Number(r.count), approved: Number(r.approved) }));
 
     // Domain category breakdown
     const domainBreakdownRaw = await this.questionRepo
@@ -2679,7 +2689,7 @@ export class AdminService implements OnModuleInit {
       await districtQb.getRawMany()
     )
       .filter((r) => r.district != null)
-      .map((r) => ({ district: r.district, state: r.state, count: Number(r.count), approved: Number(r.approved) }));
+      .map((r) => ({ district: r.district as string, state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
 
     // Approval rate
     const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
@@ -3072,11 +3082,11 @@ export class AdminService implements OnModuleInit {
       limit,
       pages: Math.ceil(total / limit),
       summary: {
-        totalTransactions: Number(summary.totalCount) || 0,
-        totalCredits: Number(summary.totalCredits) || 0,
-        totalDebits: Number(summary.totalDebits) || 0,
-        completedCredits: Number(summary.completedCredits) || 0,
-        completedDebits: Number(summary.completedDebits) || 0,
+        totalTransactions: Number(summary?.totalCount ?? 0),
+        totalCredits: Number(summary?.totalCredits ?? 0),
+        totalDebits: Number(summary?.totalDebits ?? 0),
+        completedCredits: Number(summary?.completedCredits ?? 0),
+        completedDebits: Number(summary?.totalDebits ?? 0),
       },
     };
   }
@@ -3236,7 +3246,7 @@ export class AdminService implements OnModuleInit {
 
     const [items, total] = await qb.getManyAndCount();
     return {
-      items: items.map((w) => ({
+      items: items.filter((w) => w.user).map((w) => ({
         id: w.id,
         userId: w.user.id,
         balance: Number(w.balance),

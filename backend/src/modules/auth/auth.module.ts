@@ -1,19 +1,18 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
-import { User, Wallet, AuditLog } from '../../shared/database/entities';
 import { JwtStrategy } from '../../shared/middleware/guards/jwt.strategy';
 import { AdminModule } from '../admin/admin.module';
 import { CacheModule } from '../../shared/database/cache/cache.module';
+import { DbModule } from '../../shared/database/db.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Wallet, AuditLog]),
+    DbModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

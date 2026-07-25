@@ -4,6 +4,7 @@
 
 **Before starting any sub-task, always prefix your commit/message with the phase number.**
 For example: `[Phase 2] Add user repository abstraction`, `[Phase 3] Implement wallet mongo repository`, etc.
+No need to migrate the data to mongodb, both database should be standalone
 
 **Coverage rule: Every endpoint and every database query/write operation must have a MongoDB equivalent.**
 No PostgreSQL-only query or API endpoint may be left without a corresponding MongoDB implementation. If a raw SQL query

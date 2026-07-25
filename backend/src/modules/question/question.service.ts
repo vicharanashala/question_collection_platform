@@ -5,8 +5,8 @@ import {
   ForbiddenException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
+import { Inject } from '@nestjs/common';
+import { DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
 import { Question, AuditLog, Notification } from '../../shared/database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../../shared/classes/enums';
 import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
@@ -23,17 +23,22 @@ import { EmbedService } from '../ai/embed.service';
 import { DuplicateDetectionService } from '../../shared/database/cache/duplicate-detection.service';
 import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
 import { HotDataService } from '../../shared/database/cache/hot-data.service';
+import {
+  IQuestionRepository,
+  IAuditLogRepository,
+  INotificationRepository,
+} from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 @Injectable()
 export class QuestionService {
   constructor(
-    @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>,
-    @InjectRepository(AuditLog)
-    private readonly auditRepo: Repository<AuditLog>,
-    @InjectRepository(Notification)
-    private readonly notifRepo: Repository<Notification>,
-    private readonly dataSource: DataSource,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(REPOSITORY_TOKENS.Notification)
+    private readonly notifRepo: INotificationRepository,
     private readonly adminService: AdminService,
     private readonly userService: UserService,
     private readonly storageService: StorageService,
@@ -187,7 +192,7 @@ export class QuestionService {
     const dbDup = await this.findExactDuplicate(dto.questionText, userId);
     if (dbDup) {
       const dup = dbDup.matchedQuestion;
-      let duplicateQuestion = this.questionRepo.create({
+      const duplicateQuestion = await this.questionRepo.create({
         userId,
         domains,
         season: dto.season,
@@ -204,10 +209,6 @@ export class QuestionService {
         rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
         submittedAt: now,
         embedding: [0],
-      });
-      duplicateQuestion = await this.dataSource.transaction(async (em) => {
-        const repo = em.getRepository(Question);
-        return repo.save(duplicateQuestion) as Promise<Question>;
       });
       await this.auditRepo.save({
         actorType: ActorType.USER,
@@ -253,7 +254,7 @@ export class QuestionService {
       // Save the question as REJECTED so it counts as a submission against the daily limit,
       // then return the matched Q&A pair so the mobile can display DuplicateFoundModal.
       const dup = duplicateResult as { isDuplicate: true; matchedQuestionId: string | null; matchedQuestion: string | null; matchedAnswer: string | null; similarityScore: number | null; matchedUserName: string | null };
-      let duplicateQuestion = this.questionRepo.create({
+      const duplicateQuestion = await this.questionRepo.create({
         userId,
         domains,
         season: dto.season,
@@ -272,10 +273,6 @@ export class QuestionService {
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
       // Capture the saved entity so we have its ID for audit metadata.
-      duplicateQuestion = await this.dataSource.transaction(async (em) => {
-        const repo = em.getRepository(Question);
-        return repo.save(duplicateQuestion) as Promise<Question>;
-      });
       await this.auditRepo.save({
         actorType: ActorType.USER,
         actorId: userId,
@@ -323,7 +320,7 @@ export class QuestionService {
     }
 
     // 8. Persist question in a transaction
-    const question = this.questionRepo.create({
+    const saved = await this.questionRepo.create({
       userId,
       domains,
       season: dto.season,
@@ -339,11 +336,6 @@ export class QuestionService {
       status,
       submittedAt: now,
       embedding,
-    });
-
-    const saved = await this.dataSource.transaction(async (em) => {
-      const repo = em.getRepository(Question);
-      return repo.save(question) as Promise<Question>;
     });
 
     // 10. Audit log
@@ -419,25 +411,15 @@ export class QuestionService {
       where.submittedAt = LessThanOrEqual(new Date(toDate));
     }
 
-    const [items, total] = await this.questionRepo.findAndCount({
+    const { data: items, total } = await this.questionRepo.findAndCount(
       where,
-      relations: { user: true, reviewer: true },
-      order: { submittedAt: 'DESC' },
-      skip,
-      take: limit,
-      select: [
-        'id', 'domains', 'season', 'cropType', 'questionText',
-        'mediaType', 'mediaUrls', 'status', 'duplicateFlag',
-        'submittedAt', 'reviewedAt', 'rejectionReason', 'heldReason', 'approvalReason',
-        'state', 'district', 'block', 'language',
-        'createdAt',
-      ],
-    });
+      { pagination: { page, limit, sort: { submittedAt: -1 } } },
+    );
 
     return {
       items: items.map((q) => ({
-        ...q,
-        reviewedByName: (q as any).reviewer?.name ?? null,
+        ...(q as unknown as Record<string, unknown>),
+        reviewedByName: ((q as unknown as Record<string, unknown>).reviewer as { name?: string } | null)?.name ?? null,
       })),
       total, page, limit, pages: Math.ceil(total / limit),
     };
@@ -594,7 +576,7 @@ export class QuestionService {
       const dup = dbDup.matchedQuestion;
       const now = new Date();
 
-      let duplicateQuestion = this.questionRepo.create({
+      const duplicateQuestion = await this.questionRepo.create({
         userId,
         domains: inferred.domains,
         season,
@@ -610,10 +592,6 @@ export class QuestionService {
         rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
-      });
-      duplicateQuestion = await this.dataSource.transaction(async (em) => {
-        const repo = em.getRepository(Question);
-        return repo.save(duplicateQuestion) as Promise<Question>;
       });
       await this.auditRepo.save({
         actorType: ActorType.USER,
@@ -665,7 +643,7 @@ export class QuestionService {
       };
       const now = new Date();
 
-      let duplicateQuestion = this.questionRepo.create({
+      const duplicateQuestion = await this.questionRepo.create({
         userId,
         domains: inferred.domains,
         season,
@@ -681,10 +659,6 @@ export class QuestionService {
         rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
-      });
-      duplicateQuestion = await this.dataSource.transaction(async (em) => {
-        const repo = em.getRepository(Question);
-        return repo.save(duplicateQuestion) as Promise<Question>;
       });
       await this.auditRepo.save({
         actorType: ActorType.USER,

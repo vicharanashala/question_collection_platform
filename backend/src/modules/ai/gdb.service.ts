@@ -12,12 +12,12 @@
  * is returned so the mobile app can show it to the user.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Question } from '../../shared/database/entities';
 import { AdminService } from '../admin/admin.service';
+import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 export interface GdbSearchResult {
   question_id: string;
@@ -81,8 +81,8 @@ export class GdbService {
   constructor(
     private readonly configService: ConfigService,
     private readonly adminService: AdminService,
-    @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
   ) {}
 
   // ─── Public API ──────────────────────────────────────────────────────────────

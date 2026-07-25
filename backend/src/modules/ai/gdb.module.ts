@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Question } from '../../shared/database/entities';
 import { GdbService } from './gdb.service';
 import { AdminModule } from '../admin/admin.module';
+import { DbModule } from '../../shared/database/db.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Question]),
+    DbModule,
     AdminModule, // for AdminService.getConfigValue()
   ],
   providers: [GdbService],

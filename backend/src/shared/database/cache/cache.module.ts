@@ -1,5 +1,4 @@
 import { Module, Global } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisService } from './redis.service';
 import { SessionService } from './session.service';
@@ -10,14 +9,12 @@ import { AnalyticsCacheService } from './analytics-cache.service';
 import { DuplicateDetectionService } from './duplicate-detection.service';
 import { CacheInterceptor } from './interceptors/cache.interceptor';
 import { RateLimitGuard } from './guards/rate-limit.guard';
-import { AdminConfig } from '../entities/admin-config.entity';
-import { User } from '../entities/user.entity';
-import { Question } from '../entities/question.entity';
 import { getRateLimitPresets } from './rate-limit-presets';
+import { DbModule } from '../db.module';
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminConfig, User, Question]), ConfigModule],
+  imports: [DbModule, ConfigModule],
   providers: [
     RedisService,
     SessionService,

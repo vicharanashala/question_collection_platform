@@ -271,7 +271,7 @@ export default function ReportsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <Badge className={STATUS_COLORS[report.status] ?? 'bg-surface-variant text-text'}>
-                    {report.status.replace('_', ' ')}
+                    {(report.status ?? '').replace(/_/g, ' ')}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">

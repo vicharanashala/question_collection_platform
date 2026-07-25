@@ -17,7 +17,7 @@ The platform is a cloud-native application designed to collect, validate, and st
 | Web Dashboard | React (Vite) | Admin/curator/finance team reviews and manages |
 | Public Web | React (Vite) | — (future public question browse, not yet built) |
 
-**Backend:** NestJS (Node.js/TypeScript) — single monolith deployed as a container, horizontally scalable.
+**Backend:** NestJS (Node.js/TypeScript) — single monolith deployed as a container, horizontally scalable. Supports **dual database drivers** — PostgreSQL (TypeORM) and MongoDB (Mongoose) — selected at boot via the `DB` environment variable (`DB=postgres` | `DB=mongo`).
 
 ---
 
@@ -65,22 +65,29 @@ The platform is a cloud-native application designed to collect, validate, and st
          │                           │                               │
          v                           v                               v
   ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────────┐
-  │  PostgreSQL      │   │     Redis        │   │   External Services   │
-  │  (Primary DB)    │   │  (Cache/Session) │   │                       │
+  │  PostgreSQL      │   │    MongoDB       │   │   External Services   │
+  │  (TypeORM)       │   │   (Mongoose)     │   │                       │
   │                  │   │                  │   │  • SMS Gateway (OTP)  │
-  │  users           │   │  • Config cache  │   │  • PineLabs           │
-  │  questions       │   │  • Rate limit    │   │    (payment verify)   │
-  │  wallets         │   │    counters      │   │  • Razorpay           │
-  │  transactions    │   │                  │   │    (fund accounts +   │
-  │  withdrawal_     │   │                  │   │    payouts)           │
-  │    requests      │   │                  │   │  • GCP Cloud Storage  │
-  │  payment_logs    │   │                  │   │    (media files)      │
-  │  user_payment_   │   │                  │   │  • Sarvam AI          │
-  │    details       │   │                  │   │    (speech-to-text)   │
-  │  notifications   │   │                  │   │  • LGD Service        │
-  │  audit_logs      │   │                  │   │    (district/block    │
-  │  admin_config    │   │                  │   │    master data)       │
-  └──────────────────┘   └──────────────────┘   └──────────────────────┘
+  │  users           │   │  users           │   │  • PineLabs           │
+  │  questions       │   │  questions       │   │    (payment verify)   │
+  │  wallets         │   │  wallets         │   │  • Razorpay           │
+  │  transactions    │   │  transactions    │   │    (fund accounts +   │
+  │  withdrawal_     │   │  withdrawal_     │   │    payouts)           │
+  │    requests      │   │    requests      │   │  • GCP Cloud Storage  │
+  │  payment_logs    │   │  payment_logs    │   │    (media files)      │
+  │  user_payment_   │   │  user_payment_   │   │  • Sarvam AI          │
+  │    details       │   │    details       │   │    (speech-to-text)   │
+  │  notifications   │   │  notifications   │   │  • LGD Service        │
+  │  audit_logs      │   │  audit_logs      │   │    (district/block    │
+  │  admin_config    │   │  admin_config    │   │    master data)       │
+  │  reports         │   │  reports         │   └──────────────────────┘
+  │  report_replies  │   │  report_replies  │
+  │  faqs            │   │  faqs            │
+  └──────────────────┘   └──────────────────┘
+
+  Redis (Cache/Session):  • Config cache  • Rate limit counters
+
+  > **Database Selection:** Set `DB=postgres` for PostgreSQL; `DB=mongo` for MongoDB. Both are production-ready with full API coverage. See [docs/MIGRATION.md](./docs/MIGRATION.md) for deployment details.
 ```
 
 ---
@@ -251,7 +258,7 @@ On Withdrawal:
 | Mobile App | React Native (Expo SDK 53) |
 | Web (Admin + future public) | React + Vite + TypeScript |
 | Backend Framework | NestJS (Node.js) |
-| Database | PostgreSQL 15 + TypeORM |
+| Database | PostgreSQL 15 + TypeORM **or** MongoDB + Mongoose (`DB` env var) |
 | Cache | Redis |
 | Object Storage | GCP Cloud Storage |
 | AI Inference | Groq (OpenAI-compatible API) — `meta-llama/llama-4-maverick` default |

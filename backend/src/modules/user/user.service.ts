@@ -1,24 +1,29 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { User, AuditLog, Notification, Question, Transaction } from '../../shared/database/entities';
 import { AuditAction, ActorType, QuestionStatus, TransactionType, TransactionSource, TransactionStatus, UserRole } from '../../shared/classes/enums';
 import { UpdateProfileDto, UpdateCropDetailsDto } from './dto';
+import {
+  IUserRepository,
+  IAuditLogRepository,
+  INotificationRepository,
+  IQuestionRepository,
+  ITransactionRepository,
+} from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-    @InjectRepository(AuditLog)
-    private readonly auditRepo: Repository<AuditLog>,
-    @InjectRepository(Notification)
-    private readonly notifRepo: Repository<Notification>,
-    @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>,
-    @InjectRepository(Transaction)
-    private readonly transactionRepo: Repository<Transaction>,
-    private readonly dataSource: DataSource,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(REPOSITORY_TOKENS.Notification)
+    private readonly notifRepo: INotificationRepository,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.Transaction)
+    private readonly transactionRepo: ITransactionRepository,
   ) {}
 
   async getProfile(userId: string): Promise<User> {
@@ -92,14 +97,12 @@ export class UserService {
     const skip = (page - 1) * limit;
 
     const [notifications, total, unreadCount] = await Promise.all([
-      this.notifRepo.find({
-        where: { userId },
-        order: { createdAt: 'DESC' },
-        skip,
-        take: limit,
-      }),
-      this.notifRepo.count({ where: { userId } }),
-      this.notifRepo.count({ where: { userId, isRead: false } }),
+      this.notifRepo.findAll(
+        { userId },
+        { pagination: { page, limit, sort: { createdAt: -1 } } },
+      ),
+      this.notifRepo.count({ userId }),
+      this.notifRepo.count({ userId, isRead: false }),
     ]);
 
     return {
@@ -154,26 +157,34 @@ export class UserService {
 
     // Main query: join users with both aggregate subqueries — farmer users only
     const qb = this.userRepo
-      .createQueryBuilder('u')
-      .leftJoin(`(${earnedSubSql.trim()})`, 'e', 'e."userId" = u.id')
-      .leftJoin(`(${questionsSubSql.trim()})`, 'qc', 'qc."userId" = u.id')
-      .select([
-        'u.id AS "userId"',
-        'u.name AS name',
-        'COALESCE(e."totalEarned", 0) AS "totalEarned"',
-        'COALESCE(qc."totalQuestions", 0) AS "totalQuestions"',
-      ])
-      .where('u.role = :userRole', { userRole: UserRole.USER })
-      .andWhere('COALESCE(qc."totalQuestions", 0) > 0')
-      .orderBy('"totalQuestions"', 'DESC')
-      .addOrderBy('"totalEarned"', 'DESC');
+      .createQueryBuilder('u') as any;
+
+    void qb.leftJoin(`(${earnedSubSql.trim()})`, 'e', 'e."userId" = u.id');
+    void qb.leftJoin(`(${questionsSubSql.trim()})`, 'qc', 'qc."userId" = u.id');
+    void qb.select([
+      'u.id AS "userId"',
+      'u.name AS name',
+      'COALESCE(e."totalEarned", 0) AS "totalEarned"',
+      'COALESCE(qc."totalQuestions", 0) AS "totalQuestions"',
+    ]);
+    void qb.where('u.role = :userRole', { userRole: UserRole.USER });
+    void qb.andWhere('COALESCE(qc."totalQuestions", 0) > 0');
+    void qb.orderBy('"totalQuestions"', 'DESC');
+    void qb.addOrderBy('"totalEarned"', 'DESC');
 
     const allRows: Array<{
       userId: string;
       name: string;
       totalEarned: number;
       totalQuestions: number;
-    }> = await qb.getRawMany();
+    }> = await (qb.getRawMany() as Promise<Array<Record<string, unknown>>>).then(rows =>
+      rows.map(r => ({
+        userId: String(r.userId),
+        name: String(r.name),
+        totalEarned: Number(r.totalEarned ?? 0),
+        totalQuestions: Number(r.totalQuestions ?? 0),
+      }))
+    );
 
     const total = allRows.length;
 
@@ -213,11 +224,11 @@ export class UserService {
   }
 
   async markAsRead(userId: string, notificationId: string): Promise<void> {
-    await this.notifRepo.update({ id: notificationId, userId }, { isRead: true });
+    await this.notifRepo.update(notificationId, { isRead: true });
   }
 
   async markAllNotificationsRead(userId: string): Promise<void> {
-    await this.notifRepo.update({ userId, isRead: false }, { isRead: true });
+    await this.notifRepo.updateMany({ userId, isRead: false }, { isRead: true });
   }
 
   async createNotification(params: {
@@ -227,14 +238,13 @@ export class UserService {
     body: string;
     data?: Record<string, unknown>;
   }): Promise<Notification> {
-    const notif = this.notifRepo.create({
+    return this.notifRepo.create({
       userId: params.userId,
       type: params.type as any,
       title: params.title,
       body: params.body,
       data: params.data ?? null,
     });
-    return this.notifRepo.save(notif);
   }
 
   private async logAudit(
@@ -246,7 +256,7 @@ export class UserService {
     oldValue?: Record<string, unknown> | null,
     newValue?: Record<string, unknown> | null,
   ): Promise<void> {
-    const log = this.auditRepo.create({
+    const log = await this.auditRepo.create({
       actorType,
       actorId,
       action,
@@ -255,6 +265,5 @@ export class UserService {
       oldValue: oldValue ?? null,
       newValue: newValue ?? null,
     });
-    await this.auditRepo.save(log);
   }
 }

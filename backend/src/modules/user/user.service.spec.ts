@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User, AuditLog } from '../../shared/database/entities';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import {
   UserCategory,
   VerificationStatus,
@@ -49,14 +49,14 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: getRepositoryToken(User), useFactory: mockUserRepo },
-        { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
+        { provide: REPOSITORY_TOKENS.User, useFactory: mockUserRepo },
+        { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
         { provide: DataSource, useFactory: mockDataSource },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
-    userRepo = module.get(getRepositoryToken(User));
+    userRepo = module.get(REPOSITORY_TOKENS.User);
   });
 
   afterEach(() => jest.clearAllMocks());

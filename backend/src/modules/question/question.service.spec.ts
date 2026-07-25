@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { QuestionService } from './question.service';
 import { UserService } from '../user/user.service';
@@ -7,6 +6,7 @@ import { AdminService } from '../admin/admin.service';
 import { StorageService } from '../storage/storage.service';
 import { GemmaService } from '../ai/gemma.service';
 import { Question, AuditLog, Notification } from '../../shared/database/entities';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { QuestionStatus, MediaType, Season, VerificationStatus } from '../../shared/classes/enums';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 
@@ -95,9 +95,9 @@ describe('QuestionService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         QuestionService,
-        { provide: getRepositoryToken(Question), useFactory: mockQuestionRepo },
-        { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
-        { provide: getRepositoryToken(Notification), useFactory: mockNotificationRepo },
+        { provide: REPOSITORY_TOKENS.Question, useFactory: mockQuestionRepo },
+        { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
+        { provide: REPOSITORY_TOKENS.Notification, useFactory: mockNotificationRepo },
         { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
         { provide: UserService, useFactory: mockUserService },
@@ -107,8 +107,8 @@ describe('QuestionService', () => {
     }).compile();
 
     service = module.get<QuestionService>(QuestionService);
-    questionRepo = module.get(getRepositoryToken(Question));
-    auditRepo = module.get(getRepositoryToken(AuditLog));
+    questionRepo = module.get(REPOSITORY_TOKENS.Question);
+    auditRepo = module.get(REPOSITORY_TOKENS.AuditLog);
   });
 
   afterEach(() => jest.clearAllMocks());

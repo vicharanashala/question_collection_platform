@@ -11,8 +11,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Public } from '../../shared/middleware/decorators/public.decorator';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import {
@@ -23,6 +22,13 @@ import {
 } from '../../shared/database/entities';
 import { WithdrawalStatus, PaymentLogStatus, TransactionStatus } from '../../shared/classes/enums';
 import { WalletsService } from '../wallets/wallets.service';
+import {
+  IWithdrawalRequestRepository,
+  IPaymentLogRepository,
+  ITransactionRepository,
+  IUserPaymentDetailRepository,
+} from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 interface RazorpayPaymentEntity {
   id?: string;
@@ -59,14 +65,14 @@ export class RazorpayWebhookController {
   constructor(
     private readonly walletsService: WalletsService,
     private readonly configService: ConfigService,
-    @InjectRepository(WithdrawalRequest)
-    private readonly withdrawalRepo: Repository<WithdrawalRequest>,
-    @InjectRepository(PaymentLog)
-    private readonly paymentLogRepo: Repository<PaymentLog>,
-    @InjectRepository(Transaction)
-    private readonly transactionRepo: Repository<Transaction>,
-    @InjectRepository(UserPaymentDetail)
-    private readonly paymentDetailRepo: Repository<UserPaymentDetail>,
+    @Inject(REPOSITORY_TOKENS.WithdrawalRequest)
+    private readonly withdrawalRepo: IWithdrawalRequestRepository,
+    @Inject(REPOSITORY_TOKENS.PaymentLog)
+    private readonly paymentLogRepo: IPaymentLogRepository,
+    @Inject(REPOSITORY_TOKENS.Transaction)
+    private readonly transactionRepo: ITransactionRepository,
+    @Inject(REPOSITORY_TOKENS.UserPaymentDetail)
+    private readonly paymentDetailRepo: IUserPaymentDetailRepository,
   ) {}
 
   private verifySignature(rawBody: string, signature: string): boolean {
@@ -295,7 +301,7 @@ export class RazorpayWebhookController {
 
     // Also update the corresponding transaction from PENDING → COMPLETED
     if (isSuccess) {
-      const txUpdated = await this.transactionRepo.update(
+      const txUpdated = await this.transactionRepo.updateMany(
         { referenceId: withdrawalId, status: TransactionStatus.PENDING },
         { status: TransactionStatus.COMPLETED },
       );
@@ -309,7 +315,7 @@ export class RazorpayWebhookController {
     this.logger.debug(`[handlePayoutSuccess] payment_log exists: ${!!existingLog}`);
 
     if (!existingLog) {
-      const log = this.paymentLogRepo.create({
+      const log = await this.paymentLogRepo.create({
         withdrawalRequestId: withdrawalId,
         orderId: referenceId,
         razorpayPayoutId: payoutId,
@@ -387,7 +393,7 @@ export class RazorpayWebhookController {
     this.logger.debug(`[handlePayoutFailure] payment_log exists: ${!!existingLog}`);
 
     if (!existingLog) {
-      const log = this.paymentLogRepo.create({
+      const log = await this.paymentLogRepo.create({
         withdrawalRequestId: withdrawalId,
         orderId: referenceId,
         razorpayPayoutId: payoutId,
@@ -490,7 +496,7 @@ export class RazorpayWebhookController {
     });
 
     // ── Log the reversal in payment_logs ──────────────────────────────────────
-    const log = this.paymentLogRepo.create({
+    const log = await this.paymentLogRepo.create({
       withdrawalRequestId: withdrawalId,
       orderId: referenceId,
       razorpayPayoutId: payoutId,

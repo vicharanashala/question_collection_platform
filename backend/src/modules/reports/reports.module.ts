@@ -1,13 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Report, ReportReply, Notification, AuditLog, User } from '../../shared/database/entities';
+import { DbModule } from '../../shared/database/db.module';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Report, ReportReply, Notification, AuditLog, User]),
-  ],
+  imports: [DbModule],
   controllers: [ReportsController],
   providers: [ReportsService],
   exports: [ReportsService],

@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Injectable, Inject, Optional } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { AuditLog } from '../../shared/database/entities';
 import { AuditAction, UserRole } from '../../shared/classes/enums';
 import { QueryAuditLogsDto, AuditStatsDto } from './dto';
+import { IAuditLogRepository } from '../../shared/database/repositories/IAuditLog.repository';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 type ActionCategory = 'withdrawal' | 'user' | 'question' | 'config' | 'auth';
 
@@ -70,10 +71,17 @@ const ADMIN_ASSIGNABLE_ROLES = [UserRole.CURATOR, UserRole.FINANCE];
 @Injectable()
 export class AuditService {
   constructor(
-    @InjectRepository(AuditLog)
-    private readonly auditRepo: Repository<AuditLog>,
-    private readonly dataSource: DataSource,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(DataSource) @Optional()
+    private readonly dataSource?: DataSource,
   ) {}
+
+  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
+  private get ds(): DataSource {
+    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
+    return this.dataSource;
+  }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -202,7 +210,7 @@ export class AuditService {
       // If actorId is specified, verify it belongs to an allowed actor
       if (authRole === UserRole.ADMIN) {
         // Verify the target actor is a curator or finance user
-        const targetUser = await this.dataSource
+        const targetUser = await this.ds
           .getRepository('user')
           .findOne({ where: { id: dto.actorId }, select: ['role'] });
         if (!targetUser || !ADMIN_VIEWABLE_ROLES.includes(targetUser.role as UserRole)) {
@@ -410,45 +418,23 @@ export class AuditService {
     const { actorTypes, roles, disallowAdminRole } = this.buildStatsRoleFilters(dto, _authId, authRole);
 
     if (disallowAdminRole) {
-      return { granularity: (dto.granularity ?? 'day') as 'day' | 'week' | 'month', series: [] };
+      return {
+        fromDate: dto.fromDate ?? null,
+        toDate: dto.toDate ?? null,
+        granularity: (dto.granularity ?? 'day') as 'day' | 'week' | 'month',
+        series: [],
+      };
     }
 
-    const fromDate = dto.fromDate ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const toDate = dto.toDate ?? new Date().toISOString();
-    const granularity = dto.granularity ?? 'day';
+    const fromDate = dto.fromDate ? new Date(dto.fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const toDate = dto.toDate ? new Date(dto.toDate) : new Date();
+    const granularity = (dto.granularity ?? 'day') as 'day' | 'week' | 'month';
 
-    let dateTrunc: string;
-    switch (granularity) {
-      case 'week':
-        dateTrunc = "TO_CHAR(al.created_at, 'IYYY-IW')";
-        break;
-      case 'month':
-        dateTrunc = "TO_CHAR(al.created_at, 'YYYY-MM')";
-        break;
-      default:
-        dateTrunc = "TO_CHAR(al.created_at, 'YYYY-MM-DD')";
-    }
-
-    const typeCondition = actorTypes
-      ? `AND al.actor_type IN (${actorTypes.map((_, i) => `$${i + 3}`).join(',')})`
-      : '';
-
-    const params: unknown[] = [fromDate, toDate];
-    if (actorTypes) params.push(...actorTypes);
-
-    const rows: Array<{ date: string; action: string; count: string }> = await this.dataSource.query(
-      `
-      SELECT
-        ${dateTrunc} AS date,
-        al.action,
-        COUNT(*) AS count
-      FROM audit_logs al
-      WHERE al.created_at >= $1 AND al.created_at <= $2
-      ${typeCondition}
-      GROUP BY date, al.action
-      ORDER BY date ASC
-      `,
-      params,
+    const rows: Array<{ date: string; action: string; count: number }> = await this.auditRepo.aggregateByAction(
+      fromDate,
+      toDate,
+      actorTypes ?? undefined,
+      granularity,
     );
 
     const seriesMap = new Map<string, {
@@ -473,7 +459,7 @@ export class AuditService {
       }
       const s = seriesMap.get(row.date)!;
       const cat = ACTION_CATEGORY[row.action] ?? 'auth';
-      const cnt = parseInt(row.count, 10);
+      const cnt = row.count;
       s.total += cnt;
       switch (cat) {
         case 'withdrawal': s.withdrawals += cnt; break;
@@ -484,7 +470,9 @@ export class AuditService {
     }
 
     return {
-      granularity: granularity as 'day' | 'week' | 'month',
+      fromDate: dto.fromDate ?? null,
+      toDate: dto.toDate ?? null,
+      granularity: (dto.granularity ?? 'day') as 'day' | 'week' | 'month',
       series: Array.from(seriesMap.values()),
     };
   }
@@ -547,8 +535,8 @@ export class AuditService {
       return { users: [] };
     }
 
-    const qb = this.dataSource
-      .getRepository('user')
+    const qb = this.ds
+           .getRepository('user')
       .createQueryBuilder('u')
       .select(['u.id', 'u.name', 'u.mobileNumber', 'u.role'])
       .where('u.role = :role', { role })

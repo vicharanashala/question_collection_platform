@@ -48,7 +48,7 @@ export class EndpointLoggerService implements OnApplicationBootstrap {
 
   onApplicationBootstrap() {
     // Small delay ensures the router is fully wired
-    setTimeout(() => { this.logEndpoints(); }, 100);
+    // setTimeout(() => { this.logEndpoints(); }, 100); // temporarily disabled for diagnostics
   }
 
   /** Call from main.ts after `await app.listen()` for complete results. */

@@ -5,10 +5,10 @@ import {
   Inject,
   forwardRef,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Wallet, Transaction, WithdrawalRequest, User } from '../../shared/database/entities';
 import { UserPaymentDetail } from '../../shared/database/entities/user-payment-detail.entity';
 import {
@@ -24,6 +24,14 @@ import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
 import { WithdrawDto } from './dto';
 import { AddPaymentDetailDto, PaymentDetailDto } from './dto/payment-details.dto';
 import { encrypt, decrypt } from '../../shared/functions/utils/encryption.util';
+import {
+  IWalletRepository,
+  ITransactionRepository,
+  IWithdrawalRequestRepository,
+  IUserPaymentDetailRepository,
+  IUserRepository,
+} from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 // Reward tiers based on approved question count (per TASK_06)
 // Tier 1:  1–25  approved → ₹1  (stored as maxApproved=26 → condition: count < 26)
@@ -41,23 +49,30 @@ export class WalletsService {
   private readonly logger = new Logger(WalletsService.name);
 
   constructor(
-    @InjectRepository(Wallet)
-    private readonly walletRepo: Repository<Wallet>,
-    @InjectRepository(Transaction)
-    private readonly transactionRepo: Repository<Transaction>,
-    @InjectRepository(WithdrawalRequest)
-    private readonly withdrawalRepo: Repository<WithdrawalRequest>,
-    @InjectRepository(UserPaymentDetail)
-    private readonly paymentDetailRepo: Repository<UserPaymentDetail>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-    private readonly dataSource: DataSource,
+    @Inject(REPOSITORY_TOKENS.Wallet)
+    private readonly walletRepo: IWalletRepository,
+    @Inject(REPOSITORY_TOKENS.Transaction)
+    private readonly transactionRepo: ITransactionRepository,
+    @Inject(REPOSITORY_TOKENS.WithdrawalRequest)
+    private readonly withdrawalRepo: IWithdrawalRequestRepository,
+    @Inject(REPOSITORY_TOKENS.UserPaymentDetail)
+    private readonly paymentDetailRepo: IUserPaymentDetailRepository,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
     @Inject(forwardRef(() => AdminService))
     private readonly adminService: AdminService,
     private readonly pinelabsService: PinelabsService,
     private readonly razorpayPayoutService: RazorpayPayoutService,
     private readonly configService: ConfigService,
+    @Inject(DataSource) @Optional()
+    private readonly dataSource?: DataSource,
   ) {}
+
+  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
+  private get ds(): DataSource {
+    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
+    return this.dataSource;
+  }
 
   /**
    * Returns the reward amount in rupees for a given approved question count.
@@ -84,7 +99,7 @@ export class WalletsService {
 
     const rewardAmount = this.getRewardAmount(params.approvedCount);
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner = this.ds.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -165,12 +180,10 @@ export class WalletsService {
     const limit = Math.min(50, Math.max(1, params?.limit ?? 20));
     const skip = (page - 1) * limit;
 
-    const [items, total] = await this.transactionRepo.findAndCount({
-      where: { walletId: wallet.id },
-      order: { createdAt: 'DESC' },
-      skip,
-      take: limit,
-    });
+    const { data: items, total } = await this.transactionRepo.findAndCount(
+      { walletId: wallet.id },
+      { pagination: { page, limit, sort: { createdAt: -1 } } },
+    );
 
     return { transactions: items, total };
   }
@@ -271,7 +284,7 @@ export class WalletsService {
         };
 
     // Atomic: deduct balance + create withdrawal request + create transaction
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner = this.ds.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -347,7 +360,7 @@ export class WalletsService {
       );
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner = this.ds.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -406,7 +419,7 @@ export class WalletsService {
     withdrawalId: string,
     payoutId: string,
   ): Promise<Wallet> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner = this.ds.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -720,7 +733,7 @@ export class WalletsService {
       if (isPineLabsVerification) {
         const wallet = await this.walletRepo.findOne({ where: { userId: detail.userId } });
         if (wallet) {
-          const queryRunner = this.dataSource.createQueryRunner();
+          const queryRunner = this.ds.createQueryRunner();
           await queryRunner.connect();
           await queryRunner.startTransaction();
           try {
@@ -767,7 +780,7 @@ export class WalletsService {
 
     // Mark the ₹1 debit as failed — only for PineLabs flow (Razorpay has no debit)
     if (params.orderId.startsWith('VF_')) {
-      await this.transactionRepo.update(
+      await this.transactionRepo.updateMany(
         { referenceId: params.orderId },
         { status: TransactionStatus.FAILED },
       );

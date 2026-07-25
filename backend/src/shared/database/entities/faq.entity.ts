@@ -6,8 +6,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-
-export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
+import { FaqCategory } from '../../classes/enums';
 
 @Entity('faqs')
 export class Faq {

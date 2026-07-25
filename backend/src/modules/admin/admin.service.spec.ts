@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import {
   NotFoundException,
@@ -18,6 +17,7 @@ import {
   AuditLog,
   AdminConfig,
 } from '../../shared/database/entities';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import {
   VerificationStatus,
   QuestionStatus,
@@ -181,24 +181,24 @@ describe('AdminService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
-        { provide: getRepositoryToken(User), useFactory: mockUserRepo },
-        { provide: getRepositoryToken(Question), useFactory: mockQuestionRepo },
-        { provide: getRepositoryToken(Wallet), useFactory: mockWalletRepo },
-        { provide: getRepositoryToken(Transaction), useFactory: mockTransactionRepo },
-        { provide: getRepositoryToken(WithdrawalRequest), useFactory: mockWithdrawalRepo },
-        { provide: getRepositoryToken(AuditLog), useFactory: mockAuditRepo },
-        { provide: getRepositoryToken(AdminConfig), useFactory: mockConfigRepo },
+        { provide: REPOSITORY_TOKENS.User, useFactory: mockUserRepo },
+        { provide: REPOSITORY_TOKENS.Question, useFactory: mockQuestionRepo },
+        { provide: REPOSITORY_TOKENS.Wallet, useFactory: mockWalletRepo },
+        { provide: REPOSITORY_TOKENS.Transaction, useFactory: mockTransactionRepo },
+        { provide: REPOSITORY_TOKENS.WithdrawalRequest, useFactory: mockWithdrawalRepo },
+        { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
+        { provide: REPOSITORY_TOKENS.AdminConfig, useFactory: mockConfigRepo },
         { provide: ConfigService, useFactory: () => ({ get: jest.fn() }) },
         { provide: WalletsService, useValue: mockWalletsService },
       ],
     }).compile();
 
     service = module.get<AdminService>(AdminService);
-    userRepo = module.get(getRepositoryToken(User));
-    questionRepo = module.get(getRepositoryToken(Question));
-    withdrawalRepo = module.get(getRepositoryToken(WithdrawalRequest));
-    auditRepo = module.get(getRepositoryToken(AuditLog));
-    configRepo = module.get(getRepositoryToken(AdminConfig));
+    userRepo = module.get(REPOSITORY_TOKENS.User);
+    questionRepo = module.get(REPOSITORY_TOKENS.Question);
+    withdrawalRepo = module.get(REPOSITORY_TOKENS.WithdrawalRequest);
+    auditRepo = module.get(REPOSITORY_TOKENS.AuditLog);
+    configRepo = module.get(REPOSITORY_TOKENS.AdminConfig);
   });
 
   afterEach(() => jest.clearAllMocks());

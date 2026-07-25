@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, SelectQueryBuilder } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { Between } from 'typeorm';
 import { Question } from '../../shared/database/entities';
 import { QuestionStatus } from '../../shared/classes/enums';
+import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 export interface DailyVolume {
   date: string;
@@ -21,8 +22,8 @@ export interface QueueStatusCount {
 @Injectable()
 export class CuratorService {
   constructor(
-    @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
   ) {}
 
   /**
@@ -166,7 +167,7 @@ export class CuratorService {
       .orderBy('count', 'DESC')
       .limit(8)
       .getRawMany()
-      .then((rows) => rows.map((r) => ({ cropType: r.cropType, count: Number(r.count) })));
+      .then((rows) => rows.map((r) => ({ cropType: r.cropType as string, count: Number(r.count) })));
 
     // ── Top states (last 30 days) ────────────────────────────────────────────
     const stateBreakdown: Array<{ state: string; count: number }> = await this.questionRepo
@@ -178,7 +179,7 @@ export class CuratorService {
       .orderBy('count', 'DESC')
       .limit(10)
       .getRawMany()
-      .then((rows) => rows.map((r) => ({ state: r.state, count: Number(r.count) })));
+      .then((rows) => rows.map((r) => ({ state: r.state as string, count: Number(r.count) })));
 
     // ── Domain breakdown (last 30 days) ─────────────────────────────────────
     const domainBreakdown: Array<{ domain: string; count: number }> = await this.questionRepo
@@ -190,7 +191,7 @@ export class CuratorService {
       .orderBy('count', 'DESC')
       .limit(8)
       .getRawMany()
-      .then((rows) => rows.map((r) => ({ domain: r.domain, count: Number(r.count) })));
+      .then((rows) => rows.map((r) => ({ domain: r.domain as string, count: Number(r.count) })));
 
     // ── Growth vs prior 30-day period ────────────────────────────────────────
     const sixtyDaysAgo = new Date(thirtyDaysAgo);

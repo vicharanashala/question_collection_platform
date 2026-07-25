@@ -158,6 +158,33 @@ export enum ReportPriority {
   URGENT = 'urgent',
 }
 
+export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
+
+export enum NotificationType {
+  QUESTION_APPROVED = 'question_approved',
+  QUESTION_REJECTED = 'question_rejected',
+  QUESTION_HELD = 'question_held',
+  QUESTION_INFO_REQUESTED = 'question_info_requested',
+  DUPLICATE_QUESTION = 'duplicate_question',
+  REWARD_CREDITED = 'reward_credited',
+  WITHDRAWAL_APPROVED = 'withdrawal_approved',
+  WITHDRAWAL_REJECTED = 'withdrawal_rejected',
+  WITHDRAWAL_FAILED = 'withdrawal_failed',
+  REFUND_COMPLETED = 'refund_completed',
+  ACCOUNT_SUSPENDED = 'account_suspended',
+  ACCOUNT_BANNED = 'account_banned',
+  GENERAL = 'general',
+  REPORT_REPLY = 'report_reply',
+  REPORT_CLOSED = 'report_closed',
+}
+
+export enum NotificationTriggerType {
+  QUESTION = 'question',
+  WITHDRAW = 'withdraw',
+  REPORT = 'report',
+  SYSTEM = 'system',
+}
+
 export enum AuditAction {
   // Auth
   OTP_REQUESTED = 'otp_requested',

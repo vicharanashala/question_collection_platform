@@ -6,13 +6,14 @@ import {
   HttpStatus,
   Logger,
   Headers,
+  Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { PinelabsService } from './pinelabs.service';
 import { WalletsService } from '../wallets/wallets.service';
 import { PaymentLog, WithdrawalRequest } from '../../shared/database/entities';
 import { PaymentLogStatus, WithdrawalStatus } from '../../shared/classes/enums';
+import { IPaymentLogRepository, IWithdrawalRequestRepository } from '../../shared/database/repositories';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 @Controller('api/webhooks/pinelabs')
 export class PaymentWebhookController {
@@ -21,10 +22,10 @@ export class PaymentWebhookController {
   constructor(
     private readonly pinelabsService: PinelabsService,
     private readonly walletsService: WalletsService,
-    @InjectRepository(PaymentLog)
-    private readonly paymentLogRepo: Repository<PaymentLog>,
-    @InjectRepository(WithdrawalRequest)
-    private readonly withdrawalRepo: Repository<WithdrawalRequest>,
+    @Inject(REPOSITORY_TOKENS.PaymentLog)
+    private readonly paymentLogRepo: IPaymentLogRepository,
+    @Inject(REPOSITORY_TOKENS.WithdrawalRequest)
+    private readonly withdrawalRepo: IWithdrawalRequestRepository,
   ) {}
 
   /**
@@ -99,7 +100,7 @@ export class PaymentWebhookController {
     if (status === 'AUTHORIZED') {
       this.logger.log(`[Webhook] Order AUTHORIZED (pending capture) | orderId=${orderId}`);
       // Update withdrawal with AUTHORIZED status but keep PROCESSING
-      await this.withdrawalRepo.update({ orderId }, { status: WithdrawalStatus.PROCESSING });
+      await this.withdrawalRepo.updateMany({ orderId }, { status: WithdrawalStatus.PROCESSING });
       return { received: true };
     }
 
@@ -119,7 +120,7 @@ export class PaymentWebhookController {
         pinelabsTransactionId: transactionId || null,
       });
 
-      const log = this.paymentLogRepo.create({
+      const log = await this.paymentLogRepo.create({
         withdrawalRequestId: withdrawal.id,
         orderId,
         pinelabsTransactionId: transactionId || null,
@@ -132,7 +133,7 @@ export class PaymentWebhookController {
     } else {
       // Failure — log error but do NOT auto-mark FAILED (per task spec):
       // admin must manually review and trigger refund.
-      const log = this.paymentLogRepo.create({
+      const log = await this.paymentLogRepo.create({
         withdrawalRequestId: withdrawal.id,
         orderId,
         pinelabsTransactionId: transactionId || null,

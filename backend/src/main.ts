@@ -12,10 +12,12 @@ import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoin
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
+  console.log('[Bootstrap] Calling NestFactory.create()...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // Raw body needed for some webhooks
     rawBody: true,
   });
+  console.log('[Bootstrap] NestFactory.create() returned');
 
   // Serve uploaded audio files statically so external services (e.g. Sarvam) can fetch them
   app.useStaticAssets(join(__dirname, '..'), {
@@ -55,7 +57,18 @@ async function bootstrap() {
   const port = configService.get<number>('app.port') ?? 3000;
   const environment = configService.get<string>('app.environment') ?? 'development';
 
-  await app.listen(port);
+  console.log('[Bootstrap] About to call app.listen()...');
+  const listenPromise = app.listen(port);
+  const timeout = new Promise<any>((_, reject) =>
+    setTimeout(() => reject(new Error('app.listen() timed out after 10s')), 10_000),
+  );
+  try {
+    await Promise.race([listenPromise, timeout]);
+  } catch (err) {
+    console.error('[Bootstrap] listen failed:', err.message);
+    throw err;
+  }
+  console.log('[Bootstrap] app.listen() resolved');
   logger.log(`🚀 Server running on http://localhost:${port}/api/v1 [${environment}]`);
 
   // Print the endpoint table — explicitly after listen() so the router is fully wired

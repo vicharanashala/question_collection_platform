@@ -56,7 +56,7 @@ export function DonutChartComponent({
   innerRadius = 60,
   outerRadius = 90,
 }: DonutChartComponentProps) {
-  const total = data.reduce((s, d) => s + d.value, 0)
+  const total = data.reduce((s, d) => s + (d.value ?? 0), 0)
 
   return (
     <div className="relative">
@@ -98,16 +98,17 @@ export function DonutChartComponent({
       {showLegend && (
         <div className="mt-3 space-y-2">
           {data.map((segment, i) => {
-            const pct = total > 0 ? ((segment.value / total) * 100).toFixed(1) : '0'
+            const value = segment.value ?? 0
+            const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
             return (
               <div key={segment.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className={cn('h-2 w-2 rounded-full shrink-0')} style={{ backgroundColor: colors[i % colors.length] }} />
-                  <span className="text-text capitalize">{segment.name.replace('_', ' ')}</span>
+                  <span className="text-text capitalize">{(segment.name ?? '').replace('_', ' ')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-text-secondary">{pct}%</span>
-                  <span className="font-semibold text-text">{segment.value.toLocaleString()}</span>
+                  <span className="font-semibold text-text">{value.toLocaleString()}</span>
                 </div>
               </div>
             )

@@ -1,21 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Faq } from '../../shared/database/entities/faq.entity';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { IFaqRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
 
 @Injectable()
 export class FaqsService {
   constructor(
-    @InjectRepository(Faq)
-    private readonly faqRepo: Repository<Faq>,
+    @Inject(REPOSITORY_TOKENS.Faq)
+    private readonly faqRepo: IFaqRepository,
   ) {}
 
   /** Public: return only visible FAQs ordered by display_order */
-  async findAllVisible(query: ListFaqsQueryDto): Promise<Faq[]> {
-    const qb = this.faqRepo
-      .createQueryBuilder('faq')
-      .where('faq.isVisible = :isVisible', { isVisible: true });
+  async findAllVisible(query: ListFaqsQueryDto): Promise<unknown[]> {
+    const qb = this.faqRepo.createQueryBuilder('faq');
+    qb.where('faq.isVisible = :isVisible', { isVisible: true });
 
     if (query.category) {
       qb.andWhere('faq.category = :category', { category: query.category });
@@ -24,7 +21,7 @@ export class FaqsService {
     if (query.search) {
       const term = `%${query.search}%`;
       qb.andWhere(
-        '(faq.question ILIKE :term OR faq.answer ILIKE :term)',
+        "(faq.question ILIKE :term OR faq.answer ILIKE :term)",
         { term },
       );
     }
@@ -37,83 +34,72 @@ export class FaqsService {
 
   /** Admin: FAQ counts (used for stats row) */
   async getStats(category?: string): Promise<{ total: number; visible: number; hidden: number }> {
+    return this.faqRepo.getStats(category as never);
+  }
+
+  /** Admin: list all (including hidden) */
+  async findAll(query: ListFaqsQueryDto): Promise<unknown[]> {
     const qb = this.faqRepo.createQueryBuilder('faq');
-    if (category) qb.andWhere('faq.category = :category', { category });
-    const all = await qb.getMany();
+
+    if (query.category) {
+      qb.andWhere('faq.category = :category', { category: query.category });
+    }
+
+    return qb
+      .orderBy('faq.displayOrder', 'ASC')
+      .addOrderBy('faq.createdAt', 'ASC')
+      .getMany();
+  }
+
+  async findOne(id: string): Promise<unknown> {
+    const faq = await this.faqRepo.findById(id);
+    if (!faq) throw new NotFoundException('FAQ not found');
+    return faq;
+  }
+
+  async create(dto: CreateFaqDto): Promise<unknown> {
+    return this.faqRepo.create(dto as never);
+  }
+
+  async update(id: string, dto: UpdateFaqDto): Promise<unknown> {
+    const updated = await this.faqRepo.update(id, dto as never);
+    if (!updated) throw new NotFoundException('FAQ not found');
+    return updated;
+  }
+
+  async toggleVisibility(id: string, dto: ToggleVisibilityDto): Promise<unknown> {
+    const updated = await this.faqRepo.update(id, { isVisible: dto.isVisible } as never);
+    if (!updated) throw new NotFoundException('FAQ not found');
+    return updated;
+  }
+
+  async findAllPaginated(query: ListFaqsQueryDto): Promise<unknown> {
+    const filter: Record<string, unknown> = {};
+    if (query.category) filter.category = query.category;
+
+    const sortBy = query.sortBy ?? 'displayOrder';
+    const sortOrder: 1 | -1 = (query.sortOrder ?? 'ASC') === 'ASC' ? 1 : -1;
+
+    const result = await this.faqRepo.findAndCount(filter, {
+      pagination: { page: query.page ?? 1, limit: query.limit ?? 20, sort: { [sortBy]: sortOrder } },
+    });
+
     return {
-      total: all.length,
-      visible: all.filter((f) => f.isVisible).length,
-      hidden: all.filter((f) => !f.isVisible).length,
+      items: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      pages: result.totalPages,
     };
   }
 
-  /** Admin: return paginated FAQ list */
-  async findAllPaginated(query: ListFaqsQueryDto): Promise<{
-    items: Faq[];
-    total: number;
-    page: number;
-    limit: number;
-    pages: number;
-  }> {
-    const { page = 1, limit = 20, category, search, sortBy = 'displayOrder', sortOrder = 'ASC' } = query;
-
-    const qb = this.faqRepo.createQueryBuilder('faq');
-
-    if (category) {
-      qb.andWhere('faq.category = :category', { category });
-    }
-
-    if (search) {
-      const term = `%${search}%`;
-      qb.andWhere(
-        '(faq.question ILIKE :term OR faq.answer ILIKE :term)',
-        { term },
-      );
-    }
-
-    const sortCol =
-      sortBy === 'question' ? 'faq.question'
-        : sortBy === 'createdAt' ? 'faq.createdAt'
-        : sortBy === 'updatedAt' ? 'faq.updatedAt'
-        : 'faq.displayOrder';
-    qb.orderBy(sortCol, sortOrder ?? 'ASC');
-
-    qb.skip((page - 1) * limit).take(limit);
-
-    const [items, total] = await qb.getManyAndCount();
-    return { items, total, page, limit, pages: Math.ceil(total / limit) };
-  }
-
-  async create(dto: CreateFaqDto): Promise<Faq> {
-    const faq = this.faqRepo.create({
-      question: dto.question,
-      answer: dto.answer,
-      category: dto.category ?? 'general',
-      isVisible: dto.isVisible ?? true,
-    });
-    return this.faqRepo.save(faq);
-  }
-
-  async update(id: string, dto: UpdateFaqDto): Promise<Faq> {
-    const faq = await this.faqRepo.findOne({ where: { id } });
-    if (!faq) throw new NotFoundException('FAQ not found');
-    if (dto.question !== undefined) faq.question = dto.question;
-    if (dto.answer !== undefined) faq.answer = dto.answer;
-    if (dto.category !== undefined) faq.category = dto.category;
-    if (dto.isVisible !== undefined) faq.isVisible = dto.isVisible;
-    return this.faqRepo.save(faq);
-  }
-
-  async toggleVisibility(id: string, dto: ToggleVisibilityDto): Promise<Faq> {
-    const faq = await this.faqRepo.findOne({ where: { id } });
-    if (!faq) throw new NotFoundException('FAQ not found');
-    faq.isVisible = dto.isVisible;
-    return this.faqRepo.save(faq);
-  }
-
   async delete(id: string): Promise<void> {
-    const faq = await this.faqRepo.findOne({ where: { id } });
-    if (!faq) throw new NotFoundException('FAQ not found');
-    await this.faqRepo.remove(faq);
+    const deleted = await this.faqRepo.delete(id);
+    if (!deleted) throw new NotFoundException('FAQ not found');
+  }
+
+  async remove(id: string): Promise<void> {
+    const deleted = await this.faqRepo.delete(id);
+    if (!deleted) throw new NotFoundException('FAQ not found');
   }
 }

@@ -1,6 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { RedisService } from './redis.service';
 import {
   LEADERBOARD_KEY,
@@ -12,9 +10,10 @@ import {
   metaKey,
 } from './cache.keys';
 import { CacheTTL } from '../../../config/cache-ttl.constants';
-import { Question } from '../entities/question.entity';
+import { IQuestionRepository } from '../repositories/IQuestion.repository';
+import { IAdminConfigRepository } from '../repositories/IAdminConfig.repository';
+import { REPOSITORY_TOKENS } from '../repositories';
 import { QuestionStatus } from '../../classes/enums';
-import { AdminConfig } from '../entities/admin-config.entity';
 
 @Injectable()
 export class HotDataService {
@@ -25,10 +24,10 @@ export class HotDataService {
 
   constructor(
     private readonly redis: RedisService,
-    @InjectRepository(Question)
-    private readonly questionRepo: Repository<Question>,
-    @InjectRepository(AdminConfig)
-    private readonly adminConfigRepo: Repository<AdminConfig>,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.AdminConfig)
+    private readonly adminConfigRepo: IAdminConfigRepository,
   ) {
     this.leaderboardTtl = CacheTTL.LEADERBOARD;
     this.metadataTtl = CacheTTL.METADATA;
@@ -76,7 +75,7 @@ export class HotDataService {
     const raw = await this.redis.get(HOT_REWARD_TIERS_KEY);
     if (raw) return JSON.parse(raw);
     // Fallback: load from DB
-    const config = await this.adminConfigRepo.findOne({ where: { key: 'reward_tiers' } });
+    const config = await this.adminConfigRepo.findOne({ key: 'reward_tiers' });
     if (config) {
       await this.redis.set(HOT_REWARD_TIERS_KEY, JSON.stringify(config.value), this.metadataTtl);
       return config.value;
@@ -85,7 +84,7 @@ export class HotDataService {
   }
 
   async refreshRewardTiers(): Promise<void> {
-    const config = await this.adminConfigRepo.findOne({ where: { key: 'reward_tiers' } });
+    const config = await this.adminConfigRepo.findOne({ key: 'reward_tiers' });
     if (config) {
       await this.redis.set(HOT_REWARD_TIERS_KEY, JSON.stringify(config.value), this.metadataTtl);
     }
@@ -127,7 +126,7 @@ export class HotDataService {
   async getTotalApproved(): Promise<number> {
     const raw = await this.redis.get(HOT_TOTAL_APPROVED_KEY);
     if (raw) return parseInt(raw, 10);
-    const count = await this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } });
+    const count = await this.questionRepo.count({ status: QuestionStatus.APPROVED });
     await this.redis.set(HOT_TOTAL_APPROVED_KEY, String(count), this.realtimeTtl);
     return count;
   }

@@ -1,12 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User } from '../../database/entities';
 import { VerificationStatus } from '../../classes/enums';
 import { UserAccountLockedException } from '../../classes/exceptions/user-status.exception';
+import { IUserRepository } from '../../../shared/database/repositories/IUser.repository';
+import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
 
 export interface JwtPayload {
   sub: string;
@@ -21,8 +21,8 @@ export interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -42,7 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // Token signature and expiry are already verified by Passport.
     // Now verify the user still exists in the DB.
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    const user = await this.userRepo.findOne({ id: payload.sub });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

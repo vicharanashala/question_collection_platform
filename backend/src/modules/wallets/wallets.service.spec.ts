@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { AdminService } from '../admin/admin.service';
 import { PinelabsService } from '../payment/pinelabs.service';
 import { Wallet, Transaction, WithdrawalRequest } from '../../shared/database/entities';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { UserPaymentDetail } from '../../shared/database/entities/user-payment-detail.entity';
 import {
   TransactionType,
@@ -75,10 +75,10 @@ describe('WalletsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WalletsService,
-        { provide: getRepositoryToken(Wallet), useFactory: mockWalletRepo },
-        { provide: getRepositoryToken(Transaction), useFactory: mockTransactionRepo },
-        { provide: getRepositoryToken(WithdrawalRequest), useFactory: mockWithdrawalRepo },
-        { provide: getRepositoryToken(UserPaymentDetail), useFactory: mockPaymentDetailRepo },
+        { provide: REPOSITORY_TOKENS.Wallet, useFactory: mockWalletRepo },
+        { provide: REPOSITORY_TOKENS.Transaction, useFactory: mockTransactionRepo },
+        { provide: REPOSITORY_TOKENS.WithdrawalRequest, useFactory: mockWithdrawalRepo },
+        { provide: REPOSITORY_TOKENS.UserPaymentDetail, useFactory: mockPaymentDetailRepo },
         { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
         { provide: PinelabsService, useFactory: mockPinelabsService },
@@ -86,10 +86,10 @@ describe('WalletsService', () => {
     }).compile();
 
     service = module.get<WalletsService>(WalletsService);
-    walletRepo = module.get(getRepositoryToken(Wallet));
-    transactionRepo = module.get(getRepositoryToken(Transaction));
-    withdrawalRepo = module.get(getRepositoryToken(WithdrawalRequest));
-    paymentDetailRepo = module.get(getRepositoryToken(UserPaymentDetail));
+    walletRepo = module.get(REPOSITORY_TOKENS.Wallet);
+    transactionRepo = module.get(REPOSITORY_TOKENS.Transaction);
+    withdrawalRepo = module.get(REPOSITORY_TOKENS.WithdrawalRequest);
+    paymentDetailRepo = module.get(REPOSITORY_TOKENS.UserPaymentDetail);
   });
 
   afterEach(() => jest.clearAllMocks());

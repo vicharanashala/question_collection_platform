@@ -1,16 +1,15 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletsController } from './wallets.controller';
 import { WalletsService } from './wallets.service';
-import { Wallet, Transaction, WithdrawalRequest, AuditLog, UserPaymentDetail, User } from '../../shared/database/entities';
+import { DbModule } from '../../shared/database/db.module';
 import { AdminModule } from '../admin/admin.module';
 import { PaymentModule } from '../payment/payment.module';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Wallet, Transaction, WithdrawalRequest, AuditLog, UserPaymentDetail, User]),
+    DbModule,
     forwardRef(() => AdminModule),
     forwardRef(() => PaymentModule),
   ],
