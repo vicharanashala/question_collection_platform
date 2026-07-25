@@ -117,3 +117,23 @@ flowchart TD
 | Date | Pass | Fail | Notes |
 |---|---|---|---|
 | 2026-07-14 | 9 | 0 | All green; no regressions in other suites |
+| 2026-07-24 | 8 | 1 | T7 newly failing — see below. Not a regression in this suite's own logic; a real caching bug newly exposed by provisioning Redis for the test environment. |
+
+**T7 — real product bug, not fixed (flagged for you to decide on):**
+
+```
+AssertionError: expected [ …(2) ] to not include '<bankDetailId>'
+  at test/e2e/payment-detail/PaymentDetail.e2e.test.ts:193:21
+```
+
+`DELETE /wallets/payment-details/:id` is decorated `@CacheInvalidate('wallet:*')`
+(`wallets.controller.ts`), but `GET /wallets/payment-details` is cached under the
+`'payment_details'` key prefix (`@Cacheable('payment_details', 60)`), which
+`CacheInterceptor.buildKey()` turns into `http:payment_details:u<userId>` — a key that does
+**not** match the `wallet:*` SCAN pattern at all. So deleting a payment detail never
+invalidates the list's cache; a prior `GET /wallets/payment-details` call in the same 60s
+window keeps serving the stale (pre-delete) list. Same root cause and same discovery path as
+the `WalletReward` T6/T7 finding: this test environment never had a real Redis instance until
+2026-07-24 (see `docker-compose.test.yml`'s history), so `CacheInterceptor` always treated
+every request as a MISS and this invalidation-pattern mismatch was invisible until Redis was
+actually provisioned. Not test-related — the test's own assertion is correct.

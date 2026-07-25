@@ -76,7 +76,7 @@ flowchart TD
     CONF -- "T3: conf=0.899" --> HRV["201 HUMAN_REVIEW below threshold"]:::warn
     CONF -- "high conf" --> GDBD{"GDB result"}:::decide
     GDBD -- "T4: not dup, score=0.5" --> NOT_DUP["201 PENDING, duplicateFlag=false"]:::ok
-    GDBD -- "T5: dup, score=0.95" --> DUP["201 DUPLICATE, id empty"]:::warn
+    GDBD -- "T5: dup, score=0.95" --> DUP["201 DUPLICATE, persisted as REJECTED row"]:::warn
     CONF -- "T6: embed null" --> EMBED_NULL["201 saved, embedding=null"]:::ok
     CONF -- "T7: 2 domains" --> MULTI_DOM["201 both domains persisted"]:::ok
   end
@@ -110,7 +110,7 @@ flowchart TD
 | #  | Test | Mock | Expected |
 |----|------|------|----------|
 | T4 | GDB similarity below threshold → PENDING | GDB `isDuplicate=false`, score=0.5 | 201 · `PENDING`; `duplicateFlag=false` in DB |
-| T5 | GDB detects duplicate → DUPLICATE | GDB `isDuplicate=true`, score=0.95 | 201 · `DUPLICATE`; `id=''`; `matchedQuestion` + `matchedAnswer` present |
+| T5 | GDB detects duplicate → DUPLICATE | GDB `isDuplicate=true`, score=0.95 | 201 · `DUPLICATE`; `id` is a real persisted (REJECTED) question row; `matchedQuestion` + `matchedAnswer` present |
 
 ### Submit — embedding tolerance (1 test)
 
@@ -137,8 +137,13 @@ flowchart TD
 - **Confidence boundary:** the service uses `confidence < 0.9` to route to `HUMAN_REVIEW`,
   so exactly `0.9` goes to `PENDING`. T2 and T3 pin both sides of that boundary.
 - **DUPLICATE response shape:** when GDB flags a duplicate, the submit endpoint returns
-  `{ id: '', status: 'DUPLICATE', duplicate: { isDuplicate, matchedQuestion, matchedAnswer, similarityScore } }`.
-  No row is written to the DB (T5).
+  `{ id, status: 'DUPLICATE', duplicate: { isDuplicate, matchedQuestion, matchedAnswer, similarityScore } }`.
+  Corrected 2026-07-24 — a real question row **is** written (status `REJECTED`), same design as
+  the exact-DB-duplicate path in `preview()`; it counts against the daily limit. T5 was
+  previously asserting `id: ''` (no row persisted at all), which was stale — this was never
+  actually exercised end-to-end until now, since the test environment's Redis-dependent
+  duplicate gate ahead of this code path always 500'd before `docker-compose.test.yml` had a
+  real Redis service.
 - **Embedding null tolerance:** `EmbedService.embed()` already returns `null` on any network
   failure. T6 forces this path explicitly; the question saves with `embedding: null`.
 - **Config cache:** `AdminService` caches config for 30 s. T8 relies on the cache being
@@ -157,16 +162,20 @@ flowchart TD
 
 ## Last run
 
-**Date:** 2026-07-17 | **Result:** 1 failing (not investigated — see below)
+**Date:** 2026-07-24 | **Result:** 10/10 passing.
 
-**Known failure:** `Admin config - duplicate_similarity_threshold update persists`
+Previously 2 failures, both now fixed as stale test expectations (not product bugs):
 
-```
-AssertionError: expected undefined to be 0.99 // Object.is equality
-- Expected: 0.99
-+ Received: undefined
-  at test/e2e/ai-pipeline/AIPipeline.e2e.test.ts:227:35
-```
+- **`Admin config - duplicate_similarity_threshold update persists`** was reading
+  `configResponse.body.config`, but `AdminService.listConfig()` returns `{ items: [...] }` (and
+  always has — confirmed via git history, this was never `{ config: [...] }` at any point).
+  `configResponse.body.config` was `undefined`, so `.find?.()` silently no-opped via optional
+  chaining instead of throwing. Fixed by reading `.items` directly.
+- **`Submit - GDB detects duplicate...`** asserted `response.body.id` toBe `''`, assuming
+  DUPLICATE responses persist no row. Corrected: GDB-detected duplicates ARE persisted as a
+  real `REJECTED` question row (see "Notable implementation details" above) — fixed to assert
+  a real id and confirm the row via a direct DB read.
 
-Reproduces identically standalone and inside the full suite run. Root cause not investigated —
-flagged for a separate look.
+Both were latent — this suite had never actually run end-to-end before 2026-07-16/17 (its own
+doc said "pending first run" until then), so neither had ever been checked against the real,
+current behavior until this pass.

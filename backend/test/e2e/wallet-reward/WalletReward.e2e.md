@@ -210,23 +210,53 @@ setWalletBalance(200) + seedVerifiedDetail()
 
 ## Last run
 
-**Date:** 2026-07-17 | **Result:** 2 failing (not investigated — see below)
+**Date:** 2026-07-24 | **Result:** 16/18 passing. Root-caused after `develop` was merged into
+this branch and the test environment was brought up to match (see below) — 2 real product
+bugs remain, both left unfixed per team decision ("we are only testers").
 
-**Known failure 1:** `T8: GET /wallets/me/config — returns minWithdrawalAmount from admin config`
+**T8 — fixed, was a test-fixture bug, not a product bug.** Previously failed with
+`expected '50' to be 50` (string vs number). Root cause: `test/e2e/helpers/seed.helper.ts`
+seeded `admin_config` rows with string values (`min_withdrawal_amount: '50'`), but every real
+write path (`AdminService.DEFAULT_CONFIG`, `CreateConfigDto`/`UpdateConfigDto` via
+`@Type(() => Number)`) always produces real numbers — the seed helper was the only place a
+string ever entered this column. Fixed by seeding numbers instead of strings; no source change
+needed.
+
+**T18 — still fails, real product bug, not fixed (flagged for you to decide on):**
 
 ```
-AssertionError: expected '50' to be 50 // Object.is equality
-- Expected: 50
-+ Received: "50"
-  at test/e2e/wallet-reward/WalletReward.e2e.test.ts:173:42
+QueryFailedError: column wr.rejectionreason does not exist
+  at WalletsService.getWithdrawals (src/wallets/wallets.service.ts:203)
 ```
 
-**Known failure 2:** `T18: GET /wallets/me/withdrawals — pending withdrawal from T10 appears in list`
+`getWithdrawals()`'s query builder selects `'wr.rejectionReason'`, but `WithdrawalRequest` only
+has `failureReason` — confirmed via git history (`git log -S"wr.rejectionReason"`) that a
+commit once renamed `failureReason` → `rejectionReason` "for clarity", but the entity was later
+reverted back to `failureReason` without this one query-builder call site being updated. So
+`GET /wallets/me/withdrawals` 500s unconditionally, for every caller, always. Not test-related.
+
+**T6, T7 — still fail, real product bug newly discovered while root-causing this batch, not
+fixed (flagged for you to decide on):**
 
 ```
-Error: expected 200 "OK", got 500 "Internal Server Error"
-  at test/e2e/wallet-reward/WalletReward.e2e.test.ts:263:8
+AssertionError: expected +0 to be 1  // T6, after creditReward(approvedCount=1)
+AssertionError: expected +0 to be 6  // T7, after creditReward(approvedCount=26)
 ```
 
-Both reproduce identically standalone and inside the full suite run. Root cause not
-investigated — flagged for a separate look.
+`GET /wallets/me` is `@Cacheable('wallet', 60)` in `wallets.controller.ts`. Reward crediting
+(`WalletsService.creditReward`, called internally from `AdminService.reviewQuestion` when a
+question is approved — a completely different controller) never runs through any endpoint
+decorated with `@CacheInvalidate('wallet:*')`. Only 4 endpoints in `wallets.controller.ts`
+invalidate that pattern (`withdraw`, `cancelWithdrawal`, `addPaymentDetail`,
+`deletePaymentDetail`) — approving a question isn't one of them. **This bug was completely
+invisible until now**: this test environment's `docker-compose.test.yml` never provisioned a
+real Redis instance (confirmed via its own git history — it never has), so every
+`RedisService.get()`/`.set()` call silently failed and the `CacheInterceptor` always treated
+every request as a cache MISS, masking any invalidation gap. Provisioning Redis for the test
+environment (`redis-test` service added 2026-07-24) is what exposed this — the caching logic
+is now genuinely exercised for the first time. In real usage, a farmer who checks their wallet
+balance and then has a question approved within the next 60 seconds would see a stale
+(pre-reward) balance. T6/T7 themselves call `creditReward()` directly on the service (bypassing
+HTTP entirely, as documented above) purely to avoid a Razorpay dependency — but the same gap
+would reproduce through the real HTTP admin-approval endpoint too, since that endpoint has the
+same missing invalidation.

@@ -149,6 +149,7 @@ describe('Auth (e2e)', () => {
       .post('/auth/register')
       .send({
         name: 'New Farmer',
+        username: 'new_farmer_106',
         mobileNumber,
         state: 'Maharashtra',
         district: 'Pune',
@@ -175,6 +176,7 @@ describe('Auth (e2e)', () => {
       .post('/auth/register')
       .send({
         name: 'Ghost User',
+        username: 'ghost_user_107',
         mobileNumber: '9111111107',
         state: 'Maharashtra',
         district: 'Pune',

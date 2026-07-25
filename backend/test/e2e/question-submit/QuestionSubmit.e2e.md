@@ -14,7 +14,7 @@ in `.env` using the NestJS in-process harness.
 |---------|-----------------------------|------------------------------------------|
 | `POST`  | `/questions/preview`        | Enrich payload; check GDB before submit  |
 | `POST`  | `/questions`                | Submit question; triggers AI pipeline    |
-| `PATCH` | `/questions/:id`            | Edit question text within edit window    |
+| `PATCH` | `/questions/:id`            | Always 403 — question editing was removed entirely (2026-07-24) |
 | `GET`   | `/questions/:id`            | Read a single question                   |
 | `GET`   | `/questions`                | List questions (paginated, filterable)   |
 | `GET`   | `/questions/stats/me`       | Daily submission count + remaining quota |
@@ -99,12 +99,12 @@ flowchart TD
     AIPATH -- "T19: VIDEO + URL" --> VID["201"]:::ok
   end
 
-  subgraph EDIT ["3. PATCH /questions/:id"]
+  subgraph EDIT ["3. PATCH /questions/:id (editing removed entirely, 2026-07-24)"]
     OWN1{"owner?"}:::decide
-    OWN1 -- "T12: student edits farmer Q" --> E403["403"]:::err
-    OWN1 -- "yes" --> WIN{"window open?"}:::decide
-    WIN -- "T11: expired" --> W400["400"]:::err
-    WIN -- "T8: within 30s" --> W200["200 updated"]:::ok
+    OWN1 -- "T12: student edits farmer Q" --> E403["403 Not your question"]:::err
+    OWN1 -- "yes" --> ALWAYS["403 Question editing is no longer available"]:::err
+    ALWAYS -.-> T8note["T8: even immediately after submit"]:::err
+    ALWAYS -.-> T11note["T11: even with an expired old editWindowClosesAt"]:::err
   end
 
   subgraph READ ["4. GET /questions/:id"]
@@ -163,12 +163,19 @@ flowchart TD
 |----|------|-------|----------|
 | T9  | Daily limit enforcement | Seed 19 questions → submit 20th (201) → submit 21st | 400 · message contains "daily limit" |
 
-### Edit window (3 tests)
+### Edit (3 tests) — editing removed entirely as of 2026-07-24, no longer window-dependent
+
+**Corrected 2026-07-24:** `question.service.ts`'s `update()` now unconditionally throws
+`ForbiddenException('Question editing is no longer available')` right after the ownership
+check — the whole edit feature was removed (`feat: remove question edit window after
+submission feature`), not just the 30s window. T8 and T11 previously asserted the old
+window-based behavior (200 when open, 400 when expired); both now correctly expect 403
+regardless of timing.
 
 | #  | Test | Setup | Expected |
 |----|------|-------|----------|
-| T8  | Edit within 30 s | Submit via API, immediately PATCH | 200 |
-| T11 | Edit after window closes | `seedQuestion` with `editWindowClosesAt` in the past | 400 |
+| T8  | Edit attempt immediately after submit | Submit via API, immediately PATCH | 403 (was 200) |
+| T11 | Edit attempt with an old, already-expired `editWindowClosesAt` | `seedQuestion` with `editWindowClosesAt` in the past | 403 (was 400) |
 | T12 | Non-owner edit | `seedQuestion` for farmer, PATCH with `studentToken` | 403 |
 
 ### Read single (3 tests)
@@ -237,6 +244,16 @@ users, then closes the NestJS application.
 | T10 | Get my questions — ownership isolation | ✅ |
 | T11 | Edit after window closes → 400 | ✅ |
 | T12 | Non-owner edit → 403 | ✅ |
+
+**Update 2026-07-24:** after `develop` was merged, question editing was removed entirely
+(commit `feat: remove question edit window after submission feature`). T8 and T11 above
+reflect the *original* 2026-07-08 pre-merge behavior (edit window open/expired). Both were
+updated to expect 403 unconditionally — see the "Edit" section above for detail. Also fixed at
+the same time: the test environment had no real Redis instance until this date
+(`docker-compose.test.yml` never provisioned one), which made every question submission 500
+via the newly-merged `DuplicateDetectionService` → `RedisService.exists()` call (no
+circuit-breaker on that method). Provisioning `redis-test` in `docker-compose.test.yml` fixed
+this for the whole suite, not just this file. Full run after both fixes: 23/23 passing again.
 | T13 | GET /:id — owner reads own pending → 200 | ✅ |
 | T14 | GET /:id — non-owner reads non-approved → 403 | ✅ |
 | T15 | GET /:id — approved visible to any user → 200 | ✅ |

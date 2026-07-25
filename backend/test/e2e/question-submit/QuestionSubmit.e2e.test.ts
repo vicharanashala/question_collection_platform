@@ -196,7 +196,10 @@ describe('Question Submit (e2e)', () => {
       .expect(400);
   });
 
-  it('Edit window - edit within 30s -> succeeds', async () => {
+  it('Edit - question editing has been removed; PATCH is always 403 even immediately after submit', async () => {
+    // Question editing was removed entirely (question.service.ts's update() unconditionally
+    // throws ForbiddenException after the ownership check), so this no longer depends on
+    // any edit window — even a PATCH immediately following submit is forbidden.
     const submitResponse = await request(app.getHttpServer())
       .post('/questions')
       .set(getAuthHeaders(farmerToken))
@@ -206,11 +209,13 @@ describe('Question Submit (e2e)', () => {
       })
       .expect(201);
 
-    await request(app.getHttpServer())
+    const res = await request(app.getHttpServer())
       .patch(`/questions/${submitResponse.body.id}`)
       .set(getAuthHeaders(farmerToken))
       .send({ questionText: 'Updated text here' })
-      .expect(200);
+      .expect(403);
+
+    expect(res.body.message).toMatch(/no longer available/i);
   });
 
   it('Submit - daily limit enforcement', async () => {
@@ -331,18 +336,20 @@ describe('Question Submit (e2e)', () => {
 
   // ─── Layer 1 Extension ──────────────────────────────────────────────────────
 
-  it('Edit window - edit after window closes -> 400', async () => {
+  it('Edit - even with an already-expired editWindowClosesAt, PATCH is 403 (feature removed, not window-dependent)', async () => {
     const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
     const question = await seedQuestion(farmer.id, {
       questionText: 'Question with an already-expired edit window',
       editWindowClosesAt: new Date(Date.now() - 1_000), // 1s in the past
     });
 
-    await request(app.getHttpServer())
+    const res = await request(app.getHttpServer())
       .patch(`/questions/${question.id}`)
       .set(getAuthHeaders(farmerToken))
       .send({ questionText: 'Attempting edit after window closed' })
-      .expect(400);
+      .expect(403);
+
+    expect(res.body.message).toMatch(/no longer available/i);
   });
 
   it('Edit - non-owner cannot edit another users question -> 403', async () => {

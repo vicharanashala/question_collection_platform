@@ -147,16 +147,20 @@ Per-test overrides use `vi.mocked(service.method).mockResolvedValueOnce(...)`.
 
 ## Known Failing Tests
 
-**As of 2026-07-17**, 3 tests fail on a full `vitest run` — reproduce standalone too, not
-investigated (root cause not determined; flagged for a separate look):
+**As of 2026-07-24**, all 3 previously-flagged failures above have been root-caused. Two turned
+out to be test-fixture bugs, not product bugs, and are now fixed (see `test_plan.md`'s
+"2026-07-24 — develop merge fallout" section for the full story of that investigation). The
+remaining 3 tests below fail on a full `vitest run` because of real product bugs — confirmed,
+not test issues — left unfixed per team decision ("we are only testers"):
 
-| Suite | Test | Failure |
-|---|---|---|
-| `ai-pipeline/AIPipeline.e2e.test.ts` | Admin config - duplicate_similarity_threshold update persists | `expected undefined to be 0.99` |
-| `wallet-reward/WalletReward.e2e.test.ts` | T8: GET /wallets/me/config — returns minWithdrawalAmount from admin config | `expected '50' to be 50` (string vs number) |
-| `wallet-reward/WalletReward.e2e.test.ts` | T18: GET /wallets/me/withdrawals — pending withdrawal from T10 appears in list | `expected 200 "OK", got 500` |
+| Suite | Test | Failure | Root cause |
+|---|---|---|---|
+| `wallet-reward/WalletReward.e2e.test.ts` | T18: GET /wallets/me/withdrawals | `expected 200, got 500` | `WalletsService.getWithdrawals()` selects a column (`wr.rejectionReason`) that doesn't exist on `WithdrawalRequest` (only `failureReason` does) |
+| `wallet-reward/WalletReward.e2e.test.ts` | T6, T7: creditReward tier balance checks | `expected balance to be 1 / 6, got 0` | `GET /wallets/me` is cached; reward crediting on question approval never invalidates that cache (different controller, no `@CacheInvalidate`) |
+| `payment-detail/PaymentDetail.e2e.test.ts` | T7: DELETE payment-details removes bank detail | stale list still contains deleted id | `DELETE .../payment-details/:id` invalidates pattern `wallet:*`, but the payment-details list is cached under a different key prefix (`payment_details`) that pattern never matches |
 
-See each suite's own `.md` file (`AIPipeline.e2e.md`, `WalletReward.e2e.md`) for the full error output.
+See each suite's own `.md` file (`WalletReward.e2e.md`, `PaymentDetail.e2e.md`) for full detail,
+including the git-history evidence for the `rejectionReason` bug.
 
 ---
 

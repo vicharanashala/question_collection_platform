@@ -76,15 +76,18 @@ const testUsers = [
   },
 ];
 
+// Values are numbers to match how the app actually writes config rows in real usage
+// (AdminService.DEFAULT_CONFIG and CreateConfigDto/UpdateConfigDto both use/coerce to
+// numbers) — seeding strings here was a test-fixture bug, not a product one.
 const adminConfig = {
-  daily_question_limit: '20',
-  question_edit_window_seconds: '30',
-  duplicate_similarity_threshold: '0.9',
-  max_question_chars: '1000',
-  min_withdrawal_amount: '50',
-  max_image_size_mb: '5',
-  video_max_size_mb: '10',
-  video_max_duration_seconds: '10',
+  daily_question_limit: 20,
+  question_edit_window_seconds: 30,
+  duplicate_similarity_threshold: 0.9,
+  max_question_chars: 1000,
+  min_withdrawal_amount: 50,
+  max_image_size_mb: 5,
+  video_max_size_mb: 10,
+  video_max_duration_seconds: 10,
 };
 
 export async function seedTestUsers(dataSource: DataSource) {

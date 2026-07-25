@@ -149,3 +149,4 @@ flowchart TD
 | Date | Pass | Fail | Notes |
 |---|---|---|---|
 | 2026-07-16 | 13 | 0 | All green, both standalone and as part of the full `vitest run` (94-test) suite. Confirmed pre-existing, unrelated failures in `WalletReward.e2e.test.ts` (T8, T18) and `AIPipeline.e2e.test.ts` ("Admin config…") reproduce identically with this file excluded from the run — not caused by this suite. |
+| 2026-07-24 | 13 | 0 | After a `develop` merge, `RegisterDto` gained a required `username` field. T6/T7's register payloads predated that field and started failing 400 instead of 201/401. Fixed by adding `username: 'new_farmer_106'` / `'ghost_user_107'` to the two payloads — no source change, test fixtures were just stale. |

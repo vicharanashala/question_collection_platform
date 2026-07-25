@@ -167,8 +167,13 @@ describe('AI Pipeline (e2e)', () => {
     expect(response.body.duplicate.matchedQuestion).toBe('How do I control aphids on soybean?');
     expect(response.body.duplicate.matchedAnswer).toBe('Apply neem-based organic pesticide in the morning.');
     expect(response.body.duplicate.similarityScore).toBe(0.95);
-    // DUPLICATE responses do not persist a question row
-    expect(response.body.id).toBe('');
+
+    // GDB-detected duplicates ARE persisted as a real REJECTED question row (same design as
+    // the exact-DB-duplicate path) — they count against the daily limit, unlike the old
+    // assumption that DUPLICATE responses returned no id at all.
+    expect(response.body.id).toBeTruthy();
+    const saved = await dataSource.getRepository(Question).findOneByOrFail({ id: response.body.id });
+    expect(saved.status).toBe(QuestionStatus.REJECTED);
   });
 
   // ── Test 6: Embedding returns null → question still saves ─────────────────────
@@ -221,7 +226,8 @@ describe('AI Pipeline (e2e)', () => {
       .set(getAuthHeaders(adminToken))
       .expect(200);
 
-    const thresholdEntry = (configResponse.body.config ?? configResponse.body).find?.(
+    // AdminService.listConfig() returns { items: [...] }, not { config: [...] }.
+    const thresholdEntry = configResponse.body.items.find(
       (c: { key: string; value: unknown }) => c.key === 'duplicate_similarity_threshold',
     );
     expect(thresholdEntry?.value).toBe(0.99);
