@@ -211,16 +211,7 @@ export class AuthService {
       user.otpExpiresAt = expiresAt;
     }
 
-    if (isNewUser) {
-      // create() only builds an in-memory doc — persist via raw insert
-      const repo = this.userRepo as any;
-      const coll = repo._model.db.collection(repo._model.collection.name);
-      const { Types } = await import('mongoose');
-      const docToInsert = { ...(user as unknown as Record<string, unknown>), _id: new Types.ObjectId(user.id) };
-      await coll.insertOne(docToInsert);
-    } else {
-      await this.userRepo.update(user.id, { otpHash, otpExpiresAt: expiresAt });
-    }
+    await this.userRepo.update(user.id, { otpHash, otpExpiresAt: expiresAt });
 
     // Increment rate-limit counter
     if (otpRateLimitEnabled) {

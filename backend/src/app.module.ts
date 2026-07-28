@@ -48,7 +48,7 @@ import { DbModule } from './shared/database/db.module';
       load: [dbConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, gdbConfig, embedConfig, sarvamConfig, lgdConfig, paymentConfig],
       envFilePath: ['.env'],
     }),
-
+ 
     // Rate limiting — global throttle (disabled when THROTTLE_ENABLED=false, e.g. in dev)
     ...(process.env.THROTTLE_ENABLED !== 'false'
       ? [

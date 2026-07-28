@@ -198,8 +198,17 @@ export class AdminController {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Section 4: Analytics Dashboard — curator uses dedicated question-metrics endpoint
+  // Section 4: Analytics Dashboard
   // ─────────────────────────────────────────────────────────────
+
+  /** Curator-only dashboard: question volume, approval rates, daily trends, and queue depth. */
+  @Get("analytics/curator-dashboard")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  @Cacheable('curator_dashboard', 60)
+  async getCuratorDashboard(@Query() dto: AnalyticsQueryDto) {
+    return this.adminService.getCuratorDashboard(dto);
+  }
 
   @Get("analytics/dashboard")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)

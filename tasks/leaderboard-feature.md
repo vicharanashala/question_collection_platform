@@ -5,7 +5,7 @@
 Users earn money when their questions are approved. They also accumulate total questions asked over time. We need a user-facing leaderboard that ranks all users by their earnings and question count, shows each user's position, and displays gold/silver/bronze medals for the top 3.
 
 ---
-
+ 
 ## Scope
 
 ### Backend — `backend/src/`

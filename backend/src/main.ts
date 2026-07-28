@@ -23,7 +23,7 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..'), {
     prefix: '/uploads/',
     setHeaders: (res) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Origin', '*'); 
     },
   });
 

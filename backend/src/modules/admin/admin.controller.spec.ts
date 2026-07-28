@@ -15,7 +15,7 @@ const mockAdminService = () => ({
   unsuspendOrUnbanUser: jest.fn(),
   verifyUser: jest.fn(),
   listReviewQueue: jest.fn(),
-  getQuestionForReview: jest.fn(),
+  getQuestionForReview: jest.fn(), 
   reviewQuestion: jest.fn(),
   getQuestionMetrics: jest.fn(),
   listConfig: jest.fn(),

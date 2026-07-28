@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 // import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 const logger = { log: (msg: string) => console.log(`[Sentry] ${msg}`) };
-
+ 
 /**
  * Initialises Sentry error tracking using the DSN from app config.
  * Call this before `await NestFactory.create()`.

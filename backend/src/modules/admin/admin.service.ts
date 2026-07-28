@@ -2385,6 +2385,38 @@ export class AdminService implements OnModuleInit {
     };
   }
 
+  /**
+   * Curator dashboard: question metrics + live review queue depth.
+   * Wraps getQuestionMetrics with the current queue counts curators care about.
+   * GET /admin/analytics/curator-dashboard  →  getCuratorDashboard
+   */
+  async getCuratorDashboard(query: AnalyticsQueryDto) {
+    const [metrics, queueDepth] = await Promise.all([
+      this.getQuestionMetrics(query),
+      this.getReviewQueueDepth(),
+    ]);
+
+    return {
+      questions: metrics,
+      reviewQueue: queueDepth,
+    };
+  }
+
+  /** Current count of questions in each pending/review status bucket. */
+  private async getReviewQueueDepth() {
+    const [pending, aiReview, humanReview] = await Promise.all([
+      this.questionRepo.count({ where: { status: QuestionStatus.PENDING } }),
+      this.questionRepo.count({ where: { status: QuestionStatus.AI_REVIEW } }),
+      this.questionRepo.count({ where: { status: QuestionStatus.HUMAN_REVIEW } }),
+    ]);
+    return {
+      pending,
+      inAiReview: aiReview,
+      inHumanReview: humanReview,
+      totalActionable: pending + aiReview + humanReview,
+    };
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Section 8c: Analytics (Task 11 — dedicated analytics endpoints)
   // ─────────────────────────────────────────────────────────────

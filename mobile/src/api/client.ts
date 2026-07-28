@@ -454,6 +454,8 @@ export const adminApi = {
   // Dashboard
   getDashboardStats: (params?: Record<string, string | number>) =>
     api.get('/admin/analytics/dashboard', { params }),
+  getCuratorDashboard: (params?: Record<string, string | number>) =>
+    api.get('/admin/analytics/curator-dashboard', { params }),
   getRewardSummary: (params?: Record<string, string | number>) =>
     api.get('/admin/analytics/rewards', { params }),
 
