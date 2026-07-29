@@ -34,6 +34,11 @@ export class CacheWarmupService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit(): Promise<void> {
+    if (!this.redis.isEnabled()) {
+      this.logger.log('CacheWarmupService: Redis disabled — skipping warmup');
+      return;
+    }
+
     await this.warmAll();
 
     // Register reconnect handler

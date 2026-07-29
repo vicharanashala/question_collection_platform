@@ -5,13 +5,14 @@ import Redis from 'ioredis';
 /**
  * Redis service wrapper for rate-limiting, caching, session management, and more.
  *
- * Redis is a required dependency — the app will crash on startup if it cannot connect.
- * Use Docker Compose `depends_on: condition: service_healthy` to gate startup.
+ * Set REDIS_ENABLED=false in .env to disable Redis entirely. When disabled, all
+ * operations become no-ops (cache returns null, rate limits are bypassed).
+ * The app starts and runs normally without any Redis dependency.
  */
 @Injectable()
 export class RedisService implements OnModuleDestroy, OnModuleInit {
   private readonly logger = new Logger(RedisService.name);
-  private readonly client: Redis;
+  private readonly client: Redis | null = null;
 
   // ─── Circuit breaker state ────────────────────────────────────────────────
   private readonly CIRCUIT_FAILURE_THRESHOLD = 5;   // open after 5 consecutive failures
@@ -32,7 +33,16 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     return true;
   }
 
+  private readonly _enabled: boolean;
+
   constructor(private readonly configService: ConfigService) {
+    this._enabled = this.configService.get<boolean>('redis.enabled') ?? true;
+
+    if (!this._enabled) {
+      this.logger.warn('Redis is DISABLED (REDIS_ENABLED=false). All cache/rate-limit operations are bypassed.');
+      return;
+    }
+
     const host = this.configService.get<string>('redis.host') ?? 'localhost';
     const port = this.configService.get<number>('redis.port') ?? 6379;
     const password = this.configService.get<string>('redis.password');
@@ -70,7 +80,6 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
           `Circuit breaker OPEN — Redis disabled for ${this.CIRCUIT_RECOVERY_TIMEOUT_MS / 1000}s after ${this._circuitFailures} failures`,
         );
       }
-      // No longer throwing — circuit breaker handles failure gracefully
     });
 
     this.client.on('connect', () => {
@@ -79,7 +88,6 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
 
     this.client.on('ready', () => {
       this.logger.log('Redis ready');
-      // Reset circuit on clean reconnect
       this._circuitFailures = 0;
       this._circuitOpenAt = 0;
       this._bypassCache = false;
@@ -92,15 +100,21 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     });
   }
 
+  isEnabled(): boolean {
+    return this._enabled;
+  }
+
   async onModuleInit(): Promise<void> {
+    if (!this._enabled) return;
     try {
-      await this.client.connect();
+      await this.client!.connect();
     } catch (err: any) {
       this.logger.error(`Redis connect failed (non-fatal): ${err.message}`);
     }
   }
 
   async onModuleDestroy(): Promise<void> {
+    if (!this._enabled || !this.client) return;
     await this.client.quit().catch(() => {/* ignore */});
   }
 
@@ -136,6 +150,7 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
    * Used by CacheWarmupService to re-run warmup on Redis restarts.
    */
   onReconnect(handler: () => void): void {
+    if (!this._enabled || !this.client) return;
     this.client.on('reconnecting', handler);
   }
 
@@ -169,7 +184,7 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     if (acquired) {
       try {
         // Set expiry on lock so it auto-releases if holder crashes
-        await this.client.expire(lockKey, lockTtlSec);
+        await this.client!.expire(lockKey, lockTtlSec);
         const value = await factory();
         await this.set(key, JSON.stringify(value), ttlSeconds);
         return value;
@@ -191,12 +206,9 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
   // ─── Core operations ─────────────────────────────────────────────────────────
 
   async get(key: string): Promise<string | null> {
-    if (this.circuitOpen) {
-      this.logger.debug(`Circuit open — bypassing Redis GET for "${key}"`);
-      return null;
-    }
+    if (!this._enabled || this.circuitOpen) return null;
     try {
-      const result = await this.client.get(key);
+      const result = await this.client!.get(key);
       this._circuitFailures = 0;
       return result;
     } catch (err: any) {
@@ -206,15 +218,12 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (this.circuitOpen) {
-      this.logger.debug(`Circuit open — bypassing Redis SET for "${key}"`);
-      return;
-    }
+    if (!this._enabled || this.circuitOpen) return;
     try {
       if (ttlSeconds !== undefined) {
-        await this.client.set(key, value, 'EX', ttlSeconds);
+        await this.client!.set(key, value, 'EX', ttlSeconds);
       } else {
-        await this.client.set(key, value);
+        await this.client!.set(key, value);
       }
       this._circuitFailures = 0;
     } catch (err: any) {
@@ -227,7 +236,8 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
    * Returns true if the key was set, false if it already existed.
    */
   async setnx(key: string, value: string): Promise<boolean> {
-    const result = await this.client.setnx(key, value);
+    if (!this._enabled) return false;
+    const result = await this.client!.setnx(key, value);
     return result === 1;
   }
 
@@ -235,59 +245,67 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
    * Set with NX and TTL combined. Returns true if key was set, false if already existed.
    */
   async setnxWithTTL(key: string, value: string, ttlSeconds: number): Promise<boolean> {
-    const result = await this.client.set(key, value, 'EX', ttlSeconds, 'NX');
+    if (!this._enabled) return false;
+    const result = await this.client!.set(key, value, 'EX', ttlSeconds, 'NX');
     return result === 'OK' || result === true;
   }
 
   async del(...keys: string[]): Promise<number> {
-    if (keys.length === 0) return 0;
-    return this.client.del(...keys);
+    if (!this._enabled || keys.length === 0) return 0;
+    return this.client!.del(...keys);
   }
 
   async exists(key: string): Promise<number> {
-    return this.client.exists(key);
+    if (!this._enabled) return 0;
+    return this.client!.exists(key);
   }
 
   async incr(key: string): Promise<number> {
-    return this.client.incr(key);
+    if (!this._enabled) return 0;
+    return this.client!.incr(key);
   }
 
   async incrby(key: string, increment: number): Promise<number> {
-    return this.client.incrby(key, increment);
+    if (!this._enabled) return 0;
+    return this.client!.incrby(key, increment);
   }
 
   async expire(key: string, seconds: number): Promise<number> {
-    return this.client.expire(key, seconds);
+    if (!this._enabled) return 0;
+    return this.client!.expire(key, seconds);
   }
 
   async ttl(key: string): Promise<number> {
-    return this.client.ttl(key);
+    if (!this._enabled) return -1;
+    return this.client!.ttl(key);
   }
 
   async ping(): Promise<string> {
-    return this.client.ping();
+    if (!this._enabled) return 'disabled';
+    return this.client!.ping();
   }
 
   async dbsize(): Promise<number> {
-    return this.client.dbsize();
+    if (!this._enabled) return 0;
+    return this.client!.dbsize();
   }
 
   // ─── Batch helpers ───────────────────────────────────────────────────────────
 
   async mget(...keys: string[]): Promise<(string | null)[]> {
-    if (keys.length === 0) return [];
-    return this.client.mget(...keys);
+    if (!this._enabled || keys.length === 0) return [];
+    return this.client!.mget(...keys);
   }
 
   async mset(...keyValuePairs: string[]): Promise<void> {
-    if (keyValuePairs.length === 0) return;
-    await this.client.mset(...keyValuePairs);
+    if (!this._enabled || keyValuePairs.length === 0) return;
+    await this.client!.mset(...keyValuePairs);
   }
 
   // ─── Pipeline ────────────────────────────────────────────────────────────────
 
   pipeline(): RedisPipeline {
-    return new Pipeline(this.client.pipeline());
+    return new Pipeline(this.client!.pipeline());
   }
 
   /**
@@ -302,47 +320,57 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     keys: number,
     ...args: [key: string, deltaStr: string, member: string]
   ): Promise<unknown> {
-    return this.client.eval(script, keys, ...args);
+    if (!this._enabled) return null;
+    return this.client!.eval(script, keys, ...args);
   }
 
   // ─── Hash helpers ────────────────────────────────────────────────────────────
 
   async hget(key: string, field: string): Promise<string | null> {
-    return this.client.hget(key, field);
+    if (!this._enabled) return null;
+    return this.client!.hget(key, field);
   }
 
   async hset(key: string, field: string, value: string): Promise<number> {
-    return this.client.hset(key, field, value);
+    if (!this._enabled) return 0;
+    return this.client!.hset(key, field, value);
   }
 
   async hgetall(key: string): Promise<Record<string, string>> {
-    return this.client.hgetall(key);
+    if (!this._enabled) return {};
+    return this.client!.hgetall(key);
   }
 
   async hincrby(key: string, field: string, increment: number): Promise<number> {
-    return this.client.hincrby(key, field, increment);
+    if (!this._enabled) return 0;
+    return this.client!.hincrby(key, field, increment);
   }
 
   async hdel(key: string, ...fields: string[]): Promise<number> {
-    return this.client.hdel(key, ...fields);
+    if (!this._enabled) return 0;
+    return this.client!.hdel(key, ...fields);
   }
 
   // ─── Sorted set helpers ──────────────────────────────────────────────────────
 
   async zadd(key: string, score: number, member: string): Promise<number> {
-    return this.client.zadd(key, score, member);
+    if (!this._enabled) return 0;
+    return this.client!.zadd(key, score, member);
   }
 
   async zincrby(key: string, increment: number, member: string): Promise<string> {
-    return this.client.zincrby(key, increment, member);
+    if (!this._enabled) return '0';
+    return this.client!.zincrby(key, increment, member);
   }
 
   async zscore(key: string, member: string): Promise<string | null> {
-    return this.client.zscore(key, member);
+    if (!this._enabled) return null;
+    return this.client!.zscore(key, member);
   }
 
   async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
-    return this.client.zrevrange(key, start, stop);
+    if (!this._enabled) return [];
+    return this.client!.zrevrange(key, start, stop);
   }
 
   async zrangebyscore(
@@ -350,15 +378,18 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     min: number | string,
     max: number | string,
   ): Promise<string[]> {
-    return this.client.zrangebyscore(key, min, max);
+    if (!this._enabled) return [];
+    return this.client!.zrangebyscore(key, min, max);
   }
 
   async zcard(key: string): Promise<number> {
-    return this.client.zcard(key);
+    if (!this._enabled) return 0;
+    return this.client!.zcard(key);
   }
 
   async zrem(key: string, ...members: string[]): Promise<number> {
-    return this.client.zrem(key, ...members);
+    if (!this._enabled) return 0;
+    return this.client!.zrem(key, ...members);
   }
 
   // ─── Scan helpers ────────────────────────────────────────────────────────────
@@ -373,10 +404,11 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
    *                   When reached the scan ends early.
    */
   async scan(pattern: string, count = 100, limitLimit?: number): Promise<string[]> {
+    if (!this._enabled) return [];
     const keys: string[] = [];
     let cursor = '0';
     do {
-      const [nextCursor, batch] = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', count);
+      const [nextCursor, batch] = await this.client!.scan(cursor, 'MATCH', pattern, 'COUNT', count);
       cursor = nextCursor;
       keys.push(...batch);
       if (limitLimit !== undefined && keys.length >= limitLimit) {
@@ -390,6 +422,7 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
    * Delete all keys matching a pattern (for cache flush).
    */
   async delByPattern(pattern: string, limit?: number): Promise<number> {
+    if (!this._enabled) return 0;
     const keys = await this.scan(pattern, 100, limit);
     if (keys.length === 0) return 0;
     return this.del(...keys);
@@ -398,7 +431,8 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
   // ─── Info helpers ────────────────────────────────────────────────────────────
 
   async infoMemory(): Promise<Record<string, string>> {
-    const info = await this.client.info('memory');
+    if (!this._enabled) return {};
+    const info = await this.client!.info('memory');
     const result: Record<string, string> = {};
     for (const line of info.split('\r\n')) {
       const idx = line.indexOf(':');

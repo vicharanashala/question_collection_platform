@@ -24,6 +24,9 @@ export class RateLimitGuard implements CanActivate {
     const rateLimitMeta = this.reflector.get('rate_limit', context.getHandler());
     if (!rateLimitMeta) return true;
 
+    // Skip rate limiting when Redis is disabled
+    if (!this.redis.isEnabled()) return true;
+
     const { limit, windowSeconds, keyPrefix } = rateLimitMeta;
     const request = context.switchToHttp().getRequest() as Request;
     const response = context.switchToHttp().getResponse() as Response;

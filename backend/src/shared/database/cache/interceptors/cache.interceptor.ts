@@ -27,6 +27,9 @@ export class CacheInterceptor implements NestInterceptor {
     const cacheMeta = this.reflector.get(CACHE_TTL_KEY, context.getHandler());
     if (!cacheMeta) return next.handle();
 
+    // Skip caching entirely when Redis is disabled
+    if (!this.redis.isEnabled()) return next.handle();
+
     const { keyPrefix, ttlSeconds } = cacheMeta;
     const request = context.switchToHttp().getRequest();
     const key = this.buildKey(keyPrefix, request);
