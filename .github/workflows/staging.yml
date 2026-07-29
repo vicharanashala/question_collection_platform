@@ -71,14 +71,9 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy to Cloud Run (Staging)
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.REGION }}
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-${{ needs.build.outputs.sha }}
-          project_id: ${{ env.PROJECT_ID }}
-          env_vars: |
+      - name: Prepare env vars file
+        run: |
+          cat > /tmp/staging-env-vars.env << 'EOF'
             NODE_ENV=staging
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
@@ -114,6 +109,16 @@ jobs:
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
+          EOF
+
+      - name: Deploy to Cloud Run (Staging)
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-${{ needs.build.outputs.sha }}
+          project_id: ${{ env.PROJECT_ID }}
+          env_vars_file: /tmp/staging-env-vars.env
           env_vars_update_strategy: merge
           flags: --allow-unauthenticated
           timeout: 60s
