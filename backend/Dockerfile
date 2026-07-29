@@ -33,6 +33,9 @@ RUN apk add --no-cache ffmpeg bash ca-certificates \
 
 WORKDIR /app
 
+# Cloud Run injects PORT=8080 into every container. Set default in case it's absent.
+ENV PORT=8080
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
@@ -43,9 +46,9 @@ RUN addgroup -g 1001 -S appgroup \
 
 USER appuser
 
-EXPOSE 3000
+EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:3000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget -qO- http://localhost:${PORT:-8080}/health || exit 1
 
 CMD ["node", "dist/main.js"]
