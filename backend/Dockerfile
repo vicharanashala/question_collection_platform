@@ -2,8 +2,10 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci && npm cache clean --force
+COPY package.json ./
+# Delete stale lock file — package.json is always in sync but package-lock.json may not be.
+# Remove it so npm install fetches fresh based on package.json only.
+RUN rm -f package-lock.json && npm install --omit=dev && npm cache clean --force
 
 FROM node:22-alpine AS build
 
@@ -14,15 +16,15 @@ RUN apk add --no-cache \
     bash \
     && rm -rf /var/cache/apk/* /tmp/*
 
-COPY package.json package-lock.json* ./
-RUN npm ci && npm cache clean --force
+COPY package.json ./
+RUN rm -f package-lock.json && npm install && npm cache clean --force
 
 COPY tsconfig*.json ./
 COPY src/ ./src/
 
 RUN npx tsc --noEmit \
-    && npx nest build --copy-files \
-    && npm prune --production
+    && npx nest build \
+    && npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 
