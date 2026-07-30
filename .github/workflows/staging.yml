@@ -80,7 +80,6 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
-            PORT=8080
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -115,6 +114,6 @@ jobs:
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
-          env_vars_update_strategy: overwrite
+          env_vars_update_strategy: merge
           flags: --allow-unauthenticated
           timeout: 300s
