@@ -116,4 +116,3 @@ jobs:
             EMBED_PORT=${{ vars.EMBED_PORT }}
           env_vars_update_strategy: merge
           flags: --allow-unauthenticated
-          timeout: 300s
