@@ -80,6 +80,7 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
+            PORT=8080
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
