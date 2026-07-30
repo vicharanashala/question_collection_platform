@@ -114,6 +114,6 @@ jobs:
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
-          env_vars_update_strategy: replace
+          env_vars_update_strategy: overwrite
           flags: --allow-unauthenticated
           timeout: 300s
