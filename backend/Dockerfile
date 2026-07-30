@@ -28,7 +28,7 @@ RUN npx tsc --noEmit \
 
 FROM node:22-alpine AS runtime
 
-RUN apk add --no-cache ffmpeg bash ca-certificates \
+RUN apk add --no-cache ffmpeg bash ca-certificates curl \
     && rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /app
@@ -49,6 +49,6 @@ USER appuser
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD wget -qO- http://localhost:${PORT:-8080}/health || exit 1
+    CMD curl -sf http://localhost:${PORT:-8080}/health || exit 1
 
 CMD ["node", "dist/main.js"]

@@ -9,8 +9,30 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
 
+// Validate required env vars before attempting to start.
+// These are eagerly evaluated during ConfigModule.forRoot() and would throw
+// opaque errors if missing. Surface a clear message instead.
+function validateRequiredEnv(): void {
+  const required = ['MONGODB_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'REDIS_HOST', 'REDIS_PORT'];
+  for (const key of required) {
+    if (!process.env[key]) {
+      throw new Error(`Missing required env var: ${key}`);
+    }
+  }
+  // LLM config — VM server vars are required for llmConfig() to not throw
+  const llmRequired = ['VM_SERVER_URL', 'GEMMA_PORT', 'GEMMA_API_KEY', 'GEMMA_VERSION', 'GEMMA_MODEL', 'GDB_PORT', 'GDB_API_KEY', 'EMBED_PORT'];
+  for (const key of llmRequired) {
+    if (!process.env[key]) {
+      throw new Error(`Missing required env var: ${key}`);
+    }
+  }
+  console.log('[Bootstrap] All required env vars present');
+}
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  validateRequiredEnv();
 
   console.log('[Bootstrap] Calling NestFactory.create()...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
