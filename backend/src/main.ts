@@ -13,16 +13,19 @@ import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoin
 // These are eagerly evaluated during ConfigModule.forRoot() and would throw
 // opaque errors if missing. Surface a clear message instead.
 function validateRequiredEnv(): void {
-  console.log('[Bootstrap] Validating env vars...');
   const required = ['MONGODB_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'REDIS_HOST', 'REDIS_PORT'];
   for (const key of required) {
     if (!process.env[key]) {
-      console.error(`[Bootstrap] Missing required env var: ${key}`);
       throw new Error(`Missing required env var: ${key}`);
     }
   }
-  // LLM/VM services are non-blocking — they use safe fallbacks in configuration.ts
-  // when the env vars are absent (e.g. in staging where VM services may not be pre-configured).
+  // LLM config — VM server vars are required for llmConfig() to not throw
+  const llmRequired = ['VM_SERVER_URL', 'GEMMA_PORT', 'GEMMA_API_KEY', 'GEMMA_VERSION', 'GEMMA_MODEL', 'GDB_PORT', 'GDB_API_KEY', 'EMBED_PORT'];
+  for (const key of llmRequired) {
+    if (!process.env[key]) {
+      throw new Error(`Missing required env var: ${key}`);
+    }
+  }
   console.log('[Bootstrap] All required env vars present');
 }
 
@@ -79,7 +82,16 @@ async function bootstrap() {
   const environment = configService.get<string>('app.environment') ?? 'development';
 
   console.log('[Bootstrap] About to call app.listen()...');
-  await app.listen(port);
+  const listenPromise = app.listen(port);
+  const timeout = new Promise<any>((_, reject) =>
+    setTimeout(() => reject(new Error('app.listen() timed out after 10s')), 10_000),
+  );
+  try {
+    await Promise.race([listenPromise, timeout]);
+  } catch (err) {
+    console.error('[Bootstrap] listen failed:', err.message);
+    throw err;
+  }
   console.log('[Bootstrap] app.listen() resolved');
   logger.log(`🚀 Server running on http://localhost:${port}/api/v1 [${environment}]`);
 
