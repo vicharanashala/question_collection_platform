@@ -76,7 +76,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port') ?? 3000;
+  // Cloud Run injects PORT=8080; read it first so the container listens on the port the orchestrator expects.
+  const portFromEnv = parseInt(process.env.PORT ?? '', 10);
+  const port = portFromEnv || configService.get<number>('app.port') ?? 3000;
   const environment = configService.get<string>('app.environment') ?? 'development';
 
   console.log('[Bootstrap] About to call app.listen()...');

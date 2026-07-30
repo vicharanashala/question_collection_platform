@@ -106,7 +106,7 @@ jobs:
             RAZORPAY_ACCOUNT_NUMBER=${{ secrets.RAZORPAY_ACCOUNT_NUMBER }}
             RAZORPAY_MOCK_VERIFICATION=true
             PAYMENT_DETAILS_ENCRYPTION_KEY=${{ secrets.PAYMENT_DETAILS_ENCRYPTION_KEY }}
-            VM_SERVER_URL=${{ vars.VM_SERVER_URL }}
+            VM_SERVER_URL=${{ secrets.VM_SERVER_URL }}
             GEMMA_PORT=${{ vars.GEMMA_PORT }}
             GEMMA_API_KEY=${{ secrets.GEMMA_API_KEY }}
             GEMMA_VERSION=${{ vars.GEMMA_VERSION }}
