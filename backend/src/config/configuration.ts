@@ -63,17 +63,40 @@ function required(key: string): string {
   return val;
 }
 
-export const llmConfig = registerAs('llm', () => ({
-  baseUrl: `${required('VM_SERVER_URL')}:${required('GEMMA_PORT')}/${required('GEMMA_VERSION')}`,
-  apiKey: required('GEMMA_API_KEY'),
-  model: required('GEMMA_MODEL'),
-}));
+// Optional env reader — returns the value or null if unset. Used for
+// services that should not block startup when running in environments
+// (e.g. staging) where the VM services may not be pre-configured.
+function optional(key: string): string | undefined {
+  const val = process.env[key];
+  return val || undefined;
+}
 
-export const gdbConfig = registerAs('gdb', () => ({
-  baseUrl: `${required('VM_SERVER_URL')}:${required('GDB_PORT')}`,
-  apiKey: required('GDB_API_KEY'),
-}));
+export const llmConfig = registerAs('llm', () => {
+  const vm = optional('VM_SERVER_URL');
+  const gPort = optional('GEMMA_PORT');
+  const gVer = optional('GEMMA_VERSION');
+  return {
+    baseUrl: vm && gPort && gVer
+      ? `${vm}:${gPort}/${gVer}`
+      : 'http://localhost:8014/v1',
+    apiKey: optional('GEMMA_API_KEY') ?? '',
+    model: optional('GEMMA_MODEL') ?? '',
+  };
+});
 
-export const embedConfig = registerAs('embed', () => ({
-  baseUrl: `${required('VM_SERVER_URL')}:${required('EMBED_PORT')}`,
-}));
+export const gdbConfig = registerAs('gdb', () => {
+  const vm = optional('VM_SERVER_URL');
+  const port = optional('GDB_PORT');
+  return {
+    baseUrl: vm && port ? `${vm}:${port}` : 'http://localhost:8110',
+    apiKey: optional('GDB_API_KEY') ?? '',
+  };
+});
+
+export const embedConfig = registerAs('embed', () => {
+  const vm = optional('VM_SERVER_URL');
+  const port = optional('EMBED_PORT');
+  return {
+    baseUrl: vm && port ? `${vm}:${port}` : 'http://localhost:6001',
+  };
+});
