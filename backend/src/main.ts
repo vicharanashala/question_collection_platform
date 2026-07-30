@@ -82,16 +82,7 @@ async function bootstrap() {
   const environment = configService.get<string>('app.environment') ?? 'development';
 
   console.log('[Bootstrap] About to call app.listen()...');
-  const listenPromise = app.listen(port);
-  const timeout = new Promise<any>((_, reject) =>
-    setTimeout(() => reject(new Error('app.listen() timed out after 10s')), 10_000),
-  );
-  try {
-    await Promise.race([listenPromise, timeout]);
-  } catch (err) {
-    console.error('[Bootstrap] listen failed:', err.message);
-    throw err;
-  }
+  await app.listen(port);
   console.log('[Bootstrap] app.listen() resolved');
   logger.log(`🚀 Server running on http://localhost:${port}/api/v1 [${environment}]`);
 
