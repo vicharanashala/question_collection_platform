@@ -6,6 +6,7 @@ export const lgdConfig = registerAs('lgd', () => ({
   districtsUrl: process.env.LGD_DISTRICTS_API_URL || 'https://api.data.gov.in/resource/37231365-78ba-44d5-ac22-3deec40b9197',
   subdistrictsUrl: process.env.LGD_SUBDISTRICTS_API_URL || 'https://api.data.gov.in/resource/6be51a29-876a-403a-a6da-42fde795e751',
   villagesUrl: process.env.LGD_VILLAGES_API_URL || 'https://api.data.gov.in/resource/f17a1608-5f10-4610-bb50-a63c80d83974',
+  reviewerUri: process.env.REVIEWER_URI,
   // Cache TTL in seconds
   cacheTtlSec: parseInt(process.env.LGD_CACHE_TTL_SEC || String(7 * 24 * 60 * 60), 10), // 7 days
   // Page size when fetching from LGD

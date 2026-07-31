@@ -20,7 +20,7 @@ export class LgdService {
   private readonly subdistrictsUrl: string;
   private readonly villagesUrl: string;
   private readonly cacheTtlMs: number;
-
+  private readonly reviewerUri: string;
   // In-memory caches
   private readonly statesCache = new Map<string, CachedData<LgdRecord[]>>();
   private readonly districtsCache = new Map<string, CachedData<LgdRecord[]>>();
@@ -35,6 +35,7 @@ export class LgdService {
     this.villagesUrl = this.configService.get<string>('LGD_VILLAGES_API_URL') ?? '';
     this.cacheTtlMs = (this.configService.get<number>('LGD_CACHE_TTL_DAYS') ?? 7) * 86_400_000;
     this.logger.log(`LGD API configured — cache TTL: ${this.cacheTtlMs / 86_400_000}d`);
+    this.reviewerUri = this.configService.get<string>('REVIEWER_URI') ?? '';
   }
 
   /**
@@ -83,6 +84,20 @@ export class LgdService {
     }
   }
 
+  private async fetchAndTransform<T, R>(
+  url: string,
+  sortKey: keyof T,
+  mapper: (item: T) => R,
+): Promise<R[]> {
+  const response = await axios.get<T[]>(url);
+
+  return response.data
+    .sort((a, b) =>
+      String(a[sortKey]).localeCompare(String(b[sortKey]))
+    )
+    .map(mapper);
+}
+
   /** Returns all villages for a given subdistrict (block) code, sorted by name */
   async getVillages(subdistrictCode: string): Promise<LgdRecord[]> {
     const cached = this.villagesCache.get(subdistrictCode);
@@ -92,15 +107,30 @@ export class LgdService {
 
     // Use server-side filter so the API returns only villages for this subdistrict
     // Villages API uses camelCase for both filter keys and response fields
-    const records = await this.makeLGDRequest(this.villagesUrl, {
-      subdistrictCode,
-    });
+    // const records = await this.makeLGDRequest(this.villagesUrl, {
+    //   subdistrictCode,
+    // });
 
     // No normalization needed — villages API already uses camelCase keys
 
-    const sorted = records.sort((a, b) =>
-      String(a['villageNameEnglish'] ?? '').localeCompare(String(b['villageNameEnglish'] ?? '')),
-    );
+  const sorted = await this.fetchAndTransform<
+  {
+    villageCode: number;
+    villageNameEnglish: string;
+    blockCode: number;
+    pincode: string;
+  },
+  LgdRecord
+>(
+  `${this.reviewerUri}/location/villages?blockCode=${subdistrictCode}`,
+  "villageNameEnglish",
+  (village) => ({
+    villageCode: village.villageCode,
+    villageNameEnglish: village.villageNameEnglish,
+    subdistrictCode: village.blockCode,
+    pincode: village.pincode,
+  }),
+);
 
     this.villagesCache.set(subdistrictCode, { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} villages for subdistrict ${subdistrictCode}`);
@@ -114,16 +144,26 @@ export class LgdService {
       return cached!.data;
     }
 
-    const records = await this.makeLGDRequest(this.statesUrl);
 
-    const sorted = records.sort((a, b) =>
-      String(a['state_name_english'] ?? '').localeCompare(String(b['state_name_english'] ?? '')),
-    );
+
+const sorted = await this.fetchAndTransform<
+  { stateCode: number; stateNameEnglish: string },
+  LgdRecord
+>(
+  `${this.reviewerUri}/location/states`,
+  "stateNameEnglish",
+  (state) => ({
+    state_code: state.stateCode,
+    state_name_english: state.stateNameEnglish,
+  }),
+);
 
     this.statesCache.set('all', { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} states`);
     return sorted;
   }
+
+  
 
   /** Returns all districts for a given state code, sorted by name */
   async getDistricts(stateCode: string): Promise<LgdRecord[]> {
@@ -131,14 +171,25 @@ export class LgdService {
     if (this.isValid(cached)) {
       return cached!.data;
     }
-
     // Districts API uses snake_case filter keys and response fields
-    const records = await this.makeLGDRequest(this.districtsUrl, { state_code: stateCode });
+    // const records = await this.makeLGDRequest(this.districtsUrl, { state_code: stateCode });
 
-    const sorted = records.sort((a, b) =>
-      String(a['district_name_english'] ?? '').localeCompare(String(b['district_name_english'] ?? '')),
-    );
-
+  const sorted = await this.fetchAndTransform<
+  {
+    districtCode: number;
+    districtNameEnglish: string;
+    stateCode: number;
+  },
+  LgdRecord
+>(
+  `${this.reviewerUri}/location/districts?stateCode=${stateCode}`,
+  "districtNameEnglish",
+  (district) => ({
+    district_code: district.districtCode,
+    district_name_english: district.districtNameEnglish,
+    state_code: district.stateCode,
+  }),
+);
     this.districtsCache.set(stateCode, { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} districts for state ${stateCode}`);
     return sorted;
@@ -152,11 +203,26 @@ export class LgdService {
     }
 
     // Subdistricts API uses snake_case filter keys and response fields
-    const records = await this.makeLGDRequest(this.subdistrictsUrl, { district_code: districtCode });
+    // const records = await this.makeLGDRequest(this.subdistrictsUrl, { district_code: districtCode });
 
-    const sorted = records.sort((a, b) =>
-      String(a['subdistrict_name_english'] ?? '').localeCompare(String(b['subdistrict_name_english'] ?? '')),
-    );
+
+
+  const sorted = await this.fetchAndTransform<
+  {
+    blockCode: number;
+    blockNameEnglish: string;
+    districtCode: number;
+  },
+  LgdRecord
+>(
+  `${this.reviewerUri}/location/blocks?districtCode=${districtCode}`,
+  "blockNameEnglish",
+  (block) => ({
+    subdistrict_code: block.blockCode,
+    subdistrict_name_english: block.blockNameEnglish,
+    district_code: block.districtCode,
+  }),
+);
 
     this.subdistrictsCache.set(districtCode, { data: sorted, fetchedAt: Date.now() });
     this.logger.log(`LGD: cached ${sorted.length} sub-districts for district ${districtCode}`);

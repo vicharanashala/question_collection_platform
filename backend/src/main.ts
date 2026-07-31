@@ -8,7 +8,9 @@ import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
+import * as dns from 'node:dns';
 
+dns.setServers(['8.8.8.8']);
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
