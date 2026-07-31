@@ -81,8 +81,6 @@ export class EndpointLoggerService implements OnApplicationBootstrap {
   /** Walk ModulesContainer → controllers → decorator metadata. */
   private walkControllers(): Map<string, { ctrlName: string; methods: ExpressMethod[] }> {
     const ctrlMap = new Map<string, { ctrlName: string; methods: ExpressMethod[] }>();
-    let totalCtrl       = 0;
-    const loggedCtrls   = new Set<string>();
 
     // ModulesContainer extends Map<string, NestJSModule> — iterate with .values()
     // to get the actual NestJS Module objects, not the keys
@@ -90,7 +88,6 @@ export class EndpointLoggerService implements OnApplicationBootstrap {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const controllers: Map<string, any> = (mod as any)._controllers ?? (mod as any).controllers;
       if (!controllers || controllers.size === 0) continue;
-      totalCtrl += controllers.size;
 
       for (const [, instanceWrapper] of controllers) {
         const metatype = instanceWrapper.metatype;
@@ -115,14 +112,6 @@ export class EndpointLoggerService implements OnApplicationBootstrap {
           const mex       = this.reflector.getAllAndOverride<RequestMethod>('requestMethod', [handler]);
           const httpMethod = this.requestMethodToString(mex);
 
-          // DEBUG: log path details for first 3 controllers so we can see what's being read
-          if (!loggedCtrls.has(ctrlName) && mpaths.length > 0) {
-            this.logger.debug(
-              `${ctrlName} ctrlPaths=[${ctrlPaths.join(',')}] mpaths=[${mpaths.join(',')}]`,
-            );
-            loggedCtrls.add(ctrlName);
-          }
-
           for (const mp of mpaths) {
             for (const cp of ctrlPaths) {
               const fullPath = this.joinPath(cp, mp);
@@ -135,7 +124,6 @@ export class EndpointLoggerService implements OnApplicationBootstrap {
         }
       }
     }
-    this.logger.debug(`walkControllers: found ${totalCtrl} controllers, ${ctrlMap.size} route entries`);
     return ctrlMap;
   }
 

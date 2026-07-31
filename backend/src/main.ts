@@ -8,11 +8,31 @@ import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
-import * as dns from 'node:dns';
 
-dns.setServers(['8.8.8.8']);
+// Validate required env vars before attempting to start.
+// These are eagerly evaluated during ConfigModule.forRoot() and would throw
+// opaque errors if missing. Surface a clear message instead.
+function validateRequiredEnv(): void {
+  const required = ['MONGODB_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'REDIS_HOST', 'REDIS_PORT'];
+  for (const key of required) {
+    if (!process.env[key]) {
+      throw new Error(`Missing required env var: ${key}`);
+    }
+  }
+  // LLM config — VM server vars are required for llmConfig() to not throw
+  const llmRequired = ['VM_SERVER_URL', 'GEMMA_PORT', 'GEMMA_API_KEY', 'GEMMA_VERSION', 'GEMMA_MODEL', 'GDB_PORT', 'GDB_API_KEY', 'EMBED_PORT'];
+  for (const key of llmRequired) {
+    if (!process.env[key]) {
+      throw new Error(`Missing required env var: ${key}`);
+    }
+  }
+  console.log('[Bootstrap] All required env vars present');
+}
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  validateRequiredEnv();
 
   console.log('[Bootstrap] Calling NestFactory.create()...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -56,20 +76,13 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port') ?? 3000;
+  // Cloud Run injects PORT=8080; read it first so the container listens on the port the orchestrator expects.
+  const portFromEnv = parseInt(process.env.PORT ?? '', 10);
+  const port = portFromEnv || (configService.get<number>('app.port') ?? 3000);
   const environment = configService.get<string>('app.environment') ?? 'development';
 
   console.log('[Bootstrap] About to call app.listen()...');
-  const listenPromise = app.listen(port);
-  const timeout = new Promise<any>((_, reject) =>
-    setTimeout(() => reject(new Error('app.listen() timed out after 10s')), 10_000),
-  );
-  try {
-    await Promise.race([listenPromise, timeout]);
-  } catch (err) {
-    console.error('[Bootstrap] listen failed:', err.message);
-    throw err;
-  }
+  await app.listen(port);
   console.log('[Bootstrap] app.listen() resolved');
   logger.log(`🚀 Server running on http://localhost:${port}/api/v1 [${environment}]`);
 

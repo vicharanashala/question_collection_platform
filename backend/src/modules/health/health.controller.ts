@@ -19,6 +19,19 @@ export class HealthController {
   @SkipJwtAuth()
   @Get('health')
   async health() {
+    const redisEnabled = this.redisService.isEnabled();
+
+    if (!redisEnabled) {
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        redis: {
+          status: 'disabled',
+          enabled: false,
+        },
+      };
+    }
+
     let redisStatus = 'unavailable';
     let redisMemory: Record<string, string> = {};
 
@@ -35,6 +48,7 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       redis: {
         status: redisStatus,
+        enabled: true,
         usedMemory: redisMemory['used_memory_human'] ?? null,
         peakMemory: redisMemory['used_memory_peak_human'] ?? null,
       },
@@ -44,6 +58,14 @@ export class HealthController {
   @SkipJwtAuth()
   @Get('health/cache')
   async cacheStats() {
+    if (!this.redisService.isEnabled()) {
+      return {
+        timestamp: new Date().toISOString(),
+        enabled: false,
+        message: 'Redis is disabled (REDIS_ENABLED=false)',
+      };
+    }
+
     const circuit = this.redisService.getCircuitState();
     const info: Record<string, string> = (await this.redisService.infoMemory().catch(() => ({}))) as Record<string, string>;
     const dbsize = await this.redisService.dbsize().catch(() => -1);

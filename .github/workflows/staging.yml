@@ -1,0 +1,118 @@
+name: Staging Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - build
+          - deploy
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: question-collection-staging
+  REGION: asia-south1
+  DOCKER_IMAGE: question-collection
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'all' || github.event.inputs.action == 'build' }}
+    outputs:
+      sha: ${{ steps.generate-tags.outputs.short_sha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate image tags
+        id: generate-tags
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          no-cache: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-${{ steps.generate-tags.outputs.short_sha }}
+
+  deploy_staging:
+    name: Deploy to Cloud Run (Staging)
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'all' || github.event.inputs.action == 'deploy' }}
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_GH_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run (Staging)
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-${{ needs.build.outputs.sha }}
+          project_id: ${{ env.PROJECT_ID }}
+          env_vars: |
+            NODE_ENV=development
+            MONGODB_URL=${{ secrets.MONGODB_URL }}
+            CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}
+            REDIS_ENABLED=false
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ vars.REDIS_PORT }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            REDIS_DB=${{ vars.REDIS_DB }}
+            REDIS_TLS=${{ vars.REDIS_TLS }}
+            SMS_PROVIDER=mock
+            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+            LGD_API_KEY=${{ secrets.LGD_API_KEY }}
+            GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
+            GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}
+            PINELABS_ENV=sandbox
+            PINELABS_MERCHANT_ID=${{ secrets.PINELABS_MERCHANT_ID }}
+            PINELABS_CLIENT_ID=${{ secrets.PINELABS_CLIENT_ID }}
+            PINELABS_CLIENT_SECRET=${{ secrets.PINELABS_CLIENT_SECRET }}
+            PINELABS_MOCK_VERIFICATION=true
+            RAZORPAY_API_KEY=${{ secrets.RAZORPAY_API_KEY }}
+            RAZORPAY_SECRET=${{ secrets.RAZORPAY_SECRET }}
+            RAZORPAY_ENV=sandbox
+            RAZORPAY_ACCOUNT_NUMBER=${{ secrets.RAZORPAY_ACCOUNT_NUMBER }}
+            RAZORPAY_MOCK_VERIFICATION=true
+            PAYMENT_DETAILS_ENCRYPTION_KEY=${{ secrets.PAYMENT_DETAILS_ENCRYPTION_KEY }}
+            VM_SERVER_URL=${{ secrets.VM_SERVER_URL }}
+            GEMMA_PORT=${{ vars.GEMMA_PORT }}
+            GEMMA_API_KEY=${{ secrets.GEMMA_API_KEY }}
+            GEMMA_VERSION=${{ vars.GEMMA_VERSION }}
+            GEMMA_MODEL=${{ vars.GEMMA_MODEL }}
+            GDB_PORT=${{ vars.GDB_PORT }}
+            GDB_API_KEY=${{ secrets.GDB_API_KEY }}
+            EMBED_PORT=${{ vars.EMBED_PORT }}
+          env_vars_update_strategy: merge
+          flags: --allow-unauthenticated

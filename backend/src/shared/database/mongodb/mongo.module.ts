@@ -42,10 +42,18 @@ const SCHEMAS = [
         const user = configService.get<string>('db.mongoUser');
         const password = configService.get<string>('db.mongoPassword');
 
+        // Atlas SRV connections require TLS; local dev connections may not
+        const isAtlas = uri.includes('+srv://');
+
         const options: Record<string, unknown> = {
           serverSelectionTimeoutMS: 8_000,
           connectTimeoutMS: 8_000,
         };
+
+        if (isAtlas) {
+          options.tls = true;
+          options.tlsAllowInvalidCertificates = false;
+        }
 
         if (user && password) {
           // Inject credentials into URI if not already present
@@ -62,8 +70,8 @@ const SCHEMAS = [
           options.pass = password;
         }
 
-        // For Atlas SRV connections, ensure authSource is set for SCRAM-SHA
-        if (uri.includes('+srv://')) {
+        // For Atlas SRV connections, ensure authSource is set for SCRAM-SHA-256
+        if (isAtlas) {
           try {
             const url = new URL(uri);
             if (!url.searchParams.has('authSource')) {

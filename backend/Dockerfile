@@ -3,7 +3,9 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 COPY package.json ./
-RUN npm ci --only=production && npm cache clean --force
+# Delete stale lock file — package.json is always in sync but package-lock.json may not be.
+# Remove it so npm install fetches fresh based on package.json only.
+RUN rm -f package-lock.json && npm install --omit=dev && npm cache clean --force
 
 FROM node:22-alpine AS build
 
@@ -14,22 +16,25 @@ RUN apk add --no-cache \
     bash \
     && rm -rf /var/cache/apk/* /tmp/*
 
-COPY package.json package-lock.json* ./
-RUN npm ci && npm cache clean --force
+COPY package.json ./
+RUN rm -f package-lock.json && npm install && npm cache clean --force
 
 COPY tsconfig*.json ./
 COPY src/ ./src/
 
 RUN npx tsc --noEmit \
-    && npx nest build --copy-files \
-    && npm prune --production
+    && npx nest build \
+    && npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 
-RUN apk add --no-cache ffmpeg bash ca-certificates \
+RUN apk add --no-cache ffmpeg bash ca-certificates curl \
     && rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /app
+
+# Cloud Run injects PORT=8080 into every container. Set default in case it's absent.
+ENV PORT=8080
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
@@ -41,9 +46,9 @@ RUN addgroup -g 1001 -S appgroup \
 
 USER appuser
 
-EXPOSE 3000
+EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:3000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -sf http://localhost:${PORT:-8080}/health || exit 1
 
 CMD ["node", "dist/main.js"]

@@ -34,6 +34,9 @@ export class DuplicateDetectionService {
     crop: string,
     questionText: string,
   ): Promise<boolean> {
+    // Skip duplicate detection when Redis is disabled
+    if (!this.redis.isEnabled()) return false;
+
     const normalized = this.normalize(questionText);
     const key = dupKey(userId, state, crop, normalized);
 
@@ -58,6 +61,8 @@ export class DuplicateDetectionService {
     crop: string,
     questionText: string,
   ): Promise<void> {
+    if (!this.redis.isEnabled()) return;
+
     const normalized = this.normalize(questionText);
     const key = dupKey(userId, state, crop, normalized);
     // NX = only set if not exists; TTL = 30 days
@@ -73,6 +78,8 @@ export class DuplicateDetectionService {
     crop: string,
     questionText: string,
   ): Promise<void> {
+    if (!this.redis.isEnabled()) return;
+
     const normalized = this.normalize(questionText);
     const key = dupKey(userId, state, crop, normalized);
     await this.redis.del(key);
