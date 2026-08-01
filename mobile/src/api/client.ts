@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { accountLockedEmitter } from '../events/accountLockedEvents';
+import { accountLockedEmitter, authClearedEmitter } from '../events/accountLockedEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import type { Faq } from '../types';
@@ -22,7 +22,7 @@ const isProduction = process.env.EXPO_PUBLIC_ENV === 'production';
 const BASE_URL = isProduction
   ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1")
   : Platform.OS === "android"
-    ? "https://epiphany-query-same.ngrok-free.dev/api/v1"
+    ? " https://idealism-cylinder-eternity.ngrok-free.dev/api/v1"
     : // ? 'http://10.0.2.2:3000/api/v1'
       "http://localhost:3000/api/v1";
 
@@ -112,6 +112,7 @@ api.interceptors.response.use(
         const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
         if (!refreshToken) {
           await clearAuth();
+          authClearedEmitter.emit();
           throw new Error('No refresh token');
         }
 
@@ -129,6 +130,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch {
         await clearAuth();
+        authClearedEmitter.emit();
       }
     }
 
@@ -584,6 +586,12 @@ export const lgdApi = {
   getVillages: (blockCode: string) =>
     api.get<{ villages: { code: string; name: string; blockCode: string }[] }>('/lgd/villages', {
       params: { blockCode },
+    }),
+
+  /** List KVKs for a given LGD district code */
+  getKvks: (districtCode: string) =>
+    api.get<{ kvks: { code: string; name: string; address: string }[] }>('/lgd/kvks', {
+      params: { districtCode },
     }),
 };
 

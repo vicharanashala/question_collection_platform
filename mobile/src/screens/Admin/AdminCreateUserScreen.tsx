@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { adminApi, getErrorMessage, lgdApi } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
-import { KVKS } from '../../utils/constants';
+
 
 type Props = {
   navigation: NativeStackNavigationProp<AdminStackParamList, 'AdminCreateUser'>;
@@ -77,6 +77,8 @@ export function AdminCreateUserScreen({ navigation }: Props) {
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingSubdistricts, setLoadingSubdistricts] = useState(false);
   const [loadingVillages, setLoadingVillages] = useState(false);
+  const [kvkList, setKvkList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingKvks, setLoadingKvks] = useState(false);
 
   // Load states on mount
   useEffect(() => {
@@ -86,6 +88,16 @@ export function AdminCreateUserScreen({ navigation }: Props) {
       .catch(() => setStateList([]))
       .finally(() => setLoadingStates(false));
   }, []);
+
+  // Load KVKs whenever district changes
+  useEffect(() => {
+    if (!districtCode) { setKvkList([]); return; }
+    setLoadingKvks(true);
+    lgdApi.getKvks(districtCode)
+      .then((res) => setKvkList(res.data.kvks))
+      .catch(() => setKvkList([]))
+      .finally(() => setLoadingKvks(false));
+  }, [districtCode]);
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -283,6 +295,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
                   .then((res) => setSubdistrictList(res.data.subdistricts))
                   .catch(() => setSubdistrictList([]))
                   .finally(() => setLoadingSubdistricts(false));
+                setKvkList([]);
               }}
               error={errors.district}
               searchable
@@ -379,7 +392,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               placeholder={t('selectKvk')}
               value={showOtherKvk ? '__other__' : kvk}
               options={[
-                ...(KVKS[district] ?? []).map((k) => ({ value: k, label: k })),
+                ...kvkList.map((k) => ({ value: k.code, label: k.address })),
                 { value: '__other__', label: t('kvkNotListed') },
               ]}
               onChange={(v) => {
@@ -394,8 +407,9 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               }}
               error={errors.kvk}
               searchable
-              disabled={category === 'farmer' && !block}
-              disabledMessage={t('selectVillageBeforeKvk')}
+              loading={loadingKvks}
+              disabled={category === 'farmer' && !district}
+              disabledMessage={!district ? t('selectDistrictBeforeKvk') : t('kvkLoadingMessage')}
             />
             {showOtherKvk && (
               <Input

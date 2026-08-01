@@ -12,6 +12,7 @@ import { AccountLockedProvider } from './src/context/AccountLockedContext';
 import { AccountLockedModal } from './src/components/AccountLockedModal';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { RootStackParamList } from './src/navigation/types';
+import { authClearedEmitter } from './src/events/accountLockedEvents';
 import './src/i18n';
 
 export default function App() {
@@ -54,6 +55,18 @@ export default function App() {
     });
 
     return () => subscription.remove();
+  }, []);
+
+  // Auto-navigate to login screen when 401 interceptor clears tokens (expired / invalid)
+  useEffect(() => {
+    const authSub = authClearedEmitter.subscribe(() => {
+      if (rootNavigationRef.current) {
+        rootNavigationRef.current.dispatch(
+          CommonActions.reset({ index: 0, routes: [{ name: 'Auth', params: { screen: 'LoginPhone' } }] }),
+        );
+      }
+    });
+    return () => authSub();
   }, []);
 
   useEffect(() => {

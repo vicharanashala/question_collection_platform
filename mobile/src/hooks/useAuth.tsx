@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import { AppState, AppStateStatus } from 'react-native';
 import { PublicUser } from '../types';
 import { authApi, saveAuth, clearAuth, getStoredUser, isAuthenticated } from '../api/client';
-import { accountLockedEmitter } from '../events/accountLockedEvents';
+import { accountLockedEmitter, authClearedEmitter } from '../events/accountLockedEvents';
 import { useAccountLocked } from '../context/AccountLockedContext';
 
 interface AuthState {
@@ -112,6 +112,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Auto-logout when 423 fires from the API interceptor (mid-session ban)
   useEffect(() => {
     const unsubscribe = accountLockedEmitter.subscribe(() => {
+      clearAuth();
+      clearLocked();
+      setState({ user: null, isLoading: false, isReady: true });
+    });
+    return unsubscribe;
+  }, [clearLocked]);
+
+  // Auto-logout when 401 interceptor clears tokens (expired/invalid token)
+  useEffect(() => {
+    const unsubscribe = authClearedEmitter.subscribe(() => {
       clearAuth();
       clearLocked();
       setState({ user: null, isLoading: false, isReady: true });
