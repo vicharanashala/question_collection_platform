@@ -57,6 +57,10 @@ export const gcpStorageConfig = registerAs('gcpStorage', () => ({
   keyFile: process.env.GCP_KEY_FILE || '',
 }));
 
+export const reviewerConfig =registerAs('reviewerConfig', ()=>({
+reviewerUri: process.env.REVIEWER_URI || ""
+}))
+
 function required(key: string): string {
   const val = process.env[key];
   if (!val) throw new Error(`Missing required env var: ${key}`);

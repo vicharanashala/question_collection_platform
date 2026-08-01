@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { accountLockedEmitter } from '../events/accountLockedEvents';
+import { accountLockedEmitter, authClearedEmitter } from '../events/accountLockedEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import type { Faq } from '../types';
@@ -112,6 +112,7 @@ api.interceptors.response.use(
         const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
         if (!refreshToken) {
           await clearAuth();
+          authClearedEmitter.emit();
           throw new Error('No refresh token');
         }
 
@@ -129,6 +130,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch {
         await clearAuth();
+        authClearedEmitter.emit();
       }
     }
 
@@ -584,6 +586,12 @@ export const lgdApi = {
   getVillages: (blockCode: string) =>
     api.get<{ villages: { code: string; name: string; blockCode: string }[] }>('/lgd/villages', {
       params: { blockCode },
+    }),
+
+  /** List KVKs for a given LGD district code */
+  getKvks: (districtCode: string) =>
+    api.get<{ kvks: { code: string; name: string; address: string }[] }>('/lgd/kvks', {
+      params: { districtCode },
     }),
 };
 
