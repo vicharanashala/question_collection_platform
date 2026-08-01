@@ -22,7 +22,7 @@ const isProduction = process.env.EXPO_PUBLIC_ENV === 'production';
 const BASE_URL = isProduction
   ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1")
   : Platform.OS === "android"
-    ? "https://epiphany-query-same.ngrok-free.dev/api/v1"
+    ? "https://idealism-cylinder-eternity.ngrok-free.dev/api/v1"
     : // ? 'http://10.0.2.2:3000/api/v1'
       "http://localhost:3000/api/v1";
 
