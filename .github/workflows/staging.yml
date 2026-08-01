@@ -92,7 +92,6 @@ jobs:
             REDIS_TLS=${{ vars.REDIS_TLS }}
             SMS_PROVIDER=mock
             SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
-            LGD_API_KEY=${{ secrets.LGD_API_KEY }}
             GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
             GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}
             PINELABS_ENV=sandbox
@@ -111,6 +110,7 @@ jobs:
             GEMMA_API_KEY=${{ secrets.GEMMA_API_KEY }}
             GEMMA_VERSION=${{ vars.GEMMA_VERSION }}
             GEMMA_MODEL=${{ vars.GEMMA_MODEL }}
+            REVIEWER_URI=${{ secrets.REVIEWER_URI }}
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
