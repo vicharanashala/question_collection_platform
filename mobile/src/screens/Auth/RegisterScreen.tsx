@@ -11,7 +11,7 @@ import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthStackParamList } from '../../navigation/types';
-import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, KVKS, ORG_TYPE_OPTIONS } from '../../utils/constants';
+import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
 import { UserCategory } from '../../types';
 import { useTranslation } from 'react-i18next';
@@ -86,6 +86,8 @@ export function RegisterScreen({ navigation, route }: Props) {
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingSubdistricts, setLoadingSubdistricts] = useState(false);
   const [loadingVillages, setLoadingVillages] = useState(false);
+  const [kvkList, setKvkList] = useState<{ code: string; name: string }[]>([]);
+  const [loadingKvks, setLoadingKvks] = useState(false);
 
   // Load org states when category is FPO/NGO (runs whenever category changes)
   useEffect(() => {
@@ -105,6 +107,16 @@ export function RegisterScreen({ navigation, route }: Props) {
       .catch(() => setStateList([]))
       .finally(() => setLoadingStates(false));
   }, []);
+
+  // Load KVKs whenever district is selected (keyed by districtCode so it refetches per district)
+  useEffect(() => {
+    if (!selectedDistrictCode) { setKvkList([]); return; }
+    setLoadingKvks(true);
+    lgdApi.getKvks(selectedDistrictCode)
+      .then((res) => setKvkList(res.data.kvks))
+      .catch(() => setKvkList([]))
+      .finally(() => setLoadingKvks(false));
+  }, [selectedDistrictCode]);
 
   // Debounced username availability check (fires 600ms after user stops typing)
   useEffect(() => {
@@ -559,7 +571,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                   placeholder={t('selectKvk')}
                   value={showOtherKvk ? '__other__' : kvk}
                   options={[
-                    ...(KVKS[selectedDistrict] ?? []).map((k) => ({ value: k, label: k })),
+                    ...kvkList.map((k) => ({ value: k.code, label: k.address })),
                     { value: '__other__', label: t('kvkNotListed') },
                   ]}
                   onChange={(v) => {
@@ -574,8 +586,9 @@ export function RegisterScreen({ navigation, route }: Props) {
                   }}
                   error={errors.kvk}
                   searchable
+                  loading={loadingKvks}
                   disabled={category === UserCategory.FARMER && !selectedDistrict}
-                  disabledMessage={t('selectVillageBeforeKvk')}
+                  disabledMessage={!selectedDistrict ? t('selectDistrictBeforeKvk') : t('kvkLoadingMessage')}
                   required={category === UserCategory.FARMER}
                 />
                 {showOtherKvk && (

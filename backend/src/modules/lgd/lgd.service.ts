@@ -1,250 +1,270 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 interface CachedData<T> {
   data: T;
   fetchedAt: number;
 }
 
-interface LgdRecord {
-  [key: string]: string | number;
+// Raw shapes returned by the reviewer service
+interface ReviewerState {
+  stateCode: number;
+  stateNameEnglish: string;
+}
+
+interface ReviewerDistrict {
+  districtCode: number;
+  districtNameEnglish: string;
+  stateCode: number;
+}
+
+interface ReviewerBlock {
+  blockCode: number;
+  blockNameEnglish: string;
+  districtCode: number;
+}
+
+interface ReviewerVillage {
+  villageCode: number;
+  villageNameEnglish: string;
+  blockCode: number;
+  pincode: string;
+}
+
+interface ReviewerKvk {
+  kvkId: string;
+  kvkName: string;
+  kvkAddress: string;
+  districtCode: number;
+  stateCode: number;
+  latitude: number;
+  longitude: number;
+}
+
+// Canonical snake_case shapes used internally and returned to callers
+export interface LgdState {
+  state_code: string;
+  state_name_english: string;
+}
+
+export interface LgdDistrict {
+  district_code: string;
+  district_name_english: string;
+  state_code: string;
+}
+
+export interface LgdSubDistrict {
+  subdistrict_code: string;
+  subdistrict_name_english: string;
+  district_code: string;
+}
+
+export interface LgdVillage {
+  villageCode: string;
+  villageNameEnglish: string;
+  subdistrictCode: string;
+  pincode: string;
+}
+
+export interface LgdKvk {
+  kvkCode: string;
+  kvkName: string;
+  kvkAddress: string;
+  districtCode: string;
+  stateCode: string;
+  latitude: number;
+  longitude: number;
 }
 
 @Injectable()
 export class LgdService {
   private readonly logger = new Logger(LgdService.name);
-  private readonly apiKey: string;
-  private readonly statesUrl: string;
-  private readonly districtsUrl: string;
-  private readonly subdistrictsUrl: string;
-  private readonly villagesUrl: string;
-  private readonly cacheTtlMs: number;
+
+  /** Base URL of the reviewer (LGD facade) service */
   private readonly reviewerUri: string;
-  // In-memory caches
-  private readonly statesCache = new Map<string, CachedData<LgdRecord[]>>();
-  private readonly districtsCache = new Map<string, CachedData<LgdRecord[]>>();
-  private readonly subdistrictsCache = new Map<string, CachedData<LgdRecord[]>>();
-  private readonly villagesCache = new Map<string, CachedData<LgdRecord[]>>();
+
+  /** Cache TTL in milliseconds, read from config */
+  private readonly cacheTtlMs: number;
+
+  /** Per-endpoint in-memory caches */
+  private readonly statesCache = new Map<string, CachedData<LgdState[]>>();
+  private readonly districtsCache = new Map<string, CachedData<LgdDistrict[]>>();
+  private readonly subdistrictsCache = new Map<string, CachedData<LgdSubDistrict[]>>();
+  private readonly villagesCache = new Map<string, CachedData<LgdVillage[]>>();
+  private readonly kvksCache = new Map<string, CachedData<LgdKvk[]>>();
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey = this.configService.get<string>('LGD_API_KEY') ?? '';
-    this.statesUrl = this.configService.get<string>('LGD_STATES_API_URL') ?? '';
-    this.districtsUrl = this.configService.get<string>('LGD_DISTRICTS_API_URL') ?? '';
-    this.subdistrictsUrl = this.configService.get<string>('LGD_SUBDISTRICTS_API_URL') ?? '';
-    this.villagesUrl = this.configService.get<string>('LGD_VILLAGES_API_URL') ?? '';
-    this.cacheTtlMs = (this.configService.get<number>('LGD_CACHE_TTL_DAYS') ?? 7) * 86_400_000;
-    this.logger.log(`LGD API configured — cache TTL: ${this.cacheTtlMs / 86_400_000}d`);
-    this.reviewerUri = this.configService.get<string>('REVIEWER_URI') ?? '';
+    // NestJS ConfigService namespaced under 'lgd' (from registerAs('lgd', …)),
+    // with raw env as fallback when the config isn't loaded yet.
+    this.reviewerUri =
+      this.configService.get<string>('lgd.lgdReviewerUri') ||
+      process.env.REVIEWER_URI ||
+      '';
+
+    const ttlDays =
+      this.configService.get<number>('lgd.cacheTtlDays') ??
+      parseInt(process.env.LGD_CACHE_TTL_DAYS || '7', 10);
+    this.cacheTtlMs = ttlDays * 86_400_000;
+
+    this.logger.log(
+      `LGD service initialised — reviewer: ${this.reviewerUri || '(not set)'}, cache TTL: ${ttlDays}d`,
+    );
   }
+
+  // ─── Private helpers ────────────────────────────────────────────────────────
 
   /**
-   * Make a single LGD API request with optional server-side filters.
-   * Uses filters[key]=value params so data.gov.in returns only matching records.
+   * Fetch a JSON array from the reviewer service, apply a transform, sort by
+   * the given key, cache the result, and return it.
+   *
+   * @param url     Full URL to GET
+   * @param cache   Map used for memoisation
+   * @param cacheKey  Key into the cache Map (e.g. state code or 'all')
+   * @param sortOn  Property name to sort by (locale-insensitive string sort)
+   * @param transform  Mapper from raw reviewer shape to public shape
    */
-  private async makeLGDRequest(
-    apiUrl: string,
-    filters?: Record<string, string | number>,
-  ): Promise<LgdRecord[]> {
-    if (!this.apiKey) {
-      throw new InternalServerErrorException('LGD_API_KEY is not configured');
-    }
-
-    const params: Record<string, string | number> = {
-      'api-key': this.apiKey,
-      format: 'json',
-      limit: 10_000,
-      offset: 0,
-    };
-
-    if (filters) {
-      for (const [key, value] of Object.entries(filters)) {
-        params[`filters[${key}]`] = value;
-      }
-    }
-
-    try {
-      const response = await axios.get(apiUrl, { params, timeout: 30_000 });
-
-      if (!response?.data?.records) {
-        throw new InternalServerErrorException('Invalid LGD API response: records missing');
-      }
-
-      return response.data.records;
-    } catch (err) {
-      if (err instanceof InternalServerErrorException) throw err;
-
-      const axiosErr = err as AxiosError<{ message?: string }>;
-      const message =
-        axiosErr?.response?.data?.message ??
-        axiosErr?.message ??
-        'Failed to fetch LGD locations';
-
-      throw new InternalServerErrorException(`LGD service error: ${message}`);
-    }
-  }
-
-  private async fetchAndTransform<T, R>(
-  url: string,
-  sortKey: keyof T,
-  mapper: (item: T) => R,
-): Promise<R[]> {
-  const response = await axios.get<T[]>(url);
-
-  return response.data
-    .sort((a, b) =>
-      String(a[sortKey]).localeCompare(String(b[sortKey]))
-    )
-    .map(mapper);
-}
-
-  /** Returns all villages for a given subdistrict (block) code, sorted by name */
-  async getVillages(subdistrictCode: string): Promise<LgdRecord[]> {
-    const cached = this.villagesCache.get(subdistrictCode);
+  private async fetchThenCache<T, R>(
+    url: string,
+    cache: Map<string, CachedData<R[]>>,
+    cacheKey: string,
+    sortOn: keyof T,
+    transform: (item: T) => R,
+  ): Promise<R[]> {
+    const cached = cache.get(cacheKey);
     if (this.isValid(cached)) {
       return cached!.data;
     }
 
-    // Use server-side filter so the API returns only villages for this subdistrict
-    // Villages API uses camelCase for both filter keys and response fields
-    // const records = await this.makeLGDRequest(this.villagesUrl, {
-    //   subdistrictCode,
-    // });
+    const response = await axios.get<T[]>(url, { timeout: 15_000 });
 
-    // No normalization needed — villages API already uses camelCase keys
-
-  const sorted = await this.fetchAndTransform<
-  {
-    villageCode: number;
-    villageNameEnglish: string;
-    blockCode: number;
-    pincode: string;
-  },
-  LgdRecord
->(
-  `${this.reviewerUri}/location/villages?blockCode=${subdistrictCode}`,
-  "villageNameEnglish",
-  (village) => ({
-    villageCode: village.villageCode,
-    villageNameEnglish: village.villageNameEnglish,
-    subdistrictCode: village.blockCode,
-    pincode: village.pincode,
-  }),
-);
-
-    this.villagesCache.set(subdistrictCode, { data: sorted, fetchedAt: Date.now() });
-    this.logger.log(`LGD: cached ${sorted.length} villages for subdistrict ${subdistrictCode}`);
-    return sorted;
-  }
-
-  /** Returns all Indian states, sorted by name */
-  async getStates(): Promise<LgdRecord[]> {
-    const cached = this.statesCache.get('all');
-    if (this.isValid(cached)) {
-      return cached!.data;
+    if (!Array.isArray(response.data)) {
+      throw new InternalServerErrorException(
+        `LGD reviewer returned unexpected payload for ${url}`,
+      );
     }
 
+    const sorted: R[] = [...response.data]
+      .sort((a, b) =>
+        String(a[sortOn]).localeCompare(String(b[sortOn])),
+      )
+      .map(transform);
 
+    cache.set(cacheKey, { data: sorted, fetchedAt: Date.now() });
+    this.logger.log(
+      `LGD cached ${sorted.length} records for key "${cacheKey}" (${url})`,
+    );
 
-const sorted = await this.fetchAndTransform<
-  { stateCode: number; stateNameEnglish: string },
-  LgdRecord
->(
-  `${this.reviewerUri}/location/states`,
-  "stateNameEnglish",
-  (state) => ({
-    state_code: state.stateCode,
-    state_name_english: state.stateNameEnglish,
-  }),
-);
-
-    this.statesCache.set('all', { data: sorted, fetchedAt: Date.now() });
-    this.logger.log(`LGD: cached ${sorted.length} states`);
-    return sorted;
-  }
-
-  
-
-  /** Returns all districts for a given state code, sorted by name */
-  async getDistricts(stateCode: string): Promise<LgdRecord[]> {
-    const cached = this.districtsCache.get(stateCode);
-    if (this.isValid(cached)) {
-      return cached!.data;
-    }
-    // Districts API uses snake_case filter keys and response fields
-    // const records = await this.makeLGDRequest(this.districtsUrl, { state_code: stateCode });
-
-  const sorted = await this.fetchAndTransform<
-  {
-    districtCode: number;
-    districtNameEnglish: string;
-    stateCode: number;
-  },
-  LgdRecord
->(
-  `${this.reviewerUri}/location/districts?stateCode=${stateCode}`,
-  "districtNameEnglish",
-  (district) => ({
-    district_code: district.districtCode,
-    district_name_english: district.districtNameEnglish,
-    state_code: district.stateCode,
-  }),
-);
-    this.districtsCache.set(stateCode, { data: sorted, fetchedAt: Date.now() });
-    this.logger.log(`LGD: cached ${sorted.length} districts for state ${stateCode}`);
-    return sorted;
-  }
-
-  /** Returns all sub-districts (blocks) for a given district code, sorted by name */
-  async getSubDistricts(districtCode: string): Promise<LgdRecord[]> {
-    const cached = this.subdistrictsCache.get(districtCode);
-    if (this.isValid(cached)) {
-      return cached!.data;
-    }
-
-    // Subdistricts API uses snake_case filter keys and response fields
-    // const records = await this.makeLGDRequest(this.subdistrictsUrl, { district_code: districtCode });
-
-
-
-  const sorted = await this.fetchAndTransform<
-  {
-    blockCode: number;
-    blockNameEnglish: string;
-    districtCode: number;
-  },
-  LgdRecord
->(
-  `${this.reviewerUri}/location/blocks?districtCode=${districtCode}`,
-  "blockNameEnglish",
-  (block) => ({
-    subdistrict_code: block.blockCode,
-    subdistrict_name_english: block.blockNameEnglish,
-    district_code: block.districtCode,
-  }),
-);
-
-    this.subdistrictsCache.set(districtCode, { data: sorted, fetchedAt: Date.now() });
-    this.logger.log(`LGD: cached ${sorted.length} sub-districts for district ${districtCode}`);
     return sorted;
   }
 
   private isValid<T>(cached: CachedData<T> | undefined): boolean {
-    if (!cached) return false;
-    return Date.now() - cached.fetchedAt < this.cacheTtlMs;
+    return cached !== undefined && Date.now() - cached.fetchedAt < this.cacheTtlMs;
   }
 
-  /**
-   * Convert camelCase keys to snake_case.
-   * Needed because the villages API returns camelCase while all other LGD
-   * APIs return snake_case field names.
-   */
-  private normalizeKeys(record: LgdRecord): LgdRecord {
-    const normalized: LgdRecord = {};
-    for (const [k, v] of Object.entries(record)) {
-      const snakeKey = k.replace(/([A-Z])/g, (_, c) => `_${c.toLowerCase()}`);
-      normalized[snakeKey] = v;
+  // ─── Public API ─────────────────────────────────────────────────────────────
+
+  /** GET /lgd/states */
+  async getStates(): Promise<LgdState[]> {
+    if (!this.reviewerUri) {
+      throw new InternalServerErrorException('LGD_REVIEWER_URI is not configured');
     }
-    return normalized;
+    return this.fetchThenCache<ReviewerState, LgdState>(
+      `${this.reviewerUri}/location/states`,
+      this.statesCache,
+      'all',
+      'stateNameEnglish',
+      (s) => ({
+        state_code: String(s.stateCode),
+        state_name_english: s.stateNameEnglish,
+      }),
+    );
+  }
+
+  /** GET /lgd/districts?stateCode=… */
+  async getDistricts(stateCode: string): Promise<LgdDistrict[]> {
+    if (!this.reviewerUri) {
+      throw new InternalServerErrorException('LGD_REVIEWER_URI is not configured');
+    }
+    return this.fetchThenCache<ReviewerDistrict, LgdDistrict>(
+      `${this.reviewerUri}/location/districts?stateCode=${stateCode}`,
+      this.districtsCache,
+      stateCode,
+      'districtNameEnglish',
+      (d) => ({
+        district_code: String(d.districtCode),
+        district_name_english: d.districtNameEnglish,
+        state_code: String(d.stateCode),
+      }),
+    );
+  }
+
+  /** GET /lgd/subdistricts?districtCode=… */
+  async getSubDistricts(districtCode: string): Promise<LgdSubDistrict[]> {
+    if (!this.reviewerUri) {
+      throw new InternalServerErrorException('LGD_REVIEWER_URI is not configured');
+    }
+    return this.fetchThenCache<ReviewerBlock, LgdSubDistrict>(
+      `${this.reviewerUri}/location/blocks?districtCode=${districtCode}`,
+      this.subdistrictsCache,
+      districtCode,
+      'blockNameEnglish',
+      (b) => ({
+        subdistrict_code: String(b.blockCode),
+        subdistrict_name_english: b.blockNameEnglish,
+        district_code: String(b.districtCode),
+      }),
+    );
+  }
+
+  /** GET /lgd/villages?blockCode=… */
+  async getVillages(blockCode: string): Promise<LgdVillage[]> {
+    if (!this.reviewerUri) {
+      throw new InternalServerErrorException('LGD_REVIEWER_URI is not configured');
+    }
+    return this.fetchThenCache<ReviewerVillage, LgdVillage>(
+      `${this.reviewerUri}/location/villages?blockCode=${blockCode}`,
+      this.villagesCache,
+      blockCode,
+      'villageNameEnglish',
+      (v) => ({
+        villageCode: String(v.villageCode),
+        villageNameEnglish: v.villageNameEnglish,
+        subdistrictCode: String(v.blockCode),
+        pincode: v.pincode,
+      }),
+    );
+  }
+
+  /** GET /lgd/kvks?districtCode=… */
+  async getKvks(districtCode: string): Promise<LgdKvk[]> {
+    if (!this.reviewerUri) {
+      throw new InternalServerErrorException('LGD_REVIEWER_URI is not configured');
+    }
+    return this.fetchThenCache<ReviewerKvk, LgdKvk>(
+      `${this.reviewerUri}/location/kvks?districtCode=${districtCode}`,
+      this.kvksCache,
+      districtCode,
+      'kvkName',
+      (k) => ({
+        kvkCode: k.kvkId,
+        kvkName: k.kvkName,
+        kvkAddress: k.kvkAddress,
+        districtCode: String(k.districtCode),
+        stateCode: String(k.stateCode),
+        latitude: k.latitude,
+        longitude: k.longitude,
+      }),
+    );
+  }
+
+  /** Invalidate all caches. Useful for admin tooling or cache-warming cron jobs. */
+  clearCache(): void {
+    this.statesCache.clear();
+    this.districtsCache.clear();
+    this.subdistrictsCache.clear();
+    this.villagesCache.clear();
+    this.kvksCache.clear();
+    this.logger.log('LGD cache cleared');
   }
 }

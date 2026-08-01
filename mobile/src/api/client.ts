@@ -587,6 +587,12 @@ export const lgdApi = {
     api.get<{ villages: { code: string; name: string; blockCode: string }[] }>('/lgd/villages', {
       params: { blockCode },
     }),
+
+  /** List KVKs for a given LGD district code */
+  getKvks: (districtCode: string) =>
+    api.get<{ kvks: { code: string; name: string; address: string }[] }>('/lgd/kvks', {
+      params: { districtCode },
+    }),
 };
 
 // ─── Reports API ─────────────────────────────────────────────────────────────────
