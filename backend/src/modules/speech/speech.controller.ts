@@ -176,7 +176,7 @@ export class SpeechController {
     return this.sarvamService.translateText(
       dto.text,
       dto.targetLanguage,
-      dto.sourceLanguage ?? 'en-IN',
+      dto.sourceLanguage,
     );
   }
 }

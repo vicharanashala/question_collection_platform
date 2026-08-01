@@ -4611,6 +4611,7 @@ function computeRelevanceScore(text: string): { score: number; detail: string } 
       ? 'no_agriculture_keywords'
       : `matched_${Math.min(agricultureWordCount, 20)}+_keywords`;
 
+  console.log('[OnDeviceAI] relevance score:', { score, agricultureWordCount, words: words.slice(0, 20), detail });
   return { score, detail };
 }
 
@@ -4866,6 +4867,7 @@ export async function runOnDeviceValidation(
     } else {
       const { score, detail } = computeRelevanceScore(text);
       const pass = score >= 0.15; // threshold tuned for short queries
+      console.log('[OnDeviceAI] relevance stage:', { text, score, threshold: 0.15, pass, detail });
       relevanceResult = {
         pass,
         confidence: score,
@@ -4921,6 +4923,13 @@ export async function runOnDeviceValidation(
     overallVerdict = 'pass';
   }
 
+  console.log('[OnDeviceAI] overall verdict:', {
+    verdict: overallVerdict,
+    reasonKey: overallReasonKey,
+    relevance: relevanceResult,
+    duplicate: duplicateResult,
+    spam: spamResult,
+  });
   return {
     verdict: overallVerdict,
     message: overallReasonKey, // caller resolves via i18n
