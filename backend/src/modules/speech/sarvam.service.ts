@@ -218,6 +218,7 @@ export class SarvamService {
 
   /**
    * Translate English text to a target Indian language using Sarvam Translate API.
+   * Skips the API call entirely when source and target languages are the same.
    */
   async translateText(
     text: string,
@@ -236,6 +237,20 @@ export class SarvamService {
         'Source text cannot be empty',
         HttpStatus.BAD_REQUEST,
       );
+    }
+
+    // Skip if source and target are the same — nothing to translate.
+    const resolvedSource = sourceLanguage ?? 'en-IN';
+    if (resolvedSource === targetLanguage) {
+      this.logger.debug(
+        `[translateText] source (${resolvedSource}) and target (${targetLanguage}) are identical — returning original text`,
+      );
+      return {
+        translatedText: text,
+        confidence: 1.0,
+        sourceLanguage: resolvedSource,
+        targetLanguage,
+      };
     }
 
     // Attempt 1: try without source_language_code — let Sarvam auto-detect
@@ -280,7 +295,7 @@ export class SarvamService {
       const requestPayload: Record<string, string> = {
         input: text,
         target_language_code: targetLanguage,
-        source_language_code: sourceLanguage ?? 'en-IN',
+        source_language_code: resolvedSource,
         model: 'sarvam-translate:v1',
       };
       this.logger.debug(`Sarvam translate [attempt 2 - explicit source]: ${JSON.stringify(requestPayload)}`);
