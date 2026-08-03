@@ -30,8 +30,8 @@ RUN npx tsc --noEmit \
 FROM node:22-slim AS runtime
 
 # Tailscale userspace binary (glibc-based, requires Debian-slim not Alpine)
-COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscaled /usr/local/bin/tailscaled
-COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscale /usr/local/bin/tailscale
+COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscaled /app/tailscaled
+COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscale /app/tailscale
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
