@@ -29,24 +29,23 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('questions')
+@UseGuards(JwtAuthGuard)
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
 
-  // POST /questions — Submit a new question (Public — no auth)
+  // POST /questions — Submit a new question
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @CacheInvalidate('questions:u*')
   async submit(
     @Body() dto: SubmitQuestionDto,
+    @Req() req: AuthenticatedRequest,
   ): Promise<SubmitQuestionResponseDto> {
-    // For public submissions, derive userId from deviceId in deviceInfo
-    const userId = (dto.deviceInfo as { deviceId?: string })?.deviceId ?? 'anonymous';
-    return this.questionService.submit(userId, dto);
+    return this.questionService.submit(req.user.id, dto);
   }
 
   // POST /questions/preview — Validate and enrich fields; no DB write
   @Post('preview')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async preview(
     @Body() dto: PreviewQuestionDto,
@@ -57,7 +56,6 @@ export class QuestionController {
 
   // GET /questions — List questions (own or all for admin)
   @Get()
-  @UseGuards(JwtAuthGuard)
   @Cacheable('questions', 120)
   async list(
     @Query() dto: ListQuestionsDto,
@@ -68,7 +66,6 @@ export class QuestionController {
 
   // GET /questions/:id — Get single question
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   @Cacheable('question', 300)
   async getOne(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -79,7 +76,6 @@ export class QuestionController {
 
   // PATCH /questions/:id — Update question (edit window only)
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
   @CacheInvalidate('hot:today:*', 'hot:total_approved')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -91,7 +87,6 @@ export class QuestionController {
 
   // GET /questions/stats/me — Daily submission count for current user
   @Get('stats/me')
-  @UseGuards(JwtAuthGuard)
   @Cacheable('question_stats', 60)
   async getMyStats(@Req() req: AuthenticatedRequest) {
     const [dailyCount, limits, totalApproved] = await Promise.all([
