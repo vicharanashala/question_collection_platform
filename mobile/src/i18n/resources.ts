@@ -457,6 +457,8 @@ const resources = {
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
       "question": {
         "title": "Submit Question",
+        "location": "Location",
+        "locationLockedNote": "Location is locked to your profile and cannot be changed",
         "selectType": "Select Question Type",
         "text": "Text",
         "image": "Photo",
