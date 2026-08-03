@@ -1,15 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { VmProxyService } from '../../shared/services/vm-proxy';
 import { GemmaService } from './gemma.service';
-
-// ─── Mock VmProxyService ──────────────────────────────────────────────────────
-
-const mockVmProxy: Partial<VmProxyService> = {
-  getProxyConfigForVmServer: jest.fn().mockReturnValue(null),
-  getProxyAgent: jest.fn().mockReturnValue(null),
-  isConfigured: false,
-};
 
 // ─── Config helper ────────────────────────────────────────────────────────────
 
@@ -50,7 +41,7 @@ describe('GemmaService', () => {
 
   describe('when LLM is disabled', () => {
     it('returns keyword fallback without calling axios', async () => {
-      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }));
       const result = await service.inferCropAndDomains(
         'My rice leaves have yellow spots and rust',
       );
@@ -66,7 +57,7 @@ describe('GemmaService', () => {
   describe('crop inference', () => {
     it('returns crop and confidence from LLM', async () => {
       const spy = jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropCompletion('Rice', 0.92) });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Rice nitrogen deficiency');
 
@@ -77,7 +68,7 @@ describe('GemmaService', () => {
 
     it('normalises an unknown crop to Unknown', async () => {
       jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropCompletion('Kangkong', 0.75) });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Weed in kangkong field');
 
@@ -86,7 +77,7 @@ describe('GemmaService', () => {
 
     it('normalises crop case-insensitively', async () => {
       jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropCompletion('WHEAT', 0.9) });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Wheat NPK ratio');
 
@@ -95,7 +86,7 @@ describe('GemmaService', () => {
 
     it('clamps crop confidence > 1.0 to 1.0', async () => {
       jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropCompletion('Cotton', 1.5) });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Cotton pest attack');
 
@@ -104,7 +95,7 @@ describe('GemmaService', () => {
 
     it('clamps negative crop confidence to 0.0', async () => {
       jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropCompletion('Sugarcane', -0.3) });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Sugarcane weed question');
 
@@ -113,7 +104,7 @@ describe('GemmaService', () => {
 
     it('returns Unknown when crop call throws (after retries)', async () => {
       jest.spyOn(axios, 'post').mockRejectedValue(new Error('ECONNREFUSED'));
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Any question');
 
@@ -126,7 +117,7 @@ describe('GemmaService', () => {
       jest.spyOn(axios, 'post').mockResolvedValueOnce({
         data: { choices: [{ message: { content: '```json\n{"crop":"Rice","confidence":0.91}\n```' } }] },
       });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Rice nitrogen deficiency');
 
@@ -147,7 +138,7 @@ describe('GemmaService', () => {
             0.88,
           ),
         });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Wheat field pest and water issue');
 
@@ -160,7 +151,7 @@ describe('GemmaService', () => {
       jest.spyOn(axios, 'post')
         .mockResolvedValueOnce({ data: cropCompletion('Maize', 0.5) })
         .mockResolvedValueOnce({ data: domainCompletion(['Not a Real Domain', 'Also Not Real'], 0.5) });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Random farm question');
 
@@ -172,7 +163,7 @@ describe('GemmaService', () => {
       jest.spyOn(axios, 'post')
         .mockResolvedValueOnce({ data: cropCompletion('Tomato', 0.9) })
         .mockRejectedValue(new Error('ECONNREFUSED'));
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Pest attack on my tomato plants');
 
@@ -186,7 +177,7 @@ describe('GemmaService', () => {
         .mockResolvedValueOnce({
           data: { choices: [{ message: { content: '```json\n{"domains":["Nutrient Management"],"confidence":0.88}\n```' } }] },
         });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg());
 
       const result = await service.inferCropAndDomains('Rice nutrient question');
 
@@ -199,7 +190,7 @@ describe('GemmaService', () => {
 
   describe('keyword fallback (LLM disabled)', () => {
     it('infers domains from fertilizer keywords', async () => {
-      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }));
       const result = await service.inferCropAndDomains('Which NPK ratio is best for rabi wheat?');
 
       expect(result.domains.length).toBeGreaterThan(0);
@@ -207,63 +198,17 @@ describe('GemmaService', () => {
     });
 
     it('infers Disease Management from disease keywords', async () => {
-      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }));
       const result = await service.inferCropAndDomains('My potato plants got late blight');
 
       expect(result.domains).toContain('Disease Management');
     });
 
     it('returns [Others] when no domain keywords match', async () => {
-      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }), mockVmProxy as VmProxyService);
+      const service = new GemmaService(cfg({ 'llm.baseUrl': '' }));
       const result = await service.inferCropAndDomains('Tell me a story about farming');
 
       expect(result.domains).toEqual(['Others']);
-    });
-  });
-
-  // ─── Proxy integration ─────────────────────────────────────────────────────
-
-  describe('proxy integration', () => {
-    it('passes proxy config to axios when PROXY is set', async () => {
-      const proxyMock = {
-        getProxyConfigForVmServer: jest.fn().mockReturnValue({ protocol: 'http', host: 'my-proxy', port: 8080 }),
-        getProxyAgent: jest.fn().mockReturnValue(null),
-        isConfigured: true,
-      };
-
-      const cropData = { choices: [{ message: { content: JSON.stringify({ crop: 'Rice', confidence: 0.9 }) } }] };
-      const postSpy = jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropData });
-
-      const service = new GemmaService(cfg(), proxyMock as unknown as VmProxyService);
-      await service.inferCropAndDomains('Rice question');
-
-      expect(proxyMock.getProxyConfigForVmServer).toHaveBeenCalled();
-      expect(postSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ model: expect.any(String) }),
-        expect.objectContaining({
-          headers: expect.objectContaining({ Authorization: 'Bearer test-key' }),
-          proxy: { protocol: 'http', host: 'my-proxy', port: 8080 },
-        }),
-      );
-
-      postSpy.mockRestore();
-    });
-
-    it('omits proxy option when PROXY is not set', async () => {
-      const cropData = { choices: [{ message: { content: JSON.stringify({ crop: 'Rice', confidence: 0.9 }) } }] };
-      const postSpy = jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: cropData });
-      const service = new GemmaService(cfg(), mockVmProxy as VmProxyService);
-
-      await service.inferCropAndDomains('Rice question');
-
-      expect(postSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Object),
-        expect.not.objectContaining({ proxy: expect.anything() }),
-      );
-
-      postSpy.mockRestore();
     });
   });
 });

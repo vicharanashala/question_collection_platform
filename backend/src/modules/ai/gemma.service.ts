@@ -8,10 +8,9 @@
  * If the LLM is disabled or a call fails, crop falls back to "Unknown" and domains
  * fall back to the keyword-based inferDomains() from ../question/constants/domains.
  *
- * Proxy support: when PROXY is set, requests to VM_SERVER_URL are routed through it
- * via the standard axios `proxy` config object (no extra agent libraries needed for
- * axios itself; https-proxy-agent is used only for the Node.js fetch path in
- * GdbService / EmbedService).
+ * Proxy support: globally handled in main.ts via installVmProxy() — both axios
+ * (SocksProxyAgent via interceptor) and globalThis.fetch (undici + ProxyAgent).
+ * No per-service proxy injection is needed.
  */
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -20,7 +19,6 @@ import axios, { AxiosError } from 'axios';
 import { inferDomains, DOMAINS } from '../question/constants/domains';
 import { CROPS } from '../question/constants/crops';
 import { GemmaInferenceResult } from './dto/infer-crop-domain.dto';
-import { VmProxyService } from '../../shared/services/vm-proxy';
 
 const RETRY_DELAY_MS = 500;
 const MAX_RETRIES = 2;
@@ -91,10 +89,7 @@ interface ChatCompletionResponse {
 export class GemmaService {
   private readonly logger = new Logger(GemmaService.name);
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly vmProxy: VmProxyService,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
   // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -221,11 +216,7 @@ export class GemmaService {
     const apiKey = this.configService.get<string>('llm.apiKey')!.trim();
     const url = `${baseUrl}/chat/completions`;
 
-    const proxyConfig = this.vmProxy.getProxyConfigForVmServer();
-
-    const axiosOptions = proxyConfig
-      ? { proxy: proxyConfig }
-      : undefined;
+    // Proxy is handled globally — see src/bootstrap/tailnetProxy.ts
 
     const body: ChatCompletionRequest = {
       temperature: 0.2,
@@ -246,7 +237,6 @@ export class GemmaService {
             Authorization: `Bearer ${apiKey}`,
           },
           timeout: 30_000,
-          ...axiosOptions,
         },
       );
 

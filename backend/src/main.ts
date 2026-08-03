@@ -8,10 +8,16 @@ import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
+import { installVmProxy } from './bootstrap/tailnetProxy.js';
 
 // Validate required env vars before attempting to start.
 // These are eagerly evaluated during ConfigModule.forRoot() and would throw
 // opaque errors if missing. Surface a clear message instead.
+// Must run before any service issues a request: the AI / GDB / Gemma / Embed
+// servers sit on the tailnet (100.x), which is only reachable through the
+// local SOCKS/HTTP proxy.
+installVmProxy();
+
 function validateRequiredEnv(): void {
   const required = ['MONGODB_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'REDIS_HOST', 'REDIS_PORT'];
   for (const key of required) {

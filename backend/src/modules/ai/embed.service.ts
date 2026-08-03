@@ -1,16 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { VmProxyService } from '../../shared/services/vm-proxy';
 
 @Injectable()
 export class EmbedService {
   private readonly logger = new Logger(EmbedService.name);
   private readonly baseUrl: string;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly vmProxy: VmProxyService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     this.baseUrl = this.configService.get<string>('embed.baseUrl')!;
   }
 
@@ -23,12 +19,10 @@ export class EmbedService {
    */
   async embed(text: string): Promise<number[] | null> {
     try {
-      const agent = this.vmProxy.getProxyAgent();
       const res = await fetch(`${this.baseUrl}/embed`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
-        ...(agent ? { agent } : {}),
       });
 
       if (!res.ok) {

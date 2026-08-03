@@ -28,6 +28,10 @@ RUN npx tsc --noEmit \
 
 FROM node:22-alpine AS runtime
 
+# Tailscale userspace binary (no kernel module, no TUN device)
+COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscaled /usr/local/bin/tailscaled
+COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscale /usr/local/bin/tailscale
+
 RUN apk add --no-cache ffmpeg bash ca-certificates curl \
     && rm -rf /var/cache/apk/* /tmp/*
 
@@ -39,16 +43,12 @@ ENV PORT=8080
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
+COPY scripts/start.sh ./scripts/start.sh
 
-RUN addgroup -g 1001 -S appgroup \
-    && adduser -u 1001 -S appuser -G appgroup \
-    && chown -R appuser:appgroup /app
-
-USER appuser
+# Entrypoint script starts tailscaled first, then the NestJS app
+ENTRYPOINT ["/bin/sh", "scripts/start.sh"]
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -sf http://localhost:${PORT:-8080}/health || exit 1
-
-CMD ["node", "dist/main.js"]
