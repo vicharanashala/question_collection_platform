@@ -114,6 +114,9 @@ jobs:
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
+            USE_VM_PROXY=true
+            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
+            TS_HOSTNAME=annadatha-cloudrun
             PROXY=${{ secrets.PROXY }}
           env_vars_update_strategy: merge
           flags: --allow-unauthenticated
