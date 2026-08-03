@@ -12,57 +12,65 @@ if [ -z "${TAILSCALE_AUTHKEY:-}" ]; then
   exec node dist/main.js
 fi
 
+echo "[start.sh] ✅ TAILSCALE_AUTHKEY received (length: ${#TAILSCALE_AUTHKEY})"
 echo "[start.sh] Starting tailscaled in userspace mode..."
 
-# Create runtime dirs
-mkdir -p /var/run/tailscale /var/lib/tailscale
+# ---------------------------------------------------------------------------
+# Tailscale (optional)
+#
+# The tailnet is only needed to reach the AI / agent / GDB servers (100.x CGNAT
+# addresses). The HTTP server itself does not depend on it, so a Tailscale failure must
+# NOT stop the app from booting: Cloud Run kills any container that fails to listen on
+# $PORT and reports it as "failed to start and listen on the port", which buries the
+# real cause.
+#
+# Everything below therefore tolerates failure and always falls through to Node.
+# ---------------------------------------------------------------------------
+start_tailscale() {
+  # --state=mem: — Cloud Run instances are ephemeral, so an on-disk state dir only ever
+  # holds a stale identity from a previous container.
+  #
+  # Userspace networking means there is NO interface for 100.x, so the app can only reach
+  # the tailnet through these proxies (see src/bootstrap/tailnetProxy.ts). Both listen on
+  # the same port: SOCKS5 for node's http agents (axios), HTTP CONNECT for undici (fetch).
+  /app/tailscaled \
+    --tun=userspace-networking \
+    --state=mem: \
+    --socks5-server=localhost:1055 \
+    --outbound-http-proxy-listen=localhost:1055 &
 
-# Start tailscaled in background — userspace networking (no TUN device needed on Cloud Run)
-# --outbound-http-proxy-listen must be different from --socks5-server (Cloud Run default healthcheck probes 8080)
-tailscaled \
-  --tun=userspace-networking \
-  --socket=/var/run/tailscale/tailscaled.sock \
-  --socks5-server=127.0.0.1:1055 \
-  --outbound-http-proxy-listen=127.0.0.1:1056 &
-DAEMON_PID=$!
+  DAEMON_PID=$!
+  echo "[start.sh] tailscaled started (PID $DAEMON_PID)..."
 
-echo "[start.sh] tailscaled started (PID $DAEMON_PID), waiting for socket..."
+  # Wait for the daemon to be ready
+  i=0
+  while [ $i -lt 30 ]; do
+    if /app/tailscale status >/dev/null 2>&1; then break; fi
+    i=$((i + 1))
+    sleep 1
+  done
 
-# Wait for socket file (max 15s)
-WAIT_COUNT=0
-until [ -S /var/run/tailscale/tailscaled.sock ]; do
-  WAIT_COUNT=$((WAIT_COUNT + 1))
-  echo "  waiting for tailscaled.sock... (${WAIT_COUNT}s)"
-  if [ $WAIT_COUNT -gt 15 ]; then
-    echo "[start.sh] ERROR: tailscaled.sock not created within 15 seconds — starting app without Tailscale"
-    exec node dist/main.js
+  echo "[start.sh] Running tailscale up..."
+
+  # The auth key must be REUSABLE and EPHEMERAL: every cold start is a new machine, so a
+  # single-use key authenticates the first instance and fails on every one after it, and
+  # non-ephemeral nodes accumulate in the tailnet as gcp-1, gcp-2, ...
+  if /app/tailscale up \
+    --auth-key="${TAILSCALE_AUTHKEY}" \
+    --hostname="${TS_HOSTNAME:-annadatha-cloudrun}"; then
+    echo "[start.sh] ✅ Tailscale connected: $(/app/tailscale ip -4 2>/dev/null | head -1)"
+  else
+    echo "[start.sh] ⚠️  'tailscale up' FAILED — continuing without the tailnet."
+    echo "[start.sh] ⚠️  Usual causes: auth key expired, single-use, or revoked."
   fi
-  sleep 1
-done
-
-echo "[start.sh] Socket ready — authenticating with Tailscale..."
-
-# Authenticate using authkey
-# --accept-routes not strictly needed for client-only (no subnet routing needed)
-tailscale up \
-  --socket=/var/run/tailscale/tailscaled.sock \
-  --reset \
-  --authkey="${TAILSCALE_AUTHKEY}" \
-  --hostname="${TS_HOSTNAME:-annadatha-cloudrun}" \
-  --accept-routes 2>&1 || {
-  echo "[start.sh] WARNING: tailscale up failed — starting app without Tailscale proxy"
-  echo "[start.sh] VM services (Gemma/GDB/Embed) will be unreachable"
-  exec node dist/main.js
 }
 
-UP_EXIT=$?
-echo "[start.sh] tailscale up finished (exit code: $UP_EXIT)"
+# `|| true` so a non-zero return can never abort the script under `set -e`.
+start_tailscale || true
 
-# Print status for debugging
-tailscale --socket=/var/run/tailscale/tailscaled.sock status 2>&1 || true
-
-echo "[start.sh] Tailscale ready. Starting NestJS application..."
+echo ""
+echo "[start.sh] Starting NestJS application..."
 echo "[start.sh] VM_PROXY_SOCKS_URL=socks5h://localhost:1055"
-echo "[start.sh] VM_PROXY_HTTP_URL=http://localhost:1056"
+echo "[start.sh] VM_PROXY_HTTP_URL=http://localhost:1055"
 
-exec node dist/main.js
+exec dumb-init node dist/main.js

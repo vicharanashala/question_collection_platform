@@ -30,7 +30,7 @@ import { fetch as undiciFetch, ProxyAgent } from 'undici';
 // ─── Proxy configuration (read once at startup) ────────────────────────────────
 
 const VM_PROXY_SOCKS_URL = process.env.VM_PROXY_SOCKS_URL || 'socks5h://localhost:1055';
-const VM_PROXY_HTTP_URL = process.env.VM_PROXY_HTTP_URL || 'http://localhost:1056';
+const VM_PROXY_HTTP_URL = process.env.VM_PROXY_HTTP_URL || 'http://localhost:1055';
 const USE_VM_PROXY = process.env.USE_VM_PROXY !== 'false';
 
 // ─── Tailnet host detection ────────────────────────────────────────────────────

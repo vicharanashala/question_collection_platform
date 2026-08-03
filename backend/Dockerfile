@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     ca-certificates \
+    dumb-init \
     && rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app
@@ -49,10 +50,10 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
 COPY scripts/start.sh ./scripts/start.sh
 
-# Entrypoint script starts tailscaled first, then the NestJS app
+# Entrypoint script starts tailscaled first, then the NestJS app via dumb-init
 ENTRYPOINT ["/bin/sh", "scripts/start.sh"]
 
 EXPOSE 8080
 
-# Entrypoint handles tailscaled startup; start.sh ends with exec node dist/main.js
+# Entrypoint handles tailscaled startup; start.sh ends with exec dumb-init node dist/main.js
 # (CMD below is unreachable but kept for `docker run` without start.sh compatibility)
