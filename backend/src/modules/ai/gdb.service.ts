@@ -18,6 +18,7 @@ import { Question } from '../../shared/database/entities';
 import { AdminService } from '../admin/admin.service';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { VmProxyService } from '../../shared/services/vm-proxy';
 
 export interface GdbSearchResult {
   question_id: string;
@@ -83,6 +84,7 @@ export class GdbService {
     private readonly adminService: AdminService,
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
+    private readonly vmProxy: VmProxyService,
   ) {}
 
   // ─── Public API ──────────────────────────────────────────────────────────────
@@ -108,6 +110,7 @@ export class GdbService {
     // ── Call GDB ──────────────────────────────────────────────────────────────
     let response: Response;
     try {
+      const agent = this.vmProxy.getProxyAgent();
       response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -119,6 +122,7 @@ export class GdbService {
           crop: payload.crop,
           state: payload.state,
         }),
+        ...(agent ? { agent } : {}),
       });
     } catch (err) {
       // Network failure — do not block the user; treat as non-duplicate

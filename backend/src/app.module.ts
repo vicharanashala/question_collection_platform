@@ -39,6 +39,7 @@ import { CacheInvalidationInterceptor } from './shared/database/cache/intercepto
 import { EndpointLoggerModule } from './shared/services/endpoint-logger/endpoint-logger.module';
 import { MongoDbModule } from './shared/database/mongodb/mongo.module';
 import { DbModule } from './shared/database/db.module';
+import { VmProxyModule } from './shared/services/vm-proxy/vm-proxy.module';
 
 @Module({
   imports: [
@@ -71,6 +72,9 @@ import { DbModule } from './shared/database/db.module';
 
     // Database abstraction layer (all 13 repository providers)
     DbModule,
+
+    // VM proxy (global — provides VmProxyService for all VM_SERVER_URL requests)
+    VmProxyModule,
 
     // Feature modules
     EndpointLoggerModule,

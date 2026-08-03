@@ -21,7 +21,9 @@ import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../hooks/useLanguage';
 import { questionApi, storageApi } from '../../api/client';
+import { speechApi } from '../../api/speech';
 import { runOnDeviceValidation } from '../../utils/onDeviceAI';
 import { AIValidationResult } from '../../utils/onDeviceAI';
 import { AIValidationBanner } from '../../components/AIValidationBanner';
@@ -82,6 +84,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
+  const { language: appLanguage } = useLanguage();
   const { showToast } = useToast();
   const navigation = useNavigation();
   const { t } = useTranslation();
@@ -142,10 +145,15 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       if (!text.trim() || text === prevTextRef.current) return;
       prevTextRef.current = text;
       aiDebounceRef.current = setTimeout(async () => {
-        setAiValidation(await runOnDeviceValidation({ text, ownId: editingQuestionId }));
+        console.log('[OnDeviceAI] translate request:', { text: text.trim(), source: appLanguage });
+        const result = await speechApi.translate(text.trim(), 'en', appLanguage);
+        console.log('[OnDeviceAI] translate response:', result);
+        const translatedText = result.translatedText;
+        console.log('[OnDeviceAI] original:', text, '| translated:', translatedText);
+        setAiValidation(await runOnDeviceValidation({ text: translatedText, ownId: editingQuestionId }));
       }, 600);
     },
-    [editingQuestionId],
+    [editingQuestionId, appLanguage],
   );
 
   useEffect(() => () => { if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current); }, []);
@@ -170,14 +178,16 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
       return;
     }
 
-    // on-device validation disabled
-    // const validation = await runOnDeviceValidation({ text: questionText.trim(), ownId: editingQuestionId });
-    // setAiValidation(validation);
-    // if (validation.verdict === 'fail') {
-    //   showToast(t(validation.reasonKey ?? 'onDeviceAI.defaultFail'), 'error');
-    //   return;
-    // }
-    // if (validation.verdict === 'warn') return;
+    // Translate non-English text before on-device validation
+    const textToValidate = appLanguage !== 'en'
+      ? (await speechApi.translate(questionText.trim(), 'en', appLanguage)).translatedText
+      : questionText.trim();
+
+    // on-device validation (always runs on English text)
+    const validation = await runOnDeviceValidation({ text: textToValidate, ownId: editingQuestionId });
+    setAiValidation(validation);
+    if (validation.verdict === 'fail') return;
+    if (validation.verdict === 'warn') return;
 
     setPreviewLoading(true);
     try {
@@ -235,13 +245,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     }
   }
 
-  // relevanceFailed — left as no-op since on-device AI is disabled
-  const relevanceFailed = false;
+  // canSubmit gates on on-device AI verdict
+  const relevanceFailed = aiValidation?.verdict === 'fail';
   const canSubmit =
-    questionText.trim().length > 0 &&
     questionText.length <= maxChars &&
     (isEditMode || remainingToday > 0) &&
-    !relevanceFailed; // no-op: aiValidation disabled
+    !relevanceFailed;
 
   const charCountColor =
     questionText.length > maxChars ? c.error
@@ -375,6 +384,14 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           </View>
 
 
+
+          {/* ── On-Device AI Validation Banner ─────────────────────────────── */}
+          {questionText.trim().length > 0 && (aiValidation?.verdict === 'warn' || aiValidation?.verdict === 'fail') && (
+            <AIValidationBanner
+              result={aiValidation}
+              onDismiss={() => setAiValidation(null)}
+            />
+          )}
 
           {/* ── Continue ───────────────────────────────────────────────── */}
           <Button

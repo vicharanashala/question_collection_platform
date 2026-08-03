@@ -7,14 +7,20 @@
  * Crop and domain inference are separate LLM calls with independent retry + fallback.
  * If the LLM is disabled or a call fails, crop falls back to "Unknown" and domains
  * fall back to the keyword-based inferDomains() from ../question/constants/domains.
+ *
+ * Proxy support: when PROXY is set, requests to VM_SERVER_URL are routed through it
+ * via the standard axios `proxy` config object (no extra agent libraries needed for
+ * axios itself; https-proxy-agent is used only for the Node.js fetch path in
+ * GdbService / EmbedService).
  */
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+import axios, { AxiosError } from 'axios';
 import { inferDomains, DOMAINS } from '../question/constants/domains';
 import { CROPS } from '../question/constants/crops';
 import { GemmaInferenceResult } from './dto/infer-crop-domain.dto';
+import { VmProxyService } from '../../shared/services/vm-proxy';
 
 const RETRY_DELAY_MS = 500;
 const MAX_RETRIES = 2;
@@ -62,11 +68,33 @@ Rules:
 - Do NOT include a domain unless it is clearly and directly relevant to the question`;
 const USER_PROMPT = (question: string) => `Question: "${question}"`;
 
+// ─── Chat completions request shape ───────────────────────────────────────────
+
+interface ChatCompletionMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+interface ChatCompletionRequest {
+  model: string;
+  messages: ChatCompletionMessage[];
+  temperature?: number;
+  max_tokens?: number;
+  response_format?: { type: 'json_object' };
+}
+
+interface ChatCompletionResponse {
+  choices: { message: { content: string } }[];
+}
+
 @Injectable()
 export class GemmaService {
   private readonly logger = new Logger(GemmaService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly vmProxy: VmProxyService,
+  ) {}
 
   // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -95,7 +123,6 @@ export class GemmaService {
   }> {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-
         return await this.inferCrop(questionText);
       } catch (err) {
         this.logger.warn(
@@ -111,21 +138,16 @@ export class GemmaService {
   }
 
   private async inferCrop(questionText: string): Promise<{ crop: string; confidence: number }> {
-    const client = this.getClient();
     const model = this.configService.get<string>('llm.model', 'meta-llama/llama-4-maverick');
 
-    const completion = await client.chat.completions.create({
+    const raw = await this.chatCompletion({
       model,
       messages: [
         { role: 'system', content: CROP_SYSTEM_PROMPT },
         { role: 'user', content: USER_PROMPT(questionText) },
       ],
-      temperature: 0.2,
-      max_tokens: 128,
-      response_format: { type: 'json_object' },
     });
 
-    const raw = completion.choices[0]?.message?.content?.trim() ?? '';
     let parsed: Record<string, unknown>;
     try {
       parsed = this.tryParseJson(raw, ['crop', 'confidence']);
@@ -146,7 +168,6 @@ export class GemmaService {
   }> {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-
         return await this.inferDomains(questionText);
       } catch (err) {
         this.logger.warn(
@@ -166,21 +187,16 @@ export class GemmaService {
     domains: string[];
     confidence: number;
   }> {
-    const client = this.getClient();
     const model = this.configService.get<string>('llm.model', 'meta-llama/llama-4-maverick');
 
-    const completion = await client.chat.completions.create({
+    const raw = await this.chatCompletion({
       model,
       messages: [
         { role: 'system', content: DOMAIN_SYSTEM_PROMPT },
         { role: 'user', content: USER_PROMPT(questionText) },
       ],
-      temperature: 0.2,
-      max_tokens: 128,
-      response_format: { type: 'json_object' },
     });
 
-    const raw = completion.choices[0]?.message?.content?.trim() ?? '';
     let parsed: Record<string, unknown>;
     try {
       parsed = this.tryParseJson(raw, ['domains', 'confidence']);
@@ -191,6 +207,55 @@ export class GemmaService {
     const domains = this.normaliseDomains(parsed.domains);
     const confidence = this.clipConfidence(parsed.confidence);
     return { domains, confidence };
+  }
+
+  // ─── Shared chat completion call ─────────────────────────────────────────────
+
+  /**
+   * Makes a chat completions POST to the LLM base URL.
+   * When PROXY is set, injects the standard axios `proxy` config so the request
+   * is routed through the configured forward proxy for VM_SERVER_URL destinations.
+   */
+  private async chatCompletion(request: ChatCompletionRequest): Promise<string> {
+    const baseUrl = this.configService.get<string>('llm.baseUrl')!.trim();
+    const apiKey = this.configService.get<string>('llm.apiKey')!.trim();
+    const url = `${baseUrl}/chat/completions`;
+
+    const proxyConfig = this.vmProxy.getProxyConfigForVmServer();
+
+    const axiosOptions = proxyConfig
+      ? { proxy: proxyConfig }
+      : undefined;
+
+    const body: ChatCompletionRequest = {
+      temperature: 0.2,
+      max_tokens: 128,
+      response_format: { type: 'json_object' },
+      ...request,
+    };
+
+    this.logger.debug(`[Gemma] POST ${url}`);
+
+    try {
+      const response = await axios.post<ChatCompletionResponse>(
+        url,
+        body,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          timeout: 30_000,
+          ...axiosOptions,
+        },
+      );
+
+      return response.data.choices[0]?.message?.content?.trim() ?? '';
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: { message?: string } }>;
+      const detail = axiosErr.response?.data?.error?.message ?? axiosErr.message;
+      throw new Error(`chat completion failed: ${detail}`);
+    }
   }
 
   // ─── Normalisation helpers ───────────────────────────────────────────────────
@@ -239,12 +304,6 @@ export class GemmaService {
     return url !== '' && apiKey !== undefined && apiKey !== '';
   }
 
-  private getClient(): OpenAI {
-    const baseURL = this.configService.get<string>('llm.baseUrl')!.trim();
-    const apiKey = this.configService.get<string>('llm.apiKey')!.trim();
-    return new OpenAI({ baseURL, apiKey });
-  }
-
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -280,7 +339,6 @@ export class GemmaService {
         }
       }
       if (Object.keys(extracted).length > 0) {
-
         return extracted;
       }
       // Nothing recoverable — throw so retry kicks in

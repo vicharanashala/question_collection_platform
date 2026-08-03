@@ -16,7 +16,7 @@ export interface TranscriptionResult {
 export interface TranslationResult {
   translatedText: string;
   confidence: number;
-  sourceLanguage: string;
+  sourceLanguage?: string;
   targetLanguage: string;
 }
 
@@ -218,11 +218,12 @@ export class SarvamService {
 
   /**
    * Translate English text to a target Indian language using Sarvam Translate API.
+   * Skips the API call entirely when source and target languages are the same.
    */
   async translateText(
     text: string,
     targetLanguage: string,
-    sourceLanguage = 'en-IN',
+    sourceLanguage?: string,
   ): Promise<TranslationResult> {
     if (!this.apiKey) {
       throw new HttpException(
@@ -238,84 +239,94 @@ export class SarvamService {
       );
     }
 
-    let attempt = 0;
-    const maxAttempts = 3;
+    // Skip if source and target are the same — nothing to translate.
+    const resolvedSource = sourceLanguage ?? 'en-IN';
+    if (resolvedSource === targetLanguage) {
+      this.logger.debug(
+        `[translateText] source (${resolvedSource}) and target (${targetLanguage}) are identical — returning original text`,
+      );
+      return {
+        translatedText: text,
+        confidence: 1.0,
+        sourceLanguage: resolvedSource,
+        targetLanguage,
+      };
+    }
 
-    while (attempt < maxAttempts) {
+    // Attempt 1: try without source_language_code — let Sarvam auto-detect
+    {
+      const requestPayload: Record<string, string> = {
+        input: text,
+        target_language_code: targetLanguage,
+        model: 'sarvam-translate:v1',
+      };
+      this.logger.debug(`Sarvam translate [attempt 1 - auto-detect]: ${JSON.stringify(requestPayload)}`);
       try {
-        const requestPayload = {
-          input: text,
-          source_language_code: sourceLanguage,
-          target_language_code: targetLanguage,
-          model: 'sarvam-translate:v1',
-        };
-        this.logger.debug(
-          `Sarvam translate request: ${JSON.stringify(requestPayload)}`,
-        );
-        const response = await axios.post(
-          this.translateUrl,
-          requestPayload,
-          {
-            headers: {
-              'api-subscription-key': this.apiKey,
-              'Content-Type': 'application/json',
-            },
-            timeout: 30_000,
+        const response = await axios.post(this.translateUrl, requestPayload, {
+          headers: {
+            'api-subscription-key': this.apiKey,
+            'Content-Type': 'application/json',
           },
-        );
-
-        this.logger.debug(
-          `Sarvam translate response (${response.status}): ${JSON.stringify(response.data).slice(0, 300)}`,
-        );
+          timeout: 30_000,
+        });
+        this.logger.debug(`Sarvam translate response: ${JSON.stringify(response.data).slice(0, 300)}`);
         const data = response.data;
-        const translatedText =
-          typeof data === 'string'
-            ? data.trim()
-            : (data?.translated_text ?? data?.output ?? JSON.stringify(data));
-
         return {
-          translatedText,
+          translatedText:
+            typeof data === 'string'
+              ? data.trim()
+              : (data?.translated_text ?? data?.output ?? JSON.stringify(data)),
+          confidence: data?.confidence ?? data?.score ?? 1.0,
+          sourceLanguage: data?.detected_language ?? sourceLanguage,
+          targetLanguage,
+        };
+      } catch (err) {
+        const axiosErr = err as AxiosError;
+        const status = axiosErr.response?.status;
+        // If Sarvam says source_language_code is required, fall through to attempt 2
+        if (status !== 400) {
+          this.logger.warn(`Sarvam auto-detect failed (${status}): ${JSON.stringify(axiosErr.response?.data)}`);
+        }
+      }
+    }
+
+    // Attempt 2: include source_language_code (required for sarvam-translate:v1)
+    {
+      const requestPayload: Record<string, string> = {
+        input: text,
+        target_language_code: targetLanguage,
+        source_language_code: resolvedSource,
+        model: 'sarvam-translate:v1',
+      };
+      this.logger.debug(`Sarvam translate [attempt 2 - explicit source]: ${JSON.stringify(requestPayload)}`);
+      try {
+        const response = await axios.post(this.translateUrl, requestPayload, {
+          headers: {
+            'api-subscription-key': this.apiKey,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30_000,
+        });
+        this.logger.debug(`Sarvam translate response: ${JSON.stringify(response.data).slice(0, 300)}`);
+        const data = response.data;
+        return {
+          translatedText:
+            typeof data === 'string'
+              ? data.trim()
+              : (data?.translated_text ?? data?.output ?? JSON.stringify(data)),
           confidence: data?.confidence ?? data?.score ?? 1.0,
           sourceLanguage,
           targetLanguage,
         };
       } catch (err) {
-        attempt++;
         const axiosErr = err as AxiosError;
-
-        if (axiosErr.response?.status === 429) {
-          const retryAfter = parseInt(
-            axiosErr.response.headers['retry-after'] ?? '5',
-            10,
-          );
-          const waitMs = retryAfter * 1_000 * attempt;
-          this.logger.warn(
-            `Sarvam Translate rate-limited. Retrying in ${waitMs}ms (attempt ${attempt}/${maxAttempts})`,
-          );
-          await this.sleep(waitMs);
-          continue;
-        }
-
-        if (attempt >= maxAttempts) {
-          this.logger.error(
-            `Sarvam Translate failed after ${maxAttempts} attempts: ${axiosErr.message}`,
-          );
-          throw new HttpException(
-            'Translation failed. Please try again.',
-            HttpStatus.BAD_GATEWAY,
-          );
-        }
-
-        this.logger.warn(
-          `Sarvam Translate attempt ${attempt} failed: ${axiosErr.message}. Retrying…`,
+        this.logger.error(`Sarvam Translate failed on attempt 2: ${axiosErr.message}, ${JSON.stringify(axiosErr.response?.data)}`);
+        throw new HttpException(
+          'Translation failed. Please try again.',
+          HttpStatus.BAD_GATEWAY,
         );
       }
     }
-
-    throw new HttpException(
-      'Translation failed unexpectedly.',
-      HttpStatus.BAD_GATEWAY,
-    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
