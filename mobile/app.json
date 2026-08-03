@@ -25,8 +25,8 @@
       "package": "com.kisanMitra.kisanDekho",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#0D9488",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
       },
       "statusBar": {
         "backgroundColor": "#0D9488",
