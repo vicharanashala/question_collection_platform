@@ -357,11 +357,11 @@ export const DOMAINS = [
   "Market Prices, MSP & Marketing",
   "Agricultural Schemes & Subsidies",
   "Credit, Loan & Insurance",
-  "Capacity Building & Extension",
-  "Rural Infrastructure",
-  "Animal Husbandry & Livestock",
-  "Fisheries & Aquaculture",
-  "Allied Agricultural Activities",
+  // "Capacity Building & Extension",
+  // "Rural Infrastructure",
+  // "Animal Husbandry & Livestock",
+  // "Fisheries & Aquaculture",
+  // "Allied Agricultural Activities",
   "Others"
 ] as const;
 

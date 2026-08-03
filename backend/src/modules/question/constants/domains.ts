@@ -13,11 +13,11 @@ export const DOMAINS = [
   "Market Prices, MSP & Marketing",
   "Agricultural Schemes & Subsidies",
   "Credit, Loan & Insurance",
-  "Capacity Building & Extension",
-  "Rural Infrastructure",
-  "Animal Husbandry & Livestock",
-  "Fisheries & Aquaculture",
-  "Allied Agricultural Activities",
+  // "Capacity Building & Extension",
+  // "Rural Infrastructure",
+  // "Animal Husbandry & Livestock",
+  // "Fisheries & Aquaculture",
+  // "Allied Agricultural Activities",
   "Others",
 ] as const;
 
@@ -42,11 +42,11 @@ const DOMAIN_KEYWORDS: [Domain, RegExp][] = [
   ['Market Prices, MSP & Marketing',         /\b(market|price|MSP|mandi|procurement|selling|buying|export|contract\s*farming|marketing|market\s*information|price\s*forecast|trends|demand\s*supply|commodity\s*price)\b/i],
   ['Agricultural Schemes & Subsidies',       /\b(scheme|subsidy|government|PM\s*KISAN|grant|assistance|benefit|eligibility|certificate)\b/i],
   ['Credit, Loan & Insurance',               /\b(loan|credit|crop\s*loan|Kisan\s*Credit|kcc|debt|mortgage|interest\s*rate|bank\s*loan|insurance|crop\s*insurance|PMFBY|weather\s*based|loss\s*claim|damage\s*claim)\b/i],
-  ['Capacity Building & Extension',          /\b(capacity\s*building|extension|training|farmers?\s*training|demonstration|field\s*day|workshop|awareness|skill\s*development|technology\s*transfer|advisory|extension\s*service)\b/i],
-  ['Rural Infrastructure',                   /\b(rural\s*infrastructure|road|electricity|power\s*supply|cold\s*chain|market\s*infrastructure|godown|warehouse\s*infrastructure|storage\s*facility|processing\s*facility|drying\s*yard|pack\s*house|grading\s*facility)\b/i],
-  ['Animal Husbandry & Livestock',           /\b(livestock|cattle|buffalo|cow|bull|goat|sheep|poultry|chicken|broiler|layer|dairy|milk\s*production|animal\s*health|animal\s*disease|foot\s*and\s*mouth|FMD|deworming|breeding|artificial\s*insemination|AI\s*technique|calf\s*rearing|fodder|green\s*fodder|concentrate\s*feed|mineral\s*supplement|vaccination|livestock\s*insurance)\b/i],
-  ['Fisheries & Aquaculture',                /\b(fish|fisheries|aquaculture|fish\s*farm|fish\s*pond|shrimp|prawn|carp|catla|rohu|mrigal|tilapia|fish\s*seed|fingerling|hatchery|fish\s*feed|fish\s*disease|fish\s*health|water\s*quality|pond\s*preparation|net\s*fishing|cage\s*culture|integrated\s*farming|fish\s*processing|fish\s*marketing)\b/i],
-  ['Allied Agricultural Activities',         /\b(beekeeping|honey|apiculture|sericulture|silk\s*worm|mushroom\s*cultivation|mushroom|vermicompost\s*production|coir|banana\s*fiber|bamboo\s*cultivation|floriculture|seed\s*production\s*plot|nursery\s*management|integrated\s*farming\s*system|IFS|agroforestry|agripreneurship|agri\s*startup)\b/i],
+  // ['Capacity Building & Extension',          /\b(capacity\s*building|extension|training|farmers?\s*training|demonstration|field\s*day|workshop|awareness|skill\s*development|technology\s*transfer|advisory|extension\s*service)\b/i],
+  // ['Rural Infrastructure',                   /\b(rural\s*infrastructure|road|electricity|power\s*supply|cold\s*chain|market\s*infrastructure|godown|warehouse\s*infrastructure|storage\s*facility|processing\s*facility|drying\s*yard|pack\s*house|grading\s*facility)\b/i],
+  // ['Animal Husbandry & Livestock',           /\b(livestock|cattle|buffalo|cow|bull|goat|sheep|poultry|chicken|broiler|layer|dairy|milk\s*production|animal\s*health|animal\s*disease|foot\s*and\s*mouth|FMD|deworming|breeding|artificial\s*insemination|AI\s*technique|calf\s*rearing|fodder|green\s*fodder|concentrate\s*feed|mineral\s*supplement|vaccination|livestock\s*insurance)\b/i],
+  // ['Fisheries & Aquaculture',                /\b(fish|fisheries|aquaculture|fish\s*farm|fish\s*pond|shrimp|prawn|carp|catla|rohu|mrigal|tilapia|fish\s*seed|fingerling|hatchery|fish\s*feed|fish\s*disease|fish\s*health|water\s*quality|pond\s*preparation|net\s*fishing|cage\s*culture|integrated\s*farming|fish\s*processing|fish\s*marketing)\b/i],
+  // ['Allied Agricultural Activities',         /\b(beekeeping|honey|apiculture|sericulture|silk\s*worm|mushroom\s*cultivation|mushroom|vermicompost\s*production|coir|banana\s*fiber|bamboo\s*cultivation|floriculture|seed\s*production\s*plot|nursery\s*management|integrated\s*farming\s*system|IFS|agroforestry|agripreneurship|agri\s*startup)\b/i],
 ];
 
 /**
