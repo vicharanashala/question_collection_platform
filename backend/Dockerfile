@@ -1,4 +1,4 @@
-FROM node:22-alpine AS deps
+FROM node:22-slim AS deps
 
 WORKDIR /app
 
@@ -7,14 +7,15 @@ COPY package.json ./
 # Remove it so npm install fetches fresh based on package.json only.
 RUN rm -f package-lock.json && npm install --omit=dev && npm cache clean --force
 
-FROM node:22-alpine AS build
+FROM node:22-slim AS build
 
 WORKDIR /app
 
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    bash \
-    && rm -rf /var/cache/apk/* /tmp/*
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY package.json ./
 RUN rm -f package-lock.json && npm install && npm cache clean --force
@@ -26,14 +27,17 @@ RUN npx tsc --noEmit \
     && npx nest build \
     && npm prune --omit=dev
 
-FROM node:22-alpine AS runtime
+FROM node:22-slim AS runtime
 
-# Tailscale userspace binary (no kernel module, no TUN device)
+# Tailscale userspace binary (glibc-based, requires Debian-slim not Alpine)
 COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscaled /usr/local/bin/tailscaled
 COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscale /usr/local/bin/tailscale
 
-RUN apk add --no-cache ffmpeg bash ca-certificates curl \
-    && rm -rf /var/cache/apk/* /tmp/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app
 
@@ -50,5 +54,5 @@ ENTRYPOINT ["/bin/sh", "scripts/start.sh"]
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -sf http://localhost:${PORT:-8080}/health || exit 1
+# Entrypoint handles tailscaled startup; start.sh ends with exec node dist/main.js
+# (CMD below is unreachable but kept for `docker run` without start.sh compatibility)
