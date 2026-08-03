@@ -319,7 +319,7 @@ function MainNavigator() {
         <View style={mainStyles.headerBar}>
           {/* App logo + name */}
           <View style={mainStyles.brand}>
-            <Image source={require('../../assets/icon.png')} style={mainStyles.logo} />
+            <Image source={require('../../assets/logo.png')} style={mainStyles.logo} />
             <View style={mainStyles.brandText}>
               <Text style={[mainStyles.appName, { color: c.text }]} numberOfLines={1}>AnnaDatha</Text>
               <Text style={[mainStyles.tagline, { color: c.textSecondary }]} numberOfLines={1}>Empowering Farmers</Text>
@@ -430,6 +430,7 @@ const mainStyles = StyleSheet.create({
   brand: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     gap: tokens.spacing2,
     flex: 1,
   },
