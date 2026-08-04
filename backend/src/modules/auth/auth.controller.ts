@@ -32,7 +32,7 @@ export class AuthController {
    */
   @Public()
   @Post('request-otp')
-  @Throttle({ default: { limit: 3, ttl: 900_000 } }) // 3 per 15 min
+  @Throttle({ default: { limit: 10, ttl: 900_000 } }) // 10 per 15 min
   @HttpCode(HttpStatus.OK)
   async requestOtp(@Body() dto: RequestOtpDto) {
     return this.authService.requestOtp(dto);

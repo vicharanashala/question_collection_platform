@@ -85,6 +85,8 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}
             REDIS_ENABLED=false
+            THROTTLE_ENABLED=true
+            OTP_RATE_LIMIT=true
             REDIS_HOST=${{ secrets.REDIS_HOST }}
             REDIS_PORT=${{ vars.REDIS_PORT }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
