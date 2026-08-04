@@ -75,7 +75,7 @@ export interface PublicUser {
 @Injectable()
 export class AuthService {
   private readonly otpExpiryMinutes = 5;
-  private readonly otpMaxRequestsPerWindow = 3; // per 15-minute window
+  private readonly otpMaxRequestsPerWindow = 10; // per 15-minute window
 
   constructor(
     @Inject(REPOSITORY_TOKENS.User)
@@ -108,7 +108,7 @@ export class AuthService {
 
   /**
    * Generate a 6-digit OTP and send it via SMS.
-   * Rate-limited to 3 requests per 15-minute window per mobile number.
+   * Rate-limited to 10 requests per 15-minute window per mobile number.
    */
   async requestOtp(dto: RequestOtpDto): Promise<{ message: string }> {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);

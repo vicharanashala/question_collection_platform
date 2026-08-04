@@ -1,5 +1,6 @@
 import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AxiosError } from 'axios';
 import axios from 'axios';
 
 interface CachedData<T> {
@@ -87,6 +88,10 @@ export class LgdService {
   /** Cache TTL in milliseconds, read from config */
   private readonly cacheTtlMs: number;
 
+  /** Retry configuration */
+  private readonly maxRetries: number;
+  private readonly initialBackoffMs: number;
+
   /** Per-endpoint in-memory caches */
   private readonly statesCache = new Map<string, CachedData<LgdState[]>>();
   private readonly districtsCache = new Map<string, CachedData<LgdDistrict[]>>();
@@ -107,8 +112,16 @@ export class LgdService {
       parseInt(process.env.LGD_CACHE_TTL_DAYS || '7', 10);
     this.cacheTtlMs = ttlDays * 86_400_000;
 
+    this.maxRetries =
+      this.configService.get<number>('lgd.maxRetries') ??
+      parseInt(process.env.LGD_MAX_RETRIES || '3', 10);
+
+    this.initialBackoffMs =
+      this.configService.get<number>('lgd.initialBackoffMs') ??
+      parseInt(process.env.LGD_INITIAL_BACKOFF_MS || '500', 10);
+
     this.logger.log(
-      `LGD service initialised — reviewer: ${this.reviewerUri || '(not set)'}, cache TTL: ${ttlDays}d`,
+      `LGD service initialised — reviewer: ${this.reviewerUri || '(not set)'}, cache TTL: ${ttlDays}d, retries: ${this.maxRetries}`,
     );
   }
 
@@ -136,26 +149,59 @@ export class LgdService {
       return cached!.data;
     }
 
-    const response = await axios.get<T[]>(url, { timeout: 15_000 });
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await axios.get<T[]>(url, { timeout: 15_000 });
 
-    if (!Array.isArray(response.data)) {
-      throw new InternalServerErrorException(
-        `LGD reviewer returned unexpected payload for ${url}`,
-      );
+        if (!Array.isArray(response.data)) {
+          throw new InternalServerErrorException(
+            `LGD reviewer returned unexpected payload for ${url}`,
+          );
+        }
+
+        const sorted: R[] = [...response.data]
+          .sort((a, b) =>
+            String(a[sortOn]).localeCompare(String(b[sortOn])),
+          )
+          .map(transform);
+
+        cache.set(cacheKey, { data: sorted, fetchedAt: Date.now() });
+        this.logger.log(
+          `LGD cached ${sorted.length} records for key "${cacheKey}" (${url})`,
+        );
+
+        return sorted;
+      } catch (err) {
+        lastError = err;
+        const isRetryable =
+          err instanceof AxiosError &&
+          (err.code === 'ECONNABORTED' ||
+            err.code === 'ETIMEDOUT' ||
+            err.code === 'ECONNRESET' ||
+            err.code === 'ENOTFOUND' ||
+            !err.response); // network error with no response
+
+        if (isRetryable && attempt < this.maxRetries) {
+          const backoffMs =
+            this.initialBackoffMs * Math.pow(2, attempt);
+          this.logger.warn(
+            `LGD fetch attempt ${attempt + 1}/${this.maxRetries} failed for ${url}: ${err instanceof AxiosError ? err.code : err}. Retrying in ${backoffMs}ms...`,
+          );
+          await this.sleep(backoffMs);
+          continue;
+        }
+
+        // Non-retryable error or all retries exhausted
+        throw lastError;
+      }
     }
 
-    const sorted: R[] = [...response.data]
-      .sort((a, b) =>
-        String(a[sortOn]).localeCompare(String(b[sortOn])),
-      )
-      .map(transform);
+    throw lastError;
+  }
 
-    cache.set(cacheKey, { data: sorted, fetchedAt: Date.now() });
-    this.logger.log(
-      `LGD cached ${sorted.length} records for key "${cacheKey}" (${url})`,
-    );
-
-    return sorted;
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private isValid<T>(cached: CachedData<T> | undefined): boolean {
