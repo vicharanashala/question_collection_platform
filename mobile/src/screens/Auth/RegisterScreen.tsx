@@ -720,6 +720,7 @@ export function RegisterScreen({ navigation, route }: Props) {
                       searchable
                       multi
                       required
+                      layout="grid"
                     />
                   </>
                 )}

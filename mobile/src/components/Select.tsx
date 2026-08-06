@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { TextInput, StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Modal, FlatList, Image, ImageSourcePropType } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { WarningModal } from './WarningModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from '../utils/theme';
@@ -12,6 +13,8 @@ interface Option {
   /** Optional thumbnail rendered to the left of the label. */
   image?: ImageSourcePropType;
 }
+
+export type SelectLayout = 'list' | 'grid';
 
 interface SelectProps {
   label?: string;
@@ -29,6 +32,13 @@ interface SelectProps {
   multi?: boolean;
   /** When true, appends a red asterisk to the label */
   required?: boolean;
+  /**
+   * Visual layout of the option modal:
+   * - `list`: vertical list with row thumbnails (default, used by most screens).
+   * - `grid`: 3-column grid with circular thumbnails + label below (used by the
+   *   registration crop picker for a visual, image-first browsing experience).
+   */
+  layout?: SelectLayout;
 }
 
 export const Select = React.memo(function Select({
@@ -44,6 +54,7 @@ export const Select = React.memo(function Select({
   disabledMessage,
   multi = false,
   required = false,
+  layout = 'list',
 }: SelectProps) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -54,6 +65,8 @@ export const Select = React.memo(function Select({
   const selectedValues = multi ? (Array.isArray(value) ? value : []) : [];
   const singleSelected = multi ? '' : (typeof value === 'string' ? value : '');
   const selected = options.find((o) => o.value === singleSelected);
+  const isGrid = layout === 'grid';
+  const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return options as Option[];
@@ -133,7 +146,7 @@ export const Select = React.memo(function Select({
 
       <Modal visible={open} animationType="slide" transparent>
         <View style={styles.overlay}>
-          <SafeAreaView style={[styles.modal, { backgroundColor: c.surface }]}>
+          <SafeAreaView style={[styles.modal, isGrid && styles.modalGrid, { backgroundColor: c.surface }]}>
             <View
               style={[
                 styles.modalHeader,
@@ -181,6 +194,78 @@ export const Select = React.memo(function Select({
                   No results found
                 </Text>
               </View>
+            ) : isGrid ? (
+              <FlatList
+                data={filtered}
+                keyExtractor={(item) => item.value}
+                numColumns={3}
+                contentContainerStyle={styles.gridContent}
+                columnWrapperStyle={styles.gridRow}
+                renderItem={({ item }) => {
+                  const isSelected = multi ? selectedSet.has(item.value) : item.value === singleSelected;
+                  return (
+                    <TouchableOpacity
+                      style={styles.gridCell}
+                      onPress={() => handleSelect(item)}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
+                      accessibilityLabel={item.label}
+                    >
+                      <View
+                        style={[
+                          styles.gridThumbWrap,
+                          {
+                            borderColor: isSelected ? c.primary : c.borderSubtle,
+                            borderWidth: isSelected ? 2.5 : 1,
+                            backgroundColor: c.surface,
+                          },
+                        ]}
+                      >
+                        {item.image ? (
+                          <Image
+                            source={item.image}
+                            style={styles.gridThumb}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.gridThumb,
+                              styles.gridThumbPlaceholder,
+                              { backgroundColor: c.surfaceVariant },
+                            ]}
+                          >
+                            <Ionicons name="leaf-outline" size={28} color={c.textTertiary} />
+                          </View>
+                        )}
+                        {isSelected && multi && (
+                          <View
+                            style={[
+                              styles.gridCheckBadge,
+                              { backgroundColor: c.primary, borderColor: c.surface },
+                            ]}
+                          >
+                            <Ionicons name="checkmark" size={12} color={c.primaryForeground} />
+                          </View>
+                        )}
+                      </View>
+                      <Text
+                        style={[
+                          styles.gridCellLabel,
+                          {
+                            color: isSelected ? c.primary : c.text,
+                            fontWeight: isSelected ? '600' : '400',
+                          },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
             ) : (
               <FlatList
                 data={filtered}
@@ -253,6 +338,11 @@ export const Select = React.memo(function Select({
             )}
             {multi && (
               <View style={[styles.multiFooter, { borderTopColor: c.borderSubtle }]}>
+                <Text style={[styles.multiFooterCount, { color: c.textSecondary }]}>
+                  {selectedValues.length > 0
+                    ? `${selectedValues.length} selected`
+                    : 'Select one or more'}
+                </Text>
                 <TouchableOpacity
                   style={[styles.doneBtn, { backgroundColor: c.primary }]}
                   onPress={closeModal}
@@ -304,6 +394,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: tokens.radiusXl,
     borderTopRightRadius: tokens.radiusXl,
     maxHeight: '70%',
+  },
+  modalGrid: {
+    borderTopLeftRadius: tokens.radiusXl,
+    borderTopRightRadius: tokens.radiusXl,
+    maxHeight: '92%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -360,11 +455,70 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingHorizontal: tokens.spacing6,
     paddingVertical: tokens.spacing4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  multiFooterCount: {
+    fontSize: 13,
+    flex: 1,
   },
   doneBtn: {
     borderRadius: tokens.radiusMd,
     paddingVertical: tokens.spacing3 + 2,
+    paddingHorizontal: tokens.spacing8,
     alignItems: 'center',
   },
   doneBtnText: { fontSize: 16, fontWeight: '700' },
+  // Grid layout
+  gridContent: {
+    paddingHorizontal: tokens.spacing4,
+    paddingTop: tokens.spacing4,
+    paddingBottom: tokens.spacing4,
+  },
+  gridRow: {
+    justifyContent: 'flex-start',
+    marginBottom: tokens.spacing4,
+  },
+  gridCell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: tokens.spacing1,
+  },
+  gridThumbWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: tokens.spacing2,
+    position: 'relative',
+  },
+  gridThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+  },
+  gridThumbPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridCheckBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+  },
+  gridCellLabel: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 15,
+    paddingHorizontal: tokens.spacing1,
+  },
 });
