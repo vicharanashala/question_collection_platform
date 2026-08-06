@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TextInput, StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { TextInput, StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Modal, FlatList, Image, ImageSourcePropType } from 'react-native';
 import { WarningModal } from './WarningModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from '../utils/theme';
@@ -9,6 +9,8 @@ interface Option {
   value: string;
   label: string;
   sublabel?: string;
+  /** Optional thumbnail rendered to the left of the label. */
+  image?: ImageSourcePropType;
 }
 
 interface SelectProps {
@@ -187,39 +189,59 @@ export const Select = React.memo(function Select({
                   <TouchableOpacity
                     style={[
                       styles.option,
+                      styles.optionRow,
                       (multi
                         ? (Array.isArray(value) ? value : []).includes(item.value)
                         : item.value === value) && { backgroundColor: c.accent },
                     ]}
                     onPress={() => handleSelect(item)}
                   >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        {
-                          color: (multi
-                            ? (Array.isArray(value) ? value : []).includes(item.value)
-                            : item.value === value)
-                            ? c.primary
-                            : c.text,
-                        },
-                        (multi
-                          ? (Array.isArray(value) ? value : []).includes(item.value)
-                          : item.value === value) && styles.optionTextSelected,
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                    {item.sublabel && (
+                    {item.image ? (
+                      <Image
+                        source={item.image}
+                        style={[
+                          styles.optionImage,
+                          { backgroundColor: c.surfaceVariant },
+                        ]}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.optionImagePlaceholder,
+                          { backgroundColor: c.surfaceVariant },
+                        ]}
+                      />
+                    )}
+                    <View style={styles.optionTextWrap}>
                       <Text
                         style={[
-                          styles.optionSublabel,
-                          { color: c.textSecondary },
+                          styles.optionText,
+                          {
+                            color: (multi
+                              ? (Array.isArray(value) ? value : []).includes(item.value)
+                              : item.value === value)
+                              ? c.primary
+                              : c.text,
+                          },
+                          (multi
+                            ? (Array.isArray(value) ? value : []).includes(item.value)
+                            : item.value === value) && styles.optionTextSelected,
                         ]}
                       >
-                        {item.sublabel}
+                        {item.label}
                       </Text>
-                    )}
+                      {item.sublabel && (
+                        <Text
+                          style={[
+                            styles.optionSublabel,
+                            { color: c.textSecondary },
+                          ]}
+                        >
+                          {item.sublabel}
+                        </Text>
+                      )}
+                    </View>
                   </TouchableOpacity>
                 )}
                 ItemSeparatorComponent={() => (
@@ -309,6 +331,26 @@ const styles = StyleSheet.create({
   option: {
     paddingHorizontal: tokens.spacing6,
     paddingVertical: tokens.spacing4,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: tokens.spacing3,
+  },
+  optionImagePlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: tokens.spacing3,
+    opacity: 0, // invisible — keeps alignment consistent when no image is available
+  },
+  optionTextWrap: {
+    flex: 1,
   },
   optionText: { fontSize: 15 },
   optionTextSelected: { fontWeight: '700' },

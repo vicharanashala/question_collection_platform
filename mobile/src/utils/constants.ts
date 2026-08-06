@@ -1,4 +1,5 @@
 import { UserCategory } from '../types';
+import { getCropImage } from './cropImages';
 
 // ─── API Base URL ─────────────────────────────────────────────────────────────
 // In production, replace with your deployed backend URL
@@ -100,7 +101,11 @@ export const CROPS = [
   "Wild jack or Aini", "Wood apple", "Yam",
 ] as const;
 
-export const CROP_OPTIONS = CROPS.map((c) => ({ value: c, label: c }));
+export const CROP_OPTIONS = CROPS.map((c) => ({
+  value: c,
+  label: c,
+  image: getCropImage(c) ?? undefined,
+}));
 
 // ─── Organisation Types ─────────────────────────────────────────────────────────
 export const ORG_TYPE_OPTIONS = [
