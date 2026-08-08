@@ -245,6 +245,31 @@ export const authApi = {
     }, false),
 }
 
+// ─── LGD / Location API ───────────────────────────────────────────────────
+
+export interface LgdState    { code: string; name: string }
+export interface LgdDistrict  { code: string; name: string; stateCode: string }
+export interface LgdSubDistrict { code: string; name: string; districtCode: string }
+export interface LgdVillage   { code: string; name: string; blockCode: string }
+export interface LgdKvk       { code: string; name: string; address: string; districtCode: string; stateCode: string }
+
+export const lgdApi = {
+  getStates: () =>
+    request<{ states: LgdState[] }>('/lgd/states', {}, false),
+
+  getDistricts: (stateCode: string) =>
+    request<{ districts: LgdDistrict[] }>(`/lgd/districts?stateCode=${stateCode}`, {}, false),
+
+  getSubDistricts: (districtCode: string) =>
+    request<{ subdistricts: LgdSubDistrict[] }>(`/lgd/subdistricts?districtCode=${districtCode}`, {}, false),
+
+  getVillages: (blockCode: string) =>
+    request<{ villages: LgdVillage[] }>(`/lgd/villages?blockCode=${blockCode}`, {}, false),
+
+  getKvks: (districtCode: string) =>
+    request<{ kvks: LgdKvk[] }>(`/lgd/kvks?districtCode=${districtCode}`, {}, false),
+}
+
 // ─── Admin API ─────────────────────────────────────────────────────────────
 
 export const adminApi = {
