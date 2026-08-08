@@ -743,7 +743,6 @@ export class AdminService implements OnModuleInit {
 
     const terminalStatuses = [QuestionStatus.APPROVED, QuestionStatus.REJECTED];
     if (terminalStatuses.includes(question.status)) {
-      console.log("question----", question);
       throw new BadRequestException('Question has already been reviewed');
     }
 

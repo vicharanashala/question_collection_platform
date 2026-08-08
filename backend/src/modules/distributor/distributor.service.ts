@@ -129,12 +129,12 @@ export class DistributorService {
     // The unique compound index on (referenceQuestionId, distributionState)
     // guarantees at most one reference doc per question because `null` is a
     // distinct value in Mongo's unique index.
-    let referenceDoc: Awaited<ReturnType<typeof this.finalQuestionRepo.findReferenceByQuestionId>> | { _id: Types.ObjectId } | null =
+    let existingReferenceDoc: Awaited<ReturnType<typeof this.finalQuestionRepo.findReferenceByQuestionId>> | null =
       await this.finalQuestionRepo.findReferenceByQuestionId(questionId);
     let referenceDocId: Types.ObjectId;
     let referenceDocCreated = false;
 
-    if (!referenceDoc) {
+    if (!existingReferenceDoc) {
       try {
         const created = await this.finalQuestionRepo.create({
           referenceQuestionId: questionObjectId,
@@ -146,8 +146,16 @@ export class DistributorService {
           parentReferenceId: null,
           ...snapshot,
         } as never);
-        referenceDoc = created as unknown as { _id: Types.ObjectId };
-        referenceDocId = (referenceDoc as unknown as { _id: Types.ObjectId })._id;
+        // ASYMMETRY NOTE: `create()` returns the result of `docToEntity()`,
+        // which renames the Mongoose `_id` (ObjectId) → `id` (string).
+        // See MongoRepository.docToEntity(). The previous version cast
+        // `created` as `{ _id: Types.ObjectId }` and accessed `._id`,
+        // producing `undefined` at runtime — the audit metadata
+        // `.toHexString()` then crashed. Read `.id` instead and convert
+        // back to ObjectId.
+        referenceDocId = new Types.ObjectId(
+          (created as unknown as { id: string }).id,
+        );
         referenceDocCreated = true;
 
         await this.auditRepo.create({
@@ -155,7 +163,7 @@ export class DistributorService {
           actorId,
           action: AuditAction.QUESTION_DISTRIBUTED,
           entityType: 'final_question',
-          entityId: (referenceDoc as unknown as { id?: string }).id ?? questionId,
+          entityId: (created as unknown as { id?: string }).id ?? questionId,
           metadata: {
             referenceQuestionId: questionId,
             isReference: true,
@@ -167,17 +175,21 @@ export class DistributorService {
         // Race: a concurrent call already created the reference doc. The
         // unique index on (referenceQuestionId, distributionState: null)
         // throws E11000. Recover by re-reading the winning doc.
+        // ASYMMETRY NOTE: `findReferenceByQuestionId` returns a RAW
+        // Mongoose document (it does NOT go through `docToEntity`),
+        // so the winning doc has `_id: Types.ObjectId` (not `id: string`).
         const raceErr = err as { code?: number };
         if (raceErr && raceErr.code === 11000) {
-          referenceDoc = await this.finalQuestionRepo.findReferenceByQuestionId(questionId);
-          if (!referenceDoc) throw err; // genuine create failure
-          referenceDocId = (referenceDoc as unknown as { _id: Types.ObjectId })._id;
+          const winner = await this.finalQuestionRepo.findReferenceByQuestionId(questionId);
+          if (!winner) throw err; // genuine create failure
+          referenceDocId = (winner as unknown as { _id: Types.ObjectId })._id;
         } else {
           throw err;
         }
       }
     } else {
-      referenceDocId = (referenceDoc as unknown as { _id: Types.ObjectId })._id;
+      // Raw Mongoose document from `findReferenceByQuestionId` — `_id` is a real ObjectId.
+      referenceDocId = (existingReferenceDoc as unknown as { _id: Types.ObjectId })._id;
     }
 
     // ── Step 2: Create state-specific child docs (one per new state) ────────
