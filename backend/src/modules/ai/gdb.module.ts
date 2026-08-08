@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { GdbService } from './gdb.service';
 import { AdminModule } from '../admin/admin.module';
 import { DbModule } from '../../shared/database/db.module';
@@ -6,7 +6,7 @@ import { DbModule } from '../../shared/database/db.module';
 @Module({
   imports: [
     DbModule,
-    AdminModule, // for AdminService.getConfigValue()
+    forwardRef(() => AdminModule), // for AdminService.getConfigValue()
   ],
   providers: [GdbService],
   exports: [GdbService],

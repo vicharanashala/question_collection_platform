@@ -150,6 +150,18 @@ export class AdminController {
     return this.adminService.getQuestionForReview(id);
   }
 
+  /**
+   * Check whether a question in the curator queue is a duplicate.
+   * Runs exact-match (DB) + GDB semantic search — same logic as question submission.
+   * Returns { isDuplicate, matchedQuestion, matchedAnswer, similarityScore, matchedUserName }.
+   */
+  @Post("questions/:id/check-duplicate")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  @HttpCode(HttpStatus.OK)
+  async checkDuplicate(@Param("id") id: string) {
+    return this.adminService.checkDuplicate(id);
+  }
+
   @Post("questions/:id/review")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)

@@ -43,8 +43,7 @@ function VerificationBadge({ status }: { status: string }) {
 function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
   const map: Record<QuestionStatus, { label: string; dot: string; cls: string }> = {
     pending:      { label: 'Pending',      dot: 'bg-amber-500',  cls: 'text-amber-600' },
-    ai_review:    { label: 'AI Review',    dot: 'bg-blue-500',   cls: 'text-blue-600' },
-    human_review: { label: 'Human Review', dot: 'bg-purple-500', cls: 'text-purple-600' },
+
     held:         { label: 'Held',          dot: 'bg-orange-400', cls: 'text-orange-500' },
     approved:     { label: 'Approved',     dot: 'bg-emerald-500',  cls: 'text-emerald-600' },
     rejected:     { label: 'Rejected',     dot: 'bg-red-600', cls: 'text-red-600' },
@@ -81,7 +80,7 @@ function StatsStrip({ questions }: { questions: Question[] }) {
     total: questions.length,
     approved: questions.filter((q) => q.status === 'approved').length,
     rejected: questions.filter((q) => q.status === 'rejected').length,
-    pending: questions.filter((q) => ['pending', 'ai_review', 'human_review'].includes(q.status)).length,
+    pending: questions.filter((q) => ['pending', 'held'].includes(q.status)).length,
   }), [questions])
 
   const items = [

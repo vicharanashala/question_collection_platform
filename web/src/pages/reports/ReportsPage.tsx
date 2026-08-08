@@ -40,7 +40,7 @@ const PRIORITY_OPTIONS = [
 const CATEGORY_COLORS: Record<string, string> = {
   bug:              'bg-destructive text-white',
   payout_issue:     'bg-warning text-white',
-  question_issue:   'bg-ai_review text-white',
+  question_issue:   'bg-amber-500 text-white',
   abuse:            'bg-black text-white',
   feature_request:  'bg-success text-white',
   other:            'bg-surface-variant text-text',

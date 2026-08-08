@@ -585,6 +585,59 @@ export class AuthService {
     return this.toPublicUser(user);
   }
 
+  // ─── Update own profile ─────────────────────────────────────────────────────
+
+  async updateMe(
+    userId: string,
+    dto: {
+      name?: string;
+      age?: number | null;
+      gender?: string | null;
+      state?: string | null;
+      district?: string | null;
+      block?: string | null;
+      village?: string | null;
+      kvk?: string | null;
+      farmSize?: string | null;
+      cropType?: string | null;
+      courseName?: string | null;
+      collegeName?: string | null;
+      universityName?: string | null;
+      organisationType?: string | null;
+      organizationName?: string | null;
+      organizationRole?: string | null;
+      numberOfFarmers?: number | null;
+      organizationState?: string | null;
+      organizationDistrict?: string | null;
+      organizationBlock?: string | null;
+      organizationVillage?: string | null;
+      season?: string | null;
+      languagePreference?: string | null;
+      crops?: string[] | null;
+    },
+  ): Promise<PublicUser> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    // Only assign fields that were explicitly provided (not undefined)
+    const fields: (keyof typeof dto)[] = [
+      'name', 'age', 'gender', 'state', 'district', 'block', 'village', 'kvk',
+      'farmSize', 'cropType',
+      'courseName', 'collegeName', 'universityName',
+      'organisationType', 'organizationName', 'organizationRole', 'numberOfFarmers',
+      'organizationState', 'organizationDistrict', 'organizationBlock', 'organizationVillage',
+      'season', 'languagePreference',
+    ];
+    for (const f of fields) {
+      if (dto[f] !== undefined) (user as any)[f] = dto[f];
+    }
+
+    if (dto.crops !== undefined) user.crops = dto.crops ?? [];
+
+    await this.userRepo.save(user);
+    return this.toPublicUser(user);
+  }
+
   async findUserByMobile(mobileNumber: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { mobileNumber } });
   }

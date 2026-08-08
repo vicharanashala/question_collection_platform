@@ -40,8 +40,6 @@ export enum ActorType {
 
 export enum QuestionStatus {
   PENDING = 'pending',
-  AI_REVIEW = 'ai_review',
-  HUMAN_REVIEW = 'human_review',
   HELD = 'held',
   APPROVED = 'approved',
   REJECTED = 'rejected',

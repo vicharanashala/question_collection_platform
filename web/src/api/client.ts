@@ -90,28 +90,6 @@ function invalidateCache(pattern?: string) {
   }
 }
 
-// ─── Offline queue ─────────────────────────────────────────────────────────
-
-interface QueuedRequest {
-  path: string
-  options: RequestInit
-  resolve: (v: unknown) => void
-  reject: (e: unknown) => void
-}
-
-let isOnline = navigator.onLine
-
-const offlineQueue: QueuedRequest[] = []
-
-window.addEventListener('online', () => {
-  isOnline = true
-  const queue = offlineQueue.splice(0)
-  queue.forEach((r) =>
-    request(r.path, r.options, false).then((v: unknown) => r.resolve(v)).catch(r.reject)
-  )
-})
-window.addEventListener('offline', () => { isOnline = false })
-
 // ─── Retry with exponential backoff ───────────────────────────────────────
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
@@ -149,9 +127,14 @@ export async function request<T>(
     delete (options as Record<string, unknown>).headers
   }
 
-  const doFetch = () =>
-    withRetry(() =>
-      fetch(`${BASE}${path}`, { ...options, headers }).then(async (res) => {
+  const doFetch = () => {
+    const url = `${BASE}${path}`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10_000)
+    return withRetry(() =>
+      fetch(url, { ...options, headers, signal: controller.signal })
+        .finally(() => clearTimeout(timeoutId))
+        .then(async (res) => {
         if (res.status === 401) {
           const refresh = getRefreshToken()
           if (refresh) {
@@ -182,6 +165,7 @@ export async function request<T>(
         return handleResponse(res)
       })
     )
+  }
 
   if (useCache && options.method === undefined) {
     const cached = getCache<T>(path, 30_000)
@@ -190,17 +174,6 @@ export async function request<T>(
     const data = await result
     setCache(path, data, 30_000)
     return data
-  }
-
-  if (!isOnline) {
-    return new Promise((resolve, reject) => {
-      offlineQueue.push({
-        path,
-        options,
-        resolve: resolve as (v: unknown) => void,
-        reject,
-      })
-    })
   }
 
   return doFetch() as Promise<T>
@@ -236,11 +209,12 @@ async function handleResponse<T>(res: Response): Promise<T> {
 //   me            → { user: PublicUser }
 
 export const authApi = {
-  requestOtp: (mobileNumber: string, isWeb = false) =>
-    request<{ message: string }>('/auth/request-otp', {
+  requestOtp: (mobileNumber: string, isWeb = false) => {
+    return request<{ message: string }>('/auth/request-otp', {
       method: 'POST',
       body: JSON.stringify({ mobileNumber, ...(isWeb ? { client: 'web' } : {}) }),
-    }, false),
+    }, false)
+  },
 
   verifyOtp: (mobileNumber: string, otp: string) =>
     request<{
@@ -269,6 +243,31 @@ export const authApi = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }, false),
+}
+
+// ─── LGD / Location API ───────────────────────────────────────────────────
+
+export interface LgdState    { code: string; name: string }
+export interface LgdDistrict  { code: string; name: string; stateCode: string }
+export interface LgdSubDistrict { code: string; name: string; districtCode: string }
+export interface LgdVillage   { code: string; name: string; blockCode: string }
+export interface LgdKvk       { code: string; name: string; address: string; districtCode: string; stateCode: string }
+
+export const lgdApi = {
+  getStates: () =>
+    request<{ states: LgdState[] }>('/lgd/states', {}, false),
+
+  getDistricts: (stateCode: string) =>
+    request<{ districts: LgdDistrict[] }>(`/lgd/districts?stateCode=${stateCode}`, {}, false),
+
+  getSubDistricts: (districtCode: string) =>
+    request<{ subdistricts: LgdSubDistrict[] }>(`/lgd/subdistricts?districtCode=${districtCode}`, {}, false),
+
+  getVillages: (blockCode: string) =>
+    request<{ villages: LgdVillage[] }>(`/lgd/villages?blockCode=${blockCode}`, {}, false),
+
+  getKvks: (districtCode: string) =>
+    request<{ kvks: LgdKvk[] }>(`/lgd/kvks?districtCode=${districtCode}`, {}, false),
 }
 
 // ─── Admin API ─────────────────────────────────────────────────────────────
@@ -573,7 +572,7 @@ export const curatorApi = {
     request<import('@/types').CuratorReviewerStats>(`/curator/my-stats?userId=${encodeURIComponent(userId)}`),
 
   getReviewQueue: (params = {} as Record<string, string | string[] | number | undefined>) => {
-    // Backend expects status as an array: ?status[]=pending&status[]=ai_review
+    // Backend expects status as an array: ?status[]=pending&status[]=held
     const sp = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
       if (v === undefined) continue
@@ -592,6 +591,15 @@ export const curatorApi = {
 
   getQuestion: (id: string) =>
     request<Question>(`/admin/questions/${id}`),
+
+  checkDuplicate: (id: string) =>
+    request<{
+      isDuplicate: boolean
+      matchedQuestion?: string
+      matchedAnswer?: string | null
+      similarityScore?: number | null
+      matchedUserName?: string | null
+    }>(`/admin/questions/${id}/check-duplicate`, { method: 'POST' }),
 
   reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'hold'; reason?: string; heldReason?: string }) =>
     request<{

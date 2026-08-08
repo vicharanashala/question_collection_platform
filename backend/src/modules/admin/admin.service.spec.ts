@@ -649,7 +649,7 @@ describe('AdminService', () => {
     const reviewDto = { action: 'approve' as const };
 
     it('should approve a question in human_review status', async () => {
-      questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.HUMAN_REVIEW });
+      questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.PENDING });
       questionRepo.update.mockResolvedValue(undefined);
 
       const result = await service.reviewQuestion(
@@ -668,7 +668,7 @@ describe('AdminService', () => {
     });
 
     it('should reject a question with a reason', async () => {
-      questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.AI_REVIEW });
+      questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.PENDING });
       questionRepo.update.mockResolvedValue(undefined);
 
       const result = await service.reviewQuestion(
@@ -686,7 +686,7 @@ describe('AdminService', () => {
     });
 
     it('should move question to human_review on request_info action', async () => {
-      questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.AI_REVIEW });
+      questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.PENDING });
       questionRepo.update.mockResolvedValue(undefined);
 
       const result = await service.reviewQuestion(
@@ -698,7 +698,7 @@ describe('AdminService', () => {
 
       expect(result.action).toBe('request_info');
       expect(questionRepo.update).toHaveBeenCalledWith('q-1', {
-        status: QuestionStatus.HUMAN_REVIEW,
+        status: QuestionStatus.PENDING,
       });
     });
 

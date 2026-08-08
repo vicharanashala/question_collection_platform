@@ -101,7 +101,7 @@ export function DonutChartComponent({
             const value = segment.value ?? 0
             const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
             return (
-              <div key={segment.name} className="flex items-center justify-between text-sm">
+              <div key={segment.name ?? i} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className={cn('h-2 w-2 rounded-full shrink-0')} style={{ backgroundColor: colors[i % colors.length] }} />
                   <span className="text-text capitalize">{(segment.name ?? '').replace('_', ' ')}</span>

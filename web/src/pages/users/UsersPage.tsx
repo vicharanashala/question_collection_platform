@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning text-white',
   suspended: 'bg-warning text-white',
   banned: 'bg-destructive text-white',
-  manual_review: 'bg-ai_review text-white',
+  manual_review: 'bg-amber-500 text-white',
 }
 
 const STATUS_ICONS: Record<string, React.ElementType> = {

@@ -306,7 +306,7 @@ describe('QuestionService', () => {
       const question = {
         id: questionId,
         userId,
-        status: QuestionStatus.HUMAN_REVIEW,
+        status: QuestionStatus.PENDING,
         reviewedAt: null,
         reviewerId: null,
       };
@@ -332,7 +332,7 @@ describe('QuestionService', () => {
       const question = {
         id: questionId,
         userId,
-        status: QuestionStatus.HUMAN_REVIEW,
+        status: QuestionStatus.PENDING,
         reviewedAt: null,
         reviewerId: null,
       };

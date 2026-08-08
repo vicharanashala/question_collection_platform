@@ -308,10 +308,8 @@ export class QuestionService {
     // 6. Update real-time analytics counters
     await this.analyticsCacheService.onQuestionSubmitted().catch(() => {/* best-effort */});
 
-    // 7. Low-confidence submissions go to human review
-    const status: QuestionStatus = inferred.confidence < 0.9
-      ? QuestionStatus.HUMAN_REVIEW
-      : QuestionStatus.PENDING;
+    // All new submissions go to PENDING for curator review
+    const status: QuestionStatus = QuestionStatus.PENDING;
 
     // 7. Validate domains against allowed list
     const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));

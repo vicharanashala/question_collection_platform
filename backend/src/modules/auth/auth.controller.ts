@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Query,
   UseGuards,
@@ -13,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthResponse } from './auth.service';
-import { RequestOtpDto, VerifyOtpDto, RegisterDto } from './dto';
+import { RequestOtpDto, VerifyOtpDto, RegisterDto, UpdateMeDto } from './dto';
 import { Public } from '../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
@@ -94,6 +95,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async me(@Req() req: AuthenticatedRequest) {
     const user = await this.authService.getProfile(req.user.id);
+    return { user };
+  }
+
+  /**
+   * PATCH /auth/me
+   * Update the authenticated user's own profile (name, languagePreference).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  @HttpCode(HttpStatus.OK)
+  async updateMe(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateMeDto,
+  ) {
+    const user = await this.authService.updateMe(req.user.id, dto);
     return { user };
   }
 
