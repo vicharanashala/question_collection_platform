@@ -30,6 +30,44 @@ export class MongoUserRepository
     return this._model.findOne({ username } as Record<string, unknown>).exec() as Promise<User | null>;
   }
 
+  /**
+   * Bulk lookup users by ObjectId hex strings. Invalid ids (not 24 chars, or
+   * not parseable as ObjectId) are filtered out before the query so the
+   * `$in` doesn't throw. Returns only `id / name / username` — enough for
+   * list-table display enrichment without pulling the whole user document
+   * (sensitive fields, otpHash, profileData, etc.).
+   *
+   * Accepts a mixed array of strings and `Types.ObjectId` instances; each
+   * value is coerced to its 24-char hex representation before the query so
+   * callers don't have to pre-normalize.
+   */
+  async findByIds(
+    ids: ReadonlyArray<string | Types.ObjectId | null | undefined>,
+  ): Promise<Array<{ id: string; name: string; username: string | null }>> {
+    const validIds = (ids ?? [])
+      .map((id) => (id == null ? null : typeof id === 'string' ? id : String(id)))
+      .filter((id): id is string => typeof id === 'string' && id.length === 24 && Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    if (validIds.length === 0) return [];
+
+    const docs = await this._model
+      .find(
+        { _id: { $in: validIds } } as Record<string, unknown>,
+        { _id: 1, name: 1, username: 1 } as Record<string, unknown>,
+      )
+      .exec();
+
+    return docs.map((d) => {
+      const raw = d as unknown as Record<string, unknown>;
+      return {
+        id: String(raw._id),
+        name: (raw.name as string) ?? '',
+        username: (raw.username as string | null) ?? null,
+      };
+    });
+  }
+
   async updateOtpHash(mobileNumber: string, hash: string): Promise<void> {
     await this._model.updateOne({ mobileNumber } as Record<string, unknown>, { $set: { otpHash: hash } }).exec();
   }

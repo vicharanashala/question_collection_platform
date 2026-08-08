@@ -31,6 +31,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { AiModule } from './modules/ai/ai.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { FaqsModule } from './modules/faqs/faqs.module';
+import { DistributorModule } from './modules/distributor/distributor.module';
 import { JwtAuthGuard } from './shared/middleware/guards/jwt-auth.guard';
 import { HealthController } from './modules/health/health.controller';
 import { CacheModule } from './shared/database/cache/cache.module';
@@ -89,6 +90,7 @@ import { DbModule } from './shared/database/db.module';
     AiModule,
     ReportsModule,
     FaqsModule,
+    DistributorModule,
   ],
   controllers: [HealthController],
   providers: [

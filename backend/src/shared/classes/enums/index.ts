@@ -28,6 +28,7 @@ export enum UserRole {
   SUPER_ADMIN = 'super_admin',
   CURATOR = 'curator',
   FINANCE = 'finance',
+  DISTRIBUTOR = 'distributor',
 }
 
 export enum ActorType {
@@ -35,6 +36,7 @@ export enum ActorType {
   ADMIN = 'admin',
   CURATOR = 'curator',
   FINANCE = 'finance',
+  DISTRIBUTOR = 'distributor',
   SYSTEM = 'system',
 }
 
@@ -43,6 +45,7 @@ export enum QuestionStatus {
   HELD = 'held',
   APPROVED = 'approved',
   REJECTED = 'rejected',
+  MOVED_TO_FINAL = 'moved_to_final',
 }
 
 export enum MediaType {
@@ -200,6 +203,7 @@ export enum AuditAction {
   QUESTION_SUBMITTED = 'question_submitted',
   QUESTION_APPROVED = 'question_approved',
   QUESTION_REJECTED = 'question_rejected',
+  QUESTION_DISTRIBUTED = 'question_distributed',
   // Wallet
   REWARD_CREDITED = 'reward_credited',
   WITHDRAWAL_REQUESTED = 'withdrawal_requested',

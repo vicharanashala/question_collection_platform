@@ -5,16 +5,18 @@
  * navigation difference is handled in Sidebar.tsx Phase 5).
  */
 import { useAuth } from '@/context/AuthContext'
-import { isCurator, isFinance } from '@/lib/roles'
+import { isCurator, isFinance, isDistributor } from '@/lib/roles'
 import { AdminDashboardPage } from './AdminDashboardPage'
 import { CuratorDashboardPage } from './CuratorDashboardPage'
 import { FinanceDashboardPage } from './FinanceDashboardPage'
+import { DistributorDashboardPage } from './DistributorDashboardPage'
 
 export function DashboardRouter() {
   const { user } = useAuth()
 
   if (isCurator(user)) return <CuratorDashboardPage />
   if (isFinance(user)) return <FinanceDashboardPage />
+  if (isDistributor(user)) return <DistributorDashboardPage />
   // admin and super_admin share AdminDashboardPage
   return <AdminDashboardPage />
 }

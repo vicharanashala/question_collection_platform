@@ -5,6 +5,8 @@
  * Used by mongo.repository.ts to implement the same query semantics when DB=mongo.
  */
 
+import { Types } from 'mongoose';
+
 // ─── Comparison operators ───────────────────────────────────────────────────
 
 /** $gte — greater-than-or-equal */
@@ -104,6 +106,29 @@ export const dateRangeFilter = (
   if (opts.to) return { [field]: mongoLte(opts.to) };
   return {};
 };
+
+// ─── ObjectId coercion ───────────────────────────────────────────────────────
+
+/**
+ * Build an `ObjectId` from a 24-char hex string. Returns `null` when the
+ * input is not a valid ObjectId (must be exactly 24 hex chars and pass
+ * `Types.ObjectId.isValid`) — callers should treat that as "no match" rather
+ * than crashing. Already-ObjectId inputs are returned as-is.
+ *
+ * Used by repositories to convert incoming string FKs (over JSON / HTTP) into
+ * real `ObjectId` instances for query filters, and by services that need to
+ * coerce snapshot fields from a source document into the persisted type.
+ */
+export function toObjectIdOrNull(
+  value: string | Types.ObjectId | null | undefined,
+): Types.ObjectId | null {
+  if (value == null) return null;
+  if (value instanceof Types.ObjectId) return value;
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (trimmed.length !== 24) return null;
+  return Types.ObjectId.isValid(trimmed) ? new Types.ObjectId(trimmed) : null;
+}
 
 // ─── Pagination helpers ─────────────────────────────────────────────────────
 

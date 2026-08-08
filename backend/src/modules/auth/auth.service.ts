@@ -114,7 +114,7 @@ export class AuthService {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     const rateLimitKey = `otp_rl:${mobileNumber}`;
 
-    // Web clients are restricted to registered admin/curator accounts only
+    // Web clients are restricted to registered admin/curator/distributor accounts only
     if (dto.client === 'web') {
       const user = await this.userRepo.findOne({ where: { mobileNumber } });
       if (!user) {
@@ -122,9 +122,15 @@ export class AuthService {
           'This number is not registered on the platform. Please use the mobile app to sign up.',
         );
       }
-      if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.CURATOR && user.role !== UserRole.FINANCE) {
+      if (
+        user.role !== UserRole.ADMIN &&
+        user.role !== UserRole.SUPER_ADMIN &&
+        user.role !== UserRole.CURATOR &&
+        user.role !== UserRole.FINANCE &&
+        user.role !== UserRole.DISTRIBUTOR
+      ) {
         throw new ForbiddenException(
-          'Only admin, curator, and finance accounts can access the web portal. Please use the mobile app.',
+          'Only admin, curator, finance, and distributor accounts can access the web portal. Please use the mobile app.',
         );
       }
       if (user.verificationStatus !== VerificationStatus.VERIFIED) {
