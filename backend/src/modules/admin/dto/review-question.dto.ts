@@ -16,10 +16,6 @@ export class ListReviewQueueDto {
   limit?: number = 20;
 
   @IsOptional()
-  @IsIn(['human_review', 'ai_review'])
-  queueType?: 'human_review' | 'ai_review';
-
-  @IsOptional()
   @IsString()
   state?: string;
 
@@ -35,7 +31,7 @@ export class ListReviewQueueDto {
     if (Array.isArray(value)) return value.map((s: string) => s.trim()).filter(Boolean);
     return value;
   })
-  @IsIn(['pending', 'ai_review', 'human_review', 'held', 'approved', 'rejected'], { each: true })
+  @IsIn(['pending', 'held', 'approved', 'rejected'], { each: true })
   status?: string[];
 
   @IsOptional()

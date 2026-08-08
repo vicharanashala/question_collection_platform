@@ -12,7 +12,7 @@
  * is returned so the mobile app can show it to the user.
  */
 
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Question } from '../../shared/database/entities';
 import { AdminService } from '../admin/admin.service';
@@ -35,7 +35,13 @@ export interface GdbSearchResponse {
   rephrased_query: string;
   crop: string;
   state: string;
-  exact_match: Record<string, unknown>;
+  exact_match: {
+    question_id: string
+    similarity_score: number
+    retrieval_source: string
+    question: string
+    answer: string
+  } | null
   selected_match: {
     question_id: string;
     retrieved_question: string;
@@ -80,6 +86,7 @@ export class GdbService {
 
   constructor(
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => AdminService))
     private readonly adminService: AdminService,
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
@@ -155,11 +162,31 @@ export class GdbService {
     });
 
     // ── Find the best match above threshold ─────────────────────────────────────
-    //    Primary filter: chosen_for_answer=true (GDB's LLM-selected best match)
-    //    AND similarity >= threshold.
-    //    Fallback: if GDB returns no confident pick (status=empty / all
-    //    chosen_for_answer=false), use the highest similarity_score candidate.
+    //    Priority:
+    //    1. exact_match (strict exact-duplicate from GDB, always >= 1.0)
+    //    2. chosen_for_answer=true in evaluations AND similarity >= threshold
+    //    3. Highest similarity_score candidate above threshold (fallback)
     const evaluations = raw.classification_audit?.evaluations ?? [];
+
+    // exact_match is a guaranteed exact/near-exact text duplicate at similarity 1.0
+    if (raw.exact_match && raw.exact_match.similarity_score >= threshold) {
+
+      // Resolve matched entity from DB via the GDB question_id
+      const matchedQuestionEntity = await this.questionRepo.findOne({
+        where: { questionText: raw.exact_match.question },
+        select: ['id', 'questionText'],
+        relations: ['user'],
+      });
+      return {
+        isDuplicate: true,
+        matchedQuestionId: matchedQuestionEntity?.id ?? null,
+        matchedQuestion: raw.exact_match.question,
+        matchedAnswer: raw.exact_match.answer?.trim() || null,
+        similarityScore: raw.exact_match.similarity_score,
+        matchedUserName: this.resolveDisplayName(matchedQuestionEntity?.user ?? null),
+        rawResponse: raw,
+      };
+    }
 
     const chosenMatch = evaluations.find(
       (e) => e.chosen_for_answer === true && e.similarity_score >= threshold,

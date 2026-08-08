@@ -61,6 +61,7 @@ import { WalletsService } from '../wallets/wallets.service';
 import { NotificationsService } from '../notification/notifications.service';
 import { PinelabsService } from '../payment/pinelabs.service';
 import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
+import { GdbService } from '../ai/gdb.service';
 import { decrypt } from '../../shared/functions/utils/encryption.util';
 import {
   IUserRepository,
@@ -188,6 +189,7 @@ export class AdminService implements OnModuleInit {
     private readonly redisService: RedisService,
     private readonly hotDataService: HotDataService,
     private readonly analyticsCacheService: AnalyticsCacheService,
+    private readonly gdbService: GdbService,
     @Inject(DataSource) @Optional()
     private readonly dataSource?: DataSource,
   ) {}
@@ -564,7 +566,7 @@ export class AdminService implements OnModuleInit {
 
   async listReviewQueue(dto: ListReviewQueueDto) {
     const {
-      page = 1, limit = 20, queueType, state, search,
+      page = 1, limit = 20, state, search,
       status, sortBy = 'submittedAt', sortOrder = 'DESC',
       fromDate, toDate,
     } = dto;
@@ -605,10 +607,8 @@ export class AdminService implements OnModuleInit {
         qb.andWhere('q.status IN (:...statuses)', { statuses: status });
       }
     } else {
-      // Default: show all reviewable statuses (pending + queues)
-      const defaultStatuses = queueType === 'ai_review'
-        ? [QuestionStatus.AI_REVIEW]
-        : [QuestionStatus.PENDING, QuestionStatus.HUMAN_REVIEW, QuestionStatus.AI_REVIEW];
+      // Default: show all reviewable statuses
+      const defaultStatuses = [QuestionStatus.PENDING, QuestionStatus.HELD];
       qb.andWhere('q.status IN (:...statuses)', { statuses: defaultStatuses });
     }
 
@@ -661,6 +661,66 @@ export class AdminService implements OnModuleInit {
         : null,
       reviewedByName: question.reviewer?.name ?? null,
     };
+  }
+
+  /**
+   * Check whether a question in the curator queue is a duplicate of an existing
+   * approved question. Mirrors the duplicate-detection logic used at submit time
+   * (exact-match via Redis + DB, then GDB semantic search).
+   *
+   * Returns { isDuplicate: false } if no duplicate is found.
+   * Returns { isDuplicate: true, matchedQuestion, matchedAnswer, similarityScore }
+   *         if a duplicate was found in either the DB or GDB.
+   */
+  async checkDuplicate(questionId: string): Promise<{
+    isDuplicate: boolean
+    matchedQuestion?: string
+    matchedAnswer?: string | null
+    similarityScore?: number | null
+    matchedUserName?: string | null
+  }> {
+    const question = await this.questionRepo.findOne({ where: { id: questionId } });
+    if (!question) throw new NotFoundException('Question not found');
+    // Step 1: DB exact-match (case-insensitive trimmed comparison, excluding self)
+    const dbDup = await this.questionRepo
+      .createQueryBuilder('q')
+      .innerJoinAndSelect('q.user', 'u')
+      .where('LOWER(TRIM(q.questionText)) = LOWER(TRIM(:text))', {
+        text: question.questionText,
+      })
+      .andWhere('q.id != :id', { id: questionId })
+      .andWhere('q.status = :status', { status: QuestionStatus.APPROVED })
+      .select(['q.id', 'q.questionText', 'u.name'])
+      .getOne();
+
+    if (dbDup) {
+      return {
+        isDuplicate: true,
+        matchedQuestion: dbDup.questionText,
+        matchedAnswer: null, // exact DB match has no stored answer in this query path
+        similarityScore: null,
+        matchedUserName: dbDup.user?.name ?? null,
+      };
+    }
+
+    // Step 2: GDB semantic duplicate check
+    const gdbResult = await this.gdbService.checkDuplicate({
+      questionText: question.questionText,
+      crop: question.cropType ?? '',
+      state: question.state ?? '',
+    });
+
+    if (gdbResult.isDuplicate) {
+      return {
+        isDuplicate: true,
+        matchedQuestion: gdbResult.matchedQuestion ?? undefined,
+        matchedAnswer: gdbResult.matchedAnswer ?? null,
+        similarityScore: gdbResult.similarityScore ?? null,
+        matchedUserName: gdbResult.matchedUserName ?? null,
+      };
+    }
+
+    return { isDuplicate: false };
   }
 
   async reviewQuestion(
@@ -807,9 +867,9 @@ export class AdminService implements OnModuleInit {
       return { success: true, action: 'held', questionId, heldReason: dto.heldReason };
     }
 
-    // request_info — move to human_review for more info from user
+    // request_info — hold for more info from user
     await this.questionRepo.update(questionId, {
-      status: QuestionStatus.HUMAN_REVIEW,
+      status: QuestionStatus.HELD,
     });
     await this.logAudit({
       actorType,
@@ -818,7 +878,7 @@ export class AdminService implements OnModuleInit {
       entityType: 'question',
       entityId: questionId,
       oldValue: { status: oldStatus },
-      newValue: { status: QuestionStatus.HUMAN_REVIEW },
+      newValue: { status: QuestionStatus.HELD },
     });
     await this.notificationRepo.save(await this.notificationRepo.create({
         userId: question.userId,
@@ -938,7 +998,7 @@ export class AdminService implements OnModuleInit {
       this.questionRepo.count({ where: { ...whereClause } }),
       this.questionRepo.count({ where: { ...whereClause, status: QuestionStatus.APPROVED } }),
       this.questionRepo.count({ where: { ...whereClause, status: QuestionStatus.REJECTED } }),
-      this.questionRepo.count({ where: { ...whereClause, status: In([QuestionStatus.PENDING, QuestionStatus.AI_REVIEW, QuestionStatus.HUMAN_REVIEW]) } }),
+      this.questionRepo.count({ where: { ...whereClause, status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) } }),
       this.userRepo.count(),
       this.questionRepo.count({ where: { ...whereClause, duplicateFlag: true } }),
     ]);
@@ -1020,7 +1080,7 @@ export class AdminService implements OnModuleInit {
       this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } }),
       this.questionRepo.count({ where: { status: QuestionStatus.REJECTED } }),
       this.questionRepo.count({
-        where: { status: In([QuestionStatus.PENDING, QuestionStatus.AI_REVIEW, QuestionStatus.HUMAN_REVIEW]) },
+        where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) },
       }),
       // Users registered in last 7 days
       this.userRepo.count({
@@ -2294,16 +2354,14 @@ export class AdminService implements OnModuleInit {
       approved,
       rejected,
       pending,
-      aiReview,
-      humanReview,
+      held,
       duplicates,
     ] = await Promise.all([
       this.questionRepo.count({ where: { ...baseWhere } }),
       this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
       this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
       this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.PENDING } }),
-      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.AI_REVIEW } }),
-      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.HUMAN_REVIEW } }),
+      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.HELD } }),
       this.questionRepo.count({ where: { ...baseWhere, duplicateFlag: true } }),
     ]);
 
@@ -2361,8 +2419,8 @@ export class AdminService implements OnModuleInit {
         approved,
         rejected,
         pending,
-        inAiReview: aiReview,
-        inHumanReview: humanReview,
+        inAiReview: 0,
+        inHumanReview: 0,
         duplicates,
         approvalRate: total > 0 ? Math.round((approved / total) * 100) : 0,
         rejectionRate: total > 0 ? Math.round((rejected / total) * 100) : 0,
@@ -2404,16 +2462,14 @@ export class AdminService implements OnModuleInit {
 
   /** Current count of questions in each pending/review status bucket. */
   private async getReviewQueueDepth() {
-    const [pending, aiReview, humanReview] = await Promise.all([
+    const [pending, held] = await Promise.all([
       this.questionRepo.count({ where: { status: QuestionStatus.PENDING } }),
-      this.questionRepo.count({ where: { status: QuestionStatus.AI_REVIEW } }),
-      this.questionRepo.count({ where: { status: QuestionStatus.HUMAN_REVIEW } }),
+      this.questionRepo.count({ where: { status: QuestionStatus.HELD } }),
     ]);
     return {
       pending,
-      inAiReview: aiReview,
-      inHumanReview: humanReview,
-      totalActionable: pending + aiReview + humanReview,
+      held,
+      totalActionable: pending + held,
     };
   }
 
@@ -2636,7 +2692,7 @@ export class AdminService implements OnModuleInit {
       this.questionRepo.count({ where: { ...baseWhere } }),
       this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
       this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
-      this.questionRepo.count({ where: { status: In([QuestionStatus.PENDING, QuestionStatus.AI_REVIEW, QuestionStatus.HUMAN_REVIEW]) } }),
+      this.questionRepo.count({ where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) } }),
     ]);
 
     // Daily volume: submitted, approved, rejected per day

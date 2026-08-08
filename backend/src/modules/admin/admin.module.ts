@@ -11,6 +11,7 @@ import { DbModule } from '../../shared/database/db.module';
 import { WalletsModule } from '../wallets/wallets.module';
 import { NotificationsModule } from '../notification/notifications.module';
 import { PaymentModule } from '../payment/payment.module';
+import { GdbModule } from '../ai/gdb.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PaymentModule } from '../payment/payment.module';
     forwardRef(() => WalletsModule),
     NotificationsModule,
     PaymentModule,
+    forwardRef(() => GdbModule),
   ],
   controllers: [AdminController, AnalyticsController, ExportController, AuditController, CuratorController],
   providers: [AdminService, AuditService, CuratorService],

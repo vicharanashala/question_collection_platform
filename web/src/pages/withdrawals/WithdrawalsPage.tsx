@@ -22,7 +22,7 @@ import type { Withdrawal } from '@/types'
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
-  processing: 'bg-ai_review text-white',
+  processing: 'bg-blue-500 text-white',
   completed:  'bg-success text-white',
   rejected:   'bg-destructive text-white',
 }

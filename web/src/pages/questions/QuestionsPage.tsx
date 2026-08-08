@@ -28,21 +28,17 @@ import {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:      'bg-warning text-white',
-  ai_review:    'bg-blue-500 text-white',
-  human_review: 'bg-purple-500 text-white',
-  held:         'bg-[hsl(38,92%,50%)] text-white',
-  approved:     'bg-success text-white',
-  rejected:     'bg-destructive text-white',
+  pending:    'bg-warning text-white',
+  held:       'bg-amber-500 text-white',
+  approved:   'bg-success text-white',
+  rejected:   'bg-destructive text-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending:      'Pending',
-  ai_review:    'AI Review',
-  human_review: 'Human Review',
-  held:         'Held',
-  approved:     'Approved',
-  rejected:     'Rejected',
+  pending:    'Pending',
+  held:       'On Hold',
+  approved:   'Approved',
+  rejected:   'Rejected',
 }
 
 const SEASON_LABEL: Record<string, string> = {
@@ -83,7 +79,7 @@ export function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'held' | 'approved' | 'rejected' | 'pending' | 'ai_review' | 'human_review' | ''>('')
+  const [statusFilter, setStatusFilter] = useState<'held' | 'approved' | 'rejected' | 'pending' | ''>('')
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'table' | 'card'>('table')
   const limit = 10
@@ -230,14 +226,12 @@ export function QuestionsPage() {
   )
 
   // ─── Status filter chips ───────────────────────────────────────────────────
-  const statusOptions: { value: 'held' | 'approved' | 'rejected' | 'pending' | 'ai_review' | 'human_review' | ''; label: string }[] = [
-    { value: '',             label: 'All' },
-    { value: 'pending',      label: 'Pending' },
-    { value: 'ai_review',    label: 'AI Review' },
-    { value: 'human_review', label: 'Human Review' },
-    { value: 'held',         label: 'Held' },
-    { value: 'approved',     label: 'Approved' },
-    { value: 'rejected',     label: 'Rejected' },
+  const statusOptions: { value: 'held' | 'approved' | 'rejected' | 'pending' | ''; label: string }[] = [
+    { value: '',           label: 'All' },
+    { value: 'pending',    label: 'Pending' },
+    { value: 'held',       label: 'On Hold' },
+    { value: 'approved',   label: 'Approved' },
+    { value: 'rejected',   label: 'Rejected' },
   ]
 
   return (

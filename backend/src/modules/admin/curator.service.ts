@@ -48,8 +48,6 @@ export class CuratorService {
       .where('q.status IN (:...statuses)', {
         statuses: [
           QuestionStatus.PENDING,
-          QuestionStatus.AI_REVIEW,
-          QuestionStatus.HUMAN_REVIEW,
           QuestionStatus.HELD,
         ],
       })
@@ -58,8 +56,6 @@ export class CuratorService {
 
     const statusLabels: Record<string, string> = {
       [QuestionStatus.PENDING]: 'Pending',
-      [QuestionStatus.AI_REVIEW]: 'AI Review',
-      [QuestionStatus.HUMAN_REVIEW]: 'Human Review',
       [QuestionStatus.HELD]: 'On Hold',
     };
 
@@ -284,7 +280,7 @@ export class CuratorService {
       this.questionRepo.count({
         where: {
           reviewerId: userId,
-          status: Between(QuestionStatus.PENDING, QuestionStatus.HUMAN_REVIEW),
+          status: QuestionStatus.PENDING,
         },
       }),
     ]);
