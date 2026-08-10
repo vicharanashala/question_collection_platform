@@ -4,14 +4,15 @@ import type { AuthUser } from '@/types'
  * Role constants for clarity across the app.
  * Ordered from least to most privileged.
  */
-export type Role = 'user' | 'curator' | 'finance' | 'admin' | 'super_admin'
+export type Role = 'user' | 'curator' | 'finance' | 'distributor' | 'admin' | 'super_admin'
 
 export const ROLE_HIERARCHY: Record<Role, number> = {
   user: 0,
   curator: 1,
   finance: 2,
-  admin: 3,
-  super_admin: 4,
+  distributor: 3,
+  admin: 4,
+  super_admin: 5,
 }
 
 /** Returns true if currentUser is super_admin */
@@ -32,6 +33,11 @@ export function isCuratorOrAbove(user: AuthUser | null | undefined): boolean {
 /** Returns true if currentUser is finance, admin, or super_admin (can manage finances) */
 export function isFinanceOrAbove(user: AuthUser | null | undefined): boolean {
   return user?.role === 'finance' || user?.role === 'admin' || user?.role === 'super_admin'
+}
+
+/** Returns true if currentUser is distributor role specifically */
+export function isDistributor(user: AuthUser | null | undefined): boolean {
+  return user?.role === 'distributor'
 }
 
 /**

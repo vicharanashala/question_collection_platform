@@ -31,6 +31,8 @@ import type {
   AuditUsersByRoleResponse,
   Report,
   ReportReply,
+  FinalQuestion,
+  DistributorStats,
 } from '@/types'
 import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
@@ -811,6 +813,96 @@ export const faqApi = {
 
   remove: (id: string) =>
     request<void>(`/admin/faqs/${id}`, { method: 'DELETE' }, false),
+}
+
+// ─── Distributor ──────────────────────────────────────────────────────────
+
+export interface ListApprovedQuestionsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface AssignStatesPayload {
+  states: string[];
+  notes?: string;
+}
+
+export interface ListDistributionsParams {
+  page?: number;
+  limit?: number;
+  /** Filter by the TARGET Indian state (was `state`, renamed to disambiguate
+   * from the asker's home state that is now embedded on each row). */
+  distributionState?: string;
+  search?: string;
+}
+
+export const distributor = {
+  /** Reference data: list of all 32 Indian states / UTs. */
+  listIndianStates: () =>
+    request<{ states: string[] }>(`/distributor/indian-states`, {}, false),
+
+  /** Dashboard stats: how many final-questions exist per state. */
+  getStats: () =>
+    request<DistributorStats>(`/distributor/stats`, {}, false),
+
+  /** Approved-questions queue. */
+  listApprovedQuestions: (params: ListApprovedQuestionsParams = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{
+      items: Question[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/distributor/questions${qs ? `?${qs}` : ''}`, {}, false);
+  },
+
+  getApprovedQuestion: (id: string) =>
+    request<Question>(`/distributor/questions/${id}`, {}, false),
+
+  /** Assign 0..N Indian states to an approved question. Pass `states: []` to move a non-state-specific question to `moved_to_final` without distributing to any state. */
+  assignStates: (questionId: string, payload: AssignStatesPayload) =>
+    request<{
+      questionId: string;
+      insertedStates: string[];
+      skippedStates: string[];
+      insertedCount: number;
+      totalStates: number;
+      questionStatus: string;
+    }>(`/distributor/questions/${questionId}/assign-states`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, false),
+
+  /** Browse the final_questions (distributions). */
+  listDistributions: (params: ListDistributionsParams = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{
+      items: FinalQuestion[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/distributor/distributions${qs ? `?${qs}` : ''}`, {}, false);
+  },
+
+  getDistributionsForQuestion: (questionId: string) =>
+    request<{
+      questionId: string;
+      states: string[];
+      entries: FinalQuestion[];
+    }>(`/distributor/distributions/by-question/${questionId}`, {}, false),
 }
 
 // ─── Error helper ──────────────────────────────────────────────────────────

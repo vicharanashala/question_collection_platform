@@ -21,15 +21,16 @@ const ReportsPage     = lazyRoute(() => import('@/pages/reports/ReportsPage').th
 const ReportDetailPage = lazyRoute(() => import('@/pages/reports/ReportDetailPage').then(m => ({ default: m.default })))
 const FaqListPage   = lazyRoute(() => import('@/pages/faqs/FaqListPage').then(m => ({ default: m.FaqListPage })))
 const FaqsPage      = lazyRoute(() => import('@/pages/faqs/FaqsPage').then(m => ({ default: m.FaqsPage })))
+const DistributionsPage = lazyRoute(() => import('@/pages/distributions/DistributionsPage').then(m => ({ default: m.DistributionsPage })))
 
 /** Pages visible per role */
 const PAGE_ROLES: Record<string, UserRole[]> = {
-  dashboard:   ['admin', 'super_admin', 'curator', 'finance'],
+  dashboard:   ['admin', 'super_admin', 'curator', 'finance', 'distributor'],
   users:       ['finance', 'admin', 'super_admin'],
   userDetail:  ['admin', 'super_admin', 'finance'],
   questions:   ['user', 'curator', 'admin', 'super_admin'],
   reviews:     ['curator', 'super_admin'],
-  profile:     ['user', 'curator', 'finance', 'admin', 'super_admin'],
+  profile:     ['user', 'curator', 'finance', 'distributor', 'admin', 'super_admin'],
   settings:    ['super_admin'],
   withdrawals: ['finance', 'admin', 'super_admin'],
   wallets:     ['finance', 'admin', 'super_admin'],
@@ -38,6 +39,7 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   reportDetail: ['admin', 'super_admin', 'curator'],
   faqs:        ['user', 'curator', 'admin', 'super_admin', 'finance'],
   faqAdmin:    ['admin', 'super_admin'],
+  distributions: ['distributor', 'admin', 'super_admin'],
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -98,6 +100,7 @@ export default function App() {
           <Route path="reports/:reportId" element={<><RoleRoute pageKey="reportDetail" /><ReportDetailPage /></>} />
           <Route path="faqs"           element={<><RoleRoute pageKey="faqs"     /><FaqListPage  /></>} />
           <Route path="admin/faqs"     element={<><RoleRoute pageKey="faqAdmin" /><FaqsPage     /></>} />
+          <Route path="distributions"  element={<><RoleRoute pageKey="distributions" /><DistributionsPage /></>} />
         </Route>
       </Routes>
     </PrefetchProvider>

@@ -14,6 +14,7 @@ import {
 ScrollText,
   Flag,
   HelpCircle,
+  Send,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -21,10 +22,11 @@ import {
 import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, roles: ['user', 'curator', 'finance', 'admin', 'super_admin'] },
+  { to: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard, roles: ['user', 'curator', 'finance', 'distributor', 'admin', 'super_admin'] },
   { to: '/users',       label: 'Users',        icon: Users,          roles: ['finance', 'admin', 'super_admin'] },
   { to: '/questions',   label: 'Questions',    icon: MessageSquare,  roles: ['user', 'curator', 'admin', 'super_admin'] },
   { to: '/reviews',     label: 'Review Queue', icon: CheckSquare,    roles: ['curator', 'super_admin'] },
+  { to: '/distributions', label: 'Distributions', icon: Send,         roles: ['distributor', 'admin', 'super_admin'] },
   { to: '/withdrawals', label: 'Withdrawals',  icon: CreditCard,     roles: ['finance', 'admin', 'super_admin'] },
   { to: '/wallets',     label: 'Wallets',      icon: Wallet,         roles: ['finance', 'admin', 'super_admin'] },
   { to: '/settings',    label: 'Settings',     icon: Settings2,      roles: ['super_admin'] },

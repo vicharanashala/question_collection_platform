@@ -288,7 +288,12 @@ export class AdminService implements OnModuleInit {
     }
 
     // Enforce max_users_per_state (only for non-privileged roles)
-    if (dto.role !== UserRole.ADMIN && dto.role !== UserRole.CURATOR) {
+    if (
+      dto.role !== UserRole.ADMIN &&
+      dto.role !== UserRole.CURATOR &&
+      dto.role !== UserRole.FINANCE &&
+      dto.role !== UserRole.DISTRIBUTOR
+    ) {
       const maxPerState = await this.getConfigValue('max_users_per_state');
       const stateCount = await this.userRepo.count({
         where: { state: dto.state },
@@ -300,7 +305,11 @@ export class AdminService implements OnModuleInit {
       }
     }
 
-    const isPrivilegedRole = dto.role === UserRole.ADMIN || dto.role === UserRole.CURATOR;
+    const isPrivilegedRole =
+      dto.role === UserRole.ADMIN ||
+      dto.role === UserRole.CURATOR ||
+      dto.role === UserRole.FINANCE ||
+      dto.role === UserRole.DISTRIBUTOR;
 
     const user = await this.userRepo.create({
       name: dto.name.trim(),

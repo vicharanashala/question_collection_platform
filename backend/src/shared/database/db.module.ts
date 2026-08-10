@@ -23,6 +23,7 @@ import {
   Report,
   ReportReply,
   Faq,
+  FinalQuestion,
 } from './entities';
 import { REPOSITORY_TOKENS, buildRepositoryProviders } from './repositories';
 
@@ -40,6 +41,7 @@ import { NotificationSchema } from './mongodb/schemas/notification.schema';
 import { ReportSchema } from './mongodb/schemas/report.schema';
 import { ReportReplySchema } from './mongodb/schemas/report-reply.schema';
 import { FaqSchema } from './mongodb/schemas/faq.schema';
+import { FinalQuestionSchema } from './mongodb/schemas/final-question.schema';
 
 const MONGO_SCHEMA_ENTRIES = [
   { name: 'User', schema: UserSchema },
@@ -55,6 +57,7 @@ const MONGO_SCHEMA_ENTRIES = [
   { name: 'Report', schema: ReportSchema },
   { name: 'ReportReply', schema: ReportReplySchema },
   { name: 'Faq', schema: FaqSchema },
+  { name: 'FinalQuestion', schema: FinalQuestionSchema },
 ];
 
 @Global()
