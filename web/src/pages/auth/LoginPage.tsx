@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { authApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { ShieldCheck, Loader2, ArrowLeft, CheckCircle, Smartphone } from 'lucide-react'
+import { ShieldCheck, Loader2, ArrowLeft, CheckCircle, Smartphone, Sprout } from 'lucide-react'
 import { toast } from 'sonner'
 
 // ─── Resend countdown ──────────────────────────────────────────────────────
@@ -90,7 +90,9 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      await authApi.requestOtp(cleaned, true)
+      // Pass `false` (no `client:'web'`) so the backend accepts BOTH staff
+      // and new public users. The verify-otp step routes by role afterwards.
+      await authApi.requestOtp(cleaned, false)
       setSent(true)
       setStep(2)
       countdown.start()
@@ -113,21 +115,36 @@ export function LoginPage() {
     try {
       const res = await authApi.verifyOtp(mobile, cleaned)
 
+      // ── New user ────────────────────────────────────────────────────
+      // Backend returns `{ requiresRegistration, role }` for any user
+      // that doesn't have a name set yet. Public users (role='user')
+      // get sent to the signup wizard. Staff accounts are blocked —
+      // the admin creates them server-side.
       if ('requiresRegistration' in res && res.requiresRegistration) {
-        toast.error(`Account not registered. Role: ${res.role ?? 'USER'}`)
+        if (res.role === 'user') {
+          navigate('/public/register', { state: { mobileNumber: mobile } })
+        } else {
+          toast.error('Your account is not yet activated. Please contact your administrator.')
+        }
         return
       }
 
+      // ── Existing user ──────────────────────────────────────────────
       const tokens = res.tokens!
       const user = res.user!
-
       login(
         { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
         { ...user, token: tokens.accessToken },
       )
 
-      toast.success('Welcome back!')
-      navigate('/dashboard', { replace: true })
+      // Route by role: public users → /public, staff → /dashboard
+      if (user.role === 'user') {
+        toast.success('Welcome back!')
+        navigate('/public', { replace: true })
+      } else {
+        toast.success('Welcome back!')
+        navigate('/dashboard', { replace: true })
+      }
     } catch (err) {
       toast.error(getErrorMessage(err, 'Invalid OTP'))
       setOtp('')
@@ -298,10 +315,17 @@ export function LoginPage() {
         </CardContent>
       </Card>
 
-      <div className="absolute bottom-6 text-center">
+      <div className="absolute bottom-6 left-0 right-0 px-4 text-center space-y-1">
         <p className="text-xs text-text-tertiary">
           Question Collection Platform &middot; Admin Dashboard
         </p>
+        <Link
+          to="/public/register"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+        >
+          <Sprout className="h-3.5 w-3.5" />
+          New here? Sign up as a public user &rarr;
+        </Link>
       </div>
     </div>
   )

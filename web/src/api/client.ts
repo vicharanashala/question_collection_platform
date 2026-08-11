@@ -245,6 +245,69 @@ export const authApi = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }, false),
+
+  /**
+   * Complete new-user registration. Called AFTER `verifyOtp` returned
+   * `{ requiresRegistration: true, tempToken, role }`. The endpoint is
+   * public — the backend identifies the user by `mobileNumber` (no JWT
+   * required for this call).
+   *
+   * On success returns `{ tokens, user }` — the wizard should immediately
+   * `login()` so the public user is authenticated.
+   */
+  register: (body: {
+    mobileNumber: string
+    name: string
+    username: string
+    category: string
+    state: string
+    district: string
+    block?: string
+    village?: string
+    kvk?: string
+    age?: number
+    gender?: string
+    farmSize?: string
+    cropType?: string
+    courseName?: string
+    collegeName?: string
+    universityName?: string
+    organisationType?: string
+    organizationName?: string
+    organizationRole?: string
+    numberOfFarmers?: number
+    organizationState?: string
+    organizationDistrict?: string
+    organizationBlock?: string
+    organizationVillage?: string
+    season?: string
+    volunteerCropType?: string
+    languagePreference: string
+    consentGiven: boolean
+  }) =>
+    request<{
+      tokens: { accessToken: string; refreshToken: string; expiresIn: number }
+      user: AuthUser
+    }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  /** Check whether a username is available. */
+  checkUsername: (username: string) =>
+    request<{
+      username: string
+      available: boolean
+      suggestions: string[]
+    }>(`/auth/check-username?username=${encodeURIComponent(username)}`, {}, false),
+
+  /** Suggest N available usernames based on a base string. */
+  suggestUsernames: (base: string, limit = 5) =>
+    request<{ suggestions: string[] }>(
+      `/auth/suggest-usernames?base=${encodeURIComponent(base)}&limit=${limit}`,
+      {},
+      false,
+    ),
 }
 
 // ─── LGD / Location API ───────────────────────────────────────────────────
@@ -542,6 +605,96 @@ export const questionApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }, false).finally(() => invalidateCache('/api/questions')),
+
+  /**
+   * Public-user submit. The backend derives `state`/`district`/etc. from the
+   * authenticated user's profile, but on the web we send them explicitly so
+   * the wizard does not have to call `/auth/me` first.
+   */
+  submitQuestion: (body: {
+    questionText: string
+    domains: string[]
+    season: string
+    cropType: string
+    state: string
+    district: string
+    block?: string
+    agroClimaticZone?: string
+    mediaType?: 'none' | 'image' | 'video' | 'audio'
+    mediaUrls?: string[]
+  }) =>
+    request<{
+      id: string
+      status: string
+      message: string
+      duplicate?: {
+        isDuplicate: boolean
+        matchedQuestion: string | null
+        matchedAnswer: string | null
+        similarityScore: number | null
+        matchedUserName: string | null
+      }
+    }>('/questions', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false).finally(() => invalidateCache('/api/questions')),
+
+  /** Daily / total submission stats for the current (public) user. */
+  getMyStats: () =>
+    request<{
+      dailyCount: number
+      remainingToday: number
+      totalApproved: number
+      dailyLimit: number
+      [k: string]: unknown
+    }>('/questions/stats/me', {}, false),
+
+  /** Reuse the same list endpoint with a hard `userId=me` filter. */
+  listMyQuestions: (params: { page?: number; limit?: number; status?: string } = {}) => {
+    const p = { ...params, userId: 'me' }
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined && v !== '')) as Record<string, string>,
+    ).toString()
+    return request<PaginatedResponse<Question>>(
+      `/questions${qs ? `?${qs}` : ''}`,
+      {},
+      false,
+    )
+  },
+}
+
+// ─── Wallet API (public-user dashboard) ────────────────────────────────────
+
+export const walletApi = {
+  /** Wallet balance for the authenticated user. */
+  getBalance: () =>
+    request<{ balance: number; pending: number; totalEarned: number; currency: string }>(
+      '/wallets/me',
+      {},
+      false,
+    ),
+
+  /** Current reward tier (1/5/10 rupees per approved question). */
+  getRewardTier: (approvedCount?: number) => {
+    const qs = approvedCount != null ? `?approvedCount=${approvedCount}` : ''
+    return request<{ tier: number; reward: number; nextTierAt: number | null }>(
+      `/wallets/me/tier${qs}`,
+      {},
+      false,
+    )
+  },
+
+  /** Recent wallet transactions for the authenticated user. */
+  getTransactions: (params: { page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+    ).toString()
+    return request<{ items: Transaction[]; total: number }>(
+      `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
+      {},
+      false,
+    )
+  },
 }
 
 // ─── Notifications API ─────────────────────────────────────────────────────

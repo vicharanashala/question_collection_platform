@@ -129,6 +129,7 @@ export interface AuthUser {
   id: string;
   mobileNumber: string;
   name: string;
+  username?: string | null;
   role: UserRole;
   token: string;
   // Additional fields returned from /auth/me and /auth/verify-otp
@@ -137,13 +138,29 @@ export interface AuthUser {
   district?: string;
   block?: string | null;
   village?: string | null;
+  kvk?: string | null;
   languagePreference?: string;
   verificationStatus?: VerificationStatus;
   createdAt?: string;
+  lastLoginAt?: string | null;
+  // Profile fields populated by toPublicUser (used by the public-user pages)
+  age?:              number | null;
+  gender?:           string | null;
+  farmSize?:         string | null;
+  season?:           string | null;
+  cropType?:         string | null;
+  courseName?:       string | null;
+  collegeName?:      string | null;
+  universityName?:   string | null;
+  organisationType?: string | null;
+  organizationName?:     string | null;
+  organizationRole?:     string | null;
+  numberOfFarmers?:      number | null;
   organizationState?:    string | null;
   organizationDistrict?: string | null;
   organizationBlock?:    string | null;
   organizationVillage?:  string | null;
+  consentGiven?:         boolean;
 }
 
 export type TimeRange = '7d' | '30d' | '90d'
