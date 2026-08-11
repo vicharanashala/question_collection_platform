@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Public-user signup flow. Mirrors the mobile folder's
- *   LoginPhoneScreen → OtpScreen → RegisterScreen
+ *   LoginPhoneScreen â†’ OtpScreen â†’ RegisterScreen
  * by combining them into a single page with three sequential stages:
- *   1. `mobile` — enter mobile number + request OTP
- *   2. `otp`    — enter OTP + verify (gates new vs returning user)
- *   3. `wizard` — 4-step profile wizard (category → location → details → consent)
+ *   1. `mobile` â€” enter mobile number + request OTP
+ *   2. `otp`    â€” enter OTP + verify (gates new vs returning user)
+ *   3. `wizard` â€” 4-step profile wizard (category â†’ location â†’ details â†’ consent)
  *
  * The `mobile` + `otp` stages are skipped when the user arrives here
  * from the LoginPage OTP-success path (which already supplies a
@@ -34,7 +34,7 @@ const RESEND_COOLDOWN = 30 // seconds
 interface RegisterState { mobileNumber: string }
 type GateStage = 'mobile' | 'otp' | 'wizard'
 
-// ─── Resend countdown ──────────────────────────────────────────────────────
+// â”€â”€â”€ Resend countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function useCountdown(initial = 0) {
   const [secs, setSecs] = useState(initial)
@@ -68,7 +68,7 @@ function useCountdown(initial = 0) {
   return { secs, active, start, stop }
 }
 
-// ─── Gate progress indicator ───────────────────────────────────────────────
+// â”€â”€â”€ Gate progress indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const GATE_STAGE_LABELS: Record<GateStage, string> = {
   mobile: 'Mobile',
@@ -145,6 +145,531 @@ const INITIAL_FORM: WizardFormState = {
   consentGiven: false,
 }
 
+// â”€â”€â”€ Sub-components (module-scope) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// NOTE: These are extracted out of `PublicRegisterPage` so their function
+// references are stable across the parent's renders. Defining them as
+// nested functions inside the parent body created a new function on
+// every render, which made React's reconciler treat each `<Stage />` as
+// a different component type and unmount + remount the subtree (and
+// the inputs inside it) on every keystroke â€” making the mobile / OTP /
+// wizard inputs lose focus after each character.
+
+function LockedBanner({ info }: { info: AccountLockedInfo }) {
+  return (
+    <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+      <p className="font-semibold">Account {info.status}</p>
+      {info.reason && <p className="mt-1 text-xs">{info.reason}</p>}
+      <p className="mt-1 text-xs">Contact support for help regaining access.</p>
+    </div>
+  )
+}
+
+interface CountdownState {
+  secs: number
+  active: boolean
+  start: (from?: number) => void
+  stop: () => void
+}
+
+interface MobileStageProps {
+  gateMobile: string
+  setGateMobile: (v: string) => void
+  gateLoading: boolean
+  lockedInfo: AccountLockedInfo | null
+  handleSendOtp: (e: React.FormEvent) => void
+}
+
+function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, handleSendOtp }: MobileStageProps) {
+  return (
+    <div className="space-y-5">
+      <div className="text-center space-y-2">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <Smartphone className="h-6 w-6" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground">Enter your mobile number</h2>
+        <p className="text-sm text-text-secondary">
+          We&apos;ll send a 6-digit OTP to verify it&apos;s you.
+        </p>
+      </div>
+      {lockedInfo && <LockedBanner info={lockedInfo} />}
+      <form onSubmit={handleSendOtp} className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text">Mobile Number</label>
+          <div className="flex gap-2">
+            <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-sm font-semibold text-text-secondary shadow-xs">
+              +91
+            </div>
+            <Input
+              type="tel"
+              inputMode="tel"
+              placeholder="98XXX XXXXX"
+              value={gateMobile}
+              onChange={(e) => setGateMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className="flex-1 font-medium tracking-wide"
+              maxLength={10}
+              autoComplete="tel"
+              disabled={gateLoading}
+            />
+          </div>
+          <p className="text-xs text-text-secondary">Standard SMS rates may apply.</p>
+        </div>
+        <Button type="submit" className="w-full shadow-md" size="lg" disabled={gateLoading}>
+          {gateLoading ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending OTP...</>
+          ) : (
+            'Send OTP'
+          )}
+        </Button>
+        <div className="text-center">
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary"
+          >
+            <ArrowLeft className="h-3 w-3" /> Back to sign in
+          </Link>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+interface OtpStageProps {
+  gateMobile: string
+  otp: string
+  setOtp: (v: string) => void
+  gateLoading: boolean
+  gateError: string
+  setGateError: (v: string) => void
+  lockedInfo: AccountLockedInfo | null
+  countdown: CountdownState
+  otpRef: React.RefObject<HTMLInputElement>
+  handleVerifyOtp: (e: React.FormEvent) => void
+  handleChangeMobile: () => void
+  handleResendOtp: () => void
+}
+
+function OtpStage({
+  gateMobile,
+  otp,
+  setOtp,
+  gateLoading,
+  gateError,
+  setGateError,
+  lockedInfo,
+  countdown,
+  otpRef,
+  handleVerifyOtp,
+  handleChangeMobile,
+  handleResendOtp,
+}: OtpStageProps) {
+  return (
+    <div className="space-y-5">
+      <div className="text-center space-y-2">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <MailQuestion className="h-6 w-6" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground">Verify your mobile</h2>
+        <p className="text-sm text-text-secondary">Enter the 6-digit code we just sent.</p>
+      </div>
+      {lockedInfo && <LockedBanner info={lockedInfo} />}
+      <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-variant/60 px-3 py-2">
+        <Smartphone className="h-4 w-4 text-text-tertiary shrink-0" />
+        <span className="text-sm font-medium text-text">+91 {gateMobile}</span>
+        <button
+          type="button"
+          onClick={handleChangeMobile}
+          disabled={gateLoading}
+          className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+        >
+          <ArrowLeft className="h-3 w-3" /> Change
+        </button>
+      </div>
+      <form onSubmit={handleVerifyOtp} className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text">One-Time Password</label>
+          <Input
+            ref={otpRef}
+            type="text"
+            inputMode="numeric"
+            placeholder="● ● ● ● ● ●"
+            value={otp}
+            onChange={(e) => {
+              setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+              setGateError('')
+            }}
+            className="text-center text-2xl tracking-[0.4em] font-mono font-bold py-6"
+            maxLength={6}
+            autoComplete="one-time-code"
+            disabled={gateLoading}
+          />
+          {gateError && <p className="text-xs text-rose-600 text-center">{gateError}</p>}
+          <p className="text-xs text-text-secondary text-center">
+            Enter the 6-digit code sent to your mobile
+          </p>
+        </div>
+        <Button type="submit" className="w-full shadow-md" size="lg" disabled={gateLoading}>
+          {gateLoading ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</>
+          ) : (
+            <>
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Verify
+            </>
+          )}
+        </Button>
+        <div className="flex items-center justify-between text-sm">
+          <button
+            type="button"
+            onClick={handleChangeMobile}
+            disabled={gateLoading}
+            className="flex items-center gap-1 text-text-tertiary hover:text-text transition-colors disabled:opacity-50"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Change number
+          </button>
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={countdown.active || gateLoading}
+            className={cn(
+              'font-medium transition-colors',
+              countdown.active
+                ? 'text-text-tertiary cursor-not-allowed'
+                : 'text-primary hover:underline',
+            )}
+          >
+            {countdown.active ? `Resend in ${countdown.secs}s` : 'Resend OTP'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+type SetField = <K extends keyof WizardFormState>(k: K, v: WizardFormState[K]) => void
+
+interface WizardFormStateProps {
+  form: WizardFormState
+  errors: Record<string, string>
+  usernameStatus: 'idle' | 'checking' | 'available' | 'taken'
+  usernameSuggestions: string[]
+  districts: LgdDistrict[]
+  blocks: LgdSubDistrict[]
+  villages: LgdVillage[]
+  kvks: LgdKvk[]
+  setField: SetField
+  loadDistricts: (stateName: string) => Promise<void>
+  loadBlocks: (districtCode: string) => Promise<void>
+  loadVillages: (blockCode: string) => Promise<void>
+  loadKvks: (districtCode: string) => Promise<void>
+}
+
+function Step1({ form, errors, setField }: WizardFormStateProps) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-text-secondary">Pick the option that best describes you.</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {USER_CATEGORIES.map((c) => {
+          const active = form.category === c.value
+          return (
+            <button key={c.value} type="button" onClick={() => setField('category', c.value)} className={cn('flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm', active ? `${c.ring} bg-emerald-50/50 dark:bg-emerald-950/20` : 'border-border-subtle hover:border-emerald-200')}>
+              <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', c.iconBg, c.iconColor)}><CategoryIcon value={c.value} className="h-5 w-5" /></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground">{c.label}</p>
+                <p className="mt-0.5 text-xs text-text-secondary">{c.description}</p>
+              </div>
+              {active && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
+            </button>
+          )
+        })}
+      </div>
+      {errors.category && <p className="text-xs text-rose-600">{errors.category}</p>}
+    </div>
+  )
+}
+
+function Step2({ form, errors, districts, blocks, villages, kvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }: WizardFormStateProps) {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-text-secondary">We'll use this to match your questions with local experts.</p>
+      <div className="space-y-1.5">
+        <Label>State <span className="text-rose-600">*</span></Label>
+        <Select value={form.state} onValueChange={(v) => { setField('state', v); setField('district', ''); setField('districtCode', ''); loadDistricts(v) }}>
+          <SelectTrigger><SelectValue placeholder="Choose state" /></SelectTrigger>
+          <SelectContent>{SUPPORTED_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+        </Select>
+        {errors.state && <p className="text-xs text-rose-600">{errors.state}</p>}
+      </div>
+      <div className="space-y-1.5">
+        <Label>District <span className="text-rose-600">*</span></Label>
+        <Select value={form.district} onValueChange={(v) => { const d = districts.find((x) => x.name === v); setField('district', v); setField('districtCode', d?.code ?? ''); loadBlocks(d?.code ?? '') }} disabled={!form.state}>
+          <SelectTrigger><SelectValue placeholder={form.state ? 'Choose district' : 'Choose state first'} /></SelectTrigger>
+          <SelectContent>{districts.map((d) => <SelectItem key={d.code} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+        </Select>
+        {errors.district && <p className="text-xs text-rose-600">{errors.district}</p>}
+      </div>
+      {form.category === 'farmer' && (
+        <div className="space-y-1.5">
+          <Label>Block <span className="text-rose-600">*</span></Label>
+          <Select value={form.block} onValueChange={(v) => {const block = blocks.find((b) => b.name === v); setField('block', v); loadVillages(block?.code ?? ''); loadKvks(form.districtCode) }} disabled={!form.district}>
+            <SelectTrigger><SelectValue placeholder={form.district ? 'Choose block' : 'Choose district first'} /></SelectTrigger>
+            <SelectContent>{blocks.map((b) => <SelectItem key={b.code} value={b.name}>{b.name}</SelectItem>)}</SelectContent>
+          </Select>
+          {errors.block && <p className="text-xs text-rose-600">{errors.block}</p>}
+        </div>
+      )}
+      {form.category === 'farmer' && form.block && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Village</Label>
+            <Select value={form.village} onValueChange={(v) => setField('village', v)}>
+              <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+              <SelectContent>{villages.map((v) => <SelectItem key={v.code} value={v.name}>{v.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Nearest KVK</Label>
+            <Select value={form.kvk} onValueChange={(v) => setField('kvk', v)}>
+              <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+              <SelectContent>{kvks.map((k) => <SelectItem key={k.code} value={k.name}>{k.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: WizardFormStateProps) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label>Full name <span className="text-rose-600">*</span></Label>
+          <Input value={form.name} onChange={(e) => setField('name', e.target.value)} maxLength={80} placeholder="Your name" />
+          {errors.name && <p className="text-xs text-rose-600">{errors.name}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label>Username <span className="text-rose-600">*</span></Label>
+          <Input value={form.username} onChange={(e) => setField('username', e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase())} maxLength={20} placeholder="e.g. ram_kr" />
+          {errors.username && <p className="text-xs text-rose-600">{errors.username}</p>}
+          {usernameStatus === 'available' && <p className="text-xs text-emerald-700">âœ“ Available</p>}
+          {usernameStatus === 'taken' && (
+            <div className="space-y-1">
+              <p className="text-xs text-rose-600">Taken. Try one of these:</p>
+              <div className="flex flex-wrap gap-1.5">{usernameSuggestions.map((s) => <button key={s} type="button" onClick={() => setField('username', s)} className="rounded-full border border-emerald-200 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-50">{s}</button>)}</div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label>Gender <span className="text-rose-600">*</span></Label>
+          <Select value={form.gender} onValueChange={(v) => setField('gender', v as any)}>
+            <SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
+            <SelectContent>{GENDER_OPTIONS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
+          </Select>
+          {errors.gender && <p className="text-xs text-rose-600">{errors.gender}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label>Age</Label>
+          <Input type="number" min={1} max={120} value={form.age} onChange={(e) => setField('age', e.target.value)} placeholder="Optional" />
+          {errors.age && <p className="text-xs text-rose-600">{errors.age}</p>}
+        </div>
+      </div>
+      {form.category === 'farmer' && (
+        <>
+          <div className="space-y-1.5">
+            <Label>Farm size (acres) <span className="text-rose-600">*</span></Label>
+            <Input value={form.farmSize} onChange={(e) => setField('farmSize', e.target.value)} placeholder="e.g. 2.5" />
+            {errors.farmSize && <p className="text-xs text-rose-600">{errors.farmSize}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Primary crops <span className="text-rose-600">*</span></Label>
+            <div className="flex flex-wrap gap-1.5">
+              {CROP_OPTIONS.map((c) => {
+                const selected = form.cropType.includes(c.value)
+                return (
+                  <button key={c.value} type="button" onClick={() => setField('cropType', selected ? form.cropType.filter((x) => x !== c.value) : [...form.cropType, c.value])} className={cn('rounded-full border px-2.5 py-1 text-xs font-medium transition-colors', selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border-subtle text-text-secondary hover:border-emerald-300')}>{c.label}</button>
+                )
+              })}
+            </div>
+            {errors.cropType && <p className="text-xs text-rose-600">{errors.cropType}</p>}
+          </div>
+        </>
+      )}
+      {form.category === 'student' && (
+        <>
+          <div className="space-y-1.5">
+            <Label>Course <span className="text-rose-600">*</span></Label>
+            <Select value={form.courseName} onValueChange={(v) => setField('courseName', v)}>
+              <SelectTrigger><SelectValue placeholder="Choose course" /></SelectTrigger>
+              <SelectContent>
+                {COURSE_OPTIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.courseName && <p className="text-xs text-rose-600">{errors.courseName}</p>}
+            {form.courseName === OTHER_VALUE && (
+              <Input className="mt-2" placeholder="Enter course name" value={form.courseNameOther} onChange={(e) => setField('courseNameOther', e.target.value)} />
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label>College name <span className="text-rose-600">*</span></Label>
+            <Input value={form.collegeName} onChange={(e) => setField('collegeName', e.target.value)} />
+            {errors.collegeName && <p className="text-xs text-rose-600">{errors.collegeName}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>University</Label>
+            <Input value={form.universityName} onChange={(e) => setField('universityName', e.target.value)} placeholder="Optional" />
+          </div>
+        </>
+      )}
+      {(form.category === 'fpo' || form.category === 'ngo' || form.category === 'volunteer') && (
+        <>
+          <div className="space-y-1.5">
+            <Label>Organisation type <span className="text-rose-600">*</span></Label>
+            <Select value={form.organisationType} onValueChange={(v) => setField('organisationType', v)}>
+              <SelectTrigger><SelectValue placeholder="Choose type" /></SelectTrigger>
+              <SelectContent>
+                {ORG_TYPE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.organisationType && <p className="text-xs text-rose-600">{errors.organisationType}</p>}
+            {form.organisationType === OTHER_VALUE && <Input className="mt-2" placeholder="Specify type" value={form.organisationTypeOther} onChange={(e) => setField('organisationTypeOther', e.target.value)} />}
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Organisation name <span className="text-rose-600">*</span></Label>
+              <Input value={form.organizationName} onChange={(e) => setField('organizationName', e.target.value)} />
+              {errors.organizationName && <p className="text-xs text-rose-600">{errors.organizationName}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Your role <span className="text-rose-600">*</span></Label>
+              <Input value={form.organizationRole} onChange={(e) => setField('organizationRole', e.target.value)} placeholder="e.g. Director" />
+              {errors.organizationRole && <p className="text-xs text-rose-600">{errors.organizationRole}</p>}
+            </div>
+          </div>
+          {(form.category === 'fpo' || form.category === 'ngo') && (
+            <div className="space-y-1.5">
+              <Label>Number of farmers <span className="text-rose-600">*</span></Label>
+              <Input type="number" min={1} value={form.numberOfFarmers} onChange={(e) => setField('numberOfFarmers', e.target.value)} />
+              {errors.numberOfFarmers && <p className="text-xs text-rose-600">{errors.numberOfFarmers}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Organisation state <span className="text-rose-600">*</span></Label>
+              <Select value={form.organizationState} onValueChange={(v) => setField('organizationState', v)}>
+                <SelectTrigger><SelectValue placeholder="Choose state" /></SelectTrigger>
+                <SelectContent>{SUPPORTED_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+              </Select>
+              {errors.organizationState && <p className="text-xs text-rose-600">{errors.organizationState}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label>District <span className="text-rose-600">*</span></Label>
+              <Input value={form.organizationDistrict} onChange={(e) => setField('organizationDistrict', e.target.value)} placeholder="District name" />
+              {errors.organizationDistrict && <p className="text-xs text-rose-600">{errors.organizationDistrict}</p>}
+            </div>
+          </div>
+          {form.category === 'volunteer' && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Season</Label>
+                <Select value={form.season} onValueChange={(v) => setField('season', v)}>
+                  <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                  <SelectContent>{SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Crop focus</Label>
+                <Input value={form.volunteerCropType} onChange={(e) => setField('volunteerCropType', e.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function Step4({ form, errors, setField }: WizardFormStateProps) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label>Preferred language <span className="text-rose-600">*</span></Label>
+        <Select value={form.languagePreference} onValueChange={(v) => setField('languagePreference', v)}>
+          <SelectTrigger><SelectValue placeholder="Choose language" /></SelectTrigger>
+          <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>)}</SelectContent>
+        </Select>
+        {errors.languagePreference && <p className="text-xs text-rose-600">{errors.languagePreference}</p>}
+      </div>
+      <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-sm text-foreground">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-emerald-500" checked={form.consentGiven} onChange={(e) => setField('consentGiven', e.target.checked)} />
+        <span>I agree that the information I provide will be used to answer my agriculture questions and improve services. I understand my mobile number will receive SMS notifications.</span>
+      </label>
+      {errors.consentGiven && <p className="text-xs text-rose-600">{errors.consentGiven}</p>}
+      <div className="rounded-lg border border-border-subtle bg-surface/50 p-4 text-xs text-text-secondary">
+        <p className="font-semibold text-foreground">What happens next?</p>
+        <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
+          <li>Your account will go through a quick verification (usually within 24 hours).</li>
+          <li>Once verified you can ask questions, earn rewards, and access expert answers.</li>
+          <li>You'll get a notification when verification completes.</li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+interface WizardStagesProps {
+  form: WizardFormState
+  errors: Record<string, string>
+  usernameStatus: 'idle' | 'checking' | 'available' | 'taken'
+  usernameSuggestions: string[]
+  districts: LgdDistrict[]
+  blocks: LgdSubDistrict[]
+  villages: LgdVillage[]
+  kvks: LgdKvk[]
+  step: number
+  loading: boolean
+  setField: SetField
+  loadDistricts: (stateName: string) => Promise<void>
+  loadBlocks: (districtCode: string) => Promise<void>
+  loadVillages: (blockCode: string) => Promise<void>
+  loadKvks: (districtCode: string) => Promise<void>
+  next: () => void
+  back: () => void
+  submit: () => void
+}
+
+function WizardStages({ form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, step, loading, setField, loadDistricts, loadBlocks, loadVillages, loadKvks, next, back, submit }: WizardStagesProps) {
+  const stepProps: WizardFormStateProps = { form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }
+  return (
+    <>
+      <h2 className="mb-4 text-lg font-bold text-foreground">Step {step}: {STEP_KEYS[step - 1]}</h2>
+      {step === 1 && <Step1 {...stepProps} />}
+      {step === 2 && <Step2 {...stepProps} />}
+      {step === 3 && <Step3 {...stepProps} />}
+      {step === 4 && <Step4 {...stepProps} />}
+      <div className="mt-6 flex items-center justify-between gap-2">
+        <Button variant="ghost" onClick={back} disabled={loading} className="gap-1.5">
+          <ArrowLeft className="h-4 w-4" />Back
+        </Button>
+        {step < TOTAL_STEPS ? (
+          <Button onClick={next} className="bg-emerald-500 hover:bg-emerald-600 gap-1.5">
+            Next<ArrowRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button onClick={submit} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 gap-1.5">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            Submit registration
+          </Button>
+        )}
+      </div>
+    </>
+  )
+}
+
 export function PublicRegisterPage() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -153,8 +678,8 @@ export function PublicRegisterPage() {
   const state = location.state as RegisterState | null
   const initialMobile = state?.mobileNumber ?? ''
 
-  // ── Gate state machine ──────────────────────────────────────────────────
-  // Mobile → OTP → wizard. When the user arrives from the LoginPage
+  // â”€â”€ Gate state machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Mobile â†’ OTP â†’ wizard. When the user arrives from the LoginPage
   // OTP-success path, `state.mobileNumber` is already set, so we skip
   // straight to the wizard.
   const [stage, setStage] = useState<GateStage>(initialMobile ? 'wizard' : 'mobile')
@@ -181,7 +706,7 @@ export function PublicRegisterPage() {
     }
   }, [stage])
 
-  // ── Gate handlers ───────────────────────────────────────────────────────
+  // â”€â”€ Gate handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault()
@@ -222,7 +747,7 @@ export function PublicRegisterPage() {
     try {
       const res = await authApi.verifyOtp(gateMobile, cleaned)
 
-      // New public user → enter the wizard.
+      // New public user â†’ enter the wizard.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
           setVerifiedMobile(gateMobile)
@@ -230,12 +755,12 @@ export function PublicRegisterPage() {
           countdown.stop()
           return
         }
-        // Staff accounts without a profile are an admin-only flow — bounce.
+        // Staff accounts without a profile are an admin-only flow â€” bounce.
         toast.error('Your account is not yet activated. Please contact your administrator.')
         return
       }
 
-      // Returning user — log them straight in instead of asking them to
+      // Returning user â€” log them straight in instead of asking them to
       // re-register. Mirrors LoginPage behaviour.
       if (res.tokens && res.user) {
         login(res.tokens, res.user)
@@ -363,18 +888,40 @@ export function PublicRegisterPage() {
   }
 
   function next() { if (validateStep(step)) setStep((s) => (Math.min(4, s + 1) as 1 | 2 | 3 | 4)) }
-  function back() { setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4)) }
+  function back() {
+    if (step > 1) {
+      // Within the wizard: go one step back.
+      setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4))
+    } else {
+      // Step 1 is the first wizard step — return to the OTP stage so the
+      // user can re-verify or change their mobile number.
+      setStage('otp')
+    }
+  }
 
   async function loadDistricts(stateName: string) {
     setDistricts([]); setBlocks([]); setVillages([])
     if (!stateName) return
     try {
       const res = await lgdApi.getStates()
-      const match = res.states.find((s) => s.name === stateName)
-      if (!match) return
+      // LGD state names are returned in English and may differ in casing or
+      // whitespace from our local SUPPORTED_STATES labels (e.g. "and" vs "&",
+      // leading/trailing spaces). Match case-insensitively after trimming so
+      // the dropdown populates reliably.
+      const target = stateName.trim().toLowerCase()
+      const match = res.states.find((s) => (s.name ?? '').trim().toLowerCase() === target)
+      if (!match) {
+        console.warn(
+          `[loadDistricts] No state matched "${stateName}". ` +
+          `Sample API names: ${res.states.slice(0, 5).map((s) => s.name).join(', ')}`,
+        )
+        return
+      }
       const d = await lgdApi.getDistricts(match.code)
       setDistricts(d.districts)
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('[loadDistricts] Failed to fetch districts:', err)
+    }
   }
 
   async function loadBlocks(districtCode: string) {
@@ -455,442 +1002,6 @@ export function PublicRegisterPage() {
       setLoading(false)
     }
   }
-
-  function Step1() {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-text-secondary">Pick the option that best describes you.</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {USER_CATEGORIES.map((c) => {
-            const active = form.category === c.value
-            return (
-              <button key={c.value} type="button" onClick={() => setField('category', c.value)} className={cn('flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm', active ? `${c.ring} bg-emerald-50/50 dark:bg-emerald-950/20` : 'border-border-subtle hover:border-emerald-200')}>
-                <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', c.iconBg, c.iconColor)}><CategoryIcon value={c.value} className="h-5 w-5" /></div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-foreground">{c.label}</p>
-                  <p className="mt-0.5 text-xs text-text-secondary">{c.description}</p>
-                </div>
-                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
-              </button>
-            )
-          })}
-        </div>
-        {errors.category && <p className="text-xs text-rose-600">{errors.category}</p>}
-      </div>
-    )
-  }
-
-  function Step2() {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-text-secondary">We'll use this to match your questions with local experts.</p>
-        <div className="space-y-1.5">
-          <Label>State <span className="text-rose-600">*</span></Label>
-          <Select value={form.state} onValueChange={(v) => { setField('state', v); setField('district', ''); setField('districtCode', ''); loadDistricts(v) }}>
-            <SelectTrigger><SelectValue placeholder="Choose state" /></SelectTrigger>
-            <SelectContent>{SUPPORTED_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-          </Select>
-          {errors.state && <p className="text-xs text-rose-600">{errors.state}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label>District <span className="text-rose-600">*</span></Label>
-          <Select value={form.district} onValueChange={(v) => { const d = districts.find((x) => x.name === v); setField('district', v); setField('districtCode', d?.code ?? ''); loadBlocks(d?.code ?? '') }} disabled={!form.state}>
-            <SelectTrigger><SelectValue placeholder={form.state ? 'Choose district' : 'Choose state first'} /></SelectTrigger>
-            <SelectContent>{districts.map((d) => <SelectItem key={d.code} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
-          </Select>
-          {errors.district && <p className="text-xs text-rose-600">{errors.district}</p>}
-        </div>
-        {form.category === 'farmer' && (
-          <div className="space-y-1.5">
-            <Label>Block <span className="text-rose-600">*</span></Label>
-            <Select value={form.block} onValueChange={(v) => { setField('block', v); loadVillages(v); loadKvks(form.districtCode) }} disabled={!form.district}>
-              <SelectTrigger><SelectValue placeholder={form.district ? 'Choose block' : 'Choose district first'} /></SelectTrigger>
-              <SelectContent>{blocks.map((b) => <SelectItem key={b.code} value={b.name}>{b.name}</SelectItem>)}</SelectContent>
-            </Select>
-            {errors.block && <p className="text-xs text-rose-600">{errors.block}</p>}
-          </div>
-        )}
-        {form.category === 'farmer' && form.block && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Village</Label>
-              <Select value={form.village} onValueChange={(v) => setField('village', v)}>
-                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                <SelectContent>{villages.map((v) => <SelectItem key={v.code} value={v.name}>{v.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Nearest KVK</Label>
-              <Select value={form.kvk} onValueChange={(v) => setField('kvk', v)}>
-                <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                <SelectContent>{kvks.map((k) => <SelectItem key={k.code} value={k.name}>{k.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  function Step3() {
-    return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Full name <span className="text-rose-600">*</span></Label>
-            <Input value={form.name} onChange={(e) => setField('name', e.target.value)} maxLength={80} placeholder="Your name" />
-            {errors.name && <p className="text-xs text-rose-600">{errors.name}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Username <span className="text-rose-600">*</span></Label>
-            <Input value={form.username} onChange={(e) => setField('username', e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase())} maxLength={20} placeholder="e.g. ram_kr" />
-            {errors.username && <p className="text-xs text-rose-600">{errors.username}</p>}
-            {usernameStatus === 'available' && <p className="text-xs text-emerald-700">✓ Available</p>}
-            {usernameStatus === 'taken' && (
-              <div className="space-y-1">
-                <p className="text-xs text-rose-600">Taken. Try one of these:</p>
-                <div className="flex flex-wrap gap-1.5">{usernameSuggestions.map((s) => <button key={s} type="button" onClick={() => setField('username', s)} className="rounded-full border border-emerald-200 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-50">{s}</button>)}</div>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Gender <span className="text-rose-600">*</span></Label>
-            <Select value={form.gender} onValueChange={(v) => setField('gender', v as any)}>
-              <SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
-              <SelectContent>{GENDER_OPTIONS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-            </Select>
-            {errors.gender && <p className="text-xs text-rose-600">{errors.gender}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Age</Label>
-            <Input type="number" min={1} max={120} value={form.age} onChange={(e) => setField('age', e.target.value)} placeholder="Optional" />
-            {errors.age && <p className="text-xs text-rose-600">{errors.age}</p>}
-          </div>
-        </div>
-        {form.category === 'farmer' && (
-          <>
-            <div className="space-y-1.5">
-              <Label>Farm size (acres) <span className="text-rose-600">*</span></Label>
-              <Input value={form.farmSize} onChange={(e) => setField('farmSize', e.target.value)} placeholder="e.g. 2.5" />
-              {errors.farmSize && <p className="text-xs text-rose-600">{errors.farmSize}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>Primary crops <span className="text-rose-600">*</span></Label>
-              <div className="flex flex-wrap gap-1.5">
-                {CROP_OPTIONS.map((c) => {
-                  const selected = form.cropType.includes(c.value)
-                  return (
-                    <button key={c.value} type="button" onClick={() => setField('cropType', selected ? form.cropType.filter((x) => x !== c.value) : [...form.cropType, c.value])} className={cn('rounded-full border px-2.5 py-1 text-xs font-medium transition-colors', selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border-subtle text-text-secondary hover:border-emerald-300')}>{c.label}</button>
-                  )
-                })}
-              </div>
-              {errors.cropType && <p className="text-xs text-rose-600">{errors.cropType}</p>}
-            </div>
-          </>
-        )}
-        {form.category === 'student' && (
-          <>
-            <div className="space-y-1.5">
-              <Label>Course <span className="text-rose-600">*</span></Label>
-              <Select value={form.courseName} onValueChange={(v) => setField('courseName', v)}>
-                <SelectTrigger><SelectValue placeholder="Choose course" /></SelectTrigger>
-                <SelectContent>
-                  {COURSE_OPTIONS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                  <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.courseName && <p className="text-xs text-rose-600">{errors.courseName}</p>}
-              {form.courseName === OTHER_VALUE && (
-                <Input className="mt-2" placeholder="Enter course name" value={form.courseNameOther} onChange={(e) => setField('courseNameOther', e.target.value)} />
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label>College name <span className="text-rose-600">*</span></Label>
-              <Input value={form.collegeName} onChange={(e) => setField('collegeName', e.target.value)} />
-              {errors.collegeName && <p className="text-xs text-rose-600">{errors.collegeName}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label>University</Label>
-              <Input value={form.universityName} onChange={(e) => setField('universityName', e.target.value)} placeholder="Optional" />
-            </div>
-          </>
-        )}
-        {(form.category === 'fpo' || form.category === 'ngo' || form.category === 'volunteer') && (
-          <>
-            <div className="space-y-1.5">
-              <Label>Organisation type <span className="text-rose-600">*</span></Label>
-              <Select value={form.organisationType} onValueChange={(v) => setField('organisationType', v)}>
-                <SelectTrigger><SelectValue placeholder="Choose type" /></SelectTrigger>
-                <SelectContent>
-                  {ORG_TYPE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                  <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.organisationType && <p className="text-xs text-rose-600">{errors.organisationType}</p>}
-              {form.organisationType === OTHER_VALUE && <Input className="mt-2" placeholder="Specify type" value={form.organisationTypeOther} onChange={(e) => setField('organisationTypeOther', e.target.value)} />}
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Organisation name <span className="text-rose-600">*</span></Label>
-                <Input value={form.organizationName} onChange={(e) => setField('organizationName', e.target.value)} />
-                {errors.organizationName && <p className="text-xs text-rose-600">{errors.organizationName}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label>Your role <span className="text-rose-600">*</span></Label>
-                <Input value={form.organizationRole} onChange={(e) => setField('organizationRole', e.target.value)} placeholder="e.g. Director" />
-                {errors.organizationRole && <p className="text-xs text-rose-600">{errors.organizationRole}</p>}
-              </div>
-            </div>
-            {(form.category === 'fpo' || form.category === 'ngo') && (
-              <div className="space-y-1.5">
-                <Label>Number of farmers <span className="text-rose-600">*</span></Label>
-                <Input type="number" min={1} value={form.numberOfFarmers} onChange={(e) => setField('numberOfFarmers', e.target.value)} />
-                {errors.numberOfFarmers && <p className="text-xs text-rose-600">{errors.numberOfFarmers}</p>}
-              </div>
-            )}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Organisation state <span className="text-rose-600">*</span></Label>
-                <Select value={form.organizationState} onValueChange={(v) => setField('organizationState', v)}>
-                  <SelectTrigger><SelectValue placeholder="Choose state" /></SelectTrigger>
-                  <SelectContent>{SUPPORTED_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                </Select>
-                {errors.organizationState && <p className="text-xs text-rose-600">{errors.organizationState}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label>District <span className="text-rose-600">*</span></Label>
-                <Input value={form.organizationDistrict} onChange={(e) => setField('organizationDistrict', e.target.value)} placeholder="District name" />
-                {errors.organizationDistrict && <p className="text-xs text-rose-600">{errors.organizationDistrict}</p>}
-              </div>
-            </div>
-            {form.category === 'volunteer' && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>Season</Label>
-                  <Select value={form.season} onValueChange={(v) => setField('season', v)}>
-                    <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                    <SelectContent>{SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Crop focus</Label>
-                  <Input value={form.volunteerCropType} onChange={(e) => setField('volunteerCropType', e.target.value)} placeholder="Optional" />
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    )
-  }
-
-  function Step4() {
-    return (
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label>Preferred language <span className="text-rose-600">*</span></Label>
-          <Select value={form.languagePreference} onValueChange={(v) => setField('languagePreference', v)}>
-            <SelectTrigger><SelectValue placeholder="Choose language" /></SelectTrigger>
-            <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>)}</SelectContent>
-          </Select>
-          {errors.languagePreference && <p className="text-xs text-rose-600">{errors.languagePreference}</p>}
-        </div>
-        <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-sm text-foreground">
-          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-emerald-500" checked={form.consentGiven} onChange={(e) => setField('consentGiven', e.target.checked)} />
-          <span>I agree that the information I provide will be used to answer my agriculture questions and improve services. I understand my mobile number will receive SMS notifications.</span>
-        </label>
-        {errors.consentGiven && <p className="text-xs text-rose-600">{errors.consentGiven}</p>}
-        <div className="rounded-lg border border-border-subtle bg-surface/50 p-4 text-xs text-text-secondary">
-          <p className="font-semibold text-foreground">What happens next?</p>
-          <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
-            <li>Your account will go through a quick verification (usually within 24 hours).</li>
-            <li>Once verified you can ask questions, earn rewards, and access expert answers.</li>
-            <li>You'll get a notification when verification completes.</li>
-          </ul>
-        </div>
-      </div>
-    )
-  }
-
-// ── Gate sub-components ─────────────────────────────────────────────────
-
-  function LockedBanner({ info }: { info: AccountLockedInfo }) {
-    return (
-      <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-        <p className="font-semibold">Account {info.status}</p>
-        {info.reason && <p className="mt-1 text-xs">{info.reason}</p>}
-        <p className="mt-1 text-xs">Contact support for help regaining access.</p>
-      </div>
-    )
-  }
-
-  function MobileStage() {
-    return (
-      <div className="space-y-5">
-        <div className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-            <Smartphone className="h-6 w-6" />
-          </div>
-          <h2 className="text-lg font-bold text-foreground">Enter your mobile number</h2>
-          <p className="text-sm text-text-secondary">
-            We&apos;ll send a 6-digit OTP to verify it&apos;s you.
-          </p>
-        </div>
-        {lockedInfo && <LockedBanner info={lockedInfo} />}
-        <form onSubmit={handleSendOtp} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">Mobile Number</label>
-            <div className="flex gap-2">
-              <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-sm font-semibold text-text-secondary shadow-xs">
-                +91
-              </div>
-              <Input
-                type="tel"
-                inputMode="tel"
-                placeholder="98XXX XXXXX"
-                value={gateMobile}
-                onChange={(e) => setGateMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="flex-1 font-medium tracking-wide"
-                maxLength={10}
-                autoComplete="tel"
-                disabled={gateLoading}
-              />
-            </div>
-            <p className="text-xs text-text-secondary">Standard SMS rates may apply.</p>
-          </div>
-          <Button type="submit" className="w-full shadow-md" size="lg" disabled={gateLoading}>
-            {gateLoading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending OTP...</>
-            ) : (
-              'Send OTP'
-            )}
-          </Button>
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary"
-            >
-              <ArrowLeft className="h-3 w-3" /> Back to sign in
-            </Link>
-          </div>
-        </form>
-      </div>
-    )
-  }
-
-  function OtpStage() {
-    return (
-      <div className="space-y-5">
-        <div className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-            <MailQuestion className="h-6 w-6" />
-          </div>
-          <h2 className="text-lg font-bold text-foreground">Verify your mobile</h2>
-          <p className="text-sm text-text-secondary">Enter the 6-digit code we just sent.</p>
-        </div>
-        {lockedInfo && <LockedBanner info={lockedInfo} />}
-        <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-variant/60 px-3 py-2">
-          <Smartphone className="h-4 w-4 text-text-tertiary shrink-0" />
-          <span className="text-sm font-medium text-text">+91 {gateMobile}</span>
-          <button
-            type="button"
-            onClick={handleChangeMobile}
-            disabled={gateLoading}
-            className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
-          >
-            <ArrowLeft className="h-3 w-3" /> Change
-          </button>
-        </div>
-        <form onSubmit={handleVerifyOtp} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">One-Time Password</label>
-            <Input
-              ref={otpRef}
-              type="text"
-              inputMode="numeric"
-              placeholder="● ● ● ● ● ●"
-              value={otp}
-              onChange={(e) => {
-                setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
-                setGateError('')
-              }}
-              className="text-center text-2xl tracking-[0.4em] font-mono font-bold py-6"
-              maxLength={6}
-              autoComplete="one-time-code"
-              disabled={gateLoading}
-            />
-            {gateError && <p className="text-xs text-rose-600 text-center">{gateError}</p>}
-            <p className="text-xs text-text-secondary text-center">
-              Enter the 6-digit code sent to your mobile
-            </p>
-          </div>
-          <Button type="submit" className="w-full shadow-md" size="lg" disabled={gateLoading}>
-            {gateLoading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</>
-            ) : (
-              <>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Verify
-              </>
-            )}
-          </Button>
-          <div className="flex items-center justify-between text-sm">
-            <button
-              type="button"
-              onClick={handleChangeMobile}
-              disabled={gateLoading}
-              className="flex items-center gap-1 text-text-tertiary hover:text-text transition-colors disabled:opacity-50"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Change number
-            </button>
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={countdown.active || gateLoading}
-              className={cn(
-                'font-medium transition-colors',
-                countdown.active
-                  ? 'text-text-tertiary cursor-not-allowed'
-                  : 'text-primary hover:underline',
-              )}
-            >
-              {countdown.active ? `Resend in ${countdown.secs}s` : 'Resend OTP'}
-            </button>
-          </div>
-        </form>
-      </div>
-    )
-  }
-
-  function WizardStages() {
-    return (
-      <>
-        <h2 className="mb-4 text-lg font-bold text-foreground">Step {step}: {STEP_KEYS[step - 1]}</h2>
-        {step === 1 && <Step1 />}
-        {step === 2 && <Step2 />}
-        {step === 3 && <Step3 />}
-        {step === 4 && <Step4 />}
-        <div className="mt-6 flex items-center justify-between gap-2">
-          <Button variant="ghost" onClick={back} disabled={step === 1 || loading} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" />Back
-          </Button>
-          {step < TOTAL_STEPS ? (
-            <Button onClick={next} className="bg-emerald-500 hover:bg-emerald-600 gap-1.5">
-              Next<ArrowRight className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button onClick={submit} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 gap-1.5">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              Submit registration
-            </Button>
-          )}
-        </div>
-      </>
-    )
-  }
-
   const isGateStage = stage !== 'wizard'
 
   return (
@@ -928,9 +1039,53 @@ export function PublicRegisterPage() {
         )}
 
         <div className="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm sm:p-6 dark:bg-surface">
-          {stage === 'mobile' && <MobileStage />}
-          {stage === 'otp' && <OtpStage />}
-          {stage === 'wizard' && <WizardStages />}
+          {stage === 'mobile' && (
+            <MobileStage
+              gateMobile={gateMobile}
+              setGateMobile={setGateMobile}
+              gateLoading={gateLoading}
+              lockedInfo={lockedInfo}
+              handleSendOtp={handleSendOtp}
+            />
+          )}
+          {stage === 'otp' && (
+            <OtpStage
+              gateMobile={gateMobile}
+              otp={otp}
+              setOtp={setOtp}
+              gateLoading={gateLoading}
+              gateError={gateError}
+              setGateError={setGateError}
+              lockedInfo={lockedInfo}
+              countdown={countdown}
+              otpRef={otpRef}
+              handleVerifyOtp={handleVerifyOtp}
+              handleChangeMobile={handleChangeMobile}
+              handleResendOtp={handleResendOtp}
+            />
+          )}
+          {stage === 'wizard' && (
+            <WizardStages
+              form={form}
+              errors={errors}
+              usernameStatus={usernameStatus}
+              usernameSuggestions={usernameSuggestions}
+              districts={districts}
+              blocks={blocks}
+              villages={villages}
+              kvks={kvks}
+              step={step}
+              loading={loading}
+              setField={setField}
+              loadDistricts={loadDistricts}
+              loadBlocks={loadBlocks}
+              loadVillages={loadVillages}
+              loadKvks={loadKvks}
+              next={next}
+              back={back}
+              submit={submit}
+            />
+          )}
         </div>
 
         {!isGateStage && (
