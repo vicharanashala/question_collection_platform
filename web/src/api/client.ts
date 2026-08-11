@@ -649,11 +649,18 @@ export const questionApi = {
       [k: string]: unknown
     }>('/questions/stats/me', {}, false),
 
-  /** Reuse the same list endpoint with a hard `userId=me` filter. */
+  /**
+   * List the current (public) user's own questions.
+   *
+   * NOTE: we deliberately do NOT pass a `userId` query param here. The backend
+   * already scopes `GET /questions` to `req.user.id` (taken from the JWT) for
+   * non-admin callers, and the `ListQuestionsDto` has no `userId` field. With
+   * the global ValidationPipe's `forbidNonWhitelisted: true`, sending
+   * `userId=me` here would cause a 400 ("property userId should not exist").
+   */
   listMyQuestions: (params: { page?: number; limit?: number; status?: string } = {}) => {
-    const p = { ...params, userId: 'me' }
     const qs = new URLSearchParams(
-      Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined && v !== '')) as Record<string, string>,
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== '')) as Record<string, string>,
     ).toString()
     return request<PaginatedResponse<Question>>(
       `/questions${qs ? `?${qs}` : ''}`,

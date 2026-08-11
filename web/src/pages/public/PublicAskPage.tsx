@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage } from '@/api/client'
@@ -7,15 +7,138 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Loader2, Send, Lightbulb, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Loader2, Send, Lightbulb, ArrowLeft, CheckCircle2, AlertTriangle, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
+import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, CROPS } from '@/constants/public'
 
 interface DuplicateInfo {
   matchedQuestion: string
   matchedAnswer: string | null
   similarityScore: number | null
   matchedUserName: string | null
+}
+
+// ─── Crop Type picker modal ────────────────────────────────────────────────────
+// Mirrors the mobile `Select` component's bottom-sheet behaviour for the
+// `cropType` field on `QuestionPreviewScreen`: search-driven, alphabetised,
+// single-select with an "Other (enter manually)" fallback so users whose crop
+// isn't in the list can still submit. Module-scope so its identity is stable
+// across renders (same rationale as MobileStage / OtpStage in PublicRegisterPage).
+interface CropPickerModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  value: string
+  onChange: (value: string) => void
+}
+
+function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModalProps) {
+  const [query, setQuery] = useState('')
+  const [otherText, setOtherText] = useState('')
+  const [showOther, setShowOther] = useState(false)
+
+  // `CROPS` is the full 340+ list mirrored from mobile's `Select` component.
+  // We render it as `{ value, label }` option objects on the fly.
+  const cropOptions = useMemo(() => CROPS.map((c) => ({ value: c, label: c })), [])
+  const filtered = useMemo(() => {
+    if (!query.trim()) return cropOptions
+    const q = query.toLowerCase()
+    return cropOptions.filter((o) => o.label.toLowerCase().includes(q))
+  }, [query, cropOptions])
+
+  function pickCrop(v: string) {
+    onChange(v)
+    setQuery('')
+    setShowOther(false)
+    setOtherText('')
+    onOpenChange(false)
+  }
+
+  function pickOther() {
+    setShowOther(true)
+  }
+
+  function confirmOther() {
+    const v = otherText.trim()
+    if (!v) return
+    pickCrop(v)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setQuery(''); setShowOther(false); setOtherText('') } }}>
+      <DialogContent className="max-w-md p-0 sm:max-w-md">
+        <DialogHeader className="flex-row items-center justify-between border-b border-border-subtle px-4 py-3">
+          <DialogTitle className="text-base font-semibold">Crop Type</DialogTitle>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="rounded-md p-1 text-text-tertiary hover:bg-surface-variant hover:text-foreground focus:outline-none focus:ring-2 focus:ring-focus"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </DialogHeader>
+        <div className="px-4 pt-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+            <Input
+              autoFocus
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setShowOther(false) }}
+              placeholder="Search..."
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div className="max-h-72 overflow-y-auto px-2 pb-2">
+          {showOther ? (
+            <div className="px-2 py-3 space-y-2">
+              <Label htmlFor="other-crop">Enter crop name</Label>
+              <Input
+                id="other-crop"
+                autoFocus
+                value={otherText}
+                onChange={(e) => setOtherText(e.target.value)}
+                placeholder="e.g. Local millet variety"
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); confirmOther() } }}
+              />
+              <div className="flex justify-end gap-2 pt-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => { setShowOther(false); setOtherText('') }}>Back</Button>
+                <Button type="button" size="sm" disabled={!otherText.trim()} onClick={confirmOther}>Use this crop</Button>
+              </div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <p className="py-8 text-center text-sm text-text-tertiary">No matches</p>
+          ) : (
+            <ul className="py-1">
+              {filtered.map((c) => (
+                <li key={c.value}>
+                  <button
+                    type="button"
+                    onClick={() => pickCrop(c.value)}
+                    className={`flex w-full items-center justify-between rounded-md px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface-variant ${value === c.value ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-950/30 dark:text-emerald-300' : 'text-foreground'}`}
+                  >
+                    <span>{c.label}</span>
+                    {value === c.value && <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={pickOther}
+                  className="mt-1 flex w-full items-center rounded-md border-t border-border-subtle px-3 py-2.5 text-left text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
+                >
+                  Other (enter manually)
+                </button>
+              </li>
+            </ul>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 export function PublicAskPage() {
@@ -25,6 +148,7 @@ export function PublicAskPage() {
   const [domain, setDomain] = useState<string>('')
   const [season, setSeason] = useState<string>('')
   const [cropType, setCropType] = useState('')
+  const [cropPickerOpen, setCropPickerOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [stats, setStats] = useState<{ remainingToday: number; dailyLimit: number } | null>(null)
@@ -184,7 +308,19 @@ export function PublicAskPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="crop">Crop type <span className="text-rose-600">*</span></Label>
-              <input id="crop" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500" placeholder="e.g. Tomato, Rice, Cotton" value={cropType} onChange={(e) => setCropType(e.target.value)} />
+              <button
+                id="crop"
+                type="button"
+                onClick={() => setCropPickerOpen(true)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+              >
+                <span className={cropType ? 'text-text' : 'text-text-tertiary'}>
+                  {cropType || 'Pick a crop'}
+                </span>
+                <svg className="h-4 w-4 text-text-tertiary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
             <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
               <p className="flex items-start gap-1.5"><Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />Tip: include clear photos if you can — they help experts answer faster. (Image upload coming soon to the web.)</p>
@@ -199,6 +335,12 @@ export function PublicAskPage() {
           </form>
         </CardContent>
       </Card>
+      <CropPickerModal
+        open={cropPickerOpen}
+        onOpenChange={setCropPickerOpen}
+        value={cropType}
+        onChange={setCropType}
+      />
     </div>
   )
 }

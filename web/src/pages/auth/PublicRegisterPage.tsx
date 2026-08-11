@@ -1,14 +1,16 @@
 ﻿/**
  * Public-user signup flow. Mirrors the mobile folder's
- *   LoginPhoneScreen â†’ OtpScreen â†’ RegisterScreen
- * by combining them into a single page with three sequential stages:
+ *   LoginPhoneScreen â†’ OtpScreen â†’ TermsScreen â†’ RegisterScreen
+ * by combining them into a single page with four sequential stages:
  *   1. `mobile` â€” enter mobile number + request OTP
  *   2. `otp`    â€” enter OTP + verify (gates new vs returning user)
- *   3. `wizard` â€” 4-step profile wizard (category â†’ location â†’ details â†’ consent)
+ *   3. `terms`  â€” accept Terms of Service + Privacy Policy (mobile TermsScreen analogue)
+ *   4. `wizard` â€” 4-step profile wizard (category â†’ location â†’ details â†’ consent)
  *
  * The `mobile` + `otp` stages are skipped when the user arrives here
  * from the LoginPage OTP-success path (which already supplies a
- * `state.mobileNumber` after OTP verification).
+ * `state.mobileNumber` after OTP verification); such users land on
+ * the `terms` stage directly.
  */
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -19,20 +21,157 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion } from 'lucide-react'
+import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion, FileText, ChevronDown, ChevronUp, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { LANGUAGES, USER_CATEGORIES, GENDER_OPTIONS, SUPPORTED_STATES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS, SEASONS } from '@/constants/public'
 import type { LgdDistrict, LgdKvk, LgdSubDistrict, LgdVillage } from '@/api/client'
 import type { UserCategory } from '@/types'
+
+const SUPPORT_EMAIL = (import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined
 
 const TOTAL_STEPS = 4
 const STEP_KEYS = ['Tell us about yourself', 'Where are you from?', 'About you', 'Language & Consent']
 const OTHER_VALUE = '__other__'
 const RESEND_COOLDOWN = 30 // seconds
 
+// ─── Terms of Service content ──────────────────────────────────────────────
+// Mirrors `mobile/src/screens/Auth/TermsScreen.tsx` (11 sections) so the web
+// gate stays in lockstep with the mobile Terms screen. The contact email is
+// sourced from `VITE_SUPPORT_EMAIL` (web env) to stay aligned with the
+// LockedAccountModal which uses the same variable.
+const TERMS_SECTIONS: { id: string; title: string; body: string }[] = [
+  {
+    id: '1',
+    title: 'Acceptance of Terms',
+    body: 'By accessing or using the AnnaDatha platform, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.',
+  },
+  {
+    id: '2',
+    title: 'Purpose of the Platform',
+    body: 'AnnaDatha is an agricultural knowledge platform that allows users to submit questions, share expertise, and receive answers related to farming, crops, and agricultural practices.',
+  },
+  {
+    id: '3',
+    title: 'User Accounts',
+    body: 'You agree to provide accurate and complete information during registration. You are solely responsible for maintaining the confidentiality of your account and for all activities under your account.',
+  },
+  {
+    id: '4',
+    title: 'Content You Submit',
+    body: 'Questions and content submitted by you will be used for agricultural research, AI model training, and policy planning purposes. All submitted data is owned by the organisation and will be retained indefinitely unless you request account deletion.',
+  },
+  {
+    id: '5',
+    title: 'Moderation',
+    body: 'The platform reserves the right to moderate, edit, approve, or reject any submitted content at any time without prior notice. We may suspend or terminate your access if you violate these terms.',
+  },
+  {
+    id: '6',
+    title: 'Rewards and Incentives',
+    body: 'Rewards and incentives are subject to platform policy and may be changed or withdrawn at any time without prior notice. All rewards are subject to verification and approval of submitted content.',
+  },
+  {
+    id: '7',
+    title: 'Privacy',
+    body: 'Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services. For full details, please refer to our Privacy Policy.',
+  },
+  {
+    id: '8',
+    title: 'Account Deletion',
+    body: 'You may withdraw consent and request data deletion at any time by contacting our support team. Upon deletion, your personal data will be removed as per applicable data protection laws.',
+  },
+  {
+    id: '9',
+    title: 'Limitation of Liability',
+    body: 'The platform is provided "as is." We do not guarantee the accuracy, completeness, or usefulness of any information on the platform. You are solely responsible for the accuracy of information submitted through your account.',
+  },
+  {
+    id: '10',
+    title: 'Changes to Terms',
+    body: 'We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the updated terms.',
+  },
+  {
+    id: '11',
+    title: 'Contact',
+    body: SUPPORT_EMAIL
+      ? `For questions about these Terms of Service, please contact our support team at ${SUPPORT_EMAIL}.`
+      : 'For questions about these Terms of Service, please contact our support team.',
+  },
+]
+
+// ─── Privacy Policy content ────────────────────────────────────────────────
+// Inlined summary of `PRIVACY_POLICY.md` (12 sections). Rendered inside the
+// `PrivacyPolicyDialog` opened from the Terms stage. Keeping the copy local
+// avoids a network round-trip and ensures the dialog works offline.
+const PRIVACY_POLICY_SECTIONS: { id: string; title: string; body: string }[] = [
+  {
+    id: '1',
+    title: 'Introduction',
+    body: 'Annam.Ai ("we," "us," or "our") operates the AnnaDatha platform. We are committed to protecting your privacy and ensuring that your personal data is handled responsibly. This Privacy Policy explains how we collect, use, store, disclose, and protect information about you when you use the AnnaDatha Platform.',
+  },
+  {
+    id: '2',
+    title: 'Information We Collect',
+    body: 'We collect your mobile number, name, category, location (state, district, block, village), KVK affiliation, language preference, optional profile photo, and the questions, answers and comments you submit. We also collect device information, app usage data, IP address, and login timestamps automatically.',
+  },
+  {
+    id: '3',
+    title: 'How We Use Your Information',
+    body: 'We use your information to create and manage your account, authenticate you via OTP, personalise your experience, deliver relevant content, enable direct messaging, maintain security, detect fraud, send service notifications, respond to support requests, improve the Platform, train AI models from your audio submissions, and comply with legal obligations.',
+  },
+  {
+    id: '4',
+    title: 'Data Sharing and Disclosure',
+    body: 'We do not sell your personal data. We share data only with trusted service providers (cloud hosting, SMS gateway, analytics), within community features (public posts are visible to other users, but your mobile number is not), via direct messages (visible only to sender and recipient), when required by law, or in aggregated form for research and policy.',
+  },
+  {
+    id: '5',
+    title: 'Data Retention',
+    body: 'Personal data is stored on secure servers operated by Annam.Ai or our cloud providers. Account data is retained while your account is active and for up to 3 years after deletion. Audit logs are retained for at least 1 year. Posted content may be retained in anonymised form after account deletion. When no longer needed, we securely delete or anonymise the data.',
+  },
+  {
+    id: '6',
+    title: 'Data Security',
+    body: 'We use encrypted transmission (HTTPS), password hashing (bcrypt), role-based access controls, and regular security reviews. No method of transmission over the internet is 100% secure, but we strive to protect your data.',
+  },
+  {
+    id: '7',
+    title: 'Your Rights',
+    body: 'You have the right to access, correct, delete, withdraw consent for, and request a portable copy of your personal data. You may also raise a grievance — we aim to respond within 30 days. To exercise any of these rights, contact us at the email below.',
+  },
+  {
+    id: '8',
+    title: 'Cookies and Tracking',
+    body: 'The AnnaDatha app does not use browser cookies. We may use equivalent local storage and session-management technologies for keeping you signed in, remembering your language and display preferences, and basic app analytics.',
+  },
+  {
+    id: '9',
+    title: "Children's Privacy",
+    body: 'The Platform is not intended for users under 18 years of age. We do not knowingly collect personal data from minors. If we become aware that we have inadvertently collected data from a minor, we will delete it promptly.',
+  },
+  {
+    id: '10',
+    title: 'Third-Party Links',
+    body: 'The Platform may contain links to external websites or services not operated by us. We are not responsible for the privacy practices of third-party sites. We encourage you to review the privacy policies of any third-party sites you visit.',
+  },
+  {
+    id: '11',
+    title: 'Changes to This Policy',
+    body: 'We may update this Privacy Policy from time to time. Material changes will be communicated by posting the updated policy within the Platform and updating the "Effective Date." We encourage you to review this policy periodically.',
+  },
+  {
+    id: '12',
+    title: 'Contact Us',
+    body: SUPPORT_EMAIL
+      ? `For privacy-related questions, data access requests, or grievances, please contact us at ${SUPPORT_EMAIL}. We aim to respond to all legitimate requests within 30 days.`
+      : 'For privacy-related questions, data access requests, or grievances, please contact us via the AnnaDatha App. We aim to respond to all legitimate requests within 30 days.',
+  },
+]
+
 interface RegisterState { mobileNumber: string }
-type GateStage = 'mobile' | 'otp' | 'wizard'
+type GateStage = 'mobile' | 'otp' | 'terms' | 'wizard'
 
 // â”€â”€â”€ Resend countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -73,11 +212,12 @@ function useCountdown(initial = 0) {
 const GATE_STAGE_LABELS: Record<GateStage, string> = {
   mobile: 'Mobile',
   otp: 'Verify',
+  terms: 'Terms',
   wizard: 'Profile',
 }
 
 function GateProgress({ stage }: { stage: GateStage }) {
-  const order: GateStage[] = ['mobile', 'otp', 'wizard']
+  const order: GateStage[] = ['mobile', 'otp', 'terms', 'wizard']
   const activeIdx = order.indexOf(stage)
   return (
     <div className="mb-4 flex items-center justify-center gap-2">
@@ -342,6 +482,175 @@ function OtpStage({
         </div>
       </form>
     </div>
+  )
+}
+
+// ─── Privacy Policy dialog ─────────────────────────────────────────────────
+// Modal that displays the inlined PRIVACY_POLICY_SECTIONS content. Opened
+// from the Terms stage via the "Read our Privacy Policy →" link. Uses the
+// shared `Dialog` component for overlay + a focus-trapped scrollable body.
+function PrivacyPolicyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0">
+        <DialogHeader className="border-b border-border-subtle px-6 py-4">
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Privacy Policy
+          </DialogTitle>
+          <p className="mt-1 text-xs text-text-secondary">
+            Annam.Ai — AnnaDatha Platform · Effective Date: 30 June 2026
+          </p>
+        </DialogHeader>
+        <div className="max-h-[calc(85vh-88px)] overflow-y-auto px-6 py-4">
+          <ol className="space-y-4">
+            {PRIVACY_POLICY_SECTIONS.map(({ id, title, body }) => (
+              <li key={id} className="space-y-1">
+                <h3 className="text-sm font-bold text-foreground">
+                  {id}. {title}
+                </h3>
+                <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── Terms stage ───────────────────────────────────────────────────────────
+// Mirrors `mobile/src/screens/Auth/TermsScreen.tsx`:
+//   • Top bar with "← Back" + "Terms of Service" title.
+//   • Hero with `FileText` icon, title, and section count subtitle.
+//   • 11 collapsible accordion sections (TERMS_SECTIONS).
+//   • "Read our Privacy Policy →" link → opens PrivacyPolicyDialog.
+//   • "I have read and agree to the Terms of Service and Privacy Policy" checkbox.
+//   • "Confirm & Continue" button (disabled until accepted).
+// The `back` prop returns to the OTP stage; `acceptAndContinue` advances to
+// the wizard. Local state (accepted / openId / showPolicy) lives here so the
+// component owns its UI behaviour independently of the parent.
+interface TermsStageProps {
+  mobileNumber: string
+  back: () => void
+  acceptAndContinue: () => void
+}
+
+function TermsStage({ mobileNumber, back, acceptAndContinue }: TermsStageProps) {
+  const [accepted, setAccepted] = useState(false)
+  const [openId, setOpenId] = useState<string | null>('1')
+  const [showPolicy, setShowPolicy] = useState(false)
+
+  return (
+    <>
+      {/* Top bar */}
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
+        <button
+          type="button"
+          onClick={back}
+          className="min-w-[60px] text-left text-sm font-semibold text-primary hover:underline"
+        >
+          ← Back
+        </button>
+        <h2 className="text-base font-bold text-foreground">Terms of Service</h2>
+        <div className="min-w-[60px]" />
+      </div>
+
+      {/* Scrollable body */}
+      <div className="max-h-[60vh] overflow-y-auto px-4 py-5 sm:px-6">
+        {/* Hero */}
+        <div className="mb-5 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+            <FileText className="h-8 w-8" />
+          </div>
+          <h3 className="text-xl font-extrabold text-foreground">Terms of Service</h3>
+          <p className="mt-1 text-xs text-text-secondary">
+            Read and accept to continue · {TERMS_SECTIONS.length} sections
+          </p>
+        </div>
+
+        {/* Accordion sections */}
+        <div className="mb-5 space-y-1.5">
+          {TERMS_SECTIONS.map(({ id, title, body }) => {
+            const isOpen = openId === id
+            return (
+              <div key={id} className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+                <button
+                  type="button"
+                  onClick={() => setOpenId(isOpen ? null : id)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-variant/40"
+                >
+                  <span className="flex flex-1 items-center gap-3">
+                    <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                      {id}
+                    </span>
+                    <span className="text-sm font-semibold text-foreground">{title}</span>
+                  </span>
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-text-tertiary" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-text-tertiary" />
+                  )}
+                </button>
+                {isOpen && (
+                  <div className="border-t border-border-subtle px-4 py-3">
+                    <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Privacy Policy link */}
+        <button
+          type="button"
+          onClick={() => setShowPolicy(true)}
+          className="mx-auto mb-5 flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline"
+        >
+          <Shield className="h-4 w-4" />
+          Read our Privacy Policy →
+        </button>
+      </div>
+
+      {/* Consent + confirm footer */}
+      <div className="border-t border-border-subtle px-4 py-4 sm:px-6">
+        <label
+          className={cn(
+            'mb-3 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
+            accepted
+              ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-500/40 dark:bg-emerald-500/15'
+              : 'border-border-subtle bg-surface',
+          )}
+        >
+          <input
+            type="checkbox"
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-emerald-500"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+          />
+          <span className="text-xs leading-relaxed text-foreground">
+            I have read and agree to the <span className="font-bold">Terms of Service</span> and{' '}
+            <span className="font-bold">Privacy Policy</span>
+          </span>
+        </label>
+        <Button
+          type="button"
+          onClick={acceptAndContinue}
+          disabled={!accepted}
+          className="w-full shadow-md"
+          size="lg"
+        >
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+          Confirm & Continue
+        </Button>
+        <p className="mt-3 text-center text-[11px] text-text-secondary">
+          Signing up for <span className="font-semibold text-emerald-700 dark:text-emerald-300">+91 {mobileNumber}</span>
+        </p>
+      </div>
+
+      <PrivacyPolicyDialog open={showPolicy} onOpenChange={setShowPolicy} />
+    </>
   )
 }
 
@@ -678,11 +987,12 @@ export function PublicRegisterPage() {
   const state = location.state as RegisterState | null
   const initialMobile = state?.mobileNumber ?? ''
 
-  // â”€â”€ Gate state machine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Mobile â†’ OTP â†’ wizard. When the user arrives from the LoginPage
-  // OTP-success path, `state.mobileNumber` is already set, so we skip
-  // straight to the wizard.
-  const [stage, setStage] = useState<GateStage>(initialMobile ? 'wizard' : 'mobile')
+  // ─── Gate state machine ────────────────────────────────────────────────────
+  // Mobile → OTP → terms → wizard. When the user arrives from the LoginPage
+  // OTP-success path, `state.mobileNumber` is already set, so we skip the
+  // mobile + OTP stages and land on the `terms` stage — the same place the
+  // in-gate OTP flow would have put them.
+  const [stage, setStage] = useState<GateStage>(initialMobile ? 'terms' : 'mobile')
   const [gateMobile, setGateMobile] = useState(initialMobile) // mobile currently awaiting OTP
   const [verifiedMobile, setVerifiedMobile] = useState(initialMobile) // mobile after OTP OK
   const [otp, setOtp] = useState('')
@@ -747,11 +1057,11 @@ export function PublicRegisterPage() {
     try {
       const res = await authApi.verifyOtp(gateMobile, cleaned)
 
-      // New public user â†’ enter the wizard.
+      // New public user → accept terms first, then enter the wizard.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
           setVerifiedMobile(gateMobile)
-          setStage('wizard')
+          setStage('terms')
           countdown.stop()
           return
         }
@@ -893,9 +1203,10 @@ export function PublicRegisterPage() {
       // Within the wizard: go one step back.
       setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4))
     } else {
-      // Step 1 is the first wizard step — return to the OTP stage so the
-      // user can re-verify or change their mobile number.
-      setStage('otp')
+      // Step 1 is the first wizard step — return to the Terms stage so the
+      // user can re-read the ToS, change their acceptance, or click "Back"
+      // again to return to the OTP stage (or to /login for LoginPage users).
+      setStage('terms')
     }
   }
 
@@ -1004,6 +1315,26 @@ export function PublicRegisterPage() {
   }
   const isGateStage = stage !== 'wizard'
 
+  // ─── Terms stage handlers ────────────────────────────────────────────────
+  // The Terms stage sits between the OTP gate and the wizard. From here:
+  //   • "Back" returns to the OTP stage when the user just verified in-gate,
+  //     or bounces to /login when they arrived from LoginPage (since there
+  //     is no OTP stage to go back to in that path).
+  //   • "Confirm & Continue" advances to the wizard, resetting step to 1
+  //     so re-entering the stage always restarts the profile build.
+  function handleTermsBack() {
+    if (initialMobile) {
+      navigate('/login', { replace: true })
+    } else {
+      setStage('otp')
+    }
+  }
+
+  function handleTermsAccept() {
+    setStep(1)
+    setStage('wizard')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-background to-emerald-50/30 dark:from-emerald-950/40 dark:via-background dark:to-emerald-950/30 py-6 px-4">
       <div className="mx-auto max-w-2xl">
@@ -1015,6 +1346,7 @@ export function PublicRegisterPage() {
           <p className="text-sm text-text-secondary">
             {stage === 'mobile' && 'Create your account'}
             {stage === 'otp' && 'Verify your mobile'}
+            {stage === 'terms' && 'Review our terms'}
             {stage === 'wizard' && 'Complete your profile'}
           </p>
         </div>
@@ -1062,6 +1394,13 @@ export function PublicRegisterPage() {
               handleVerifyOtp={handleVerifyOtp}
               handleChangeMobile={handleChangeMobile}
               handleResendOtp={handleResendOtp}
+            />
+          )}
+          {stage === 'terms' && (
+            <TermsStage
+              mobileNumber={mobileNumber}
+              back={handleTermsBack}
+              acceptAndContinue={handleTermsAccept}
             />
           )}
           {stage === 'wizard' && (
