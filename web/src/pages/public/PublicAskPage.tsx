@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2, Send, ArrowLeft, CheckCircle2, AlertTriangle, Search, X } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, CROPS } from '@/constants/public'
 import { MicButton } from '@/components/MicButton'
@@ -177,10 +177,14 @@ export function PublicAskPage() {
 
   useEffect(() => {
     const text = debouncedQuestion.trim()
-    if (text.length < 8) {
+    if (text.length === 0) {
       setAiValidation(null)
       return
     }
+    // Always run the pipeline, even for short input — `isLikelySpam` now
+    // emits `onDeviceAI.spam.tooShort` for `< 3 words`, producing the
+    // "Please describe your agriculture question in more detail." banner
+    // that mobile shows. Mirrors `mobile/src/screens/Question/QuestionScreen.tsx`.
     const seq = ++validationSeqRef.current
     runOnDeviceValidation(text).then((r) => {
       if (seq !== validationSeqRef.current) return // stale response
@@ -190,13 +194,12 @@ export function PublicAskPage() {
     })
   }, [debouncedQuestion])
 
-  // Submit is hard-blocked when the AI flags the text as spam.
+  // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
   const blockedByAi = aiValidation?.verdict === 'fail'
   const showBanner =
     aiValidation &&
     aiValidation.verdict !== 'pass' &&
-    !bannerDismissed &&
-    questionText.trim().length >= 8
+    !bannerDismissed
 
   // ─── Stats (daily limit counter) ──────────────────────────────────────────
   useEffect(() => {
@@ -413,9 +416,33 @@ export function PublicAskPage() {
 
             <div className="flex items-center justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
-              <Button type="submit" disabled={submitting || atLimit || blockedByAi || !questionText.trim() || !domain || !season || !cropType.trim()}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Submit question
+              {/*
+                Mirror mobile `QuestionScreen`'s submit button: when the AI
+                flags the text as spam or "too short" (verdict === 'fail'),
+                show "Not Relevant" + a forward arrow instead of the usual
+                "Submit question" + send icon. Stays disabled so the user can't
+                bypass the validation.
+              */}
+              <Button
+                type="submit"
+                disabled={
+                  submitting ||
+                  atLimit ||
+                  blockedByAi ||
+                  !questionText.trim() ||
+                  !domain ||
+                  !season ||
+                  !cropType.trim()
+                }
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : blockedByAi ? (
+                  <ArrowRight className="h-4 w-4" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {blockedByAi ? 'Not Relevant' : 'Submit question'}
               </Button>
             </div>
           </form>

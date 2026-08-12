@@ -58,6 +58,13 @@ export interface StageResult {
   confidence: number
   /** Optional short description for debug. */
   detail?: string
+  /**
+   * Optional reason key for i18n / per-stage message override. Mirrors the
+   * `reasonKey` field on mobile (`mobile/src/utils/onDeviceAI.ts`). When the
+   * aggregator promotes a failed stage to the top-level verdict, it consults
+   * this key to pick a specific user-facing message (e.g. `spam.tooShort`).
+   */
+  reasonKey?: string
 }
 
 interface CachedQuestion {
@@ -72,8 +79,6 @@ interface CachedQuestion {
 const DUPLICATE_CACHE_KEY = 'web_on_device_ai_duplicate_cache'
 const DUPLICATE_CACHE_MAX_ENTRIES = 50
 const /** ms */ DUPLICATE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1_000 // 7 days
-
-const SHORT_INPUT_THRESHOLD = 8 // characters
 
 // ─── Agriculture Keyword Lexicon ──────────────────────────────────────────────
 //
@@ -335,6 +340,7 @@ function isLikelySpam(text: string): StageResult {
       pass: false,
       confidence: 0.95,
       detail: 'Contains URL or email address.',
+      reasonKey: 'onDeviceAI.spam.contactInfo',
     }
   }
 
@@ -345,18 +351,44 @@ function isLikelySpam(text: string): StageResult {
       pass: false,
       confidence: 0.85,
       detail: 'Contains long numeric sequence.',
+      reasonKey: 'onDeviceAI.spam.contactInfo',
+    }
+  }
+
+  // Question is too short to be substantive. Mirrors mobile `checkSpam`'s
+  // `< 3 words` rule (`mobile/src/utils/onDeviceAI.ts`). This is what produces
+  // the "Your question is too short. Please describe your agriculture
+  // question in more detail." banner on mobile, and on web via
+  // `runOnDeviceValidation`'s aggregation.
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length
+  if (wordCount < 3) {
+    return {
+      pass: false,
+      confidence: 0.85,
+      detail: 'Question is too short.',
+      reasonKey: 'onDeviceAI.spam.tooShort',
     }
   }
 
   // Repeated character spam e.g. "aaaaaaaaa"
   if (/(.)\1{6,}/.test(trimmed)) {
-    return { pass: false, confidence: 0.9, detail: 'Repeated characters.' }
+    return {
+      pass: false,
+      confidence: 0.9,
+      detail: 'Repeated characters.',
+      reasonKey: 'onDeviceAI.spam.repeatedChars',
+    }
   }
 
   // Mostly-uppercase ranting
   const letters = trimmed.replace(/[^a-zA-Z]/g, '')
   if (letters.length >= 20 && letters === letters.toUpperCase()) {
-    return { pass: false, confidence: 0.7, detail: 'All-uppercase.' }
+    return {
+      pass: false,
+      confidence: 0.7,
+      detail: 'All-uppercase.',
+      reasonKey: 'onDeviceAI.spam.allCaps',
+    }
   }
 
   return { pass: true, confidence: 0.95 }
@@ -567,10 +599,10 @@ function checkDuplicate(text: string): StageResult {
 
 /**
  * Run the full on-device validation pipeline against user-typed text.
- * Aggregation rules (mirrored from mobile/src/utils/onDeviceAI.ts):
+ * Aggregation rules (mirrored from `mobile/src/utils/onDeviceAI.ts`):
  *
- *   • If text is too short (< SHORT_INPUT_THRESHOLD chars) → skip and return `ran: false`.
- *   • If spam → verdict = 'fail'.
+ *   • Empty input → skip and return `ran: false` (no banner).
+ *   • If spam (incl. the `< 3 words` "too short" rule) → verdict = 'fail'.
  *   • Else if relevance fails or duplicate → verdict = 'warn'.
  *   • Else → verdict = 'pass'.
  *
@@ -580,22 +612,29 @@ function checkDuplicate(text: string): StageResult {
  */
 export async function runOnDeviceValidation(text: string): Promise<AIValidationResult> {
   const cleaned = text.trim()
-  const initial: AIValidationResult = {
-    verdict: 'pass',
-    message: null,
-    reasonKey: null,
-    stages: {
-      relevance: { pass: true, confidence: 1 },
-      duplicate: { pass: true, confidence: 0 },
-      spam: { pass: true, confidence: 1 },
-    },
-    ran: false,
+
+  // Empty input: skip the pipeline entirely so we don't flash banners on
+  // focus or transient whitespace. Mirrors mobile's `checkSpam` 'empty'
+  // pass-through (no banner shown).
+  if (cleaned.length === 0) {
+    return {
+      verdict: 'pass',
+      message: null,
+      reasonKey: null,
+      stages: {
+        relevance: { pass: true, confidence: 1 },
+        duplicate: { pass: true, confidence: 0 },
+        spam: { pass: true, confidence: 1 },
+      },
+      ran: false,
+    }
   }
 
-  if (cleaned.length < SHORT_INPUT_THRESHOLD) {
-    return initial
-  }
-
+  // Always run the full pipeline, even on short input. The spam stage now
+  // handles the "< 3 words" rule (see `isLikelySpam`) and emits
+  // `onDeviceAI.spam.tooShort`, which we resolve to the friendly
+  // "Please describe your agriculture question in more detail." banner —
+  // mirroring mobile `mobile/src/utils/onDeviceAI.ts` behaviour.
   const relevance = checkRelevance(cleaned)
   const duplicate = checkDuplicate(cleaned)
   const spam = isLikelySpam(cleaned)
@@ -604,10 +643,19 @@ export async function runOnDeviceValidation(text: string): Promise<AIValidationR
   let message: string | null = null
   let reasonKey: string | null = null
 
+  // Priority (mirrors mobile): spam > relevance > duplicate
+  //   spam FAIL        → fail  (hard block, cannot submit)
+  //   relevance FAIL   → warn  (banner shown, user may still submit)
+  //   duplicate FAIL   → warn  (banner shown, user may still submit)
   if (!spam.pass) {
     verdict = 'fail'
-    message = 'Your question looks like spam or promotional content.'
-    reasonKey = 'onDeviceAI.spamDetected'
+    reasonKey = spam.reasonKey ?? 'onDeviceAI.spamDetected'
+    if (reasonKey === 'onDeviceAI.spam.tooShort') {
+      message =
+        'Your question is too short. Please describe your agriculture question in more detail.'
+    } else {
+      message = 'Your question looks like spam or promotional content.'
+    }
   } else if (!relevance.pass) {
     verdict = 'warn'
     message =
