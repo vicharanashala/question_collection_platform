@@ -37,6 +37,8 @@ const PublicWalletPage               = lazyRoute(() => import('@/pages/public/Pu
 const PublicReportsPage              = lazyRoute(() => import('@/pages/public/PublicReportsPage').then(m => ({ default: m.default })))
 const PublicReportDetailPage         = lazyRoute(() => import('@/pages/public/PublicReportDetailPage').then(m => ({ default: m.default })))
 const PublicPaymentMethodsPage       = lazyRoute(() => import('@/pages/public/PublicPaymentMethodsPage').then(m => ({ default: m.PublicPaymentMethodsPage })))
+const PublicTermsPage                = lazyRoute(() => import('@/pages/public/PublicTermsPage').then(m => ({ default: m.default })))
+const PublicPrivacyPage              = lazyRoute(() => import('@/pages/public/PublicPrivacyPage').then(m => ({ default: m.default })))
 
 /** Pages visible per role (staff / admin side) */
 const PAGE_ROLES: Record<string, UserRole[]> = {
@@ -175,6 +177,8 @@ export default function App() {
           <Route path="reports"             element={<PublicReportsPage />} />
           <Route path="reports/:reportId"   element={<PublicReportDetailPage />} />
           <Route path="payment-methods"    element={<PublicPaymentMethodsPage />} />
+          <Route path="terms"              element={<PublicTermsPage />} />
+          <Route path="privacy"            element={<PublicPrivacyPage />} />
         </Route>
 
         {/* ── Fallback ────────────────────────────────────────────────────── */}

@@ -143,7 +143,7 @@ function AccountRow({ icon: Icon, label, value, isLast, onClick }: AccountRowPro
       </div>
       <div className="flex min-w-0 items-center gap-1 text-right">
         <span className="truncate text-sm font-semibold text-foreground">
-          {value || <span className="text-text-tertiary">{em}</span>}
+          {value || <span className="text-text-tertiary">{'—'}</span>}
         </span>
         {interactive && <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" />}
       </div>
@@ -320,13 +320,21 @@ export function PublicProfilePage() {
     navigate('/public/reports')
   }
   function handleTerms() {
-    toast.info('Terms of Service — coming soon to the web app')
+    navigate('/public/terms')
   }
   function handlePrivacy() {
-    toast.info('Privacy Policy — coming soon to the web app')
+    navigate('/public/privacy')
   }
   function handleContact() {
-    window.location.href = 'mailto:support@annadatha.app?subject=AnnaDatha%20Support'
+    const email = (import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined
+    if (!email) {
+      toast.error('Support email is not configured for this environment.')
+      return
+    }
+    // Gmail web compose instead of a mailto: link — works even when the
+    // browser/OS has no default mail client registered (common on dev machines).
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent('AnnaDatha Support')}`
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   return (

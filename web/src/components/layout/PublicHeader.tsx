@@ -15,6 +15,8 @@ const titles: Record<string, string> = {
   '/public/profile': 'Profile',
   '/public/wallet': 'Wallet',
   '/public/payment-methods': 'Payment Methods',
+  '/public/terms': 'Terms of Service',
+  '/public/privacy': 'Privacy Policy',
 }
 
 export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
