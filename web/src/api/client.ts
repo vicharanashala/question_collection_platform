@@ -943,6 +943,25 @@ export const reportsApi = {
       { method: 'POST', body: JSON.stringify({ message }) },
       false,
     ),
+
+  /** List the current (authenticated) user's own reports — backed by GET /reports/my */
+  listMy: (params: { page?: number; limit?: number } = {}) => {
+    const p: Record<string, string> = {}
+    if (params.page !== undefined)  p.page  = String(params.page)
+    if (params.limit !== undefined) p.limit = String(params.limit)
+    const qs = new URLSearchParams(p).toString()
+    return request<{
+      items: Report[]
+      total: number
+      page: number
+      limit: number
+      pages: number
+    }>(`/reports/my${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  /** Get a single report belonging to the current user — backed by GET /reports/my/:id */
+  getMy: (reportId: string) =>
+    request<Report>(`/reports/my/${reportId}`, {}, false),
 }
 
 // ─── FAQ API ──────────────────────────────────────────────────────────────────

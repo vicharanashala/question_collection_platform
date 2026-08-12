@@ -150,7 +150,7 @@ function AccountRow({ icon: Icon, label, value, isLast, onClick }: AccountRowPro
     </>
   )
   const baseClasses = cn(
-    'flex items-center justify-between gap-3 px-4 py-3',
+    'flex items-center justify-between gap-3 px-4 py-4',
     !isLast && 'border-b border-slate-100 dark:border-slate-800',
     interactive && 'transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50',
   )
@@ -317,7 +317,7 @@ export function PublicProfilePage() {
   }
 
   function handleReport() {
-    toast.info('Report an Issue is available in the mobile app')
+    navigate('/public/reports')
   }
   function handleTerms() {
     toast.info('Terms of Service — coming soon to the web app')
@@ -472,7 +472,7 @@ export function PublicProfilePage() {
       </div>
 
       {/* — 4. Account section —————————————————————— */}
-      <section>
+      <section className="space-y-4">
         <SectionHeader
           icon={Users}
           title="Account"

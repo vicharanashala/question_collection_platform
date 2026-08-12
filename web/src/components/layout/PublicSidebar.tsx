@@ -6,7 +6,6 @@ import {
   Home,
   MessageSquarePlus,
   ListChecks,
-  HelpCircle,
   User,
   Wallet,
   LogOut,
@@ -21,7 +20,6 @@ const navItems = [
   { to: '/public',           label: 'Home',          icon: Home,             end: true },
   { to: '/public/ask',       label: 'Ask Question',  icon: MessageSquarePlus },
   { to: '/public/questions', label: 'My Questions',  icon: ListChecks },
-  { to: '/public/faqs',      label: 'Help & FAQ',    icon: HelpCircle },
   { to: '/public/wallet',    label: 'Wallet',        icon: Wallet },
   { to: '/public/profile',   label: 'Profile',       icon: User },
 ]
