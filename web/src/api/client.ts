@@ -40,7 +40,7 @@ const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
 
-function getAccessToken(): string | null {
+export function getAccessToken(): string | null {
   return localStorage.getItem('access_token')
 }
 

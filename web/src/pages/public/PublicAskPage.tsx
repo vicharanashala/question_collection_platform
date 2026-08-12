@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage } from '@/api/client'
@@ -9,9 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2, Send, Lightbulb, ArrowLeft, CheckCircle2, AlertTriangle, Search, X } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, CheckCircle2, AlertTriangle, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, CROPS } from '@/constants/public'
+import { MicButton } from '@/components/MicButton'
+import { AIValidationBanner } from '@/components/AIValidationBanner'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import {
+  runOnDeviceValidation,
+  cacheQuestionForDuplicateDetection,
+  type AIValidationResult,
+} from '@/utils/onDeviceAI'
 
 interface DuplicateInfo {
   matchedQuestion: string
@@ -156,6 +164,41 @@ export function PublicAskPage() {
 
   const atLimit = stats != null && stats.remainingToday <= 0
 
+  // ─── On-device AI validation pipeline ─────────────────────────────────────
+  // Debounced run of `runOnDeviceValidation` against the live question text.
+  // Mirrors the mobile `QuestionScreen` behaviour: warn the user when their
+  // text looks off-topic or duplicates a recent submission, block submit on
+  // spam verdict.
+  const debouncedQuestion = useDebouncedValue(questionText, 600)
+  const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+  // Sequence counter prevents out-of-order results from clobbering the latest.
+  const validationSeqRef = useRef(0)
+
+  useEffect(() => {
+    const text = debouncedQuestion.trim()
+    if (text.length < 8) {
+      setAiValidation(null)
+      return
+    }
+    const seq = ++validationSeqRef.current
+    runOnDeviceValidation(text).then((r) => {
+      if (seq !== validationSeqRef.current) return // stale response
+      setAiValidation(r)
+      // Reset dismiss when the verdict category changes
+      setBannerDismissed(false)
+    })
+  }, [debouncedQuestion])
+
+  // Submit is hard-blocked when the AI flags the text as spam.
+  const blockedByAi = aiValidation?.verdict === 'fail'
+  const showBanner =
+    aiValidation &&
+    aiValidation.verdict !== 'pass' &&
+    !bannerDismissed &&
+    questionText.trim().length >= 8
+
+  // ─── Stats (daily limit counter) ──────────────────────────────────────────
   useEffect(() => {
     questionApi.getMyStats()
       .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
@@ -171,6 +214,8 @@ export function PublicAskPage() {
     if (!cropType.trim()) { toast.error('Please enter the crop type'); return }
     if (atLimit) { toast.error('You have reached the daily submission limit'); return }
     if (!user?.state || !user?.district) { toast.error('Your profile is missing location info — please update it.'); return }
+    // Hard block: AI flagged as spam. Don't waste a server round-trip.
+    if (blockedByAi) { toast.error('Please rewrite your question so it does not look like spam.'); return }
 
     setSubmitting(true)
     try {
@@ -194,10 +239,18 @@ export function PublicAskPage() {
         return
       }
       toast.success(res.message || 'Question submitted!')
+      // Cache the submitted question so future drafts are checked against it
+      // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
+      // endpoint returns either `{ id: string, status, message }` (current
+      // shape) or `{ id, question: { id }, ... }` (newer variants) — handle
+      // both without throwing.
+      const newId: string | undefined =
+        (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+      cacheQuestionForDuplicateDetection(questionText.trim(), newId)
       setSubmitted(true)
       questionApi.getMyStats()
         .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-        .catch(() => { })
+        .catch(() => undefined)
     } catch (err) {
       toast.error(getErrorMessage(err, 'Could not submit your question.'))
     } finally {
@@ -285,6 +338,15 @@ export function PublicAskPage() {
                 <span className="text-text-tertiary">Be specific — include crop, location, and what you've already tried.</span>
                 <span className={questionText.length > MAX_QUESTION_CHARS - 50 ? 'text-amber-600 font-semibold' : 'text-text-tertiary'}>{questionText.length}/{MAX_QUESTION_CHARS}</span>
               </div>
+              {/* Inline AI validation banner — same semantics as the mobile
+                  `AIValidationBanner`: warns on off-topic / duplicate, blocks
+                  on spam. Only rendered when there's something to surface. */}
+              {showBanner && aiValidation && (
+                <AIValidationBanner
+                  result={aiValidation}
+                  onDismiss={() => setBannerDismissed(true)}
+                />
+              )}
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -322,12 +384,36 @@ export function PublicAskPage() {
                 </svg>
               </button>
             </div>
-            <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3 text-xs text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-200">
-              <p className="flex items-start gap-1.5"><Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />Tip: include clear photos if you can — they help experts answer faster. (Image upload coming soon to the web.)</p>
+
+            {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
+                 Disabled when the daily limit is reached or the AI flagged
+                 the text as spam, so the user can't circumvent validation
+                 by typing fresh text after submitting a flagged one. */}
+            <div className="rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
+              <MicButton
+                disabled={atLimit || blockedByAi}
+                onRecordingStart={() => {
+                  // Clear any stale banner dismissal when a new recording
+                  // starts so the user can re-evaluate their question.
+                  setBannerDismissed(false)
+                }}
+                onTranscribed={(text) => {
+                  setQuestionText((prev) => {
+                    const base = prev.trim()
+                    // Append with a space separator when joining with prior text
+                    return base ? `${base} ${text}` : text
+                  })
+                  // Re-focus the textarea so the user can edit immediately
+                  requestAnimationFrame(() => {
+                    document.getElementById('q')?.focus()
+                  })
+                }}
+              />
             </div>
+
             <div className="flex items-center justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
-              <Button type="submit" disabled={submitting || atLimit || !questionText.trim() || !domain || !season || !cropType.trim()}>
+              <Button type="submit" disabled={submitting || atLimit || blockedByAi || !questionText.trim() || !domain || !season || !cropType.trim()}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 Submit question
               </Button>
