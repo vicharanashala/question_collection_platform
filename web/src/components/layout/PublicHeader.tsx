@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Menu } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Menu, Bell, Trophy } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
+import { notificationApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
@@ -17,6 +18,8 @@ const titles: Record<string, string> = {
   '/public/payment-methods': 'Payment Methods',
   '/public/terms': 'Terms of Service',
   '/public/privacy': 'Privacy Policy',
+  '/public/notifications': 'Notifications',
+  '/public/leaderboard': 'Leaderboard',
 }
 
 export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
@@ -26,6 +29,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   const { theme, toggleTheme } = useTheme()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const title = titles[pathname] ?? 'AnnaDatha'
@@ -38,6 +42,15 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  // Refresh the unread badge on mount and whenever the user navigates away
+  // from the notifications page (covers "just read some notifications").
+  useEffect(() => {
+    if (pathname === '/public/notifications') return
+    notificationApi.getNotifications({ page: 1, limit: 1 })
+      .then((res) => setUnreadCount(res.unread))
+      .catch(() => {})
+  }, [pathname])
 
   function confirmLogout() {
     setLogoutConfirmOpen(false)
@@ -57,6 +70,17 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
         <h1 className="text-base font-bold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
+        <button onClick={() => navigate('/public/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Notifications" title="Notifications">
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-0.5 text-[9px] font-bold leading-none text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Leaderboard" title="Leaderboard">
+          <Trophy className="h-4 w-4" />
+        </button>
         <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>

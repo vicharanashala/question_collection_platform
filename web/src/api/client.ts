@@ -744,7 +744,7 @@ export const notificationApi = {
   getNotifications: (params: { page?: number; limit?: number } = {}) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    return request<{ items: Notification[]; unreadCount: number; total: number; page: number; pages: number }>(
+    return request<{ notifications: Notification[]; unread: number; total: number }>(
       `/users/me/notifications${qs ? `?${qs}` : ''}`,
     )
   },
@@ -756,6 +756,18 @@ export const notificationApi = {
   markAllRead: () =>
     request<void>(`/users/me/notifications/read-all`, { method: 'PATCH' }, false)
       .finally(() => invalidateCache('/api/users/me/notifications')),
+}
+
+// ─── Leaderboard API ────────────────────────────────────────────────────────
+
+export const leaderboardApi = {
+  getLeaderboard: (params: { limit?: number; offset?: number } = {}) => {
+    const sp = new URLSearchParams()
+    if (params.limit !== undefined) sp.set('limit', String(params.limit))
+    if (params.offset !== undefined) sp.set('offset', String(params.offset))
+    const qs = sp.toString()
+    return request<import('@/types').LeaderboardResponse>(`/users/me/leaderboard${qs ? `?${qs}` : ''}`)
+  },
 }
 
 // ─── Curator API ───────────────────────────────────────────────────────────

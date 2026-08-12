@@ -287,6 +287,24 @@ export interface PaginatedResponse<T> {
   pages: number
 }
 
+// ─── Leaderboard ────────────────────────────────────────────────────────────
+
+export interface LeaderboardEntry {
+  rank: number
+  userId: string
+  name: string
+  totalEarned: number
+  totalQuestions: number
+  medal: 'gold' | 'silver' | 'bronze' | null
+  isCurrentUser: boolean
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[]
+  userRank: number | null
+  total: number
+}
+
 // ─── Analytics (Task 11) ────────────────────────────────────────────────────────
 
 export interface SignupTrendPoint {
