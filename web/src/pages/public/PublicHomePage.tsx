@@ -1,42 +1,22 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { adminApi, questionApi, walletApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
-  FileText, BookOpen, User, MessageSquare, Sparkles, TrendingUp, Wallet,
-  Trophy, Calendar, PenLine, Lightbulb, ArrowRight, Info, Leaf,
+  Wallet, Trophy, Calendar, PenLine, Lightbulb, ArrowRight, Info, Leaf,
+  Sprout, MapPin, CheckCircle2, Clock, PenSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { ReactNode } from 'react'
-import { REWARD_TIERS } from '@/constants/public'
+import { REWARD_TIERS, categoryLabel } from '@/constants/public'
 
-interface MyStats { totalQuestions?: number; totalApproved?: number; totalAnswers?: number }
-
-interface PublicActionCardProps {
-  icon: ReactNode
-  label: string
-  subtitle: string
-  onClick: () => void
-  color: 'emerald' | 'blue' | 'violet' | 'amber'
-}
-
-function PublicActionCard({ icon, label, subtitle, onClick, color }: PublicActionCardProps) {
-  const palettes: Record<typeof color, string> = {
-    emerald: 'from-emerald-500/15 to-emerald-500/5 border-emerald-100 text-emerald-700',
-    blue: 'from-blue-500/15 to-blue-500/5 border-blue-100 text-blue-700',
-    violet: 'from-violet-500/15 to-violet-500/5 border-violet-100 text-violet-700',
-    amber: 'from-amber-500/15 to-amber-500/5 border-amber-100 text-amber-700',
-  }
-  const textColor = palettes[color].split(' ').pop() ?? 'text-emerald-700'
-  return (
-    <button onClick={onClick} className={cn('rounded-xl border bg-gradient-to-br p-4 text-left transition-all hover:shadow-md hover:-translate-y-0.5', palettes[color])}>
-      <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg bg-white/80', textColor)}>{icon}</div>
-      <p className="mt-3 text-sm font-bold text-foreground">{label}</p>
-      <p className="text-xs text-text-secondary">{subtitle}</p>
-    </button>
-  )
+interface Stats {
+  dailyCount: number
+  remainingToday: number
+  totalApproved: number
+  dailyLimit?: number
+  [k: string]: unknown
 }
 
 interface InfoTipProps {
@@ -61,18 +41,65 @@ function InfoTip({ label, description }: InfoTipProps) {
   )
 }
 
-// Tier display config — mirrors the visual style on mobile (Bronze → Silver → Gold).
-// Source-of-truth ranges live in REWARD_TIERS; this is presentation only.
+interface StatTileProps {
+  icon: ReactNode
+  label: string
+  value: string
+  iconClass: string
+}
+
+function StatTile({ icon, label, value, iconClass }: StatTileProps) {
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-1.5 p-3">
+        <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg', iconClass)}>
+          {icon}
+        </span>
+        <p className="text-base font-bold leading-tight text-foreground">{value}</p>
+        <p className="text-[11px] leading-tight text-text-secondary">{label}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface QuickActionProps {
+  icon: ReactNode
+  iconWrapClass: string
+  iconClass: string
+  label: string
+  sub: string
+  onClick: () => void
+}
+
+function QuickAction({ icon, iconWrapClass, iconClass, label, sub, onClick }: QuickActionProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-start gap-2.5 rounded-xl border border-emerald-100 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md dark:border-emerald-900/40 dark:bg-surface dark:hover:border-emerald-800"
+    >
+      <span className={cn('flex h-10 w-10 items-center justify-center rounded-lg', iconWrapClass)}>
+        <span className={iconClass}>{icon}</span>
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-foreground">{label}</p>
+        <p className="text-xs text-text-secondary">{sub}</p>
+      </div>
+    </button>
+  )
+}
+
+// Tier display config — mirrors the mobile home screen's Bronze → Silver → Gold
+// step path. Source-of-truth ranges live in REWARD_TIERS; this is presentation only.
 const TIER_DISPLAY = [
   { key: 'bronze', label: 'Bronze', bg: 'bg-orange-600', text: 'text-orange-600', track: 'bg-orange-600' },
-  { key: 'silver', label: 'Silver', bg: 'bg-slate-400', text: 'text-slate-500',  track: 'bg-slate-400' },
-  { key: 'gold',   label: 'Gold',   bg: 'bg-amber-500', text: 'text-amber-500',  track: 'bg-amber-500' },
+  { key: 'silver', label: 'Silver', bg: 'bg-slate-400',  text: 'text-slate-500',  track: 'bg-slate-400' },
+  { key: 'gold',   label: 'Gold',   bg: 'bg-amber-500',  text: 'text-amber-500',  track: 'bg-amber-500' },
 ] as const
 
 export function PublicHomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [stats, setStats] = useState<MyStats | null>(null)
+  const [stats, setStats] = useState<Stats | null>(null)
   const [balance, setBalance] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [dailyLimit, setDailyLimit] = useState<number>(20)
@@ -85,8 +112,9 @@ export function PublicHomePage() {
       .then(([s, w]) => {
         if (!alive) return
         if (s.status === 'fulfilled') {
-          setStats(s.value)
-          setDailyLimit((s.value as { dailyLimit?: number }).dailyLimit ?? 20)
+          const v = s.value as Stats
+          setStats(v)
+          setDailyLimit(v.dailyLimit ?? 20)
         }
         if (w.status === 'fulfilled') setBalance(w.value.balance ?? 0)
       })
@@ -95,116 +123,133 @@ export function PublicHomePage() {
 
     // Try to read the configured edit-window length so the tip row matches
     // what staff have set. The endpoint is admin-scoped, so a public user
-    // gets a 403 and we fall back to "closed" (matches the screenshot).
+    // gets a 403 and we fall back to "closed" (matches mobile).
     adminApi.getConfig()
       .then((res) => {
         if (!alive) return
         const found = (res.items ?? []).find((c) => c.key === 'question_edit_window_seconds')
         setEditWindowSec(found?.value ?? 0)
       })
-      .catch(() => { /* public users can't read admin config — default 0 */ })
+      .catch(() => { /* public users can't read admin config -- default 0 */ })
 
     return () => { alive = false }
   }, [])
 
-  const approved = stats?.totalApproved ?? 0
-  const currentTier = REWARD_TIERS.find((t) => approved >= t.min && approved <= t.max) ?? REWARD_TIERS[0]
-  const nextTier = REWARD_TIERS.find((t) => t.min > approved)
-  const progressToNext = nextTier ? Math.min(100, Math.round(((approved - currentTier.min + 1) / (nextTier.min - currentTier.min)) * 100)) : 100
-  const greeting = (() => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening' })()
+  const greeting = (() => {
+    const h = new Date().getHours()
+    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+  })()
   const name = user?.name?.split(' ')[0] || 'Friend'
+  const isVerified = user?.verificationStatus === 'verified'
+  const initials = (user?.name?.charAt(0) || '?').toUpperCase()
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <Card className="border-emerald-100 bg-gradient-to-br from-emerald-500/8 via-emerald-500/3 to-transparent dark:border-emerald-900/40">
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{greeting}</p>
-              <h1 className="mt-1 truncate text-2xl font-bold text-foreground">{name} 🙏</h1>
-              <p className="mt-1 text-sm text-text-secondary">What can we help you grow today?</p>
-            </div>
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-2xl">🌾</div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="mx-auto max-w-2xl space-y-5 pb-6">
+      {/* Hero greeting card -- mirrors the mobile home screen */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-5 text-white shadow-md">
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" aria-hidden="true" />
+        <div className="absolute -right-2 bottom-0 h-20 w-20 rounded-full bg-white/5" aria-hidden="true" />
 
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><Wallet className="h-5 w-5" /></div>
-              <div>
-                <p className="text-xs text-text-tertiary">Wallet Balance</p>
-                <p className="text-lg font-bold text-foreground">₹{loading ? '…' : balance.toFixed(0)}</p>
-              </div>
-            </div>
-            <Link to="/public/profile" className="text-xs font-medium text-emerald-700 hover:underline">View</Link>
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-white/80">{greeting},</p>
+            <h1 className="mt-0.5 truncate text-2xl font-bold">{name}</h1>
+            {user?.category && (
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium">
+                <Sprout className="h-3.5 w-3.5" />
+                {categoryLabel(user.category)}
+              </span>
+            )}
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <PublicActionCard color="emerald" icon={<MessageSquare className="h-5 w-5" />} label="Ask a Question" subtitle="Get expert answers" onClick={() => navigate('/public/ask')} />
-        <PublicActionCard color="blue" icon={<FileText className="h-5 w-5" />} label="My Questions" subtitle={`${stats?.totalQuestions ?? 0} asked`} onClick={() => navigate('/public/questions')} />
-        <PublicActionCard color="violet" icon={<BookOpen className="h-5 w-5" />} label="Help & FAQ" subtitle="Browse articles" onClick={() => navigate('/public/faqs')} />
-        <PublicActionCard color="amber" icon={<User className="h-5 w-5" />} label="Profile" subtitle="Account settings" onClick={() => navigate('/public/profile')} />
+          <div className="relative shrink-0">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/25 text-xl font-bold backdrop-blur-sm">
+              {initials}
+            </div>
+            {isVerified && (
+              <span
+                className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-emerald-600 bg-emerald-400 text-white"
+                aria-label="Verified user"
+              >
+                <CheckCircle2 className="h-3 w-3" />
+              </span>
+            )}
+          </div>
+        </div>
+
+        {user?.state && (
+          <div className="relative mt-3 flex items-center gap-1.5 text-xs text-white/85">
+            <MapPin className="h-3.5 w-3.5" />
+            <span className="truncate">
+              {user.state}
+              {user.district ? ` > ${user.district}` : ''}
+            </span>
+          </div>
+        )}
       </div>
 
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Reward Tier</p>
-              <p className="mt-1 text-lg font-bold text-foreground flex items-center gap-1.5"><Sparkles className="h-4 w-4 text-amber-500" />{currentTier.reward} pts per answer</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-text-tertiary">Approved</p>
-              <p className="text-2xl font-bold text-foreground">{loading ? '…' : approved}</p>
-            </div>
-          </div>
-          <div className="mt-4 space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-text-tertiary">
-              <span>Tier {REWARD_TIERS.indexOf(currentTier) + 1} of {REWARD_TIERS.length}</span>
-              {nextTier && <span>{nextTier.min - approved} to next tier → ₹{nextTier.reward}/answer</span>}
-              {!nextTier && <span className="text-emerald-700 font-semibold">Top tier reached 🎉</span>}
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-950/30">
-              <div className="h-full bg-emerald-500 transition-all" style={{ width: `${progressToNext}%` }} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats row -- three tiles mirroring mobile (Wallet / Today / Remaining) */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatTile
+          icon={<Wallet className="h-4 w-4" />}
+          label="Wallet"
+          value={loading ? '...' : `\u20B9${balance.toFixed(0)}`}
+          iconClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+        />
+        <StatTile
+          icon={<CheckCircle2 className="h-4 w-4" />}
+          label="Today"
+          value={loading ? '...' : stats ? `${stats.dailyCount} done` : '0'}
+          iconClass="bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
+        />
+        <StatTile
+          icon={<Clock className="h-4 w-4" />}
+          label="Remaining"
+          value={loading ? '...' : stats ? `${stats.remainingToday}` : '0'}
+          iconClass="bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+        />
+      </div>
+{/* Quick Actions -- mirrors mobile home screen */}
+      <section aria-labelledby="quick-actions-heading">
+        <div className="mb-3 flex items-center gap-1.5">
+          <h3 id="quick-actions-heading" className="text-base font-bold text-foreground">Quick Actions</h3>
+          <InfoTip label="About quick actions" description="Jump straight to the two things you do most: ask a new question or open your wallet to view earnings." />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <QuickAction
+            icon={<PenSquare className="h-5 w-5" />}
+            iconWrapClass="bg-emerald-500/10"
+            iconClass="text-emerald-700 dark:text-emerald-400"
+            label="Submit a Question"
+            sub="Get expert answers"
+            onClick={() => navigate('/public/ask')}
+          />
+          <QuickAction
+            icon={<Wallet className="h-5 w-5" />}
+            iconWrapClass="bg-emerald-500/10"
+            iconClass="text-emerald-700 dark:text-emerald-400"
+            label="My Wallet"
+            sub="View balance & history"
+            onClick={() => navigate('/public/wallet')}
+          />
+        </div>
+      </section>
 
-      <Card>
-        <CardContent className="p-5">
-          <p className="text-sm font-bold text-foreground flex items-center gap-1.5"><TrendingUp className="h-4 w-4 text-emerald-600" />Your activity</p>
-          <div className="mt-3 grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-lg bg-emerald-50 p-2.5 dark:bg-emerald-950/20"><p className="text-xl font-bold text-emerald-700">{loading ? '…' : stats?.totalQuestions ?? 0}</p><p className="text-[10px] uppercase tracking-wider text-text-tertiary mt-0.5">Asked</p></div>
-            <div className="rounded-lg bg-blue-50 p-2.5 dark:bg-blue-950/20"><p className="text-xl font-bold text-blue-700">{loading ? '…' : stats?.totalApproved ?? 0}</p><p className="text-[10px] uppercase tracking-wider text-text-tertiary mt-0.5">Approved</p></div>
-            <div className="rounded-lg bg-violet-50 p-2.5 dark:bg-violet-950/20"><p className="text-xl font-bold text-violet-700">{loading ? '…' : stats?.totalAnswers ?? 0}</p><p className="text-[10px] uppercase tracking-wider text-text-tertiary mt-0.5">Answers</p></div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Earn Rewards (mirrors mobile home screen) ─────────────────────── */}
+      {/* Earn Rewards -- mirrors the mobile home screen */}
       <section aria-labelledby="earn-rewards-heading">
         <div className="mb-3">
           <div className="flex items-center gap-1.5">
             <h3 id="earn-rewards-heading" className="text-base font-bold text-foreground">Earn Rewards</h3>
-            <InfoTip label="About rewards" description="Earn more as your approved question count grows — up to Rs.10 per question once you reach the Gold tier." />
+            <InfoTip label="About rewards" description="Earn more as your approved question count grows -- up to Rs.10 per question once you reach the Gold tier." />
           </div>
-          <p className="text-xs text-text-secondary">Rs.10 for 251–500 approved questions</p>
+          <p className="text-xs text-text-secondary">Rs.10 for 251-500 approved questions</p>
         </div>
 
         <Card>
           <CardContent className="p-5">
             <div className="relative">
-              {/* Background track spanning the three tier nodes */}
               <div className="pointer-events-none absolute left-[18px] right-[18px] top-[17px] h-0.5 bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
-              {/* Bronze → Silver connector (Bronze colour) */}
               <div className="pointer-events-none absolute left-[18px] top-[16px] h-1 w-[calc(50%-18px)] rounded-full bg-orange-600" aria-hidden="true" />
-              {/* Silver → Gold connector (Silver colour) */}
               <div className="pointer-events-none absolute left-1/2 top-[16px] h-1 w-[calc(50%-18px)] rounded-full bg-slate-400" aria-hidden="true" />
 
               <div className="relative flex items-start justify-between gap-2">
@@ -213,10 +258,7 @@ export function PublicHomePage() {
                   return (
                     <div key={tier.key} className="flex flex-1 flex-col items-center">
                       <div
-                        className={cn(
-                          'z-10 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-sm',
-                          tier.bg,
-                        )}
+                        className={cn('z-10 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-sm', tier.bg)}
                         aria-hidden="true"
                       >
                         <Leaf className="h-4 w-4" />
@@ -224,7 +266,7 @@ export function PublicHomePage() {
                       <div className="mt-3 text-center">
                         <p className={cn('text-xs font-extrabold', tier.text)}>{tier.label}</p>
                         <p className="mt-0.5 text-[10px] text-text-secondary">
-                          {range.min}–{range.max}Qs
+                          {range.min}-{range.max}Qs
                         </p>
                         <p className="mt-1 text-base font-extrabold text-foreground">Rs.{range.reward}/Q</p>
                       </div>
@@ -236,7 +278,6 @@ export function PublicHomePage() {
           </CardContent>
         </Card>
 
-        {/* "Reach Gold Tier" callout — routes to the ask page */}
         <button
           type="button"
           onClick={() => navigate('/public/ask')}
@@ -255,7 +296,8 @@ export function PublicHomePage() {
         </button>
       </section>
 
-      {/* ── Submission Tips (mirrors mobile home screen) ───────────────────── */}
+
+{/* Submission Tips (mirrors mobile home screen) */}
       <section aria-labelledby="submission-tips-heading">
         <div className="mb-3 flex items-center gap-1.5">
           <h3 id="submission-tips-heading" className="text-base font-bold text-foreground">Submission Tips</h3>
@@ -268,7 +310,7 @@ export function PublicHomePage() {
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-50 dark:bg-emerald-950/30" aria-hidden="true">
                   <Calendar className="h-3.5 w-3.5 text-emerald-600" />
                 </span>
-                <span className="text-sm text-foreground">Daily limit — {dailyLimit} questions per day</span>
+                <span className="text-sm text-foreground">Daily limit -- {dailyLimit} questions per day</span>
               </li>
               <li className="flex items-center gap-3 p-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-50 dark:bg-amber-950/30" aria-hidden="true">
@@ -277,7 +319,7 @@ export function PublicHomePage() {
                 <span className="text-sm text-foreground">
                   {editWindowSec === 0
                     ? 'Questions cannot be edited after submission'
-                    : `Edit window — ${editWindowSec} seconds after submission`}
+                    : `Edit window -- ${editWindowSec} seconds after submission`}
                 </span>
               </li>
               <li className="flex items-center gap-3 p-3">
@@ -291,7 +333,7 @@ export function PublicHomePage() {
         </Card>
       </section>
 
-      <p className="text-center text-xs text-text-tertiary">AnnaDatha · Made for Indian farmers</p>
+      <p className="pt-2 text-center text-xs text-text-tertiary">AnnaDatha - Made for Indian farmers</p>
     </div>
   )
 }
