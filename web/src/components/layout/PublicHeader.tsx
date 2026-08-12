@@ -1,37 +1,40 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Menu, Bell, Trophy } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Menu, Bell, Trophy, Languages } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { notificationApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-
-const titles: Record<string, string> = {
-  '/public': 'Home',
-  '/public/ask': 'Submit',
-  '/public/questions': 'Submissions',
-  '/public/faqs': 'Help & FAQ',
-  '/public/profile': 'Profile',
-  '/public/wallet': 'Wallet',
-  '/public/payment-methods': 'Payment Methods',
-  '/public/terms': 'Terms of Service',
-  '/public/privacy': 'Privacy Policy',
-  '/public/notifications': 'Notifications',
-  '/public/leaderboard': 'Leaderboard',
-}
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { t } = useTranslation()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  const titles: Record<string, string> = {
+    '/public': t('nav.home'),
+    '/public/ask': t('nav.submit'),
+    '/public/questions': t('nav.submissions'),
+    '/public/faqs': t('faq.title'),
+    '/public/profile': t('nav.profile'),
+    '/public/wallet': t('nav.wallet'),
+    '/public/payment-methods': t('profile.paymentMethods'),
+    '/public/terms': t('profile.termsOfService'),
+    '/public/privacy': t('profile.privacyPolicy'),
+    '/public/notifications': t('notifications.title'),
+    '/public/leaderboard': t('leaderboard.title'),
+  }
   const title = titles[pathname] ?? 'AnnaDatha'
   const initials = user ? getInitials(user.name || '', user.mobileNumber) : '?'
 
@@ -78,11 +81,14 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
             </span>
           )}
         </button>
-        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Leaderboard" title="Leaderboard">
-          <Trophy className="h-4 w-4" />
+        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Change language" title="Change language">
+          <Languages className="h-4 w-4" />
         </button>
         <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Leaderboard" title="Leaderboard">
+          <Trophy className="h-4 w-4" />
         </button>
         <div className="h-6 w-px bg-border-subtle" />
         <div className="relative" ref={menuRef}>
@@ -124,6 +130,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </header>
   )
 }

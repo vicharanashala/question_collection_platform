@@ -63,9 +63,9 @@ export function NotificationsPage() {
     setLoading(!refresh)
     notificationApi.getNotifications({ page: pg, limit })
       .then((res) => {
-        setItems((prev) => refresh ? res.items : (prev) => [...prev, ...res.items])
+        setItems((prev) => refresh ? res.notifications : [...prev, ...res.notifications])
         setTotal(res.total)
-        setUnreadCount(res.unreadCount)
+        setUnreadCount(res.unread)
       })
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load notifications')))
       .finally(() => setLoading(false))

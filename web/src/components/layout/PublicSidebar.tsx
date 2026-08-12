@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -17,15 +18,16 @@ import {
 import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { to: '/public',           label: 'Home',          icon: Home,             end: true },
-  { to: '/public/ask',       label: 'Submit',        icon: MessageSquarePlus },
-  { to: '/public/questions', label: 'Submissions',   icon: ListChecks },
-  { to: '/public/wallet',    label: 'Wallet',        icon: Wallet },
-  { to: '/public/profile',   label: 'Profile',       icon: User },
+  { to: '/public',           labelKey: 'nav.home',        icon: Home,             end: true },
+  { to: '/public/ask',       labelKey: 'nav.submit',      icon: MessageSquarePlus },
+  { to: '/public/questions', labelKey: 'nav.submissions', icon: ListChecks },
+  { to: '/public/wallet',    labelKey: 'nav.wallet',      icon: Wallet },
+  { to: '/public/profile',   labelKey: 'nav.profile',     icon: User },
 ]
 
 export function PublicSidebar() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
@@ -44,7 +46,7 @@ export function PublicSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, label, icon: Icon, end }) => (
+        {navItems.map(({ to, labelKey, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -59,7 +61,7 @@ export function PublicSidebar() {
             }
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {label}
+            {t(labelKey)}
           </NavLink>
         ))}
       </nav>
