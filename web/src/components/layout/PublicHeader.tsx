@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button'
 
 const titles: Record<string, string> = {
   '/public': 'Home',
-  '/public/ask': 'Ask a Question',
-  '/public/questions': 'My Questions',
+  '/public/ask': 'Submit',
+  '/public/questions': 'Submissions',
   '/public/faqs': 'Help & FAQ',
   '/public/profile': 'Profile',
   '/public/wallet': 'Wallet',

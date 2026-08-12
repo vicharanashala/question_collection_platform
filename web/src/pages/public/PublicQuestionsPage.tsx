@@ -73,7 +73,7 @@ export function PublicQuestionsPage() {
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">My Questions</h2>
+          <h2 className="text-xl font-bold text-foreground">Submissions</h2>
           <p className="mt-0.5 text-sm text-text-secondary">Your submitted questions and their status.</p>
         </div>
         <Button onClick={() => navigate('/public/ask')} className="bg-emerald-500 hover:bg-emerald-600">

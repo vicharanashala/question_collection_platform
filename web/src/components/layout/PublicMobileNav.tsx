@@ -14,8 +14,8 @@ interface PublicMobileNavProps {
 
 const items = [
   { to: '/public',           label: 'Home',          icon: Home,             end: true },
-  { to: '/public/ask',       label: 'Ask Question',  icon: MessageSquarePlus },
-  { to: '/public/questions', label: 'My Questions',  icon: ListChecks },
+  { to: '/public/ask',       label: 'Submit',        icon: MessageSquarePlus },
+  { to: '/public/questions', label: 'Submissions',   icon: ListChecks },
   { to: '/public/wallet',    label: 'Wallet',        icon: Wallet },
   { to: '/public/profile',   label: 'Profile',       icon: User },
 ]
