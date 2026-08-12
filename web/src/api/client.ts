@@ -702,6 +702,40 @@ export const walletApi = {
       false,
     )
   },
+
+  /** Wallet configuration (min withdrawal amount, razorpay key id, …). */
+  getWalletConfig: () =>
+    request<{ minWithdrawalAmount: number; razorpayKeyId: string }>(
+      '/wallets/me/config',
+      {},
+      false,
+    ),
+
+  /** Payout methods (UPI / bank) saved by the authenticated user. */
+  getPaymentDetails: () =>
+    request<unknown[]>('/wallets/payment-details', {}, false),
+
+  /** Add a new payout method (UPI or bank). Initiates ₹1 micro-transaction
+   *  verification on the backend; the native Razorpay SDK is required to
+   *  complete verification, which is not available in the web app. */
+  addPaymentDetail: (data: {
+    payoutMethod: 'upi' | 'bank_transfer'
+    upiId?: string
+    accountNumber?: string
+    confirmAccountNumber?: string
+    ifsc?: string
+    accountHolderName?: string
+    bankName?: string
+  }) =>
+    request<{ id: string; status: 'pending' | 'in_progress' | 'verified' | 'failed'; message: string }>(
+      '/wallets/payment-details',
+      { method: 'POST', body: JSON.stringify(data) },
+      false,
+    ),
+
+  /** Delete a saved payout method (only allowed for non-verified details). */
+  deletePaymentDetail: (id: string) =>
+    request<{ success: true }>(`/wallets/payment-details/${id}`, { method: 'DELETE' }, false),
 }
 
 // ─── Notifications API ─────────────────────────────────────────────────────

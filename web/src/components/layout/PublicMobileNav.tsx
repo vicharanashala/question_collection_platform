@@ -1,4 +1,4 @@
-import { X, Home, MessageSquarePlus, ListChecks, HelpCircle, User, LogOut, Sprout } from 'lucide-react'
+import { X, Home, MessageSquarePlus, ListChecks, HelpCircle, Wallet, User, LogOut, Sprout } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -17,6 +17,7 @@ const items = [
   { to: '/public/ask',       label: 'Ask Question',  icon: MessageSquarePlus },
   { to: '/public/questions', label: 'My Questions',  icon: ListChecks },
   { to: '/public/faqs',      label: 'Help & FAQ',    icon: HelpCircle },
+  { to: '/public/wallet',    label: 'Wallet',        icon: Wallet },
   { to: '/public/profile',   label: 'Profile',       icon: User },
 ]
 

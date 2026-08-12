@@ -13,6 +13,8 @@ const titles: Record<string, string> = {
   '/public/questions': 'My Questions',
   '/public/faqs': 'Help & FAQ',
   '/public/profile': 'Profile',
+  '/public/wallet': 'Wallet',
+  '/public/payment-methods': 'Payment Methods',
 }
 
 export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
