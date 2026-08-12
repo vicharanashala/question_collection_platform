@@ -1,8 +1,8 @@
-export type UserRole = "user" | "admin" | "super_admin" | "curator" | "finance";
+export type UserRole = "user" | "admin" | "super_admin" | "curator" | "finance" | "distributor";
 export type PaymentDetailStatus = 'pending' | 'in_progress' | 'verified' | 'failed';
 export type PayoutMethod = 'upi' | 'bank_transfer';
 export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'suspended' | 'banned';
-export type QuestionStatus = 'pending' | 'ai_review' | 'human_review' | 'held' | 'approved' | 'rejected';
+export type QuestionStatus = 'pending' | 'held' | 'approved' | 'rejected' | 'moved_to_final';
 export type UserCategory = 'farmer' | 'fpo' | 'student' | 'volunteer' | 'ngo';
 
 export interface User {
@@ -551,4 +551,97 @@ export interface Faq {
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// ─── Distributor (final-questions distribution) ──────────────────────────
+
+/**
+ * Distributed copy of an approved question into a specific Indian state.
+ *
+ * Each row carries a denormalized snapshot of the original `Question` so
+ * the row is self-contained — readers do NOT need to fetch the source
+ * question to see its full context (language, asker's home state, media,
+ * etc.).
+ *
+ * Field-naming collisions with the source `Question`:
+ *   - `distributionState` ↔ the *target* Indian state this row is being
+ *     distributed to.
+ *   - `state` (embedded below) ↔ the *asker's home* state, copied from
+ *     `Question.state`.
+ *   - `createdAt` / `updatedAt` ↔ distribution timestamps (when this row
+ *     was created/updated). The source question's `createdAt` / `updatedAt`
+ *     are NOT preserved on this row.
+ *   - `referenceQuestionId` ↔ FK to the source `Question._id`.
+ */
+export interface FinalQuestion {
+  id: string;
+
+  // ── Reference back to the source question ─────────────────────────────────
+  referenceQuestionId: string;
+
+  // ── Distribution-side fields ──────────────────────────────────────────────
+  /**
+   * Target Indian state this row is being distributed to.
+   *
+   * `null` for the canonical reference doc (the "original question" row that
+   * is written the very first time a question is distributed to any state).
+   * For every state-specific child row this is a non-null Indian state name.
+   */
+  distributionState: string | null;
+  distributorId: string;
+  /**
+   * Resolved display info for the distributor that performed this assignment.
+   * Backed by `users._id` → `users.name` / `users.username` lookup done on
+   * the server in `DistributorService.listDistributions` so the UI does not
+   * have to render a raw ObjectId. `null` if the user has been deleted or
+   * the lookup otherwise failed (client should fall back to a truncated id).
+   */
+  distributor?: {
+    id: string;
+    name: string;
+    username: string | null;
+  } | null;
+  notes: string | null;
+  isActive: boolean;
+  /** True on the canonical reference doc; false on every state-specific child row. */
+  isReference: boolean;
+  /** FK -> final_questions._id of this row's canonical reference doc. `null` on the reference doc itself. */
+  parentReferenceId: string | null;
+
+  // ── Snapshot of the source Question (denormalized copy) ───────────────────
+  userId: string | null;
+  language: string;
+  domains: string[];
+  season: string | null;
+  cropType: string | null;
+  agroClimaticZone: string | null;
+  /** Asker's HOME state — distinct from `distributionState` above. */
+  state: string | null;
+  district: string | null;
+  block: string | null;
+  questionText: string;
+  /** Vector embedding — copied from Question. May be large. */
+  embedding: number[] | null;
+  mediaType: string | null;
+  mediaUrls: string[] | null;
+  deviceInfo: Record<string, unknown> | null;
+  /** Source question's status at the time of distribution. */
+  status: string | null;
+  duplicateFlag: boolean;
+  duplicateOfId: string | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewerId: string | null;
+  rejectionReason: string | null;
+  heldReason: string | null;
+  approvalReason: string | null;
+
+  // ── Distribution timestamps ───────────────────────────────────────────────
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DistributorStats {
+  indianStatesTotal: number;
+  byState: { state: string; count: number }[];
 }

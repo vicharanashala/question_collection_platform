@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { PublicUser } from '../types';
 import { authApi, saveAuth, clearAuth, getStoredUser, isAuthenticated } from '../api/client';
+import { accountLockedEmitter, authClearedEmitter } from '../events/accountLockedEvents';
+import { useAccountLocked } from '../context/AccountLockedContext';
 
 interface AuthState {
   user: PublicUser | null;
@@ -18,12 +21,13 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
     isLoading: true,
     isReady: false,
   });
+  const { clearLocked } = useAccountLocked();
 
   // Restore session on app start and sync with server
   useEffect(() => {
@@ -40,8 +44,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data } = await authApi.me();
             setState((prev) => ({ ...prev, user: data.user }));
-          } catch {
-            // Use stored snapshot if server unreachable
+          } catch (e: any) {
+            if (e?.response?.status === 423) {
+              // Banned mid-session — auto-logout and clear lock state
+              accountLockedEmitter.emit(e.response.data);
+              await clearAuth();
+              clearLocked();
+              setState({ user: null, isLoading: false, isReady: true });
+            }
+            // Use stored snapshot for other errors (network unreachable, etc.)
           }
         } else {
           setState({ user: null, isLoading: false, isReady: true });
@@ -85,8 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await clearAuth();
+    clearLocked();
     setState({ user: null, isLoading: false, isReady: true });
-  }, []);
+  }, [clearLocked]);
 
   const refreshProfile = useCallback(async () => {
     try {
@@ -96,6 +108,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Token likely expired — let the interceptor handle it
     }
   }, []);
+
+  // Auto-logout when 423 fires from the API interceptor (mid-session ban)
+  useEffect(() => {
+    const unsubscribe = accountLockedEmitter.subscribe(() => {
+      clearAuth();
+      clearLocked();
+      setState({ user: null, isLoading: false, isReady: true });
+    });
+    return unsubscribe;
+  }, [clearLocked]);
+
+  // Auto-logout when 401 interceptor clears tokens (expired/invalid token)
+  useEffect(() => {
+    const unsubscribe = authClearedEmitter.subscribe(() => {
+      clearAuth();
+      clearLocked();
+      setState({ user: null, isLoading: false, isReady: true });
+    });
+    return unsubscribe;
+  }, [clearLocked]);
+
+  // Heartbeat: probe /auth/me every 30s to detect mid-session bans even during idle
+  useEffect(() => {
+    if (!state.isReady || !state.user) return;
+    const interval = setInterval(async () => {
+      try {
+        await authApi.me();
+      } catch (e: any) {
+        if (e?.response?.status === 423) {
+          accountLockedEmitter.emit(e.response.data);
+          clearAuth();
+          clearLocked();
+          setState({ user: null, isLoading: false, isReady: true });
+        }
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [state.isReady, !!state.user]);
+
+  // Probe on app resume from background — catches bans that happened while app was backgrounded
+  useEffect(() => {
+    if (!state.isReady || !state.user) return;
+    function handleAppStateChange(next: AppStateStatus) {
+      if (next === 'active') {
+        authApi.me().catch((e: any) => {
+          if (e?.response?.status === 423) {
+            accountLockedEmitter.emit(e.response.data);
+            clearAuth();
+            clearLocked();
+            setState({ user: null, isLoading: false, isReady: true });
+          }
+        });
+      }
+    }
+    const sub = AppState.addEventListener('change', handleAppStateChange);
+    return () => sub.remove();
+  }, [state.isReady, !!state.user]);
 
   return (
     <AuthContext.Provider value={{ ...state, login, verifyOtp, register, logout, refreshProfile }}>

@@ -21,5 +21,9 @@
     "paths": {
       "@/*": ["src/*"]
     }
-  }
+  },
+  "exclude": [
+    "scripts/**/*",
+    "src/shared/database/seeds/**/*"
+  ]
 }

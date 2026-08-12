@@ -42,6 +42,7 @@ export function EditProfileScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const c = theme.colors;
   const { user, refreshProfile } = useAuth();
+  console.log("User found out", user);
   const { showToast } = useToast();
   const { t } = useTranslation();
 

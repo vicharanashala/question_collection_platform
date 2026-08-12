@@ -40,7 +40,7 @@ const PRIORITY_OPTIONS = [
 const CATEGORY_COLORS: Record<string, string> = {
   bug:              'bg-destructive text-white',
   payout_issue:     'bg-warning text-white',
-  question_issue:   'bg-ai_review text-white',
+  question_issue:   'bg-amber-500 text-white',
   abuse:            'bg-black text-white',
   feature_request:  'bg-success text-white',
   other:            'bg-surface-variant text-text',
@@ -271,7 +271,7 @@ export default function ReportsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <Badge className={STATUS_COLORS[report.status] ?? 'bg-surface-variant text-text'}>
-                    {report.status.replace('_', ' ')}
+                    {(report.status ?? '').replace(/_/g, ' ')}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">

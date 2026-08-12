@@ -11,7 +11,10 @@ import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { questionApi, storageApi } from '../../api/client';
-import { cacheQuestionForDuplicateDetection } from '../../utils/onDeviceAI';
+import { cacheQuestionForDuplicateDetection, runOnDeviceValidation, AIValidationResult } from '../../utils/onDeviceAI';
+import { AIValidationBanner } from '../../components/AIValidationBanner';
+import { speechApi } from '../../api/speech';
+import { useLanguage } from '../../hooks/useLanguage';
 import { useTranslation } from 'react-i18next';
 import { SEASONS, CROP_OPTIONS, DOMAINS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
@@ -57,9 +60,11 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
   const { showToast } = useToast();
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { language: appLanguage } = useLanguage();
 
   const preview = route.params;
   const [editWindowSec, setEditWindowSec] = useState(0);
+  const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
   const [duplicateModal, setDuplicateModal] = useState<{
     visible: boolean;
     matchedQuestion: string;
@@ -106,6 +111,14 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
   async function handleConfirm() {
     if (!validate()) return;
+
+    // On-device AI validation (translate first, same as QuestionScreen)
+    const textToValidate = appLanguage !== 'en'
+      ? (await speechApi.translate(questionText.trim(), 'en', appLanguage)).translatedText
+      : questionText.trim();
+    const validation = await runOnDeviceValidation({ text: textToValidate });
+    setAiValidation(validation);
+    if (validation.verdict === 'fail') return;
 
     setLoading(true);
     try {
@@ -371,6 +384,13 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
           {/* Actions */}
           <View style={styles.actions}>
+            {/* On-Device AI Validation Banner */}
+            {aiValidation && (aiValidation.verdict === 'fail' || aiValidation.verdict === 'warn') && (
+              <AIValidationBanner
+                result={aiValidation}
+                onDismiss={() => setAiValidation(null)}
+              />
+            )}
             <Button
               title={t('question.submitQuestion')}
               onPress={handleConfirm}

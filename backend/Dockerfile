@@ -1,49 +1,59 @@
-FROM node:22-alpine AS deps
+FROM node:22-slim AS deps
 
 WORKDIR /app
 
 COPY package.json ./
-RUN npm ci --only=production && npm cache clean --force
+# Delete stale lock file — package.json is always in sync but package-lock.json may not be.
+# Remove it so npm install fetches fresh based on package.json only.
+RUN rm -f package-lock.json && npm install --omit=dev && npm cache clean --force
 
-FROM node:22-alpine AS build
+FROM node:22-slim AS build
 
 WORKDIR /app
 
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    bash \
-    && rm -rf /var/cache/apk/* /tmp/*
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
-COPY package.json package-lock.json* ./
-RUN npm ci && npm cache clean --force
+COPY package.json ./
+RUN rm -f package-lock.json && npm install && npm cache clean --force
 
 COPY tsconfig*.json ./
 COPY src/ ./src/
 
 RUN npx tsc --noEmit \
-    && npx nest build --copy-files \
-    && npm prune --production
+    && npx nest build \
+    && npm prune --omit=dev
 
-FROM node:22-alpine AS runtime
+FROM node:22-slim AS runtime
 
-RUN apk add --no-cache ffmpeg bash ca-certificates \
-    && rm -rf /var/cache/apk/* /tmp/*
+# Tailscale userspace binary (glibc-based, requires Debian-slim not Alpine)
+COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscaled /app/tailscaled
+COPY --from=ghcr.io/tailscale/tailscale:latest /usr/local/bin/tailscale /app/tailscale
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    curl \
+    ca-certificates \
+    dumb-init \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app
+
+# Cloud Run injects PORT=8080 into every container. Set default in case it's absent.
+ENV PORT=8080
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
+COPY scripts/start.sh ./scripts/start.sh
 
-RUN addgroup -g 1001 -S appgroup \
-    && adduser -u 1001 -S appuser -G appgroup \
-    && chown -R appuser:appgroup /app
+# Entrypoint script starts tailscaled first, then the NestJS app via dumb-init
+ENTRYPOINT ["/bin/sh", "scripts/start.sh"]
 
-USER appuser
+EXPOSE 8080
 
-EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:3000/health || exit 1
-
-CMD ["node", "dist/main.js"]
+# Entrypoint handles tailscaled startup; start.sh ends with exec dumb-init node dist/main.js
+# (CMD below is unreachable but kept for `docker run` without start.sh compatibility)

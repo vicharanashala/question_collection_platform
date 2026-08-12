@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { accountLockedEmitter } from '../events/accountLockedEvents';
+import { accountLockedEmitter, authClearedEmitter } from '../events/accountLockedEvents';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import type { Faq } from '../types';
@@ -22,9 +22,8 @@ const isProduction = process.env.EXPO_PUBLIC_ENV === 'production';
 const BASE_URL = isProduction
   ? (process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1")
   : Platform.OS === "android"
-    ? "https://epiphany-query-same.ngrok-free.dev/api/v1"
-    : // ? 'http://10.0.2.2:3000/api/v1'
-      "http://localhost:3000/api/v1";
+    ? "http://10.0.2.2:3000/api/v1"
+    : "http://localhost:3000/api/v1";
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -112,6 +111,7 @@ api.interceptors.response.use(
         const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
         if (!refreshToken) {
           await clearAuth();
+          authClearedEmitter.emit();
           throw new Error('No refresh token');
         }
 
@@ -129,12 +129,22 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch {
         await clearAuth();
+        authClearedEmitter.emit();
       }
     }
 
-    // 423 Locked — user was suspended/banned mid-session (token refresh path).
+    // 423 Locked — user was suspended/banned.
+    // Fires for both direct 423 responses (JWT valid but account locked)
+    // and 423 on the token-refresh retry path.
     // For unauthenticated requests (e.g. /auth/otp sign-in) the caller handles
     // the 423 inline; skip the modal emitter to avoid double-display.
+    if (error.response?.status === 423 && !originalRequest._retry) {
+      const locked = parseAccountLocked(error);
+      if (locked) {
+        accountLockedEmitter.emit(locked);
+      }
+    }
+    // 423 on the token-refresh retry path (token was refreshed but user is locked)
     if (error.response?.status === 423 && originalRequest._retry) {
       const locked = parseAccountLocked(error);
       if (locked) {
@@ -445,6 +455,8 @@ export const adminApi = {
   // Dashboard
   getDashboardStats: (params?: Record<string, string | number>) =>
     api.get('/admin/analytics/dashboard', { params }),
+  getCuratorDashboard: (params?: Record<string, string | number>) =>
+    api.get('/admin/analytics/curator-dashboard', { params }),
   getRewardSummary: (params?: Record<string, string | number>) =>
     api.get('/admin/analytics/rewards', { params }),
 
@@ -573,6 +585,12 @@ export const lgdApi = {
   getVillages: (blockCode: string) =>
     api.get<{ villages: { code: string; name: string; blockCode: string }[] }>('/lgd/villages', {
       params: { blockCode },
+    }),
+
+  /** List KVKs for a given LGD district code */
+  getKvks: (districtCode: string) =>
+    api.get<{ kvks: { code: string; name: string; address: string }[] }>('/lgd/kvks', {
+      params: { districtCode },
     }),
 };
 

@@ -193,11 +193,16 @@ export function AdminUsersScreen() {
     const statusColor = STATUS_COLORS[item.verificationStatus] ?? c.textTertiary;
     const displayName = item.name || item.username || item.mobileNumber || 'Unknown user';
     const isCurrentUser = item.id === currentUser?.id;
+    const isLocked = item.verificationStatus === 'suspended' || item.verificationStatus === 'banned';
+    const isBanned = item.verificationStatus === 'banned';
 
     return (
       <View style={[
         styles.card,
-        { backgroundColor: c.surface },
+        { backgroundColor: isLocked
+          ? (isBanned ? '#fef2f2' : '#fffbeb')
+          : c.surface
+        },
         isCurrentUser && { opacity: 0.55 },
       ]}>
         <Pressable
@@ -219,6 +224,16 @@ export function AdminUsersScreen() {
                 {(item.verificationStatus ?? 'unknown').replace('_', ' ')}
               </Text>
             </View>
+            {isLocked && (
+              <View style={[
+                styles.badge,
+                { backgroundColor: isBanned ? '#dc2626' : '#d97706', marginLeft: 4 },
+              ]}>
+                <Text style={[styles.badgeText, { color: '#fff' }]}>
+                  {isBanned ? 'BANNED' : 'SUSPENDED'}
+                </Text>
+              </View>
+            )}
             {isCurrentUser && (
               <View style={[styles.badge, { backgroundColor: c.primary + '22', marginLeft: 4 }]}>
                 <Text style={[styles.badgeText, { color: c.primary }]}>This is you</Text>

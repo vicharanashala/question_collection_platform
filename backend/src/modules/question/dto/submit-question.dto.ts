@@ -1,0 +1,121 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  IsIn,
+  IsObject,
+  MaxLength,
+  ValidateIf,
+  ArrayMinSize,
+} from 'class-validator';
+import { Season } from '../../../shared/classes/enums';
+import { MaxQuestionChars } from '../../../shared/middleware/validators/max-question-chars.validator';
+import { DOMAINS } from '../constants/domains';
+
+export class SubmitQuestionDto {
+  /**
+   * Language code (ISO 639-1). If omitted, defaults to the user's languagePreference.
+   * The mobile app no longer sends this field — it is derived server-side.
+   */
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  language?: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  domains: string[];
+
+  @IsString()
+  season: Season;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  cropType: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxQuestionChars()
+  questionText: string;
+
+  @IsString()
+  @IsNotEmpty()
+  state: string;
+
+  @IsString()
+  @IsNotEmpty()
+  district: string;
+
+  @IsString()
+  @IsOptional()
+  block?: string;
+
+  @ValidateIf((o) => o.agroClimaticZone !== undefined && o.agroClimaticZone !== null && o.agroClimaticZone !== '')
+  @IsString({ message: 'agroClimaticZone must be a string' })
+  @MaxLength(255, { message: 'agroClimaticZone must be shorter than or equal to 255 characters' })
+  agroClimaticZone?: string;
+
+  @IsOptional()
+  @IsIn(['none', 'image', 'video', 'audio'])
+  mediaType?: 'none' | 'image' | 'video' | 'audio';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  mediaUrls?: string[];
+
+  @IsOptional()
+  @IsObject()
+  deviceInfo?: Record<string, unknown>;
+}
+
+export class SubmitQuestionResponseDto {
+  id: string;
+  status: string;
+  message: string;
+  /** Present when GDB found a near-duplicate — mobile should show DuplicateFoundModal */
+  duplicate?: DuplicateQuestionResultDto;
+}
+
+/**
+ * DTO for the /questions/preview endpoint.
+ * Only requires questionText + optional mediaType.
+ * All location and crop fields are derived server-side from the user's profile.
+ */
+export class PreviewQuestionDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxQuestionChars()
+  questionText: string;
+
+  @IsOptional()
+  @IsString()
+  mediaType?: 'none' | 'image' | 'video' | 'audio';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  mediaUrls?: string[];
+}
+
+/**
+ * Embedded in the /questions/preview response when a similar question is found.
+ * The mobile app uses this to show the user the existing question + answer
+ * instead of proceeding to the preview/confirmation screen.
+ */
+export class DuplicateQuestionResultDto {
+  isDuplicate: boolean;
+  matchedQuestionId: string | null;
+  matchedQuestion: string | null;
+  matchedAnswer: string | null;
+  similarityScore: number | null;
+  /**
+   * Display name of the user who submitted the matched question.
+   * Falls back to the literal string `'user name not available'` when unknown.
+   */
+  matchedUserName: string | null;
+}
+

@@ -31,7 +31,10 @@ import type {
   AuditUsersByRoleResponse,
   Report,
   ReportReply,
+  FinalQuestion,
+  DistributorStats,
 } from '@/types'
+import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
 const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -89,28 +92,6 @@ function invalidateCache(pattern?: string) {
   }
 }
 
-// ─── Offline queue ─────────────────────────────────────────────────────────
-
-interface QueuedRequest {
-  path: string
-  options: RequestInit
-  resolve: (v: unknown) => void
-  reject: (e: unknown) => void
-}
-
-let isOnline = navigator.onLine
-
-const offlineQueue: QueuedRequest[] = []
-
-window.addEventListener('online', () => {
-  isOnline = true
-  const queue = offlineQueue.splice(0)
-  queue.forEach((r) =>
-    request(r.path, r.options, false).then((v: unknown) => r.resolve(v)).catch(r.reject)
-  )
-})
-window.addEventListener('offline', () => { isOnline = false })
-
 // ─── Retry with exponential backoff ───────────────────────────────────────
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
@@ -148,9 +129,14 @@ export async function request<T>(
     delete (options as Record<string, unknown>).headers
   }
 
-  const doFetch = () =>
-    withRetry(() =>
-      fetch(`${BASE}${path}`, { ...options, headers }).then(async (res) => {
+  const doFetch = () => {
+    const url = `${BASE}${path}`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10_000)
+    return withRetry(() =>
+      fetch(url, { ...options, headers, signal: controller.signal })
+        .finally(() => clearTimeout(timeoutId))
+        .then(async (res) => {
         if (res.status === 401) {
           const refresh = getRefreshToken()
           if (refresh) {
@@ -166,6 +152,13 @@ export async function request<T>(
                   ...options,
                   headers: { ...headers, Authorization: `Bearer ${refreshed.accessToken}` },
                 })
+                // Check 423 on retry response before general handleResponse so the
+                // lock event fires even when handleResponse throws.
+                if (retryRes.status === 423) {
+                  const data = await retryRes.json().catch(() => ({}))
+                  const locked = parseAccountLocked(data)
+                  if (locked) accountLockedEmitter.emit(locked)
+                }
                 return handleResponse(retryRes)
               }
             } catch { /* refresh failed */ }
@@ -174,6 +167,7 @@ export async function request<T>(
         return handleResponse(res)
       })
     )
+  }
 
   if (useCache && options.method === undefined) {
     const cached = getCache<T>(path, 30_000)
@@ -184,17 +178,6 @@ export async function request<T>(
     return data
   }
 
-  if (!isOnline) {
-    return new Promise((resolve, reject) => {
-      offlineQueue.push({
-        path,
-        options,
-        resolve: resolve as (v: unknown) => void,
-        reject,
-      })
-    })
-  }
-
   return doFetch() as Promise<T>
 }
 
@@ -202,6 +185,14 @@ async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     const msg = (data as { message?: string })?.message
+
+    // 423 Locked — user was suspended/banned. Emit event so the auth layer can
+    // auto-logout and show the locked modal.
+    if (res.status === 423) {
+      const locked = parseAccountLocked(data)
+      if (locked) accountLockedEmitter.emit(locked)
+    }
+
     const err: Error & { status: number; data: unknown } = Object.assign(new Error(msg ?? `Request failed with ${res.status}`), {
       status: res.status,
       data,
@@ -220,11 +211,12 @@ async function handleResponse<T>(res: Response): Promise<T> {
 //   me            → { user: PublicUser }
 
 export const authApi = {
-  requestOtp: (mobileNumber: string, isWeb = false) =>
-    request<{ message: string }>('/auth/request-otp', {
+  requestOtp: (mobileNumber: string, isWeb = false) => {
+    return request<{ message: string }>('/auth/request-otp', {
       method: 'POST',
       body: JSON.stringify({ mobileNumber, ...(isWeb ? { client: 'web' } : {}) }),
-    }, false),
+    }, false)
+  },
 
   verifyOtp: (mobileNumber: string, otp: string) =>
     request<{
@@ -245,13 +237,39 @@ export const authApi = {
     }, false),
 
   me: () =>
-    request<{ user: AuthUser }>('/auth/me', {}, true),
+    // Never cache me() — it is the authoritative source of current user state including locks
+    request<{ user: AuthUser }>('/auth/me', {}, false),
 
   updateMe: (body: { name?: string; languagePreference?: string }) =>
     request<{ user: AuthUser }>('/auth/me', {
       method: 'PATCH',
       body: JSON.stringify(body),
     }, false),
+}
+
+// ─── LGD / Location API ───────────────────────────────────────────────────
+
+export interface LgdState    { code: string; name: string }
+export interface LgdDistrict  { code: string; name: string; stateCode: string }
+export interface LgdSubDistrict { code: string; name: string; districtCode: string }
+export interface LgdVillage   { code: string; name: string; blockCode: string }
+export interface LgdKvk       { code: string; name: string; address: string; districtCode: string; stateCode: string }
+
+export const lgdApi = {
+  getStates: () =>
+    request<{ states: LgdState[] }>('/lgd/states', {}, false),
+
+  getDistricts: (stateCode: string) =>
+    request<{ districts: LgdDistrict[] }>(`/lgd/districts?stateCode=${stateCode}`, {}, false),
+
+  getSubDistricts: (districtCode: string) =>
+    request<{ subdistricts: LgdSubDistrict[] }>(`/lgd/subdistricts?districtCode=${districtCode}`, {}, false),
+
+  getVillages: (blockCode: string) =>
+    request<{ villages: LgdVillage[] }>(`/lgd/villages?blockCode=${blockCode}`, {}, false),
+
+  getKvks: (districtCode: string) =>
+    request<{ kvks: LgdKvk[] }>(`/lgd/kvks?districtCode=${districtCode}`, {}, false),
 }
 
 // ─── Admin API ─────────────────────────────────────────────────────────────
@@ -556,7 +574,7 @@ export const curatorApi = {
     request<import('@/types').CuratorReviewerStats>(`/curator/my-stats?userId=${encodeURIComponent(userId)}`),
 
   getReviewQueue: (params = {} as Record<string, string | string[] | number | undefined>) => {
-    // Backend expects status as an array: ?status[]=pending&status[]=ai_review
+    // Backend expects status as an array: ?status[]=pending&status[]=held
     const sp = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
       if (v === undefined) continue
@@ -575,6 +593,15 @@ export const curatorApi = {
 
   getQuestion: (id: string) =>
     request<Question>(`/admin/questions/${id}`),
+
+  checkDuplicate: (id: string) =>
+    request<{
+      isDuplicate: boolean
+      matchedQuestion?: string
+      matchedAnswer?: string | null
+      similarityScore?: number | null
+      matchedUserName?: string | null
+    }>(`/admin/questions/${id}/check-duplicate`, { method: 'POST' }),
 
   reviewQuestion: (id: string, body: { action: 'approve' | 'reject' | 'hold'; reason?: string; heldReason?: string }) =>
     request<{
@@ -786,6 +813,96 @@ export const faqApi = {
 
   remove: (id: string) =>
     request<void>(`/admin/faqs/${id}`, { method: 'DELETE' }, false),
+}
+
+// ─── Distributor ──────────────────────────────────────────────────────────
+
+export interface ListApprovedQuestionsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface AssignStatesPayload {
+  states: string[];
+  notes?: string;
+}
+
+export interface ListDistributionsParams {
+  page?: number;
+  limit?: number;
+  /** Filter by the TARGET Indian state (was `state`, renamed to disambiguate
+   * from the asker's home state that is now embedded on each row). */
+  distributionState?: string;
+  search?: string;
+}
+
+export const distributor = {
+  /** Reference data: list of all 32 Indian states / UTs. */
+  listIndianStates: () =>
+    request<{ states: string[] }>(`/distributor/indian-states`, {}, false),
+
+  /** Dashboard stats: how many final-questions exist per state. */
+  getStats: () =>
+    request<DistributorStats>(`/distributor/stats`, {}, false),
+
+  /** Approved-questions queue. */
+  listApprovedQuestions: (params: ListApprovedQuestionsParams = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{
+      items: Question[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/distributor/questions${qs ? `?${qs}` : ''}`, {}, false);
+  },
+
+  getApprovedQuestion: (id: string) =>
+    request<Question>(`/distributor/questions/${id}`, {}, false),
+
+  /** Assign 0..N Indian states to an approved question. Pass `states: []` to move a non-state-specific question to `moved_to_final` without distributing to any state. */
+  assignStates: (questionId: string, payload: AssignStatesPayload) =>
+    request<{
+      questionId: string;
+      insertedStates: string[];
+      skippedStates: string[];
+      insertedCount: number;
+      totalStates: number;
+      questionStatus: string;
+    }>(`/distributor/questions/${questionId}/assign-states`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, false),
+
+  /** Browse the final_questions (distributions). */
+  listDistributions: (params: ListDistributionsParams = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{
+      items: FinalQuestion[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/distributor/distributions${qs ? `?${qs}` : ''}`, {}, false);
+  },
+
+  getDistributionsForQuestion: (questionId: string) =>
+    request<{
+      questionId: string;
+      states: string[];
+      entries: FinalQuestion[];
+    }>(`/distributor/distributions/by-question/${questionId}`, {}, false),
 }
 
 // ─── Error helper ──────────────────────────────────────────────────────────

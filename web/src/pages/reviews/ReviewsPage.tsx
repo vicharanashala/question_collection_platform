@@ -13,6 +13,7 @@ import {
   MapPin, Wheat, Film, Eye, Hash,
   User, ThumbsUp, Ban, ListFilter,
   Globe, X, Mic,
+  CopyCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question, QuestionStatus } from '@/types'
@@ -22,24 +23,20 @@ import { DataTable, type ColumnDef } from '@/components/DataTable'
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:      'bg-warning text-white',
-  ai_review:    'bg-blue-500 text-white',
-  human_review: 'bg-purple-500 text-white',
-  held:         'bg-amber-500 text-white',
-  approved:     'bg-success text-white',
-  rejected:     'bg-destructive text-white',
+  pending:    'bg-warning text-white',
+  held:       'bg-amber-500 text-white',
+  approved:   'bg-success text-white',
+  rejected:   'bg-destructive text-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending:      'Pending',
-  ai_review:    'AI Review',
-  human_review: 'Human Review',
-  held:         'Held',
-  approved:     'Approved',
-  rejected:     'Rejected',
+  pending:    'Pending',
+  held:       'On Hold',
+  approved:   'Approved',
+  rejected:   'Rejected',
 }
 
-const REVIEWABLE_STATUSES: QuestionStatus[] = ['pending', 'ai_review', 'human_review', 'held']
+const REVIEWABLE_STATUSES: QuestionStatus[] = ['pending', 'held']
 
 // ─── Review Detail Modal ──────────────────────────────────────────────────────
 
@@ -415,7 +412,11 @@ function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, lo
 
 // ─── Table columns ────────────────────────────────────────────────────────────
 
-function buildColumns(page: number): ColumnDef<Question>[] {
+function buildColumns(
+  page: number,
+  onCheckDuplicate: (q: Question) => void,
+  checkDuplicateLoadingId: string | null,
+): ColumnDef<Question>[] {
   return [
     {
       key: '_slno', header: '#', width: '50px', textAlign: 'center',
@@ -461,33 +462,189 @@ function buildColumns(page: number): ColumnDef<Question>[] {
         ? <span className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>
         : <span className="text-xs text-muted-foreground">—</span>,
     },
+    {
+      key: '_actions',
+      header: 'Actions',
+      width: '120px',
+      textAlign: 'center',
+      render: (q) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); onCheckDuplicate(q) }}
+          disabled={checkDuplicateLoadingId === q.id}
+          title="Check for duplicate questions in the approved database"
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150',
+            'border-warning/30 bg-warning/10 text-warning hover:bg-warning/20 hover:border-warning/50',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+          )}
+        >
+          {checkDuplicateLoadingId === q.id ? (
+            <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+          ) : (
+            <CopyCheck className="h-3.5 w-3.5" />
+          )}
+          Check Dup
+        </button>
+      ),
+    },
   ]
+}
+
+// ─── Duplicate Found Modal ─────────────────────────────────────────────────────
+
+interface DuplicateData {
+  matchedQuestion: string
+  matchedAnswer: string | null
+  similarityScore: number | null
+  matchedUserName: string | null
+}
+
+interface DuplicateFoundModalProps {
+  /** The question currently being checked (from the queue) */
+  currentQuestion: Question
+  duplicate: DuplicateData
+  onReject: (id: string) => void
+  onDismiss: () => void
+  rejectLoading: boolean
+  selectedLang: string
+  onLangChange: (lang: string) => void
+}
+
+function DuplicateFoundModal({
+  currentQuestion,
+  duplicate,
+  onReject,
+  onDismiss,
+  rejectLoading,
+  selectedLang,
+  onLangChange,
+}: DuplicateFoundModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onDismiss} />
+      <div className="relative w-full max-w-lg bg-surface rounded-2xl shadow-2xl border border-destructive/30 overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-destructive/20 bg-destructive/5 shrink-0">
+          <div className="rounded-full bg-destructive/20 p-2.5">
+            <CopyCheck className="h-5 w-5 text-destructive" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-destructive">Duplicate Question Found</h3>
+            <p className="text-xs text-muted-foreground">
+              This question is similar to an existing approved question.
+              {duplicate.similarityScore != null && (
+                <span className="ml-1.5 text-muted-foreground/60">
+                  (Similarity: {(duplicate.similarityScore * 100).toFixed(0)}%)
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          {/* Duplicate Q&A */}
+          {duplicate.matchedAnswer ? (
+            <>
+              {/* Existing question + answer (mirrors user-side submission display) */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Existing Question
+                </p>
+                <div className="rounded-xl border border-border-subtle bg-muted/60 p-4 space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 font-medium">Q</p>
+                    <p className="text-sm text-foreground leading-relaxed">{duplicate.matchedQuestion}</p>
+                  </div>
+                  <div className="border-t border-border-subtle pt-3">
+                    <p className="text-xs text-muted-foreground mb-1 font-medium">A</p>
+                    <TranslatableText
+                      text={duplicate.matchedAnswer}
+                      selectedLang={selectedLang}
+                      onLangChange={onLangChange}
+                      sourceLanguage={currentQuestion.language ?? 'en'}
+                      inline
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-border-subtle bg-muted/60 p-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Existing Question
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">{duplicate.matchedQuestion}</p>
+            </div>
+          )}
+
+          {/* Current question being reviewed */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Question You Are Reviewing
+            </p>
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-xs text-muted-foreground mb-1 font-medium">Q</p>
+              <TranslatableText
+                text={currentQuestion.questionText}
+                selectedLang={selectedLang}
+                onLangChange={onLangChange}
+                sourceLanguage={currentQuestion.language ?? 'en'}
+                inline
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-subtle bg-muted/20 shrink-0">
+          <Button variant="outline" onClick={onDismiss}>
+            Dismiss
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => onReject(currentQuestion.id)}
+            disabled={rejectLoading}
+          >
+            {rejectLoading ? 'Rejecting...' : 'Reject Question'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─── Status filter chips ──────────────────────────────────────────────────────
 
 const STATUS_FILTER_OPTIONS = [
-  { value: '',              label: 'All' },
-  { value: 'pending',       label: 'Pending' },
-  { value: 'ai_review',     label: 'AI Review' },
-  { value: 'human_review',  label: 'Human Review' },
-  { value: 'held',          label: 'Held' },
+  { value: '',           label: 'All' },
+  { value: 'pending',    label: 'Pending' },
+  { value: 'held',       label: 'On Hold' },
+  { value: 'approved',   label: 'Approved' },
+  { value: 'rejected',   label: 'Rejected' },
 ]
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
-  const [questions, setQuestions]       = useState<Question[]>([])
-  const [total, setTotal]               = useState(0)
-  const [page, setPage]                 = useState(1)
-  const [statusFilter, setStatusFilter] = useState('')
-  const [search, setSearch]             = useState('')
-  const [loading, setLoading]           = useState(false)
+  const [questions, setQuestions]         = useState<Question[]>([])
+  const [total, setTotal]                 = useState(0)
+  const [page, setPage]                   = useState(1)
+  const [statusFilter, setStatusFilter]   = useState('')
+  const [search, setSearch]               = useState('')
+  const [loading, setLoading]             = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
-  const [detailOpen, setDetailOpen]     = useState(false)
+  const [detailOpen, setDetailOpen]       = useState(false)
   const [pendingAction, setPendingAction] = useState<{ action: ReviewAction; questionText: string } | null>(null)
   const [langByQuestionId, setLangByQuestionId] = useState<Record<string, string>>({})
+
+  /** "Check Duplicate" state */
+  const [checkDuplicateLoadingId, setCheckDuplicateLoadingId] = useState<string | null>(null)
+  const [duplicateData, setDuplicateData] = useState<{
+    question: Question
+    duplicate: DuplicateData
+  } | null>(null)
 
   const limit = 15
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -504,6 +661,7 @@ export function ReviewsPage() {
     setPage(1)
     setSelectedQuestion(null)
     setDetailOpen(false)
+    setDuplicateData(null)
   }, [debouncedSearch, statusFilter])
 
   useEffect(() => {
@@ -522,6 +680,49 @@ export function ReviewsPage() {
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load review queue')))
       .finally(() => setLoading(false))
   }, [page, debouncedSearch, statusFilter])
+
+  /**
+   * Call the /check-duplicate endpoint. If a duplicate is found, open the
+   * DuplicateFoundModal so the curator can see the existing Q&A and reject.
+   */
+  function checkDuplicateAndShowModal(q: Question) {
+    setCheckDuplicateLoadingId(q.id)
+    curatorApi.checkDuplicate(q.id)
+      .then((result) => {
+        if (result.isDuplicate) {
+          setDuplicateData({
+            question: q,
+            duplicate: {
+              matchedQuestion: result.matchedQuestion ?? '',
+              matchedAnswer: result.matchedAnswer ?? null,
+              similarityScore: result.similarityScore ?? null,
+              matchedUserName: result.matchedUserName ?? null,
+            },
+          })
+        } else {
+          toast.success('No duplicate found — this question is unique.')
+        }
+      })
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to check for duplicates')))
+      .finally(() => setCheckDuplicateLoadingId(null))
+  }
+
+  /**
+   * Called from DuplicateFoundModal's "Reject Question" button.
+   * Immediately rejects with a generated duplicate-rejection reason.
+   */
+  function rejectFromDuplicateModal(questionId: string) {
+    setActionLoading(true)
+    const reason = 'Duplicate of an existing approved question in the knowledge base'
+    curatorApi.reviewQuestion(questionId, { action: 'reject', reason })
+      .then(() => {
+        toast.success('Question rejected as duplicate')
+        setDuplicateData(null)
+        setQuestions((qs) => qs.filter((q) => q.id !== questionId))
+      })
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to reject question')))
+      .finally(() => setActionLoading(false))
+  }
 
   function doAction(id: string, action: ReviewAction, reason: string) {
     setActionLoading(true)
@@ -551,7 +752,7 @@ export function ReviewsPage() {
   }
 
   const totalPages = Math.ceil(total / limit)
-  const columns = buildColumns(page)
+  const columns = buildColumns(page, checkDuplicateAndShowModal, checkDuplicateLoadingId)
   const emptyMessage = search || statusFilter ? 'No questions match your filters' : 'No questions in queue'
 
   return (
@@ -634,11 +835,48 @@ export function ReviewsPage() {
           questionId={selectedQuestion.id}
           questionText={pendingAction.questionText}
           onConfirm={(id, action, reason) => {
-            setPendingAction(null)
-            doAction(id, action, reason)
+            // For approve, run duplicate check first before sending the approval
+            if (action === 'approve') {
+              setPendingAction(null)
+              setActionLoading(true)
+              curatorApi.checkDuplicate(id)
+                .then((result) => {
+                  if (result.isDuplicate) {
+                    setDuplicateData({
+                      question: selectedQuestion,
+                      duplicate: {
+                        matchedQuestion: result.matchedQuestion ?? '',
+                        matchedAnswer: result.matchedAnswer ?? null,
+                        similarityScore: result.similarityScore ?? null,
+                        matchedUserName: result.matchedUserName ?? null,
+                      },
+                    })
+                  } else {
+                    doAction(id, action, reason)
+                  }
+                })
+                .catch((e) => toast.error(getErrorMessage(e, 'Failed to check for duplicates')))
+                .finally(() => setActionLoading(false))
+            } else {
+              setPendingAction(null)
+              doAction(id, action, reason)
+            }
           }}
           onCancel={() => setPendingAction(null)}
           loading={actionLoading}
+        />
+      )}
+
+      {/* Duplicate found modal */}
+      {duplicateData && (
+        <DuplicateFoundModal
+          currentQuestion={duplicateData.question}
+          duplicate={duplicateData.duplicate}
+          onReject={rejectFromDuplicateModal}
+          onDismiss={() => setDuplicateData(null)}
+          rejectLoading={actionLoading}
+          selectedLang={getLang(duplicateData.question.id)}
+          onLangChange={(lang) => setLang(duplicateData.question.id, lang)}
         />
       )}
     </div>

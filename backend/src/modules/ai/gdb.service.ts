@@ -1,0 +1,279 @@
+/**
+ * GdbService — calls the Graph DB (GDB) semantic search endpoint to find
+ * similar questions before a new question is submitted.
+ *
+ * The GDB service runs at GDB_BASE_URL and exposes:
+ *   POST /v1/gdb/search
+ *
+ * It returns candidate questions with similarity_score per evaluation.
+ * If any candidate has chosen_for_answer === true and
+ * similarity >= similarityThreshold (admin config "duplicate_similarity_threshold",
+ * default 0.9), the submission is blocked and the matching question + answer
+ * is returned so the mobile app can show it to the user.
+ */
+
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Question } from '../../shared/database/entities';
+import { AdminService } from '../admin/admin.service';
+import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+
+export interface GdbSearchResult {
+  question_id: string;
+  retrieved_question: string;
+  answer: string;
+  similarity_score: number;
+  relevance_decision: string;
+  relevance_reason: string;
+  classification: string;
+  reason: string;
+  chosen_for_answer: boolean;
+}
+
+export interface GdbSearchResponse {
+  rephrased_query: string;
+  crop: string;
+  state: string;
+  exact_match: {
+    question_id: string
+    similarity_score: number
+    retrieval_source: string
+    question: string
+    answer: string
+  } | null
+  selected_match: {
+    question_id: string;
+    retrieved_question: string;
+    answer: string;
+    similarity_score: number;
+    retrieval_source: string;
+  } | null;
+  classification_audit: {
+    status: string;
+    model: string;
+    relevance_filter_mode: string;
+    evaluations: GdbSearchResult[];
+    selected_question_id: string | null;
+    chosen_for_answer: boolean;
+  };
+}
+
+export interface DuplicateCheckResult {
+  /** true when a matching question was found above the similarity threshold */
+  isDuplicate: boolean;
+  /** DB id of the matched question (null when not a duplicate) */
+  matchedQuestionId: string | null;
+  /** The text of the matched question */
+  matchedQuestion: string | null;
+  /** The answer text for the matched question (from our DB) */
+  matchedAnswer: string | null;
+  /** Similarity score of the top match (null when not a duplicate) */
+  similarityScore: number | null;
+  /**
+   * Display name of the user who submitted the matched question.
+   * Populated when the duplicate was found in our own DB (exact or GDB-assisted).
+   * Falls back to the literal string `'user name not available'` when unknown.
+   */
+  matchedUserName: string | null;
+  /** Raw GDB response for auditing — always populated even on non-duplicate */
+  rawResponse: GdbSearchResponse | null;
+}
+
+@Injectable()
+export class GdbService {
+  private readonly logger = new Logger(GdbService.name);
+
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(forwardRef(() => AdminService))
+    private readonly adminService: AdminService,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+  ) {}
+
+  // ─── Public API ──────────────────────────────────────────────────────────────
+
+  /**
+   * Search for semantically similar questions and check if this submission
+   * should be blocked as a near-duplicate.
+   *
+   * Uses `chosen_for_answer = true` from the GDB classification_audit as the
+   * primary filter (LLM-selected best match) plus the similarity threshold.
+   */
+  async checkDuplicate(payload: {
+    questionText: string;
+    crop: string;
+    state: string;
+  }): Promise<DuplicateCheckResult> {
+    const baseUrl = this.configService.get<string>('gdb.baseUrl')!;
+    const apiKey = this.configService.get<string>('gdb.apiKey')!;
+
+    const url = `${baseUrl}/v1/gdb/search`;
+    this.logger.debug(`[GDB] search → ${url}`);
+
+    // ── Call GDB ──────────────────────────────────────────────────────────────
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          rephrased_query: payload.questionText,
+          crop: payload.crop,
+          state: payload.state,
+        }),
+      });
+    } catch (err) {
+      // Network failure — do not block the user; treat as non-duplicate
+      this.logger.error(`[GDB] network error: ${err}`);
+      return this.noDuplicate();
+    }
+
+    let raw: GdbSearchResponse;
+    let responseText = '';
+    try {
+      responseText = await response.text();
+      this.logger.debug(`[GDB] raw response (${response.status}): ${responseText.slice(0, 500)}`);
+      raw = JSON.parse(responseText) as GdbSearchResponse;
+    } catch {
+      this.logger.error(`[GDB] non-JSON response body: ${responseText?.slice(0, 200)}`);
+      return this.noDuplicate();
+    }
+
+    if (!response.ok) {
+      this.logger.warn(`[GDB] HTTP ${response.status}`);
+      return this.noDuplicate(raw);
+    }
+
+    // ── Resolve threshold from admin config (default 0.9) ─────────────────────
+    const threshold = await this.adminService
+      .getConfigValue('duplicate_similarity_threshold')
+      .catch(() => 0.9);
+
+    this.logger.debug(`[GDB] threshold=${threshold}, evaluations count=${raw.classification_audit?.evaluations?.length ?? 0}`);
+    raw.classification_audit?.evaluations?.forEach((e, i) => {
+      this.logger.debug(
+        `[GDB] eval[${i}] chosen_for_answer=${e.chosen_for_answer} similarity_score=${e.similarity_score} question_id=${e.question_id} retrieved_question=${String(e.retrieved_question ?? '').slice(0, 80)}`,
+      );
+    });
+
+    // ── Find the best match above threshold ─────────────────────────────────────
+    //    Priority:
+    //    1. exact_match (strict exact-duplicate from GDB, always >= 1.0)
+    //    2. chosen_for_answer=true in evaluations AND similarity >= threshold
+    //    3. Highest similarity_score candidate above threshold (fallback)
+    const evaluations = raw.classification_audit?.evaluations ?? [];
+
+    // exact_match is a guaranteed exact/near-exact text duplicate at similarity 1.0
+    if (raw.exact_match && raw.exact_match.similarity_score >= threshold) {
+
+      // Resolve matched entity from DB via the GDB question_id
+      const matchedQuestionEntity = await this.questionRepo.findOne({
+        where: { questionText: raw.exact_match.question },
+        select: ['id', 'questionText'],
+        relations: ['user'],
+      });
+      return {
+        isDuplicate: true,
+        matchedQuestionId: matchedQuestionEntity?.id ?? null,
+        matchedQuestion: raw.exact_match.question,
+        matchedAnswer: raw.exact_match.answer?.trim() || null,
+        similarityScore: raw.exact_match.similarity_score,
+        matchedUserName: this.resolveDisplayName(matchedQuestionEntity?.user ?? null),
+        rawResponse: raw,
+      };
+    }
+
+    const chosenMatch = evaluations.find(
+      (e) => e.chosen_for_answer === true && e.similarity_score >= threshold,
+    );
+
+    const bestMatch =
+      chosenMatch ??
+      evaluations
+        .filter((e) => e.similarity_score >= threshold)
+        .sort((a, b) => b.similarity_score - a.similarity_score)[0] ??
+      null;
+
+    if (!bestMatch) {
+      return this.noDuplicate(raw);
+    }
+
+    const fallback = !evaluations.some((e) => e.chosen_for_answer === true);
+    if (fallback) {
+      this.logger.debug(
+        `[GDB] no chosen_for_answer=true; using fallback highest similarity_score=${bestMatch.similarity_score} question_id=${bestMatch.question_id}`,
+      );
+    }
+
+    // ── Fetch the matched question from our DB using the retrieved question text ──
+    //    (GDB question_ids are short-format identifiers, not our UUIDs)
+    //    Load the user relation to resolve the submitter's display name for the mobile UI.
+    const matchedQuestionEntity = await this.questionRepo.findOne({
+      where: { questionText: bestMatch.retrieved_question },
+      select: ['id', 'questionText'],
+      relations: ['user'],
+    });
+
+    // ── Resolve the answer ───────────────────────────────────────────────────
+    //    Priority:
+    //    1. `selected_match.answer` from GDB (the canonical answer for the top match)
+    //    2. `bestMatch.answer` from the evaluation entry (chosen_for_answer=true path)
+    //    3. retrieved_question as last resort
+    const selectedMatchAnswer = raw.selected_match?.answer?.trim() || null;
+    const evalAnswer = bestMatch.answer?.trim() || null;
+    const matchedAnswer = selectedMatchAnswer ?? evalAnswer ?? bestMatch.retrieved_question;
+    this.logger.debug(
+      `[GDB] answer resolved: selected_match=${selectedMatchAnswer ? 'yes (' + selectedMatchAnswer.slice(0, 50) + '...)' : 'no'} eval_answer=${evalAnswer ? 'yes' : 'no'} fallback=${matchedAnswer === bestMatch.retrieved_question}`,
+    );
+
+    return {
+      isDuplicate: true,
+      // GDB's question_id is not our UUID — use the DB id if found, otherwise null
+      matchedQuestionId: matchedQuestionEntity?.id ?? null,
+      matchedQuestion: bestMatch.retrieved_question,
+      matchedAnswer,
+      similarityScore: bestMatch.similarity_score,
+      matchedUserName: this.resolveDisplayName(matchedQuestionEntity?.user ?? null),
+      rawResponse: raw,
+    };
+  }
+
+  // ─── Private helpers ─────────────────────────────────────────────────────────
+
+  private noDuplicate(raw: GdbSearchResponse | null = null): DuplicateCheckResult {
+    return {
+      isDuplicate: false,
+      matchedQuestionId: null,
+      matchedQuestion: null,
+      matchedAnswer: null,
+      similarityScore: null,
+      matchedUserName: null,
+      rawResponse: raw,
+    };
+  }
+
+  /**
+   * Resolves the best display name from a User entity, using the same priority
+   * as QuestionService.findExactDuplicate:
+   *   1. username  2. name  3. masked mobile  4. 'user name not available'
+   */
+  private resolveDisplayName(user: { username?: string | null; name?: string | null; mobileNumber?: string | null } | null): string | null {
+    if (!user) return null;
+    if (user.username) return user.username;
+    if (user.name?.trim()) return user.name.trim();
+    if (user.mobileNumber) return this.maskMobile(user.mobileNumber);
+    return null;
+  }
+
+  private maskMobile(mobile: string): string {
+    const digits = mobile.replace(/\D/g, '');
+    return digits.length >= 4
+      ? `${'*'.repeat(digits.length - 4)}${digits.slice(-4)}`
+      : mobile;
+  }
+}

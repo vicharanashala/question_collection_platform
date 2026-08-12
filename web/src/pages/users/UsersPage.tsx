@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning text-white',
   suspended: 'bg-warning text-white',
   banned: 'bg-destructive text-white',
-  manual_review: 'bg-ai_review text-white',
+  manual_review: 'bg-amber-500 text-white',
 }
 
 const STATUS_ICONS: Record<string, React.ElementType> = {
@@ -33,6 +33,14 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   suspended: PauseCircle,
   banned: Ban,
 }
+
+const STATUS_FILTER_CHIPS: Array<{ value: string; label: string; dot: string }> = [
+  { value: '',               label: 'All',     dot: 'bg-muted' },
+  { value: 'verified',      label: 'Verified', dot: 'bg-emerald-500' },
+  { value: 'pending',       label: 'Pending',  dot: 'bg-amber-500' },
+  { value: 'suspended',     label: 'Suspended',dot: 'bg-amber-500' },
+  { value: 'banned',        label: 'Banned',   dot: 'bg-red-600' },
+]
 
 export function UsersPage() {
   const { user: currentUser } = useAuth()
@@ -137,17 +145,23 @@ export function UsersPage() {
               className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
             />
           </div>
-          <select
-            className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="verified">Verified</option>
-            <option value="suspended">Suspended</option>
-            <option value="banned">Banned</option>
-          </select>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_FILTER_CHIPS.map((chip) => (
+              <button
+                key={chip.value}
+                onClick={() => { setStatusFilter(chip.value); setPage(1) }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all border',
+                  statusFilter === chip.value
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border-subtle bg-surface-variant text-text-secondary hover:border-primary/40 hover:text-text',
+                )}
+              >
+                <span className={cn('h-1.5 w-1.5 rounded-full', chip.dot)} />
+                {chip.label}
+              </button>
+            ))}
+          </div>
           {isSuperAdmin && (
             <select
               className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
@@ -196,17 +210,39 @@ export function UsersPage() {
               ) : (
                 users.map((u) => {
                   const StatusIcon = STATUS_ICONS[u.verificationStatus] ?? Clock
+                  const isLocked = u.verificationStatus === 'suspended' || u.verificationStatus === 'banned'
                   return (
-                    <tr key={u.id} className="hover:bg-surface-variant/30 transition-colors">
+                    <tr
+                      key={u.id}
+                      className={cn(
+                        'hover:bg-surface-variant/30 transition-colors',
+                        isLocked && 'bg-red-50 dark:bg-red-950/20',
+                      )}
+                    >
                       <td className="px-4 py-3">
                         <Link to={`/users/${u.id}`} className="flex items-center gap-3 group">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          <div className={cn(
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                            isLocked ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' : 'bg-primary/10 text-primary',
+                          )}>
                             {(u.name || u.username || u.mobileNumber).slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-text group-hover:text-primary transition-colors">
-                              {u.name || '—'}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className={cn('font-semibold group-hover:text-primary transition-colors', isLocked && 'text-red-700 dark:text-red-400')}>
+                                {u.name || '—'}
+                              </p>
+                              {isLocked && (
+                                <span className={cn(
+                                  'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+                                  u.verificationStatus === 'banned'
+                                    ? 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                    : 'bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
+                                )}>
+                                  {u.verificationStatus === 'banned' ? 'BANNED' : 'SUSPENDED'}
+                                </span>
+                              )}
+                            </div>
                             {u.username && <p className="text-xs text-text-tertiary">@{u.username}</p>}
                             <p className="text-xs text-text-tertiary">{u.mobileNumber}</p>
                           </div>

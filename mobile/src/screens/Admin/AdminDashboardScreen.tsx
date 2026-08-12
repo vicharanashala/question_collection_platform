@@ -469,31 +469,65 @@ export function AdminDashboardScreen() {
   const [reasonAction, setReasonAction] = useState<'approve' | 'reject' | 'hold' | null>(null);
   const [reasonId, setReasonId] = useState<string | null>(null);
 
+  const isCurator = user?.role === 'curator';
+
   const fetch = useCallback(async () => {
     try {
-      const [s, r] = await Promise.all([
-        adminApi.getDashboardStats(),
-        adminApi.getRewardSummary(),
-      ]);
-      setStats(s.data);
-      setRewards(r.data);
-      try {
-        const [qs1, qs2] = await Promise.all([
+      if (isCurator) {
+        // Curator dashboard: question metrics + queue depth (no rewards/reward summary)
+        const [cd, qs1, qs2] = await Promise.all([
+          adminApi.getCuratorDashboard(),
           adminApi.getReviewQueue({ queueType: 'ai_review', page: 1, limit: 5 }),
           adminApi.getReviewQueue({ queueType: 'human_review', page: 1, limit: 3 }),
         ]);
+        const m = cd.data.questions.summary;
+        setStats({
+          summary: {
+            totalQuestions: m.total,
+            approvedQuestions: m.approved,
+            rejectedQuestions: m.rejected,
+            pendingQuestions: m.pending,
+            totalUsers: 0,
+            flaggedQuestions: 0,
+            approvalRate: m.approvalRate,
+          },
+          stateBreakdown: cd.data.questions.stateBreakdown ?? [],
+          categoryBreakdown: [],
+          dailyVolume: (cd.data.questions.dailyVolume ?? []).map((d: { date: string; total: number; approved: number }) => ({
+            date: d.date,
+            total: d.total,
+            approved: d.approved,
+          })),
+        });
         setQueue([
           ...(qs1.data?.items ?? []),
           ...(qs2.data?.items ?? []),
         ].slice(0, 6));
-      } catch { /* non-critical */ }
+      } else {
+        const [s, r] = await Promise.all([
+          adminApi.getDashboardStats(),
+          adminApi.getRewardSummary(),
+        ]);
+        setStats(s.data);
+        setRewards(r.data);
+        try {
+          const [qs1, qs2] = await Promise.all([
+            adminApi.getReviewQueue({ queueType: 'ai_review', page: 1, limit: 5 }),
+            adminApi.getReviewQueue({ queueType: 'human_review', page: 1, limit: 3 }),
+          ]);
+          setQueue([
+            ...(qs1.data?.items ?? []),
+            ...(qs2.data?.items ?? []),
+          ].slice(0, 6));
+        } catch { /* non-critical */ }
+      }
     } catch (e) {
       showToast(getErrorMessage(e, 'Failed to load dashboard'), 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [showToast]);
+  }, [showToast, isCurator]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -589,12 +623,14 @@ export function AdminDashboardScreen() {
                   {fmt(s?.totalQuestions ?? 0)} questions
                 </Text>
               </View>
-              <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
-                <Ionicons name="people" size={11} color={c.heroFg + 'cc'} />
-                <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                  {fmt(s?.totalUsers ?? 0)} users
-                </Text>
-              </View>
+              {user?.role !== 'curator' && (
+                <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
+                  <Ionicons name="people" size={11} color={c.heroFg + 'cc'} />
+                  <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
+                    {fmt(s?.totalUsers ?? 0)} users
+                  </Text>
+                </View>
+              )}
               <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                 <Ionicons name="checkmark-circle" size={11} color={c.heroFg + 'cc'} />
                 <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
@@ -843,14 +879,16 @@ export function AdminDashboardScreen() {
         {/* ── Quick access ──────────────────────────────────────────────── */}
         <View style={[styles.section, { marginTop: tokens.spacing2 }]}>
           <SectionHeader title="Quick Access" icon="grid" themeColors={c} />
-          <QuickCard
-            label="Users"
-            sub="Manage accounts"
-            icon="people"
-            color="#0891B2"
-            onPress={() => navigation.navigate('AdminUsers')}
-            themeColors={c}
-          />
+          {user?.role !== 'curator' && (
+            <QuickCard
+              label="Users"
+              sub="Manage accounts"
+              icon="people"
+              color="#0891B2"
+              onPress={() => navigation.navigate('AdminUsers')}
+              themeColors={c}
+            />
+          )}
           <QuickCard
             label="Questions"
             sub="Review & moderate"
@@ -928,13 +966,15 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   loadingText: { fontSize: 14, fontWeight: '500' },
-  scroll: { paddingBottom: tokens.spacing4 },
+  scroll: { paddingBottom: tokens.spacing4, paddingTop: tokens.spacing5 },
 
   // Hero
   hero: {
     borderRadius: tokens.radiusLg,
     padding: tokens.spacing5,
+    paddingTop: tokens.spacing5 + 8,
     marginHorizontal: tokens.spacing5,
+    marginTop: 20,
     overflow: 'hidden',
   },
   heroTop: {

@@ -90,7 +90,7 @@ export const speechApi = {
   translate(
     text: string,
     targetLanguage: string,
-    sourceLanguage = 'en',
+    sourceLanguage: string,
   ): Promise<TranslationResult> {
     return api
       .post<TranslationResult>('/speech/translate', {

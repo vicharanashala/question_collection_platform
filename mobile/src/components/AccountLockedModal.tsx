@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity,  } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Linking } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
@@ -7,10 +8,12 @@ import { useAccountLocked } from '../context/AccountLockedContext';
 import { useAuth } from '../hooks/useAuth';
 import { ConfirmModal } from './ConfirmModal';
 import { tokens } from '../utils/theme';
+import { config } from '../config';
 
 export function AccountLockedModal() {
   const { theme } = useTheme();
   const c = theme.colors;
+  const { t } = useTranslation();
   const { lockedInfo, clearLocked } = useAccountLocked();
   const { logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -80,10 +83,24 @@ export function AccountLockedModal() {
             </View>
           )}
 
-          {/* Help text */}
-          <Text style={[styles.helpText, { color: '#FFFFFF55' }]}>
-            If you believe this was a mistake, contact support.
+          {/* Contact support */}
+          <Text style={[styles.contactLabel, { color: '#FFFFFF66' }]}>
+            If you believe this was a mistake, contact support
           </Text>
+          <TouchableOpacity
+            style={styles.emailBtn}
+            onPress={() => {
+              if (!config.support.email) return;
+              const subject = encodeURIComponent(isBan
+                ? t('otp.contactSupportBannedSubject')
+                : t('otp.contactSupportSuspendedSubject'));
+              Linking.openURL(`mailto:${config.support.email}?subject=${subject}`).catch(() => {});
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="mail-outline" size={15} color={accentColor} />
+            <Text style={[styles.emailBtnLabel, { color: accentColor }]}>Send email</Text>
+          </TouchableOpacity>
 
           {/* Logout button */}
           <TouchableOpacity
@@ -152,12 +169,26 @@ const styles = StyleSheet.create({
   },
   dateLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: tokens.spacing1 },
   dateText: { fontSize: 14 },
-  helpText: {
-    fontSize: 13,
+  emailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.spacing1,
+    paddingVertical: 6,
+    paddingHorizontal: tokens.spacing3,
+    borderRadius: tokens.radiusFull,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    marginTop: tokens.spacing2,
+    marginBottom: tokens.spacing6,
+  },
+  emailBtnLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  contactLabel: {
+    fontSize: 12,
     textAlign: 'center',
     marginTop: tokens.spacing2,
-    marginBottom: tokens.spacing8,
-    paddingHorizontal: tokens.spacing4,
   },
   logoutBtn: {
     width: '100%', maxWidth: 280,

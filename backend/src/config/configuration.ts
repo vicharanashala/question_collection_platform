@@ -1,11 +1,9 @@
 import { registerAs } from '@nestjs/config';
 
-export const databaseConfig = registerAs('database', () => ({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'question_platform',
+export const dbConfig = registerAs('db', () => ({
+  mongoUri: process.env.MONGODB_URL || 'mongodb://localhost:27017/question_platform',
+  mongoUser: process.env.MONGODB_USER || process.env.MONGO_USER || '',
+  mongoPassword: process.env.MONGODB_PASSWORD || process.env.MONGO_PASSWORD || '',
 }));
 
 export const jwtConfig = registerAs('jwt', () => ({
@@ -14,6 +12,7 @@ export const jwtConfig = registerAs('jwt', () => ({
 }));
 
 export const redisConfig = registerAs('redis', () => ({
+  enabled: process.env.REDIS_ENABLED !== 'false', // defaults to true (opt-out via REDIS_ENABLED=false)
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || undefined,
@@ -57,6 +56,10 @@ export const gcpStorageConfig = registerAs('gcpStorage', () => ({
   bucketName: process.env.GCP_BUCKET_NAME || '',
   keyFile: process.env.GCP_KEY_FILE || '',
 }));
+
+export const reviewerConfig =registerAs('reviewerConfig', ()=>({
+reviewerUri: process.env.REVIEWER_URI || ""
+}))
 
 function required(key: string): string {
   const val = process.env[key];
