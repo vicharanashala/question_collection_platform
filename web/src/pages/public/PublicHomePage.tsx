@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { questionApi, walletApi, getErrorMessage } from '@/api/client'
+import { adminApi, questionApi, walletApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
-import { FileText, BookOpen, User, MessageSquare, Sparkles, TrendingUp, Wallet } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import {
+  FileText, BookOpen, User, MessageSquare, Sparkles, TrendingUp, Wallet,
+  Trophy, Calendar, PenLine, Lightbulb, ArrowRight, Info, Leaf,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 import { REWARD_TIERS } from '@/constants/public'
@@ -35,12 +39,44 @@ function PublicActionCard({ icon, label, subtitle, onClick, color }: PublicActio
   )
 }
 
+interface InfoTipProps {
+  label: string
+  description: string
+}
+
+function InfoTip({ label, description }: InfoTipProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          className="inline-flex items-center justify-center text-text-tertiary transition-colors hover:text-text-secondary"
+        >
+          <Info className="h-3.5 w-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{description}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+// Tier display config — mirrors the visual style on mobile (Bronze → Silver → Gold).
+// Source-of-truth ranges live in REWARD_TIERS; this is presentation only.
+const TIER_DISPLAY = [
+  { key: 'bronze', label: 'Bronze', bg: 'bg-orange-600', text: 'text-orange-600', track: 'bg-orange-600' },
+  { key: 'silver', label: 'Silver', bg: 'bg-slate-400', text: 'text-slate-500',  track: 'bg-slate-400' },
+  { key: 'gold',   label: 'Gold',   bg: 'bg-amber-500', text: 'text-amber-500',  track: 'bg-amber-500' },
+] as const
+
 export function PublicHomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [stats, setStats] = useState<MyStats | null>(null)
   const [balance, setBalance] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const [dailyLimit, setDailyLimit] = useState<number>(20)
+  const [editWindowSec, setEditWindowSec] = useState<number>(0)
 
   useEffect(() => {
     let alive = true
@@ -48,11 +84,26 @@ export function PublicHomePage() {
     Promise.allSettled([questionApi.getMyStats(), walletApi.getBalance()])
       .then(([s, w]) => {
         if (!alive) return
-        if (s.status === 'fulfilled') setStats(s.value)
+        if (s.status === 'fulfilled') {
+          setStats(s.value)
+          setDailyLimit((s.value as { dailyLimit?: number }).dailyLimit ?? 20)
+        }
         if (w.status === 'fulfilled') setBalance(w.value.balance ?? 0)
       })
       .catch((e) => console.warn(getErrorMessage(e, 'home load')))
       .finally(() => { if (alive) setLoading(false) })
+
+    // Try to read the configured edit-window length so the tip row matches
+    // what staff have set. The endpoint is admin-scoped, so a public user
+    // gets a 403 and we fall back to "closed" (matches the screenshot).
+    adminApi.getConfig()
+      .then((res) => {
+        if (!alive) return
+        const found = (res.items ?? []).find((c) => c.key === 'question_edit_window_seconds')
+        setEditWindowSec(found?.value ?? 0)
+      })
+      .catch(() => { /* public users can't read admin config — default 0 */ })
+
     return () => { alive = false }
   }, [])
 
@@ -135,6 +186,110 @@ export function PublicHomePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Earn Rewards (mirrors mobile home screen) ─────────────────────── */}
+      <section aria-labelledby="earn-rewards-heading">
+        <div className="mb-3">
+          <div className="flex items-center gap-1.5">
+            <h3 id="earn-rewards-heading" className="text-base font-bold text-foreground">Earn Rewards</h3>
+            <InfoTip label="About rewards" description="Earn more as your approved question count grows — up to Rs.10 per question once you reach the Gold tier." />
+          </div>
+          <p className="text-xs text-text-secondary">Rs.10 for 251–500 approved questions</p>
+        </div>
+
+        <Card>
+          <CardContent className="p-5">
+            <div className="relative">
+              {/* Background track spanning the three tier nodes */}
+              <div className="pointer-events-none absolute left-[18px] right-[18px] top-[17px] h-0.5 bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
+              {/* Bronze → Silver connector (Bronze colour) */}
+              <div className="pointer-events-none absolute left-[18px] top-[16px] h-1 w-[calc(50%-18px)] rounded-full bg-orange-600" aria-hidden="true" />
+              {/* Silver → Gold connector (Silver colour) */}
+              <div className="pointer-events-none absolute left-1/2 top-[16px] h-1 w-[calc(50%-18px)] rounded-full bg-slate-400" aria-hidden="true" />
+
+              <div className="relative flex items-start justify-between gap-2">
+                {TIER_DISPLAY.map((tier, i) => {
+                  const range = REWARD_TIERS[i]
+                  return (
+                    <div key={tier.key} className="flex flex-1 flex-col items-center">
+                      <div
+                        className={cn(
+                          'z-10 flex h-9 w-9 items-center justify-center rounded-full text-white shadow-sm',
+                          tier.bg,
+                        )}
+                        aria-hidden="true"
+                      >
+                        <Leaf className="h-4 w-4" />
+                      </div>
+                      <div className="mt-3 text-center">
+                        <p className={cn('text-xs font-extrabold', tier.text)}>{tier.label}</p>
+                        <p className="mt-0.5 text-[10px] text-text-secondary">
+                          {range.min}–{range.max}Qs
+                        </p>
+                        <p className="mt-1 text-base font-extrabold text-foreground">Rs.{range.reward}/Q</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* "Reach Gold Tier" callout — routes to the ask page */}
+        <button
+          type="button"
+          onClick={() => navigate('/public/ask')}
+          className="mt-3 flex w-full items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-left transition-colors hover:bg-emerald-100/70 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30"
+        >
+          <div className="flex items-center gap-3">
+            <Trophy className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold text-foreground">Reach Gold Tier</p>
+              <p className="text-xs text-text-secondary">Earn up to Rs.10 per question after 250 approvals</p>
+            </div>
+          </div>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40" aria-hidden="true">
+            <ArrowRight className="h-3.5 w-3.5 text-emerald-700" />
+          </span>
+        </button>
+      </section>
+
+      {/* ── Submission Tips (mirrors mobile home screen) ───────────────────── */}
+      <section aria-labelledby="submission-tips-heading">
+        <div className="mb-3 flex items-center gap-1.5">
+          <h3 id="submission-tips-heading" className="text-base font-bold text-foreground">Submission Tips</h3>
+          <InfoTip label="About submission tips" description="Follow these tips to keep your submissions high-quality and within platform limits." />
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              <li className="flex items-center gap-3 p-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-50 dark:bg-emerald-950/30" aria-hidden="true">
+                  <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+                </span>
+                <span className="text-sm text-foreground">Daily limit — {dailyLimit} questions per day</span>
+              </li>
+              <li className="flex items-center gap-3 p-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-50 dark:bg-amber-950/30" aria-hidden="true">
+                  <PenLine className="h-3.5 w-3.5 text-amber-600" />
+                </span>
+                <span className="text-sm text-foreground">
+                  {editWindowSec === 0
+                    ? 'Questions cannot be edited after submission'
+                    : `Edit window — ${editWindowSec} seconds after submission`}
+                </span>
+              </li>
+              <li className="flex items-center gap-3 p-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-violet-50 dark:bg-violet-950/30" aria-hidden="true">
+                  <Lightbulb className="h-3.5 w-3.5 text-violet-600" />
+                </span>
+                <span className="text-sm text-foreground">AI relevance check runs automatically before posting</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
 
       <p className="text-center text-xs text-text-tertiary">AnnaDatha · Made for Indian farmers</p>
     </div>
