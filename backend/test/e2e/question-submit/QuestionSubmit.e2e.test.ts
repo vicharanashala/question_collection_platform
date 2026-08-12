@@ -1,18 +1,19 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { DataSource, In } from 'typeorm';
 import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GemmaService } from '../../../src/ai/gemma.service';
-import { GdbService } from '../../../src/ai/gdb.service';
-import { Question, User } from '../../../src/database/entities';
-import { MediaType, QuestionStatus, Season } from '../../../src/common/enums';
+import { GemmaService } from '../../../src/modules/ai/gemma.service';
+import { GdbService } from '../../../src/modules/ai/gdb.service';
+import { Question } from '../../../src/shared/database/entities';
+import { MediaType, QuestionStatus, Season } from '../../../src/shared/classes/enums';
+import { REPOSITORY_TOKENS, IUserRepository, IQuestionRepository } from '../../../src/shared/database/repositories';
 import { createTestApp } from '../helpers/app.helper';
 import { cleanTestData, seedTestUsers } from '../helpers/seed.helper';
 import { getAuthHeaders, getAuthToken } from '../helpers/auth.helper';
 
 describe('Question Submit (e2e)', () => {
   let app: INestApplication;
-  let dataSource: DataSource;
+  let userRepo: IUserRepository;
+  let questionRepo: IQuestionRepository;
   let gemmaService: GemmaService;
   let gdbService: GdbService;
   let farmerToken: string;
@@ -40,38 +41,37 @@ describe('Question Submit (e2e)', () => {
   };
 
   // Seeds a question directly into the DB, bypassing the API daily-limit check.
+  // language deliberately omitted (defaults to 'en' on the schema) — see UserProfile.e2e.md
+  // / test_plan.md for the real MongoDB text-index bug that setting it explicitly would trip.
+  // editWindowClosesAt also omitted — that field was fully removed from the Question schema
+  // when question editing was removed; it doesn't exist anymore.
   async function seedQuestion(userId: string, overrides: Partial<Question> = {}): Promise<Question> {
-    const questionRepo = dataSource.getRepository(Question);
     const now = new Date();
-    return questionRepo.save(
-      questionRepo.create({
-        userId,
-        language: 'mr',
-        domains: ['Insect - Pest Management'],
-        season: Season.KHARIF,
-        cropType: 'Soybean',
-        agroClimaticZone: 'eastern_plateau_and_hills',
-        state: 'Maharashtra',
-        district: 'Pune',
-        block: null,
-        questionText: `Seeded test question ${Date.now()}`,
-        embedding: [0.1, 0.2, 0.3],
-        mediaType: MediaType.NONE,
-        mediaUrls: null,
-        deviceInfo: null,
-        status: QuestionStatus.PENDING,
-        duplicateFlag: false,
-        duplicateOfId: null,
-        editWindowClosesAt: new Date(now.getTime() + 30_000),
-        submittedAt: now,
-        reviewedAt: null,
-        reviewerId: null,
-        rejectionReason: null,
-        heldReason: null,
-        approvalReason: null,
-        ...overrides,
-      }),
-    );
+    return questionRepo.create({
+      userId,
+      domains: ['Insect - Pest Management'],
+      season: Season.KHARIF,
+      cropType: 'Soybean',
+      agroClimaticZone: 'eastern_plateau_and_hills',
+      state: 'Maharashtra',
+      district: 'Pune',
+      block: null,
+      questionText: `Seeded test question ${Date.now()}`,
+      embedding: [0.1, 0.2, 0.3],
+      mediaType: MediaType.NONE,
+      mediaUrls: null,
+      deviceInfo: null,
+      status: QuestionStatus.PENDING,
+      duplicateFlag: false,
+      duplicateOfId: null,
+      submittedAt: now,
+      reviewedAt: null,
+      reviewerId: null,
+      rejectionReason: null,
+      heldReason: null,
+      approvalReason: null,
+      ...overrides,
+    } as Partial<Question>);
   }
 
   beforeAll(async () => {
@@ -79,9 +79,10 @@ describe('Question Submit (e2e)', () => {
     app = testApp.app;
     gemmaService = testApp.gemmaService;
     gdbService = testApp.gdbService;
-    dataSource = app.get(DataSource);
+    userRepo = app.get<IUserRepository>(REPOSITORY_TOKENS.User);
+    questionRepo = app.get<IQuestionRepository>(REPOSITORY_TOKENS.Question);
 
-    await seedTestUsers(dataSource);
+    await seedTestUsers(app);
     farmerToken = await getAuthToken(app, '9000000001');
     studentToken = await getAuthToken(app, '9000000002');
     adminToken = await getAuthToken(app, '9000000005');
@@ -92,7 +93,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanTestData(dataSource);
+    await cleanTestData(app);
     await app.close();
   });
 
@@ -124,7 +125,11 @@ describe('Question Submit (e2e)', () => {
     expect(response.body.status).toBe(QuestionStatus.PENDING);
   });
 
-  it('Submit - low confidence -> status HUMAN_REVIEW', async () => {
+  // AI/human-review confidence branching was removed on `develop` ("streamline question
+  // review process by removing AI and human review statuses") — QuestionStatus no longer
+  // has AI_REVIEW/HUMAN_REVIEW members at all; every new submission goes to PENDING
+  // regardless of Gemma confidence (question.service.ts:311-312).
+  it('Submit - low confidence -> still status PENDING (AI/human-review branching removed)', async () => {
     vi.mocked(gemmaService.inferCropAndDomains).mockResolvedValueOnce({
       crop: 'soybean',
       domains: ['Insect - Pest Management'],
@@ -140,7 +145,7 @@ describe('Question Submit (e2e)', () => {
       })
       .expect(201);
 
-    expect(response.body.status).toBe(QuestionStatus.HUMAN_REVIEW);
+    expect(response.body.status).toBe(QuestionStatus.PENDING);
   });
 
   it('Submit - GDB duplicate detected -> question rejected', async () => {
@@ -219,20 +224,18 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('Submit - daily limit enforcement', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({
-      mobileNumber: '9000000001',
-    });
-    const questionRepo = dataSource.getRepository(Question);
-    await questionRepo.delete({ userId: farmer.id });
+    const farmer = await userRepo.findByMobile('9000000001');
+
+    // No bulk delete-by-filter on the repository abstraction — fetch then delete by id.
+    const existing = await questionRepo.find({ userId: farmer!.id });
+    await Promise.all(existing.map((q) => questionRepo.delete(q.id)));
 
     const submittedAt = new Date();
-    const editWindowClosesAt = new Date(submittedAt.getTime() + 30_000);
 
-    await questionRepo.save(
+    await Promise.all(
       Array.from({ length: 19 }, (_, index) =>
         questionRepo.create({
-          userId: farmer.id,
-          language: 'mr',
+          userId: farmer!.id,
           domains: ['Insect - Pest Management'],
           season: Season.KHARIF,
           cropType: 'Soybean',
@@ -248,14 +251,13 @@ describe('Question Submit (e2e)', () => {
           status: QuestionStatus.PENDING,
           duplicateFlag: false,
           duplicateOfId: null,
-          editWindowClosesAt,
           submittedAt,
           reviewedAt: null,
           reviewerId: null,
           rejectionReason: null,
           heldReason: null,
           approvalReason: null,
-        }),
+        } as Partial<Question>),
       ),
     );
 
@@ -281,40 +283,33 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('Get my questions - returns only own questions', async () => {
-    const student = await dataSource.getRepository(User).findOneByOrFail({
-      mobileNumber: '9000000002',
-    });
-    const questionRepo = dataSource.getRepository(Question);
+    const student = await userRepo.findByMobile('9000000002');
     const submittedAt = new Date();
 
-    await questionRepo.save(
-      questionRepo.create({
-        userId: student.id,
-        language: 'kn',
-        domains: ['Insect - Pest Management'],
-        season: Season.KHARIF,
-        cropType: 'Soybean',
-        agroClimaticZone: 'karnataka_plain_and_lcms',
-        state: 'Karnataka',
-        district: 'Bengaluru',
-        block: null,
-        questionText: 'Student owned question for list endpoint',
-        embedding: [0.1, 0.2, 0.3],
-        mediaType: MediaType.NONE,
-        mediaUrls: null,
-        deviceInfo: null,
-        status: QuestionStatus.PENDING,
-        duplicateFlag: false,
-        duplicateOfId: null,
-        editWindowClosesAt: new Date(submittedAt.getTime() + 30_000),
-        submittedAt,
-        reviewedAt: null,
-        reviewerId: null,
-        rejectionReason: null,
-        heldReason: null,
-        approvalReason: null,
-      }),
-    );
+    await questionRepo.create({
+      userId: student!.id,
+      domains: ['Insect - Pest Management'],
+      season: Season.KHARIF,
+      cropType: 'Soybean',
+      agroClimaticZone: 'karnataka_plain_and_lcms',
+      state: 'Karnataka',
+      district: 'Bengaluru',
+      block: null,
+      questionText: 'Student owned question for list endpoint',
+      embedding: [0.1, 0.2, 0.3],
+      mediaType: MediaType.NONE,
+      mediaUrls: null,
+      deviceInfo: null,
+      status: QuestionStatus.PENDING,
+      duplicateFlag: false,
+      duplicateOfId: null,
+      submittedAt,
+      reviewedAt: null,
+      reviewerId: null,
+      rejectionReason: null,
+      heldReason: null,
+      approvalReason: null,
+    } as Partial<Question>);
 
     const response = await request(app.getHttpServer())
       .get('/questions')
@@ -324,20 +319,36 @@ describe('Question Submit (e2e)', () => {
     expect(response.body.items).toEqual(expect.any(Array));
     expect(response.body.items.length).toBeGreaterThan(0);
 
-    const returnedIds = response.body.items.map((item: { id: string }) => item.id);
-    const returnedQuestions = await questionRepo.find({
-      where: { id: In(returnedIds) },
-      select: ['id', 'userId'],
-    });
+    // Verify ownership by looking each returned id up directly rather than via a TypeORM
+    // In() filter — In()'s FindOperator hits the same mistranslation bug as Between()
+    // (documented in AdminAnalyticsAudit.e2e.md / test_plan.md): mongo-utils.ts's
+    // translateValue() intercepts it via isTypeormFindOperator() before any dedicated
+    // handler runs, and falls through to returning the raw id array as a literal filter
+    // value, matching nothing.
+    const returnedIds: string[] = response.body.items.map((item: { id: string }) => item.id);
+    const returnedQuestions = await Promise.all(returnedIds.map((id) => questionRepo.findById(id)));
 
-    expect(returnedQuestions).toHaveLength(returnedIds.length);
-    expect(returnedQuestions.every((question) => question.userId === student.id)).toBe(true);
+    expect(returnedQuestions.every((q) => q !== null)).toBe(true);
+    expect(returnedQuestions.every((q) => q!.userId === student!.id)).toBe(true);
   });
 
   // ─── Layer 1 Extension ──────────────────────────────────────────────────────
+  //
+  // Real bug, not fixed here (documented in QuestionSubmit.e2e.md / test_plan.md), affects
+  // all 6 tests below that hit a `/questions/:id` route: `question.controller.ts` guards
+  // `PATCH /questions/:id`, `GET /questions/:id`, and 2 other `:id` routes with
+  // `@Param('id', new ParseUUIDPipe())`. Every real question id in Mongo mode is a 24-char
+  // ObjectId hex string, never a UUID, so `ParseUUIDPipe` always rejects it with 400 before
+  // the request ever reaches the controller method — regardless of what the test is actually
+  // trying to exercise (edit-removed 403, ownership 403, read visibility). Same class of bug
+  // as WalletReward's `@IsUUID('4', ...)` finding on `paymentDetailId` — real ids throughout
+  // this Mongo-migrated codebase are ObjectId strings, but several DTOs/route params still
+  // validate against the old UUID format.
+
+
 
   it('Edit - even with an already-expired editWindowClosesAt, PATCH is 403 (feature removed, not window-dependent)', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
+    const farmer = await userRepo.findByMobile('9000000001');
     const question = await seedQuestion(farmer.id, {
       questionText: 'Question with an already-expired edit window',
       editWindowClosesAt: new Date(Date.now() - 1_000), // 1s in the past
@@ -353,7 +364,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('Edit - non-owner cannot edit another users question -> 403', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
+    const farmer = await userRepo.findByMobile('9000000001');
     const question = await seedQuestion(farmer.id, {
       questionText: 'Farmer question that student should not be able to edit',
     });
@@ -366,7 +377,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('GET /questions/:id - owner can read own pending question', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
+    const farmer = await userRepo.findByMobile('9000000001');
     const question = await seedQuestion(farmer.id, {
       questionText: 'Farmer question that only owner should read',
     });
@@ -381,7 +392,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('GET /questions/:id - non-owner cannot read a non-approved question -> 403', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
+    const farmer = await userRepo.findByMobile('9000000001');
     const question = await seedQuestion(farmer.id, {
       questionText: 'Pending question invisible to non-owner',
       status: QuestionStatus.PENDING,
@@ -394,7 +405,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('GET /questions/:id - approved question is visible to any authenticated user', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
+    const farmer = await userRepo.findByMobile('9000000001');
     const question = await seedQuestion(farmer.id, {
       questionText: 'Question that will be approved and become public',
     });
@@ -415,7 +426,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('GET /questions - pagination returns correct page size and totals', async () => {
-    const student = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000002' });
+    const student = await userRepo.findByMobile('9000000002');
     // Seed 3 questions for student so we have enough to paginate
     for (let i = 0; i < 3; i++) {
       await seedQuestion(student.id, { questionText: `Pagination test question ${i + 1} ts=${Date.now()}` });
@@ -432,25 +443,27 @@ describe('Question Submit (e2e)', () => {
     expect(response.body.pages).toBeGreaterThanOrEqual(2);
   });
 
+  // AI_REVIEW/HUMAN_REVIEW statuses were removed on `develop`; using HELD as the "distinct
+  // from PENDING" status instead, same substitution as AdminAnalyticsAudit.e2e.test.ts.
   it('GET /questions - status filter returns only questions matching that status', async () => {
-    const student = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000002' });
-    await seedQuestion(student.id, {
+    const student = await userRepo.findByMobile('9000000002');
+    await seedQuestion(student!.id, {
       questionText: `Filter test PENDING ${Date.now()}`,
       status: QuestionStatus.PENDING,
     });
-    await seedQuestion(student.id, {
-      questionText: `Filter test HUMAN_REVIEW ${Date.now()}`,
-      status: QuestionStatus.HUMAN_REVIEW,
+    await seedQuestion(student!.id, {
+      questionText: `Filter test HELD ${Date.now()}`,
+      status: QuestionStatus.HELD,
     });
 
     const response = await request(app.getHttpServer())
-      .get('/questions?status=human_review')
+      .get('/questions?status=held')
       .set(getAuthHeaders(studentToken))
       .expect(200);
 
     expect(response.body.items.length).toBeGreaterThan(0);
     expect(
-      response.body.items.every((q: { status: string }) => q.status === QuestionStatus.HUMAN_REVIEW),
+      response.body.items.every((q: { status: string }) => q.status === QuestionStatus.HELD),
     ).toBe(true);
   });
 
@@ -536,7 +549,7 @@ describe('Question Submit (e2e)', () => {
   });
 
   it('GET /questions - admin sees questions from all users, not just own', async () => {
-    const farmer = await dataSource.getRepository(User).findOneByOrFail({ mobileNumber: '9000000001' });
+    const farmer = await userRepo.findByMobile('9000000001');
     const farmerQuestion = await seedQuestion(farmer.id, {
       questionText: `Admin visibility test question ${Date.now()}`,
     });

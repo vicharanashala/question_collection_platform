@@ -166,4 +166,10 @@ flowchart TD
 
 | Date | Pass | Fail | Notes |
 |---|---|---|---|
-| — | — | — | Not yet run |
+| 2026-08-12 | 15 | 6 | First real run. `develop` had migrated the backend from PostgreSQL/TypeORM to MongoDB/Mongoose before this suite was ever exercised (see `test_plan.md`'s 2026-08-12 section). Rewrote `DataSource` usage onto the repository abstraction; replaced the removed `QuestionStatus.HUMAN_REVIEW` with `PENDING` (all new submissions now go straight to PENDING — see AIPipeline/QuestionSubmit for the same change). All 6 failures map to root causes already established in other suites this session, not new categories — see below. |
+
+**6 real bugs, not fixed, all matching already-established root causes:**
+
+- **T3 (approve → 500), T6 (cascades from T3):** `WalletsService.creditReward()` (`wallets.service.ts:102`, via `AdminService.reviewQuestion()` at `admin.service.ts:769`) throws `DataSource is not available when DB=mongo` — same root cause documented in `WalletReward.e2e.md` (`this.ds` is an `@Optional()` TypeORM `DataSource` `AppModule` never provides). Approving a question can never credit the farmer's reward right now.
+- **T11 (config items always `[]`):** `AdminService.listConfig()` calls `this.configRepo.find({ order: { key: 'ASC' } })` — same root cause documented in `AIPipeline.e2e.md` (a TypeORM-style options object with no `where` wrapper is treated as a literal Mongo filter).
+- **T15 (fraud list empty), T16 (`wallet.user` undefined), T18 (`processWithdrawal` crashes reading `withdrawal.user.mobileNumber`):** `AdminService.getFraudStats()`/`.listAllWallets()`/`.processWithdrawal()` all use TypeORM relation-based joins (`innerJoin('q.user', 'u')`, `innerJoinAndSelect('w.user', 'u')`) — same root cause documented in `UserProfile.e2e.md`'s leaderboard finding and `AdminAnalyticsAudit.e2e.md`'s audit-log join finding: `MongoQueryBuilder` has no real relation-join support, so joined fields never hydrate.

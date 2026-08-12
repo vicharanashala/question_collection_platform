@@ -265,3 +265,27 @@ this for the whole suite, not just this file. Full run after both fixes: 23/23 p
 | T21 | Submit — empty domains → 400 | ✅ |
 | T22 | Preview — GDB duplicate flag reflected | ✅ |
 | T23 | GET /questions — admin sees all users | ✅ |
+
+**Update 2026-08-12:** `develop` migrated the backend from PostgreSQL/TypeORM to
+MongoDB/Mongoose (see `test_plan.md`'s 2026-08-12 section). Rewrote `DataSource` usage onto
+the repository abstraction; removed `editWindowClosesAt` from `seedQuestion()` and all seed
+calls (confirmed the field no longer exists on the `Question` schema at all — flagged as an
+unresolved TS diagnostic in the previous session, now resolved by deletion rather than
+suppression); replaced `QuestionStatus.HUMAN_REVIEW` (removed — "streamline question review
+process by removing AI and human review statuses") with `PENDING` in the low-confidence test
+and `HELD` in the status-filter test; omitted `language` from all direct-seed question objects
+(see `UserProfile.e2e.md` for the real MongoDB text-index bug this avoids); replaced a
+`questionRepo.find({ where: { id: In(...) } })` ownership check with per-id `findById()` calls
+(the repo abstraction has no bulk delete-by-filter, and `In()` hits the same FindOperator
+mistranslation bug documented in `AdminAnalyticsAudit.e2e.md`).
+
+**Result: 17/23 passing.** 6 tests fail on one real bug, not fixed: `question.controller.ts`
+guards `PATCH /questions/:id`, `GET /questions/:id`, and 2 other `:id` routes with
+`@Param('id', new ParseUUIDPipe())`. Every real question id in Mongo mode is a 24-char
+ObjectId hex string, never a UUID, so `ParseUUIDPipe` always rejects it with 400 before the
+request ever reaches the controller — regardless of what the test is actually trying to
+exercise (edit-removed 403, ownership 403, read visibility). Same class of bug as
+`WalletReward.e2e.md`'s `@IsUUID('4', ...)` finding on `paymentDetailId` — real ids throughout
+this Mongo-migrated codebase are ObjectId strings, but several DTOs/route params still
+validate against the old UUID format. Affects: both "Edit" tests, "Edit - non-owner", and all
+3 "GET /questions/:id" tests.

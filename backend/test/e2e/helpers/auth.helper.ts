@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import request from 'supertest';
-import { DataSource } from 'typeorm';
-import { User } from '../../../src/database/entities';
+import { REPOSITORY_TOKENS, IUserRepository } from '../../../src/shared/database/repositories';
+import { User } from '../../../src/shared/database/entities';
 
 export async function getAuthToken(app: INestApplication, mobileNumber: string): Promise<string> {
   await request(app.getHttpServer())
@@ -14,12 +14,12 @@ export async function getAuthToken(app: INestApplication, mobileNumber: string):
       }
     });
 
-  await app.get(DataSource).getRepository(User).update(
+  await app.get<IUserRepository>(REPOSITORY_TOKENS.User).updateMany(
     { mobileNumber },
     {
       otpHash: await bcrypt.hash('123456', 12),
       otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
-    },
+    } as Partial<User>,
   );
 
   const response = await request(app.getHttpServer())

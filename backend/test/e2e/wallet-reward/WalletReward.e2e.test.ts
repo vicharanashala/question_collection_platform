@@ -1,17 +1,23 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { User, UserPaymentDetail, Wallet } from '../../../src/database/entities';
-import { PayoutMethod, WithdrawalStatus } from '../../../src/common/enums';
-import { WalletsService } from '../../../src/wallets/wallets.service';
+import { UserPaymentDetail } from '../../../src/shared/database/entities';
+import { PayoutMethod, WithdrawalStatus } from '../../../src/shared/classes/enums';
+import { WalletsService } from '../../../src/modules/wallets/wallets.service';
+import {
+  REPOSITORY_TOKENS,
+  IUserRepository,
+  IWalletRepository,
+  IUserPaymentDetailRepository,
+} from '../../../src/shared/database/repositories';
 import { createTestApp } from '../helpers/app.helper';
 import { cleanTestData, seedTestUsers } from '../helpers/seed.helper';
 import { getAuthHeaders, getAuthToken } from '../helpers/auth.helper';
 
 describe('WalletReward (e2e)', () => {
   let app: INestApplication;
-  let dataSource: DataSource;
+  let userPaymentDetailRepo: IUserPaymentDetailRepository;
+  let walletRepo: IWalletRepository;
   let walletsService: WalletsService;
   let farmerToken: string;
   let studentToken: string;
@@ -21,50 +27,50 @@ describe('WalletReward (e2e)', () => {
   let verifiedDetailId: string;
   let pendingWithdrawalId: string;
 
+  // Real bug workaround (documented in WalletReward.e2e.md / test_plan.md), same class as
+  // Auth's username issue: `verificationOrderId` on UserPaymentDetail is `unique: true,
+  // default: null` (no `sparse`) — Mongoose writes an explicit null when omitted, and a
+  // *second* document with an explicit null on a unique-indexed field always collides.
+  // Giving each seeded detail its own unique placeholder avoids tripping this on setup so
+  // the tests below can still exercise their actual intended assertions.
   async function seedVerifiedDetail(userId: string): Promise<UserPaymentDetail> {
-    const repo = dataSource.getRepository(UserPaymentDetail);
-    return repo.save(
-      repo.create({
-        userId,
-        payoutMethod: PayoutMethod.UPI,
-        upiId: 'farmer@upi',
-        status: 'verified',
-        verifiedAt: new Date(),
-      }),
-    );
+    return userPaymentDetailRepo.create({
+      userId,
+      payoutMethod: PayoutMethod.UPI,
+      upiId: 'farmer@upi',
+      status: 'verified',
+      verifiedAt: new Date(),
+      verificationOrderId: `seed-verified-${userId}-${Date.now()}`,
+    } as never);
   }
 
   async function seedUnverifiedDetail(userId: string): Promise<UserPaymentDetail> {
-    const repo = dataSource.getRepository(UserPaymentDetail);
-    return repo.save(
-      repo.create({
-        userId,
-        payoutMethod: PayoutMethod.UPI,
-        upiId: 'farmer2@upi',
-        status: 'in_progress',
-      }),
-    );
+    return userPaymentDetailRepo.create({
+      userId,
+      payoutMethod: PayoutMethod.UPI,
+      upiId: 'farmer2@upi',
+      status: 'in_progress',
+      verificationOrderId: `seed-unverified-${userId}-${Date.now()}`,
+    } as never);
   }
 
   async function setWalletBalance(userId: string, balance: number): Promise<void> {
-    const walletRepo = dataSource.getRepository(Wallet);
-    const wallet = await walletRepo.findOne({ where: { userId } });
+    const wallet = await walletRepo.findByUserId(userId);
     await walletRepo.update(wallet!.id, { balance });
   }
 
   beforeAll(async () => {
     const testApp = await createTestApp();
     app = testApp.app;
-    dataSource = app.get(DataSource);
     walletsService = app.get(WalletsService);
+    userPaymentDetailRepo = app.get<IUserPaymentDetailRepository>(REPOSITORY_TOKENS.UserPaymentDetail);
+    walletRepo = app.get<IWalletRepository>(REPOSITORY_TOKENS.Wallet);
+    const userRepo = app.get<IUserRepository>(REPOSITORY_TOKENS.User);
 
-    await seedTestUsers(dataSource);
+    await seedTestUsers(app);
 
-    const users = await dataSource.getRepository(User).find({
-      where: [{ mobileNumber: '9000000001' }, { mobileNumber: '9000000002' }],
-      order: { mobileNumber: 'ASC' },
-    });
-    farmerId = users[0].id;
+    const farmer = await userRepo.findByMobile('9000000001');
+    farmerId = farmer!.id;
 
     [farmerToken, studentToken] = await Promise.all([
       getAuthToken(app, '9000000001'),
@@ -73,7 +79,7 @@ describe('WalletReward (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanTestData(dataSource);
+    await cleanTestData(app);
     await app.close();
   });
 
@@ -131,6 +137,16 @@ describe('WalletReward (e2e)', () => {
   });
 
   // ── 3. Credit reward (via service) ──────────────────────────────────────────
+  //
+  // Real bug, not fixed here (documented in WalletReward.e2e.md / test_plan.md):
+  // WalletsService.creditReward()/.withdraw()/.cancelWithdrawal() all call
+  // `this.ds.createQueryRunner()` (wallets.service.ts:102, 287, 363) for their balance-update
+  // transaction, but `this.ds` is an `@Optional()` TypeORM DataSource that AppModule never
+  // provides (Mongo-only, no TypeOrmModule.forRoot()) — so these throw
+  // `Error: DataSource is not available when DB=mongo` unconditionally, in any environment,
+  // not just tests. Reward crediting and withdrawal create/cancel are completely
+  // non-functional right now. T6, T7, T9 (depends on T6/T7), T10, T15, T16, T17, T18 (all
+  // depend on T10) are left failing intentionally as an honest signal, per team decision.
 
   it('T6: creditReward — tier 1 (approvedCount=1) → balance +₹1', async () => {
     await walletsService.creditReward({
@@ -188,6 +204,16 @@ describe('WalletReward (e2e)', () => {
   });
 
   // ── 6. Withdraw ─────────────────────────────────────────────────────────────
+  //
+  // Second real bug, not fixed here, compounding the one above: WithdrawDto.paymentDetailId
+  // is validated with `@IsUUID('4', ...)` (wallets/dto/index.ts:16), but every id in Mongo
+  // mode is a 24-char ObjectId hex string, never a UUID — so `POST /wallets/withdraw` always
+  // 400s with "Invalid payment detail ID" before it can even reach the DataSource bug above.
+  // T11–T14 below all hit this same validation error instead of their originally-intended
+  // code paths; assertions changed to String(res.body.message) since Nest's validation
+  // pipe returns `message` as a string[] (which .toMatch() can't take directly), but the
+  // expected message text is intentionally left as the ORIGINAL (now-unreachable) one so
+  // these stay red as an honest signal rather than silently asserting the wrong thing.
 
   it('T10: POST /wallets/withdraw — happy path → 201 PENDING, balance deducted', async () => {
     // Start from a known balance so assertions are deterministic
@@ -219,7 +245,7 @@ describe('WalletReward (e2e)', () => {
       .send({ amount: 10, paymentDetailId: verifiedDetailId })
       .expect(400);
 
-    expect(res.body.message).toMatch(/at least ₹50/);
+    expect(String(res.body.message)).toMatch(/at least ₹50/);
   });
 
   it('T12: POST /wallets/withdraw — amount exceeds balance (₹500 > ₹100) → 400', async () => {
@@ -229,7 +255,7 @@ describe('WalletReward (e2e)', () => {
       .send({ amount: 500, paymentDetailId: verifiedDetailId })
       .expect(400);
 
-    expect(res.body.message).toMatch(/[Ii]nsufficient/);
+    expect(String(res.body.message)).toMatch(/[Ii]nsufficient/);
   });
 
   it('T13: POST /wallets/withdraw — unverified payment detail → 400', async () => {
@@ -241,7 +267,7 @@ describe('WalletReward (e2e)', () => {
       .send({ amount: 60, paymentDetailId: unverified.id })
       .expect(400);
 
-    expect(res.body.message).toMatch(/not verified/i);
+    expect(String(res.body.message)).toMatch(/not verified/i);
   });
 
   it('T14: POST /wallets/withdraw — duplicate pending request → 400', async () => {
@@ -251,7 +277,7 @@ describe('WalletReward (e2e)', () => {
       .send({ amount: 60, paymentDetailId: verifiedDetailId })
       .expect(400);
 
-    expect(res.body.message).toMatch(/already pending/i);
+    expect(String(res.body.message)).toMatch(/already pending/i);
   });
 
   // ── 7. Withdrawals list ──────────────────────────────────────────────────────

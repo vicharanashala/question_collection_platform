@@ -179,3 +179,26 @@ Previously 2 failures, both now fixed as stale test expectations (not product bu
 Both were latent — this suite had never actually run end-to-end before 2026-07-16/17 (its own
 doc said "pending first run" until then), so neither had ever been checked against the real,
 current behavior until this pass.
+
+**Date:** 2026-08-12 | **Result:** 10/10 passing.
+
+`develop` migrated the backend from PostgreSQL/TypeORM to MongoDB/Mongoose (see `test_plan.md`'s
+2026-08-12 section). Two updates were needed, both behavioral (not bugs):
+
+- Rewrote `DataSource`/`getRepository()` usage onto the new repository abstraction.
+- The AI_REVIEW/HUMAN_REVIEW confidence-branching logic was removed entirely on `develop`
+  ("streamline question review process by removing AI and human review statuses") —
+  `QuestionStatus` no longer has those members at all. Test 3 ("confidence 0.899 →
+  HUMAN_REVIEW") now asserts the new real behavior: every submission goes to `PENDING`
+  regardless of Gemma confidence (`question.service.ts:311-312`).
+
+Also found (not fixed) a real bug in Test 8: `AdminService.listConfig()` calls
+`this.configRepo.find({ order: { key: 'ASC' } })` — a TypeORM-style call with no `where`
+wrapper. The Mongo repository's `find(filter)` treats its whole argument as a literal filter
+(no `order`/`take`/`select` support), so it searches for a field literally named `order`, which
+no document has — `GET /admin/config` unconditionally returns `{ items: [] }` in Mongo mode.
+`PATCH /admin/config` itself persists correctly (confirmed — only the list-back path is
+broken), so Test 8 now verifies persistence directly via the config repository instead of
+round-tripping through the broken `GET` endpoint. See `AdminAnalyticsAudit.e2e.md` /
+`AdminOps.e2e.md` for the wider pattern this bug belongs to (5 call sites in
+`admin.service.ts` all pass TypeORM-style options objects to the Mongo `find()`).

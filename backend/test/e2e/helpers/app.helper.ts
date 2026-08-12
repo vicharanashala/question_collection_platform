@@ -3,11 +3,11 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { vi } from 'vitest';
 import { AppModule } from '../../../src/app.module';
-import { GemmaService } from '../../../src/ai/gemma.service';
-import { GdbService } from '../../../src/ai/gdb.service';
-import { EmbedService } from '../../../src/ai/embed.service';
-import { SarvamService } from '../../../src/speech/sarvam.service';
-import { RazorpayPayoutService } from '../../../src/payment/razorpay-payout.service';
+import { GemmaService } from '../../../src/modules/ai/gemma.service';
+import { GdbService } from '../../../src/modules/ai/gdb.service';
+import { EmbedService } from '../../../src/modules/ai/embed.service';
+import { SarvamService } from '../../../src/modules/speech/sarvam.service';
+import { RazorpayPayoutService } from '../../../src/modules/payment/razorpay-payout.service';
 
 type CreateTestAppResult = {
   app: INestApplication;

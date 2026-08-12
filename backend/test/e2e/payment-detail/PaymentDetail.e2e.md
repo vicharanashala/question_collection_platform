@@ -137,3 +137,26 @@ the `WalletReward` T6/T7 finding: this test environment never had a real Redis i
 2026-07-24 (see `docker-compose.test.yml`'s history), so `CacheInterceptor` always treated
 every request as a MISS and this invalidation-pattern mismatch was invisible until Redis was
 actually provisioned. Not test-related — the test's own assertion is correct.
+
+| 2026-08-12 | 5 | 4 | `develop` migrated the backend from PostgreSQL/TypeORM to MongoDB/Mongoose (see `test_plan.md`'s 2026-08-12 section). Rewrote this suite's `DataSource` usage onto the repository abstraction. The old T7 caching finding above is unverified under Mongo (superseded — see below), but 3 real bugs were confirmed. |
+
+**T3, T6, T7 — real bug, not fixed (documented, not worked around — see below for why):**
+`WalletsService.addPaymentDetail()`'s own `this.paymentDetailRepo.save(detail)` call
+(`wallets.service.ts:518`) throws a MongoDB duplicate-key error the moment a **second**
+payment detail (UPI or bank, doesn't matter) is added for the same or any other user.
+`UserPaymentDetail.verificationOrderId` is `unique: true, default: null` (no `sparse`) — the
+first detail's implicit `null` succeeds, every subsequent one collides. Confirmed via a
+temporary diagnostic try/catch around the real service call (added, verified, then reverted —
+not left in `backend/src`). **This is real, production-affecting**: any real user adding a
+second payment method would hit it. Unlike the `verificationOrderId`/`orderId` collisions
+worked around elsewhere in this session (which happen in *our own* test seed helpers, bypassing
+real service code), this one fires from inside the real `addPaymentDetail()` flow itself,
+before the test ever gets an id back to patch — there's no test-side workaround available.
+T3 (add a second detail) fails directly; T6/T7 (list/delete) cascade-fail since `bankDetailId`
+never gets set.
+
+**T9 — real bug, not fixed, same root cause as `WalletReward`'s T6/T7/T10/T15-T17:** the
+`payout.reversed` webhook handler calls `WalletsService.creditReversedWithdrawal()`
+(`wallets.service.ts:422`), which — like `creditReward()`/`withdraw()` — calls
+`this.ds.createQueryRunner()`. `this.ds` is never provided in Mongo mode, so this throws
+unconditionally. Reversed payouts can never credit the wallet back right now.

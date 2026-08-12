@@ -260,3 +260,33 @@ balance and then has a question approved within the next 60 seconds would see a 
 HTTP entirely, as documented above) purely to avoid a Razorpay dependency — but the same gap
 would reproduce through the real HTTP admin-approval endpoint too, since that endpoint has the
 same missing invalidation.
+
+**Date:** 2026-08-12 | **Result:** 6/18 passing. `develop` migrated the backend from
+PostgreSQL/TypeORM to MongoDB/Mongoose (see `test_plan.md`'s 2026-08-12 section). Rewrote this
+suite's `DataSource` usage onto the new repository abstraction. The old T18/T6/T7 findings
+above are Postgres-era and their current status under Mongo is **unverified** — the queries
+they targeted are now unreachable, blocked upstream by two much bigger, newly-confirmed bugs
+that between them account for all 12 of this run's failures:
+
+1. **`WalletsService.creditReward()`/`.withdraw()`/`.cancelWithdrawal()` all throw
+   unconditionally** (`wallets.service.ts:102, 287, 363`): each calls
+   `this.ds.createQueryRunner()` for its balance-update transaction, but `this.ds` is an
+   `@Optional()` TypeORM `DataSource` that `AppModule` never provides in Mongo mode (no
+   `TypeOrmModule.forRoot()` anywhere) — `Error: DataSource is not available when DB=mongo`,
+   every time, in any environment, not just tests. **Reward crediting and withdrawal
+   create/cancel are completely non-functional right now.** Blocks T6, T7, T9 (depends on
+   T6/T7), T10, T15, T16, T17, T18 (all depend on T10 succeeding).
+
+2. **`WithdrawDto.paymentDetailId` is validated with `@IsUUID('4', ...)`**
+   (`wallets/dto/index.ts:16`), but every id in Mongo mode is a 24-char ObjectId hex string,
+   never a UUID — `POST /wallets/withdraw` always 400s with `"Invalid payment detail ID"`
+   before it can even reach bug (1) above. Blocks T11–T14, which now hit this validation error
+   instead of their originally-intended code paths (amount-below-minimum, insufficient
+   balance, unverified detail, duplicate-pending — none of that logic is ever reached).
+
+Both are real, confirmed (not guessed — traced via server-side stack traces), not fixed here.
+Two smaller, separately-confirmed real bugs surfaced and were worked around at the test-seed
+level only (not fixed, and not the cause of any remaining failure): `UserPaymentDetail
+.verificationOrderId` is `unique: true, default: null` with no `sparse` flag, so a second
+seeded detail with an explicit null collides — worked around by giving each seeded detail a
+unique placeholder value.

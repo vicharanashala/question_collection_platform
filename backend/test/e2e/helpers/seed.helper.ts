@@ -1,10 +1,14 @@
-import { DataSource } from 'typeorm';
-import { AdminConfig, User, Wallet } from '../../../src/database/entities';
+import { INestApplication } from '@nestjs/common';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
+import { REPOSITORY_TOKENS, IUserRepository, IWalletRepository, IAdminConfigRepository } from '../../../src/shared/database/repositories';
+import { User } from '../../../src/shared/database/entities';
 
 const testUsers = [
   {
     mobileNumber: '9000000001',
     name: 'Test Farmer',
+    username: 'test_farmer_seed1',
     category: 'farmer',
     state: 'Maharashtra',
     district: 'Pune',
@@ -17,6 +21,7 @@ const testUsers = [
   {
     mobileNumber: '9000000002',
     name: 'Test Student',
+    username: 'test_student_seed2',
     category: 'student',
     state: 'Karnataka',
     district: 'Bengaluru',
@@ -29,6 +34,7 @@ const testUsers = [
   {
     mobileNumber: '9000000003',
     name: 'Test Curator',
+    username: 'test_curator_seed3',
     category: 'volunteer',
     state: 'Maharashtra',
     district: 'Pune',
@@ -41,6 +47,7 @@ const testUsers = [
   {
     mobileNumber: '9000000004',
     name: 'Test Finance',
+    username: 'test_finance_seed4',
     category: 'volunteer',
     state: 'Maharashtra',
     district: 'Pune',
@@ -53,6 +60,7 @@ const testUsers = [
   {
     mobileNumber: '9000000005',
     name: 'Test Admin',
+    username: 'test_admin_seed5',
     category: 'volunteer',
     state: 'Maharashtra',
     district: 'Pune',
@@ -65,6 +73,7 @@ const testUsers = [
   {
     mobileNumber: '9000000006',
     name: 'Test SuperAdmin',
+    username: 'test_superadmin_seed6',
     category: 'volunteer',
     state: 'Maharashtra',
     district: 'Pune',
@@ -90,54 +99,40 @@ const adminConfig = {
   video_max_duration_seconds: 10,
 };
 
-export async function seedTestUsers(dataSource: DataSource) {
-  const userRepository = dataSource.getRepository(User);
-  const walletRepository = dataSource.getRepository(Wallet);
-  const configRepository = dataSource.getRepository(AdminConfig);
+export async function seedTestUsers(app: INestApplication): Promise<User[]> {
+  const userRepo = app.get<IUserRepository>(REPOSITORY_TOKENS.User);
+  const walletRepo = app.get<IWalletRepository>(REPOSITORY_TOKENS.Wallet);
+  const configRepo = app.get<IAdminConfigRepository>(REPOSITORY_TOKENS.AdminConfig);
 
-  const users = await userRepository.save(testUsers.map((user) => userRepository.create(user as Partial<User>)));
+  const users: User[] = [];
+  for (const userData of testUsers) {
+    const user = await userRepo.create(userData as Partial<User>);
+    users.push(user);
+  }
 
-  await walletRepository.save(
-    users.map((user) =>
-      walletRepository.create({
-        user,
-        balance: 0,
-      } as Partial<Wallet>),
-    ),
-  );
+  for (const user of users) {
+    await walletRepo.create({ userId: user.id, balance: 0 } as never);
+  }
 
-  await configRepository.save(
-    Object.entries(adminConfig).map(([key, value]) =>
-      configRepository.create({
-        key,
-        value,
-      } as Partial<AdminConfig>),
-    ),
-  );
+  for (const [key, value] of Object.entries(adminConfig)) {
+    await configRepo.create({ key, value } as never);
+  }
 
   return users;
 }
 
-export async function getTestUsers(dataSource: DataSource) {
-  return dataSource.getRepository(User).find({
-    where: testUsers.map(({ mobileNumber }) => ({ mobileNumber })),
-    order: { mobileNumber: 'ASC' },
-  });
+export async function getTestUsers(app: INestApplication): Promise<User[]> {
+  const userRepo = app.get<IUserRepository>(REPOSITORY_TOKENS.User);
+  const users: User[] = [];
+  for (const { mobileNumber } of testUsers) {
+    const user = await userRepo.findByMobile(mobileNumber);
+    if (user) users.push(user);
+  }
+  return users.sort((a, b) => (a.mobileNumber ?? '').localeCompare(b.mobileNumber ?? ''));
 }
 
-export async function cleanTestData(dataSource: DataSource) {
-  const tables = [
-    'notifications',
-    'audit_logs',
-    'questions',
-    'transactions',
-    'withdrawal_requests',
-    'payment_logs',
-    'user_payment_details',
-    'wallets',
-    'users',
-    'admin_config',
-  ];
-
-  await dataSource.query(`TRUNCATE TABLE ${tables.map((table) => `"${table}"`).join(', ')} RESTART IDENTITY CASCADE`);
+export async function cleanTestData(app: INestApplication): Promise<void> {
+  const connection = app.get<Connection>(getConnectionToken());
+  const collections = await connection.db!.collections();
+  await Promise.all(collections.map((collection) => collection.deleteMany({})));
 }

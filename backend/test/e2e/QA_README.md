@@ -147,20 +147,24 @@ Per-test overrides use `vi.mocked(service.method).mockResolvedValueOnce(...)`.
 
 ## Known Failing Tests
 
-**As of 2026-07-24**, all 3 previously-flagged failures above have been root-caused. Two turned
-out to be test-fixture bugs, not product bugs, and are now fixed (see `test_plan.md`'s
-"2026-07-24 — develop merge fallout" section for the full story of that investigation). The
-remaining 3 tests below fail on a full `vitest run` because of real product bugs — confirmed,
-not test issues — left unfixed per team decision ("we are only testers"):
+**As of 2026-08-12**, `develop` was merged again and migrated the backend from
+PostgreSQL/TypeORM to MongoDB/Mongoose. All 8 e2e suites were rewritten onto the new
+repository abstraction (see `test_plan.md`'s "2026-08-12 — `develop` merge #2" section for the
+full investigation). This superseded the 3 bugs previously listed here — the code paths they
+lived in were rewritten as part of the migration, so their current status is unverified. **41
+of 123 tests now fail**, every one attributed to one of ~9 confirmed real bugs surfaced by the
+migration (not test-harness issues) — full detail and per-suite breakdowns are in
+`test_plan.md`'s results table and each suite's own `.md` "Last run" section. Highlights:
 
-| Suite | Test | Failure | Root cause |
-|---|---|---|---|
-| `wallet-reward/WalletReward.e2e.test.ts` | T18: GET /wallets/me/withdrawals | `expected 200, got 500` | `WalletsService.getWithdrawals()` selects a column (`wr.rejectionReason`) that doesn't exist on `WithdrawalRequest` (only `failureReason` does) |
-| `wallet-reward/WalletReward.e2e.test.ts` | T6, T7: creditReward tier balance checks | `expected balance to be 1 / 6, got 0` | `GET /wallets/me` is cached; reward crediting on question approval never invalidates that cache (different controller, no `@CacheInvalidate`) |
-| `payment-detail/PaymentDetail.e2e.test.ts` | T7: DELETE payment-details removes bank detail | stale list still contains deleted id | `DELETE .../payment-details/:id` invalidates pattern `wallet:*`, but the payment-details list is cached under a different key prefix (`payment_details`) that pattern never matches |
+| Bug | Impact |
+|---|---|
+| `WalletsService` methods call a TypeORM `DataSource` never provided in Mongo mode | Reward crediting and withdrawal create/cancel/reversal are completely non-functional |
+| `@IsUUID`/`ParseUUIDPipe` validators reject real Mongo ObjectId strings | Withdraw and question-by-id endpoints always reject valid ids |
+| Sparse-unique-null schema bugs (`username`, `verificationOrderId`, `orderId`) | A second payment detail (any user, any type) always 500s |
+| `Between()`/`In()` FindOperator mistranslation in the Mongo query layer | Date-range and id-list filters silently match nothing |
+| Raw SQL / TypeORM relation-joins never ported to Mongo | Leaderboard, most audit-log endpoints, fraud stats, admin wallet listings return empty or crash |
 
-See each suite's own `.md` file (`WalletReward.e2e.md`, `PaymentDetail.e2e.md`) for full detail,
-including the git-history evidence for the `rejectionReason` bug.
+None of these are fixed, per team decision ("we are only testers").
 
 ---
 
