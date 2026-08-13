@@ -640,8 +640,40 @@ const resources = {
         "mediaUploadHelp": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight.",
         "updateSuccess": "Question Updated",
         "successBody": "Your question is under review. You will be notified once it is approved.",
-        "submitAnother": "Submit Another Question"
+        "submitAnother": "Submit Another Question",
+        "expertWillRespond": "An expert will get back to you with an answer.",
+        "questionExample": "e.g. My tomato leaves are turning yellow — what should I do?",
+        "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
+        "pickDomain": "Pick a domain",
+        "pickSeason": "Pick a season",
+        "pickCrop": "Pick a crop",
+        "cropOtherManually": "Other (enter manually)",
+        "cropLocalPlaceholder": "e.g. Local millet variety",
+        "dailyLimitIndicator": "Daily limit reached",
+        "errors": {
+          "pickDomain": "Please pick a domain",
+          "pickSeason": "Please pick a season",
+          "enterCrop": "Please enter the crop type",
+          "dailyLimitReached": "You have reached the daily submission limit",
+          "locationMissing": "Your profile is missing location info — please update it.",
+          "rewriteSpam": "Please rewrite your question so it does not look like spam."
+        },
+        "duplicate": {
+          "expertAnswer": "Expert answer",
+          "answeredBy": "— Answered by {{name}}",
+          "askAnyway": "Ask anyway",
+          "backHome": "Back home"
+        }
       },
+      "justNow": "just now",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago",
+      "showing": "Showing {{start}}-{{end}} of {{total}}",
+      "pageX": "Page {{page}} / {{total}}",
+      "askYourFirstQuestion": "Ask your first question",
+      "noQuestionsFound": "No questions found",
+      "published": "Published",
+      "onHold": "On hold",
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
       "rolePlaceholder": "e.g., Coordinator, Field Officer",
@@ -1123,7 +1155,10 @@ const resources = {
         "approved": "Approved",
         "pending": "Pending",
         "rejected": "Rejected",
-        "duplicate": "Duplicate"
+        "duplicate": "Duplicate",
+        "held": "On hold",
+        "published": "Published",
+        "yourSubmissions": "Your submitted questions and their status."
       },
       "status": {
         "verified": "Verified",
