@@ -192,9 +192,9 @@ export function LoginPage() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20 ring-4 ring-primary/10">
             <ShieldCheck className="h-8 w-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl font-extrabold tracking-tight">Admin Portal</CardTitle>
+          <CardTitle className="text-2xl font-extrabold tracking-tight">Login Portal</CardTitle>
           <CardDescription className="text-sm text-text-secondary px-2">
-            Sign in to manage users, questions, and content
+            Sign in with your mobile number to continue
           </CardDescription>
           <div className="mt-4">
             <StepDots step={step} />
@@ -317,7 +317,7 @@ export function LoginPage() {
 
       <div className="absolute bottom-6 left-0 right-0 px-4 text-center space-y-1">
         <p className="text-xs text-text-tertiary">
-          Question Collection Platform &middot; Admin Dashboard
+          Question Collection Platform &middot; AnnaDatha
         </p>
         <Link
           to="/public/register"
