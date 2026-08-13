@@ -178,12 +178,12 @@ function StatCard({ icon, label, value, tone }: StatCardProps) {
   }
   const p = palettes[tone]
   return (
-    <div className={cn('rounded-xl border p-3', p.bg)}>
-      <div className={cn('flex h-7 w-7 items-center justify-center rounded-md bg-white/70 dark:bg-black/20', p.text)}>
+    <div className={cn('rounded-xl border p-3 lg:p-4', p.bg)}>
+      <div className={cn('flex h-7 w-7 items-center justify-center rounded-md bg-white/70 dark:bg-black/20 lg:h-9 lg:w-9', p.text)}>
         {icon}
       </div>
-      <p className={cn('mt-2 text-lg font-extrabold tabular-nums leading-none', p.value)}>{value}</p>
-      <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">{label}</p>
+      <p className={cn('mt-2 text-lg font-extrabold tabular-nums leading-none lg:text-xl', p.value)}>{value}</p>
+      <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-text-tertiary lg:text-xs">{label}</p>
     </div>
   )
 }
@@ -289,7 +289,7 @@ export function PublicWalletPage() {
 
   if (loading && balance === null) {
     return (
-      <div className="mx-auto flex max-w-2xl items-center justify-center py-20">
+      <div className="mx-auto flex max-w-5xl items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
       </div>
     )
@@ -297,7 +297,7 @@ export function PublicWalletPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="mx-auto max-w-2xl space-y-5">
+      <div className="mx-auto max-w-5xl space-y-5">
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">{t('wallet.title')}</h2>
@@ -327,7 +327,7 @@ export function PublicWalletPage() {
         </div>
 
         {/* ── Balance hero card ──────────────────────────────────── */}
-        <div className="overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-5 text-white shadow-md dark:from-emerald-700 dark:via-emerald-800 dark:to-teal-900">
+        <div className="overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-5 text-white shadow-md dark:from-emerald-700 dark:via-emerald-800 dark:to-teal-900 lg:p-7">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-90">

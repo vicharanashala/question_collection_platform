@@ -85,10 +85,10 @@ export function PublicQuestionsPage() {
   const end = Math.min(page * limit, total)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">{t('submissions.title')}</h2>
+          <h2 className="text-xl font-bold text-foreground lg:text-2xl">{t('submissions.title')}</h2>
           <p className="mt-0.5 text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
         </div>
         <Button onClick={() => navigate('/public/ask')} className="bg-emerald-500 hover:bg-emerald-600">
@@ -118,12 +118,16 @@ export function PublicQuestionsPage() {
           ) : (
             <ul className="divide-y divide-border-subtle">
               {items.map((q) => (
-                <li key={q.id} className="p-4 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer" onClick={() => q.id && navigate(`/public/questions/${q.id}`)}>
+                <li key={q.id} className="p-4 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer lg:p-5" onClick={() => q.id && navigate(`/public/questions/${q.id}`)}>
                   <div className="flex items-start gap-3">
                     {q.mediaUrls && q.mediaUrls.length > 0 && <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />}
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 text-sm font-medium text-foreground">{q.questionText}</p>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-text-tertiary">
+                    {/* Text + meta stack on mobile; on desktop the meta (status/
+                        date/crop) moves beside the text instead of below it,
+                        so a short question isn't left with empty space to its
+                        right on a wide row. */}
+                    <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+                      <p className="line-clamp-2 flex-1 text-sm font-medium text-foreground lg:line-clamp-1 lg:text-base">{q.questionText}</p>
+                      <div className="flex shrink-0 items-center gap-2 text-xs text-text-tertiary">
                         <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>{t(statusLabelKey(q.status))}</span>
                         <span>·</span>
                         <span>{formatDate(q.submittedAt)}</span>

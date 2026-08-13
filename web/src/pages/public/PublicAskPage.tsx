@@ -317,7 +317,7 @@ export function PublicAskPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
@@ -335,86 +335,94 @@ export function PublicAskPage() {
         <p className="text-sm text-text-secondary mt-0.5">{t('question.expertWillRespond')}</p>
       </div>
       <Card>
-        <CardContent className="p-5">
+        <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
-              <Textarea id="q" placeholder={t('question.questionExample')} value={questionText} onChange={(e) => setQuestionText(e.target.value)} rows={4} maxLength={MAX_QUESTION_CHARS} className="resize-none" />
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-text-tertiary">{t('question.tipDetailed')}</span>
-                <span className={questionText.length > MAX_QUESTION_CHARS - 50 ? 'text-amber-600 font-semibold' : 'text-text-tertiary'}>{questionText.length}/{MAX_QUESTION_CHARS}</span>
+            {/* Question (primary field) + Domain/Season/Crop/Voice (secondary
+                fields) sit side by side on desktop instead of one long
+                stacked column, so the wide viewport isn't mostly empty. */}
+            <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
+              <div className="flex flex-col gap-1.5 lg:col-span-3">
+                <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
+                <Textarea id="q" placeholder={t('question.questionExample')} value={questionText} onChange={(e) => setQuestionText(e.target.value)} rows={8} maxLength={MAX_QUESTION_CHARS} className="resize-none lg:flex-1" />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-text-tertiary">{t('question.tipDetailed')}</span>
+                  <span className={questionText.length > MAX_QUESTION_CHARS - 50 ? 'text-amber-600 font-semibold' : 'text-text-tertiary'}>{questionText.length}/{MAX_QUESTION_CHARS}</span>
+                </div>
+                {/* Inline AI validation banner — same semantics as the mobile
+                    `AIValidationBanner`: warns on off-topic / duplicate, blocks
+                    on spam. Only rendered when there's something to surface. */}
+                {showBanner && aiValidation && (
+                  <AIValidationBanner
+                    result={aiValidation}
+                    onDismiss={() => setBannerDismissed(true)}
+                  />
+                )}
               </div>
-              {/* Inline AI validation banner — same semantics as the mobile
-                  `AIValidationBanner`: warns on off-topic / duplicate, blocks
-                  on spam. Only rendered when there's something to surface. */}
-              {showBanner && aiValidation && (
-                <AIValidationBanner
-                  result={aiValidation}
-                  onDismiss={() => setBannerDismissed(true)}
-                />
-              )}
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>{t('question.domain')} <span className="text-rose-600">*</span></Label>
-                <Select value={domain} onValueChange={setDomain}>
-                  <SelectTrigger><SelectValue placeholder={t('question.pickDomain')} /></SelectTrigger>
-                  <SelectContent>
-                    {DOMAINS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>{t('question.season')} <span className="text-rose-600">*</span></Label>
-                <Select value={season} onValueChange={setSeason}>
-                  <SelectTrigger><SelectValue placeholder={t('question.pickSeason')} /></SelectTrigger>
-                  <SelectContent>
-                    {SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="crop">{t('question.cropType')} <span className="text-rose-600">*</span></Label>
-              <button
-                id="crop"
-                type="button"
-                onClick={() => setCropPickerOpen(true)}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
-              >
-                <span className={cropType ? 'text-text' : 'text-text-tertiary'}>
-                  {cropType || t('question.pickCrop')}
-                </span>
-                <svg className="h-4 w-4 text-text-tertiary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
 
-            {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
-                 Disabled when the daily limit is reached or the AI flagged
-                 the text as spam, so the user can't circumvent validation
-                 by typing fresh text after submitting a flagged one. */}
-            <div className="rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
-              <MicButton
-                disabled={atLimit || blockedByAi}
-                onRecordingStart={() => {
-                  // Clear any stale banner dismissal when a new recording
-                  // starts so the user can re-evaluate their question.
-                  setBannerDismissed(false)
-                }}
-                onTranscribed={(text) => {
-                  setQuestionText((prev) => {
-                    const base = prev.trim()
-                    // Append with a space separator when joining with prior text
-                    return base ? `${base} ${text}` : text
-                  })
-                  // Re-focus the textarea so the user can edit immediately
-                  requestAnimationFrame(() => {
-                    document.getElementById('q')?.focus()
-                  })
-                }}
-              />
+              <div className="flex flex-col gap-4 lg:col-span-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="space-y-1.5">
+                    <Label>{t('question.domain')} <span className="text-rose-600">*</span></Label>
+                    <Select value={domain} onValueChange={setDomain}>
+                      <SelectTrigger><SelectValue placeholder={t('question.pickDomain')} /></SelectTrigger>
+                      <SelectContent>
+                        {DOMAINS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t('question.season')} <span className="text-rose-600">*</span></Label>
+                    <Select value={season} onValueChange={setSeason}>
+                      <SelectTrigger><SelectValue placeholder={t('question.pickSeason')} /></SelectTrigger>
+                      <SelectContent>
+                        {SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="crop">{t('question.cropType')} <span className="text-rose-600">*</span></Label>
+                  <button
+                    id="crop"
+                    type="button"
+                    onClick={() => setCropPickerOpen(true)}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+                  >
+                    <span className={cropType ? 'text-text' : 'text-text-tertiary'}>
+                      {cropType || t('question.pickCrop')}
+                    </span>
+                    <svg className="h-4 w-4 text-text-tertiary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
+                     Disabled when the daily limit is reached or the AI flagged
+                     the text as spam, so the user can't circumvent validation
+                     by typing fresh text after submitting a flagged one. */}
+                <div className="flex flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5 lg:flex-1">
+                  <MicButton
+                    disabled={atLimit || blockedByAi}
+                    onRecordingStart={() => {
+                      // Clear any stale banner dismissal when a new recording
+                      // starts so the user can re-evaluate their question.
+                      setBannerDismissed(false)
+                    }}
+                    onTranscribed={(text) => {
+                      setQuestionText((prev) => {
+                        const base = prev.trim()
+                        // Append with a space separator when joining with prior text
+                        return base ? `${base} ${text}` : text
+                      })
+                      // Re-focus the textarea so the user can edit immediately
+                      requestAnimationFrame(() => {
+                        document.getElementById('q')?.focus()
+                      })
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-1">

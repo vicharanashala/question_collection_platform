@@ -400,26 +400,28 @@ export function PublicPaymentMethodsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto max-w-4xl space-y-4">
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="relative flex h-12 items-center justify-center border-b border-border-subtle bg-surface px-2 dark:bg-surface">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="absolute left-2 flex h-9 w-9 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-base font-bold text-foreground">{t('profile.paymentMethods')}</h1>
-        <button
-          type="button"
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-xl font-bold text-foreground lg:text-2xl">{t('profile.paymentMethods')}</h1>
+        </div>
+        <Button
+          variant={mode === 'add' ? 'outline' : 'default'}
           onClick={() => setMode((m) => (m === 'list' ? 'add' : 'list'))}
-          className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-md text-emerald-600 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-          aria-label={mode === 'add' ? 'Close' : 'Add payment method'}
+          className={mode === 'add' ? '' : 'bg-emerald-500 hover:bg-emerald-600'}
         >
-          {mode === 'add' ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-        </button>
+          {mode === 'add' ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {mode === 'add' ? t('common.close', 'Close') : t('paymentMethods.addButton')}
+        </Button>
       </div>
 
       {/* ── Info banner ─────────────────────────────────────────── */}

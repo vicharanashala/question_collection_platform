@@ -112,7 +112,7 @@ interface AccountCardProps {
 }
 function AccountCard({ icon: Icon, title, children }: AccountCardProps) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden lg:min-w-[320px] lg:flex-1 lg:basis-[380px]">
       <div className="flex items-center gap-2 px-4 pt-4 pb-2">
         <Icon className="h-3.5 w-3.5 text-emerald-600" />
         <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
@@ -309,7 +309,7 @@ export function PublicProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5 pb-4">
+    <div className="mx-auto max-w-6xl space-y-5 pb-4 lg:space-y-6">
       {/* — 1. Hero card ———————————————————————————————————————— */}
       <Card className="overflow-hidden">
         <CardContent className="p-4">
@@ -430,7 +430,7 @@ export function PublicProfilePage() {
       </Card>
 
       {/* — 3. Stats row ————————————————————————————————————— */}
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
         <StatTile
           icon={Wallet}
           value={rupee + (walletBalance ?? 0)}
@@ -450,222 +450,239 @@ export function PublicProfilePage() {
         />
       </div>
 
-      {/* — 4. Account section —————————————————————— */}
-      <section className="space-y-4">
-        <SectionHeader
-          icon={Users}
-          title={t('profile.account')}
-        />
+      {/* Below the fold: profile detail cards (main column) + actions/sign-out
+          (sidebar) sit side by side on desktop. items-start keeps the shorter
+          sidebar from being stretched tall to match the much longer main
+          column. */}
+      <div className="grid gap-5 lg:grid-cols-3 lg:items-start lg:gap-6">
+        <div className="space-y-4 lg:col-span-2">
+          {/* — 4. Account section —————————————————————— */}
+          <section className="space-y-4">
+            <SectionHeader
+              icon={Users}
+              title={t('profile.account')}
+            />
 
-        {/* Personal Info */}
-        <AccountCard icon={Users} title={t('profile.personalInfo')}>
-          <div className="border-t border-slate-100 dark:border-slate-800">
-            {user.username != null && (
-              <AccountRow icon={AtSign} label={t('profile.username')} value={String('@') + user.username} />
-            )}
-            {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(cat)} />}
-            {user.gender && (
-              <AccountRow
-                icon={Users}
-                label={t('profile.gender')}
-                value={<span className="capitalize">{user.gender}</span>}
-              />
-            )}
-            {user.age != null && (
-              <AccountRow
-                icon={CalendarDays}
-                label={t('profile.age')}
-                value={user.age + ' ' + t('profile.years')}
-                isLast
-              />
-            )}
-          </div>
-        </AccountCard>
+            {/* Detail cards flow two-per-row on wide screens instead of
+                stacking full-width one after another. A plain 2-col grid
+                would leave a dangling empty cell when the visible card count
+                is odd (varies by user category); flex-wrap + flex-1 lets a
+                lone trailing card grow to fill the full row instead. */}
+            <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+              {/* Personal Info */}
+              <AccountCard icon={Users} title={t('profile.personalInfo')}>
+                <div className="border-t border-slate-100 dark:border-slate-800">
+                  {user.username != null && (
+                    <AccountRow icon={AtSign} label={t('profile.username')} value={String('@') + user.username} />
+                  )}
+                  {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(cat)} />}
+                  {user.gender && (
+                    <AccountRow
+                      icon={Users}
+                      label={t('profile.gender')}
+                      value={<span className="capitalize">{user.gender}</span>}
+                    />
+                  )}
+                  {user.age != null && (
+                    <AccountRow
+                      icon={CalendarDays}
+                      label={t('profile.age')}
+                      value={user.age + ' ' + t('profile.years')}
+                      isLast
+                    />
+                  )}
+                </div>
+              </AccountCard>
 
-        {/* Location */}
-        {(user.state || user.district || user.block || user.village || user.kvk) && (
-          <AccountCard icon={MapPin} title={t('profile.location')}>
-            <div className="border-t border-slate-100 dark:border-slate-800">
-              {user.state && <AccountRow icon={MapPin} label={t('profile.state')} value={user.state} />}
-              {user.district && (
-                <AccountRow icon={Building2} label={t('profile.district')} value={user.district} />
+              {/* Location */}
+              {(user.state || user.district || user.block || user.village || user.kvk) && (
+                <AccountCard icon={MapPin} title={t('profile.location')}>
+                  <div className="border-t border-slate-100 dark:border-slate-800">
+                    {user.state && <AccountRow icon={MapPin} label={t('profile.state')} value={user.state} />}
+                    {user.district && (
+                      <AccountRow icon={Building2} label={t('profile.district')} value={user.district} />
+                    )}
+                    {user.block && (
+                      <AccountRow icon={MapPinned} label={t('profile.block')} value={user.block} />
+                    )}
+                    {user.village && (
+                      <AccountRow icon={Home} label={t('profile.village')} value={user.village} />
+                    )}
+                    {user.kvk && (
+                      <AccountRow icon={School} label={t('profile.kvk')} value={user.kvk} isLast />
+                    )}
+                  </div>
+                </AccountCard>
               )}
-              {user.block && (
-                <AccountRow icon={MapPinned} label={t('profile.block')} value={user.block} />
+
+              {/* Education — students only */}
+              {cat === 'student' && (user.courseName || user.collegeName || user.universityName) && (
+                <AccountCard icon={GraduationCap} title={t('profile.education')}>
+                  <div className="border-t border-slate-100 dark:border-slate-800">
+                    {user.courseName && (
+                      <AccountRow icon={BookOpen} label={t('profile.course')} value={user.courseName} />
+                    )}
+                    {user.collegeName && (
+                      <AccountRow icon={School} label={t('profile.college')} value={user.collegeName} />
+                    )}
+                    {user.universityName && (
+                      <AccountRow
+                        icon={GraduationCap}
+                        label={t('profile.university')}
+                        value={user.universityName}
+                        isLast
+                      />
+                    )}
+                  </div>
+                </AccountCard>
               )}
-              {user.village && (
-                <AccountRow icon={Home} label={t('profile.village')} value={user.village} />
-              )}
-              {user.kvk && (
-                <AccountRow icon={School} label={t('profile.kvk')} value={user.kvk} isLast />
+
+              {/* Organization — FPO / NGO only */}
+              {(cat === 'fpo' || cat === 'ngo') &&
+                (user.organizationName ||
+                  user.organisationType ||
+                  user.organizationRole ||
+                  user.numberOfFarmers != null) && (
+                  <AccountCard icon={Briefcase} title={t('profile.organisationDetails')}>
+                    <div className="border-t border-slate-100 dark:border-slate-800">
+                      {user.organizationName && (
+                        <AccountRow icon={Briefcase} label={t('profile.orgName')} value={user.organizationName} />
+                      )}
+                      {user.organisationType && (
+                        <AccountRow icon={Tag} label={t('profile.orgType')} value={user.organisationType} />
+                      )}
+                      {user.organizationRole && (
+                        <AccountRow
+                          icon={Users}
+                          label={t('profile.orgRole')}
+                          value={user.organizationRole}
+                        />
+                      )}
+                      {user.numberOfFarmers != null && (
+                        <AccountRow
+                          icon={Users}
+                          label={t('profile.members')}
+                          value={String(user.numberOfFarmers)}
+                          isLast
+                        />
+                      )}
+                    </div>
+                  </AccountCard>
+                )}
+
+              {/* Organization Location — FPO / NGO only */}
+              {(cat === 'fpo' || cat === 'ngo') &&
+                (user.organizationState ||
+                  user.organizationDistrict ||
+                  user.organizationBlock ||
+                  user.organizationVillage) && (
+                  <AccountCard icon={MapPin} title={t('profile.organisationLocation')}>
+                    <div className="border-t border-slate-100 dark:border-slate-800">
+                      {user.organizationState && (
+                        <AccountRow icon={MapPin} label={t('profile.state')} value={user.organizationState} />
+                      )}
+                      {user.organizationDistrict && (
+                        <AccountRow
+                          icon={Building2}
+                          label={t('profile.district')}
+                          value={user.organizationDistrict}
+                        />
+                      )}
+                      {user.organizationBlock && (
+                        <AccountRow
+                          icon={MapPinned}
+                          label={t('profile.block')}
+                          value={user.organizationBlock}
+                        />
+                      )}
+                      {user.organizationVillage && (
+                        <AccountRow
+                          icon={Home}
+                          label={t('profile.village')}
+                          value={user.organizationVillage}
+                          isLast
+                        />
+                      )}
+                    </div>
+                  </AccountCard>
+                )}
+
+              {/* — 5. Farming card (farmers only) ————————— */}
+              {cat === 'farmer' && (user.farmSize || user.cropType || user.season) && (
+                <AccountCard icon={Sprout} title={t('profile.farming')}>
+                  <div className="border-t border-slate-100 dark:border-slate-800">
+                    {user.farmSize && (
+                      <AccountRow
+                        icon={Ruler}
+                        label={t('profile.farmSize')}
+                        value={user.farmSize + ' ' + t('profile.acres')}
+                      />
+                    )}
+                    {user.cropType && (
+                      <AccountRow
+                        icon={Sprout}
+                        label={t('profile.crop')}
+                        value={user.cropType}
+                        isLast={!user.season}
+                      />
+                    )}
+                    {user.season && (
+                      <AccountRow icon={Calendar} label={t('profile.season')} value={user.season} isLast />
+                    )}
+                  </div>
+                </AccountCard>
               )}
             </div>
-          </AccountCard>
-        )}
+          </section>
 
-        {/* Education — students only */}
-        {cat === 'student' && (user.courseName || user.collegeName || user.universityName) && (
-          <AccountCard icon={GraduationCap} title={t('profile.education')}>
-            <div className="border-t border-slate-100 dark:border-slate-800">
-              {user.courseName && (
-                <AccountRow icon={BookOpen} label={t('profile.course')} value={user.courseName} />
-              )}
-              {user.collegeName && (
-                <AccountRow icon={School} label={t('profile.college')} value={user.collegeName} />
-              )}
-              {user.universityName && (
-                <AccountRow
-                  icon={GraduationCap}
-                  label={t('profile.university')}
-                  value={user.universityName}
-                  isLast
+          {/* — 6. Crops chips (any category, if cropType set) — */}
+          {cropList.length > 0 && (
+            <section>
+              <SectionHeader icon={Sprout} title={t('profile.crops')} />
+              <div className="flex flex-wrap gap-1.5">
+                {cropList.map((c) => (
+                  <CropChip key={c} name={c} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <div className="space-y-4 lg:col-span-1">
+          {/* — 7. Actions section ——————————————————— */}
+          <section>
+            <SectionHeader icon={Trophy} title={t('profile.actions')} />
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <ActionRow
+                  icon={Wallet}
+                  label={t('profile.paymentMethods')}
+                  onClick={() => navigate('/public/payment-methods')}
                 />
-              )}
-            </div>
-          </AccountCard>
-        )}
+                <ActionRow icon={Flag} label={t('report.title')} onClick={handleReport} />
+                <ActionRow
+                  icon={HelpCircle}
+                  label={t('profile.helpAndFeedback')}
+                  onClick={() => navigate('/public/faqs')}
+                />
+                <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={handleTerms} />
+                <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={handlePrivacy} />
+                <ActionRow icon={MessageSquarePlus} label={t('profile.contactAdmin')} onClick={handleContact} />
+              </CardContent>
+            </Card>
+          </section>
 
-        {/* Organization — FPO / NGO only */}
-        {(cat === 'fpo' || cat === 'ngo') &&
-          (user.organizationName ||
-            user.organisationType ||
-            user.organizationRole ||
-            user.numberOfFarmers != null) && (
-            <AccountCard icon={Briefcase} title={t('profile.organisationDetails')}>
-              <div className="border-t border-slate-100 dark:border-slate-800">
-                {user.organizationName && (
-                  <AccountRow icon={Briefcase} label={t('profile.orgName')} value={user.organizationName} />
-                )}
-                {user.organisationType && (
-                  <AccountRow icon={Tag} label={t('profile.orgType')} value={user.organisationType} />
-                )}
-                {user.organizationRole && (
-                  <AccountRow
-                    icon={Users}
-                    label={t('profile.orgRole')}
-                    value={user.organizationRole}
-                  />
-                )}
-                {user.numberOfFarmers != null && (
-                  <AccountRow
-                    icon={Users}
-                    label={t('profile.members')}
-                    value={String(user.numberOfFarmers)}
-                    isLast
-                  />
-                )}
-              </div>
-            </AccountCard>
-          )}
-
-        {/* Organization Location — FPO / NGO only */}
-        {(cat === 'fpo' || cat === 'ngo') &&
-          (user.organizationState ||
-            user.organizationDistrict ||
-            user.organizationBlock ||
-            user.organizationVillage) && (
-            <AccountCard icon={MapPin} title={t('profile.organisationLocation')}>
-              <div className="border-t border-slate-100 dark:border-slate-800">
-                {user.organizationState && (
-                  <AccountRow icon={MapPin} label={t('profile.state')} value={user.organizationState} />
-                )}
-                {user.organizationDistrict && (
-                  <AccountRow
-                    icon={Building2}
-                    label={t('profile.district')}
-                    value={user.organizationDistrict}
-                  />
-                )}
-                {user.organizationBlock && (
-                  <AccountRow
-                    icon={MapPinned}
-                    label={t('profile.block')}
-                    value={user.organizationBlock}
-                  />
-                )}
-                {user.organizationVillage && (
-                  <AccountRow
-                    icon={Home}
-                    label={t('profile.village')}
-                    value={user.organizationVillage}
-                    isLast
-                  />
-                )}
-              </div>
-            </AccountCard>
-          )}
-      </section>
-
-      {/* — 5. Farming card (farmers only) ————————— */}
-      {cat === 'farmer' && (user.farmSize || user.cropType || user.season) && (
-        <AccountCard icon={Sprout} title={t('profile.farming')}>
-          <div className="border-t border-slate-100 dark:border-slate-800">
-            {user.farmSize && (
-              <AccountRow
-                icon={Ruler}
-                label={t('profile.farmSize')}
-                value={user.farmSize + ' ' + t('profile.acres')}
-              />
-            )}
-            {user.cropType && (
-              <AccountRow
-                icon={Sprout}
-                label={t('profile.crop')}
-                value={user.cropType}
-                isLast={!user.season}
-              />
-            )}
-            {user.season && (
-              <AccountRow icon={Calendar} label={t('profile.season')} value={user.season} isLast />
-            )}
-          </div>
-        </AccountCard>
-      )}
-
-      {/* — 6. Crops chips (any category, if cropType set) — */}
-      {cropList.length > 0 && (
-        <section>
-          <SectionHeader icon={Sprout} title={t('profile.crops')} />
-          <div className="flex flex-wrap gap-1.5">
-            {cropList.map((c) => (
-              <CropChip key={c} name={c} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* — 7. Actions section ——————————————————— */}
-      <section>
-        <SectionHeader icon={Trophy} title={t('profile.actions')} />
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <ActionRow
-              icon={Wallet}
-              label={t('profile.paymentMethods')}
-              onClick={() => navigate('/public/payment-methods')}
-            />
-            <ActionRow icon={Flag} label={t('report.title')} onClick={handleReport} />
-            <ActionRow
-              icon={HelpCircle}
-              label={t('profile.helpAndFeedback')}
-              onClick={() => navigate('/public/faqs')}
-            />
-            <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={handleTerms} />
-            <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={handlePrivacy} />
-            <ActionRow icon={MessageSquarePlus} label={t('profile.contactAdmin')} onClick={handleContact} />
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* — 8. Sign Out ———————————————————————————————————— */}
-      <button
-        type="button"
-        onClick={() => setLogoutOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
-      >
-        <LogOut className="h-4 w-4" />
-        {t('profile.signOut')}
-      </button>
+          {/* — 8. Sign Out ———————————————————————————————————— */}
+          <button
+            type="button"
+            onClick={() => setLogoutOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
+          >
+            <LogOut className="h-4 w-4" />
+            {t('profile.signOut')}
+          </button>
+        </div>
+      </div>
 
       <p className="pt-2 text-center text-xs text-text-tertiary">
         AnnaDatha — Made for Indian farmers
