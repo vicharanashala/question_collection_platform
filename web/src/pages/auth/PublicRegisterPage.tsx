@@ -1,16 +1,21 @@
 ﻿/**
  * Public-user signup flow. Mirrors the mobile folder's
- *   LoginPhoneScreen â†’ OtpScreen â†’ TermsScreen â†’ RegisterScreen
- * by combining them into a single page with four sequential stages:
- *   1. `mobile` â€” enter mobile number + request OTP
+ *   LoginPhoneScreen â†’ OtpScreen â†’ RegisterScreen
+ * by combining them into a single page with three sequential stages:
+ *   1. `mobile` â€” enter mobile number + accept Terms of Service and
+ *                 Privacy Policy (inline accordion) + request OTP
  *   2. `otp`    â€” enter OTP + verify (gates new vs returning user)
- *   3. `terms`  â€” accept Terms of Service + Privacy Policy (mobile TermsScreen analogue)
- *   4. `wizard` â€” 4-step profile wizard (category â†’ location â†’ details â†’ consent)
+ *   3. `wizard` â€” 4-step profile wizard (category â†’ location â†’ details â†’ consent)
+ *
+ * The Terms acceptance is folded into the mobile stage so the user
+ * agrees before the OTP is sent â€” the Send OTP button is disabled
+ * until both a valid mobile number has been entered and the consent
+ * checkbox is ticked.
  *
  * The `mobile` + `otp` stages are skipped when the user arrives here
  * from the LoginPage OTP-success path (which already supplies a
  * `state.mobileNumber` after OTP verification); such users land on
- * the `terms` stage directly.
+ * the `wizard` stage directly.
  */
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -23,7 +28,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion, FileText, ChevronDown, ChevronUp, Shield } from 'lucide-react'
+import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion, FileText, ChevronDown, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { LANGUAGES, USER_CATEGORIES, GENDER_OPTIONS, SUPPORTED_STATES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS, SEASONS } from '@/constants/public'
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
@@ -36,7 +41,7 @@ const OTHER_VALUE = '__other__'
 const RESEND_COOLDOWN = 30 // seconds
 
 interface RegisterState { mobileNumber: string }
-type GateStage = 'mobile' | 'otp' | 'terms' | 'wizard'
+type GateStage = 'mobile' | 'otp' | 'wizard'
 
 // â”€â”€â”€ Resend countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -77,12 +82,11 @@ function useCountdown(initial = 0) {
 const GATE_STAGE_LABELS: Record<GateStage, string> = {
   mobile: 'Mobile',
   otp: 'Verify',
-  terms: 'Terms',
   wizard: 'Profile',
 }
 
 function GateProgress({ stage }: { stage: GateStage }) {
-  const order: GateStage[] = ['mobile', 'otp', 'terms', 'wizard']
+  const order: GateStage[] = ['mobile', 'otp', 'wizard']
   const activeIdx = order.indexOf(stage)
   return (
     <div className="mb-4 flex items-center justify-center gap-2">
@@ -181,10 +185,45 @@ interface MobileStageProps {
   setGateMobile: (v: string) => void
   gateLoading: boolean
   lockedInfo: AccountLockedInfo | null
+  accepted: boolean
+  setAccepted: (v: boolean) => void
   handleSendOtp: (e: React.FormEvent) => void
 }
 
-function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, handleSendOtp }: MobileStageProps) {
+// ─── Terms accordion (used inside MobileStage) ─────────────────────────────
+// Collapsible list of TERMS_SECTIONS so the user can read the ToS inline
+// before agreeing. Uses native <details>/<summary> for accessibility (built-in
+// keyboard + screen-reader support, no extra deps) and avoids the unmount-
+// /remount churn that comes from a stateful controlled accordion.
+function TermsAccordion() {
+  return (
+    <div className="max-h-[180px] overflow-y-auto rounded-lg border border-border-subtle bg-surface-variant/40">
+      <div className="divide-y divide-border-subtle">
+        {TERMS_SECTIONS.map(({ id, title, body }) => (
+          <details key={id} className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold text-foreground hover:bg-surface-variant/70 [&::-webkit-details-marker]:hidden">
+              <span className="flex flex-1 items-center gap-2">
+                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                  {id}
+                </span>
+                <span className="leading-tight">{title}</span>
+              </span>
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-tertiary transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="border-t border-border-subtle bg-surface/60 px-3 py-2">
+              <p className="text-[11px] leading-relaxed text-text-secondary">{body}</p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accepted, setAccepted, handleSendOtp }: MobileStageProps) {
+  const [showPolicy, setShowPolicy] = useState(false)
+  const isValidMobile = gateMobile.length === 10
+
   return (
     <div className="space-y-5">
       <div className="text-center space-y-2">
@@ -218,13 +257,69 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, handl
           </div>
           <p className="text-xs text-text-secondary">Standard SMS rates may apply.</p>
         </div>
-        <Button type="submit" className="w-full shadow-md" size="lg" disabled={gateLoading}>
+
+        {/* Terms & Conditions — read + agree before sending OTP */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4 text-emerald-700" />
+              <h3 className="text-sm font-semibold text-foreground">Terms &amp; Conditions</h3>
+            </div>
+            <span className="text-[11px] text-text-tertiary">
+              {TERMS_SECTIONS.length} sections
+            </span>
+          </div>
+          <TermsAccordion />
+          <button
+            type="button"
+            onClick={() => setShowPolicy(true)}
+            className="mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+          >
+            <Shield className="h-3.5 w-3.5" />
+            Read our Privacy Policy →
+          </button>
+        </div>
+
+        {/* Consent checkbox */}
+        <label
+          className={cn(
+            'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
+            accepted
+              ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-500/40 dark:bg-emerald-500/15'
+              : 'border-border-subtle bg-surface',
+          )}
+        >
+          <input
+            type="checkbox"
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-emerald-500"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            disabled={gateLoading}
+            data-testid="terms-consent-checkbox"
+          />
+          <span className="text-xs leading-relaxed text-foreground">
+            I have read and agree to the <span className="font-bold">Terms of Service</span> and{' '}
+            <span className="font-bold">Privacy Policy</span>
+          </span>
+        </label>
+
+        <Button
+          type="submit"
+          className="w-full shadow-md"
+          size="lg"
+          disabled={gateLoading || !isValidMobile || !accepted}
+        >
           {gateLoading ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending OTP...</>
           ) : (
             'Send OTP'
           )}
         </Button>
+        {!accepted && isValidMobile && (
+          <p className="text-center text-[11px] text-text-tertiary">
+            Please read and agree to the Terms of Service to continue.
+          </p>
+        )}
         <div className="text-center">
           <Link
             to="/login"
@@ -234,6 +329,7 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, handl
           </Link>
         </div>
       </form>
+      <PrivacyPolicyDialog open={showPolicy} onOpenChange={setShowPolicy} />
     </div>
   )
 }
@@ -381,141 +477,6 @@ function PrivacyPolicyDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
-
-// ─── Terms stage ───────────────────────────────────────────────────────────
-// Mirrors `mobile/src/screens/Auth/TermsScreen.tsx`:
-//   • Top bar with "← Back" + "Terms of Service" title.
-//   • Hero with `FileText` icon, title, and section count subtitle.
-//   • 11 collapsible accordion sections (TERMS_SECTIONS).
-//   • "Read our Privacy Policy →" link → opens PrivacyPolicyDialog.
-//   • "I have read and agree to the Terms of Service and Privacy Policy" checkbox.
-//   • "Confirm & Continue" button (disabled until accepted).
-// The `back` prop returns to the OTP stage; `acceptAndContinue` advances to
-// the wizard. Local state (accepted / openId / showPolicy) lives here so the
-// component owns its UI behaviour independently of the parent.
-interface TermsStageProps {
-  mobileNumber: string
-  back: () => void
-  acceptAndContinue: () => void
-}
-
-function TermsStage({ mobileNumber, back, acceptAndContinue }: TermsStageProps) {
-  const [accepted, setAccepted] = useState(false)
-  const [openId, setOpenId] = useState<string | null>('1')
-  const [showPolicy, setShowPolicy] = useState(false)
-
-  return (
-    <>
-      {/* Top bar */}
-      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
-        <button
-          type="button"
-          onClick={back}
-          className="min-w-[60px] text-left text-sm font-semibold text-primary hover:underline"
-        >
-          ← Back
-        </button>
-        <h2 className="text-base font-bold text-foreground">Terms of Service</h2>
-        <div className="min-w-[60px]" />
-      </div>
-
-      {/* Scrollable body */}
-      <div className="max-h-[60vh] overflow-y-auto px-4 py-5 sm:px-6">
-        {/* Hero */}
-        <div className="mb-5 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-            <FileText className="h-8 w-8" />
-          </div>
-          <h3 className="text-xl font-extrabold text-foreground">Terms of Service</h3>
-          <p className="mt-1 text-xs text-text-secondary">
-            Read and accept to continue · {TERMS_SECTIONS.length} sections
-          </p>
-        </div>
-
-        {/* Accordion sections */}
-        <div className="mb-5 space-y-1.5">
-          {TERMS_SECTIONS.map(({ id, title, body }) => {
-            const isOpen = openId === id
-            return (
-              <div key={id} className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
-                <button
-                  type="button"
-                  onClick={() => setOpenId(isOpen ? null : id)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-variant/40"
-                >
-                  <span className="flex flex-1 items-center gap-3">
-                    <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                      {id}
-                    </span>
-                    <span className="text-sm font-semibold text-foreground">{title}</span>
-                  </span>
-                  {isOpen ? (
-                    <ChevronUp className="h-4 w-4 shrink-0 text-text-tertiary" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-text-tertiary" />
-                  )}
-                </button>
-                {isOpen && (
-                  <div className="border-t border-border-subtle px-4 py-3">
-                    <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Privacy Policy link */}
-        <button
-          type="button"
-          onClick={() => setShowPolicy(true)}
-          className="mx-auto mb-5 flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline"
-        >
-          <Shield className="h-4 w-4" />
-          Read our Privacy Policy →
-        </button>
-      </div>
-
-      {/* Consent + confirm footer */}
-      <div className="border-t border-border-subtle px-4 py-4 sm:px-6">
-        <label
-          className={cn(
-            'mb-3 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
-            accepted
-              ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-500/40 dark:bg-emerald-500/15'
-              : 'border-border-subtle bg-surface',
-          )}
-        >
-          <input
-            type="checkbox"
-            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-emerald-500"
-            checked={accepted}
-            onChange={(e) => setAccepted(e.target.checked)}
-          />
-          <span className="text-xs leading-relaxed text-foreground">
-            I have read and agree to the <span className="font-bold">Terms of Service</span> and{' '}
-            <span className="font-bold">Privacy Policy</span>
-          </span>
-        </label>
-        <Button
-          type="button"
-          onClick={acceptAndContinue}
-          disabled={!accepted}
-          className="w-full shadow-md"
-          size="lg"
-        >
-          <CheckCircle2 className="mr-2 h-4 w-4" />
-          Confirm & Continue
-        </Button>
-        <p className="mt-3 text-center text-[11px] text-text-secondary">
-          Signing up for <span className="font-semibold text-emerald-700 dark:text-emerald-300">+91 {mobileNumber}</span>
-        </p>
-      </div>
-
-      <PrivacyPolicyDialog open={showPolicy} onOpenChange={setShowPolicy} />
-    </>
   )
 }
 
@@ -853,19 +814,25 @@ export function PublicRegisterPage() {
   const initialMobile = state?.mobileNumber ?? ''
 
   // ─── Gate state machine ────────────────────────────────────────────────────
-  // Mobile → OTP → terms → wizard. When the user arrives from the LoginPage
-  // OTP-success path, `state.mobileNumber` is already set, so we skip the
-  // mobile + OTP stages and land on the `terms` stage — the same place the
-  // in-gate OTP flow would have put them.
-  const [stage, setStage] = useState<GateStage>(initialMobile ? 'terms' : 'mobile')
+  // Mobile (entry + terms acceptance) → OTP → wizard. When the user arrives
+  // from the LoginPage OTP-success path, `state.mobileNumber` is already set,
+  // so we skip the mobile + OTP stages and land directly on the wizard stage.
+  const [stage, setStage] = useState<GateStage>(initialMobile ? 'wizard' : 'mobile')
   const [gateMobile, setGateMobile] = useState(initialMobile) // mobile currently awaiting OTP
   const [verifiedMobile, setVerifiedMobile] = useState(initialMobile) // mobile after OTP OK
+  const [accepted, setAccepted] = useState(false) // Terms of Service consent
   const [otp, setOtp] = useState('')
   const [gateLoading, setGateLoading] = useState(false)
   const [gateError, setGateError] = useState('')
   const [lockedInfo, setLockedInfo] = useState<AccountLockedInfo | null>(null)
   const countdown = useCountdown()
   const otpRef = useRef<HTMLInputElement>(null)
+
+  // Reset terms acceptance whenever the user changes their mobile number —
+  // they need to re-confirm with the new (potentially different) identity.
+  useEffect(() => {
+    setAccepted(false)
+  }, [gateMobile])
 
   // The wizard submits with this number (post-verification).
   const mobileNumber = verifiedMobile
@@ -888,6 +855,12 @@ export function PublicRegisterPage() {
     const cleaned = gateMobile.replace(/\D/g, '').slice(0, 10)
     if (cleaned.length !== 10) {
       toast.error('Enter a valid 10-digit mobile number')
+      return
+    }
+    if (!accepted) {
+      // Defensive: the Send OTP button is also `disabled` when !accepted, but
+      // the form can still be submitted by pressing Enter in the mobile input.
+      toast.error('Please agree to the Terms of Service before continuing')
       return
     }
     setGateLoading(true)
@@ -926,7 +899,8 @@ export function PublicRegisterPage() {
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
           setVerifiedMobile(gateMobile)
-          setStage('terms')
+          setStep(1) // reset wizard so re-entering always restarts at step 1
+          setStage('wizard')
           countdown.stop()
           return
         }
@@ -1068,10 +1042,16 @@ export function PublicRegisterPage() {
       // Within the wizard: go one step back.
       setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4))
     } else {
-      // Step 1 is the first wizard step — return to the Terms stage so the
-      // user can re-read the ToS, change their acceptance, or click "Back"
-      // again to return to the OTP stage (or to /login for LoginPage users).
-      setStage('terms')
+      // Step 1 is the first wizard step — return to the mobile / OTP stage so
+      // the user can re-enter their number or nav back to /login. The Terms
+      // acceptance is now inline on the mobile stage (no separate step).
+      if (initialMobile) {
+        // User arrived here from LoginPage — there's no OTP stage to return
+        // to, so just navigate back to /login.
+        navigate('/login', { replace: true })
+      } else {
+        setStage('otp')
+      }
     }
   }
 
@@ -1180,25 +1160,10 @@ export function PublicRegisterPage() {
   }
   const isGateStage = stage !== 'wizard'
 
-  // ─── Terms stage handlers ────────────────────────────────────────────────
-  // The Terms stage sits between the OTP gate and the wizard. From here:
-  //   • "Back" returns to the OTP stage when the user just verified in-gate,
-  //     or bounces to /login when they arrived from LoginPage (since there
-  //     is no OTP stage to go back to in that path).
-  //   • "Confirm & Continue" advances to the wizard, resetting step to 1
-  //     so re-entering the stage always restarts the profile build.
-  function handleTermsBack() {
-    if (initialMobile) {
-      navigate('/login', { replace: true })
-    } else {
-      setStage('otp')
-    }
-  }
-
-  function handleTermsAccept() {
-    setStep(1)
-    setStage('wizard')
-  }
+  // ─── Stage-aware header subtitle ─────────────────────────────────────────
+  // The "Verify" subtitle only applies during the OTP-pending state. The
+  // mobile stage has its own subtitle ("Enter your mobile number") and the
+  // wizard owns its own step labels.
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-background to-emerald-50/30 dark:from-emerald-950/40 dark:via-background dark:to-emerald-950/30 py-6 px-4">
@@ -1211,7 +1176,6 @@ export function PublicRegisterPage() {
           <p className="text-sm text-text-secondary">
             {stage === 'mobile' && 'Create your account'}
             {stage === 'otp' && 'Verify your mobile'}
-            {stage === 'terms' && 'Review our terms'}
             {stage === 'wizard' && 'Complete your profile'}
           </p>
         </div>
@@ -1242,6 +1206,8 @@ export function PublicRegisterPage() {
               setGateMobile={setGateMobile}
               gateLoading={gateLoading}
               lockedInfo={lockedInfo}
+              accepted={accepted}
+              setAccepted={setAccepted}
               handleSendOtp={handleSendOtp}
             />
           )}
@@ -1259,13 +1225,6 @@ export function PublicRegisterPage() {
               handleVerifyOtp={handleVerifyOtp}
               handleChangeMobile={handleChangeMobile}
               handleResendOtp={handleResendOtp}
-            />
-          )}
-          {stage === 'terms' && (
-            <TermsStage
-              mobileNumber={mobileNumber}
-              back={handleTermsBack}
-              acceptAndContinue={handleTermsAccept}
             />
           )}
           {stage === 'wizard' && (
