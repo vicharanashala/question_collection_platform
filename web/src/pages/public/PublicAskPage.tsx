@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Search, X } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Search, X, MapPin, Lock, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, CROPS } from '@/constants/public'
 import { MicButton } from '@/components/MicButton'
@@ -27,6 +27,18 @@ interface DuplicateInfo {
   matchedAnswer: string | null
   similarityScore: number | null
   matchedUserName: string | null
+}
+
+// Server-derived fields from `questionApi.preview` — location/zone are locked
+// to the user's profile (not user-editable), domain/season/crop seed the
+// details-step form but remain adjustable before final submit.
+interface PreviewMeta {
+  state: string
+  district: string
+  block: string | null
+  agroClimaticZone: string
+  remainingToday: number
+  dailyLimit: number
 }
 
 // ─── Crop Type picker modal ────────────────────────────────────────────────────
@@ -155,8 +167,18 @@ export function PublicAskPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth()
+  // ─── Two-step flow ─────────────────────────────────────────────────────────
+  // Mirrors mobile's QuestionScreen → QuestionPreviewScreen split: the user
+  // first writes their question text, then `questionApi.preview` classifies
+  // it server-side (Gemma LLM) and returns suggested domain(s)/season/crop
+  // plus profile-derived location, which seed the details step below instead
+  // of the user picking everything from empty dropdowns.
+  const [step, setStep] = useState<'ask' | 'details'>('ask')
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewMeta, setPreviewMeta] = useState<PreviewMeta | null>(null)
+
   const [questionText, setQuestionText] = useState('')
-  const [domain, setDomain] = useState<string>('')
+  const [domains, setDomains] = useState<string[]>([])
   const [season, setSeason] = useState<string>('')
   const [cropType, setCropType] = useState('')
   const [cropPickerOpen, setCropPickerOpen] = useState(false)
@@ -211,30 +233,94 @@ export function PublicAskPage() {
       .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
   }, [])
 
-  async function handleSubmit(e: React.FormEvent) {
+  function toggleDomain(d: string) {
+    setDomains((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
+  }
+
+  function resetAll() {
+    setStep('ask')
+    setQuestionText('')
+    setDomains([])
+    setSeason('')
+    setCropType('')
+    setPreviewMeta(null)
+  }
+
+  // ─── Step 1 → Step 2: classify the question text server-side ─────────────
+  // Mirrors mobile `QuestionScreen.handlePreview`: the raw text is sent to
+  // `/questions/preview`, which runs an LLM classifier + profile lookup and
+  // returns suggested domain(s)/season/crop/location. If the backend's
+  // duplicate check matches an existing question it's saved as REJECTED
+  // immediately and we show the duplicate screen instead of advancing.
+  async function handleContinue(e: React.FormEvent) {
     e.preventDefault()
     if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
     if (questionText.length > MAX_QUESTION_CHARS) { toast.error(t('question.textTooLong', { max: MAX_QUESTION_CHARS })); return }
-    if (!domain) { toast.error(t('question.errors.pickDomain')); return }
-    if (!season) { toast.error(t('question.errors.pickSeason')); return }
-    if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
     if (atLimit) { toast.error(t('question.errors.dailyLimitReached')); return }
     if (!user?.state || !user?.district) { toast.error(t('question.errors.locationMissing')); return }
     // Hard block: AI flagged as spam. Don't waste a server round-trip.
     if (blockedByAi) { toast.error(t('question.errors.rewriteSpam')); return }
 
+    setPreviewLoading(true)
+    try {
+      const res = await questionApi.preview({
+        questionText: questionText.trim(),
+        mediaType: 'none',
+        mediaUrls: [],
+      })
+      if (res.duplicate?.isDuplicate) {
+        setDuplicate({
+          matchedQuestion: res.duplicate.matchedQuestion ?? '',
+          matchedAnswer: res.duplicate.matchedAnswer,
+          similarityScore: res.duplicate.similarityScore,
+          matchedUserName: res.duplicate.matchedUserName,
+        })
+        questionApi.getMyStats()
+          .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
+          .catch(() => undefined)
+        return
+      }
+      setPreviewMeta({
+        state: res.state ?? user.state,
+        district: res.district ?? user.district,
+        block: res.block ?? user.block ?? null,
+        agroClimaticZone: res.agroClimaticZone ?? '',
+        remainingToday: res.remainingToday ?? stats?.remainingToday ?? 0,
+        dailyLimit: res.dailyLimit ?? stats?.dailyLimit ?? 20,
+      })
+      setDomains(res.domains ?? [])
+      setSeason(res.season || '')
+      setCropType(res.cropType ?? '')
+      setStep('details')
+    } catch (err) {
+      toast.error(getErrorMessage(err, t('question.submitFailed')))
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  // ─── Step 2: final submit ──────────────────────────────────────────────────
+  async function handleFinalSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!previewMeta) return
+    if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+    if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+    if (!season) { toast.error(t('question.errors.pickSeason')); return }
+    if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+
     setSubmitting(true)
     try {
       const res = await questionApi.submitQuestion({
         questionText: questionText.trim(),
-        domains: [domain],
+        domains,
         season,
         cropType: cropType.trim(),
-        state: user.state,
-        district: user.district,
-        block: user.block ?? undefined,
+        state: previewMeta.state,
+        district: previewMeta.district,
+        block: previewMeta.block ?? undefined,
+        agroClimaticZone: previewMeta.agroClimaticZone || undefined,
         mediaType: 'none',
-      } as any)
+      })
       if (res.duplicate?.isDuplicate) {
         setDuplicate({
           matchedQuestion: res.duplicate.matchedQuestion ?? '',
@@ -275,7 +361,7 @@ export function PublicAskPage() {
             <h2 className="text-xl font-bold text-foreground">{t('question.submitted')}</h2>
             <p className="mt-2 text-sm text-text-secondary max-w-sm">{t('question.successBody')}</p>
             <div className="mt-6 flex gap-3">
-              <Button variant="outline" onClick={() => { setSubmitted(false); setQuestionText(''); setDomain(''); setSeason(''); setCropType('') }}>{t('question.submitAnother')}</Button>
+              <Button variant="outline" onClick={() => { setSubmitted(false); resetAll() }}>{t('question.submitAnother')}</Button>
               <Button onClick={() => navigate('/public/questions')}>{t('nav.submissions')}</Button>
             </div>
           </CardContent>
@@ -307,7 +393,7 @@ export function PublicAskPage() {
               {duplicate.matchedUserName && <p className="mt-3 text-xs text-text-tertiary">{t('question.duplicate.answeredBy', { name: duplicate.matchedUserName })}</p>}
             </div>
             <div className="mt-5 flex gap-3">
-              <Button variant="outline" onClick={() => { setDuplicate(null); setQuestionText('') }}>{t('question.duplicate.askAnyway')}</Button>
+              <Button variant="outline" onClick={() => { setDuplicate(null); resetAll() }}>{t('question.duplicate.askAnyway')}</Button>
               <Button onClick={() => navigate('/public')}>{t('question.duplicate.backHome')}</Button>
             </div>
           </CardContent>
@@ -316,6 +402,155 @@ export function PublicAskPage() {
     )
   }
 
+  // ─── Step 2 — details form, seeded from the preview response ─────────────
+  if (step === 'details' && previewMeta) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        <div className="flex items-center justify-between">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setStep('ask')} className="gap-1.5">
+            <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
+          </Button>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{t('question.submitQuestion')}</h2>
+          <p className="text-sm text-text-secondary mt-0.5">{t('question.askSubtitle')}</p>
+        </div>
+
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{t('question.notEditableAfterSubmission', 'This question is not editable after submission')}</span>
+        </div>
+
+        <Card>
+          <CardContent className="p-5 lg:p-6">
+            <form onSubmit={handleFinalSubmit} className="space-y-5">
+              {/* Location + Agro-Climatic Zone (read-only — locked to profile) +
+                  Domain/Season/Crop (editable, pre-filled from the classifier)
+                  sit side by side on desktop instead of one long stacked column. */}
+              <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
+                <div className="space-y-4 lg:col-span-2">
+                  <div className="rounded-lg border border-border-subtle bg-surface-variant/40 p-3.5">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <MapPin className="h-4 w-4 text-emerald-600" />
+                      {t('question.location')}
+                    </div>
+                    <div className="mt-2 space-y-1 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-tertiary">{t('question.state')}</span>
+                        <span className="font-medium text-foreground">{previewMeta.state}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-tertiary">{t('question.district')}</span>
+                        <span className="font-medium text-foreground">{previewMeta.district}</span>
+                      </div>
+                      {previewMeta.block && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-text-tertiary">{t('question.blockOptional')}</span>
+                          <span className="font-medium text-foreground">{previewMeta.block}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-1.5 border-t border-border-subtle pt-2 text-xs text-text-tertiary">
+                      <Lock className="h-3 w-3" />
+                      {t('question.locationLockedNote')}
+                    </div>
+                  </div>
+
+                  {previewMeta.agroClimaticZone && (
+                    <div className="space-y-1.5">
+                      <Label>{t('question.agroClimaticZone', 'Agro-Climatic Zone')}</Label>
+                      <div className="inline-flex rounded-md bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                        {previewMeta.agroClimaticZone}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="rounded-lg bg-muted px-3.5 py-2.5 text-xs text-text-secondary">
+                    {t('question.dailyRemaining', { remaining: previewMeta.remainingToday, total: previewMeta.dailyLimit })}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4 lg:col-span-3">
+                  <div className="space-y-1.5">
+                    <Label>{t('question.domainSelect')} <span className="text-rose-600">*</span></Label>
+                    <p className="text-xs text-text-tertiary">{t('question.selectOneOrMore', 'Select one or more')}</p>
+                    <div className="flex flex-wrap gap-2 pt-0.5">
+                      {DOMAINS.map((d) => {
+                        const selected = domains.includes(d.value)
+                        return (
+                          <button
+                            key={d.value}
+                            type="button"
+                            onClick={() => toggleDomain(d.value)}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${selected ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300'}`}
+                          >
+                            {selected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                            {d.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label>{t('question.season')} <span className="text-rose-600">*</span></Label>
+                      <Select value={season} onValueChange={setSeason}>
+                        <SelectTrigger><SelectValue placeholder={t('question.pickSeason')} /></SelectTrigger>
+                        <SelectContent>
+                          {SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="crop">{t('question.cropType')} <span className="text-rose-600">*</span></Label>
+                      <button
+                        id="crop"
+                        type="button"
+                        onClick={() => setCropPickerOpen(true)}
+                        className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+                      >
+                        <span className={cropType ? 'text-text' : 'text-text-tertiary'}>
+                          {cropType || t('question.pickCrop')}
+                        </span>
+                        <svg className="h-4 w-4 text-text-tertiary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 lg:flex-1">
+                    <Label htmlFor="q-details">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
+                    <Textarea id="q-details" value={questionText} onChange={(e) => setQuestionText(e.target.value)} rows={5} maxLength={MAX_QUESTION_CHARS} className="resize-none lg:flex-1" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button type="button" variant="outline" onClick={() => setStep('ask')}>{t('common.back', 'Back')}</Button>
+                <Button
+                  type="submit"
+                  disabled={submitting || !questionText.trim() || !domains.length || !season || !cropType.trim()}
+                >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {t('question.submitQuestion')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        <CropPickerModal
+          open={cropPickerOpen}
+          onOpenChange={setCropPickerOpen}
+          value={cropType}
+          onChange={setCropType}
+        />
+      </div>
+    )
+  }
+
+  // ─── Step 1 — free-text question entry ─────────────────────────────────────
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
@@ -336,10 +571,12 @@ export function PublicAskPage() {
       </div>
       <Card>
         <CardContent className="p-5 lg:p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Question (primary field) + Domain/Season/Crop/Voice (secondary
-                fields) sit side by side on desktop instead of one long
-                stacked column, so the wide viewport isn't mostly empty. */}
+          <form onSubmit={handleContinue} className="space-y-4">
+            {/* Question (primary field) + Voice input (secondary field) sit
+                side by side on desktop instead of one long stacked column, so
+                the wide viewport isn't mostly empty. Domain/Season/Crop are no
+                longer picked here — `questionApi.preview` suggests them on the
+                next step, same as mobile's QuestionScreen → QuestionPreviewScreen. */}
             <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
               <div className="flex flex-col gap-1.5 lg:col-span-3">
                 <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
@@ -359,49 +596,12 @@ export function PublicAskPage() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-4 lg:col-span-2">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <div className="space-y-1.5">
-                    <Label>{t('question.domain')} <span className="text-rose-600">*</span></Label>
-                    <Select value={domain} onValueChange={setDomain}>
-                      <SelectTrigger><SelectValue placeholder={t('question.pickDomain')} /></SelectTrigger>
-                      <SelectContent>
-                        {DOMAINS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>{t('question.season')} <span className="text-rose-600">*</span></Label>
-                    <Select value={season} onValueChange={setSeason}>
-                      <SelectTrigger><SelectValue placeholder={t('question.pickSeason')} /></SelectTrigger>
-                      <SelectContent>
-                        {SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="crop">{t('question.cropType')} <span className="text-rose-600">*</span></Label>
-                  <button
-                    id="crop"
-                    type="button"
-                    onClick={() => setCropPickerOpen(true)}
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
-                  >
-                    <span className={cropType ? 'text-text' : 'text-text-tertiary'}>
-                      {cropType || t('question.pickCrop')}
-                    </span>
-                    <svg className="h-4 w-4 text-text-tertiary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-
+              <div className="flex flex-col lg:col-span-2">
                 {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
                      Disabled when the daily limit is reached or the AI flagged
                      the text as spam, so the user can't circumvent validation
                      by typing fresh text after submitting a flagged one. */}
-                <div className="flex flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5 lg:flex-1">
+                <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
                   <MicButton
                     disabled={atLimit || blockedByAi}
                     onRecordingStart={() => {
@@ -428,43 +628,26 @@ export function PublicAskPage() {
             <div className="flex items-center justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => navigate(-1)}>{t('common.cancel', 'Cancel')}</Button>
               {/*
-                Mirror mobile `QuestionScreen`'s submit button: when the AI
+                Mirror mobile `QuestionScreen`'s Continue button: when the AI
                 flags the text as spam or "too short" (verdict === 'fail'),
-                show "Not Relevant" + a forward arrow instead of the usual
-                "Submit question" + send icon. Stays disabled so the user can't
-                bypass the validation.
+                show "Not Relevant" instead of "Continue". Stays disabled so
+                the user can't bypass the validation.
               */}
               <Button
                 type="submit"
-                disabled={
-                  submitting ||
-                  atLimit ||
-                  blockedByAi ||
-                  !questionText.trim() ||
-                  !domain ||
-                  !season ||
-                  !cropType.trim()
-                }
+                disabled={previewLoading || submitting || atLimit || blockedByAi || !questionText.trim()}
               >
-                {submitting ? (
+                {previewLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
-                ) : blockedByAi ? (
-                  <ArrowRight className="h-4 w-4" />
                 ) : (
-                  <Send className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" />
                 )}
-                {blockedByAi ? t('question.notRelevant') : t('question.submitQuestion')}
+                {blockedByAi ? t('question.notRelevant') : t('common.continue', 'Continue')}
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
-      <CropPickerModal
-        open={cropPickerOpen}
-        onOpenChange={setCropPickerOpen}
-        value={cropType}
-        onChange={setCropType}
-      />
     </div>
   )
 }

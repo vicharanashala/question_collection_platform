@@ -607,6 +607,39 @@ export const questionApi = {
     }, false).finally(() => invalidateCache('/api/questions')),
 
   /**
+   * Analyses raw question text and returns server-derived suggestions
+   * (domain(s), season, crop type, agro-climatic zone, location) used to
+   * pre-fill the details step before final submission. Mirrors mobile's
+   * `questionApi.preview` / `POST /questions/preview`. If the backend's
+   * duplicate check matches an existing question, it saves this one as
+   * REJECTED (counts against the daily limit) and returns `duplicate` —
+   * the caller should not proceed to the details step in that case.
+   */
+  preview: (body: { questionText: string; mediaType?: 'none' | 'image' | 'video' | 'audio'; mediaUrls?: string[] }) =>
+    request<{
+      state: string
+      district: string
+      block: string | null
+      domains: string[]
+      cropType: string
+      season: string
+      agroClimaticZone: string
+      remainingToday: number
+      dailyLimit: number
+      duplicate?: {
+        isDuplicate: boolean
+        matchedQuestionId: string | null
+        matchedQuestion: string | null
+        matchedAnswer: string | null
+        similarityScore: number | null
+        matchedUserName: string | null
+      }
+    }>('/questions/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false).finally(() => invalidateCache('/api/questions')),
+
+  /**
    * Public-user submit. The backend derives `state`/`district`/etc. from the
    * authenticated user's profile, but on the web we send them explicitly so
    * the wizard does not have to call `/auth/me` first.
