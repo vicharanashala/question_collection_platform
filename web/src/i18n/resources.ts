@@ -345,7 +345,8 @@ const resources = {
         "rewardSubtitle": "Rs.10 for 251–500 approved questions",
         "reachGold": "Reach Gold Tier",
         "reachGoldSub": "Earn up to Rs.10 per question after 250 approvals",
-        "submissionTips": "Submission Tips"
+        "submissionTips": "Submission Tips",
+        "currentTier": "Current tier"
       },
       "iAcceptContinue": "I Accept & Continue",
       "invalidOtp": "Enter the complete 6-digit code",
@@ -7298,7 +7299,8 @@ const resources = {
         "rewardSubtitle": "251-500 स्वीकृत प्रश्नों के लिए रु. 10",
         "reachGold": "गोल्ड टियर तक पहुँचें",
         "reachGoldSub": "250 स्वीकृतियों के बाद प्रति प्रश्न रु. 10 तक कमाएं",
-        "submissionTips": "सबमिशन के सुझाव"
+        "submissionTips": "सबमिशन के सुझाव",
+        "currentTier": "वर्तमान स्तर"
       },
       "iAcceptContinue": "मैं स्वीकार करता हूँ और जारी रखें",
       "invalidOtp": "पूरा 6-अंकीय कोड दर्ज करें",
