@@ -175,24 +175,26 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div className="auth-page dark flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
 
-      {/* Background decoration */}
+      {/* Background decoration — uses --primary so it picks up the mint-green glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-48 -top-48 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -left-32 -bottom-32 h-[22rem] w-[22rem] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute left-1/2 top-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-        <div className="absolute left-1/2 bottom-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="absolute -right-48 -top-48 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -left-32 -bottom-32 h-[22rem] w-[22rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="absolute left-1/2 bottom-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </div>
 
       {/* Login card */}
       <Card className="relative w-full max-w-sm shadow-xl border-border-subtle">
         <CardHeader className="pb-4 text-center">
-          {/* Logo mark */}
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20 ring-4 ring-primary/10">
-            <ShieldCheck className="h-8 w-8 text-primary-foreground" />
+          {/* Logo mark — circular bright-green gradient (matches ajrasakha-desk.annam.ai/auth) */}
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30 ring-4 ring-emerald-500/20">
+            <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-extrabold tracking-tight">Login Portal</CardTitle>
+          <CardTitle className="text-2xl font-extrabold tracking-tight text-primary">
+            Login Portal
+          </CardTitle>
           <CardDescription className="text-sm text-text-secondary px-2">
             Sign in with your mobile number to continue
           </CardDescription>
@@ -321,7 +323,7 @@ export function LoginPage() {
         </p>
         <Link
           to="/public/register"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
         >
           <Sprout className="h-3.5 w-3.5" />
           New here? Sign up as a public user &rarr;

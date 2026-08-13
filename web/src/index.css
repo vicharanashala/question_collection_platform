@@ -155,6 +155,86 @@
     --sidebar-border:       215 28% 16%; /* #1E293B */
     --sidebar-ring:         166 76% 55%;
   }
+
+  /* ── Auth pages — scoped dark "Annam.ai" theme ───────────────────────────
+     Wraps the login & signup flows so they always render in the dark
+     mint-green palette shown on ajrasakha-desk.annam.ai/auth, regardless
+     of the user's light/dark preference. Defined as a *scoped* token
+     override (inside `.auth-page`) so the rest of the app keeps its
+     existing mobile-matched theme. The `dark` class is also added on the
+     wrapper so Tailwind's `dark:` variants activate on these pages. */
+  .auth-page {
+    --background:       150 30% 4%;    /* very dark green-tinted near-black */
+    --foreground:       0 0% 95%;
+
+    /* Card / Popover */
+    --card:             150 14% 9%;    /* dark charcoal */
+    --card-foreground:  0 0% 95%;
+    --popover:          150 14% 9%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Primary — bright mint green (matches the Sign-In button + heading) */
+    --primary:          142 71% 45%;   /* #22c55e */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary */
+    --secondary:        150 14% 12%;
+    --secondary-foreground: 0 0% 95%;
+
+    /* Muted */
+    --muted:            150 14% 12%;
+    --muted-foreground: 150 10% 65%;
+
+    /* Accent */
+    --accent:           150 18% 16%;
+    --accent-foreground: 0 0% 95%;
+
+    /* Destructive */
+    --destructive:      0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border / Input / Ring */
+    --border:           150 14% 18%;
+    --input:            150 14% 12%;
+    --ring:             142 71% 45%;
+
+    /* Semantic status */
+    --success:          142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning:          38 92% 55%;
+    --warning-foreground: 38 92% 6%;
+
+    /* Semantic aliases */
+    --surface:          150 14% 9%;    /* main card bg */
+    --surface-variant:  150 14% 13%;   /* input / chip bg */
+    --hero-bg:          142 50% 22%;
+    --hero-fg:          142 76% 94%;
+    --text:             0 0% 95%;
+    --text-secondary:   150 10% 70%;
+    --text-tertiary:    150 10% 55%;
+    --border-subtle:    150 14% 18%;
+    --focus:            142 71% 45%;
+
+    /* Charts */
+    --chart-1: 142 71% 45%;
+    --chart-2: 199 89% 55%;
+    --chart-3: 263 70% 60%;
+    --chart-4: 38 92% 55%;
+    --chart-5: 142 71% 50%;
+
+    /* Sidebar (unused on auth pages but defined for consistency) */
+    --sidebar:              150 30% 4%;
+    --sidebar-foreground:   150 10% 70%;
+    --sidebar-primary:      142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:       150 14% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border:       150 14% 16%;
+    --sidebar-ring:         142 71% 45%;
+
+    /* Hint UA form controls to render dark (scrollbars, native inputs). */
+    color-scheme: dark;
+  }
 }
 
 @layer base {
