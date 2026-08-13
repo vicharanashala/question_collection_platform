@@ -15,6 +15,7 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, questionApi, walletApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -62,27 +63,27 @@ interface StatusConfig {
 }
 const VERIFICATION_CONFIG: Record<VerificationStatus, StatusConfig> = {
   verified: {
-    label: 'Verified',
+    label: 'status.verified',
     icon: CheckCircle2,
     classes: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800',
   },
   pending: {
-    label: 'Pending',
+    label: 'status.pending',
     icon: Clock,
     classes: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800',
   },
   manual_review: {
-    label: 'In Review',
+    label: 'status.manual_review',
     icon: Eye,
     classes: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800',
   },
   suspended: {
-    label: 'Suspended',
+    label: 'status.suspended',
     icon: AlertCircle,
     classes: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800',
   },
   banned: {
-    label: 'Banned',
+    label: 'status.banned',
     icon: XCircle,
     classes: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-800',
   },
@@ -222,6 +223,7 @@ function CropChip({ name }: CropChipProps) {
 // — Main page ——————————————————————————————————————————————————————
 
 export function PublicProfilePage() {
+  const { t } = useTranslation()
   const { user, logout, updateUser } = useAuth()
   const navigate = useNavigate()
 
@@ -294,17 +296,17 @@ export function PublicProfilePage() {
 
   async function save() {
     if (!name.trim()) {
-      toast.error('Name cannot be empty')
+      toast.error(t('editProfile.nameMinChars'))
       return
     }
     setSaving(true)
     try {
       const { user: fresh } = await authApi.updateMe({ name: name.trim(), languagePreference })
       updateUser(fresh)
-      toast.success('Profile updated')
+      toast.success(t('editProfile.saveSuccess'))
       setEditing(false)
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not save changes.'))
+      toast.error(getErrorMessage(err, t('editProfile.saveFailed')))
     } finally {
       setSaving(false)
     }
@@ -380,7 +382,7 @@ export function PublicProfilePage() {
             {statusCfg && (
               <div className={cn('inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold', statusCfg.classes)}>
                 <statusCfg.icon className="h-2.5 w-2.5" />
-                <span>{statusCfg.label}</span>
+                <span>{t(statusCfg.label)}</span>
               </div>
             )}
           </div>
@@ -463,19 +465,19 @@ export function PublicProfilePage() {
         <StatTile
           icon={Wallet}
           value={rupee + (walletBalance ?? 0)}
-          label="Wallet"
+          label={t('profile.wallet')}
           loading={loadingStats}
         />
         <StatTile
           icon={HelpCircle}
           value={totalQuestions == null ? em : String(totalQuestions)}
-          label="Questions"
+          label={t('profile.questions')}
           loading={loadingStats}
         />
         <StatTile
           icon={Calendar}
           value={memberSince}
-          label="Member Since"
+          label={t('profile.memberSince')}
         />
       </div>
 
@@ -483,7 +485,7 @@ export function PublicProfilePage() {
       <section className="space-y-4">
         <SectionHeader
           icon={Users}
-          title="Account"
+          title={t('profile.account')}
           trailing={
             <button
               type="button"
@@ -491,30 +493,30 @@ export function PublicProfilePage() {
               className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
             >
               <Pencil className="h-3 w-3" />
-              <span>Edit</span>
+              <span>{t('profile.editProfile')}</span>
             </button>
           }
         />
 
         {/* Personal Info */}
-        <AccountCard icon={Users} title="Personal Info">
+        <AccountCard icon={Users} title={t('profile.personalInfo')}>
           <div className="border-t border-slate-100 dark:border-slate-800">
             {user.username != null && (
               <AccountRow icon={AtSign} label="Username" value={String('@') + user.username} />
             )}
-            {cat && <AccountRow icon={Tag} label="Category" value={categoryLabel(cat)} />}
+            {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(cat)} />}
             {user.gender && (
               <AccountRow
                 icon={Users}
-                label="Gender"
+                label={t('profile.gender')}
                 value={<span className="capitalize">{user.gender}</span>}
               />
             )}
             {user.age != null && (
               <AccountRow
                 icon={CalendarDays}
-                label="Age"
-                value={user.age + ' yrs'}
+                label={t('profile.age')}
+                value={user.age + ' ' + t('profile.years')}
                 isLast
               />
             )}
@@ -523,20 +525,20 @@ export function PublicProfilePage() {
 
         {/* Location */}
         {(user.state || user.district || user.block || user.village || user.kvk) && (
-          <AccountCard icon={MapPin} title="Location">
+          <AccountCard icon={MapPin} title={t('profile.location')}>
             <div className="border-t border-slate-100 dark:border-slate-800">
-              {user.state && <AccountRow icon={MapPin} label="State" value={user.state} />}
+              {user.state && <AccountRow icon={MapPin} label={t('profile.state')} value={user.state} />}
               {user.district && (
-                <AccountRow icon={Building2} label="District" value={user.district} />
+                <AccountRow icon={Building2} label={t('profile.district')} value={user.district} />
               )}
               {user.block && (
-                <AccountRow icon={MapPinned} label="Block" value={user.block} />
+                <AccountRow icon={MapPinned} label={t('profile.block')} value={user.block} />
               )}
               {user.village && (
-                <AccountRow icon={Home} label="Village" value={user.village} />
+                <AccountRow icon={Home} label={t('profile.village')} value={user.village} />
               )}
               {user.kvk && (
-                <AccountRow icon={School} label="KVK" value={user.kvk} isLast />
+                <AccountRow icon={School} label={t('profile.kvk')} value={user.kvk} isLast />
               )}
             </div>
           </AccountCard>
@@ -544,18 +546,18 @@ export function PublicProfilePage() {
 
         {/* Education — students only */}
         {cat === 'student' && (user.courseName || user.collegeName || user.universityName) && (
-          <AccountCard icon={GraduationCap} title="Education">
+          <AccountCard icon={GraduationCap} title={t('profile.education')}>
             <div className="border-t border-slate-100 dark:border-slate-800">
               {user.courseName && (
-                <AccountRow icon={BookOpen} label="Course" value={user.courseName} />
+                <AccountRow icon={BookOpen} label={t('profile.course')} value={user.courseName} />
               )}
               {user.collegeName && (
-                <AccountRow icon={School} label="College" value={user.collegeName} />
+                <AccountRow icon={School} label={t('profile.college')} value={user.collegeName} />
               )}
               {user.universityName && (
                 <AccountRow
                   icon={GraduationCap}
-                  label="University"
+                  label={t('profile.university')}
                   value={user.universityName}
                   isLast
                 />
@@ -570,25 +572,25 @@ export function PublicProfilePage() {
             user.organisationType ||
             user.organizationRole ||
             user.numberOfFarmers != null) && (
-            <AccountCard icon={Briefcase} title="Organization">
+            <AccountCard icon={Briefcase} title={t('profile.organisationDetails')}>
               <div className="border-t border-slate-100 dark:border-slate-800">
                 {user.organizationName && (
-                  <AccountRow icon={Briefcase} label="Name" value={user.organizationName} />
+                  <AccountRow icon={Briefcase} label={t('profile.orgName')} value={user.organizationName} />
                 )}
                 {user.organisationType && (
-                  <AccountRow icon={Tag} label="Type" value={user.organisationType} />
+                  <AccountRow icon={Tag} label={t('profile.orgType')} value={user.organisationType} />
                 )}
                 {user.organizationRole && (
                   <AccountRow
                     icon={Users}
-                    label="Your role"
+                    label={t('profile.orgRole')}
                     value={user.organizationRole}
                   />
                 )}
                 {user.numberOfFarmers != null && (
                   <AccountRow
                     icon={Users}
-                    label="Farmers reached"
+                    label={t('profile.members')}
                     value={String(user.numberOfFarmers)}
                     isLast
                   />
@@ -603,29 +605,29 @@ export function PublicProfilePage() {
             user.organizationDistrict ||
             user.organizationBlock ||
             user.organizationVillage) && (
-            <AccountCard icon={MapPin} title="Organization Location">
+            <AccountCard icon={MapPin} title={t('profile.organisationLocation')}>
               <div className="border-t border-slate-100 dark:border-slate-800">
                 {user.organizationState && (
-                  <AccountRow icon={MapPin} label="State" value={user.organizationState} />
+                  <AccountRow icon={MapPin} label={t('profile.state')} value={user.organizationState} />
                 )}
                 {user.organizationDistrict && (
                   <AccountRow
                     icon={Building2}
-                    label="District"
+                    label={t('profile.district')}
                     value={user.organizationDistrict}
                   />
                 )}
                 {user.organizationBlock && (
                   <AccountRow
                     icon={MapPinned}
-                    label="Block"
+                    label={t('profile.block')}
                     value={user.organizationBlock}
                   />
                 )}
                 {user.organizationVillage && (
                   <AccountRow
                     icon={Home}
-                    label="Village"
+                    label={t('profile.village')}
                     value={user.organizationVillage}
                     isLast
                   />
@@ -637,25 +639,25 @@ export function PublicProfilePage() {
 
       {/* — 5. Farming card (farmers only) ————————— */}
       {cat === 'farmer' && (user.farmSize || user.cropType || user.season) && (
-        <AccountCard icon={Sprout} title="Farming">
+        <AccountCard icon={Sprout} title={t('profile.farming')}>
           <div className="border-t border-slate-100 dark:border-slate-800">
             {user.farmSize && (
               <AccountRow
                 icon={Ruler}
-                label="Farm Size"
-                value={user.farmSize + ' acres'}
+                label={t('profile.farmSize')}
+                value={user.farmSize + ' ' + t('profile.acres')}
               />
             )}
             {user.cropType && (
               <AccountRow
                 icon={Sprout}
-                label="Crop"
+                label={t('profile.crop')}
                 value={user.cropType}
                 isLast={!user.season}
               />
             )}
             {user.season && (
-              <AccountRow icon={Calendar} label="Season" value={user.season} isLast />
+              <AccountRow icon={Calendar} label={t('profile.season')} value={user.season} isLast />
             )}
           </div>
         </AccountCard>
@@ -664,7 +666,7 @@ export function PublicProfilePage() {
       {/* — 6. Crops chips (any category, if cropType set) — */}
       {cropList.length > 0 && (
         <section>
-          <SectionHeader icon={Sprout} title="Crops" />
+          <SectionHeader icon={Sprout} title={t('profile.crops')} />
           <div className="flex flex-wrap gap-1.5">
             {cropList.map((c) => (
               <CropChip key={c} name={c} />
@@ -675,23 +677,23 @@ export function PublicProfilePage() {
 
       {/* — 7. Actions section ——————————————————— */}
       <section>
-        <SectionHeader icon={Trophy} title="Actions" />
+        <SectionHeader icon={Trophy} title={t('profile.actions')} />
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <ActionRow
               icon={Wallet}
-              label="Payment Methods"
+              label={t('profile.paymentMethods')}
               onClick={() => navigate('/public/payment-methods')}
             />
-            <ActionRow icon={Flag} label="Report an Issue" onClick={handleReport} />
+            <ActionRow icon={Flag} label={t('report.title')} onClick={handleReport} />
             <ActionRow
               icon={HelpCircle}
-              label="Help & Feedback"
+              label={t('profile.helpAndFeedback')}
               onClick={() => navigate('/public/faqs')}
             />
-            <ActionRow icon={FileText} label="Terms of Service" onClick={handleTerms} />
-            <ActionRow icon={ShieldCheck} label="Privacy Policy" onClick={handlePrivacy} />
-            <ActionRow icon={MessageSquarePlus} label="Contact Admin" onClick={handleContact} />
+            <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={handleTerms} />
+            <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={handlePrivacy} />
+            <ActionRow icon={MessageSquarePlus} label={t('profile.contactAdmin')} onClick={handleContact} />
           </CardContent>
         </Card>
       </section>
@@ -703,7 +705,7 @@ export function PublicProfilePage() {
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
       >
         <LogOut className="h-4 w-4" />
-        Sign Out
+        {t('profile.signOut')}
       </button>
 
       <p className="pt-2 text-center text-xs text-text-tertiary">
@@ -714,14 +716,14 @@ export function PublicProfilePage() {
       <Dialog open={editing} onOpenChange={(v) => !saving && setEditing(v)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit profile</DialogTitle>
+            <DialogTitle>{t('editProfile.title')}</DialogTitle>
             <DialogDescription>
-              Update your display name and preferred language.
+              {t('editProfile.subtitle')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="profile-name">Full name</Label>
+              <Label htmlFor="profile-name">{t('editProfile.fullName')}</Label>
               <Input
                 id="profile-name"
                 value={name}
@@ -731,7 +733,7 @@ export function PublicProfilePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="profile-lang">Preferred language</Label>
+              <Label htmlFor="profile-lang">{t('editProfile.preferredLanguage')}</Label>
               <Select value={languagePreference} onValueChange={setLanguagePreference}>
                 <SelectTrigger id="profile-lang">
                   <SelectValue placeholder="Select a language" />
@@ -748,11 +750,11 @@ export function PublicProfilePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-              Cancel
+              {t('editProfile.cancel')}
             </Button>
             <Button onClick={save} disabled={saving || !name.trim()}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save changes
+              {t('editProfile.saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -762,18 +764,18 @@ export function PublicProfilePage() {
       <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign Out?</DialogTitle>
+            <DialogTitle>{t('profile.signOut')}?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to sign out of your AnnaDatha account?
+              {t('profile.signOutConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLogoutOpen(false)}>
-              Cancel
+              {t('editProfile.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
-              Sign Out
+              {t('profile.signOutAction')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -11,6 +11,7 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { walletApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react'
 import { cn, formatINRFull, formatINRCompact } from '@/lib/utils'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 import type { Transaction } from '@/types'
 
 // ─── Filter types ────────────────────────────────────────────────────────────
@@ -59,10 +61,10 @@ function formatRel(iso: string | null | undefined): string {
     const d = new Date(iso)
     const now = new Date()
     const diffH = Math.floor((now.getTime() - d.getTime()) / 3600000)
-    if (diffH < 1) return 'just now'
-    if (diffH < 24) return `${diffH}h ago`
+    if (diffH < 1) return i18n.t('common.justNow')
+    if (diffH < 24) return i18n.t('common.hoursAgo', { count: diffH })
     const days = Math.floor(diffH / 24)
-    if (days < 7) return `${days}d ago`
+    if (days < 7) return i18n.t('common.daysAgo', { count: days })
     return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   } catch {
     return ''
@@ -113,12 +115,13 @@ interface TxDetailProps {
   onClose: () => void
 }
 function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
+  const { t } = useTranslation()
   if (!tx) return null
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Transaction Details</DialogTitle>
+          <DialogTitle>{t('wallet.txDetail')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="rounded-md border border-border-subtle bg-muted/30 p-3 text-center">
@@ -128,21 +131,21 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
             </p>
             {tx.balanceAfter != null && (
               <p className="mt-1 text-[11px] tabular-nums text-text-tertiary">
-                Balance after: ₹{formatINRFull(Number(tx.balanceAfter))}
+                {t('wallet.txBalanceAfter')}: ₹{formatINRFull(Number(tx.balanceAfter))}
               </p>
             )}
           </div>
-          <Row label="Type" value={<span className="capitalize">{tx.type}</span>} />
-          <Row label="Source" value={TX_SOURCE_LABELS[tx.source] ?? tx.source} />
+          <Row label={t('wallet.txType')} value={<span className="capitalize">{tx.type === 'credit' ? t('wallet.credit') : t('wallet.debit')}</span>} />
+          <Row label={t('wallet.txSource')} value={TX_SOURCE_LABELS[tx.source] ?? tx.source} />
           <Row label="Status" value={
             <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', TX_STATUS_COLORS[tx.status] ?? 'bg-muted text-muted-foreground')}>
               {tx.status}
             </span>
           } />
-          {tx.description && <Row label="Description" value={tx.description} />}
+          {tx.description && <Row label={t('wallet.txDescription')} value={tx.description} />}
           {tx.referenceId && <Row label="Reference" value={<span className="font-mono text-xs">{tx.referenceId}</span>} />}
-          {tx.rejectionReason && <Row label="Rejection reason" value={<span className="text-destructive">{tx.rejectionReason}</span>} />}
-          <Row label="Date" value={formatDateTime(tx.createdAt)} />
+          {tx.rejectionReason && <Row label={t('wallet.rejectionReason')} value={<span className="text-destructive">{tx.rejectionReason}</span>} />}
+          <Row label={t('wallet.txDate')} value={formatDateTime(tx.createdAt)} />
         </div>
       </DialogContent>
     </Dialog>
@@ -188,6 +191,7 @@ function StatCard({ icon, label, value, tone }: StatCardProps) {
 // ─── Main page ───────────────────────────────────────────────────────────────
 
 export function PublicWalletPage() {
+  const { t } = useTranslation()
   const [balance, setBalance] = useState<number | null>(null)
   const [minWithdrawal, setMinWithdrawal] = useState<number>(50)
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -296,7 +300,7 @@ export function PublicWalletPage() {
       <div className="mx-auto max-w-2xl space-y-5">
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">Wallet</h2>
+          <h2 className="text-xl font-bold text-foreground">{t('wallet.title')}</h2>
           <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -317,7 +321,7 @@ export function PublicWalletPage() {
               className="flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:bg-emerald-400/15 dark:text-emerald-300"
             >
               <CreditCard className="h-3.5 w-3.5" />
-              Payment Methods
+              {t('profile.paymentMethods')}
             </Link>
           </div>
         </div>
@@ -328,7 +332,7 @@ export function PublicWalletPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-90">
                 <WalletIcon className="h-3.5 w-3.5" />
-                Available Balance
+                {t('wallet.availableBalance')}
               </div>
               <p className="mt-2 text-4xl font-extrabold tabular-nums leading-tight sm:text-5xl">
                 ₹{formatINRFull(balance ?? 0)}
@@ -347,7 +351,7 @@ export function PublicWalletPage() {
                   className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur transition-colors hover:bg-white/25"
                 >
                   <ArrowUpRight className="h-3.5 w-3.5" />
-                  Withdraw
+                  {t('wallet.withdraw')}
                 </Link>
               )}
             </div>
@@ -395,7 +399,7 @@ export function PublicWalletPage() {
           <CardContent className="space-y-3 p-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-foreground">
-                Transaction History
+                {t('wallet.transactionHistory')}
                 {hasActiveFilters && (
                   <span className="ml-1 text-sm font-semibold text-primary">
                     ({filteredTransactions.length})
@@ -409,7 +413,7 @@ export function PublicWalletPage() {
                     onClick={clearFilters}
                     className="text-xs font-semibold text-primary hover:underline"
                   >
-                    Clear
+                    {t('wallet.clearFilters')}
                   </button>
                 )}
                 <Tooltip>
@@ -423,8 +427,7 @@ export function PublicWalletPage() {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
-                    Reward credits appear after question approvals. Withdrawals
-                    move balance to your saved payment method.
+                    {t('wallet.txTooltip')}
                   </TooltipContent>
                 </Tooltip>
                 <button
@@ -449,12 +452,12 @@ export function PublicWalletPage() {
             {showFilters && (
               <div className="space-y-2 rounded-md border border-border-subtle bg-surface p-3 dark:bg-surface-variant/40">
                 <div>
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">Type</p>
+                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">{t('wallet.filterByType')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(['all', 'credit', 'debit'] as TxType[]).map((f) => (
                       <FilterPill
                         key={f}
-                        label={f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+                        label={f === 'all' ? t('wallet.filterAll') : f === 'credit' ? t('wallet.credit') : t('wallet.debit')}
                         active={filterType === f}
                         onClick={() => setFilterType(f)}
                       />
@@ -462,12 +465,12 @@ export function PublicWalletPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">Source</p>
+                  <p className="mb-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">{t('wallet.filterBySource')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(['all', 'reward', 'withdrawal', 'refund'] as TxSource[]).map((f) => (
                       <FilterPill
                         key={f}
-                        label={f === 'all' ? 'All' : (TX_SOURCE_LABELS[f] ?? f).replace(/_/g, ' ')}
+                        label={f === 'all' ? t('wallet.filterAll') : (TX_SOURCE_LABELS[f] ?? f).replace(/_/g, ' ')}
                         active={filterSource === f}
                         onClick={() => setFilterSource(f)}
                       />
@@ -475,12 +478,12 @@ export function PublicWalletPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">Status</p>
+                  <p className="mb-1.5 mt-2 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">{t('wallet.filterByStatus')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(['all', 'completed', 'pending', 'failed', 'reversed'] as TxStatus[]).map((f) => (
                       <FilterPill
                         key={f}
-                        label={f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+                        label={f === 'all' ? t('wallet.filterAll') : f.charAt(0).toUpperCase() + f.slice(1)}
                         active={filterStatus === f}
                         onClick={() => setFilterStatus(f)}
                       />
@@ -498,15 +501,17 @@ export function PublicWalletPage() {
             ) : filteredTransactions.length === 0 ? (
               <div className="py-10 text-center">
                 <Receipt className="mx-auto h-12 w-12 text-text-tertiary/60" strokeWidth={1.5} />
-                <p className="mt-3 text-sm font-bold text-foreground">No transactions yet</p>
+                <p className="mt-3 text-sm font-bold text-foreground">
+                  {hasActiveFilters ? t('wallet.noMatchingTransactions') : t('wallet.noTransactions')}
+                </p>
                 <p className="mt-1 text-xs text-text-secondary">
                   {hasActiveFilters
-                    ? 'No transactions match the selected filters.'
-                    : 'Your reward credits will appear here after question approvals'}
+                    ? t('wallet.noMatchingTransactionsDesc')
+                    : t('wallet.noTransactionsDesc')}
                 </p>
                 {hasActiveFilters && (
                   <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3">
-                    <X className="h-3.5 w-3.5" /> Clear filters
+                    <X className="h-3.5 w-3.5" /> {t('wallet.clearFilters')}
                   </Button>
                 )}
               </div>

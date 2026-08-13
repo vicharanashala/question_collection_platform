@@ -241,7 +241,14 @@ const resources = {
         "separator": " · ",
         "sortBy": "Sort By",
         "unknown": "Unknown",
-        "rupee": "Rs."
+        "rupee": "Rs.",
+        "daysAgo": "{{count}}d ago",
+        "hoursAgo": "{{count}}h ago",
+        "justNow": "just now",
+        "showing": "Showing {{start}}-{{end}} of {{total}}",
+        "pageX": "Page {{page}} / {{total}}",
+        "noQuestionsFound": "No questions found",
+        "askYourFirstQuestion": "Ask your first question"
       },
       "completeRegistration": "Complete Registration",
       "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -665,13 +672,6 @@ const resources = {
           "backHome": "Back home"
         }
       },
-      "justNow": "just now",
-      "hoursAgo": "{{count}}h ago",
-      "daysAgo": "{{count}}d ago",
-      "showing": "Showing {{start}}-{{end}} of {{total}}",
-      "pageX": "Page {{page}} / {{total}}",
-      "askYourFirstQuestion": "Ask your first question",
-      "noQuestionsFound": "No questions found",
       "published": "Published",
       "onHold": "On hold",
       "readFullPolicy": "Read full Privacy Policy →",
@@ -7335,7 +7335,30 @@ const resources = {
         "mediaUploadHelp": "वीडियो को 60 सेकंड और 10MB से कम रखें। सबमिट करने के बाद आपको 30-सेकंड की संपादन विंडो मिलती है। दैनिक सीमा आधी रात को रीसेट होती है।",
         "updateSuccess": "प्रश्न अपडेट हो गया",
         "successBody": "आपका प्रश्न समीक्षाधीन है। इसके स्वीकृत होने पर आपको सूचित किया जाएगा।",
-        "submitAnother": "एक और प्रश्न सबमिट करें"
+        "submitAnother": "एक और प्रश्न सबमिट करें",
+        "pickDomain": "डोमेन चुनें",
+        "pickSeason": "मौसम चुनें",
+        "pickCrop": "फसल चुनें",
+        "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई",
+        "expertWillRespond": "एक विशेषज्ञ आपके प्रश्न का उत्तर देगा।",
+        "questionExample": "जैसे: मेरे टमाटर के पत्ते पीले पड़ रहे हैं — मुझे क्या करना चाहिए?",
+        "tipDetailed": "विशिष्ट रहें — फसल, स्थान और आपने अब तक क्या प्रयास किया है, शामिल करें।",
+        "cropLocalPlaceholder": "जैसे: स्थानीय बाजरा किस्म",
+        "cropOtherManually": "अन्य (मैन्युअल रूप से दर्ज करें)",
+        "errors": {
+          "pickDomain": "कृपया एक डोमेन चुनें",
+          "pickSeason": "कृपया एक मौसम चुनें",
+          "enterCrop": "कृपया फसल का प्रकार दर्ज करें",
+          "dailyLimitReached": "आप दैनिक सबमिशन सीमा तक पहुँच गए हैं",
+          "locationMissing": "आपकी प्रोफ़ाइल में स्थान की जानकारी नहीं है — कृपया इसे अपडेट करें।",
+          "rewriteSpam": "कृपया अपना प्रश्न फिर से लिखें ताकि यह स्पैम जैसा न दिखे।"
+        },
+        "duplicate": {
+          "expertAnswer": "विशेषज्ञ का उत्तर",
+          "answeredBy": "— {{name}} द्वारा उत्तर दिया गया",
+          "askAnyway": "फिर भी पूछें",
+          "backHome": "होम पर वापस जाएँ"
+        }
       },
       "readFullPolicy": "पूरी गोपनीयता नीति पढ़ें →",
       "resendOtp": "OTP पुनः भेजें",
@@ -7794,7 +7817,7 @@ const resources = {
         "applyFilters": "फ़िल्टर लागू करें",
         "search": "खोजें",
         "searchPlaceholder": "प्रश्न खोजें…",
-        "allStatus": "सभी स्थिति (Status)",
+        "allStatus": "सभी स्थिति",
         "allSeasons": "सभी मौसम",
         "allCategories": "सभी श्रेणियां",
         "status": "स्थिति",
@@ -7818,7 +7841,10 @@ const resources = {
         "approved": "स्वीकृत",
         "pending": "लंबित",
         "rejected": "अस्वीकृत",
-        "duplicate": "डुप्लिकेट"
+        "duplicate": "डुप्लिकेट",
+        "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।",
+        "held": "होल्ड पर",
+        "published": "प्रकाशित"
       },
       "status": {
         "verified": "सत्यापित",
@@ -25625,6 +25651,6 @@ const resources = {
       }
     }
   }
-};
+}
 
 export default resources;
