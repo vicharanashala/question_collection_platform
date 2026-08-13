@@ -68,7 +68,31 @@ const resources = {
       "and": "and",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "Your district, in your language"
+        "tagline": "Your district, in your language",
+        "staffPortal": "QuestionPlatform",
+        "publicPortal": "Public Portal",
+        "footer": "AnnaDatha - Made for Indian farmers"
+      },
+      "chrome": {
+        "openMenu": "Open menu",
+        "switchToLightMode": "Switch to light mode",
+        "switchToDarkMode": "Switch to dark mode"
+      },
+      "pageTitle": {
+        "dashboard": "Dashboard",
+        "userManagement": "User Management",
+        "questions": "Questions",
+        "reviewQueue": "Review Queue",
+        "profile": "Profile",
+        "questionPlatform": "Question Platform"
+      },
+      "roles": {
+        "user": "User",
+        "curator": "Curator",
+        "finance": "Finance",
+        "distributor": "Distributor",
+        "admin": "Admin",
+        "super_admin": "Super Admin"
       },
       "loginPhone": {
         "signIn": "Sign In",
@@ -277,11 +301,19 @@ const resources = {
         "noSubmissions": "No submissions yet",
         "viewAll": "View All",
         "farmer": "Farmer",
+        "fpo": "FPO Member",
+        "student": "Student",
+        "volunteer": "Volunteer",
+        "ngo": "NGO Partner",
         "bronze": "Bronze",
         "silver": "Silver",
         "gold": "Gold",
         "questions": "Qs",
         "perQuestion": "/Q",
+        "verifiedUser": "Verified user",
+        "aboutQuickActions": "About quick actions",
+        "aboutRewards": "About rewards",
+        "aboutSubmissionTips": "About submission tips",
         "videoTip": "Video — Max {{seconds}}s, {{size}}MB",
         "editWindowTip": "Edit window — {seconds} seconds after submission",
         "aiCheckTip": "AI relevance check runs automatically before posting",
@@ -352,7 +384,18 @@ const resources = {
         "submit": "Submit",
         "wallet": "Wallet",
         "profile": "Profile",
-        "submissions": "Submissions"
+        "submissions": "Submissions",
+        "dashboard": "Dashboard",
+        "questions": "Questions",
+        "reviewQueue": "Review Queue",
+        "userManagement": "User Management",
+        "distributions": "Distributions",
+        "withdrawals": "Withdrawals",
+        "wallets": "Wallets",
+        "settings": "Settings",
+        "auditLogs": "Audit Logs",
+        "reports": "Reports",
+        "faqManagement": "FAQ Management"
       },
       "ngoPartner": "NGO Partner",
       "ngoPartnerDesc": "Non-governmental organisation",

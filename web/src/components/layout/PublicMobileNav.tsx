@@ -1,11 +1,13 @@
-import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut, Sprout } from 'lucide-react'
+import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut, Sprout, Languages } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/hooks/useLanguage'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useState } from 'react'
 
 interface PublicMobileNavProps {
@@ -24,8 +26,10 @@ const items = [
 export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
+  const { nativeName } = useLanguage()
   const navigate = useNavigate()
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
 
   function handleSignOut() {
     setLogoutOpen(false)
@@ -58,7 +62,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
-                <p className="text-[11px] text-text-tertiary leading-tight">Public Portal</p>
+                <p className="text-[11px] text-text-tertiary leading-tight">{t('app.publicPortal')}</p>
               </div>
             </div>
             <button onClick={onClose} className="rounded-md p-1.5 text-text-secondary hover:bg-accent">
@@ -98,11 +102,19 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
               </div>
             </div>
             <button
+              onClick={() => setLanguageOpen(true)}
+              className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+            >
+              <Languages className="h-4 w-4" />
+              <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
+              <span className="text-xs text-text-tertiary">{nativeName}</span>
+            </button>
+            <button
               onClick={() => setLogoutOpen(true)}
               className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              Sign Out
+              {t('profile.signOut')}
             </button>
           </div>
         </div>
@@ -111,14 +123,16 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
       <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign Out?</DialogTitle>
+            <DialogTitle>{t('profile.signOut')}</DialogTitle>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleSignOut}>Sign Out</Button>
+            <Button variant="outline" onClick={() => setLogoutOpen(false)}>{t('profile.signOutCancel')}</Button>
+            <Button variant="destructive" onClick={handleSignOut}>{t('profile.signOutAction')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </>
   )
 }

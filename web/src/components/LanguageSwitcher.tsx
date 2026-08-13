@@ -4,11 +4,15 @@
  * Lists all 22 supported languages (native name + English name), persists the
  * choice to localStorage (via i18next-browser-languagedetector's cache) and
  * updates the active i18next language immediately.
+ *
+ * Persistence and `<html dir/lang>` sync are delegated to `@/i18n` — the
+ * hook just exposes a React-friendly API over those mechanisms.
  */
 import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/hooks/useLanguage'
 import { SUPPORTED_LANGUAGES, RTL_LANGUAGES, type SupportedLanguageCode } from '@/i18n'
 
 interface LanguageSwitcherProps {
@@ -17,10 +21,11 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ open, onClose }: LanguageSwitcherProps) {
-  const { i18n, t } = useTranslation()
+  const { t } = useTranslation()
+  const { language, setLanguage } = useLanguage()
 
   function handleSelect(code: SupportedLanguageCode) {
-    i18n.changeLanguage(code)
+    void setLanguage(code)
     onClose()
   }
 
@@ -32,7 +37,7 @@ export function LanguageSwitcher({ open, onClose }: LanguageSwitcherProps) {
         </DialogHeader>
         <div className="max-h-[65vh] overflow-y-auto py-1">
           {SUPPORTED_LANGUAGES.map((lang) => {
-            const isSelected = i18n.language === lang.code
+            const isSelected = language === lang.code
             const isRTL = RTL_LANGUAGES.includes(lang.code as SupportedLanguageCode)
             return (
               <button

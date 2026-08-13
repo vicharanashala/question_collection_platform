@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { adminApi, questionApi, walletApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
@@ -91,14 +92,15 @@ function QuickAction({ icon, iconWrapClass, iconClass, label, sub, onClick }: Qu
 // Tier display config — mirrors the mobile home screen's Bronze → Silver → Gold
 // step path. Source-of-truth ranges live in REWARD_TIERS; this is presentation only.
 const TIER_DISPLAY = [
-  { key: 'bronze', label: 'Bronze', bg: 'bg-orange-600', text: 'text-orange-600', track: 'bg-orange-600' },
-  { key: 'silver', label: 'Silver', bg: 'bg-slate-400',  text: 'text-slate-500',  track: 'bg-slate-400' },
-  { key: 'gold',   label: 'Gold',   bg: 'bg-amber-500',  text: 'text-amber-500',  track: 'bg-amber-500' },
+  { key: 'bronze', bg: 'bg-orange-600', text: 'text-orange-600', track: 'bg-orange-600' },
+  { key: 'silver', bg: 'bg-slate-400',  text: 'text-slate-500',  track: 'bg-slate-400' },
+  { key: 'gold',   bg: 'bg-amber-500',  text: 'text-amber-500',  track: 'bg-amber-500' },
 ] as const
 
 export function PublicHomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [stats, setStats] = useState<Stats | null>(null)
   const [balance, setBalance] = useState<number>(0)
   const [loading, setLoading] = useState(true)
@@ -137,11 +139,29 @@ export function PublicHomePage() {
 
   const greeting = (() => {
     const h = new Date().getHours()
-    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+    return h < 12
+      ? t('home.greeting.morning')
+      : h < 17
+        ? t('home.greeting.afternoon')
+        : t('home.greeting.evening')
   })()
-  const name = user?.name?.split(' ')[0] || 'Friend'
+  const name = user?.name?.split(' ')[0] || t('home.farmer')
   const isVerified = user?.verificationStatus === 'verified'
   const initials = (user?.name?.charAt(0) || '?').toUpperCase()
+
+  // Translate the category pill — falls back to the English `categoryLabel`
+  // utility for unknown values. Mirrors the mobile HomeScreen behaviour where
+  // `home.farmer`/`home.fpo`/... are the i18n keys for the user category.
+  const CATEGORY_KEYS: Record<string, string> = {
+    farmer: 'home.farmer',
+    fpo: 'home.fpo',
+    student: 'home.student',
+    volunteer: 'home.volunteer',
+    ngo: 'home.ngo',
+  }
+  const categoryText = user?.category
+    ? (CATEGORY_KEYS[user.category] ? t(CATEGORY_KEYS[user.category]) : categoryLabel(user.category))
+    : null
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-6">
@@ -154,10 +174,10 @@ export function PublicHomePage() {
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wider text-white/80">{greeting},</p>
             <h1 className="mt-0.5 truncate text-2xl font-bold">{name}</h1>
-            {user?.category && (
+            {categoryText && (
               <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium">
                 <Sprout className="h-3.5 w-3.5" />
-                {categoryLabel(user.category)}
+                {categoryText}
               </span>
             )}
           </div>
@@ -169,7 +189,7 @@ export function PublicHomePage() {
             {isVerified && (
               <span
                 className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-emerald-600 bg-emerald-400 text-white"
-                aria-label="Verified user"
+                aria-label={t('home.verifiedUser')}
               >
                 <CheckCircle2 className="h-3 w-3" />
               </span>
@@ -192,19 +212,19 @@ export function PublicHomePage() {
       <div className="grid grid-cols-3 gap-3">
         <StatTile
           icon={<Wallet className="h-4 w-4" />}
-          label="Wallet"
+          label={t('home.walletBalance')}
           value={loading ? '...' : `\u20B9${balance.toFixed(0)}`}
           iconClass="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
         />
         <StatTile
           icon={<CheckCircle2 className="h-4 w-4" />}
-          label="Today"
+          label={t('home.today')}
           value={loading ? '...' : stats ? `${stats.dailyCount} done` : '0'}
           iconClass="bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
         />
         <StatTile
           icon={<Clock className="h-4 w-4" />}
-          label="Remaining"
+          label={t('home.remaining')}
           value={loading ? '...' : stats ? `${stats.remainingToday}` : '0'}
           iconClass="bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
         />
@@ -212,24 +232,24 @@ export function PublicHomePage() {
 {/* Quick Actions -- mirrors mobile home screen */}
       <section aria-labelledby="quick-actions-heading">
         <div className="mb-3 flex items-center gap-1.5">
-          <h3 id="quick-actions-heading" className="text-base font-bold text-foreground">Quick Actions</h3>
-          <InfoTip label="About quick actions" description="Jump straight to the two things you do most: ask a new question or open your wallet to view earnings." />
+          <h3 id="quick-actions-heading" className="text-base font-bold text-foreground">{t('home.quickActions')}</h3>
+          <InfoTip label={t('home.aboutQuickActions')} description={t('home.quickActionsTip')} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <QuickAction
             icon={<PenSquare className="h-5 w-5" />}
             iconWrapClass="bg-emerald-500/10"
             iconClass="text-emerald-700 dark:text-emerald-400"
-            label="Submit a Question"
-            sub="Get expert answers"
+            label={t('home.askQuestion')}
+            sub={t('home.askQuestionSub')}
             onClick={() => navigate('/public/ask')}
           />
           <QuickAction
             icon={<Wallet className="h-5 w-5" />}
             iconWrapClass="bg-emerald-500/10"
             iconClass="text-emerald-700 dark:text-emerald-400"
-            label="My Wallet"
-            sub="View balance & history"
+            label={t('home.myWallet')}
+            sub={t('home.myWalletSub')}
             onClick={() => navigate('/public/wallet')}
           />
         </div>
@@ -239,10 +259,10 @@ export function PublicHomePage() {
       <section aria-labelledby="earn-rewards-heading">
         <div className="mb-3">
           <div className="flex items-center gap-1.5">
-            <h3 id="earn-rewards-heading" className="text-base font-bold text-foreground">Earn Rewards</h3>
-            <InfoTip label="About rewards" description="Earn more as your approved question count grows -- up to Rs.10 per question once you reach the Gold tier." />
+            <h3 id="earn-rewards-heading" className="text-base font-bold text-foreground">{t('home.earnRewards')}</h3>
+            <InfoTip label={t('home.aboutRewards')} description={t('home.rewardsTip')} />
           </div>
-          <p className="text-xs text-text-secondary">Rs.10 for 251-500 approved questions</p>
+          <p className="text-xs text-text-secondary">{t('home.rewardSubtitle')}</p>
         </div>
 
         <Card>
@@ -264,11 +284,11 @@ export function PublicHomePage() {
                         <Leaf className="h-4 w-4" />
                       </div>
                       <div className="mt-3 text-center">
-                        <p className={cn('text-xs font-extrabold', tier.text)}>{tier.label}</p>
+                        <p className={cn('text-xs font-extrabold', tier.text)}>{t(`home.${tier.key}`)}</p>
                         <p className="mt-0.5 text-[10px] text-text-secondary">
-                          {range.min}-{range.max}Qs
+                          {range.min}-{range.max}{t('home.questions')}
                         </p>
-                        <p className="mt-1 text-base font-extrabold text-foreground">Rs.{range.reward}/Q</p>
+                        <p className="mt-1 text-base font-extrabold text-foreground">Rs.{range.reward}{t('home.perQuestion')}</p>
                       </div>
                     </div>
                   )
@@ -286,8 +306,8 @@ export function PublicHomePage() {
           <div className="flex items-center gap-3">
             <Trophy className="h-5 w-5 text-emerald-600" aria-hidden="true" />
             <div>
-              <p className="text-sm font-bold text-foreground">Reach Gold Tier</p>
-              <p className="text-xs text-text-secondary">Earn up to Rs.10 per question after 250 approvals</p>
+              <p className="text-sm font-bold text-foreground">{t('home.reachGold')}</p>
+              <p className="text-xs text-text-secondary">{t('home.reachGoldSub')}</p>
             </div>
           </div>
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40" aria-hidden="true">
@@ -300,8 +320,8 @@ export function PublicHomePage() {
 {/* Submission Tips (mirrors mobile home screen) */}
       <section aria-labelledby="submission-tips-heading">
         <div className="mb-3 flex items-center gap-1.5">
-          <h3 id="submission-tips-heading" className="text-base font-bold text-foreground">Submission Tips</h3>
-          <InfoTip label="About submission tips" description="Follow these tips to keep your submissions high-quality and within platform limits." />
+          <h3 id="submission-tips-heading" className="text-base font-bold text-foreground">{t('home.submissionTips')}</h3>
+          <InfoTip label={t('home.aboutSubmissionTips')} description={t('home.guidelinesTip')} />
         </div>
         <Card>
           <CardContent className="p-0">
@@ -310,7 +330,7 @@ export function PublicHomePage() {
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-emerald-50 dark:bg-emerald-950/30" aria-hidden="true">
                   <Calendar className="h-3.5 w-3.5 text-emerald-600" />
                 </span>
-                <span className="text-sm text-foreground">Daily limit -- {dailyLimit} questions per day</span>
+                <span className="text-sm text-foreground">{t('home.dailyLimitTip', { count: dailyLimit })}</span>
               </li>
               <li className="flex items-center gap-3 p-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-50 dark:bg-amber-950/30" aria-hidden="true">
@@ -318,22 +338,22 @@ export function PublicHomePage() {
                 </span>
                 <span className="text-sm text-foreground">
                   {editWindowSec === 0
-                    ? 'Questions cannot be edited after submission'
-                    : `Edit window -- ${editWindowSec} seconds after submission`}
+                    ? t('home.editWindowClosed')
+                    : t('home.editWindowTip').replace('{seconds}', String(editWindowSec))}
                 </span>
               </li>
               <li className="flex items-center gap-3 p-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-violet-50 dark:bg-violet-950/30" aria-hidden="true">
                   <Lightbulb className="h-3.5 w-3.5 text-violet-600" />
                 </span>
-                <span className="text-sm text-foreground">AI relevance check runs automatically before posting</span>
+                <span className="text-sm text-foreground">{t('home.aiCheckTip')}</span>
               </li>
             </ul>
           </CardContent>
         </Card>
       </section>
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">AnnaDatha - Made for Indian farmers</p>
+      <p className="pt-2 text-center text-xs text-text-tertiary">{t('app.footer')}</p>
     </div>
   )
 }

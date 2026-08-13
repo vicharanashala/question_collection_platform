@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Menu, Bell, Trophy, Languages } from 'lucide-react'
+import { useLanguage } from '@/hooks/useLanguage'
+import { LogOut, User, Sun, Moon, Menu, Bell, Trophy, Languages, ChevronRight } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { notificationApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -16,6 +17,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { t } = useTranslation()
+  const { nativeName } = useLanguage()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -66,7 +68,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
     <header className="flex h-14 items-center justify-between border-b border-emerald-100 bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-emerald-900/40 dark:bg-surface/80">
       <div className="flex items-center gap-2">
         {onMobileMenuToggle && (
-          <button onClick={onMobileMenuToggle} className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 md:hidden" aria-label="Open menu">
+          <button onClick={onMobileMenuToggle} className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 md:hidden" aria-label={t('chrome.openMenu')}>
             <Menu className="h-5 w-5" />
           </button>
         )}
@@ -84,10 +86,10 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
         <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Change language" title="Change language">
           <Languages className="h-4 w-4" />
         </button>
-        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
-        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label="Leaderboard" title="Leaderboard">
+        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
           <Trophy className="h-4 w-4" />
         </button>
         <div className="h-6 w-px bg-border-subtle" />
@@ -105,13 +107,22 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
               <div className="py-1">
                 <Link to="/public/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors">
                   <User className="h-4 w-4 text-text-tertiary" />
-                  Profile
+                  {t('nav.profile')}
                 </Link>
+                <button
+                  onClick={() => { setProfileOpen(false); setLanguageOpen(true) }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                >
+                  <Languages className="h-4 w-4 text-text-tertiary" />
+                  <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
+                  <span className="text-xs text-text-tertiary">{nativeName}</span>
+                  <ChevronRight className="h-4 w-4 text-text-tertiary" />
+                </button>
               </div>
               <div className="border-t border-border-subtle py-1">
                 <button onClick={() => setLogoutConfirmOpen(true)} className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
                   <LogOut className="h-4 w-4" />
-                  Sign Out
+                  {t('profile.signOut')}
                 </button>
               </div>
             </div>
@@ -121,12 +132,12 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
       <Dialog open={logoutConfirmOpen} onOpenChange={(v) => setLogoutConfirmOpen(v)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign Out?</DialogTitle>
-            <DialogDescription>Are you sure you want to sign out of your AnnaDatha account?</DialogDescription>
+            <DialogTitle>{t('profile.signOut')}</DialogTitle>
+            <DialogDescription>{t('profile.signOutConfirm')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmLogout}>Sign Out</Button>
+            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>{t('profile.signOutCancel')}</Button>
+            <Button variant="destructive" onClick={confirmLogout}>{t('profile.signOutAction')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,21 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Menu, Sun, Moon } from 'lucide-react'
+import { useLanguage } from '@/hooks/useLanguage'
+import { LogOut, User, Menu, Sun, Moon, Languages, ChevronRight } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-
-const titles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/users': 'User Management',
-  '/questions': 'Questions',
-  '/reviews': 'Review Queue',
-  '/profile': 'Profile',
-}
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
@@ -26,11 +21,23 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { t } = useTranslation()
+  const { nativeName } = useLanguage()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const title = titles[pathname] ?? 'Question Platform'
+  // Title map keyed by route — translated via t() (i18next) so it re-renders
+  // on language change. Unknown routes fall back to the platform name.
+  const titles: Record<string, string> = {
+    '/dashboard': t('pageTitle.dashboard'),
+    '/users': t('pageTitle.userManagement'),
+    '/questions': t('pageTitle.questions'),
+    '/reviews': t('pageTitle.reviewQueue'),
+    '/profile': t('pageTitle.profile'),
+  }
+  const title = titles[pathname] ?? t('pageTitle.questionPlatform')
   const initials = user ? getInitials(user.name || '', user.mobileNumber) : '?'
 
   // Close dropdown on outside click
@@ -62,7 +69,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <button
           onClick={onMobileMenuToggle}
           className="md:hidden rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
-          aria-label="Open menu"
+          aria-label={t('chrome.openMenu')}
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -74,14 +81,24 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <button
           onClick={toggleTheme}
           className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')}
+          title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}
         >
           {theme === 'dark' ? (
             <Sun className="h-4 w-4" />
           ) : (
             <Moon className="h-4 w-4" />
           )}
+        </button>
+
+        {/* Language switcher quick-action */}
+        <button
+          onClick={() => setLanguageOpen(true)}
+          className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
+          aria-label={t('auth.selectLanguage')}
+          title={t('auth.selectLanguage')}
+        >
+          <Languages className="h-4 w-4" />
         </button>
 
         <div className="h-6 w-px bg-border-subtle" />
@@ -115,10 +132,19 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
                 >
                   {theme === 'dark' ? (
-                    <><Sun className="h-4 w-4 text-text-tertiary" />Light mode</>
+                    <><Sun className="h-4 w-4 text-text-tertiary" />{t('profile.themeLight')}</>
                   ) : (
-                    <><Moon className="h-4 w-4 text-text-tertiary" />Dark mode</>
+                    <><Moon className="h-4 w-4 text-text-tertiary" />{t('profile.themeDark')}</>
                   )}
+                </button>
+                <button
+                  onClick={() => { setProfileOpen(false); setLanguageOpen(true) }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
+                >
+                  <Languages className="h-4 w-4 text-text-tertiary" />
+                  <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
+                  <span className="text-xs text-text-tertiary">{nativeName}</span>
+                  <ChevronRight className="h-4 w-4 text-text-tertiary" />
                 </button>
                 <Link
                   to="/profile"
@@ -126,7 +152,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                   className="flex items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
                 >
                   <User className="h-4 w-4 text-text-tertiary" />
-                  Profile
+                  {t('nav.profile')}
                 </Link>
               </div>
 
@@ -136,7 +162,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/5 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
-                  Sign Out
+                  {t('profile.signOut')}
                 </button>
               </div>
             </div>
@@ -148,21 +174,23 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       <Dialog open={logoutConfirmOpen} onOpenChange={(v) => { setLogoutConfirmOpen(v) }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign Out?</DialogTitle>
+            <DialogTitle>{t('profile.signOut')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to sign out of your account?
+              {t('profile.signOutConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
-              Cancel
+              {t('profile.signOutCancel')}
             </Button>
             <Button variant="destructive" onClick={confirmLogout}>
-              Sign Out
+              {t('profile.signOutAction')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </header>
   )
 }
