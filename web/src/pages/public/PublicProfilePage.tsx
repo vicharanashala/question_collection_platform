@@ -42,9 +42,9 @@ import type { VerificationStatus } from '@/types'
 
 // — Tier config (mirrors mobile ProfileScreen TIER_CONFIG + REWARD_TIERS) —
 const TIER_CONFIG = {
-  bronze: { color: '#CD7F32', label: 'Bronze', next: 'Silver', threshold: 0,   nextThreshold: 26  },
-  silver: { color: '#A8A8A8', label: 'Silver', next: 'Gold',   threshold: 26,  nextThreshold: 251 },
-  gold:   { color: '#F59E0B', label: 'Gold',   next: null,    threshold: 251, nextThreshold: Number.POSITIVE_INFINITY },
+  bronze: { color: '#CD7F32', labelKey: 'profile.tierBronze', next: 'silver' as const, threshold: 0,   nextThreshold: 26  },
+  silver: { color: '#A8A8A8', labelKey: 'profile.tierSilver', next: 'gold' as const,   threshold: 26,  nextThreshold: 251 },
+  gold:   { color: '#F59E0B', labelKey: 'profile.tierGold',   next: null,              threshold: 251, nextThreshold: Number.POSITIVE_INFINITY },
 } as const
 
 type Tier = keyof typeof TIER_CONFIG
@@ -401,10 +401,10 @@ export function PublicProfilePage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-extrabold" style={{ color: tierCfg.color }}>
-                {tierCfg.label} Member
+                {t(tierCfg.labelKey)} {t('profile.member')}
               </p>
               <p className="text-xs font-medium text-text-secondary">
-                {approved} approved questions
+                {t('profile.approvedQuestions', { count: approved })}
               </p>
             </div>
             {tier !== 'gold' && (
@@ -412,7 +412,7 @@ export function PublicProfilePage() {
                 className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
                 style={{ backgroundColor: tierCfg.color + '18', color: tierCfg.color }}
               >
-                {remaining} to {tierCfg.next}
+                {t('profile.toNextTier', { count: remaining, tier: t(TIER_CONFIG[tierCfg.next!].labelKey) })}
               </div>
             )}
           </div>
@@ -429,17 +429,17 @@ export function PublicProfilePage() {
                 />
               </div>
               <p className="text-center text-[11px] font-medium text-text-tertiary">
-                {remaining} more to {tierCfg.next}
+                {t('profile.moreToNextTier', { count: remaining, tier: t(TIER_CONFIG[tierCfg.next!].labelKey) })}
               </p>
             </div>
           )}
 
           <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-            {(['bronze', 'silver', 'gold'] as Tier[]).map((t) => {
-              const tcfg = TIER_CONFIG[t]
+            {(['bronze', 'silver', 'gold'] as Tier[]).map((tierKey) => {
+              const tcfg = TIER_CONFIG[tierKey]
               const reached = approved >= tcfg.threshold
               return (
-                <div key={t} className="flex flex-col items-center gap-1">
+                <div key={tierKey} className="flex flex-col items-center gap-1">
                   <div
                     className="flex h-5 w-5 items-center justify-center rounded-full"
                     style={{ backgroundColor: reached ? tcfg.color : '#e2e8f0' }}
@@ -450,7 +450,7 @@ export function PublicProfilePage() {
                     className="text-[11px] font-bold"
                     style={{ color: reached ? tcfg.color : undefined }}
                   >
-                    {tcfg.label}
+                    {t(tcfg.labelKey)}
                   </p>
                   <p className="text-[10px] font-medium text-text-tertiary">{tcfg.threshold}</p>
                 </div>
@@ -502,7 +502,7 @@ export function PublicProfilePage() {
         <AccountCard icon={Users} title={t('profile.personalInfo')}>
           <div className="border-t border-slate-100 dark:border-slate-800">
             {user.username != null && (
-              <AccountRow icon={AtSign} label="Username" value={String('@') + user.username} />
+              <AccountRow icon={AtSign} label={t('profile.username')} value={String('@') + user.username} />
             )}
             {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(cat)} />}
             {user.gender && (
