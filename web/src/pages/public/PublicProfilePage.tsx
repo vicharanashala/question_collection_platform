@@ -17,12 +17,9 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
-import { authApi, questionApi, walletApi, getErrorMessage } from '@/api/client'
+import { questionApi, walletApi } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter,
@@ -31,12 +28,12 @@ import {
   Phone, Leaf, Wallet, Calendar, Trophy, Medal,
   CheckCircle2, Clock, Eye, AlertCircle, XCircle,
   AtSign, Tag, Users, MapPin, Building2, MapPinned, Home, School,
-  ChevronRight, Pencil, LogOut, Flag, ShieldCheck,
+  ChevronRight, LogOut, Flag, ShieldCheck,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
-  CalendarDays, Sprout, Ruler, Loader2, Save, HelpCircle,
+  CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { LANGUAGES, categoryLabel } from '@/constants/public'
+import { categoryLabel } from '@/constants/public'
 import { cn, getInitials, formatDate } from '@/lib/utils'
 import type { VerificationStatus } from '@/types'
 
@@ -224,7 +221,7 @@ function CropChip({ name }: CropChipProps) {
 
 export function PublicProfilePage() {
   const { t } = useTranslation()
-  const { user, logout, updateUser } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   // Data state
@@ -233,11 +230,7 @@ export function PublicProfilePage() {
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null)
   const [loadingStats, setLoadingStats] = useState(true)
 
-  // Edit + logout state
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [name, setName] = useState('')
-  const [languagePreference, setLanguagePreference] = useState('en')
+  // Logout state
   const [logoutOpen, setLogoutOpen] = useState(false)
 
   // Fetch wallet balance, approved stats, and total question count in parallel.
@@ -288,30 +281,6 @@ export function PublicProfilePage() {
     : []
 
   // — Handlers —
-  function startEdit() {
-    setName(user?.name || '')
-    setLanguagePreference(user?.languagePreference || 'en')
-    setEditing(true)
-  }
-
-  async function save() {
-    if (!name.trim()) {
-      toast.error(t('editProfile.nameMinChars'))
-      return
-    }
-    setSaving(true)
-    try {
-      const { user: fresh } = await authApi.updateMe({ name: name.trim(), languagePreference })
-      updateUser(fresh)
-      toast.success(t('editProfile.saveSuccess'))
-      setEditing(false)
-    } catch (err) {
-      toast.error(getErrorMessage(err, t('editProfile.saveFailed')))
-    } finally {
-      setSaving(false)
-    }
-  }
-
   function handleLogout() {
     setLogoutOpen(false)
     logout()
@@ -486,16 +455,6 @@ export function PublicProfilePage() {
         <SectionHeader
           icon={Users}
           title={t('profile.account')}
-          trailing={
-            <button
-              type="button"
-              onClick={startEdit}
-              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
-            >
-              <Pencil className="h-3 w-3" />
-              <span>{t('profile.editProfile')}</span>
-            </button>
-          }
         />
 
         {/* Personal Info */}
@@ -711,54 +670,6 @@ export function PublicProfilePage() {
       <p className="pt-2 text-center text-xs text-text-tertiary">
         AnnaDatha — Made for Indian farmers
       </p>
-
-      {/* — Edit profile dialog ————————————————————————————— */}
-      <Dialog open={editing} onOpenChange={(v) => !saving && setEditing(v)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('editProfile.title')}</DialogTitle>
-            <DialogDescription>
-              {t('editProfile.subtitle')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="profile-name">{t('editProfile.fullName')}</Label>
-              <Input
-                id="profile-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={80}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="profile-lang">{t('editProfile.preferredLanguage')}</Label>
-              <Select value={languagePreference} onValueChange={setLanguagePreference}>
-                <SelectTrigger id="profile-lang">
-                  <SelectValue placeholder="Select a language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((l) => (
-                    <SelectItem key={l.code} value={l.code}>
-                      {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>
-              {t('editProfile.cancel')}
-            </Button>
-            <Button onClick={save} disabled={saving || !name.trim()}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {t('editProfile.saveChanges')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* — Logout confirmation dialog ———————————————— */}
       <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
