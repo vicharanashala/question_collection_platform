@@ -343,7 +343,7 @@ export function PublicWalletPage() {
               {belowMin ? (
                 <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur">
                   <Info className="h-3.5 w-3.5 opacity-90" />
-                  Min ₹{minWithdrawal.toLocaleString('en-IN')} to withdraw
+                  {t('wallet.minToWithdraw', { amount: minWithdrawal.toLocaleString('en-IN') })}
                 </div>
               ) : (
                 <Link
@@ -362,19 +362,19 @@ export function PublicWalletPage() {
         <div className="grid grid-cols-3 gap-3">
           <StatCard
             icon={<ArrowDownRight className="h-4 w-4" />}
-            label="Earned"
+            label={t('wallet.earned')}
             value={formatINRCompact(totalEarned)}
             tone="success"
           />
           <StatCard
             icon={<ArrowUpRight className="h-4 w-4" />}
-            label="Withdrawn"
+            label={t('wallet.withdrawn')}
             value={formatINRCompact(totalWithdrawn)}
             tone="primary"
           />
           <StatCard
             icon={<Clock className="h-4 w-4" />}
-            label="Pending"
+            label={t('status.pending')}
             value={formatINRCompact(pendingCount)}
             tone={pendingCount > 0 ? 'warning' : 'muted'}
           />
@@ -385,11 +385,9 @@ export function PublicWalletPage() {
           <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-text-secondary dark:border-amber-900/50 dark:bg-amber-950/20">
             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
             <p>
-              Earn{' '}
-              <span className="font-bold text-amber-700 dark:text-amber-400">
-                ₹{remainingToMin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>{' '}
-              more to unlock withdrawals
+              {t('wallet.earnMoreToUnlock', {
+                amount: remainingToMin.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+              })}
             </p>
           </div>
         )}

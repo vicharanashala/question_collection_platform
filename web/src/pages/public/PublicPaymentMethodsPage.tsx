@@ -17,6 +17,7 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { walletApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -47,11 +48,11 @@ interface PaymentDetail {
   createdAt: string
 }
 
-const STATUS_CONFIG: Record<PaymentDetailStatus, { label: string; cls: string; icon: ReactNode }> = {
-  verified:    { label: 'Verified',             cls: 'bg-success/12 text-success',     icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-  in_progress: { label: 'Verification Pending', cls: 'bg-warning/12 text-warning',     icon: <Clock className="h-3.5 w-3.5" /> },
-  pending:     { label: 'Pending',              cls: 'bg-muted text-text-tertiary',    icon: <Clock className="h-3.5 w-3.5" /> },
-  failed:      { label: 'Failed',               cls: 'bg-destructive/12 text-destructive', icon: <AlertCircle className="h-3.5 w-3.5" /> },
+const STATUS_CONFIG: Record<PaymentDetailStatus, { labelKey: string; cls: string; icon: ReactNode }> = {
+  verified:    { labelKey: 'status.verified',              cls: 'bg-success/12 text-success',     icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
+  in_progress: { labelKey: 'paymentMethods.statusInProgress', cls: 'bg-warning/12 text-warning',     icon: <Clock className="h-3.5 w-3.5" /> },
+  pending:     { labelKey: 'status.pending',               cls: 'bg-muted text-text-tertiary',    icon: <Clock className="h-3.5 w-3.5" /> },
+  failed:      { labelKey: 'paymentMethods.statusFailed',  cls: 'bg-destructive/12 text-destructive', icon: <AlertCircle className="h-3.5 w-3.5" /> },
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -78,6 +79,7 @@ interface AddPaymentFormProps {
 }
 
 function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
+  const { t } = useTranslation()
   const [payoutMethod, setPayoutMethod] = useState<'upi' | 'bank_transfer'>('upi')
   const [upiId, setUpiId] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
@@ -102,24 +104,24 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
   function validate(): boolean {
     if (payoutMethod === 'upi') {
       if (!upiId || !RE_UPI.test(upiId)) {
-        setFormError('Enter a valid UPI ID (e.g. yourname@upi)')
+        setFormError(t('wallet.enterUpiId'))
         return false
       }
     } else {
       if (!accountNumber || !RE_ACCT.test(accountNumber)) {
-        setFormError('Account number must be 9–18 digits')
+        setFormError(t('paymentMethods.errors.invalidAccountNumber'))
         return false
       }
       if (accountNumber !== confirmAccountNumber) {
-        setFormError('Account numbers do not match')
+        setFormError(t('paymentMethods.errors.accountMismatch'))
         return false
       }
       if (!ifsc || !RE_IFSC.test(ifsc.toUpperCase())) {
-        setFormError('IFSC must be 11 characters (e.g. SBIN0001234)')
+        setFormError(t('paymentMethods.errors.invalidIfsc'))
         return false
       }
       if (!accountHolderName || accountHolderName.trim().length < 2) {
-        setFormError('Enter the account holder name')
+        setFormError(t('paymentMethods.errors.missingHolderName'))
         return false
       }
     }
@@ -142,11 +144,11 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
             bankName: bankName.trim() || undefined,
           }
       const res = await walletApi.addPaymentDetail(data)
-      toast.success(res.message ?? 'Payment method added. Complete verification to enable withdrawals.')
+      toast.success(res.message ?? t('paymentMethods.toastAdded'))
       reset()
       onSuccess()
     } catch (e) {
-      setFormError(getErrorMessage(e, 'Failed to add payment detail.'))
+      setFormError(getErrorMessage(e, t('paymentMethods.toastAddError')))
     } finally {
       setSubmitting(false)
     }
@@ -157,7 +159,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
-        <h2 className="text-lg font-bold text-foreground">Add Payment Method</h2>
+        <h2 className="text-lg font-bold text-foreground">{t('paymentMethods.addFormTitle')}</h2>
 
         {/* Type toggle */}
         <div className="grid grid-cols-2 gap-2">
@@ -171,7 +173,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 : 'border-border-subtle bg-surface text-text-secondary hover:bg-muted',
             )}
           >
-            <AtSign className="h-4 w-4" /> UPI
+            <AtSign className="h-4 w-4" /> {t('wallet.upiTab')}
           </button>
           <button
             type="button"
@@ -183,7 +185,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 : 'border-border-subtle bg-surface text-text-secondary hover:bg-muted',
             )}
           >
-            <Building2 className="h-4 w-4" /> Bank Account
+            <Building2 className="h-4 w-4" /> {t('wallet.bankTab')}
           </button>
         </div>
 
@@ -195,7 +197,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
               id="pm-upi"
               value={upiId}
               onChange={(e) => setUpiId(e.target.value)}
-              placeholder="yourname@upi"
+              placeholder={t('wallet.upiIdPlaceholder')}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
@@ -210,7 +212,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 id="pm-acct"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="Account number"
+                placeholder={t('wallet.accountNumber')}
                 inputMode="numeric"
                 className="h-12"
               />
@@ -221,7 +223,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 id="pm-acct2"
                 value={confirmAccountNumber}
                 onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="Confirm account number"
+                placeholder={t('paymentMethods.confirmAccountNumberPlaceholder')}
                 inputMode="numeric"
                 className="h-12"
               />
@@ -232,7 +234,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 id="pm-ifsc"
                 value={ifsc}
                 onChange={(e) => setIfsc(e.target.value.toUpperCase())}
-                placeholder="IFSC code (e.g. SBIN0001234)"
+                placeholder={`${t('wallet.ifscCode')} (${t('wallet.ifscCodePlaceholder')})`}
                 maxLength={11}
                 autoCapitalize="characters"
                 className="h-12"
@@ -244,7 +246,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 id="pm-holder"
                 value={accountHolderName}
                 onChange={(e) => setAccountHolderName(e.target.value)}
-                placeholder="Account holder name"
+                placeholder={t('wallet.accountHolderName')}
                 className="h-12"
               />
             </div>
@@ -254,7 +256,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
                 id="pm-bank"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                placeholder="Bank name (optional)"
+                placeholder={t('paymentMethods.bankNamePlaceholder')}
                 className="h-12"
               />
             </div>
@@ -273,15 +275,15 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
           disabled={submitting}
           className="h-12 w-full bg-emerald-500 text-base font-semibold hover:bg-emerald-600"
         >
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add & Verify'}
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('paymentMethods.addAndVerify')}
         </Button>
 
         <p className="text-center text-xs text-text-tertiary">
-          A ₹1 verification charge will be applied and refunded upon confirmation.
+          {t('paymentMethods.verificationChargeNote')}
         </p>
 
         <Button variant="ghost" size="sm" onClick={() => { reset(); onCancel() }} className="w-full">
-          Cancel
+          {t('editProfile.cancel')}
         </Button>
       </CardContent>
     </Card>
@@ -297,6 +299,7 @@ interface SavedItemProps {
   onDelete: (id: string) => void
 }
 function SavedItem({ detail, onDelete }: SavedItemProps) {
+  const { t } = useTranslation()
   const cfg = STATUS_CONFIG[detail.status] ?? STATUS_CONFIG.pending
   const isUpi = detail.payoutMethod === 'upi'
   const canDelete = detail.status !== 'in_progress'
@@ -319,7 +322,7 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
                   : `A/c ${detail.displayValue}${detail.bankName ? ` · ${detail.bankName}` : ''}`}
               </p>
               <p className="mt-0.5 truncate text-xs text-text-secondary">
-                {isUpi ? 'UPI' : 'Bank Transfer'}
+                {isUpi ? t('wallet.upiTab') : t('wallet.withdrawal.bank')}
                 {detail.accountHolderName && ` · ${detail.accountHolderName}`}
               </p>
               {!isUpi && detail.ifsc && (
@@ -328,14 +331,14 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
             </div>
             <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', cfg.cls)}>
               {cfg.icon}
-              {cfg.label}
+              {t(cfg.labelKey)}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between">
             <p className="text-[10px] text-text-tertiary">
               {detail.status === 'verified' && detail.verifiedAt
-                ? `Verified on ${formatDate(detail.verifiedAt)}`
-                : `Added on ${formatDate(detail.createdAt)}`}
+                ? t('paymentMethods.verifiedOn', { date: formatDate(detail.verifiedAt) })
+                : t('paymentMethods.addedOn', { date: formatDate(detail.createdAt) })}
             </p>
             {canDelete && (
               <button
@@ -345,7 +348,7 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
                 aria-label="Remove"
               >
                 <Trash2 className="h-3 w-3" />
-                Remove
+                {t('paymentMethods.remove')}
               </button>
             )}
           </div>
@@ -361,6 +364,7 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
 
 export function PublicPaymentMethodsPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [details, setDetails] = useState<PaymentDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<'list' | 'add'>('list')
@@ -373,7 +377,7 @@ export function PublicPaymentMethodsPage() {
       const res = await walletApi.getPaymentDetails()
       setDetails(Array.isArray(res) ? (res as PaymentDetail[]) : [])
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Could not load payment methods.'))
+      toast.error(getErrorMessage(err, t('paymentMethods.toastLoadError')))
     } finally {
       setLoading(false)
     }
@@ -385,11 +389,11 @@ export function PublicPaymentMethodsPage() {
     setDeleting(true)
     try {
       await walletApi.deletePaymentDetail(id)
-      toast.success('Payment method removed.')
+      toast.success(t('paymentMethods.toastRemoved'))
       setConfirmDelete(null)
       await fetchDetails()
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Failed to remove payment method.'))
+      toast.error(getErrorMessage(err, t('paymentMethods.toastRemoveError')))
     } finally {
       setDeleting(false)
     }
@@ -407,7 +411,7 @@ export function PublicPaymentMethodsPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-base font-bold text-foreground">Payment Methods</h1>
+        <h1 className="text-base font-bold text-foreground">{t('profile.paymentMethods')}</h1>
         <button
           type="button"
           onClick={() => setMode((m) => (m === 'list' ? 'add' : 'list'))}
@@ -421,9 +425,7 @@ export function PublicPaymentMethodsPage() {
       {/* ── Info banner ─────────────────────────────────────────── */}
       <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 text-sm text-text-secondary dark:border-emerald-900/40 dark:bg-emerald-950/20">
         <Shield className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-        <p>
-          Payment methods are verified with a <span className="font-bold">₹1</span> micro-transaction before use.
-        </p>
+        <p>{t('paymentMethods.verifyBanner')}</p>
       </div>
 
       {/* ── Body ────────────────────────────────────────────────── */}
@@ -441,16 +443,16 @@ export function PublicPaymentMethodsPage() {
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-muted text-text-tertiary">
             <Wallet className="h-10 w-10" strokeWidth={1.5} />
           </div>
-          <p className="mt-5 text-lg font-bold text-foreground">No payment methods</p>
+          <p className="mt-5 text-lg font-bold text-foreground">{t('paymentMethods.emptyTitle')}</p>
           <p className="mt-1 text-sm text-text-secondary">
-            Add a UPI ID or bank account to enable withdrawals.
+            {t('paymentMethods.emptySubtitle')}
           </p>
           <Button
             onClick={() => setMode('add')}
             className="mt-6 bg-emerald-500 hover:bg-emerald-600"
           >
             <Plus className="h-4 w-4" />
-            Add payment method
+            {t('paymentMethods.addButton')}
           </Button>
         </div>
       ) : (
@@ -464,11 +466,7 @@ export function PublicPaymentMethodsPage() {
             <div className="border-t border-border-subtle p-3">
               <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-text-secondary dark:border-amber-900/40 dark:bg-amber-950/20">
                 <Smartphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
-                <p>
-                  Completing the ₹1 micro-transaction verification requires the
-                  AnnaDatha mobile app (native Razorpay SDK). Until verified,
-                  withdrawals cannot use this method.
-                </p>
+                <p>{t('paymentMethods.mobileVerificationNote')}</p>
               </div>
             </div>
           </CardContent>
@@ -479,13 +477,13 @@ export function PublicPaymentMethodsPage() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-lg border border-border-subtle bg-white p-5 shadow-xl dark:bg-surface">
-            <h3 className="text-base font-bold text-foreground">Remove payment method?</h3>
+            <h3 className="text-base font-bold text-foreground">{t('paymentMethods.confirmRemoveTitle')}</h3>
             <p className="mt-1.5 text-sm text-text-secondary">
-              This payment method will no longer be available for withdrawals.
+              {t('paymentMethods.confirmRemoveMessage')}
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setConfirmDelete(null)} disabled={deleting}>
-                Cancel
+                {t('editProfile.cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -494,7 +492,7 @@ export function PublicPaymentMethodsPage() {
                 disabled={deleting}
               >
                 {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                Remove
+                {t('paymentMethods.remove')}
               </Button>
             </div>
           </div>

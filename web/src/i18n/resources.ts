@@ -789,7 +789,11 @@ const resources = {
         "bankTab": "Bank Account",
         "confirmWithdrawTitle": "Confirm Withdrawal",
         "confirmWithdrawMsg": "You are about to withdraw Rs.{{amount}} to your UPI account.",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "earned": "Earned",
+        "withdrawn": "Withdrawn",
+        "minToWithdraw": "Min ₹{{amount}} to withdraw",
+        "earnMoreToUnlock": "Earn ₹{{amount}} more to unlock withdrawals"
       },
       "yourRole": "Your Role",
       "+91": "+91",
@@ -1192,6 +1196,36 @@ const resources = {
         },
         "loading": "Loading…",
         "participants": "users competing"
+      },
+      "paymentMethods": {
+        "verifyBanner": "Payment methods are verified with a ₹1 micro-transaction before use.",
+        "emptyTitle": "No payment methods",
+        "emptySubtitle": "Add a UPI ID or bank account to enable withdrawals.",
+        "addButton": "Add payment method",
+        "addFormTitle": "Add Payment Method",
+        "confirmAccountNumberPlaceholder": "Confirm account number",
+        "bankNamePlaceholder": "Bank name (optional)",
+        "addAndVerify": "Add & Verify",
+        "verificationChargeNote": "A ₹1 verification charge will be applied and refunded upon confirmation.",
+        "statusInProgress": "Verification Pending",
+        "statusFailed": "Failed",
+        "verifiedOn": "Verified on {{date}}",
+        "addedOn": "Added on {{date}}",
+        "remove": "Remove",
+        "mobileVerificationNote": "Completing the ₹1 micro-transaction verification requires the AnnaDatha mobile app. Until verified, withdrawals cannot use this method.",
+        "confirmRemoveTitle": "Remove payment method?",
+        "confirmRemoveMessage": "This payment method will no longer be available for withdrawals.",
+        "toastAdded": "Payment method added. Complete verification to enable withdrawals.",
+        "toastLoadError": "Could not load payment methods.",
+        "toastRemoved": "Payment method removed.",
+        "toastRemoveError": "Failed to remove payment method.",
+        "toastAddError": "Failed to add payment detail.",
+        "errors": {
+          "invalidAccountNumber": "Account number must be 9–18 digits",
+          "accountMismatch": "Account numbers do not match",
+          "invalidIfsc": "IFSC must be 11 characters (e.g. SBIN0001234)",
+          "missingHolderName": "Enter the account holder name"
+        }
       }
     }
   },
@@ -1902,7 +1936,11 @@ const resources = {
         "bankTab": "বেংক একাউণ্ট",
         "confirmWithdrawTitle": "উত্তোলন নিশ্চিত কৰক",
         "confirmWithdrawMsg": "আপুনি আপোনাৰ UPI একাউণ্টলৈ {{amount}} টকা উত্তোলন কৰিবলৈ ওলাইছে।",
-        "confirm": "নিশ্চিত কৰক"
+        "confirm": "নিশ্চিত কৰক",
+        "earned": "উপাৰ্জিত",
+        "withdrawn": "উত্তোলিত",
+        "minToWithdraw": "উত্তোলনৰ বাবে নূন্যতম {{amount}} টকা",
+        "earnMoreToUnlock": "উইথড্ৰ্ব আনলক কৰিবলৈ আৰু {{amount}} টকা উপাৰ্জন কৰক"
       },
       "yourRole": "আপোনাৰ ভূমিকা",
       "+91": "+৯১",
@@ -2302,6 +2340,36 @@ const resources = {
         },
         "loading": "লোড হৈ আছে…",
         "participants": "প্ৰতিযোগী"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ব্যৱহাৰৰ আগতে পেমেন্ট পদ্ধতিসমূহ ₹1 মাইক্ৰ'-ট্ৰাঞ্জেকশ্যনৰ জৰিয়তে সত্যাপন কৰা হয়।",
+        "emptyTitle": "কোনো পেমেন্ট পদ্ধতি নাই",
+        "emptySubtitle": "উত্তোলন সক্ষম কৰিবলৈ এটা UPI ID বা বেংক একাউণ্ট যোগ কৰক।",
+        "addButton": "পেমেন্ট পদ্ধতি যোগ কৰক",
+        "addFormTitle": "পেমেন্ট পদ্ধতি যোগ কৰক",
+        "confirmAccountNumberPlaceholder": "একাউণ্ট নম্বৰ নিশ্চিত কৰক",
+        "bankNamePlaceholder": "বেংকৰ নাম (বৈকল্পিক)",
+        "addAndVerify": "যোগ কৰক আৰু সত্যাপন কৰক",
+        "verificationChargeNote": "নিশ্চিত হোৱাৰ পিছত ₹1 সত্যাপন মাচুল প্ৰয়োগ কৰা হ'ব আৰু ঘূৰাই দিয়া হ'ব।",
+        "statusInProgress": "সত্যাপন বাকী আছে",
+        "statusFailed": "বিফল",
+        "verifiedOn": "{{date}} তাৰিখত সত্যাপন কৰা হৈছে",
+        "addedOn": "{{date}} তাৰিখত যোগ কৰা হৈছে",
+        "remove": "আঁতৰাওক",
+        "mobileVerificationNote": "₹1 মাইক্ৰ'-ট্ৰাঞ্জেকশ্যন সত্যাপন সম্পূৰ্ণ কৰিবলৈ AnnaDatha মোবাইল এপৰ প্ৰয়োজন। সত্যাপিত নোহোৱালৈকে এই পদ্ধতিৰে উত্তোলন কৰিব নোৱাৰি।",
+        "confirmRemoveTitle": "পেমেন্ট পদ্ধতি আঁতৰাব নেকি?",
+        "confirmRemoveMessage": "এই পেমেন্ট পদ্ধতি আৰু উত্তোলনৰ বাবে উপলব্ধ নহ'ব।",
+        "toastAdded": "পেমেন্ট পদ্ধতি যোগ কৰা হ'ল। উত্তোলন সক্ষম কৰিবলৈ সত্যাপন সম্পূৰ্ণ কৰক।",
+        "toastLoadError": "পেমেন্ট পদ্ধতিবোৰ লোড কৰিব পৰা নগ'ল।",
+        "toastRemoved": "পেমেন্ট পদ্ধতি আঁতৰোৱা হ'ল।",
+        "toastRemoveError": "পেমেন্ট পদ্ধতি আঁতৰাবলৈ বিফল।",
+        "toastAddError": "পেমেন্ট সবিশেষ যোগ কৰিবলৈ বিফল।",
+        "errors": {
+          "invalidAccountNumber": "একাউণ্ট নম্বৰ ৯–১৮ সংখ্যাৰ হ'ব লাগিব",
+          "accountMismatch": "একাউণ্ট নম্বৰ মিল নাখায়",
+          "invalidIfsc": "IFSC ১১ আখৰৰ হ'ব লাগিব (যেনে SBIN0001234)",
+          "missingHolderName": "একাউণ্ট ধাৰকৰ নাম দিয়ক"
+        }
       }
     }
   },
@@ -3012,7 +3080,11 @@ const resources = {
         "bankTab": "ব্যাংক একাউন্ট",
         "confirmWithdrawTitle": "উত্তোলন নিশ্চিত করুন",
         "confirmWithdrawMsg": "আপনি আপনার UPI একাউন্টে {{amount}} টাকা উত্তোলন করতে যাচ্ছেন।",
-        "confirm": "নিশ্চিত করুন"
+        "confirm": "নিশ্চিত করুন",
+        "earned": "অর্জিত",
+        "withdrawn": "উত্তোলিত",
+        "minToWithdraw": "উত্তোলনের জন্য সর্বনিম্ন {{amount}} টাকা",
+        "earnMoreToUnlock": "উত্তোলন আনলক করতে আরও {{amount}} টাকা অর্জন করুন"
       },
       "yourRole": "আপনার ভূমিকা",
       "+91": "+৯১",
@@ -3412,6 +3484,36 @@ const resources = {
         },
         "loading": "লোড হচ্ছে…",
         "participants": "প্রতিদ্বন্দ্বিতা করছেন এমন ব্যবহারকারীগণ"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ব্যবহারের আগে পেমেন্ট পদ্ধতিগুলি ₹1 মাইক্রো-ট্রানজেকশন দিয়ে যাচাই করা হয়।",
+        "emptyTitle": "কোনো পেমেন্ট পদ্ধতি নেই",
+        "emptySubtitle": "উত্তোলন সক্ষম করতে একটি UPI ID বা ব্যাংক অ্যাকাউন্ট যোগ করুন।",
+        "addButton": "পেমেন্ট পদ্ধতি যোগ করুন",
+        "addFormTitle": "পেমেন্ট পদ্ধতি যোগ করুন",
+        "confirmAccountNumberPlaceholder": "একাউন্ট নম্বর নিশ্চিত করুন",
+        "bankNamePlaceholder": "ব্যাংকের নাম (ঐচ্ছিক)",
+        "addAndVerify": "যোগ করুন ও যাচাই করুন",
+        "verificationChargeNote": "নিশ্চিতকরণের পর ₹1 যাচাই চার্জ প্রয়োগ করা হবে এবং ফেরত দেওয়া হবে।",
+        "statusInProgress": "যাচাই অপেক্ষমাণ",
+        "statusFailed": "ব্যর্থ",
+        "verifiedOn": "{{date}} তারিখে যাচাই করা হয়েছে",
+        "addedOn": "{{date}} তারিখে যোগ করা হয়েছে",
+        "remove": "সরান",
+        "mobileVerificationNote": "₹1 মাইক্রো-ট্রানজেকশন যাচাই সম্পূর্ণ করতে AnnaDatha মোবাইল অ্যাপ প্রয়োজন। যাচাই না হওয়া পর্যন্ত এই পদ্ধতি দিয়ে উত্তোলন করা যাবে না।",
+        "confirmRemoveTitle": "পেমেন্ট পদ্ধতি সরাবেন?",
+        "confirmRemoveMessage": "এই পেমেন্ট পদ্ধতি আর উত্তোলনের জন্য উপলব্ধ থাকবে না।",
+        "toastAdded": "পেমেন্ট পদ্ধতি যোগ করা হয়েছে। উত্তোলন সক্ষম করতে যাচাই সম্পূর্ণ করুন।",
+        "toastLoadError": "পেমেন্ট পদ্ধতি লোড করা যায়নি।",
+        "toastRemoved": "পেমেন্ট পদ্ধতি সরানো হয়েছে।",
+        "toastRemoveError": "পেমেন্ট পদ্ধতি সরাতে ব্যর্থ।",
+        "toastAddError": "পেমেন্ট বিবরণ যোগ করতে ব্যর্থ।",
+        "errors": {
+          "invalidAccountNumber": "একাউন্ট নম্বর অবশ্যই ৯-১৮ সংখ্যার হতে হবে",
+          "accountMismatch": "একাউন্ট নম্বর মিলছে না",
+          "invalidIfsc": "IFSC অবশ্যই ১১ অক্ষরের হতে হবে (যেমন SBIN0001234)",
+          "missingHolderName": "একাউন্ট ধারকের নাম লিখুন"
+        }
       }
     }
   },
@@ -4122,7 +4224,11 @@ const resources = {
         "bankTab": "बैंक एकाउन्ट",
         "confirmWithdrawTitle": "रां दंखांनाय थार खालाम",
         "confirmWithdrawMsg": "नोंथाङा Rs.{{amount}} रांखौ नोंथानि UPI एकाउन्टआव दंखांनो लादों।",
-        "confirm": "थार खालाम"
+        "confirm": "थार खालाम",
+        "earned": "आर्जिनाय",
+        "withdrawn": "दंखांनाय",
+        "minToWithdraw": "दंखांनो थाखाय गोबां सिमा Rs.{{amount}}",
+        "earnMoreToUnlock": "दंखांनाय अनलक खालामनो थाखाय गाबां Rs.{{amount}} आर्जि"
       },
       "yourRole": "नोंथानि बिबान",
       "+91": "+91",
@@ -4522,6 +4628,36 @@ const resources = {
         },
         "loading": "लोड जागासिनो दं…",
         "participants": "सा बाहागोगिरिफोर"
+      },
+      "paymentMethods": {
+        "verifyBanner": "बाहायनायनि सिगां रां होनायनि राह्राफोरखौ ₹1 माइक्रो-ट्रान्जेक्सन जों थारसिमनाय जायो।",
+        "emptyTitle": "रां होनायनि राह्रा जायाखै",
+        "emptySubtitle": "दंखांनायखौ जाहोन जानो थाखाय UPI ID एबा बैंक एकाउन्ट दा।",
+        "addButton": "रां होनायनि राह्रा दा",
+        "addFormTitle": "रां होनायनि राह्रा दा",
+        "confirmAccountNumberPlaceholder": "एकाउन्ट नम्बरखौ थारसिम",
+        "bankNamePlaceholder": "बैंकनि मुं (हांख्रायनाय)",
+        "addAndVerify": "दा आरो थारसिम",
+        "verificationChargeNote": "थारसिमनाय जाबाय दिहुनगोन ₹1 थारसिमनायनि फी लागाबगोन आरो फिन होगोन।",
+        "statusInProgress": "थारसिमनाय जानाय दं",
+        "statusFailed": "हायाखै",
+        "verifiedOn": "{{date}} खौ थारसिमबाय",
+        "addedOn": "{{date}} खौ दाबाय",
+        "remove": "उलिया",
+        "mobileVerificationNote": "₹1 माइक्रो-ट्रान्जेक्सन थारसिमनाय सोदोब खालामनो थाखाय AnnaDatha मबाइल एप गोनां। थारसिम जायाखैलासिम, बे राह्रा जों दंखांनाय हाया।",
+        "confirmRemoveTitle": "रां होनायनि राह्रा उलियो?",
+        "confirmRemoveMessage": "बे रां होनायनि राह्राया दंखांनायनि थाखाय आर मोनहागोन।",
+        "toastAdded": "रां होनायनि राह्रा दाबाय। दंखांनाय जाहोन जानो थाखाय थारसिमनाय सोदोब खालाम।",
+        "toastLoadError": "रां होनायनि राह्राफोरखौ लोड खालामनो हायाखै।",
+        "toastRemoved": "रां होनायनि राह्रा उलिबाय।",
+        "toastRemoveError": "रां होनायनि राह्रा उलियोनो हायाखै।",
+        "toastAddError": "रां होनायनि जानाय-मोनाय दानो हायाखै।",
+        "errors": {
+          "invalidAccountNumber": "एकाउन्ट नम्बरा 9–18 अंकनि जाबग्रा",
+          "accountMismatch": "एकाउन्ट नम्बरफोरा मिलेइ",
+          "invalidIfsc": "IFSC 11 आखरनि जाबग्रा (जेरै SBIN0001234)",
+          "missingHolderName": "एकाउन्ट होल्डरनि मुं सोमाव"
+        }
       }
     }
   },
@@ -5232,7 +5368,11 @@ const resources = {
         "bankTab": "बैंक खाता",
         "confirmWithdrawTitle": "निकासी दी पुष्टि करो",
         "confirmWithdrawMsg": "तुस अपने UPI खाते च Rs.{{amount}} कड्डने वाले ओ।",
-        "confirm": "पुष्टि करो"
+        "confirm": "पुष्टि करो",
+        "earned": "कमाई",
+        "withdrawn": "कड्डेआ",
+        "minToWithdraw": "पैसे कड्डने आस्तै घट्ट थूं घट्ट Rs.{{amount}}",
+        "earnMoreToUnlock": "पैसे कड्डने अनलॉक करने आस्तै होर Rs.{{amount}} कमाओ"
       },
       "yourRole": "तुआह्दी भूमिका",
       "+91": "+91",
@@ -5632,6 +5772,36 @@ const resources = {
         },
         "loading": "लोड होई राह्या ऐ…",
         "participants": "उपयोगकर्ता मुक़ाबला करी राह्ये न"
+      },
+      "paymentMethods": {
+        "verifyBanner": "इस्तेमाल थमां पैह्ले भुगतान दे तरीके ₹1 माइक्रो-ट्रांजेक्शन कन्नै सत्यापित कीते जंदे न।",
+        "emptyTitle": "कोई भुगतान दा तरीका नेईं",
+        "emptySubtitle": "निकासी सक्षम करने आस्तै UPI ID जां बैंक खाता जोड़ो।",
+        "addButton": "भुगतान दा तरीका जोड़ो",
+        "addFormTitle": "भुगतान दा तरीका जोड़ो",
+        "confirmAccountNumberPlaceholder": "खाता नंबर दी पुश्टि करो",
+        "bankNamePlaceholder": "बैंक दा नां (वैकल्पिक)",
+        "addAndVerify": "जोड़ो कने सत्यापित करो",
+        "verificationChargeNote": "पुश्टि होने पर ₹1 दा सत्यापन शुल्क लाया जाग कने वापस कीता जाग।",
+        "statusInProgress": "सत्यापन बकाया",
+        "statusFailed": "असफल",
+        "verifiedOn": "{{date}} गी सत्यापित",
+        "addedOn": "{{date}} गी जोड़्या गेआ",
+        "remove": "हटाओ",
+        "mobileVerificationNote": "₹1 माइक्रो-ट्रांजेक्शन सत्यापन पूरा करने आस्तै AnnaDatha मोबाइल ऐप जरूरी ऐ। सत्यापित होने तगर, इस तरीके कन्नै निकासी नेईं होई सकदी।",
+        "confirmRemoveTitle": "भुगतान दा तरीका हटाना ऐ?",
+        "confirmRemoveMessage": "एह् भुगतान दा तरीका हुण निकासी आस्तै उपलब्ध नेईं होग।",
+        "toastAdded": "भुगतान दा तरीका जोड़्या गेआ। निकासी सक्षम करने आस्तै सत्यापन पूरा करो।",
+        "toastLoadError": "भुगतान दे तरीके लोड नेईं होई सके।",
+        "toastRemoved": "भुगतान दा तरीका हटाया गेआ।",
+        "toastRemoveError": "भुगतान दा तरीका हटाने च असफलता।",
+        "toastAddError": "भुगतान विवरण जोड़ने च असफलता।",
+        "errors": {
+          "invalidAccountNumber": "खाता नंबर 9–18 अंकां दा होना चाहिदा",
+          "accountMismatch": "खाता नंबर मेल नेईं खंदे",
+          "invalidIfsc": "IFSC 11 अक्षरां दा होना चाहिदा (जियां SBIN0001234)",
+          "missingHolderName": "खाता धारक दा नां पाओ"
+        }
       }
     }
   },
@@ -6342,7 +6512,11 @@ const resources = {
         "bankTab": "બેંક એકાઉન્ટ",
         "confirmWithdrawTitle": "ઉપાડની પુષ્ટિ કરો",
         "confirmWithdrawMsg": "તમે તમારા UPI એકાઉન્ટમાં રૂ.{{amount}} ઉપાડવા જઈ રહ્યા છો.",
-        "confirm": "પુષ્ટિ કરો"
+        "confirm": "પુષ્ટિ કરો",
+        "earned": "કમાયેલ",
+        "withdrawn": "ઉપાડેલ",
+        "minToWithdraw": "ઉપાડવા માટે ન્યૂનતમ રૂ.{{amount}}",
+        "earnMoreToUnlock": "ઉપાડ અનલૉક કરવા માટે વધુ રૂ.{{amount}} કમાઓ"
       },
       "yourRole": "તમારી ભૂમિકા",
       "+91": "+91",
@@ -6742,6 +6916,36 @@ const resources = {
         },
         "loading": "લોડ થઈ રહ્યું છે…",
         "participants": "વપરાશકર્તાઓ સ્પર્ધા કરી રહ્યા છે"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ઉપયોગ કરતાં પહેલાં ચુકવણી પદ્ધતિઓ ₹1 માઇક્રો-ટ્રાન્ઝેક્શનથી ચકાસવામાં આવે છે.",
+        "emptyTitle": "કોઈ ચુકવણી પદ્ધતિ નથી",
+        "emptySubtitle": "ઉપાડ સક્ષમ કરવા માટે UPI ID અથવા બેંક ખાતું ઉમેરો.",
+        "addButton": "ચુકવણી પદ્ધતિ ઉમેરો",
+        "addFormTitle": "ચુકવણી પદ્ધતિ ઉમેરો",
+        "confirmAccountNumberPlaceholder": "ખાતા નંબરની પુષ્ટિ કરો",
+        "bankNamePlaceholder": "બેંકનું નામ (વૈકલ્પિક)",
+        "addAndVerify": "ઉમેરો અને ચકાસો",
+        "verificationChargeNote": "પુષ્ટિ થયા પર ₹1 ચકાસણી ચાર્જ લાગુ કરવામાં આવશે અને પરત કરવામાં આવશે.",
+        "statusInProgress": "ચકાસણી બાકી",
+        "statusFailed": "નિષ્ફળ",
+        "verifiedOn": "{{date}} ના રોજ ચકાસાયેલ",
+        "addedOn": "{{date}} ના રોજ ઉમેરાયેલ",
+        "remove": "દૂર કરો",
+        "mobileVerificationNote": "₹1 માઇક્રો-ટ્રાન્ઝેક્શન ચકાસણી પૂર્ણ કરવા માટે AnnaDatha મોબાઇલ એપની જરૂર છે. ચકાસાય નહીં ત્યાં સુધી, ઉપાડ માટે આ પદ્ધતિનો ઉપયોગ કરી શકાશે નહીં.",
+        "confirmRemoveTitle": "ચુકવણી પદ્ધતિ દૂર કરવી છે?",
+        "confirmRemoveMessage": "આ ચુકવણી પદ્ધતિ હવે ઉપાડ માટે ઉપલબ્ધ રહેશે નહીં.",
+        "toastAdded": "ચુકવણી પદ્ધતિ ઉમેરાઈ. ઉપાડ સક્ષમ કરવા માટે ચકાસણી પૂર્ણ કરો.",
+        "toastLoadError": "ચુકવણી પદ્ધતિઓ લોડ કરી શકાઈ નહીં.",
+        "toastRemoved": "ચુકવણી પદ્ધતિ દૂર કરવામાં આવી.",
+        "toastRemoveError": "ચુકવણી પદ્ધતિ દૂર કરવામાં નિષ્ફળ.",
+        "toastAddError": "ચુકવણી વિગતો ઉમેરવામાં નિષ્ફળ.",
+        "errors": {
+          "invalidAccountNumber": "ખાતા નંબર 9–18 અંકોનો હોવો જોઈએ",
+          "accountMismatch": "ખાતા નંબરો મેળ ખાતા નથી",
+          "invalidIfsc": "IFSC 11 અક્ષરોનો હોવો જોઈએ (દા.ત. SBIN0001234)",
+          "missingHolderName": "ખાતાધારકનું નામ દાખલ કરો"
+        }
       }
     }
   },
@@ -7475,7 +7679,11 @@ const resources = {
         "bankTab": "बैंक खाता",
         "confirmWithdrawTitle": "निकासी की पुष्टि करें",
         "confirmWithdrawMsg": "आप अपने UPI खाते में रु. {{amount}} निकालने वाले हैं।",
-        "confirm": "पुष्टि करें"
+        "confirm": "पुष्टि करें",
+        "earned": "अर्जित",
+        "withdrawn": "निकाला गया",
+        "minToWithdraw": "निकालने के लिए न्यूनतम ₹{{amount}}",
+        "earnMoreToUnlock": "निकासी अनलॉक करने के लिए और ₹{{amount}} कमाएं"
       },
       "yourRole": "आपकी भूमिका",
       "+91": "+91",
@@ -7878,6 +8086,36 @@ const resources = {
         },
         "loading": "लोड हो रहा है…",
         "participants": "उपयोगकर्ता प्रतिस्पर्धा कर रहे हैं"
+      },
+      "paymentMethods": {
+        "verifyBanner": "उपयोग से पहले भुगतान के तरीकों को ₹1 के माइक्रो-ट्रांज़ैक्शन से सत्यापित किया जाता है।",
+        "emptyTitle": "कोई भुगतान का तरीका नहीं",
+        "emptySubtitle": "निकासी सक्षम करने के लिए UPI ID या बैंक खाता जोड़ें।",
+        "addButton": "भुगतान का तरीका जोड़ें",
+        "addFormTitle": "भुगतान का तरीका जोड़ें",
+        "confirmAccountNumberPlaceholder": "खाता संख्या की पुष्टि करें",
+        "bankNamePlaceholder": "बैंक का नाम (वैकल्पिक)",
+        "addAndVerify": "जोड़ें और सत्यापित करें",
+        "verificationChargeNote": "पुष्टि होने पर ₹1 का सत्यापन शुल्क लिया जाएगा और वापस कर दिया जाएगा।",
+        "statusInProgress": "सत्यापन लंबित",
+        "statusFailed": "विफल",
+        "verifiedOn": "{{date}} को सत्यापित",
+        "addedOn": "{{date}} को जोड़ा गया",
+        "remove": "हटाएं",
+        "mobileVerificationNote": "₹1 माइक्रो-ट्रांज़ैक्शन सत्यापन पूरा करने के लिए AnnaDatha मोबाइल ऐप आवश्यक है। सत्यापित होने तक इस तरीके से निकासी नहीं की जा सकती।",
+        "confirmRemoveTitle": "भुगतान का तरीका हटाएं?",
+        "confirmRemoveMessage": "यह भुगतान का तरीका अब निकासी के लिए उपलब्ध नहीं होगा।",
+        "toastAdded": "भुगतान का तरीका जोड़ा गया। निकासी सक्षम करने के लिए सत्यापन पूरा करें।",
+        "toastLoadError": "भुगतान के तरीके लोड नहीं हो सके।",
+        "toastRemoved": "भुगतान का तरीका हटाया गया।",
+        "toastRemoveError": "भुगतान का तरीका हटाने में विफल।",
+        "toastAddError": "भुगतान विवरण जोड़ने में विफल।",
+        "errors": {
+          "invalidAccountNumber": "खाता संख्या 9–18 अंकों की होनी चाहिए",
+          "accountMismatch": "खाता संख्याएं मेल नहीं खातीं",
+          "invalidIfsc": "IFSC 11 अक्षरों का होना चाहिए (जैसे SBIN0001234)",
+          "missingHolderName": "खाताधारक का नाम दर्ज करें"
+        }
       }
     }
   },
@@ -8588,7 +8826,11 @@ const resources = {
         "bankTab": "ಬ್ಯಾಂಕ್ ಖಾತೆ",
         "confirmWithdrawTitle": "ಹಣ ಹಿಂಪಡೆಯುವಿಕೆಯನ್ನು ಖಚಿತಪಡಿಸಿ",
         "confirmWithdrawMsg": "ನೀವು ರೂ.{{amount}} ಅನ್ನು ನಿಮ್ಮ UPI ಖಾತೆಗೆ ಹಿಂಪಡೆಯಲಿದ್ದೀರಿ.",
-        "confirm": "ಖಚಿತಪಡಿಸಿ"
+        "confirm": "ಖಚಿತಪಡಿಸಿ",
+        "earned": "ಗಳಿಸಿದ",
+        "withdrawn": "ಹಿಂಪಡೆದ",
+        "minToWithdraw": "ಹಿಂಪಡೆಯಲು ಕನಿಷ್ಠ ರೂ.{{amount}}",
+        "earnMoreToUnlock": "ಹಿಂಪಡೆಯುವಿಕೆಯನ್ನು ಅನ್‌ಲಾಕ್ ಮಾಡಲು ಇನ್ನೂ ರೂ.{{amount}} ಗಳಿಸಿ"
       },
       "yourRole": "ನಿಮ್ಮ ಪಾತ್ರ",
       "+91": "+91",
@@ -8988,6 +9230,36 @@ const resources = {
         },
         "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
         "participants": "ಸ್ಪರ್ಧಿಸುತ್ತಿರುವ ಬಳಕೆದಾರರು"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ಬಳಸುವ ಮೊದಲು ಪಾವತಿ ವಿಧಾನಗಳನ್ನು ₹1 ಮೈಕ್ರೋ-ವಹಿವಾಟಿನ ಮೂಲಕ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ.",
+        "emptyTitle": "ಯಾವುದೇ ಪಾವತಿ ವಿಧಾನವಿಲ್ಲ",
+        "emptySubtitle": "ಹಿಂಪಡೆಯುವಿಕೆಯನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲು UPI ID ಅಥವಾ ಬ್ಯಾಂಕ್ ಖಾತೆಯನ್ನು ಸೇರಿಸಿ.",
+        "addButton": "ಪಾವತಿ ವಿಧಾನವನ್ನು ಸೇರಿಸಿ",
+        "addFormTitle": "ಪಾವತಿ ವಿಧಾನವನ್ನು ಸೇರಿಸಿ",
+        "confirmAccountNumberPlaceholder": "ಖಾತೆ ಸಂಖ್ಯೆಯನ್ನು ದೃಢೀಕರಿಸಿ",
+        "bankNamePlaceholder": "ಬ್ಯಾಂಕ್ ಹೆಸರು (ಐಚ್ಛಿಕ)",
+        "addAndVerify": "ಸೇರಿಸಿ ಮತ್ತು ಪರಿಶೀಲಿಸಿ",
+        "verificationChargeNote": "ದೃಢೀಕರಣದ ನಂತರ ₹1 ಪರಿಶೀಲನಾ ಶುಲ್ಕವನ್ನು ವಿಧಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಮರುಪಾವತಿ ಮಾಡಲಾಗುತ್ತದೆ.",
+        "statusInProgress": "ಪರಿಶೀಲನೆ ಬಾಕಿ ಇದೆ",
+        "statusFailed": "ವಿಫಲವಾಗಿದೆ",
+        "verifiedOn": "{{date}} ರಂದು ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+        "addedOn": "{{date}} ರಂದು ಸೇರಿಸಲಾಗಿದೆ",
+        "remove": "ತೆಗೆದುಹಾಕಿ",
+        "mobileVerificationNote": "₹1 ಮೈಕ್ರೋ-ವಹಿವಾಟಿನ ಪರಿಶೀಲನೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಲು AnnaDatha ಮೊಬೈಲ್ ಆ್ಯಪ್ ಅಗತ್ಯವಿದೆ. ಪರಿಶೀಲಿಸುವವರೆಗೆ, ಈ ವಿಧಾನವನ್ನು ಹಿಂಪಡೆಯುವಿಕೆಗೆ ಬಳಸಲಾಗುವುದಿಲ್ಲ.",
+        "confirmRemoveTitle": "ಪಾವತಿ ವಿಧಾನವನ್ನು ತೆಗೆದುಹಾಕುವುದೇ?",
+        "confirmRemoveMessage": "ಈ ಪಾವತಿ ವಿಧಾನವು ಇನ್ನು ಮುಂದೆ ಹಿಂಪಡೆಯುವಿಕೆಗೆ ಲಭ್ಯವಿರುವುದಿಲ್ಲ.",
+        "toastAdded": "ಪಾವತಿ ವಿಧಾನವನ್ನು ಸೇರಿಸಲಾಗಿದೆ. ಹಿಂಪಡೆಯುವಿಕೆಯನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಲು ಪರಿಶೀಲನೆ ಪೂರ್ಣಗೊಳಿಸಿ.",
+        "toastLoadError": "ಪಾವತಿ ವಿಧಾನಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+        "toastRemoved": "ಪಾವತಿ ವಿಧಾನವನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ.",
+        "toastRemoveError": "ಪಾವತಿ ವಿಧಾನವನ್ನು ತೆಗೆದುಹಾಕಲು ವಿಫಲವಾಗಿದೆ.",
+        "toastAddError": "ಪಾವತಿ ವಿವರಗಳನ್ನು ಸೇರಿಸಲು ವಿಫಲವಾಗಿದೆ.",
+        "errors": {
+          "invalidAccountNumber": "ಖಾತೆ ಸಂಖ್ಯೆ 9–18 ಅಂಕೆಗಳಾಗಿರಬೇಕು",
+          "accountMismatch": "ಖಾತೆ ಸಂಖ್ಯೆಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ",
+          "invalidIfsc": "IFSC 11 ಅಕ್ಷರಗಳಾಗಿರಬೇಕು (ಉದಾ. SBIN0001234)",
+          "missingHolderName": "ಖಾತೆದಾರರ ಹೆಸರನ್ನು ನಮೂದಿಸಿ"
+        }
       }
     }
   },
@@ -9698,7 +9970,11 @@ const resources = {
         "bankTab": "بینک اکاؤنٹ",
         "confirmWithdrawTitle": "رقم کڈنہٕ ہنٛز تصدیق کٔریو",
         "confirmWithdrawMsg": "توہیہِ چھِو Rs.{{amount}} پننس UPI اکاؤنٹ مَنٛز ٹرانسفر کران۔",
-        "confirm": "تصدیق کٔریو"
+        "confirm": "تصدیق کٔریو",
+        "earned": "کمایو مت",
+        "withdrawn": "کاڈنہ آمت",
+        "minToWithdraw": "کاڈنہ خٲطرٕ کم از کم Rs.{{amount}}",
+        "earnMoreToUnlock": "کاڈنہ اَنلاک کرنہ خٲطرٕ ہور Rs.{{amount}} کمایو"
       },
       "yourRole": "تہنٛد کردار",
       "+91": "+91",
@@ -10098,6 +10374,36 @@ const resources = {
         },
         "loading": "لوڈ گژھان…",
         "participants": "صارفین مقابلے مَنٛز"
+      },
+      "paymentMethods": {
+        "verifyBanner": "استعمال کرنہ سٕتی پہلہٕ ادائیگی ہنٛد طریقہٕ چھِ ₹1 مائیکرو-ٹرانزیکشن سٕتی تصدیق کرنہ آمُت۔",
+        "emptyTitle": "کہین ادائیگی ہنٛد طریقہٕ چھُ نہٕ",
+        "emptySubtitle": "کاڈن فعال کرنہ خٲطرٕ چُنِیو UPI ID یا بینک اکاؤنٹ شامل۔",
+        "addButton": "ادائیگی ہنٛد طریقہٕ شامل کٔریو",
+        "addFormTitle": "ادائیگی ہنٛد طریقہٕ شامل کٔریو",
+        "confirmAccountNumberPlaceholder": "اکاؤنٹ نمبرٕچ تصدیق کٔریو",
+        "bankNamePlaceholder": "بینکُک ناو (اختیاری)",
+        "addAndVerify": "شامل کٔریو تہ تصدیق کٔریو",
+        "verificationChargeNote": "تصدیق ہیٚوتھ پتہٕ ₹1 تصدیقی چارج لاگو گژھہِ تہ واپس کرنہ یِیہِ۔",
+        "statusInProgress": "تصدیق زیرِ التوا",
+        "statusFailed": "ناکام",
+        "verifiedOn": "{{date}} تصدیق شدہ",
+        "addedOn": "{{date}} شامل کرنہ آمت",
+        "remove": "کاڈیو",
+        "mobileVerificationNote": "₹1 مائیکرو-ٹرانزیکشن تصدیق مکمل کرنہ خٲطرٕ AnnaDatha موبائل ایپ ضروری چھُ۔ تصدیق تام، یہ طریقہٕ کاڈنہٕ خٲطرٕ استعمال نہٕ گژھہِ کٔرِتھ۔",
+        "confirmRemoveTitle": "ادائیگی ہنٛد طریقہٕ کاڈیو؟",
+        "confirmRemoveMessage": "یہ ادائیگی ہنٛد طریقہٕ بہ کاڈنہٕ خٲطرٕ دستیاب نہٕ رٲوہِ۔",
+        "toastAdded": "ادائیگی ہنٛد طریقہٕ شامل کرنہ آمت۔ کاڈن فعال کرنہ خٲطرٕ تصدیق مکمل کٔریو۔",
+        "toastLoadError": "ادائیگی ہنٛد طریقہٕ لوڈ کرنہٕ مَنٛز آو نقص۔",
+        "toastRemoved": "ادائیگی ہنٛد طریقہٕ کاڈنہ آمت۔",
+        "toastRemoveError": "ادائیگی ہنٛد طریقہٕ کاڈنس مَنٛز آو نقص۔",
+        "toastAddError": "ادائیگی ہنٛز تفصیل شامل کرنس مَنٛز آو نقص۔",
+        "errors": {
+          "invalidAccountNumber": "اکاؤنٹ نمبر گژھہِ 9–18 عدد ہیوُن",
+          "accountMismatch": "اکاؤنٹ نمبر چھِ نہٕ میلان",
+          "invalidIfsc": "IFSC گژھہِ 11 اکشرن ہیوُن (مثال SBIN0001234)",
+          "missingHolderName": "درج کٔریو اکاؤنٹ ہولڈرُک ناو"
+        }
       }
     }
   },
@@ -10808,7 +11114,11 @@ const resources = {
         "bankTab": "बँक खातें",
         "confirmWithdrawTitle": "पैसे काडपाची खात्री करात",
         "confirmWithdrawMsg": "तुम्ही तुमच्या UPI खात्यात रु.{{amount}} काडपाक लागल्यात.",
-        "confirm": "खात्री करात"
+        "confirm": "खात्री करात",
+        "earned": "जोडिल्लें",
+        "withdrawn": "काडिल्लें",
+        "minToWithdraw": "काडपाक किमान रु.{{amount}}",
+        "earnMoreToUnlock": "काडप अनलॉक करपाक आणीक रु.{{amount}} जोडात"
       },
       "yourRole": "तुमची भूमिका",
       "+91": "+91",
@@ -11208,6 +11518,36 @@ const resources = {
         },
         "loading": "लोड जाता…",
         "participants": "वापरपी सर्तीत आसात"
+      },
+      "paymentMethods": {
+        "verifyBanner": "वापर करच्या पयली फारीकपाच्यो पद्धती ₹1 मायक्रो-ट्रान्झॅक्शनान पडताळल्यात.",
+        "emptyTitle": "कसलीच फारीकपाची पद्धत ना",
+        "emptySubtitle": "पैसे काडप शक्य करपाक UPI ID वा बँक खातें जोडात.",
+        "addButton": "फारीकपाची पद्धत जोडात",
+        "addFormTitle": "फारीकपाची पद्धत जोडात",
+        "confirmAccountNumberPlaceholder": "खातें नंबर निश्चित करात",
+        "bankNamePlaceholder": "बँकेचें नांव (पर्यायी)",
+        "addAndVerify": "जोडात आनी पडताळात",
+        "verificationChargeNote": "निश्चित जाल्या उपरांत ₹1 पडताळणी शुल्क लायतलें आनी परत मेळतलें.",
+        "statusInProgress": "पडताळणी प्रलंबित",
+        "statusFailed": "अपयशी",
+        "verifiedOn": "{{date}} दिसा पडताळ्ळें",
+        "addedOn": "{{date}} दिसा जोडलें",
+        "remove": "काडून उडयात",
+        "mobileVerificationNote": "₹1 मायक्रो-ट्रान्झॅक्शन पडताळणी पूर्ण करपाक AnnaDatha मोबायल अ‍ॅप गरजेचें. पडताळिना मेरेन, ही पद्धत वापरून पैसे काडूंक जायना.",
+        "confirmRemoveTitle": "फारीकपाची पद्धत काडून उडोवची?",
+        "confirmRemoveMessage": "ही फारीकपाची पद्धत फुडें पैसे काडपाक उपलब्ध आसची ना.",
+        "toastAdded": "फारीकपाची पद्धत जोडली. पैसे काडप शक्य करपाक पडताळणी पूर्ण करात.",
+        "toastLoadError": "फारीकपाच्यो पद्धती लोड करूंक जालें ना.",
+        "toastRemoved": "फारीकपाची पद्धत काडली.",
+        "toastRemoveError": "फारीकपाची पद्धत काडपाक अपयश.",
+        "toastAddError": "फारीकपाचो तपशील जोडपाक अपयश.",
+        "errors": {
+          "invalidAccountNumber": "खातें नंबर 9–18 अंकांचो आसपाक जाय",
+          "accountMismatch": "खातें नंबर जुळनात",
+          "invalidIfsc": "IFSC 11 अक्षरांचो आसपाक जाय (देखीक SBIN0001234)",
+          "missingHolderName": "खातेदाराचें नांव घालात"
+        }
       }
     }
   },
@@ -11918,7 +12258,11 @@ const resources = {
         "bankTab": "बैंक खाता",
         "confirmWithdrawTitle": "निकासीक पुष्टि करु",
         "confirmWithdrawMsg": "अहाँ अपन यूपीआई खातामे टका {{amount}} निकालए जा रहल छी।",
-        "confirm": "पुष्टि करु"
+        "confirm": "पुष्टि करु",
+        "earned": "कमाएल",
+        "withdrawn": "निकासल गेल",
+        "minToWithdraw": "निकासी लेल न्यूनतम टका {{amount}}",
+        "earnMoreToUnlock": "निकासी अनलॉक करबाक लेल आर टका {{amount}} कमाउ"
       },
       "yourRole": "अहाँक भूमिका",
       "+91": "+91",
@@ -12318,6 +12662,36 @@ const resources = {
         },
         "loading": "लोड भ रहल अछि…",
         "participants": "उपयोगकर्ता भाग लऽ रहल छथि"
+      },
+      "paymentMethods": {
+        "verifyBanner": "उपयोग सँ पहिने भुगतान विधिकेँ ₹1 माइक्रो-ट्रांजेक्शनसँ सत्यापित कएल जाइत अछि।",
+        "emptyTitle": "कोनो भुगतान विधि नहि अछि",
+        "emptySubtitle": "निकासी सक्षम करबाक लेल UPI ID वा बैंक खाता जोडू।",
+        "addButton": "भुगतान विधि जोडू",
+        "addFormTitle": "भुगतान विधि जोडू",
+        "confirmAccountNumberPlaceholder": "खाता संख्याक पुष्टि करू",
+        "bankNamePlaceholder": "बैंकक नाम (वैकल्पिक)",
+        "addAndVerify": "जोडू आ सत्यापित करू",
+        "verificationChargeNote": "पुष्टि भेला पर ₹1 सत्यापन शुल्क लगाओल जायत आ वापस कएल जायत।",
+        "statusInProgress": "सत्यापन लंबित",
+        "statusFailed": "असफल",
+        "verifiedOn": "{{date}} केँ सत्यापित",
+        "addedOn": "{{date}} केँ जोडल गेल",
+        "remove": "हटाउ",
+        "mobileVerificationNote": "₹1 माइक्रो-ट्रांजेक्शन सत्यापन पूर्ण करबाक लेल AnnaDatha मोबाइल ऐप आवश्यक अछि। सत्यापित नहि भेला धरि, एहि विधिसँ निकासी नहि भ सकैत अछि।",
+        "confirmRemoveTitle": "भुगतान विधि हटायब?",
+        "confirmRemoveMessage": "ई भुगतान विधि आब निकासीक लेल उपलब्ध नहि रहत।",
+        "toastAdded": "भुगतान विधि जोडल गेल। निकासी सक्षम करबाक लेल सत्यापन पूर्ण करू।",
+        "toastLoadError": "भुगतान विधिसभ लोड नहि भ सकल।",
+        "toastRemoved": "भुगतान विधि हटाओल गेल।",
+        "toastRemoveError": "भुगतान विधि हटयबामे असफल।",
+        "toastAddError": "भुगतान विवरण जोड़बामे असफल।",
+        "errors": {
+          "invalidAccountNumber": "खाता संख्या 9–18 अंकक होबाक चाही",
+          "accountMismatch": "खाता संख्या मेल नहि खाइत अछि",
+          "invalidIfsc": "IFSC 11 अक्षरक होबाक चाही (जेना SBIN0001234)",
+          "missingHolderName": "खाताधारकक नाम दर्ज करू"
+        }
       }
     }
   },
@@ -13028,7 +13402,11 @@ const resources = {
         "bankTab": "ബാങ്ക് അക്കൗണ്ട്",
         "confirmWithdrawTitle": "പിൻവലിക്കൽ സ്ഥിരീകരിക്കുക",
         "confirmWithdrawMsg": "നിങ്ങൾ {{amount}} രൂപ നിങ്ങളുടെ UPI അക്കൗണ്ടിലേക്ക് പിൻവലിക്കാൻ പോകുന്നു.",
-        "confirm": "സ്ഥിരീകരിക്കുക"
+        "confirm": "സ്ഥിരീകരിക്കുക",
+        "earned": "സമ്പാദിച്ചത്",
+        "withdrawn": "പിൻവലിച്ചത്",
+        "minToWithdraw": "പിൻവലിക്കാൻ കുറഞ്ഞത് ₹{{amount}}",
+        "earnMoreToUnlock": "പിൻവലിക്കൽ അൺലോക്ക് ചെയ്യാൻ ₹{{amount}} കൂടി സമ്പാദിക്കുക"
       },
       "yourRole": "നിങ്ങളുടെ റോൾ/സ്ഥാനം",
       "+91": "+91",
@@ -13428,6 +13806,36 @@ const resources = {
         },
         "loading": "ലോഡ് ചെയ്യുന്നു…",
         "participants": "ഉപയോക്താക്കൾ മത്സരിക്കുന്നു"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ഉപയോഗിക്കുന്നതിന് മുമ്പ് പേയ്‌മെന്റ് രീതികൾ ₹1 മൈക്രോ-ട്രാൻസാക്ഷൻ വഴി സാക്ഷ്യപ്പെടുത്തുന്നു.",
+        "emptyTitle": "പേയ്‌മെന്റ് രീതികളൊന്നുമില്ല",
+        "emptySubtitle": "പിൻവലിക്കൽ പ്രവർത്തനക്ഷമമാക്കാൻ UPI ID അല്ലെങ്കിൽ ബാങ്ക് അക്കൗണ്ട് ചേർക്കുക.",
+        "addButton": "പേയ്‌മെന്റ് രീതി ചേർക്കുക",
+        "addFormTitle": "പേയ്‌മെന്റ് രീതി ചേർക്കുക",
+        "confirmAccountNumberPlaceholder": "അക്കൗണ്ട് നമ്പർ സ്ഥിരീകരിക്കുക",
+        "bankNamePlaceholder": "ബാങ്കിന്റെ പേര് (ഐച്ഛികം)",
+        "addAndVerify": "ചേർക്കുക & സാക്ഷ്യപ്പെടുത്തുക",
+        "verificationChargeNote": "സ്ഥിരീകരണത്തിന് ശേഷം ₹1 സാക്ഷ്യപ്പെടുത്തൽ ചാർജ് ഈടാക്കുകയും തിരികെ നൽകുകയും ചെയ്യും.",
+        "statusInProgress": "സാക്ഷ്യപ്പെടുത്തൽ തീർച്ചപ്പെടുത്താനുണ്ട്",
+        "statusFailed": "പരാജയപ്പെട്ടു",
+        "verifiedOn": "{{date}} ന് സാക്ഷ്യപ്പെടുത്തി",
+        "addedOn": "{{date}} ന് ചേർത്തു",
+        "remove": "നീക്കം ചെയ്യുക",
+        "mobileVerificationNote": "₹1 മൈക്രോ-ട്രാൻസാക്ഷൻ സാക്ഷ്യപ്പെടുത്തൽ പൂർത്തിയാക്കാൻ AnnaDatha മൊബൈൽ ആപ്പ് ആവശ്യമാണ്. സാക്ഷ്യപ്പെടുത്തുന്നത് വരെ, ഈ രീതി പിൻവലിക്കലിന് ഉപയോഗിക്കാനാവില്ല.",
+        "confirmRemoveTitle": "പേയ്‌മെന്റ് രീതി നീക്കം ചെയ്യണോ?",
+        "confirmRemoveMessage": "ഈ പേയ്‌മെന്റ് രീതി ഇനി പിൻവലിക്കലിന് ലഭ്യമാകില്ല.",
+        "toastAdded": "പേയ്‌മെന്റ് രീതി ചേർത്തു. പിൻവലിക്കൽ പ്രവർത്തനക്ഷമമാക്കാൻ സാക്ഷ്യപ്പെടുത്തൽ പൂർത്തിയാക്കുക.",
+        "toastLoadError": "പേയ്‌മെന്റ് രീതികൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.",
+        "toastRemoved": "പേയ്‌മെന്റ് രീതി നീക്കം ചെയ്തു.",
+        "toastRemoveError": "പേയ്‌മെന്റ് രീതി നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു.",
+        "toastAddError": "പേയ്‌മെന്റ് വിവരങ്ങൾ ചേർക്കുന്നതിൽ പരാജയപ്പെട്ടു.",
+        "errors": {
+          "invalidAccountNumber": "അക്കൗണ്ട് നമ്പർ 9–18 അക്കങ്ങൾ ഉള്ളതായിരിക്കണം",
+          "accountMismatch": "അക്കൗണ്ട് നമ്പറുകൾ പൊരുത്തപ്പെടുന്നില്ല",
+          "invalidIfsc": "IFSC 11 അക്ഷരങ്ങൾ ഉള്ളതായിരിക്കണം (ഉദാ. SBIN0001234)",
+          "missingHolderName": "അക്കൗണ്ട് ഉടമയുടെ പേര് നൽകുക"
+        }
       }
     }
   },
@@ -14138,7 +14546,11 @@ const resources = {
         "bankTab": "ব্যাংক একান্ত",
         "confirmWithdrawTitle": "লৌথোকপা কনফার্ম তৌবু",
         "confirmWithdrawMsg": "অদোম নহাগী UPI একান্তদা লুপা {{amount}} লৌথোকনবা হোৎনরি।",
-        "confirm": "য়াপবা (Confirm)"
+        "confirm": "য়াপবা (Confirm)",
+        "earned": "ফংখিবা",
+        "withdrawn": "লৌথোকখিবা",
+        "minToWithdraw": "লৌথোকনবা খ্বাইদগী নেমবা লুপা {{amount}}",
+        "earnMoreToUnlock": "লৌথোকপা অনলক তৌনবা লুপা {{amount}} হেন্না ফংখৎচৌ"
       },
       "yourRole": "নহাগী থৌদাং",
       "+91": "+91",
@@ -14538,6 +14950,36 @@ const resources = {
         },
         "loading": "লোদ্ তৌরি…",
         "participants": "শীজিন্নরিবশিং শরুক য়াওরি"
+      },
+      "paymentMethods": {
+        "verifyBanner": "শীজিন্নবা মমাংদা পেমেন্ত পাম্বৈশিং অসিবু ₹1 মাইক্রো-ট্রান্জেক্শনগী মতাংদা তসদিক তৌই।",
+        "emptyTitle": "পেমেন্ত পাম্বৈ অমাত্তা লৈত্রে",
+        "emptySubtitle": "লৌথোকপা ফংহনবা UPI ID নত্রগা ব্যাংক একান্ত হাপচিনবীয়ু।",
+        "addButton": "পেমেন্ত পাম্বৈ হাপচিনবীয়ু",
+        "addFormTitle": "পেমেন্ত পাম্বৈ হাপচিনবীয়ু",
+        "confirmAccountNumberPlaceholder": "একান্ত নম্বর চেক্শিনবীয়ু",
+        "bankNamePlaceholder": "ব্যাংকী মিং (ৱাখল্লবা)",
+        "addAndVerify": "হাপচিনবীয়ু অমসুং তসদিক তৌবীয়ু",
+        "verificationChargeNote": "চেক্শিনখ্রবা মতুংদা ₹1 তসদিক চার্জ শীজিন্নগনি অমসুং হন্না চাংহনগনি।",
+        "statusInProgress": "তসদিক তৌরিবা লৈরি",
+        "statusFailed": "মায় পাকখ্রে",
+        "verifiedOn": "{{date}} দা তসদিক তৌখ্রে",
+        "addedOn": "{{date}} দা হাপচিনখ্রে",
+        "remove": "লৌথোকপীয়ু",
+        "mobileVerificationNote": "₹1 মাইক্রো-ট্রান্জেক্শন তসদিক লোয়শিনবা AnnaDatha মোবাইল এপ মথৌ তাই। তসদিক তৌদ্রিফাওবা, লৌথোকপগীদমক পাম্বৈ অসি শীজিন্নবা য়াদে।",
+        "confirmRemoveTitle": "পেমেন্ত পাম্বৈ লৌথোকপ্রা?",
+        "confirmRemoveMessage": "পেমেন্ত পাম্বৈ অসি হৌজিক্তগী লৌথোকপগীদমক ফংগনি।",
+        "toastAdded": "পেমেন্ত পাম্বৈ হাপচিনখ্রে। লৌথোকপা ফংহনবা তসদিক লোয়শিনবীয়ু।",
+        "toastLoadError": "পেমেন্তগী পাম্বৈশিং লোদ্ তৌবা ঙমদ্রে।",
+        "toastRemoved": "পেমেন্ত পাম্বৈ লৌথোকখ্রে।",
+        "toastRemoveError": "পেমেন্ত পাম্বৈ লৌথোকপা মায় পাকখ্রে।",
+        "toastAddError": "পেমেন্তকী মরোল হাপচিনবা মায় পাকখ্রে।",
+        "errors": {
+          "invalidAccountNumber": "একান্ত নম্বর 9–18 নম্বর ওইগদবনি",
+          "accountMismatch": "একান্ত নম্বরশিং চাপ্তে",
+          "invalidIfsc": "IFSC অসি 11 মায়েক ওইগদবনি (খুদম SBIN0001234)",
+          "missingHolderName": "একান্ত মপুগী মিং ইবীয়ু"
+        }
       }
     }
   },
@@ -15248,7 +15690,11 @@ const resources = {
         "bankTab": "बँक खाते",
         "confirmWithdrawTitle": "विड्रॉअलची पुष्टी करा",
         "confirmWithdrawMsg": "तुम्ही तुमच्या UPI खात्यात रु. {{amount}} काढणार आहात.",
-        "confirm": "निश्चित करा"
+        "confirm": "निश्चित करा",
+        "earned": "कमावलेले",
+        "withdrawn": "काढलेले",
+        "minToWithdraw": "काढण्यासाठी किमान रु. {{amount}}",
+        "earnMoreToUnlock": "पैसे काढणे अनलॉक करण्यासाठी आणखी रु. {{amount}} कमवा"
       },
       "yourRole": "तुमची भूमिका",
       "+91": "+91",
@@ -15648,6 +16094,36 @@ const resources = {
         },
         "loading": "लोड होत आहे…",
         "participants": "वापरकर्ते स्पर्धा करत आहेत"
+      },
+      "paymentMethods": {
+        "verifyBanner": "वापरण्यापूर्वी पेमेंट पद्धती ₹1 च्या मायक्रो-ट्रान्झॅक्शनने सत्यापित केल्या जातात.",
+        "emptyTitle": "कोणतीही पेमेंट पद्धत नाही",
+        "emptySubtitle": "पैसे काढणे सक्षम करण्यासाठी UPI ID किंवा बँक खाते जोडा.",
+        "addButton": "पेमेंट पद्धत जोडा",
+        "addFormTitle": "पेमेंट पद्धत जोडा",
+        "confirmAccountNumberPlaceholder": "खाते क्रमांकाची पुष्टी करा",
+        "bankNamePlaceholder": "बँकेचे नाव (ऐच्छिक)",
+        "addAndVerify": "जोडा आणि सत्यापित करा",
+        "verificationChargeNote": "पुष्टी झाल्यावर ₹1 सत्यापन शुल्क आकारले जाईल आणि परत केले जाईल.",
+        "statusInProgress": "सत्यापन प्रलंबित",
+        "statusFailed": "अयशस्वी",
+        "verifiedOn": "{{date}} रोजी सत्यापित",
+        "addedOn": "{{date}} रोजी जोडले",
+        "remove": "काढून टाका",
+        "mobileVerificationNote": "₹1 मायक्रो-ट्रान्झॅक्शन सत्यापन पूर्ण करण्यासाठी AnnaDatha मोबाइल अ‍ॅप आवश्यक आहे. सत्यापित होईपर्यंत, या पद्धतीने पैसे काढता येणार नाहीत.",
+        "confirmRemoveTitle": "पेमेंट पद्धत काढायची?",
+        "confirmRemoveMessage": "ही पेमेंट पद्धत यापुढे पैसे काढण्यासाठी उपलब्ध राहणार नाही.",
+        "toastAdded": "पेमेंट पद्धत जोडली. पैसे काढणे सक्षम करण्यासाठी सत्यापन पूर्ण करा.",
+        "toastLoadError": "पेमेंट पद्धती लोड करता आल्या नाहीत.",
+        "toastRemoved": "पेमेंट पद्धत काढली.",
+        "toastRemoveError": "पेमेंट पद्धत काढण्यात अयशस्वी.",
+        "toastAddError": "पेमेंट तपशील जोडण्यात अयशस्वी.",
+        "errors": {
+          "invalidAccountNumber": "खाते क्रमांक 9–18 अंकांचा असावा",
+          "accountMismatch": "खाते क्रमांक जुळत नाहीत",
+          "invalidIfsc": "IFSC 11 अक्षरांचा असावा (उदा. SBIN0001234)",
+          "missingHolderName": "खातेदाराचे नाव प्रविष्ट करा"
+        }
       }
     }
   },
@@ -16358,7 +16834,11 @@ const resources = {
         "bankTab": "बैंक खाता",
         "confirmWithdrawTitle": "निकासी पुष्टि गर्नुहोस्",
         "confirmWithdrawMsg": "तपाईं रु. {{amount}} आफ्नो UPI खातामा निकाल्न लाग्नुभएको छ।",
-        "confirm": "पुष्टि गर्नुहोस्"
+        "confirm": "पुष्टि गर्नुहोस्",
+        "earned": "कमाइएको",
+        "withdrawn": "झिकिएको",
+        "minToWithdraw": "झिक्नको लागि न्यूनतम रु. {{amount}}",
+        "earnMoreToUnlock": "रकम झिक्ने सुविधा अनलक गर्न थप रु. {{amount}} कमाउनुहोस्"
       },
       "yourRole": "तपाईंको भूमिका",
       "+91": "+91",
@@ -16758,6 +17238,36 @@ const resources = {
         },
         "loading": "लोड हुँदैछ…",
         "participants": "प्रतिस्पर्धी प्रयोगकर्ताहरू"
+      },
+      "paymentMethods": {
+        "verifyBanner": "प्रयोग गर्नुअघि भुक्तानी विधिहरूलाई ₹1 माइक्रो-कारोबारद्वारा प्रमाणित गरिन्छ।",
+        "emptyTitle": "कुनै भुक्तानी विधि छैन",
+        "emptySubtitle": "रकम झिक्ने सुविधा सक्षम गर्न UPI ID वा बैंक खाता थप्नुहोस्।",
+        "addButton": "भुक्तानी विधि थप्नुहोस्",
+        "addFormTitle": "भुक्तानी विधि थप्नुहोस्",
+        "confirmAccountNumberPlaceholder": "खाता नम्बर पुष्टि गर्नुहोस्",
+        "bankNamePlaceholder": "बैंकको नाम (वैकल्पिक)",
+        "addAndVerify": "थप्नुहोस् र प्रमाणित गर्नुहोस्",
+        "verificationChargeNote": "पुष्टि भएपछि ₹1 प्रमाणीकरण शुल्क लागू हुनेछ र फिर्ता गरिनेछ।",
+        "statusInProgress": "प्रमाणीकरण विचाराधीन",
+        "statusFailed": "असफल",
+        "verifiedOn": "{{date}} मा प्रमाणित",
+        "addedOn": "{{date}} मा थपियो",
+        "remove": "हटाउनुहोस्",
+        "mobileVerificationNote": "₹1 माइक्रो-कारोबार प्रमाणीकरण पूरा गर्न AnnaDatha मोबाइल एप आवश्यक छ। प्रमाणित नभएसम्म, यो विधिबाट रकम झिक्न सकिँदैन।",
+        "confirmRemoveTitle": "भुक्तानी विधि हटाउने हो?",
+        "confirmRemoveMessage": "यो भुक्तानी विधि अब रकम झिक्नका लागि उपलब्ध हुनेछैन।",
+        "toastAdded": "भुक्तानी विधि थपियो। रकम झिक्ने सुविधा सक्षम गर्न प्रमाणीकरण पूरा गर्नुहोस्।",
+        "toastLoadError": "भुक्तानी विधिहरू लोड गर्न सकिएन।",
+        "toastRemoved": "भुक्तानी विधि हटाइयो।",
+        "toastRemoveError": "भुक्तानी विधि हटाउन असफल भयो।",
+        "toastAddError": "भुक्तानी विवरण थप्न असफल भयो।",
+        "errors": {
+          "invalidAccountNumber": "खाता नम्बर 9–18 अंकको हुनुपर्छ",
+          "accountMismatch": "खाता नम्बरहरू मेल खाँदैनन्",
+          "invalidIfsc": "IFSC 11 वर्णको हुनुपर्छ (जस्तै SBIN0001234)",
+          "missingHolderName": "खातावालाको नाम राख्नुहोस्"
+        }
       }
     }
   },
@@ -17468,7 +17978,11 @@ const resources = {
         "bankTab": "ବ୍ୟାଙ୍କ ଆକାଉଣ୍ଟ୍",
         "confirmWithdrawTitle": "ଟଙ୍କା ଉଠାଣ ନିଶ୍ଚିତ କରନ୍ତୁ",
         "confirmWithdrawMsg": "ଆପଣ ଆପଣଙ୍କ UPI ଆକାଉଣ୍ଟକୁ ଟ. {{amount}} ଉଠାଇବାକୁ ଯାଉଛନ୍ତି।",
-        "confirm": "ନିଶ୍ଚିତ କରନ୍ତୁ"
+        "confirm": "ନିଶ୍ଚିତ କରନ୍ତୁ",
+        "earned": "ଅର୍ଜିତ",
+        "withdrawn": "ଉଠାଯାଇଥିବା",
+        "minToWithdraw": "ଉଠାଇବା ପାଇଁ ସର୍ବନିମ୍ନ ଟ. {{amount}}",
+        "earnMoreToUnlock": "ଉଠାଣକୁ ଅନଲକ୍ କରିବାକୁ ଆଉ ଟ. {{amount}} ରୋଜଗାର କରନ୍ତୁ"
       },
       "yourRole": "ଆପଣଙ୍କ ଭୂମିକା",
       "+91": "+91",
@@ -17866,6 +18380,36 @@ const resources = {
         },
         "loading": "ଲୋଡ୍ ହେଉଛି…",
         "participants": "ଜଣ ବ୍ୟବହାରକାରୀ ପ୍ରତିଯୋଗିତା କରୁଛନ୍ତି"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ବ୍ୟବହାର ପୂର୍ବରୁ ପେମେଣ୍ଟ୍ ପଦ୍ଧତିଗୁଡ଼ିକ ₹1 ମାଇକ୍ରୋ-ଟ୍ରାନଜେକ୍ସନ୍ ସହିତ ଯାଞ୍ଚ କରାଯାଏ।",
+        "emptyTitle": "କୌଣସି ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ନାହିଁ",
+        "emptySubtitle": "ଉଠାଣ ସକ୍ଷମ କରିବାକୁ ଏକ UPI ID କିମ୍ବା ବ୍ୟାଙ୍କ ଆକାଉଣ୍ଟ୍ ଯୋଡ଼ନ୍ତୁ।",
+        "addButton": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ଯୋଡ଼ନ୍ତୁ",
+        "addFormTitle": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ଯୋଡ଼ନ୍ତୁ",
+        "confirmAccountNumberPlaceholder": "ଆକାଉଣ୍ଟ୍ ନମ୍ବର ନିଶ୍ଚିତ କରନ୍ତୁ",
+        "bankNamePlaceholder": "ବ୍ୟାଙ୍କ ନାମ (ବୈକଳ୍ପିକ)",
+        "addAndVerify": "ଯୋଡ଼ନ୍ତୁ ଓ ଯାଞ୍ଚ କରନ୍ତୁ",
+        "verificationChargeNote": "ନିଶ୍ଚିତ ହେଲାପରେ ₹1 ଯାଞ୍ଚ ଚାର୍ଜ ପ୍ରୟୋଗ ହେବ ଏବଂ ଫେରସ୍ତ କରାଯିବ।",
+        "statusInProgress": "ଯାଞ୍ଚ ବିଚାରାଧୀନ",
+        "statusFailed": "ବିଫଳ",
+        "verifiedOn": "{{date}} ରେ ଯାଞ୍ଚ ହୋଇଛି",
+        "addedOn": "{{date}} ରେ ଯୋଡ଼ାଯାଇଛି",
+        "remove": "ହଟାନ୍ତୁ",
+        "mobileVerificationNote": "₹1 ମାଇକ୍ରୋ-ଟ୍ରାନଜେକ୍ସନ୍ ଯାଞ୍ଚ ସମ୍ପୂର୍ଣ୍ଣ କରିବାକୁ AnnaDatha ମୋବାଇଲ୍ ଆପ୍ ଆବଶ୍ୟକ। ଯାଞ୍ଚ ନହେବା ପର୍ଯ୍ୟନ୍ତ, ଏହି ପଦ୍ଧତି ଉଠାଣ ପାଇଁ ବ୍ୟବହାର ହୋଇପାରିବ ନାହିଁ।",
+        "confirmRemoveTitle": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ହଟାଇବେ?",
+        "confirmRemoveMessage": "ଏହି ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ଆଉ ଉଠାଣ ପାଇଁ ଉପଲବ୍ଧ ରହିବ ନାହିଁ।",
+        "toastAdded": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ଯୋଡ଼ାଗଲା। ଉଠାଣ ସକ୍ଷମ କରିବାକୁ ଯାଞ୍ଚ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ।",
+        "toastLoadError": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତିଗୁଡ଼ିକ ଲୋଡ୍ ହୋଇପାରିଲା ନାହିଁ।",
+        "toastRemoved": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ହଟାଗଲା।",
+        "toastRemoveError": "ପେମେଣ୍ଟ୍ ପଦ୍ଧତି ହଟାଇବାରେ ବିଫଳ।",
+        "toastAddError": "ପେମେଣ୍ଟ୍ ବିବରଣୀ ଯୋଡ଼ିବାରେ ବିଫଳ।",
+        "errors": {
+          "invalidAccountNumber": "ଆକାଉଣ୍ଟ୍ ନମ୍ବର 9–18 ଅଙ୍କ ବିଶିଷ୍ଟ ହେବା ଆବଶ୍ୟକ",
+          "accountMismatch": "ଆକାଉଣ୍ଟ୍ ନମ୍ବରଗୁଡ଼ିକ ମେଳ ଖାଉ ନାହିଁ",
+          "invalidIfsc": "IFSC 11 ଅକ୍ଷର ବିଶିଷ୍ଟ ହେବା ଆବଶ୍ୟକ (ଯଥା SBIN0001234)",
+          "missingHolderName": "ଖାତାଧାରୀଙ୍କ ନାମ ଦିଅନ୍ତୁ"
+        }
       }
     }
   },
@@ -18576,7 +19120,11 @@ const resources = {
         "bankTab": "ਬੈਂਕ ਖਾਤਾ",
         "confirmWithdrawTitle": "ਨਿਕਾਸੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",
         "confirmWithdrawMsg": "ਤੁਸੀਂ ਆਪਣੇ UPI ਖਾਤੇ ਵਿੱਚ ਰੁ.{{amount}} ਕਢਵਾਉਣ ਵਾਲੇ ਹੋ।",
-        "confirm": "ਪੁਸ਼ਟੀ ਕਰੋ"
+        "confirm": "ਪੁਸ਼ਟੀ ਕਰੋ",
+        "earned": "ਕਮਾਏ",
+        "withdrawn": "ਕਢਵਾਏ",
+        "minToWithdraw": "ਕਢਵਾਉਣ ਲਈ ਘੱਟੋ-ਘੱਟ ਰੁ.{{amount}}",
+        "earnMoreToUnlock": "ਕਢਵਾਉਣਾ ਅਨਲੌਕ ਕਰਨ ਲਈ ਹੋਰ ਰੁ.{{amount}} ਕਮਾਓ"
       },
       "yourRole": "ਤੁਹਾਡੀ ਭੂਮਿਕਾ",
       "+91": "+91",
@@ -18976,6 +19524,36 @@ const resources = {
         },
         "loading": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…",
         "participants": "ਮੁਕਾਬਲਾ ਕਰ ਰਹੇ ਉਪਭੋਗਤਾ"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ਵਰਤੋਂ ਤੋਂ ਪਹਿਲਾਂ ਭੁਗਤਾਨ ਦੇ ਤਰੀਕਿਆਂ ਦੀ ₹1 ਮਾਈਕ੍ਰੋ-ਟ੍ਰਾਂਜੈਕਸ਼ਨ ਨਾਲ ਪੁਸ਼ਟੀ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।",
+        "emptyTitle": "ਕੋਈ ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਨਹੀਂ",
+        "emptySubtitle": "ਨਿਕਾਸੀ ਯੋਗ ਕਰਨ ਲਈ UPI ID ਜਾਂ ਬੈਂਕ ਖਾਤਾ ਜੋੜੋ।",
+        "addButton": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਜੋੜੋ",
+        "addFormTitle": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਜੋੜੋ",
+        "confirmAccountNumberPlaceholder": "ਖਾਤਾ ਨੰਬਰ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",
+        "bankNamePlaceholder": "ਬੈਂਕ ਦਾ ਨਾਮ (ਵਿਕਲਪਿਕ)",
+        "addAndVerify": "ਜੋੜੋ ਅਤੇ ਪੁਸ਼ਟੀ ਕਰੋ",
+        "verificationChargeNote": "ਪੁਸ਼ਟੀ ਹੋਣ 'ਤੇ ₹1 ਦੀ ਪੁਸ਼ਟੀਕਰਨ ਫੀਸ ਲਾਗੂ ਕੀਤੀ ਜਾਵੇਗੀ ਅਤੇ ਵਾਪਸ ਕਰ ਦਿੱਤੀ ਜਾਵੇਗੀ।",
+        "statusInProgress": "ਪੁਸ਼ਟੀਕਰਨ ਬਾਕੀ",
+        "statusFailed": "ਅਸਫਲ",
+        "verifiedOn": "{{date}} ਨੂੰ ਪੁਸ਼ਟੀ ਕੀਤੀ ਗਈ",
+        "addedOn": "{{date}} ਨੂੰ ਜੋੜਿਆ ਗਿਆ",
+        "remove": "ਹਟਾਓ",
+        "mobileVerificationNote": "₹1 ਮਾਈਕ੍ਰੋ-ਟ੍ਰਾਂਜੈਕਸ਼ਨ ਪੁਸ਼ਟੀਕਰਨ ਪੂਰਾ ਕਰਨ ਲਈ AnnaDatha ਮੋਬਾਈਲ ਐਪ ਦੀ ਲੋੜ ਹੈ। ਜਦੋਂ ਤੱਕ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੁੰਦੀ, ਇਸ ਤਰੀਕੇ ਨਾਲ ਨਿਕਾਸੀ ਨਹੀਂ ਹੋ ਸਕਦੀ।",
+        "confirmRemoveTitle": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਹਟਾਉਣਾ ਹੈ?",
+        "confirmRemoveMessage": "ਇਹ ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਹੁਣ ਨਿਕਾਸੀ ਲਈ ਉਪਲਬਧ ਨਹੀਂ ਹੋਵੇਗਾ।",
+        "toastAdded": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਜੋੜਿਆ ਗਿਆ। ਨਿਕਾਸੀ ਯੋਗ ਕਰਨ ਲਈ ਪੁਸ਼ਟੀਕਰਨ ਪੂਰਾ ਕਰੋ।",
+        "toastLoadError": "ਭੁਗਤਾਨ ਦੇ ਤਰੀਕੇ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।",
+        "toastRemoved": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਹਟਾਇਆ ਗਿਆ।",
+        "toastRemoveError": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ ਹਟਾਉਣ ਵਿੱਚ ਅਸਫਲ।",
+        "toastAddError": "ਭੁਗਤਾਨ ਵੇਰਵੇ ਜੋੜਨ ਵਿੱਚ ਅਸਫਲ।",
+        "errors": {
+          "invalidAccountNumber": "ਖਾਤਾ ਨੰਬਰ 9–18 ਅੰਕਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ",
+          "accountMismatch": "ਖਾਤਾ ਨੰਬਰ ਮੇਲ ਨਹੀਂ ਖਾਂਦੇ",
+          "invalidIfsc": "IFSC 11 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ (ਜਿਵੇਂ SBIN0001234)",
+          "missingHolderName": "ਖਾਤਾਧਾਰਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ"
+        }
       }
     }
   },
@@ -19696,7 +20274,11 @@ const resources = {
         "bankTab": "बैंकखातम्",
         "confirmWithdrawTitle": "निष्कासनं दृढीकरोतु",
         "confirmWithdrawMsg": "भवान् स्वस्य यूपीआई-खाते रूप्यकाणि {{amount}} निष्कासयितुम् उद्यतः अस्ति।",
-        "confirm": "दृढीकरोतु"
+        "confirm": "दृढीकरोतु",
+        "earned": "अर्जितम्",
+        "withdrawn": "निष्कासितम्",
+        "minToWithdraw": "निष्कासनाय न्यूनतमं रूप्यकाणि {{amount}}",
+        "earnMoreToUnlock": "निष्कासनम् अनलॉक् कर्तुं पुनः रूप्यकाणि {{amount}} अर्जयतु"
       },
       "yourRole": "भवतः भूमिका",
       "+91": "+९१",
@@ -20096,6 +20678,36 @@ const resources = {
         },
         "loading": "आरुह्यते…",
         "participants": "उपयोक्तारः स्पर्धां कुर्वन्ति"
+      },
+      "paymentMethods": {
+        "verifyBanner": "उपयोगात् पूर्वं भुगतानविधयः ₹1 सूक्ष्म-व्यवहारेण सत्याप्यन्ते।",
+        "emptyTitle": "कोऽपि भुगतानविधिः नास्ति",
+        "emptySubtitle": "निष्कासनं सक्षमीकर्तुं UPI ID अथवा बैंकखातं योजयतु।",
+        "addButton": "भुगतानविधिं योजयतु",
+        "addFormTitle": "भुगतानविधिं योजयतु",
+        "confirmAccountNumberPlaceholder": "खातासङ्ख्यां पुनः लिखतु",
+        "bankNamePlaceholder": "बैंकस्य नाम (ऐच्छिकम्)",
+        "addAndVerify": "योजयतु तथा सत्यापयतु",
+        "verificationChargeNote": "पुष्ट्यनन्तरं ₹1 सत्यापनशुल्कं प्रयुज्यते तथा प्रत्यर्प्यते।",
+        "statusInProgress": "सत्यापनं लम्बितम्",
+        "statusFailed": "विफलम्",
+        "verifiedOn": "{{date}} दिनाङ्के सत्यापितम्",
+        "addedOn": "{{date}} दिनाङ्के योजितम्",
+        "remove": "निष्कासयतु",
+        "mobileVerificationNote": "₹1 सूक्ष्म-व्यवहारसत्यापनं पूर्णं कर्तुं AnnaDatha चलदूरभाषयन्त्रम् आवश्यकम्। यावत् सत्यापनं न भवति, तावत् एतेन विधिना निष्कासनं कर्तुं न शक्यते।",
+        "confirmRemoveTitle": "भुगतानविधिं निष्कासयतु वा?",
+        "confirmRemoveMessage": "अयं भुगतानविधिः निष्कासनाय पुनः उपलब्धः न भविष्यति।",
+        "toastAdded": "भुगतानविधिः योजितः। निष्कासनं सक्षमीकर्तुं सत्यापनं पूरयतु।",
+        "toastLoadError": "भुगतानविधयः आरोढुं न शक्यन्त।",
+        "toastRemoved": "भुगतानविधिः निष्कासितः।",
+        "toastRemoveError": "भुगतानविधेः निष्कासनं विफलम्।",
+        "toastAddError": "भुगतानविवरणस्य योजनं विफलम्।",
+        "errors": {
+          "invalidAccountNumber": "खातासङ्ख्या 9–18 अङ्कानां भवितुमर्हति",
+          "accountMismatch": "खातासङ्ख्याः न मेलन्ति",
+          "invalidIfsc": "IFSC 11 अक्षराणां भवितुमर्हति (यथा SBIN0001234)",
+          "missingHolderName": "खाताधारकस्य नाम लिखतु"
+        }
       }
     }
   },
@@ -20806,7 +21418,11 @@ const resources = {
         "bankTab": "ᱵᱮᱸᱠ ᱮᱠᱟᱣᱩᱱᱴ",
         "confirmWithdrawTitle": "ᱴᱟᱠᱟ ᱩᱰᱩᱠ ᱥᱟᱹᱨᱤ/ ᱯᱩᱥᱴᱟᱹᱣ ᱢᱮ",
         "confirmWithdrawMsg": "ᱟᱢ ᱟᱢᱟᱜ UPI ᱮᱠᱟᱣᱩᱱᱴ ᱨᱮ Rs.{{amount}} ᱩᱰᱩᱠᱚᱜ ᱞᱟᱹᱜᱤᱫ ᱮᱢ ᱞᱟᱦᱟᱜ ᱠᱟᱱᱟ᱾",
-        "confirm": "ᱥᱟᱹᱨᱤ/ ᱯᱩᱥᱴᱟᱹᱣ ᱢᱮ"
+        "confirm": "ᱥᱟᱹᱨᱤ/ ᱯᱩᱥᱴᱟᱹᱣ ᱢᱮ",
+        "earned": "ᱚᱨᱡᱚ",
+        "withdrawn": "ᱩᱰᱩᱠ ᱠᱟᱱᱟ",
+        "minToWithdraw": "ᱩᱰᱩᱠ ᱞᱟᱹᱜᱤᱫ ᱠᱚᱢ ᱠᱷᱚᱱ ᱠᱚᱢ Rs.{{amount}}",
+        "earnMoreToUnlock": "ᱩᱰᱩᱠ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱟᱨ Rs.{{amount}} ᱚᱨᱡᱚ ᱢᱮ"
       },
       "yourRole": "ᱟᱢᱟᱜ ᱛᱷᱟᱹᱱᱤᱛ/ ᱠᱟᱹᱢᱤ",
       "+91": "+91",
@@ -21206,6 +21822,36 @@ const resources = {
         },
         "loading": "ᱞᱳᱰᱚᱜ ᱠᱟᱱᱟ…",
         "participants": "ᱵᱮᱣᱦᱟᱨᱤᱭᱟᱹ ᱠᱚ ᱦᱮᱯᱨᱟᱣ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱳᱣᱟ"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ᱵᱮᱵᱦᱟᱨ ᱟᱭᱢᱟ ᱞᱟᱦᱟ ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨᱠᱚ ᱫᱚ ₹1 ᱢᱟᱭᱠᱨᱳ-ᱴᱨᱟᱱᱡᱮᱠᱥᱚᱱ ᱛᱮ ᱡᱟᱸᱪ ᱠᱟᱱᱟ ᱾",
+        "emptyTitle": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱵᱟᱝᱟ",
+        "emptySubtitle": "ᱩᱰᱩᱠ ᱮᱢ ᱞᱟᱹᱜᱤᱫ UPI ID ᱟᱨ ᱵᱮᱸᱠ ᱮᱠᱟᱣᱩᱱᱴ ᱥᱮᱞᱮᱫ ᱢᱮ ᱾",
+        "addButton": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱥᱮᱞᱮᱫ ᱢᱮ",
+        "addFormTitle": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱥᱮᱞᱮᱫ ᱢᱮ",
+        "confirmAccountNumberPlaceholder": "ᱮᱠᱟᱣᱩᱱᱴ ᱱᱚᱢᱵᱚᱨ ᱛᱚᱠᱠᱟᱛᱮ ᱢᱮ",
+        "bankNamePlaceholder": "ᱵᱮᱸᱠ ᱧᱩᱛᱩᱢ (ᱪᱷᱟᱹᱭᱟᱱ)",
+        "addAndVerify": "ᱥᱮᱞᱮᱫ ᱟᱨ ᱡᱟᱸᱪ ᱢᱮ",
+        "verificationChargeNote": "ᱛᱚᱠᱠᱟᱛᱮ ᱛᱟᱭᱚᱢ ᱛᱟᱦᱮᱸᱱᱟ ₹1 ᱡᱟᱸᱪ ᱪᱟᱨᱡᱽ ᱵᱮᱵᱦᱟᱨ ᱠᱟᱱᱟ ᱟᱨ ᱵᱟᱝ ᱮᱢ ᱟᱠᱟᱱᱟ ᱾",
+        "statusInProgress": "ᱡᱟᱸᱪ ᱛᱟᱹᱝᱜᱤ ᱨᱮ",
+        "statusFailed": "ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+        "verifiedOn": "{{date}} ᱨᱮ ᱡᱟᱸᱪ ᱠᱟᱱᱟ",
+        "addedOn": "{{date}} ᱨᱮ ᱥᱮᱞᱮᱫ ᱠᱟᱱᱟ",
+        "remove": "ᱚᱰᱚᱠ ᱢᱮ",
+        "mobileVerificationNote": "₹1 ᱢᱟᱭᱠᱨᱳ-ᱴᱨᱟᱱᱡᱮᱠᱥᱚᱱ ᱡᱟᱸᱪ ᱯᱩᱨᱟᱹᱣ ᱞᱟᱹᱜᱤᱫ AnnaDatha ᱢᱳᱵᱟᱭᱤᱞ ᱮᱯ ᱫᱚᱨᱠᱟᱨ ᱠᱟᱱᱟ ᱾ ᱡᱟᱸᱪ ᱟᱠᱟᱱ ᱦᱚᱸ ᱵᱟᱝ ᱠᱟᱛᱮ, ᱩᱰᱩᱠ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱶᱟ ᱦᱚᱨ ᱵᱮᱵᱦᱟᱨ ᱵᱟᱝ ᱦᱩᱭᱩᱜᱼᱟ ᱾",
+        "confirmRemoveTitle": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱚᱰᱚᱠ ᱢᱮ ᱥᱮ?",
+        "confirmRemoveMessage": "ᱱᱚᱶᱟ ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱫᱚ ᱩᱰᱩᱠ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱭ ᱧᱟᱢᱚᱜ ᱠᱟᱱᱟ ᱾",
+        "toastAdded": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱥᱮᱞᱮᱫ ᱮᱱᱟ ᱾ ᱩᱰᱩᱠ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱸᱪ ᱯᱩᱨᱟᱹᱣ ᱢᱮ ᱾",
+        "toastLoadError": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱞᱳᱰ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ ᱾",
+        "toastRemoved": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱚᱰᱚᱠ ᱮᱱᱟ ᱾",
+        "toastRemoveError": "ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨ ᱚᱰᱚᱠ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ ᱾",
+        "toastAddError": "ᱴᱟᱠᱟ ᱠᱟᱛᱷᱟ ᱵᱤᱵᱚᱨᱚᱱ ᱥᱮᱞᱮᱫ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ ᱾",
+        "errors": {
+          "invalidAccountNumber": "ᱮᱠᱟᱣᱩᱱᱴ ᱱᱚᱢᱵᱚᱨ ᱫᱚ 9–18 ᱦᱤᱥᱟᱹᱵ ᱠᱟᱱᱟ ᱞᱟᱹᱜᱤᱫ",
+          "accountMismatch": "ᱮᱠᱟᱣᱩᱱᱴ ᱱᱚᱢᱵᱚᱨᱠᱚ ᱵᱟᱝ ᱢᱤᱞᱟᱣ ᱠᱟᱱᱟ",
+          "invalidIfsc": "IFSC ᱫᱚ 11 ᱚᱠᱛᱚ ᱠᱟᱱᱟ ᱞᱟᱹᱜᱤᱫ (ᱡᱮᱞᱮᱠᱟ SBIN0001234)",
+          "missingHolderName": "ᱮᱠᱟᱣᱩᱱᱴ ᱢᱟᱹᱞᱤᱠ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ"
+        }
       }
     }
   },
@@ -21916,7 +22562,11 @@ const resources = {
         "bankTab": "بئنڪ اکائونٽ",
         "confirmWithdrawTitle": "پئسا ڪڍائڻ جي تصديق ڪريو",
         "confirmWithdrawMsg": "توهان پنهنجي UPI اکائونٽ ۾ Rs.{{amount}} ڪڍائڻ وارا آهيو.",
-        "confirm": "تصديق ڪريو"
+        "confirm": "تصديق ڪريو",
+        "earned": "ڪمايل",
+        "withdrawn": "ڪڍايل",
+        "minToWithdraw": "ڪڍائڻ لاءِ گهٽ ۾ گهٽ Rs.{{amount}}",
+        "earnMoreToUnlock": "ڪڍڻ اڻلاڪ ڪرڻ لاءِ وڌيڪ Rs.{{amount}} ڪمايو"
       },
       "yourRole": "توهان جو عهدو/ڪردار",
       "+91": "+91",
@@ -22316,6 +22966,36 @@ const resources = {
         },
         "loading": "لوڊ ٿي رهيو آهي…",
         "participants": "واپرايندڙ مقابلي ۾ آهن"
+      },
+      "paymentMethods": {
+        "verifyBanner": "استعمال کرڻ کان اڳ ادائيگي جا طريقا ₹1 مائڪرو-ٽرانزيڪشن سان تصديق ڪيا ويندا آهن.",
+        "emptyTitle": "ڪوبه ادائيگي جو طريقو ناهي",
+        "emptySubtitle": "پئسا ڪڍڻ فعال ڪرڻ لاءِ UPI ID يا بئنڪ اکائونٽ شامل ڪريو.",
+        "addButton": "ادائيگي جو طريقو شامل ڪريو",
+        "addFormTitle": "ادائيگي جو طريقو شامل ڪريو",
+        "confirmAccountNumberPlaceholder": "اکائونٽ نمبر جي تصديق ڪريو",
+        "bankNamePlaceholder": "بئنڪ جو نالو (اختياري)",
+        "addAndVerify": "شامل ڪريو ۽ تصديق ڪريو",
+        "verificationChargeNote": "تصديق ٿيڻ تي ₹1 جو تصديقي چارج لاڳو ڪيو ويندو ۽ واپس ڪيو ويندو.",
+        "statusInProgress": "تصديق زيرِ التوا",
+        "statusFailed": "ناڪام",
+        "verifiedOn": "{{date}} تي تصديق ٿيل",
+        "addedOn": "{{date}} تي شامل ڪيل",
+        "remove": "هٽايو",
+        "mobileVerificationNote": "₹1 مائڪرو-ٽرانزيڪشن تصديق پوري ڪرڻ لاءِ AnnaDatha موبائل ايپ گھربل آهي. جيستائين تصديق نه ٿئي، ايستائين پئسا ڪڍڻ لاءِ هي طريقو استعمال نه ٿي سگهندو.",
+        "confirmRemoveTitle": "ادائيگي جو طريقو هٽايو؟",
+        "confirmRemoveMessage": "هي ادائيگي جو طريقو هاڻ پئسا ڪڍڻ لاءِ دستياب نه هوندو.",
+        "toastAdded": "ادائيگي جو طريقو شامل ڪيو ويو. پئسا ڪڍڻ فعال ڪرڻ لاءِ تصديق پوري ڪريو.",
+        "toastLoadError": "ادائيگي جا طريقا لوڊ نه ٿي سگهيا.",
+        "toastRemoved": "ادائيگي جو طريقو هٽايو ويو.",
+        "toastRemoveError": "ادائيگي جو طريقو هٽائڻ ۾ ناڪامي.",
+        "toastAddError": "ادائيگي جي تفصيلات شامل ڪرڻ ۾ ناڪامي.",
+        "errors": {
+          "invalidAccountNumber": "اکائونٽ نمبر 9–18 عددن جو هجڻ گھرجي",
+          "accountMismatch": "اکائونٽ نمبر نٿا ملن",
+          "invalidIfsc": "IFSC 11 اکرن جو هجڻ گھرجي (مثال طور SBIN0001234)",
+          "missingHolderName": "اکائونٽ هولڊر جو نالو داخل ڪريو"
+        }
       }
     }
   },
@@ -23026,7 +23706,11 @@ const resources = {
         "bankTab": "வங்கி கணக்கு",
         "confirmWithdrawTitle": "பணம் எடுப்பதை உறுதிசெய்",
         "confirmWithdrawMsg": "உங்கள் UPI கணக்கிற்கு ரூ.{{amount}} எடுக்க உள்ளீர்கள்.",
-        "confirm": "உறுதிசெய்"
+        "confirm": "உறுதிசெய்",
+        "earned": "சம்பாதித்தது",
+        "withdrawn": "திரும்பப் பெறப்பட்டது",
+        "minToWithdraw": "திரும்பப் பெற குறைந்தபட்சம் ரூ.{{amount}}",
+        "earnMoreToUnlock": "திரும்பப் பெறுதலை திறக்க மேலும் ரூ.{{amount}} சம்பாதிக்கவும்"
       },
       "yourRole": "உங்கள் பங்கு/பதவி",
       "+91": "+91",
@@ -23426,6 +24110,36 @@ const resources = {
         },
         "loading": "ஏற்றுகிறது…",
         "participants": "பயனர்கள் போட்டியிடுகின்றனர்"
+      },
+      "paymentMethods": {
+        "verifyBanner": "பயன்படுத்துவதற்கு முன் பணம் செலுத்தும் முறைகள் ₹1 மைக்ரோ-பரிவர்த்தனை மூலம் சரிபார்க்கப்படுகின்றன.",
+        "emptyTitle": "பணம் செலுத்தும் முறைகள் இல்லை",
+        "emptySubtitle": "பணம் திரும்பப் பெறுவதற்கு UPI ID அல்லது வங்கி கணக்கைச் சேர்க்கவும்.",
+        "addButton": "பணம் செலுத்தும் முறையைச் சேர்க்கவும்",
+        "addFormTitle": "பணம் செலுத்தும் முறையைச் சேர்க்கவும்",
+        "confirmAccountNumberPlaceholder": "கணக்கு எண்ணை உறுதிப்படுத்தவும்",
+        "bankNamePlaceholder": "வங்கியின் பெயர் (விருப்பம்)",
+        "addAndVerify": "சேர்த்து சரிபார்க்கவும்",
+        "verificationChargeNote": "உறுதிப்படுத்தலுக்குப் பிறகு ₹1 சரிபார்ப்புக் கட்டணம் வசூலிக்கப்பட்டு திரும்பச் செலுத்தப்படும்.",
+        "statusInProgress": "சரிபார்ப்பு நிலுவையில் உள்ளது",
+        "statusFailed": "தோல்வியடைந்தது",
+        "verifiedOn": "{{date}} அன்று சரிபார்க்கப்பட்டது",
+        "addedOn": "{{date}} அன்று சேர்க்கப்பட்டது",
+        "remove": "அகற்று",
+        "mobileVerificationNote": "₹1 மைக்ரோ-பரிவர்த்தனை சரிபார்ப்பை முடிக்க AnnaDatha மொபைல் ஆப் தேவை. சரிபார்க்கப்படும் வரை, இந்த முறையைப் பணம் திரும்பப் பெற பயன்படுத்த முடியாது.",
+        "confirmRemoveTitle": "பணம் செலுத்தும் முறையை அகற்றவா?",
+        "confirmRemoveMessage": "இந்த பணம் செலுத்தும் முறை இனி பணம் திரும்பப் பெறுவதற்கு கிடைக்காது.",
+        "toastAdded": "பணம் செலுத்தும் முறை சேர்க்கப்பட்டது. பணம் திரும்பப் பெற சரிபார்ப்பை முடிக்கவும்.",
+        "toastLoadError": "பணம் செலுத்தும் முறைகளை ஏற்ற முடியவில்லை.",
+        "toastRemoved": "பணம் செலுத்தும் முறை அகற்றப்பட்டது.",
+        "toastRemoveError": "பணம் செலுத்தும் முறையை அகற்றுவதில் தோல்வி.",
+        "toastAddError": "பணம் செலுத்தும் விவரங்களைச் சேர்ப்பதில் தோல்வி.",
+        "errors": {
+          "invalidAccountNumber": "கணக்கு எண் 9–18 இலக்கங்களாக இருக்க வேண்டும்",
+          "accountMismatch": "கணக்கு எண்கள் பொருந்தவில்லை",
+          "invalidIfsc": "IFSC 11 எழுத்துக்களாக இருக்க வேண்டும் (எ.கா. SBIN0001234)",
+          "missingHolderName": "கணக்கு வைத்திருப்பவர் பெயரை உள்ளிடவும்"
+        }
       }
     }
   },
@@ -24138,7 +24852,11 @@ const resources = {
         "bankTab": "బ్యాంక్ ఖాతా",
         "confirmWithdrawTitle": "విత్‌డ్రాను స్థిరీకరించండి",
         "confirmWithdrawMsg": "మీరు మీ UPI ఖాతాకు రూ.{{amount}} విత్‌డ్రా చేయబోతున్నారు.",
-        "confirm": "స్థిరీకరించు"
+        "confirm": "స్థిరీకరించు",
+        "earned": "సంపాదించినది",
+        "withdrawn": "విత్‌డ్రా చేయబడింది",
+        "minToWithdraw": "విత్‌డ్రా చేయడానికి కనీసం రూ.{{amount}}",
+        "earnMoreToUnlock": "విత్‌డ్రాను అన్‌లాక్ చేయడానికి మరో రూ.{{amount}} సంపాదించండి"
       },
       "yourRole": "మీ పాత్ర",
       "+91": "+91",
@@ -24538,6 +25256,36 @@ const resources = {
         },
         "loading": "లోడ్ అవుతోంది…",
         "participants": "వినియోగదారులు పోటీపడుతున్నారు"
+      },
+      "paymentMethods": {
+        "verifyBanner": "ఉపయోగించే ముందు చెల్లింపు పద్ధతులు ₹1 మైక్రో-లావాదేవీతో ధృవీకరించబడతాయి.",
+        "emptyTitle": "చెల్లింపు పద్ధతులు లేవు",
+        "emptySubtitle": "విత్‌డ్రాలను ప్రారంభించడానికి UPI ID లేదా బ్యాంక్ ఖాతాను జోడించండి.",
+        "addButton": "చెల్లింపు పద్ధతిని జోడించండి",
+        "addFormTitle": "చెల్లింపు పద్ధతిని జోడించండి",
+        "confirmAccountNumberPlaceholder": "ఖాతా సంఖ్యను నిర్ధారించండి",
+        "bankNamePlaceholder": "బ్యాంక్ పేరు (ఐచ్ఛికం)",
+        "addAndVerify": "జోడించి ధృవీకరించండి",
+        "verificationChargeNote": "నిర్ధారించిన తర్వాత ₹1 ధృవీకరణ ఛార్జీ వర్తింపజేయబడి తిరిగి ఇవ్వబడుతుంది.",
+        "statusInProgress": "ధృవీకరణ పెండింగ్‌లో ఉంది",
+        "statusFailed": "విఫలమైంది",
+        "verifiedOn": "{{date}} న ధృవీకరించబడింది",
+        "addedOn": "{{date}} న జోడించబడింది",
+        "remove": "తీసివేయండి",
+        "mobileVerificationNote": "₹1 మైక్రో-లావాదేవీ ధృవీకరణను పూర్తి చేయడానికి AnnaDatha మొబైల్ యాప్ అవసరం. ధృవీకరించే వరకు, ఈ పద్ధతిని విత్‌డ్రాలకు ఉపయోగించలేరు.",
+        "confirmRemoveTitle": "చెల్లింపు పద్ధతిని తీసివేయాలా?",
+        "confirmRemoveMessage": "ఈ చెల్లింపు పద్ధతి ఇకపై విత్‌డ్రాలకు అందుబాటులో ఉండదు.",
+        "toastAdded": "చెల్లింపు పద్ధతి జోడించబడింది. విత్‌డ్రాలను ప్రారంభించడానికి ధృవీకరణను పూర్తి చేయండి.",
+        "toastLoadError": "చెల్లింపు పద్ధతులను లోడ్ చేయలేకపోయాము.",
+        "toastRemoved": "చెల్లింపు పద్ధతి తీసివేయబడింది.",
+        "toastRemoveError": "చెల్లింపు పద్ధతిని తీసివేయడంలో విఫలమైంది.",
+        "toastAddError": "చెల్లింపు వివరాలను జోడించడంలో విఫలమైంది.",
+        "errors": {
+          "invalidAccountNumber": "ఖాతా సంఖ్య 9–18 అంకెలుగా ఉండాలి",
+          "accountMismatch": "ఖాతా సంఖ్యలు సరిపోలడం లేదు",
+          "invalidIfsc": "IFSC 11 అక్షరాలుగా ఉండాలి (ఉదా. SBIN0001234)",
+          "missingHolderName": "ఖాతాదారుని పేరును నమోదు చేయండి"
+        }
       }
     }
   },
@@ -25248,7 +25996,11 @@ const resources = {
         "bankTab": "بینک اکاؤنٹ",
         "confirmWithdrawTitle": "رقم نکالنے کی تصدیق کریں",
         "confirmWithdrawMsg": "آپ اپنے UPI اکاؤنٹ میں {{amount}} روپے نکالنے والے ہیں۔",
-        "confirm": "تصدیق کریں"
+        "confirm": "تصدیق کریں",
+        "earned": "کمائے گئے",
+        "withdrawn": "نکالے گئے",
+        "minToWithdraw": "نکالنے کے لیے کم از کم {{amount}} روپے",
+        "earnMoreToUnlock": "نکاسی کو اَن لاک کرنے کے لیے مزید {{amount}} روپے کمائیں"
       },
       "yourRole": "آپ کا کردار",
       "+91": "+91",
@@ -25648,9 +26400,38 @@ const resources = {
         },
         "loading": "لوڈ ہو رہا ہے…",
         "participants": "صارفین مقابلہ کر رہے ہیں"
+      },
+      "paymentMethods": {
+        "verifyBanner": "استعمال سے پہلے ادائیگی کے طریقوں کی ₹1 مائیکرو ٹرانزیکشن سے تصدیق کی جاتی ہے۔",
+        "emptyTitle": "کوئی ادائیگی کا طریقہ نہیں",
+        "emptySubtitle": "نکاسی فعال کرنے کے لیے UPI ID یا بینک اکاؤنٹ شامل کریں۔",
+        "addButton": "ادائیگی کا طریقہ شامل کریں",
+        "addFormTitle": "ادائیگی کا طریقہ شامل کریں",
+        "confirmAccountNumberPlaceholder": "اکاؤنٹ نمبر کی تصدیق کریں",
+        "bankNamePlaceholder": "بینک کا نام (اختیاری)",
+        "addAndVerify": "شامل کریں اور تصدیق کریں",
+        "verificationChargeNote": "تصدیق ہونے پر ₹1 کی تصدیقی فیس لاگو ہوگی اور واپس کر دی جائے گی۔",
+        "statusInProgress": "تصدیق زیرِ التوا",
+        "statusFailed": "ناکام",
+        "verifiedOn": "{{date}} کو تصدیق شدہ",
+        "addedOn": "{{date}} کو شامل کیا گیا",
+        "remove": "ہٹائیں",
+        "mobileVerificationNote": "₹1 مائیکرو ٹرانزیکشن تصدیق مکمل کرنے کے لیے AnnaDatha موبائل ایپ درکار ہے۔ تصدیق ہونے تک، نکاسی کے لیے یہ طریقہ استعمال نہیں کیا جا سکتا۔",
+        "confirmRemoveTitle": "ادائیگی کا طریقہ ہٹائیں؟",
+        "confirmRemoveMessage": "یہ ادائیگی کا طریقہ اب نکاسی کے لیے دستیاب نہیں ہوگا۔",
+        "toastAdded": "ادائیگی کا طریقہ شامل کر دیا گیا۔ نکاسی فعال کرنے کے لیے تصدیق مکمل کریں۔",
+        "toastLoadError": "ادائیگی کے طریقے لوڈ نہیں ہو سکے۔",
+        "toastRemoved": "ادائیگی کا طریقہ ہٹا دیا گیا۔",
+        "toastRemoveError": "ادائیگی کا طریقہ ہٹانے میں ناکامی۔",
+        "toastAddError": "ادائیگی کی تفصیلات شامل کرنے میں ناکامی۔",
+        "errors": {
+          "invalidAccountNumber": "اکاؤنٹ نمبر 9–18 ہندسوں کا ہونا چاہیے",
+          "accountMismatch": "اکاؤنٹ نمبرز مماثل نہیں ہیں",
+          "invalidIfsc": "IFSC 11 حروف کا ہونا چاہیے (مثلاً SBIN0001234)",
+          "missingHolderName": "اکاؤنٹ ہولڈر کا نام درج کریں"
+        }
       }
     }
   }
 }
-
 export default resources;
