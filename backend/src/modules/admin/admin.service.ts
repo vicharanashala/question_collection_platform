@@ -350,39 +350,49 @@ export class AdminService implements OnModuleInit {
 
   async listUsers(dto: ListUsersDto) {
     const { page = 1, limit = 20, state, category, status, search, sortBy = 'createdAt', sortOrder = 'DESC' } = dto;
-    const qb = this.userRepo
-      .createQueryBuilder('u')
-      .select([
-        'u.id',
-        'u.mobileNumber',
-        'u.name',
-        'u.username',
-        'u.category',
-        'u.state',
-        'u.district',
-        'u.verificationStatus',
-        'u.role',
-        'u.createdAt',
-        'u.lastLoginAt',
-      ])
-      .skip((page - 1) * limit)
-      .take(limit);
 
-    if (state) qb.andWhere('u.state = :state', { state });
-    if (category) qb.andWhere('u.category = :category', { category });
-    if (status) qb.andWhere('u.verificationStatus = :status', { status });
+    // Built as a native Mongo filter rather than via createQueryBuilder().andWhere(<SQL string>) —
+    // the query builder's SQL-string translator only recognizes a handful of exact patterns
+    // (=, >=, <=, IN, LIKE/ILIKE); "!=" and multi-field "(...OR...)" clauses silently fall through
+    // to a broken fallback that produces an unmatchable filter key, so those conditions used to
+    // zero out the entire result set (e.g. excludeId, which the admin UI always sends).
+    const filter: Record<string, unknown> = {};
+    if (state) filter.state = state;
+    if (category) filter.category = category;
+    if (status) filter.verificationStatus = status;
     if (search) {
-      qb.andWhere(
-        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search OR u.username ILIKE :search)`,
-        { search: `%${search}%` },
-      );
+      const regex = { $regex: search, $options: 'i' };
+      filter.$or = [{ name: regex }, { mobileNumber: regex }, { username: regex }];
     }
-    if (dto.excludeId) qb.andWhere('u.id != :excludeId', { excludeId: dto.excludeId });
+    // Keep this a plain string, not a Types.ObjectId instance — the query builder's
+    // translateValue() recurses into any non-primitive object value (Object.entries()),
+    // which mangles a real ObjectId into its raw internal buffer. Mongoose casts a valid
+    // hex string to ObjectId automatically during query execution, so a string is both
+    // simpler and safe here.
+    if (dto.excludeId) filter._id = { $ne: dto.excludeId };
 
-    const sortCol = sortBy === 'verificationStatus' ? 'u.verificationStatus' : sortBy === 'state' ? 'u.state' : sortBy === 'name' ? 'u.name' : 'u.createdAt';
-    qb.orderBy(sortCol, sortOrder);
+    const sortField = sortBy === 'verificationStatus' ? 'verificationStatus' : sortBy === 'state' ? 'state' : sortBy === 'name' ? 'name' : 'createdAt';
 
-    const [items, total] = await qb.getManyAndCount();
+    const { data, total } = await this.userRepo.findAndCount(filter, {
+      pagination: { page, limit, sort: { [sortField]: sortOrder === 'ASC' ? 1 : -1 } },
+    });
+
+    // Project down to the same field set the admin user list has always returned
+    // (excludes otpHash and other internal-only fields on the User document).
+    const items = data.map((u) => ({
+      id: u.id,
+      mobileNumber: u.mobileNumber,
+      name: u.name,
+      username: u.username,
+      category: u.category,
+      state: u.state,
+      district: u.district,
+      verificationStatus: u.verificationStatus,
+      role: u.role,
+      createdAt: u.createdAt,
+      lastLoginAt: u.lastLoginAt,
+    }));
+
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
