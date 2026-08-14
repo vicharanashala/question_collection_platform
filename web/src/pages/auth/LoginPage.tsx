@@ -122,7 +122,7 @@ export function LoginPage() {
       // the admin creates them server-side.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
-          navigate('/public/register', { state: { mobileNumber: mobile } })
+          navigate('/', { state: { mobileNumber: mobile } })
         } else {
           toast.error('Your account is not yet activated. Please contact your administrator.')
         }
@@ -322,7 +322,7 @@ export function LoginPage() {
           Question Collection Platform &middot; AnnaDatha
         </p>
         <Link
-          to="/public/register"
+          to="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
         >
           <Sprout className="h-3.5 w-3.5" />

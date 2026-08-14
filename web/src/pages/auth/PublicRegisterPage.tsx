@@ -789,11 +789,23 @@ export function PublicRegisterPage() {
   const state = location.state as RegisterState | null
   const initialMobile = state?.mobileNumber ?? ''
 
+  // The signup flow is split across two URLs:
+  //   /public/register → gate ("Create your account": mobile + OTP)
+  //   /               → wizard ("Complete your profile": 4-step form)
+  // Pick the initial stage from the URL pathname: visitors at "/" always
+  // start on the wizard; visitors at "/public/register" start on "mobile"
+  // (or "otp" if they arrived with state.mobileNumber, e.g. via the
+  // wizard's Back button).
+  const isWizardRoute = location.pathname === '/'
+  const initialStage: GateStage = isWizardRoute
+    ? 'wizard'
+    : (initialMobile ? 'otp' : 'mobile')
+
   // ─── Gate state machine ────────────────────────────────────────────────────
   // Mobile (entry + terms acceptance) → OTP → wizard. When the user arrives
   // from the LoginPage OTP-success path, `state.mobileNumber` is already set,
   // so we skip the mobile + OTP stages and land directly on the wizard stage.
-  const [stage, setStage] = useState<GateStage>(initialMobile ? 'wizard' : 'mobile')
+  const [stage, setStage] = useState<GateStage>(initialStage)
   const [gateMobile, setGateMobile] = useState(initialMobile) // mobile currently awaiting OTP
   const [verifiedMobile, setVerifiedMobile] = useState(initialMobile) // mobile after OTP OK
   const [accepted, setAccepted] = useState(false) // Terms of Service consent
@@ -871,13 +883,15 @@ export function PublicRegisterPage() {
     try {
       const res = await authApi.verifyOtp(gateMobile, cleaned)
 
-      // New public user → accept terms first, then enter the wizard.
+      // New public user → accept terms first, then enter the wizard at /.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
           setVerifiedMobile(gateMobile)
-          setStep(1) // reset wizard so re-entering always restarts at step 1
-          setStage('wizard')
           countdown.stop()
+          // Navigate to "/" with state.mobileNumber so the wizard at the
+          // home page picks up where we left off; PublicRegisterPage
+          // unmounts at /public/register and remounts at "/" in wizard mode.
+          navigate('/', { state: { mobileNumber: gateMobile }, replace: true })
           return
         }
         // Staff accounts without a profile are an admin-only flow â€” bounce.
@@ -1018,16 +1032,12 @@ export function PublicRegisterPage() {
       // Within the wizard: go one step back.
       setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4))
     } else {
-      // Step 1 is the first wizard step — return to the mobile / OTP stage so
-      // the user can re-enter their number or nav back to /login. The Terms
-      // acceptance is now inline on the mobile stage (no separate step).
-      if (initialMobile) {
-        // User arrived here from LoginPage — there's no OTP stage to return
-        // to, so just navigate back to /login.
-        navigate('/login', { replace: true })
-      } else {
-        setStage('otp')
-      }
+      // Step 1 is the first wizard step. The wizard lives at "/"; the
+      // gating flow (mobile + OTP) lives at "/public/register". In the new
+      // URL split, "Back" from the wizard's first step returns to the
+      // gating URL with the mobile number pre-filled so the user lands on
+      // the OTP stage and can re-verify without re-entering their number.
+      navigate('/public/register', { state: { mobileNumber: verifiedMobile } })
     }
   }
 

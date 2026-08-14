@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PublicLayout } from '@/components/layout/PublicLayout'
@@ -80,6 +80,28 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
 }
 
 /**
+ * Root route gate: serves the public registration/wizard as the home
+ * page for unauthenticated visitors, sends authenticated role="user"
+ * accounts to their `/public` app, and falls through to the existing
+ * staff shell for staff users. Wraps the `/` route's element.
+ */
+function RootGate({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated, isLoading } = useAuth()
+  const location = useLocation()
+  const regState = location.state as { mobileNumber?: string } | null
+  if (isLoading) return null
+  if (!isAuthenticated) {
+    // Visitors who just verified an OTP arrive at "/" with
+    // `state.mobileNumber` — let them straight into the wizard.
+    // Everyone else must enter the gating flow at /public/register first.
+    if (regState?.mobileNumber) return <PublicRegisterPage />
+    return <Navigate to="/public/register" replace />
+  }
+  if (user?.role === 'user') return <Navigate to="/public" replace />
+  return <>{children}</>
+}
+
+/**
  * Public-side guard: must be authenticated AND must be role="user". Staff
  * (admin/super_admin/curator/etc.) get bounced to the staff dashboard.
  */
@@ -132,15 +154,17 @@ export default function App() {
         <Route path="/public/register" element={<PublicRegisterPage />} />
         <Route path="/public/verification-pending" element={<PublicVerificationPendingPage />} />
 
-        {/* ── Staff shell (admin/super_admin/curator/finance/distributor) ── */}
+        {/* ── Root gate: home page for visitors, staff shell for staff ──── */}
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <StaffRoute>
-                <AppLayout />
-              </StaffRoute>
-            </ProtectedRoute>
+            <RootGate>
+              <ProtectedRoute>
+                <StaffRoute>
+                  <AppLayout />
+                </StaffRoute>
+              </ProtectedRoute>
+            </RootGate>
           }
         >
           <Route index element={<HomeRedirect />} />
