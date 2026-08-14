@@ -74,7 +74,7 @@ export function PublicBottomNav() {
                 'flex min-w-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors',
                 isActive
                   ? 'text-emerald-700 dark:text-emerald-400'
-                  : 'text-text-tertiary hover:text-emerald-700',
+                  : 'text-text-tertiary hover:text-emerald-700 dark:hover:text-emerald-400',
               )}
             >
               <Icon className="h-5 w-5" />

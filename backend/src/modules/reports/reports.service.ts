@@ -88,10 +88,110 @@ export class ReportsService {
   }
 
   async getMyReport(userId: string, reportId: string): Promise<unknown | null> {
-    const qb = this.reportRepo.createQueryBuilder('report')
-      .leftJoinAndSelect('report.replies', 'reply')
-      .where('report.id = :reportId AND report.userId = :userId', { reportId, userId });
-    return qb.getOne();
+    const { Types } = require('mongoose');
+    if (!Types.ObjectId.isValid(reportId)) return null;
+    const oid = new Types.ObjectId(reportId);
+
+    // Same aggregation pattern as getReport() below (with an added userId ownership
+    // match) — a plain .where('a = :x AND b = :y', ...) compound condition isn't one
+    // of the patterns the Mongo query builder's SQL-string translator recognizes, so
+    // it silently produced an unmatchable filter and this always returned null.
+    const pipeline: Record<string, unknown>[] = [
+      { $match: { _id: oid, userId } },
+      { $addFields: { idStr: { $toString: '$_id' } } },
+      {
+        $lookup: {
+          from: 'report_replies',
+          localField: 'idStr',
+          foreignField: 'reportId',
+          as: 'repliesArr',
+        },
+      },
+      // repliesArr[].adminId is stored as a string but users._id is an ObjectId —
+      // a plain localField/foreignField $lookup requires matching types, so convert
+      // first (mirrors the $toObjectId pattern used for userIdOid above).
+      {
+        $addFields: {
+          repliesArr: {
+            $map: {
+              input: '$repliesArr',
+              as: 'x',
+              in: {
+                $mergeObjects: [
+                  '$$x',
+                  { adminIdOid: { $convert: { input: '$$x.adminId', to: 'objectId', onError: null, onNull: null } } },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'repliesArr.adminIdOid',
+          foreignField: '_id',
+          as: 'repliesAdminArr',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          title: 1,
+          description: 1,
+          category: 1,
+          status: 1,
+          priority: 1,
+          relatedEntityId: 1,
+          relatedEntityType: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          replies: {
+            $map: {
+              input: '$repliesArr',
+              as: 'r',
+              in: {
+                id: { $toString: '$$r._id' },
+                message: '$$r.message',
+                createdAt: '$$r.createdAt',
+                admin: {
+                  $let: {
+                    vars: {
+                      adminMatch: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$repliesAdminArr',
+                              cond: { $eq: [{ $toString: '$$this._id' }, '$$r.adminId'] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: {
+                      id: { $toString: '$$adminMatch._id' },
+                      name: '$$adminMatch.name',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      { $sort: { createdAt: 1 } as Record<string, 1 | -1> },
+    ];
+
+    const results = await (this.reportRepo as unknown as { _model: { aggregate: (p: unknown) => { exec: () => Promise<unknown[]> } } })
+      ._model.aggregate(pipeline).exec();
+
+    if (!results.length) return null;
+
+    const r = results[0] as Record<string, unknown>;
+    const { _id, ...rest } = r;
+    return { ...rest, id: String(_id) };
   }
 
   async getMyReports(userId: string, page = 1, limit = 20) {
@@ -205,10 +305,29 @@ export class ReportsService {
           as: 'repliesArr',
         },
       },
+      // repliesArr[].adminId is stored as a string but users._id is an ObjectId —
+      // a plain localField/foreignField $lookup requires matching types, so convert
+      // first (mirrors the $toObjectId pattern used for userIdOid above).
+      {
+        $addFields: {
+          repliesArr: {
+            $map: {
+              input: '$repliesArr',
+              as: 'x',
+              in: {
+                $mergeObjects: [
+                  '$$x',
+                  { adminIdOid: { $convert: { input: '$$x.adminId', to: 'objectId', onError: null, onNull: null } } },
+                ],
+              },
+            },
+          },
+        },
+      },
       {
         $lookup: {
           from: 'users',
-          localField: 'repliesArr.adminId',
+          localField: 'repliesArr.adminIdOid',
           foreignField: '_id',
           as: 'repliesAdminArr',
         },

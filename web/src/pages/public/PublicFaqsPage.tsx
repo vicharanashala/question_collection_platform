@@ -20,7 +20,7 @@ function FaqItem({ item }: { item: Faq }) {
   const cat = CATEGORIES.find((c) => c.key === item.category) ?? CATEGORIES[4]
   return (
     <div className="border-b border-border-subtle last:border-0">
-      <button className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-emerald-50/30 transition-colors" onClick={() => setOpen((o) => !o)}>
+      <button className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-emerald-50/30 transition-colors dark:hover:bg-emerald-950/20" onClick={() => setOpen((o) => !o)}>
         <div className="w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: cat.color }} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">

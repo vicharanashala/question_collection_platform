@@ -104,7 +104,7 @@ function ReportCard({ report, onPress }: ReportCardProps) {
       onClick={onPress}
       className={cn(
         'group flex w-full overflow-hidden rounded-xl border border-border-subtle bg-surface text-left shadow-sm',
-        'transition-all hover:border-emerald-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+        'transition-all hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
       )}
     >
       {/* Left accent bar */}
@@ -227,12 +227,12 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                       active
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-                        : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20',
+                        : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/20',
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{opt.label}</span>
-                    {active && <CheckCircle2 className="h-4 w-4 ml-auto text-emerald-600" />}
+                    {active && <CheckCircle2 className="h-4 w-4 ml-auto text-emerald-600 dark:text-emerald-400" />}
                   </button>
                 )
               })}

@@ -24,7 +24,7 @@ function statusBadge(s: string) {
     approved: 'bg-blue-100 text-blue-700',
     rejected: 'bg-rose-100 text-rose-700',
     held: 'bg-violet-100 text-violet-700',
-    moved_to_final: 'bg-emerald-100 text-emerald-700',
+    moved_to_final: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
   }
   return map[s] ?? 'bg-muted text-muted-foreground'
 }
@@ -98,7 +98,7 @@ export function PublicQuestionsPage() {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {STATUS_TABS.map((s) => (
-          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors', status === s.key ? 'bg-emerald-500 text-white' : 'border border-border-subtle bg-surface text-text-secondary hover:border-emerald-300')}>
+          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors', status === s.key ? 'bg-emerald-500 text-white' : 'border border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700')}>
             {t(s.labelKey)}
           </button>
         ))}

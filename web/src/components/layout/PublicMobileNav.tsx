@@ -81,7 +81,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-emerald-500 text-white'
-                      : 'text-text-secondary hover:bg-emerald-50 hover:text-emerald-700'
+                      : 'text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300'
                   }`
                 }
               >
@@ -103,7 +103,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
             </div>
             <button
               onClick={() => setLanguageOpen(true)}
-              className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+              className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
             >
               <Languages className="h-4 w-4" />
               <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
