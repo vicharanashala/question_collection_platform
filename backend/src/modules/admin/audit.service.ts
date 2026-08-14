@@ -1,9 +1,9 @@
-import { Injectable, Inject, Optional } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
 import { AuditLog } from '../../shared/database/entities';
 import { AuditAction, UserRole } from '../../shared/classes/enums';
 import { QueryAuditLogsDto, AuditStatsDto } from './dto';
 import { IAuditLogRepository } from '../../shared/database/repositories/IAuditLog.repository';
+import { IUserRepository } from '../../shared/database/repositories/IUser.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 type ActionCategory = 'withdrawal' | 'user' | 'question' | 'config' | 'auth';
@@ -73,15 +73,9 @@ export class AuditService {
   constructor(
     @Inject(REPOSITORY_TOKENS.AuditLog)
     private readonly auditRepo: IAuditLogRepository,
-    @Inject(DataSource) @Optional()
-    private readonly dataSource?: DataSource,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
   ) {}
-
-  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
-  private get ds(): DataSource {
-    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
-    return this.dataSource;
-  }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -210,9 +204,7 @@ export class AuditService {
       // If actorId is specified, verify it belongs to an allowed actor
       if (authRole === UserRole.ADMIN) {
         // Verify the target actor is a curator or finance user
-        const targetUser = await this.ds
-          .getRepository('user')
-          .findOne({ where: { id: dto.actorId }, select: ['role'] });
+        const targetUser = await this.userRepo.findOne({ where: { id: dto.actorId } });
         if (!targetUser || !ADMIN_VIEWABLE_ROLES.includes(targetUser.role as UserRole)) {
           return { items: [], total: 0, page, limit, pages: 0 };
         }
@@ -535,14 +527,10 @@ export class AuditService {
       return { users: [] };
     }
 
-    const qb = this.ds
-           .getRepository('user')
-      .createQueryBuilder('u')
-      .select(['u.id', 'u.name', 'u.mobileNumber', 'u.role'])
-      .where('u.role = :role', { role })
-      .orderBy('u.name', 'ASC');
-
-    const users = await qb.getMany();
+    const users = await this.userRepo.findAll(
+      { role },
+      { pagination: { sort: { name: 1 } } },
+    );
 
     return {
       users: users.map((u) => ({

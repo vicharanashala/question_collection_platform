@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Model, QueryOptions } from 'mongoose';
+import { ClientSession, Model, QueryOptions } from 'mongoose';
 import {
   BaseRepository,
   EntityFilter,
@@ -370,10 +370,12 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     filter: EntityFilter<T>,
     field: string,
     amount: number,
+    session?: ClientSession,
   ): Promise<void> {
     await this._model.updateMany(toMongoFilter(this.translateIdField(filter)) as Record<string, unknown>, {
       $inc: { [field]: amount },
     } as Record<string, unknown>)
+      .session(session ?? null)
       .exec();
   }
 
@@ -381,10 +383,12 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     filter: EntityFilter<T>,
     field: string,
     amount: number,
+    session?: ClientSession,
   ): Promise<void> {
     await this._model.updateMany(toMongoFilter(this.translateIdField(filter)) as Record<string, unknown>, {
       $inc: { [field]: -amount },
     } as Record<string, unknown>)
+      .session(session ?? null)
       .exec();
   }
 
@@ -443,9 +447,9 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     return fixed;
   }
 
-  async findOne(filter: EntityFilter<T>): Promise<T | null> {
+  async findOne(filter: EntityFilter<T>, session?: ClientSession): Promise<T | null> {
     const translated = this.translateIdField(filter);
-    const doc = await this._model.findOne(toMongoFilter(translated)).exec();
+    const doc = await this._model.findOne(toMongoFilter(translated)).session(session ?? null).exec();
     return doc ? this.docToEntity(doc) : null;
   }
 
@@ -461,9 +465,9 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     return doc ? this.docToEntity(doc) : null;
   }
 
-  async create(data: Partial<T>): Promise<T> {
+  async create(data: Partial<T>, session?: ClientSession): Promise<T> {
     const doc = new this._model(data as never);
-    const saved = await doc.save();
+    const saved = await doc.save({ session });
     return this.docToEntity(saved);
   }
 
@@ -478,7 +482,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     return result != null;
   }
 
-  async update(id: string, data: Partial<T>): Promise<T | null> {
+  async update(id: string, data: Partial<T>, session?: ClientSession): Promise<T | null> {
     const { Types } = await import('mongoose');
     let filter: Record<string, unknown>;
     if (Types.ObjectId.isValid(id) && id.length === 24) {
@@ -492,17 +496,18 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
       .findOneAndUpdate(
         filter,
         { $set: { ...data, updatedAt: new Date() } },
-        { returnDocument: 'after' },
+        { returnDocument: 'after', session },
       );
     return result ? (this.docToEntity(result) as T) : null;
   }
 
-  async updateMany(filter: EntityFilter<T>, data: Partial<T>): Promise<{ affected?: number; raw?: unknown }> {
+  async updateMany(filter: EntityFilter<T>, data: Partial<T>, session?: ClientSession): Promise<{ affected?: number; raw?: unknown }> {
     const result = await this._model
       .updateMany(
         toMongoFilter(this.translateIdField(filter)) as Record<string, unknown>,
         data as Record<string, unknown>,
       )
+      .session(session ?? null)
       .exec();
     return { affected: result.modifiedCount, raw: result };
   }
@@ -547,7 +552,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     };
   }
 
-  async save(entity: Partial<T>): Promise<T> {
+  async save(entity: Partial<T>, session?: ClientSession): Promise<T> {
     const data = entity as Record<string, unknown>;
     const id = data.id ?? data._id;
 
@@ -562,6 +567,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
         : { _id: idStr }; // use UUID as _id
       const doc = await this._model
         .findOneAndUpdate(filter as Record<string, unknown>, { ...data, _id: idStr }, { returnDocument: 'after', upsert: true })
+        .session(session ?? null)
         .exec();
       if (!doc) throw new Error(`mongo.save upsert returned null for id=${id}`);
       return this.docToEntity(doc);
@@ -569,7 +575,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
 
     // No id — insert new
     const doc = new this._model(data as never);
-    const saved = await doc.save();
+    const saved = await doc.save({ session });
     return this.docToEntity(saved);
   }
 

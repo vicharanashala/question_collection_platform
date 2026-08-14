@@ -15,19 +15,20 @@ import { useTranslation } from 'react-i18next'
 import { walletApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import {
   RefreshCw, CreditCard, Info, Filter as FilterIcon, X,
   ArrowDownRight, ArrowUpRight, Clock, Wallet as WalletIcon,
-  Receipt, Loader2, Lock,
+  Receipt, Loader2, Lock, AtSign, Building2, CheckCircle2,
 } from 'lucide-react'
 import { cn, formatINRFull, formatINRCompact } from '@/lib/utils'
 import { toast } from 'sonner'
 import i18n from '@/i18n'
-import type { Transaction } from '@/types'
+import type { Transaction, PaymentDetail } from '@/types'
 
 // ─── Filter types ────────────────────────────────────────────────────────────
 
@@ -218,7 +219,7 @@ export function PublicWalletPage() {
       if (balRes.status === 'fulfilled') setBalance(Number(balRes.value.balance ?? 0))
       if (cfgRes.status === 'fulfilled') setMinWithdrawal(Number(cfgRes.value.minWithdrawalAmount ?? 50))
       if (txRes.status === 'fulfilled') {
-        setTransactions(txRes.value.items ?? [])
+        setTransactions(txRes.value.transactions ?? [])
         setTotal(txRes.value.total ?? 0)
       }
     } catch (err) {
@@ -240,7 +241,7 @@ export function PublicWalletPage() {
       ])
       if (balRes.status === 'fulfilled') setBalance(Number(balRes.value.balance ?? 0))
       if (txRes.status === 'fulfilled') {
-        setTransactions(txRes.value.items ?? [])
+        setTransactions(txRes.value.transactions ?? [])
         setTotal(txRes.value.total ?? 0)
       }
     } finally {
@@ -286,6 +287,77 @@ export function PublicWalletPage() {
 
   const belowMin = (balance ?? 0) < minWithdrawal
   const remainingToMin = Math.max(0, minWithdrawal - (balance ?? 0))
+
+  // ── Withdraw modal — mirrors mobile's WalletScreen confirm-withdraw sheet ──
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [withdrawing, setWithdrawing] = useState(false)
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([])
+  const [selectedPaymentDetailId, setSelectedPaymentDetailId] = useState<string | null>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [payoutError, setPayoutError] = useState('')
+
+  const parsedAmount = parseFloat(withdrawAmount)
+  const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawal && parsedAmount <= (balance ?? 0)
+  const verifiedPaymentDetails = useMemo(
+    () => paymentDetails.filter((d) => d.status === 'verified'),
+    [paymentDetails],
+  )
+
+  function resetWithdrawForm() {
+    setWithdrawAmount('')
+    setPayoutError('')
+    setSelectedPaymentDetailId(null)
+    setPaymentDetails([])
+  }
+
+  async function loadPaymentDetails() {
+    setLoadingDetails(true)
+    try {
+      const items = await walletApi.getPaymentDetails()
+      setPaymentDetails(items)
+      const verified = items.find((d) => d.status === 'verified')
+      setSelectedPaymentDetailId(verified?.id ?? null)
+    } catch {
+      toast.error(t('wallet.loadPaymentDetailsError'))
+    } finally {
+      setLoadingDetails(false)
+    }
+  }
+
+  function openWithdraw() {
+    if (belowMin) {
+      toast.error(t('wallet.minWithdrawalError', { amount: minWithdrawal }))
+      return
+    }
+    resetWithdrawForm()
+    setWithdrawOpen(true)
+    loadPaymentDetails()
+  }
+
+  async function handleWithdraw() {
+    const selected = paymentDetails.find((d) => d.id === selectedPaymentDetailId)
+    if (!selected) {
+      setPayoutError(t('wallet.paymentMethodRequired'))
+      return
+    }
+    if (selected.status !== 'verified') {
+      setPayoutError(t('wallet.paymentMethodNotVerified'))
+      return
+    }
+    setWithdrawing(true)
+    try {
+      await walletApi.withdraw({ amount: parsedAmount, paymentDetailId: selected.id })
+      toast.success(t('wallet.success'))
+      setWithdrawOpen(false)
+      resetWithdrawForm()
+      fetchData()
+    } catch (err) {
+      setPayoutError(getErrorMessage(err, t('wallet.failed')))
+    } finally {
+      setWithdrawing(false)
+    }
+  }
 
   if (loading && balance === null) {
     return (
@@ -346,13 +418,14 @@ export function PublicWalletPage() {
                   {t('wallet.minToWithdraw', { amount: minWithdrawal.toLocaleString('en-IN') })}
                 </div>
               ) : (
-                <Link
-                  to="/public/withdraw"
+                <button
+                  type="button"
+                  onClick={openWithdraw}
                   className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur transition-colors hover:bg-white/25"
                 >
                   <ArrowUpRight className="h-3.5 w-3.5" />
                   {t('wallet.withdraw')}
-                </Link>
+                </button>
               )}
             </div>
           </div>
@@ -573,7 +646,7 @@ export function PublicWalletPage() {
                     const nextPage = Math.floor(transactions.length / limit) + 1
                     try {
                       const res = await walletApi.getTransactions({ page: nextPage, limit })
-                      setTransactions((prev) => [...prev, ...(res.items ?? [])])
+                      setTransactions((prev) => [...prev, ...(res.transactions ?? [])])
                     } catch (err) {
                       toast.error(getErrorMessage(err, 'Failed to load more.'))
                     }
@@ -590,6 +663,132 @@ export function PublicWalletPage() {
       </div>
 
       <TxDetailDialog tx={selectedTx} open={selectedTx !== null} onClose={() => setSelectedTx(null)} />
+
+      {/* ── Withdraw confirmation dialog ─────────────────────────── */}
+      <Dialog open={withdrawOpen} onOpenChange={(v) => !v && !withdrawing && setWithdrawOpen(false)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader className="items-center text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+              <ArrowUpRight className="h-6 w-6" />
+            </div>
+            <DialogTitle className="mt-2">{t('wallet.confirmWithdrawTitle')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-1">
+            <div className="text-center">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
+                {t('wallet.availableBalance')}
+              </p>
+              <p className="mt-1 text-2xl font-extrabold tabular-nums text-foreground">
+                ₹{formatINRFull(balance ?? 0)}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex h-12 items-center gap-1.5 rounded-md border border-border-subtle bg-background px-3">
+                <span className="text-lg font-bold text-text-secondary">₹</span>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={String(minWithdrawal)}
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                  maxLength={8}
+                  autoFocus
+                  className="h-full border-0 p-0 text-lg font-bold shadow-none focus-visible:ring-0"
+                />
+              </div>
+              {!isValidAmount && withdrawAmount.length > 0 && (
+                <p className="mt-1.5 text-xs font-medium text-destructive">
+                  {!isNaN(parsedAmount) && parsedAmount > (balance ?? 0)
+                    ? t('wallet.exceedBalance')
+                    : t('wallet.minWithdrawalError', { amount: minWithdrawal.toLocaleString('en-IN') })}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
+                {t('wallet.payoutMethod')}
+              </p>
+
+              {loadingDetails ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+                </div>
+              ) : paymentDetails.length === 0 ? (
+                <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-center">
+                  <p className="text-sm font-bold text-warning">{t('paymentMethods.emptyTitle')}</p>
+                  <Link
+                    to="/public/payment-methods"
+                    className="mt-1 inline-block text-xs font-semibold text-emerald-700 underline dark:text-emerald-400"
+                    onClick={() => setWithdrawOpen(false)}
+                  >
+                    {t('profile.paymentMethods')}
+                  </Link>
+                </div>
+              ) : verifiedPaymentDetails.length === 0 ? (
+                <p className="py-3 text-center text-xs italic text-text-tertiary">
+                  {t('wallet.paymentMethodNotVerified')}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {verifiedPaymentDetails.map((detail) => (
+                    <button
+                      key={detail.id}
+                      type="button"
+                      onClick={() => { setSelectedPaymentDetailId(detail.id); setPayoutError('') }}
+                      className={cn(
+                        'flex w-full items-center gap-2.5 rounded-md border p-3 text-left transition-colors',
+                        selectedPaymentDetailId === detail.id
+                          ? 'border-primary bg-primary/8'
+                          : 'border-border-subtle hover:border-emerald-300',
+                      )}
+                    >
+                      {detail.payoutMethod === 'upi'
+                        ? <AtSign className={cn('h-4 w-4 shrink-0', selectedPaymentDetailId === detail.id ? 'text-primary' : 'text-text-secondary')} />
+                        : <Building2 className={cn('h-4 w-4 shrink-0', selectedPaymentDetailId === detail.id ? 'text-primary' : 'text-text-secondary')} />}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">
+                          {detail.payoutMethod === 'upi' ? detail.displayValue : `A/c ${detail.displayValue}`}
+                        </p>
+                        {detail.payoutMethod === 'bank_transfer' && detail.bankName && (
+                          <p className="text-xs text-text-secondary">{detail.bankName}</p>
+                        )}
+                      </div>
+                      {selectedPaymentDetailId === detail.id && (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {payoutError && (
+              <p className="text-xs font-medium text-destructive">{payoutError}</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="flex-1"
+              disabled={withdrawing}
+              onClick={() => setWithdrawOpen(false)}
+            >
+              {t('wallet.cancel')}
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={!isValidAmount || !selectedPaymentDetailId || withdrawing}
+              onClick={handleWithdraw}
+            >
+              {withdrawing ? <Loader2 className="h-4 w-4 animate-spin" /> : t('wallet.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   )
 }

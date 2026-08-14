@@ -17,6 +17,7 @@ import type {
   Withdrawal,
   WalletSummary,
   Transaction,
+  PaymentDetail,
   Notification,
   PaginatedResponse,
   AnalyticsDashboard,
@@ -729,7 +730,7 @@ export const walletApi = {
     const qs = new URLSearchParams(
       Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
     ).toString()
-    return request<{ items: Transaction[]; total: number }>(
+    return request<{ transactions: Transaction[]; total: number }>(
       `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
       {},
       false,
@@ -746,7 +747,15 @@ export const walletApi = {
 
   /** Payout methods (UPI / bank) saved by the authenticated user. */
   getPaymentDetails: () =>
-    request<unknown[]>('/wallets/payment-details', {}, false),
+    request<PaymentDetail[]>('/wallets/payment-details', {}, false),
+
+  /** Request a withdrawal of `amount` to a previously verified payment method. */
+  withdraw: (data: { amount: number; paymentDetailId: string }) =>
+    request<{ id: string; status: string; amount: number }>(
+      '/wallets/withdraw',
+      { method: 'POST', body: JSON.stringify(data) },
+      false,
+    ).finally(() => invalidateCache('/api/wallets')),
 
   /** Add a new payout method (UPI or bank). Initiates ₹1 micro-transaction
    *  verification on the backend; the native Razorpay SDK is required to

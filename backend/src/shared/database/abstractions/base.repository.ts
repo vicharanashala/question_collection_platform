@@ -1,3 +1,5 @@
+import { ClientSession } from 'mongoose';
+
 // ─── Pagination / Sort options ─────────────────────────────────────────────
 
 export interface PaginationOptions {
@@ -151,8 +153,9 @@ export abstract class BaseRepository<T extends object> {
 
   /**
    * Returns a single document matching `filter`, or null.
+   * Pass `session` to read within an active Mongo transaction.
    */
-  abstract findOne(filter: EntityFilter<T>): Promise<T | null>;
+  abstract findOne(filter: EntityFilter<T>, session?: ClientSession): Promise<T | null>;
 
   /**
    * Returns a document by its string id (uuid / ObjectId), or null.
@@ -162,17 +165,17 @@ export abstract class BaseRepository<T extends object> {
   /**
    * Creates and returns a new document.
    */
-  abstract create(data: Partial<T>): Promise<T>;
+  abstract create(data: Partial<T>, session?: ClientSession): Promise<T>;
 
   /**
    * Updates a document by id and returns the updated document, or null.
    */
-  abstract update(id: string, data: Partial<T>): Promise<T | null>;
+  abstract update(id: string, data: Partial<T>, session?: ClientSession): Promise<T | null>;
 
   /**
    * Bulk-updates all documents matching `filter` with `data`.
    */
-  abstract updateMany(filter: EntityFilter<T>, data: Partial<T>): Promise<UpdateResult>;
+  abstract updateMany(filter: EntityFilter<T>, data: Partial<T>, session?: ClientSession): Promise<UpdateResult>;
 
   /**
    * Deletes a document by id. Returns true on success.
@@ -193,13 +196,13 @@ export abstract class BaseRepository<T extends object> {
    * TypeORM: UPDATE ... SET field = field + amount WHERE ...
    * MongoDB:  { $inc: { field: amount } }
    */
-  abstract decrement(filter: EntityFilter<T>, field: string, amount: number): Promise<void>;
+  abstract decrement(filter: EntityFilter<T>, field: string, amount: number, session?: ClientSession): Promise<void>;
 
   /**
    * Increment a numeric counter field atomically.
    * Falls back to find+save when the underlying driver doesn't support it.
    */
-  abstract increment(filter: EntityFilter<T>, field: string, amount: number): Promise<void>;
+  abstract increment(filter: EntityFilter<T>, field: string, amount: number, session?: ClientSession): Promise<void>;
 
   /**
    * Returns matching documents + total count in one round-trip.
@@ -217,7 +220,7 @@ export abstract class BaseRepository<T extends object> {
   /**
    * Persists (insert or update) a document. Returns the saved document.
    */
-  abstract save(entity: Partial<T>): Promise<T>;
+  abstract save(entity: Partial<T>, session?: ClientSession): Promise<T>;
 
   // ─── Query builder (abstracted — each impl provides its own DSL) ─────────
 

@@ -26,6 +26,7 @@ import {
   FinalQuestion,
 } from './entities';
 import { REPOSITORY_TOKENS, buildRepositoryProviders } from './repositories';
+import { MongoTransactionService } from './mongodb/mongo-transaction.service';
 
 // MongoDB schemas
 import { UserSchema } from './mongodb/schemas/user.schema';
@@ -68,9 +69,11 @@ const MONGO_SCHEMA_ENTRIES = [
   ],
   providers: [
     ...buildRepositoryProviders(),
+    MongoTransactionService,
   ],
   exports: [
     ...Object.values(REPOSITORY_TOKENS),
+    MongoTransactionService,
   ],
 })
 export class DbModule {}

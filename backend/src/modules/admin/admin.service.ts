@@ -7,9 +7,8 @@ import {
   Inject,
   forwardRef,
   Logger,
-  Optional,
 } from '@nestjs/common';
-import { SelectQueryBuilder, ILike, Between, In, DataSource } from 'typeorm';
+import { SelectQueryBuilder, ILike, Between, In } from 'typeorm';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { HotDataService } from '../../shared/database/cache/hot-data.service';
 import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
@@ -76,6 +75,7 @@ import {
   IUserPaymentDetailRepository,
 } from '../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { MongoTransactionService } from '../../shared/database/mongodb/mongo-transaction.service';
 
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
@@ -190,15 +190,8 @@ export class AdminService implements OnModuleInit {
     private readonly hotDataService: HotDataService,
     private readonly analyticsCacheService: AnalyticsCacheService,
     private readonly gdbService: GdbService,
-    @Inject(DataSource) @Optional()
-    private readonly dataSource?: DataSource,
+    private readonly mongoTransactionService: MongoTransactionService,
   ) {}
-
-  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
-  private get ds(): DataSource {
-    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
-    return this.dataSource;
-  }
 
   private readonly logger = new Logger(AdminService.name);
 
@@ -1850,27 +1843,14 @@ export class AdminService implements OnModuleInit {
     // Use existing referenceId if present, otherwise build a new one
     const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
 
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // 1. Reset withdrawal to PROCESSING and increment retry count
-      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
-        status: WithdrawalStatus.PROCESSING,
-        processedAt: new Date(),
-        orderId: referenceId,
-        razorpayPayoutId: null,
-        retryCount: (withdrawal.retryCount ?? 0) + 1,
-      });
-
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    // Reset withdrawal to PROCESSING and increment retry count
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: WithdrawalStatus.PROCESSING,
+      processedAt: new Date(),
+      orderId: referenceId,
+      razorpayPayoutId: null,
+      retryCount: (withdrawal.retryCount ?? 0) + 1,
+    });
 
     await this.logAudit({
       actorType: ActorType.ADMIN,
@@ -2084,56 +2064,40 @@ export class AdminService implements OnModuleInit {
       throw new BadRequestException(`Cannot mark withdrawal as failed in '${withdrawal.status}' status. Only PROCESSING withdrawals can be marked failed.`);
     }
 
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    await this.mongoTransactionService.runInTransaction(async (session) => {
       // 1. Mark withdrawal as FAILED
-      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
+      await this.withdrawalRepo.update(withdrawalId, {
         status: WithdrawalStatus.FAILED,
         processedAt: new Date(),
         failureReason: reason ?? 'Marked failed by admin',
-      });
+      }, session);
 
       // 2. Mark the DEBIT transaction as FAILED and store the reason
-      await queryRunner.manager.update(
-        Transaction,
+      await this.transactionRepo.updateMany(
         { referenceId: withdrawalId, type: TransactionType.DEBIT },
         { status: TransactionStatus.FAILED, rejectionReason: reason ?? 'Marked failed by admin' },
+        session,
       );
 
-      // 3. Refund balance to wallet
-      await queryRunner.manager
-        .createQueryBuilder()
-        .update(Wallet)
-        .set({ balance: () => `balance + ${Number(withdrawal.amount)}` })
-        .where('id = :id', { id: withdrawal.walletId })
-        .execute();
+      // 3. Refund balance to wallet (atomic $inc — also returns the post-refund balance)
+      const newBalance = await this.walletRepo.incrementBalance(withdrawal.walletId, Number(withdrawal.amount), session);
 
-      // 4. Fetch updated wallet for balanceAfter on refund tx
-      const wallet = await queryRunner.manager.findOne(Wallet, { where: { id: withdrawal.walletId } });
-      const newBalance = wallet ? Number(wallet.balance) : 0;
+      // 4. Create refund CREDIT transaction
+      await this.transactionRepo.save({
+        walletId: withdrawal.walletId,
+        amount: Number(withdrawal.amount),
+        type: TransactionType.CREDIT,
+        source: TransactionSource.REFUND,
+        description: `Withdrawal failed${reason ? ': ' + reason : ''}`,
+        rejectionReason: reason ?? 'Marked failed by admin',
+        status: TransactionStatus.COMPLETED,
+        referenceId: withdrawalId,
+        balanceAfter: newBalance,
+      }, session);
+    });
 
-      // 5. Create refund CREDIT transaction
-      await queryRunner.manager.save(
-        queryRunner.manager.create(Transaction, {
-          walletId: withdrawal.walletId,
-          amount: Number(withdrawal.amount),
-          type: TransactionType.CREDIT,
-          source: TransactionSource.REFUND,
-          description: `Withdrawal failed${reason ? ': ' + reason : ''}`,
-          rejectionReason: reason ?? 'Marked failed by admin',
-          status: TransactionStatus.COMPLETED,
-          referenceId: withdrawalId,
-          balanceAfter: newBalance,
-        }),
-      );
-
-      await queryRunner.commitTransaction();
-
-      // Send two notifications: one for failed withdrawal, one for refund
-      const withdrawalForNotify = await this.withdrawalRepo.findOne({
+    // Send two notifications: one for failed withdrawal, one for refund
+    const withdrawalForNotify = await this.withdrawalRepo.findOne({
         where: { id: withdrawalId },
         relations: ['user'],
       });
@@ -2208,13 +2172,7 @@ export class AdminService implements OnModuleInit {
         newValue: { status: WithdrawalStatus.FAILED, reason },
       });
 
-      return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
   }
 
   /** Admin updates the failure reason on an already-failed withdrawal. */
