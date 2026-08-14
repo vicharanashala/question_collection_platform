@@ -3265,70 +3265,93 @@ export class AdminService implements OnModuleInit {
       sortBy = 'createdAt', sortOrder = 'DESC',
     } = dto;
 
-    const qb = this.walletRepo
-      .createQueryBuilder('w')
-      .innerJoinAndSelect('w.user', 'u')
-      .leftJoin('w.transactions', 'tx')
-      .select([
-        'w.id',
-        'w.balance',
-        'w.createdAt',
-        'w.updatedAt',
-        'u.id',
-        'u.name',
-        'u.mobileNumber',
-        'u.state',
-        'u.district',
-        'u.category',
-        'u.role',
-        'u.verificationStatus',
-        'u.createdAt',
-      ])
-      .addSelect(
-        "COALESCE(SUM(CASE WHEN tx.type = 'CREDIT' AND tx.source = 'REWARD' AND tx.status = 'COMPLETED' THEN tx.amount ELSE 0 END), 0)",
-        'totalEarned',
-      )
-      .addSelect(
-        "COALESCE(SUM(CASE WHEN tx.type = 'DEBIT' AND tx.source = 'WITHDRAWAL' AND tx.status = 'COMPLETED' THEN tx.amount ELSE 0 END), 0)",
-        'totalWithdrawn',
-      )
-      .groupBy('w.id')
-      .addGroupBy('u.id')
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    if (userId) qb.andWhere('u.id = :userId', { userId });
-    if (search) {
-      qb.andWhere(
-        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search)`,
-        { search: `%${search}%` },
-      );
+    // Rebuilt as native Mongo filters + an in-memory join/aggregate instead of
+    // createQueryBuilder().innerJoinAndSelect()/SUM(CASE...)/groupBy() — none of those
+    // SQL constructs have a working Mongo-query-builder translation (joins aren't real
+    // joins there, and groupBy/addGroupBy are documented no-ops for Mongo), so this
+    // always returned zero rows. Wallet/transaction counts are small enough that
+    // fetching the filtered set and joining/aggregating in JS is simple and correct.
+    let ownerIdFilter: string[] | undefined;
+    if (userId) {
+      ownerIdFilter = [userId];
+    } else if (search || state) {
+      const userFilter: Record<string, unknown> = {};
+      if (state) userFilter.state = state;
+      if (search) {
+        const regex = { $regex: search, $options: 'i' };
+        userFilter.$or = [{ name: regex }, { mobileNumber: regex }];
+      }
+      const matchedUsers = await this.userRepo.findAll(userFilter);
+      ownerIdFilter = matchedUsers.map((u) => u.id);
+      if (ownerIdFilter.length === 0) {
+        return { items: [], total: 0, page, limit, pages: 0 };
+      }
     }
-    if (state) qb.andWhere('u.state = :state', { state });
 
-    const sortCol = sortBy === 'balance' ? 'w.balance' : 'w.createdAt';
-    qb.orderBy(sortCol, sortOrder);
+    const walletFilter: Record<string, unknown> = {};
+    if (ownerIdFilter) walletFilter.userId = { $in: ownerIdFilter };
 
-    const [items, total] = await qb.getManyAndCount();
-    return {
-      items: items.filter((w) => w.user).map((w) => ({
+    const allWallets = await this.walletRepo.findAll(walletFilter);
+    const ownerIds = [...new Set(allWallets.map((w) => w.userId))];
+    const owners = ownerIds.length ? await this.userRepo.findAll({ _id: { $in: ownerIds } }) : [];
+    const ownersById = new Map(owners.map((u) => [u.id, u]));
+
+    // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
+    // matching user (orphaned records) are excluded from both items and total.
+    const validWallets = allWallets.filter((w) => ownersById.has(w.userId));
+
+    const dir = sortOrder === 'ASC' ? 1 : -1;
+    validWallets.sort((a, b) => {
+      const av = sortBy === 'balance' ? Number(a.balance) : new Date(a.createdAt).getTime();
+      const bv = sortBy === 'balance' ? Number(b.balance) : new Date(b.createdAt).getTime();
+      return (av - bv) * dir;
+    });
+
+    const total = validWallets.length;
+    const pageWallets = validWallets.slice((page - 1) * limit, (page - 1) * limit + limit);
+    const walletIds = pageWallets.map((w) => w.id);
+
+    const transactions = walletIds.length
+      ? await this.transactionRepo.findAll({ walletId: { $in: walletIds } })
+      : [];
+
+    const sumsByWallet = new Map<string, { totalEarned: number; totalWithdrawn: number }>();
+    for (const tx of transactions) {
+      const entry = sumsByWallet.get(tx.walletId) ?? { totalEarned: 0, totalWithdrawn: 0 };
+      if (tx.type === TransactionType.CREDIT && tx.source === TransactionSource.REWARD && tx.status === TransactionStatus.COMPLETED) {
+        entry.totalEarned += Number(tx.amount);
+      }
+      if (tx.type === TransactionType.DEBIT && tx.source === TransactionSource.WITHDRAWAL && tx.status === TransactionStatus.COMPLETED) {
+        entry.totalWithdrawn += Number(tx.amount);
+      }
+      sumsByWallet.set(tx.walletId, entry);
+    }
+
+    const items = pageWallets.map((w) => {
+      const user = ownersById.get(w.userId)!;
+      const sums = sumsByWallet.get(w.id) ?? { totalEarned: 0, totalWithdrawn: 0 };
+      return {
         id: w.id,
-        userId: w.user.id,
+        userId: user.id,
         balance: Number(w.balance),
-        totalEarned: Number((w as unknown as { totalEarned: string }).totalEarned ?? 0),
-        totalWithdrawn: Number((w as unknown as { totalWithdrawn: string }).totalWithdrawn ?? 0),
+        totalEarned: sums.totalEarned,
+        totalWithdrawn: sums.totalWithdrawn,
         user: {
-          id: w.user.id,
-          name: w.user.name,
-          mobileNumber: w.user.mobileNumber,
-          state: w.user.state,
-          district: w.user.district,
-          category: w.user.category,
-          role: w.user.role,
-          verificationStatus: (w.user as { verificationStatus: string }).verificationStatus,
-          createdAt: w.user.createdAt,
+          id: user.id,
+          name: user.name,
+          mobileNumber: user.mobileNumber,
+          state: user.state,
+          district: user.district,
+          category: user.category,
+          role: user.role,
+          verificationStatus: user.verificationStatus,
+          createdAt: user.createdAt,
         },
-      })),
+      };
+    });
+
+    return {
+      items,
       total,
       page,
       limit,
