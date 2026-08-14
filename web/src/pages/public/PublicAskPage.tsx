@@ -353,10 +353,10 @@ export function PublicAskPage() {
   if (submitted) {
     return (
       <div className="mx-auto max-w-lg pt-8">
-        <Card className="border-emerald-100 bg-gradient-to-br from-emerald-500/8 to-transparent">
+        <Card className="border-emerald-100 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-500/8 to-transparent">
           <CardContent className="flex flex-col items-center justify-center p-10 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 mb-4">
-              <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+              <CheckCircle2 className="h-9 w-9 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h2 className="text-xl font-bold text-foreground">{t('question.submitted')}</h2>
             <p className="mt-2 text-sm text-text-secondary max-w-sm">{t('question.successBody')}</p>
@@ -386,7 +386,7 @@ export function PublicAskPage() {
               <p className="text-sm font-semibold text-foreground">{duplicate.matchedQuestion}</p>
               {duplicate.matchedAnswer && (
                 <div className="mt-3 border-t border-amber-100 pt-3">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700">{t('question.duplicate.expertAnswer')}</p>
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 dark:text-emerald-300">{t('question.duplicate.expertAnswer')}</p>
                   <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{duplicate.matchedAnswer}</p>
                 </div>
               )}
@@ -482,7 +482,7 @@ export function PublicAskPage() {
                             key={d.value}
                             type="button"
                             onClick={() => toggleDomain(d.value)}
-                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${selected ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300'}`}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${selected ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700'}`}
                           >
                             {selected && <CheckCircle2 className="h-3.5 w-3.5" />}
                             {d.label}
@@ -559,7 +559,7 @@ export function PublicAskPage() {
         </Button>
         <div className="text-xs text-text-tertiary">
           {stats ? (
-            <span className={atLimit ? 'text-rose-600 font-semibold' : 'text-emerald-700 font-medium'}>
+            <span className={atLimit ? 'text-rose-600 font-semibold' : 'text-emerald-700 dark:text-emerald-300 font-medium'}>
               {atLimit ? t('question.dailyLimitIndicator') : t('question.dailyLeftToday', { remaining: stats.remainingToday, total: stats.dailyLimit })}
             </span>
           ) : '…'}

@@ -70,8 +70,8 @@ function NotificationRow({ item, onPress }: { item: Notification; onPress: () =>
       className={cn(
         'flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors',
         item.isRead
-          ? 'border-border-subtle bg-surface hover:border-emerald-200'
-          : 'border-emerald-200/70 bg-emerald-50/40 hover:border-emerald-300 dark:border-emerald-900/40 dark:bg-emerald-950/20',
+          ? 'border-border-subtle bg-surface hover:border-emerald-200 dark:hover:border-emerald-800'
+          : 'border-emerald-200/70 bg-emerald-50/40 hover:border-emerald-300 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:hover:border-emerald-700',
       )}
     >
       <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', bg)}>

@@ -100,7 +100,7 @@ function FilterPill({ label, active, onClick }: FilterPillProps) {
         'shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
         active
           ? 'border-primary bg-primary text-white'
-          : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300',
+          : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700',
       )}
     >
       {label}
@@ -380,7 +380,7 @@ export function PublicWalletPage() {
                   type="button"
                   onClick={onRefresh}
                   disabled={refreshing}
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 disabled:opacity-50"
                   aria-label="Refresh"
                 >
                   <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
@@ -491,7 +491,7 @@ export function PublicWalletPage() {
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-emerald-50 hover:text-emerald-700"
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
                       aria-label="About transactions"
                     >
                       <Info className="h-4 w-4" />
@@ -507,8 +507,8 @@ export function PublicWalletPage() {
                   className={cn(
                     'relative flex h-7 w-7 items-center justify-center rounded-md transition-colors',
                     showFilters || hasActiveFilters
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40'
-                      : 'text-text-tertiary hover:bg-emerald-50 hover:text-emerald-700',
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                      : 'text-text-tertiary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300',
                   )}
                   aria-label="Toggle filters"
                 >
@@ -742,7 +742,7 @@ export function PublicWalletPage() {
                         'flex w-full items-center gap-2.5 rounded-md border p-3 text-left transition-colors',
                         selectedPaymentDetailId === detail.id
                           ? 'border-primary bg-primary/8'
-                          : 'border-border-subtle hover:border-emerald-300',
+                          : 'border-border-subtle hover:border-emerald-300 dark:hover:border-emerald-700',
                       )}
                     >
                       {detail.payoutMethod === 'upi'

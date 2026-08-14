@@ -407,7 +407,7 @@ export function PublicPaymentMethodsPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
             aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />
