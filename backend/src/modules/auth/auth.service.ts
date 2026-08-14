@@ -309,10 +309,13 @@ export class AuthService {
     const isRegistered = user.name && user.name.trim().length > 0;
 
     if (!isRegistered) {
-      // First-time user — issue a short-lived temp registration token
+      // First-time user — issue a short-lived temp registration token.
+      // 1-hour expiry so users can take breaks during the multi-step wizard
+      // and resume where they left off (each Next click saves a draft to
+      // the user record; the frontend uses this token to authorize those saves).
       const tempToken = this.jwtService.sign(
         { sub: user.id, mobileNumber, type: 'registration' },
-        { expiresIn: '15m' },
+        { expiresIn: '1h' },
       );
       return { requiresRegistration: true, tempToken, role: user.role };
     }

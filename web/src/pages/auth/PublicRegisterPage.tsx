@@ -705,6 +705,7 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
 }
 
 function Step4({ form, errors, setField }: WizardFormStateProps) {
+  const [legalDialog, setLegalDialog] = useState<'terms' | 'privacy' | null>(null)
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
@@ -717,7 +718,25 @@ function Step4({ form, errors, setField }: WizardFormStateProps) {
       </div>
       <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-sm text-foreground">
         <input type="checkbox" className="mt-0.5 h-4 w-4 accent-emerald-500" checked={form.consentGiven} onChange={(e) => setField('consentGiven', e.target.checked)} />
-        <span>I agree that the information I provide will be used to answer my agriculture questions and improve services. I understand my mobile number will receive SMS notifications.</span>
+        <span>
+          I have read and agree to the{' '}
+          <button
+            type="button"
+            onClick={() => setLegalDialog('terms')}
+            className="font-bold text-primary underline-offset-2 hover:underline"
+          >
+            Terms of Service
+          </button>
+          {' and '}
+          <button
+            type="button"
+            onClick={() => setLegalDialog('privacy')}
+            className="font-bold text-primary underline-offset-2 hover:underline"
+          >
+            Privacy Policy
+          </button>
+          . I agree that the information I provide will be used to answer my agriculture questions and improve services, and I understand my mobile number will receive SMS notifications.
+        </span>
       </label>
       {errors.consentGiven && <p className="text-xs text-rose-600">{errors.consentGiven}</p>}
       <div className="rounded-lg border border-border-subtle bg-surface/50 p-4 text-xs text-text-secondary">
@@ -728,6 +747,7 @@ function Step4({ form, errors, setField }: WizardFormStateProps) {
           <li>You'll get a notification when verification completes.</li>
         </ul>
       </div>
+      <LegalDialog type={legalDialog} onOpenChange={(v) => !v && setLegalDialog(null)} />
     </div>
   )
 }
