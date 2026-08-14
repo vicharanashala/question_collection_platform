@@ -65,7 +65,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   }
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-emerald-100 bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-emerald-900/40 dark:bg-surface/80">
+    <header className="relative z-30 flex h-14 items-center justify-between border-b border-emerald-100 bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-emerald-900/40 dark:bg-surface/80">
       <div className="flex items-center gap-2">
         {onMobileMenuToggle && (
           <button onClick={onMobileMenuToggle} className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 md:hidden" aria-label={t('chrome.openMenu')}>
