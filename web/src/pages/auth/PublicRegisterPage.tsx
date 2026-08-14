@@ -28,7 +28,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion, FileText, ChevronDown, Shield } from 'lucide-react'
+import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion, FileText, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { LANGUAGES, USER_CATEGORIES, GENDER_OPTIONS, SUPPORTED_STATES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS, SEASONS } from '@/constants/public'
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
@@ -190,38 +190,8 @@ interface MobileStageProps {
   handleSendOtp: (e: React.FormEvent) => void
 }
 
-// ─── Terms accordion (used inside MobileStage) ─────────────────────────────
-// Collapsible list of TERMS_SECTIONS so the user can read the ToS inline
-// before agreeing. Uses native <details>/<summary> for accessibility (built-in
-// keyboard + screen-reader support, no extra deps) and avoids the unmount-
-// /remount churn that comes from a stateful controlled accordion.
-function TermsAccordion() {
-  return (
-    <div className="max-h-[180px] overflow-y-auto rounded-lg border border-border-subtle bg-surface-variant/40">
-      <div className="divide-y divide-border-subtle">
-        {TERMS_SECTIONS.map(({ id, title, body }) => (
-          <details key={id} className="group">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold text-foreground hover:bg-surface-variant/70 [&::-webkit-details-marker]:hidden">
-              <span className="flex flex-1 items-center gap-2">
-                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                  {id}
-                </span>
-                <span className="leading-tight">{title}</span>
-              </span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-tertiary transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="border-t border-border-subtle bg-surface/60 px-3 py-2">
-              <p className="text-[11px] leading-relaxed text-text-secondary">{body}</p>
-            </div>
-          </details>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accepted, setAccepted, handleSendOtp }: MobileStageProps) {
-  const [showPolicy, setShowPolicy] = useState(false)
+  const [legalDialog, setLegalDialog] = useState<'terms' | 'privacy' | null>(null)
   const isValidMobile = gateMobile.length === 10
 
   return (
@@ -258,29 +228,6 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
           <p className="text-xs text-text-secondary">Standard SMS rates may apply.</p>
         </div>
 
-        {/* Terms & Conditions — read + agree before sending OTP */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <FileText className="h-4 w-4 text-emerald-700" />
-              <h3 className="text-sm font-semibold text-foreground">Terms &amp; Conditions</h3>
-            </div>
-            <span className="text-[11px] text-text-tertiary">
-              {TERMS_SECTIONS.length} sections
-            </span>
-          </div>
-          <TermsAccordion />
-          <button
-            type="button"
-            onClick={() => setShowPolicy(true)}
-            className="mx-auto flex items-center justify-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-          >
-            <Shield className="h-3.5 w-3.5" />
-            Read our Privacy Policy →
-          </button>
-        </div>
-
-        {/* Consent checkbox */}
         <label
           className={cn(
             'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
@@ -298,8 +245,22 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
             data-testid="terms-consent-checkbox"
           />
           <span className="text-xs leading-relaxed text-foreground">
-            I have read and agree to the <span className="font-bold">Terms of Service</span> and{' '}
-            <span className="font-bold">Privacy Policy</span>
+            I have read and agree to the{" "}
+            <button
+              type="button"
+              onClick={() => setLegalDialog('terms')}
+              className="font-bold text-primary underline-offset-2 hover:underline"
+            >
+              Terms of Service
+            </button>
+            {' and '}
+            <button
+              type="button"
+              onClick={() => setLegalDialog('privacy')}
+              className="font-bold text-primary underline-offset-2 hover:underline"
+            >
+              Privacy Policy
+            </button>
           </span>
         </label>
 
@@ -329,8 +290,57 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
           </Link>
         </div>
       </form>
-      <PrivacyPolicyDialog open={showPolicy} onOpenChange={setShowPolicy} />
+      <LegalDialog type={legalDialog} onOpenChange={(v) => !v && setLegalDialog(null)} />
     </div>
+  )
+}
+
+// ─── Legal dialog (Terms of Service / Privacy Policy) ─────────────────────
+// Modal that opens when the user clicks either "Terms of Service" or
+// "Privacy Policy" inside the consent checkbox label on the mobile stage.
+// The same component handles both legal documents — content + icon are
+// chosen by the `type` prop so the wording, icon, and title stay in sync
+// with whatever link was clicked. Uses the shared `Dialog` component for
+// overlay + a focus-trapped scrollable body.
+function LegalDialog({
+  type,
+  onOpenChange,
+}: {
+  type: 'terms' | 'privacy' | null
+  onOpenChange: (v: boolean) => void
+}) {
+  const open = type !== null
+  const isTerms = type === 'terms'
+  const sections = isTerms ? TERMS_SECTIONS : PRIVACY_POLICY_SECTIONS
+  const title = isTerms ? 'Terms of Service' : 'Privacy Policy'
+  const Icon = isTerms ? FileText : Shield
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0">
+        <DialogHeader className="px-6 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Icon className="h-4 w-4 text-emerald-600" />
+            {title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[calc(85vh-88px)] overflow-y-auto px-6 py-4">
+          <ol className="space-y-4">
+            {sections.map(({ id, title: sectionTitle, body }) => (
+              <li key={id} className="space-y-1">
+                <h3 className="text-sm font-bold text-foreground">
+                  <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 align-middle dark:bg-emerald-500/20 dark:text-emerald-300">
+                    {id}
+                  </span>
+                  {sectionTitle}
+                </h3>
+                <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -443,40 +453,6 @@ function OtpStage({
         </div>
       </form>
     </div>
-  )
-}
-
-// ─── Privacy Policy dialog ─────────────────────────────────────────────────
-// Modal that displays the inlined PRIVACY_POLICY_SECTIONS content. Opened
-// from the Terms stage via the "Read our Privacy Policy →" link. Uses the
-// shared `Dialog` component for overlay + a focus-trapped scrollable body.
-function PrivacyPolicyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0">
-        <DialogHeader className="border-b border-border-subtle px-6 py-4">
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            Privacy Policy
-          </DialogTitle>
-          <p className="mt-1 text-xs text-text-secondary">
-            Annam.Ai — AnnaDatha Platform · Effective Date: 30 June 2026
-          </p>
-        </DialogHeader>
-        <div className="max-h-[calc(85vh-88px)] overflow-y-auto px-6 py-4">
-          <ol className="space-y-4">
-            {PRIVACY_POLICY_SECTIONS.map(({ id, title, body }) => (
-              <li key={id} className="space-y-1">
-                <h3 className="text-sm font-bold text-foreground">
-                  {id}. {title}
-                </h3>
-                <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </DialogContent>
-    </Dialog>
   )
 }
 
