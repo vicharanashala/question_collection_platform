@@ -65,17 +65,17 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   }
 
   return (
-    <header className="relative z-30 flex h-14 items-center justify-between border-b border-emerald-100 bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-emerald-900/40 dark:bg-surface/80">
+    <header className="relative z-30 flex h-14 items-center justify-between border-b border-border-subtle bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-border-subtle dark:bg-surface/80">
       <div className="flex items-center gap-2">
         {onMobileMenuToggle && (
-          <button onClick={onMobileMenuToggle} className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 md:hidden" aria-label={t('chrome.openMenu')}>
+          <button onClick={onMobileMenuToggle} className="flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-variant hover:text-foreground md:hidden" aria-label={t('chrome.openMenu')}>
             <Menu className="h-5 w-5" />
           </button>
         )}
         <h1 className="text-base font-bold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate('/public/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" aria-label="Notifications" title="Notifications">
+        <button onClick={() => navigate('/public/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label="Notifications" title="Notifications">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-0.5 text-[9px] font-bold leading-none text-white">
@@ -83,19 +83,19 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
             </span>
           )}
         </button>
-        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" aria-label="Change language" title="Change language">
+        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label="Change language" title="Change language">
           <Languages className="h-4 w-4" />
         </button>
-        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
+        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
-        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
+        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
           <Trophy className="h-4 w-4" />
         </button>
         <div className="h-6 w-px bg-border-subtle" />
         <div className="relative" ref={menuRef}>
-          <button onClick={() => setProfileOpen((o) => !o)} className="flex items-center gap-2 rounded-md p-1.5 hover:bg-emerald-50 transition-colors dark:hover:bg-emerald-950/40">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">{initials}</div>
+          <button onClick={() => setProfileOpen((o) => !o)} className="flex items-center gap-2 rounded-md p-1.5 hover:bg-surface-variant transition-colors">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{initials}</div>
             {user?.name && <span className="text-sm font-medium text-foreground hidden sm:block">{user.name}</span>}
           </button>
           {profileOpen && (

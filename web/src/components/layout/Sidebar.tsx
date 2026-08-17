@@ -17,6 +17,7 @@ ScrollText,
   HelpCircle,
   Send,
 } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
@@ -53,8 +54,8 @@ export function Sidebar() {
     <aside className="flex h-full w-56 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo / Brand */}
       <div className="flex h-14 items-center border-b border-sidebar-border px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-          <span className="text-sm font-black text-sidebar-primary-foreground">QP</span>
+        <div className="flex h-8 w-8 items-center justify-center">
+          <BrandLogo className="h-8 w-8" />
         </div>
         <div className="ml-3">
           <p className="text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>

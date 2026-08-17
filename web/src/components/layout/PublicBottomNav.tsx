@@ -29,7 +29,7 @@ export function PublicBottomNav() {
   return (
     <nav
       aria-label="Public navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-emerald-100 bg-white/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur dark:border-emerald-900/40 dark:bg-surface/95 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-white/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur dark:border-border-subtle dark:bg-surface/95 md:hidden"
     >
       <div className="mx-auto flex max-w-2xl items-stretch justify-around pb-[env(safe-area-inset-bottom)]">
         {tabs.map(({ to, label, icon: Icon, end, primary }) => {
@@ -47,8 +47,8 @@ export function PublicBottomNav() {
                   className={cn(
                     'flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-colors',
                     isActive
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-emerald-500 text-white hover:bg-emerald-600',
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90',
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -56,7 +56,7 @@ export function PublicBottomNav() {
                 <span
                   className={cn(
                     'mt-0.5 text-[10px] font-semibold',
-                    isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-text-tertiary',
+                    isActive ? 'text-primary' : 'text-text-tertiary',
                   )}
                 >
                   {label}
@@ -73,8 +73,8 @@ export function PublicBottomNav() {
               className={cn(
                 'flex min-w-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors',
                 isActive
-                  ? 'text-emerald-700 dark:text-emerald-400'
-                  : 'text-text-tertiary hover:text-emerald-700 dark:hover:text-emerald-400',
+                  ? 'text-primary'
+                  : 'text-text-tertiary hover:text-primary',
               )}
             >
               <Icon className="h-5 w-5" />

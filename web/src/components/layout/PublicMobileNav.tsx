@@ -1,4 +1,5 @@
-import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut, Sprout, Languages } from 'lucide-react'
+import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut, Languages } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
@@ -55,10 +56,10 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
         <div
           className={`absolute left-0 top-0 h-full w-72 bg-white shadow-xl transition-transform dark:bg-surface ${open ? 'translate-x-0' : '-translate-x-full'}`}
         >
-          <div className="flex h-14 items-center justify-between border-b border-emerald-100 px-4 dark:border-emerald-900/40">
+          <div className="flex h-14 items-center justify-between border-b border-border-subtle px-4 dark:border-border-subtle">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700">
-                <Sprout className="h-5 w-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center">
+                <BrandLogo className="h-9 w-9" />
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
@@ -80,8 +81,8 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-emerald-500 text-white'
-                      : 'text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-text-secondary hover:bg-surface-variant hover:text-foreground'
                   }`
                 }
               >
@@ -91,9 +92,9 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
             ))}
           </nav>
 
-          <div className="absolute bottom-0 left-0 right-0 border-t border-emerald-100 p-3 dark:border-emerald-900/40">
-            <div className="mb-2 flex items-center gap-2 rounded-md bg-emerald-50/60 px-3 py-2 dark:bg-emerald-950/30">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+          <div className="absolute bottom-0 left-0 right-0 border-t border-border-subtle p-3 dark:border-border-subtle">
+            <div className="mb-2 flex items-center gap-2 rounded-md bg-surface-variant px-3 py-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                 {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -103,7 +104,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
             </div>
             <button
               onClick={() => setLanguageOpen(true)}
-              className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 transition-colors dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
+              className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors"
             >
               <Languages className="h-4 w-4" />
               <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>

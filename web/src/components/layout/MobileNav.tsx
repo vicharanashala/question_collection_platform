@@ -16,6 +16,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { BrandLogo } from '@/components/BrandLogo'
 
 const navItems = [
   { to: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
@@ -61,8 +62,8 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
         {/* Drawer header */}
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-              <span className="text-sm font-black text-sidebar-primary-foreground">QP</span>
+            <div className="flex h-8 w-8 items-center justify-center">
+              <BrandLogo className="h-8 w-8" />
             </div>
             <div>
               <p className="text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>

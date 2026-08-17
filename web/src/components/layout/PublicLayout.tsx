@@ -18,7 +18,7 @@ export function PublicLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-emerald-50/60 via-background to-background dark:from-emerald-950/30">
+    <div className="flex h-screen w-screen overflow-hidden bg-background">
       {/* Desktop sidebar (hidden on mobile) */}
       <div className="hidden md:flex h-full shrink-0">
         <PublicSidebar />

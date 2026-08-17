@@ -10,8 +10,8 @@ import {
   User,
   Wallet,
   LogOut,
-  Sprout,
 } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
@@ -32,11 +32,11 @@ export function PublicSidebar() {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   return (
-    <aside className="flex h-full w-56 flex-col border-r border-emerald-100 bg-white dark:border-emerald-900/40 dark:bg-surface">
+    <aside className="flex h-full w-56 flex-col border-r border-border-subtle bg-white dark:border-border-subtle dark:bg-surface">
       {/* Logo / Brand */}
-      <div className="flex h-14 items-center gap-2.5 border-b border-emerald-100 px-4 dark:border-emerald-900/40">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-sm">
-          <Sprout className="h-5 w-5 text-white" />
+      <div className="flex h-14 items-center gap-2.5 border-b border-border-subtle px-4 dark:border-border-subtle">
+        <div className="flex h-9 w-9 items-center justify-center">
+          <BrandLogo className="h-9 w-9" />
         </div>
         <div>
           <p className="text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
@@ -55,8 +55,8 @@ export function PublicSidebar() {
               cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-emerald-500 text-white shadow-sm'
-                  : 'text-text-secondary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300',
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-text-secondary hover:bg-surface-variant hover:text-foreground',
               )
             }
           >
@@ -67,9 +67,9 @@ export function PublicSidebar() {
       </nav>
 
       {/* User + Logout */}
-      <div className="border-t border-emerald-100 p-3 dark:border-emerald-900/40">
-        <div className="mb-2 flex items-center gap-2 rounded-md bg-emerald-50/60 px-3 py-2 dark:bg-emerald-950/30">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+      <div className="border-t border-border-subtle p-3 dark:border-border-subtle">
+        <div className="mb-2 flex items-center gap-2 rounded-md bg-surface-variant px-3 py-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">

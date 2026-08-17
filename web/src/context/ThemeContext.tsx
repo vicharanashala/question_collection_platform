@@ -2,10 +2,20 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 
 type Theme = 'light' | 'dark'
 
-// ─── Annam.ai theme colors ────────────────────────────────────────────────────
+// ─── Theme colors ─────────────────────────────────────────────────────────────
 // These mirror the CSS custom-property values in index.css :root / .dark so
 // any component reading from `useTheme().colors` (e.g. inline-styled chart
 // elements) sees the same hex values as the Tailwind classes.
+//
+// Color tokens (per user direction — applied 2026-08-17, revised 2026-08-17 to #006239):
+//   • Background (dark)         #121212  — Material dark surface, neutral
+//   • Background (light)        #FAFAFA  — page bg
+//   • Primary / highlight       #006239  — saturated dark forest green (active tab indicator, primary actions)
+//   • Success (semantic)        #10B981  — Tailwind emerald-500, vibrant "OK" indicator
+//   • Chart palette             #10B981 → #34D399 — emerald gradient for chart bars
+//   • Hero card bg (light)      #006239  — saturated dark forest (matches primary)
+//   • Hero card bg (dark)       #14403A  — dark teal-emerald (subdued hero, distinct from primary)
+//   • Hero card fg (dark)       #D6F2EB  — pale mint
 
 const lightColors = {
   background: '#FAFAFA',
@@ -14,7 +24,7 @@ const lightColors = {
   cardForeground: '#171717',
   popover: '#FFFFFF',
   popoverForeground: '#171717',
-  primary: '#22C55E',
+  primary: '#006239',             // saturated dark forest green — active tab / primary highlight
   primaryForeground: '#FFFFFF',
   secondary: '#F5F5F5',
   secondaryForeground: '#171717',
@@ -26,34 +36,34 @@ const lightColors = {
   destructiveForeground: '#FFFFFF',
   border: '#E5E5E5',
   input: '#F5F5F5',
-  ring: '#22C55E',
-  success: '#22C55E',
+  ring: '#006239',                // matches primary
+  success: '#10B981',             // vibrant emerald — independent of primary
   warning: '#F59E0B',
   error: '#EF4444',
   surface: '#FFFFFF',
   surfaceVariant: '#F5F5F5',
-  heroBg: '#22C55E',
+  heroBg: '#006239',              // dark forest — matches primary
   heroFg: '#FFFFFF',
   text: '#171717',
   textSecondary: '#737373',
   textTertiary: '#999999',
   borderSubtle: '#E5E5E5',
-  focus: '#22C55E',
-  chart1: '#22C55E',
+  focus: '#006239',               // matches primary
+  chart1: '#10B981',              // vibrant emerald for chart legibility
   chart2: '#3B82F6',
   chart3: '#EF4444',
   chart4: '#F59E0B',
-  chart5: '#24D366',
+  chart5: '#34D399',
 }
 
 const darkColors = {
-  background: '#0A0A0A',
+  background: '#121212',
   foreground: '#FAFAFA',
   card: '#171717',
   cardForeground: '#FAFAFA',
   popover: '#171717',
   popoverForeground: '#FAFAFA',
-  primary: '#22C55E',
+  primary: '#006239',             // saturated dark forest green — subtle elevation over #121212
   primaryForeground: '#FFFFFF',
   secondary: '#1F1F1F',
   secondaryForeground: '#FAFAFA',
@@ -65,24 +75,24 @@ const darkColors = {
   destructiveForeground: '#FFFFFF',
   border: '#262626',
   input: '#1F1F1F',
-  ring: '#22C55E',
-  success: '#22C55E',
+  ring: '#006239',                // matches primary
+  success: '#10B981',             // vibrant emerald — independent of primary
   warning: '#F59E0B',
   error: '#EF4444',
   surface: '#171717',
   surfaceVariant: '#212121',
-  heroBg: '#1A4D2E',
-  heroFg: '#E0F7E9',
+  heroBg: '#14403A',              // dark teal — subdued hero, distinct from primary
+  heroFg: '#D6F2EB',
   text: '#FAFAFA',
   textSecondary: '#A3A3A3',
   textTertiary: '#737373',
   borderSubtle: '#262626',
-  focus: '#22C55E',
-  chart1: '#22C55E',
+  focus: '#006239',               // matches primary
+  chart1: '#10B981',              // vibrant emerald for chart legibility
   chart2: '#3B82F6',
   chart3: '#EF4444',
   chart4: '#F59E0B',
-  chart5: '#24D366',
+  chart5: '#34D399',
 }
 
 export type ThemeColors = typeof lightColors

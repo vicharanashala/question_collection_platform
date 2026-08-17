@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { ShieldCheck, Loader2, ArrowLeft, CheckCircle, Smartphone, Sprout } from 'lucide-react'
+import { Loader2, ArrowLeft, CheckCircle, Smartphone, Sprout } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { toast } from 'sonner'
 
 // ─── Resend countdown ──────────────────────────────────────────────────────
@@ -188,9 +189,9 @@ export function LoginPage() {
       {/* Login card */}
       <Card className="relative w-full max-w-sm shadow-xl border-border-subtle">
         <CardHeader className="pb-4 text-center">
-          {/* Logo mark — circular bright-green gradient (matches ajrasakha-desk.annam.ai/auth) */}
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30 ring-4 ring-emerald-500/20">
-            <ShieldCheck className="h-8 w-8 text-white" />
+          {/* Brand mark — AnnaDatha logo */}
+          <div className="mx-auto mb-5 h-16 w-16 drop-shadow-[0_4px_12px_rgba(0,98,57,0.35)]">
+            <BrandLogo className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl font-extrabold tracking-tight text-primary">
             Login Portal

@@ -28,8 +28,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, ShieldCheck, User as UserIcon, Smartphone, MailQuestion, FileText, Shield } from 'lucide-react'
+import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, User as UserIcon, Smartphone, MailQuestion, FileText, Shield } from 'lucide-react'
 import { toast } from 'sonner'
+import { BrandLogo } from '@/components/BrandLogo'
 import { LANGUAGES, USER_CATEGORIES, GENDER_OPTIONS, SUPPORTED_STATES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS, SEASONS } from '@/constants/public'
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
 import type { LgdDistrict, LgdKvk, LgdSubDistrict, LgdVillage } from '@/api/client'
@@ -1175,8 +1176,8 @@ export function PublicRegisterPage() {
     <div className="auth-page dark min-h-screen bg-background py-6 px-4">
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-col items-center mb-6">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30 mb-2 ring-4 ring-emerald-500/20">
-            <ShieldCheck className="h-7 w-7 text-white" />
+          <div className="h-14 w-14 mb-2 drop-shadow-[0_4px_12px_rgba(0,98,57,0.35)]">
+            <BrandLogo className="h-14 w-14" />
           </div>
           <h1 className="text-2xl font-extrabold text-primary">AnnaDatha</h1>
           <p className="text-sm text-text-secondary">

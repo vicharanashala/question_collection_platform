@@ -98,7 +98,7 @@ export function PublicQuestionsPage() {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {STATUS_TABS.map((s) => (
-          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors', status === s.key ? 'bg-emerald-500 text-white' : 'border border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700')}>
+          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors', status === s.key ? 'bg-primary text-primary-foreground' : 'border border-border-subtle bg-surface text-text-secondary hover:border-primary/40 dark:hover:border-primary/60')}>
             {t(s.labelKey)}
           </button>
         ))}
