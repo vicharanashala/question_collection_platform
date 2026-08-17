@@ -76,7 +76,7 @@ export function Sidebar() {
                 cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 )
               }
@@ -91,7 +91,7 @@ export function Sidebar() {
       {/* User + Logout */}
       <div className="border-t border-sidebar-border p-3">
         <div className="mb-2 flex items-center gap-2 rounded-md px-3 py-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">

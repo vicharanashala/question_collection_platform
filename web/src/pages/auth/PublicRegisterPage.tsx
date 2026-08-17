@@ -1172,7 +1172,7 @@ export function PublicRegisterPage() {
   // wizard owns its own step labels.
 
   return (
-    <div className="auth-page dark min-h-screen bg-gradient-to-br from-emerald-950/60 via-background to-emerald-950/40 py-6 px-4">
+    <div className="auth-page dark min-h-screen bg-background py-6 px-4">
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-col items-center mb-6">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/30 mb-2 ring-4 ring-emerald-500/20">

@@ -477,7 +477,7 @@ setUser(r.user as UserType)
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div className={cn(
-              'flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-xl font-black text-white', avatarBg
+              'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-black text-white ring-2 ring-primary/20', avatarBg
             )}>
               {initials}
             </div>
