@@ -32,6 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
   held:       'bg-amber-500 text-white',
   approved:   'bg-success text-white',
   rejected:   'bg-destructive text-white',
+  moved_to_final: 'bg-[#8A2BE2] text-white'
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -39,6 +40,7 @@ const STATUS_LABELS: Record<string, string> = {
   held:       'On Hold',
   approved:   'Approved',
   rejected:   'Rejected',
+  moved_to_final: 'Published'
 }
 
 const SEASON_LABEL: Record<string, string> = {
