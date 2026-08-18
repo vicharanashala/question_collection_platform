@@ -3,14 +3,12 @@ import { curatorApi, getErrorMessage } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn, formatDate } from '@/lib/utils'
 import {
   CheckCircle, XCircle, PauseCircle,
-  Search,
   Clock, Star,
-  MapPin, Wheat, Film, Eye, Hash,
+  MapPin, Wheat, Film, Hash,
   User, ThumbsUp, Ban, ListFilter,
   Globe, X, Mic,
   CopyCheck,
@@ -413,7 +411,6 @@ function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, lo
 // ─── Table columns ────────────────────────────────────────────────────────────
 
 function buildColumns(
-  page: number,
   onCheckDuplicate: (q: Question) => void,
   checkDuplicateLoadingId: string | null,
 ): ColumnDef<Question>[] {
@@ -752,7 +749,7 @@ export function ReviewsPage() {
   }
 
   const totalPages = Math.ceil(total / limit)
-  const columns = buildColumns(page, checkDuplicateAndShowModal, checkDuplicateLoadingId)
+  const columns = buildColumns(checkDuplicateAndShowModal, checkDuplicateLoadingId)
   const emptyMessage = search || statusFilter ? 'No questions match your filters' : 'No questions in queue'
 
   return (

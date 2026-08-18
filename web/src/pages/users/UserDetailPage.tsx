@@ -23,7 +23,7 @@ import {
   Wallet, CreditCard, Building2, Smartphone, Leaf,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { User as UserType, Question, QuestionStatus, AuditLogEntry, PaymentDetail } from '@/types'
+import type { User as UserType, Question, QuestionStatus, AuditLogEntry, PaymentDetail, AuditEntityHistoryResponse } from '@/types'
 import { auditApi } from '@/api/client'
 
 // ─── Status badge helpers ──────────────────────────────────────────────────────
@@ -47,6 +47,7 @@ function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
     held:         { label: 'Held',          dot: 'bg-orange-400', cls: 'text-orange-500' },
     approved:     { label: 'Approved',     dot: 'bg-emerald-500',  cls: 'text-emerald-600' },
     rejected:     { label: 'Rejected',     dot: 'bg-red-600', cls: 'text-red-600' },
+    moved_to_final: {label: "Published", dot: 'bg-purple-500', cls: 'text-purple-500'}
   }
   const { label, dot, cls } = map[status] ?? { label: status, dot: 'bg-muted', cls: 'text-muted-foreground' }
   return (

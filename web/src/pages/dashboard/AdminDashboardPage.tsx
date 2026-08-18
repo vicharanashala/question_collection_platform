@@ -14,14 +14,13 @@ import { TreemapChartComponent } from '@/components/charts/TreemapChartComponent
 import { RankedBarList } from '@/components/charts/RankedBarList'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatINR } from '@/lib/utils'
-import { isAdmin } from '@/lib/roles'
+// import { isAdmin } from '@/lib/roles'
 import { format, parseISO } from 'date-fns'
 import {
-  Users, MessageSquare, CheckCircle, AlertTriangle, Ban, CreditCard,
+  Users, MessageSquare, CheckCircle, AlertTriangle, Ban,
   TrendingUp, TrendingDown, Minus, ArrowRight, Download,
   ShieldCheck, Clock, Activity, BarChart3, PieChart,
   IndianRupee, MapPin, Sparkles, DownloadCloud,
-  Wallet,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminStats, TimeRange, AnalyticsDashboard, ExportParams } from '@/types'
@@ -265,10 +264,10 @@ export function AdminDashboardPage() {
   }))
 
   // Domain breakdown
-  const domainBarData = (qAnalytics?.domainBreakdown ?? []).slice(0, 8).map((d_) => ({
-    name: d_.domain,
-    value: d_.count,
-  }))
+  // const domainBarData = (qAnalytics?.domainBreakdown ?? []).slice(0, 8).map((d_) => ({
+  //   name: d_.domain,
+  //   value: d_.count,
+  // }))
 
   if (loading) return <DashboardSkeleton />
 

@@ -11,11 +11,11 @@ import {
   Loader2, Search, RefreshCw, MapPin, Bookmark,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { FinalQuestion, DistributorStats } from '@/types'
+import type { FinalQuestion } from '@/types'
 import { Pagination } from './Pagination'
 
 export function DistributionsList() {
-  const [stats, setStats] = useState<DistributorStats | null>(null)
+  // const [stats, setStats] = useState<DistributorStats | null>(null)
   const [indianStates, setIndianStates] = useState<string[]>([])
   const [distributionState, setDistributionState] = useState<string>('')
   const [search, setSearch] = useState('')
@@ -29,8 +29,8 @@ export function DistributionsList() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [s, st, list] = await Promise.all([
-        distributor.getStats(),
+      const [st, list] = await Promise.all([
+        // distributor.getStats(),
         distributor.listIndianStates(),
         distributor.listDistributions({
           page, limit,
@@ -38,7 +38,7 @@ export function DistributionsList() {
           ...(search ? { search } : {}),
         }),
       ])
-      setStats(s)
+      // setStats(s)
       setIndianStates(st.states)
       setItems(list.items)
       setTotal(list.total)

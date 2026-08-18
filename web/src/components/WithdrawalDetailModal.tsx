@@ -13,10 +13,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { ReasonDialog } from '@/components/ReasonDialog'
 import {
-  CheckCircle, XCircle, User, Phone, CreditCard, Wallet,
-  CalendarDays, Building2, Hash, ArrowRightLeft, ArrowDownCircle,
-  ArrowUpCircle, ShieldCheck, MapPin, Banknote, Copy, CheckCheck,
-  AlertTriangle, RefreshCw, Clock, BadgeCheck, ScrollText,
+  CheckCircle, XCircle, User, Wallet,
+  Building2, Hash, ArrowRightLeft, ArrowDownCircle,
+  ArrowUpCircle, ShieldCheck, Banknote, Copy, CheckCheck,
+  AlertTriangle, RefreshCw, BadgeCheck, ScrollText,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -296,7 +296,7 @@ export function WithdrawalDetailModal({
 
             {isLoading ? (
               <div className="space-y-3 py-2">
-                {[4, 3, 5, 3].map((h, i) => (
+                {[4, 3, 5, 3].map((_,i) => (
                   <Skeleton key={i} className="h-12 w-full rounded-xl" />
                 ))}
               </div>
@@ -309,7 +309,7 @@ export function WithdrawalDetailModal({
                     <Field label="Full Name"     value={w.user?.name} />
                     <Field label="Mobile"        value={w.user?.mobileNumber} />
                     <Field label="State"         value={w.user?.state} />
-                    <Field label="Category"      value={w.user?.category} />
+                    {/* <Field label="Category"      value={w.user?.category} /> */}
                   </div>
                 </Section>
 
@@ -351,7 +351,7 @@ export function WithdrawalDetailModal({
                 <Section label="Payout Details" icon={Wallet}>
                   {hasPayoutDetails ? (
                     <div className="grid grid-cols-2 gap-3">
-                      {payoutFields.map(({ icon: Icon, label, value }) => (
+                      {payoutFields.map(({label, value }) => (
                         <div key={label} className="col-span-1">
                           <p className="text-xs text-muted-foreground mb-1">{label}</p>
                           <Copyable value={value} />

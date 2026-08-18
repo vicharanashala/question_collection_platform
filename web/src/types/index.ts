@@ -211,7 +211,6 @@ export interface PaymentLogEntry {
   pinelabsTransactionId: string | null
   razorpayPayoutId: string | null
   utrNumber: string | null
-  razorpayPayoutId: string | null
   status: 'initiated' | 'success' | 'failed' | 'pending'
   errorCode: string | null
   errorMessage: string | null

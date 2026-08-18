@@ -2,13 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notificationApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn, formatDate } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import {
   Bell, BellOff, CheckCheck, MessageSquare,
   CheckCircle, XCircle, PauseCircle, Coins,
-  CreditCard, AlertTriangle, ShieldOff, Ban,
+  AlertTriangle, ShieldOff, Ban,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Notification } from '@/types'

@@ -31,9 +31,9 @@ import type {
   AuditEntityHistoryResponse,
   AuditUsersByRoleResponse,
   Report,
-  ReportReply,
   FinalQuestion,
   DistributorStats,
+  AuditLogQuery,
 } from '@/types'
 import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
@@ -350,7 +350,7 @@ export const adminApi = {
     )
   },
 
-  getUserDetail: (userId: string) =>
+  getUserDetail: (userId: string | undefined) =>
     request<{ user: User; questions: Question[]; paymentDetails: import('@/types').PaymentDetail[] }>(
       `/admin/users/${userId}`,
       {}, false,
@@ -726,16 +726,30 @@ export const walletApi = {
   },
 
   /** Recent wallet transactions for the authenticated user. */
+  // getTransactions: (params: { page?: number; limit?: number } = {}) => {
+  //   const qs = new URLSearchParams(
+  //     Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+  //   ).toString()
+  //   return request<{ transactions: Transaction[]; total: number }>(
+  //     `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
+  //     {},
+  //     false,
+  //   )
+  // },
+
   getTransactions: (params: { page?: number; limit?: number } = {}) => {
-    const qs = new URLSearchParams(
-      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
-    ).toString()
-    return request<{ transactions: Transaction[]; total: number }>(
-      `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
-      {},
-      false,
-    )
-  },
+  const qs = new URLSearchParams(
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined)
+      .map(([key, value]) => [key, String(value)]),
+  ).toString()
+
+  return request<{ transactions: Transaction[]; total: number }>(
+    `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
+    {},
+    false,
+  )
+},
 
   /** Wallet configuration (min withdrawal amount, razorpay key id, …). */
   getWalletConfig: () =>
@@ -783,13 +797,31 @@ export const walletApi = {
 // ─── Notifications API ─────────────────────────────────────────────────────
 
 export const notificationApi = {
+  // getNotifications: (params: { page?: number; limit?: number } = {}) => {
+  //   const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+  //   const qs = new URLSearchParams(p).toString()
+  //   return request<{ notifications: Notification[]; unread: number; total: number }>(
+  //     `/users/me/notifications${qs ? `?${qs}` : ''}`,
+  //   )
+  // },
+
   getNotifications: (params: { page?: number; limit?: number } = {}) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
-    const qs = new URLSearchParams(p).toString()
-    return request<{ notifications: Notification[]; unread: number; total: number }>(
-      `/users/me/notifications${qs ? `?${qs}` : ''}`,
-    )
-  },
+  const p = Object.fromEntries(
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined)
+      .map(([key, value]) => [key, String(value)]),
+  ) as Record<string, string>
+
+  const qs = new URLSearchParams(p).toString()
+
+  return request<{
+    notifications: Notification[]
+    unread: number
+    total: number
+  }>(
+    `/users/me/notifications${qs ? `?${qs}` : ''}`,
+  )
+},
 
   markRead: (id: string) =>
     request<void>(`/users/me/notifications/${id}/read`, { method: 'PATCH' }, false)
@@ -872,7 +904,7 @@ export const cache = { invalidate: invalidateCache }
 
 // ─── Audit API (Task 19) ────────────────────────────────────────────────────────
 
-function buildAuditQS(p: Record<string, string | number | undefined | string[]>): string {
+function buildAuditQS(p: AuditLogQuery): string {
   const sp = new URLSearchParams()
   for (const [k, v] of Object.entries(p)) {
     if (v === undefined) continue
@@ -886,8 +918,8 @@ function buildAuditQS(p: Record<string, string | number | undefined | string[]>)
 }
 
 export const auditApi = {
-  getAuditLogs: (params: Record<string, string | number | undefined | string[]> = {}) => {
-    const qs = buildAuditQS(params as Record<string, string | number | undefined | string[]>)
+  getAuditLogs: (params: AuditLogQuery = {}) => {
+    const qs = buildAuditQS(params)
     return request<AuditLogsResponse>(`/admin/audit-logs${qs ? `?${qs}` : ''}`, {}, false)
   },
 
@@ -1022,11 +1054,27 @@ export const reportsApi = {
 
 export const faqApi = {
   /** User-facing: visible FAQs only, optionally filtered */
+  // getVisible: (filters?: { category?: string }) => {
+  //   const params: Record<string, string> = {}
+  //   if (filters?.category) params.category = filters.category
+  //   return request<Faq[]>('/faqs', { params }, false)
+  // },
+
   getVisible: (filters?: { category?: string }) => {
-    const params: Record<string, string> = {}
-    if (filters?.category) params.category = filters.category
-    return request<Faq[]>('/faqs', { params }, false)
-  },
+  const params = new URLSearchParams()
+
+  if (filters?.category) {
+    params.set('category', filters.category)
+  }
+
+  const qs = params.toString()
+
+  return request<Faq[]>(
+    `/faqs${qs ? `?${qs}` : ''}`,
+    {},
+    false,
+  )
+},
 
   /** Admin: paginated FAQ list */
   getAll: (filters?: {
