@@ -95,7 +95,7 @@ function RootGate({ children }: { children: React.ReactNode }) {
     // `state.mobileNumber` — let them straight into the wizard.
     // Everyone else must enter the gating flow at /public/register first.
     if (regState?.mobileNumber) return <PublicRegisterPage />
-    return <Navigate to="/public/register" replace />
+    return <Navigate to="/login" replace />
   }
   if (user?.role === 'user') return <Navigate to="/public" replace />
   return <>{children}</>
@@ -164,7 +164,7 @@ export default function App() {
                   <AppLayout />
                 </StaffRoute>
               </ProtectedRoute>
-            </RootGate>
+           </RootGate>
           }
         >
           <Route index element={<HomeRedirect />} />
