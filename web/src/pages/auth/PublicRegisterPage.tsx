@@ -86,8 +86,39 @@ const GATE_STAGE_LABELS: Record<GateStage, string> = {
   wizard: 'Profile',
 }
 
+// function GateProgress({ stage }: { stage: GateStage }) {
+//   const order: GateStage[] = ['mobile', 'otp', 'wizard']
+//   const activeIdx = order.indexOf(stage)
+//   return (
+//     <div className="mb-4 flex items-center justify-center gap-2">
+//       {order.map((s, i) => {
+//         const isDone = i < activeIdx
+//         const isActive = i === activeIdx
+//         return (
+//           <div key={s} className="flex items-center gap-1.5">
+//             <div
+//               className={cn(
+//                 'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
+//                 isDone || isActive
+//                   ? 'bg-emerald-500 text-white'
+//                   : 'bg-muted text-muted-foreground',
+//               )}
+//             >
+//               {isDone ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+//             </div>
+//             <span className={cn('hidden text-xs sm:inline', isActive ? 'font-semibold text-foreground' : 'text-text-tertiary')}>
+//               {GATE_STAGE_LABELS[s]}
+//             </span>
+//             {i < order.length - 1 && <div className="hidden h-px w-6 bg-border-subtle sm:block" />}
+//           </div>
+//         )
+//       })}
+//     </div>
+//   )
+// }
+
 function GateProgress({ stage }: { stage: GateStage }) {
-  const order: GateStage[] = ['mobile', 'otp', 'wizard']
+  const order: GateStage[] = ['mobile', 'otp']
   const activeIdx = order.indexOf(stage)
   return (
     <div className="mb-4 flex items-center justify-center gap-2">
