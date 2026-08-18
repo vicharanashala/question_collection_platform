@@ -22,6 +22,7 @@ RUN rm -f package-lock.json && npm install && npm cache clean --force
 
 COPY tsconfig*.json ./
 COPY src/ ./src/
+COPY public/ ./public/
 
 RUN npx tsc --noEmit \
     && npx nest build \
