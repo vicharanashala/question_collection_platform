@@ -20,15 +20,57 @@ env:
   DOCKER_IMAGE: question-collection
 
 jobs:
+  build_web:
+    name: Build Web Frontend
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'all' || github.event.inputs.action == 'build' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: web
+        run: pnpm build
+
+      - name: Upload web dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+          retention-days: 1
+
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    needs: build_web
     if: ${{ github.event.inputs.action == 'all' || github.event.inputs.action == 'build' }}
     outputs:
       sha: ${{ steps.generate-tags.outputs.short_sha }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download web dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
 
       - name: Generate image tags
         id: generate-tags
@@ -120,5 +162,6 @@ jobs:
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=annadatha-cloudrun
             PROXY=${{ secrets.PROXY }}
+            WEB_DIST_PATH=/app/web/dist
           env_vars_update_strategy: merge
           flags: --allow-unauthenticated
