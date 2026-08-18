@@ -1,8 +1,8 @@
 /**
  * Shared Terms of Service / Privacy Policy copy for the public web app.
  * Single source of truth for both the registration consent gate
- * (`PublicRegisterPage`) and the standalone `/public/terms` and
- * `/public/privacy` pages linked from the Profile screen — keeps the
+ * (`PublicRegisterPage`) and the standalone `/home/terms` and
+ * `/home/privacy` pages linked from the Profile screen — keeps the
  * text the two surfaces show in lockstep.
  */
 const SUPPORT_EMAIL = (import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined

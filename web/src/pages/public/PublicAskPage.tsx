@@ -362,7 +362,7 @@ export function PublicAskPage() {
             <p className="mt-2 text-sm text-text-secondary max-w-sm">{t('question.successBody')}</p>
             <div className="mt-6 flex gap-3">
               <Button variant="outline" onClick={() => { setSubmitted(false); resetAll() }}>{t('question.submitAnother')}</Button>
-              <Button onClick={() => navigate('/public/questions')}>{t('nav.submissions')}</Button>
+              <Button onClick={() => navigate('/home/questions')}>{t('nav.submissions')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -394,7 +394,7 @@ export function PublicAskPage() {
             </div>
             <div className="mt-5 flex gap-3">
               <Button variant="outline" onClick={() => { setDuplicate(null); resetAll() }}>{t('question.duplicate.askAnyway')}</Button>
-              <Button onClick={() => navigate('/public')}>{t('question.duplicate.backHome')}</Button>
+              <Button onClick={() => navigate('/home')}>{t('question.duplicate.backHome')}</Button>
             </div>
           </CardContent>
         </Card>

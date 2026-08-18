@@ -70,6 +70,7 @@ export interface PublicUser {
   organizationDistrict: string | null;
   organizationBlock:   string | null;
   organizationVillage: string | null;
+  consentGiven: boolean;
 }
 
 @Injectable()
@@ -759,6 +760,7 @@ export class AuthService {
       organizationDistrict: user.organizationDistrict,
       organizationBlock:    user.organizationBlock,
       organizationVillage:  user.organizationVillage,
+      consentGiven:         user.consentGiven,
     };
   }
 

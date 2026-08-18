@@ -11,11 +11,11 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-  { to: '/public',           label: 'Home',        icon: Home,             end: true },
-  { to: '/public/questions', label: 'Submissions', icon: ListChecks },
-  { to: '/public/ask',       label: 'Submit',      icon: MessageSquarePlus, primary: true },
-  { to: '/public/wallet',    label: 'Wallet',      icon: Wallet },
-  { to: '/public/profile',   label: 'Profile',     icon: User },
+  { to: '/home',           label: 'Home',        icon: Home,             end: true },
+  { to: '/home/questions', label: 'Submissions', icon: ListChecks },
+  { to: '/home/ask',       label: 'Submit',      icon: MessageSquarePlus, primary: true },
+  { to: '/home/wallet',    label: 'Wallet',      icon: Wallet },
+  { to: '/home/profile',   label: 'Profile',     icon: User },
 ]
 
 /**

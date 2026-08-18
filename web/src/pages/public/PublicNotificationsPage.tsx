@@ -53,9 +53,9 @@ function iconFor(type: string) {
 
 function targetFor(n: Notification): string | null {
   const data = n.data as Record<string, unknown> | null
-  if (n.triggerType === 'question') return '/public/questions'
-  if (n.triggerType === 'withdraw') return '/public/wallet'
-  if (n.triggerType === 'report' && data?.reportId) return `/public/reports/${data.reportId}`
+  if (n.triggerType === 'question') return '/home/questions'
+  if (n.triggerType === 'withdraw') return '/home/wallet'
+  if (n.triggerType === 'report' && data?.reportId) return `/home/reports/${data.reportId}`
   return null
 }
 

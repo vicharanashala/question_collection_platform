@@ -33,11 +33,11 @@ export function PublicVerificationPendingPage() {
       if (fresh.verificationStatus === 'verified') {
         toast.success('You are verified! Welcome to AnnaDatha.')
       }
-      navigate('/public', { replace: true })
+      navigate('/home', { replace: true })
     } catch {
       toast.error('Could not check status. Please try again.')
       // Still let them in — the dashboard will just show pending state.
-      navigate('/public', { replace: true })
+      navigate('/home', { replace: true })
     } finally {
       setChecking(false)
     }

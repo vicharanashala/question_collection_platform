@@ -842,12 +842,13 @@ export function PublicRegisterPage() {
   const initialMobile = state?.mobileNumber ?? ''
 
   // The signup flow is split across two URLs:
-  //   /public/register → gate ("Create your account": mobile + OTP)
-  //   /               → wizard ("Complete your profile": 4-step form)
-  // Pick the initial stage from the URL pathname: visitors at "/" always
-  // start on the wizard; visitors at "/public/register" start on "mobile"
-  // (or "otp" if they arrived with state.mobileNumber, e.g. via the
-  // wizard's Back button).
+  //   /home/register → gate ("Create your account": mobile + OTP)
+  //   /home          → dashboard hosting the wizard modal ("Complete your
+  //                    profile": 4-step form)
+  // Pick the initial stage from the URL pathname: visitors at "/home/register"
+  // start on "mobile" (or "otp" if they arrived with state.mobileNumber, e.g.
+  // via the wizard's Back button). The wizard itself lives in the modal
+  // mounted by PublicHomePage, no longer as a standalone page.
   const isWizardRoute = location.pathname === '/'
   const initialStage: GateStage = isWizardRoute
     ? 'wizard'
@@ -935,29 +936,31 @@ export function PublicRegisterPage() {
     try {
       const res = await authApi.verifyOtp(gateMobile, cleaned)
 
-      // New public user → accept terms first, then enter the wizard at /.
+      // New public user → accept terms first, then enter the wizard on /home.
+      // The wizard is hosted inside the complete-profile modal on the home
+      // dashboard (per the UX requirement), so we navigate there with
+      // `state.mobileNumber` so the modal knows what number to register.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
           setVerifiedMobile(gateMobile)
           countdown.stop()
-          // Navigate to "/" with state.mobileNumber so the wizard at the
-          // home page picks up where we left off; PublicRegisterPage
-          // unmounts at /public/register and remounts at "/" in wizard mode.
-          navigate('/', { state: { mobileNumber: gateMobile }, replace: true })
+          // Navigate to "/home" with state.mobileNumber so the modal-hosted
+          // wizard on the home page picks up where we left off.
+          navigate('/home', { state: { mobileNumber: gateMobile }, replace: true })
           return
         }
-        // Staff accounts without a profile are an admin-only flow â€” bounce.
+        // Staff accounts without a profile are an admin-only flow — bounce.
         toast.error('Your account is not yet activated. Please contact your administrator.')
         return
       }
 
-      // Returning user â€” log them straight in instead of asking them to
+      // Returning user — log them straight in instead of asking them to
       // re-register. Mirrors LoginPage behaviour.
       if (res.tokens && res.user) {
         login(res.tokens, res.user)
         toast.success('Welcome back!')
         countdown.stop()
-        navigate(res.user.role === 'user' ? '/public' : '/dashboard', { replace: true })
+        navigate(res.user.role === 'user' ? '/home' : '/dashboard', { replace: true })
         return
       }
       toast.error('Unexpected response from server')
@@ -1084,12 +1087,12 @@ export function PublicRegisterPage() {
       // Within the wizard: go one step back.
       setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4))
     } else {
-      // Step 1 is the first wizard step. The wizard lives at "/"; the
-      // gating flow (mobile + OTP) lives at "/public/register". In the new
-      // URL split, "Back" from the wizard's first step returns to the
-      // gating URL with the mobile number pre-filled so the user lands on
-      // the OTP stage and can re-verify without re-entering their number.
-      navigate('/public/register', { state: { mobileNumber: verifiedMobile } })
+      // Step 1 is the first wizard step. The wizard lives inside the modal on
+      // "/home"; the gating flow (mobile + OTP) lives at "/home/register". In
+      // the new URL split, "Back" from the wizard's first step returns to
+      // the gating URL with the mobile number pre-filled so the user lands
+      // on the OTP stage and can re-verify without re-entering their number.
+      navigate('/home/register', { state: { mobileNumber: verifiedMobile } })
     }
   }
 
@@ -1189,7 +1192,7 @@ export function PublicRegisterPage() {
       }
       const res = await authApi.register(payload)
       login(res.tokens, res.user)
-      navigate('/public/verification-pending', { replace: true })
+      navigate('/home/verification-pending', { replace: true })
     } catch (err) {
       toast.error(getErrorMessage(err, 'Registration failed. Please try again.'))
     } finally {

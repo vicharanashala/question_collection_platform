@@ -380,7 +380,7 @@ export function PublicReportsPage(): ReactNode {
             <ReportCard
               key={r.id}
               report={r}
-              onPress={() => navigate(`/public/reports/${r.id}`)}
+              onPress={() => navigate(`/home/reports/${r.id}`)}
             />
           ))}
         </div>
