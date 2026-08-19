@@ -83,10 +83,9 @@ export const USER_CATEGORIES: UserCategoryOption[] = [
   { value: 'ngo', label: 'NGO Partner', description: 'I represent an NGO working with the community', color: '#DC2626', ring: 'border-rose-500', iconBg: 'bg-rose-100', iconColor: 'text-rose-700' },
 ]
 
-// Mirrors `mobile/src/utils/constants.ts:CROPS` (340+ entries, alphabetised).
-// The web used to ship a hand-curated 47-entry list that drifted from mobile.
-// We now derive `CROP_OPTIONS` from this full list so the web's Crop Type picker
-// matches the mobile app's alphabetised list shown in the question-ask flow.
+// Mirrors `mobile/src/utils/constants.ts:CROPS` (340+ entries, alphabetised) —
+// used by both the registration wizard's crop-image grid and the ask-question
+// flow's crop picker.
 export const CROPS = [
   'Adapathiyan', 'Agathi', 'Ailanthus or Matti', 'Ajwain (Carom seeds)',
   'Allspice', 'Almond', 'Aloe vera', 'Amaranth', 'Amaranthus', 'Amla',
@@ -179,6 +178,9 @@ export const CROPS = [
   'Wild jack or Aini', 'Wood apple', 'Yam',
 ] as const
 
+// Short curated list (major/common crops) used by the registration flow's
+// crop-type picker — a simple text pill selector, distinct from `CROPS`
+// above (the full mirrored list used by the image-grid pickers elsewhere).
 export const CROP_OPTIONS: { value: string; label: string }[] = [
   { value: 'Rice', label: 'Rice (Paddy)' },
   { value: 'Wheat', label: 'Wheat' },
@@ -228,6 +230,7 @@ export const CROP_OPTIONS: { value: string; label: string }[] = [
   { value: 'Coffee', label: 'Coffee' },
   { value: 'Other', label: 'Other' },
 ]
+
 export const COURSE_OPTIONS: { value: string; label: string }[] = [
   { value: 'BSc Agriculture', label: 'BSc Agriculture' },
   { value: 'MSc Agriculture', label: 'MSc Agriculture' },
