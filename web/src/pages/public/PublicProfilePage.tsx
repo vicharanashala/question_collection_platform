@@ -205,18 +205,6 @@ function StatTile({ icon: Icon, value, label, loading }: StatTileProps) {
   )
 }
 
-interface CropChipProps {
-  name: string
-}
-function CropChip({ name }: CropChipProps) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
-      <Leaf className="h-3 w-3" />
-      {name}
-    </span>
-  )
-}
-
 // — Main page ——————————————————————————————————————————————————————
 
 export function PublicProfilePage() {
@@ -276,9 +264,6 @@ export function PublicProfilePage() {
   const cat = user.category
 
   const memberSince = formatDate(user.createdAt) || em
-  const cropList = user.cropType
-    ? user.cropType.split(',').map((c) => c.trim()).filter(Boolean)
-    : []
 
   // — Handlers —
   function handleLogout() {
@@ -634,18 +619,6 @@ export function PublicProfilePage() {
               )}
             </div>
           </section>
-
-          {/* — 6. Crops chips (any category, if cropType set) — */}
-          {cropList.length > 0 && (
-            <section>
-              <SectionHeader icon={Sprout} title={t('profile.crops')} />
-              <div className="flex flex-wrap gap-1.5">
-                {cropList.map((c) => (
-                  <CropChip key={c} name={c} />
-                ))}
-              </div>
-            </section>
-          )}
         </div>
 
         <div className="space-y-4 lg:col-span-1">

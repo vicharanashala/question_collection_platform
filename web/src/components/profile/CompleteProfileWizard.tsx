@@ -584,17 +584,18 @@ function Step3({
       {form.category === "farmer" && (
         <>
           <div className="space-y-1.5">
-            <Label>
-              Farm size (acres) <span className="text-rose-600">*</span>
-            </Label>
+            <Label>Farm size (acres) <span className="text-rose-600">*</span></Label>
             <Input
+              inputMode="decimal"
               value={form.farmSize}
-              onChange={(e) => setField("farmSize", e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.]/g, '')
+                const parts = v.split('.')
+                setField('farmSize', parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : v)
+              }}
               placeholder="e.g. 2.5"
             />
-            {errors.farmSize && (
-              <p className="text-xs text-rose-600">{errors.farmSize}</p>
-            )}
+            {errors.farmSize && <p className="text-xs text-rose-600">{errors.farmSize}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>
