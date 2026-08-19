@@ -76,7 +76,7 @@ export class FinalQuestion {
   isReference: boolean;
 
   /** FK -> final_questions._id of the reference doc; null on the reference doc itself. */
-  @Prop({ name: 'parentReferenceId', type: Types.ObjectId, default: null, ref: 'FinalQuestion', index: true })
+  @Prop({ name: 'parentReferenceId', type: Types.ObjectId, default: null, ref: 'FinalQuestion' })
   parentReferenceId: Types.ObjectId | null;
 
   // â”€â”€ Snapshot of the source Question (denormalized copy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -86,7 +86,7 @@ export class FinalQuestion {
    * field can be used directly in $lookup joins against the users collection
    * and benefits from proper index usage. Stored as null if the source
    * Question has no userId (e.g. legacy data). */
-  @Prop({ name: 'userId', type: Types.ObjectId, ref: 'User', required: false, default: null, index: true })
+  @Prop({ name: 'userId', type: Types.ObjectId, ref: 'User', required: false, default: null })
   userId: Types.ObjectId | null;
 
   @Prop({ name: 'language', type: String, default: 'en' })
@@ -151,7 +151,7 @@ export class FinalQuestion {
    * Persisted as a Mongo ObjectId (BSON 0x07), NOT a plain string, for the
    * same reasons as userId above (proper $lookup joins + index usage). Null
    * if the source Question was never reviewed (e.g. still pending). */
-  @Prop({ name: 'reviewerId', type: Types.ObjectId, ref: 'User', default: null, index: true })
+  @Prop({ name: 'reviewerId', type: Types.ObjectId, ref: 'User', default: null })
   reviewerId: Types.ObjectId | null;
 
   @Prop({ name: 'rejectionReason', type: String, default: null })

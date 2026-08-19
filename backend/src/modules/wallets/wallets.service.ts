@@ -5,10 +5,8 @@ import {
   Inject,
   forwardRef,
   Logger,
-  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DataSource } from 'typeorm';
 import { Wallet, Transaction, WithdrawalRequest, User } from '../../shared/database/entities';
 import { UserPaymentDetail } from '../../shared/database/entities/user-payment-detail.entity';
 import {
@@ -32,6 +30,7 @@ import {
   IUserRepository,
 } from '../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { MongoTransactionService } from '../../shared/database/mongodb/mongo-transaction.service';
 
 // Reward tiers based on approved question count (per TASK_06)
 // Tier 1:  1–25  approved → ₹1  (stored as maxApproved=26 → condition: count < 26)
@@ -64,15 +63,8 @@ export class WalletsService {
     private readonly pinelabsService: PinelabsService,
     private readonly razorpayPayoutService: RazorpayPayoutService,
     private readonly configService: ConfigService,
-    @Inject(DataSource) @Optional()
-    private readonly dataSource?: DataSource,
+    private readonly mongoTransactionService: MongoTransactionService,
   ) {}
-
-  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
-  private get ds(): DataSource {
-    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
-    return this.dataSource;
-  }
 
   /**
    * Returns the reward amount in rupees for a given approved question count.
@@ -99,21 +91,12 @@ export class WalletsService {
 
     const rewardAmount = this.getRewardAmount(params.approvedCount);
 
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    return this.mongoTransactionService.runInTransaction(async (session) => {
+      // Atomic $inc on the wallet document — returns the post-increment balance
+      // so the transaction log always records a consistent balanceAfter.
+      const updatedBalance = await this.walletRepo.incrementBalance(wallet.id, rewardAmount, session);
 
-    try {
-      const locked = await queryRunner.manager.findOne(Wallet, {
-        where: { id: wallet.id },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!locked) throw new NotFoundException('Wallet not found');
-
-      const updatedBalance = Number(locked.balance) + rewardAmount;
-      await queryRunner.manager.update(Wallet, wallet.id, { balance: updatedBalance });
-
-      const tx = queryRunner.manager.create(Transaction, {
+      const savedTx = await this.transactionRepo.save({
         walletId: wallet.id,
         type: TransactionType.CREDIT,
         source: TransactionSource.REWARD,
@@ -122,17 +105,10 @@ export class WalletsService {
         referenceId: params.questionId,
         description: `Reward for approved question (total approved: ${params.approvedCount}, ₹${rewardAmount})`,
         status: TransactionStatus.COMPLETED,
-      });
-      const savedTx = await queryRunner.manager.save(Transaction, tx);
+      }, session);
 
-      await queryRunner.commitTransaction();
       return { transaction: savedTx, newBalance: updatedBalance };
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   /**
@@ -283,38 +259,26 @@ export class WalletsService {
             : null,
         };
 
-    // Atomic: deduct balance + create withdrawal request + create transaction
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // Re-check balance immediately before deducting to narrow the race window,
+    // then apply the debit atomically via $inc.
+    const fresh = await this.walletRepo.findOne({ where: { id: wallet.id } });
+    if (!fresh || Number(fresh.balance) < dto.amount) {
+      throw new BadRequestException('Insufficient wallet balance.');
+    }
 
-    try {
-      // Lock the wallet row
-      const locked = await queryRunner.manager.findOne(Wallet, {
-        where: { id: wallet.id },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!locked || Number(locked.balance) < dto.amount) {
-        throw new BadRequestException('Insufficient wallet balance.');
-      }
+    return this.mongoTransactionService.runInTransaction(async (session) => {
+      const newBalance = await this.walletRepo.incrementBalance(wallet.id, -dto.amount, session);
 
-      // Deduct balance
-      const newBalance = Number(locked.balance) - dto.amount;
-      await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
-
-      // Create withdrawal request
-      const withdrawal = queryRunner.manager.create(WithdrawalRequest, {
+      const saved = await this.withdrawalRepo.save({
         userId,
         walletId: wallet.id,
         amount: dto.amount,
         payoutMethod: paymentDetail.payoutMethod,
         payoutDetails,
         status: WithdrawalStatus.PENDING,
-      });
-      const saved = await queryRunner.manager.save(WithdrawalRequest, withdrawal);
+      }, session);
 
-      // Create transaction log
-      const tx = queryRunner.manager.create(Transaction, {
+      await this.transactionRepo.save({
         walletId: wallet.id,
         type: TransactionType.DEBIT,
         source: TransactionSource.WITHDRAWAL,
@@ -323,17 +287,10 @@ export class WalletsService {
         referenceId: saved.id,
         description: `Withdrawal request — ${paymentDetail.payoutMethod}`,
         status: TransactionStatus.PENDING,
-      });
-      await queryRunner.manager.save(Transaction, tx);
+      }, session);
 
-      await queryRunner.commitTransaction();
       return saved;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   /**
@@ -360,50 +317,33 @@ export class WalletsService {
       );
     }
 
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // Refund balance to wallet
+    const wallet = await this.walletRepo.findOne({ where: { id: withdrawal.walletId } });
+    if (!wallet) throw new NotFoundException('Wallet not found.');
 
-    try {
+    await this.mongoTransactionService.runInTransaction(async (session) => {
       // Mark withdrawal as cancelled
-      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
+      await this.withdrawalRepo.update(withdrawalId, {
         status: WithdrawalStatus.CANCELLED,
         cancelledAt: new Date(),
-      });
+      }, session);
 
-      // Refund balance to wallet
-      const wallet = await queryRunner.manager.findOne(Wallet, {
-        where: { id: withdrawal.walletId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!wallet) throw new NotFoundException('Wallet not found.');
-
-      const newBalance = Number(wallet.balance) + Number(withdrawal.amount);
-      await queryRunner.manager.update(Wallet, wallet.id, {
-        balance: newBalance,
-      });
+      await this.walletRepo.incrementBalance(wallet.id, Number(withdrawal.amount), session);
 
       // Update the original debit transaction to reversed status
-      await queryRunner.manager.update(
-        Transaction,
+      await this.transactionRepo.updateMany(
         { referenceId: withdrawalId },
         { status: TransactionStatus.REVERSED },
+        session,
       );
+    });
 
-      await queryRunner.commitTransaction();
-
-      // Reload to return updated entity
-      const cancelled = await this.withdrawalRepo.findOne({
-        where: { id: withdrawalId },
-      });
-      if (!cancelled) throw new NotFoundException('Withdrawal request not found.');
-      return cancelled;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    // Reload to return updated entity
+    const cancelled = await this.withdrawalRepo.findOne({
+      where: { id: withdrawalId },
+    });
+    if (!cancelled) throw new NotFoundException('Withdrawal request not found.');
+    return cancelled;
   }
 
   /**
@@ -419,58 +359,44 @@ export class WalletsService {
     withdrawalId: string,
     payoutId: string,
   ): Promise<Wallet> {
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const wallet = await this.walletRepo.findOne({ where: { id: walletId } });
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found for reversed payout credit');
+    }
 
     try {
-      const wallet = await queryRunner.manager.findOne(Wallet, {
-        where: { id: walletId },
-        lock: { mode: 'pessimistic_write' },
+      await this.mongoTransactionService.runInTransaction(async (session) => {
+        const newBalance = await this.walletRepo.incrementBalance(walletId, Number(amount), session);
+
+        // Create a REFUND transaction record
+        await this.transactionRepo.save({
+          walletId,
+          type: TransactionType.CREDIT,
+          source: TransactionSource.REFUND,
+          amount,
+          balanceAfter: newBalance,
+          referenceId: payoutId,
+          description: `Withdrawal reversal — payout ${payoutId} was reversed by bank`,
+          status: TransactionStatus.COMPLETED,
+        }, session);
+
+        // Mark the original debit transaction as reversed
+        await this.transactionRepo.updateMany(
+          { referenceId: withdrawalId },
+          { status: TransactionStatus.REVERSED },
+          session,
+        );
       });
-
-      if (!wallet) {
-        throw new NotFoundException('Wallet not found for reversed payout credit');
-      }
-
-      const newBalance = Number(wallet.balance) + Number(amount);
-
-      // Credit the reversed amount back to wallet
-      await queryRunner.manager.update(Wallet, walletId, { balance: newBalance });
-
-      // Create a REFUND transaction record
-      const refundTx = queryRunner.manager.create(Transaction, {
-        walletId,
-        type: TransactionType.CREDIT,
-        source: TransactionSource.REFUND,
-        amount,
-        balanceAfter: newBalance,
-        referenceId: payoutId,
-        description: `Withdrawal reversal — payout ${payoutId} was reversed by bank`,
-        status: TransactionStatus.COMPLETED,
-      });
-      await queryRunner.manager.save(Transaction, refundTx);
-
-      // Mark the original debit transaction as reversed
-      await queryRunner.manager.update(
-        Transaction,
-        { referenceId: withdrawalId },
-        { status: TransactionStatus.REVERSED },
-      );
-
-      await queryRunner.commitTransaction();
 
       this.logger.log(
         `[Reversal] ₹${amount} credited to wallet ${walletId} | withdrawal=${withdrawalId} | payout=${payoutId}`,
       );
 
-      return wallet;
+      const updated = await this.walletRepo.findOne({ where: { id: walletId } });
+      return updated ?? wallet;
     } catch (err) {
-      await queryRunner.rollbackTransaction();
       this.logger.error(`[Reversal] Failed to credit wallet ${walletId}: ${err.message}`);
       throw err;
-    } finally {
-      await queryRunner.release();
     }
   }
 
@@ -733,42 +659,34 @@ export class WalletsService {
       if (isPineLabsVerification) {
         const wallet = await this.walletRepo.findOne({ where: { userId: detail.userId } });
         if (wallet) {
-          const queryRunner = this.ds.createQueryRunner();
-          await queryRunner.connect();
-          await queryRunner.startTransaction();
           try {
-            const newBalance = Number(wallet.balance) + 1;
-            await queryRunner.manager.update(Wallet, wallet.id, { balance: newBalance });
+            await this.mongoTransactionService.runInTransaction(async (session) => {
+              const newBalance = await this.walletRepo.incrementBalance(wallet.id, 1, session);
 
-            // Credit refund transaction
-          const creditTx = queryRunner.manager.create(Transaction, {
-            walletId: wallet.id,
-            type: TransactionType.CREDIT,
-            source: TransactionSource.REFUND,
-            amount: 1,
-            balanceAfter: newBalance,
-            referenceId: params.orderId,
-            description: 'Verification refund — payment detail confirmed',
-            status: TransactionStatus.COMPLETED,
-          });
-          await queryRunner.manager.save(Transaction, creditTx);
+              // Credit refund transaction
+              await this.transactionRepo.save({
+                walletId: wallet.id,
+                type: TransactionType.CREDIT,
+                source: TransactionSource.REFUND,
+                amount: 1,
+                balanceAfter: newBalance,
+                referenceId: params.orderId,
+                description: 'Verification refund — payment detail confirmed',
+                status: TransactionStatus.COMPLETED,
+              }, session);
 
-          // Update debit tx to completed
-          await queryRunner.manager.update(
-            Transaction,
-            { referenceId: params.orderId },
-            { status: TransactionStatus.COMPLETED },
-          );
-
-          await queryRunner.commitTransaction();
-        } catch (err) {
-          await queryRunner.rollbackTransaction();
-          this.logger.error(`[Verification] Refund failed for orderId=${params.orderId}: ${err.message}`);
-        } finally {
-          await queryRunner.release();
+              // Update debit tx to completed
+              await this.transactionRepo.updateMany(
+                { referenceId: params.orderId },
+                { status: TransactionStatus.COMPLETED },
+                session,
+              );
+            });
+          } catch (err) {
+            this.logger.error(`[Verification] Refund failed for orderId=${params.orderId}: ${err.message}`);
+          }
         }
       }
-    }
 
     this.logger.log(`[Verification] Payment detail verified | detailId=${detail.id} | orderId=${params.orderId}`);
   } else {

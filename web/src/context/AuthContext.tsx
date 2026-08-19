@@ -70,7 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = accountLockedEmitter.on(() => {
       logout()
     })
-    return unsubscribe
+      return () => {
+    unsubscribe()
+  }
   }, [logout])
 
   // Heartbeat: probe /auth/me every 30s so bans are detected even during idle

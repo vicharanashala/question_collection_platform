@@ -1,5 +1,4 @@
 import { Treemap, Tooltip, ResponsiveContainer } from 'recharts'
-import { formatNumber } from '@/lib/utils'
 
 interface TreemapDataPoint {
   name: string
@@ -110,7 +109,6 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: any[] 
 export function TreemapChartComponent({
   data,
   height = 220,
-  valueFormatter = (v) => formatNumber(v),
 }: TreemapChartComponentProps) {
   if (!data.length) {
     return (

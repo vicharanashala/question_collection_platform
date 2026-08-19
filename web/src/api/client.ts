@@ -17,6 +17,7 @@ import type {
   Withdrawal,
   WalletSummary,
   Transaction,
+  PaymentDetail,
   Notification,
   PaginatedResponse,
   AnalyticsDashboard,
@@ -30,9 +31,9 @@ import type {
   AuditEntityHistoryResponse,
   AuditUsersByRoleResponse,
   Report,
-  ReportReply,
   FinalQuestion,
   DistributorStats,
+  AuditLogQuery,
 } from '@/types'
 import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
@@ -40,7 +41,7 @@ const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
 
-function getAccessToken(): string | null {
+export function getAccessToken(): string | null {
   return localStorage.getItem('access_token')
 }
 
@@ -245,6 +246,69 @@ export const authApi = {
       method: 'PATCH',
       body: JSON.stringify(body),
     }, false),
+
+  /**
+   * Complete new-user registration. Called AFTER `verifyOtp` returned
+   * `{ requiresRegistration: true, tempToken, role }`. The endpoint is
+   * public — the backend identifies the user by `mobileNumber` (no JWT
+   * required for this call).
+   *
+   * On success returns `{ tokens, user }` — the wizard should immediately
+   * `login()` so the public user is authenticated.
+   */
+  register: (body: {
+    mobileNumber: string
+    name: string
+    username: string
+    category: string
+    state: string
+    district: string
+    block?: string
+    village?: string
+    kvk?: string
+    age?: number
+    gender?: string
+    farmSize?: string
+    cropType?: string
+    courseName?: string
+    collegeName?: string
+    universityName?: string
+    organisationType?: string
+    organizationName?: string
+    organizationRole?: string
+    numberOfFarmers?: number
+    organizationState?: string
+    organizationDistrict?: string
+    organizationBlock?: string
+    organizationVillage?: string
+    season?: string
+    volunteerCropType?: string
+    languagePreference: string
+    consentGiven: boolean
+  }) =>
+    request<{
+      tokens: { accessToken: string; refreshToken: string; expiresIn: number }
+      user: AuthUser
+    }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  /** Check whether a username is available. */
+  checkUsername: (username: string) =>
+    request<{
+      username: string
+      available: boolean
+      suggestions: string[]
+    }>(`/auth/check-username?username=${encodeURIComponent(username)}`, {}, false),
+
+  /** Suggest N available usernames based on a base string. */
+  suggestUsernames: (base: string, limit = 5) =>
+    request<{ suggestions: string[] }>(
+      `/auth/suggest-usernames?base=${encodeURIComponent(base)}&limit=${limit}`,
+      {},
+      false,
+    ),
 }
 
 // ─── LGD / Location API ───────────────────────────────────────────────────
@@ -286,7 +350,7 @@ export const adminApi = {
     )
   },
 
-  getUserDetail: (userId: string) =>
+  getUserDetail: (userId: string | undefined) =>
     request<{ user: User; questions: Question[]; paymentDetails: import('@/types').PaymentDetail[] }>(
       `/admin/users/${userId}`,
       {}, false,
@@ -542,18 +606,222 @@ export const questionApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }, false).finally(() => invalidateCache('/api/questions')),
+
+  /**
+   * Analyses raw question text and returns server-derived suggestions
+   * (domain(s), season, crop type, agro-climatic zone, location) used to
+   * pre-fill the details step before final submission. Mirrors mobile's
+   * `questionApi.preview` / `POST /questions/preview`. If the backend's
+   * duplicate check matches an existing question, it saves this one as
+   * REJECTED (counts against the daily limit) and returns `duplicate` —
+   * the caller should not proceed to the details step in that case.
+   */
+  preview: (body: { questionText: string; mediaType?: 'none' | 'image' | 'video' | 'audio'; mediaUrls?: string[] }) =>
+    request<{
+      state: string
+      district: string
+      block: string | null
+      domains: string[]
+      cropType: string
+      season: string
+      agroClimaticZone: string
+      remainingToday: number
+      dailyLimit: number
+      duplicate?: {
+        isDuplicate: boolean
+        matchedQuestionId: string | null
+        matchedQuestion: string | null
+        matchedAnswer: string | null
+        similarityScore: number | null
+        matchedUserName: string | null
+      }
+    }>('/questions/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false).finally(() => invalidateCache('/api/questions')),
+
+  /**
+   * Public-user submit. The backend derives `state`/`district`/etc. from the
+   * authenticated user's profile, but on the web we send them explicitly so
+   * the wizard does not have to call `/auth/me` first.
+   */
+  submitQuestion: (body: {
+    questionText: string
+    domains: string[]
+    season: string
+    cropType: string
+    state: string
+    district: string
+    block?: string
+    agroClimaticZone?: string
+    mediaType?: 'none' | 'image' | 'video' | 'audio'
+    mediaUrls?: string[]
+  }) =>
+    request<{
+      id: string
+      status: string
+      message: string
+      duplicate?: {
+        isDuplicate: boolean
+        matchedQuestion: string | null
+        matchedAnswer: string | null
+        similarityScore: number | null
+        matchedUserName: string | null
+      }
+    }>('/questions', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false).finally(() => invalidateCache('/api/questions')),
+
+  /** Daily / total submission stats for the current (public) user. */
+  getMyStats: () =>
+    request<{
+      dailyCount: number
+      remainingToday: number
+      totalApproved: number
+      dailyLimit: number
+      [k: string]: unknown
+    }>('/questions/stats/me', {}, false),
+
+  /**
+   * List the current (public) user's own questions.
+   *
+   * NOTE: we deliberately do NOT pass a `userId` query param here. The backend
+   * already scopes `GET /questions` to `req.user.id` (taken from the JWT) for
+   * non-admin callers, and the `ListQuestionsDto` has no `userId` field. With
+   * the global ValidationPipe's `forbidNonWhitelisted: true`, sending
+   * `userId=me` here would cause a 400 ("property userId should not exist").
+   */
+  listMyQuestions: (params: { page?: number; limit?: number; status?: string } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== '')) as Record<string, string>,
+    ).toString()
+    return request<PaginatedResponse<Question>>(
+      `/questions${qs ? `?${qs}` : ''}`,
+      {},
+      false,
+    )
+  },
+}
+
+// ─── Wallet API (public-user dashboard) ────────────────────────────────────
+
+export const walletApi = {
+  /** Wallet balance for the authenticated user. */
+  getBalance: () =>
+    request<{ balance: number; pending: number; totalEarned: number; currency: string }>(
+      '/wallets/me',
+      {},
+      false,
+    ),
+
+  /** Current reward tier (1/5/10 rupees per approved question). */
+  getRewardTier: (approvedCount?: number) => {
+    const qs = approvedCount != null ? `?approvedCount=${approvedCount}` : ''
+    return request<{ tier: number; reward: number; nextTierAt: number | null }>(
+      `/wallets/me/tier${qs}`,
+      {},
+      false,
+    )
+  },
+
+  /** Recent wallet transactions for the authenticated user. */
+  // getTransactions: (params: { page?: number; limit?: number } = {}) => {
+  //   const qs = new URLSearchParams(
+  //     Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+  //   ).toString()
+  //   return request<{ transactions: Transaction[]; total: number }>(
+  //     `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
+  //     {},
+  //     false,
+  //   )
+  // },
+
+  getTransactions: (params: { page?: number; limit?: number } = {}) => {
+  const qs = new URLSearchParams(
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined)
+      .map(([key, value]) => [key, String(value)]),
+  ).toString()
+
+  return request<{ transactions: Transaction[]; total: number }>(
+    `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
+    {},
+    false,
+  )
+},
+
+  /** Wallet configuration (min withdrawal amount, razorpay key id, …). */
+  getWalletConfig: () =>
+    request<{ minWithdrawalAmount: number; razorpayKeyId: string }>(
+      '/wallets/me/config',
+      {},
+      false,
+    ),
+
+  /** Payout methods (UPI / bank) saved by the authenticated user. */
+  getPaymentDetails: () =>
+    request<PaymentDetail[]>('/wallets/payment-details', {}, false),
+
+  /** Request a withdrawal of `amount` to a previously verified payment method. */
+  withdraw: (data: { amount: number; paymentDetailId: string }) =>
+    request<{ id: string; status: string; amount: number }>(
+      '/wallets/withdraw',
+      { method: 'POST', body: JSON.stringify(data) },
+      false,
+    ).finally(() => invalidateCache('/api/wallets')),
+
+  /** Add a new payout method (UPI or bank). Initiates ₹1 micro-transaction
+   *  verification on the backend; the native Razorpay SDK is required to
+   *  complete verification, which is not available in the web app. */
+  addPaymentDetail: (data: {
+    payoutMethod: 'upi' | 'bank_transfer'
+    upiId?: string
+    accountNumber?: string
+    confirmAccountNumber?: string
+    ifsc?: string
+    accountHolderName?: string
+    bankName?: string
+  }) =>
+    request<{ id: string; status: 'pending' | 'in_progress' | 'verified' | 'failed'; message: string }>(
+      '/wallets/payment-details',
+      { method: 'POST', body: JSON.stringify(data) },
+      false,
+    ),
+
+  /** Delete a saved payout method (only allowed for non-verified details). */
+  deletePaymentDetail: (id: string) =>
+    request<{ success: true }>(`/wallets/payment-details/${id}`, { method: 'DELETE' }, false),
 }
 
 // ─── Notifications API ─────────────────────────────────────────────────────
 
 export const notificationApi = {
+  // getNotifications: (params: { page?: number; limit?: number } = {}) => {
+  //   const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+  //   const qs = new URLSearchParams(p).toString()
+  //   return request<{ notifications: Notification[]; unread: number; total: number }>(
+  //     `/users/me/notifications${qs ? `?${qs}` : ''}`,
+  //   )
+  // },
+
   getNotifications: (params: { page?: number; limit?: number } = {}) => {
-    const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
-    const qs = new URLSearchParams(p).toString()
-    return request<{ items: Notification[]; unreadCount: number; total: number; page: number; pages: number }>(
-      `/users/me/notifications${qs ? `?${qs}` : ''}`,
-    )
-  },
+  const p = Object.fromEntries(
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined)
+      .map(([key, value]) => [key, String(value)]),
+  ) as Record<string, string>
+
+  const qs = new URLSearchParams(p).toString()
+
+  return request<{
+    notifications: Notification[]
+    unread: number
+    total: number
+  }>(
+    `/users/me/notifications${qs ? `?${qs}` : ''}`,
+  )
+},
 
   markRead: (id: string) =>
     request<void>(`/users/me/notifications/${id}/read`, { method: 'PATCH' }, false)
@@ -562,6 +830,18 @@ export const notificationApi = {
   markAllRead: () =>
     request<void>(`/users/me/notifications/read-all`, { method: 'PATCH' }, false)
       .finally(() => invalidateCache('/api/users/me/notifications')),
+}
+
+// ─── Leaderboard API ────────────────────────────────────────────────────────
+
+export const leaderboardApi = {
+  getLeaderboard: (params: { limit?: number; offset?: number } = {}) => {
+    const sp = new URLSearchParams()
+    if (params.limit !== undefined) sp.set('limit', String(params.limit))
+    if (params.offset !== undefined) sp.set('offset', String(params.offset))
+    const qs = sp.toString()
+    return request<import('@/types').LeaderboardResponse>(`/users/me/leaderboard${qs ? `?${qs}` : ''}`)
+  },
 }
 
 // ─── Curator API ───────────────────────────────────────────────────────────
@@ -624,7 +904,7 @@ export const cache = { invalidate: invalidateCache }
 
 // ─── Audit API (Task 19) ────────────────────────────────────────────────────────
 
-function buildAuditQS(p: Record<string, string | number | undefined | string[]>): string {
+function buildAuditQS(p: AuditLogQuery): string {
   const sp = new URLSearchParams()
   for (const [k, v] of Object.entries(p)) {
     if (v === undefined) continue
@@ -638,8 +918,8 @@ function buildAuditQS(p: Record<string, string | number | undefined | string[]>)
 }
 
 export const auditApi = {
-  getAuditLogs: (params: Record<string, string | number | undefined | string[]> = {}) => {
-    const qs = buildAuditQS(params as Record<string, string | number | undefined | string[]>)
+  getAuditLogs: (params: AuditLogQuery = {}) => {
+    const qs = buildAuditQS(params)
     return request<AuditLogsResponse>(`/admin/audit-logs${qs ? `?${qs}` : ''}`, {}, false)
   },
 
@@ -749,17 +1029,52 @@ export const reportsApi = {
       { method: 'POST', body: JSON.stringify({ message }) },
       false,
     ),
+
+  /** List the current (authenticated) user's own reports — backed by GET /reports/my */
+  listMy: (params: { page?: number; limit?: number } = {}) => {
+    const p: Record<string, string> = {}
+    if (params.page !== undefined)  p.page  = String(params.page)
+    if (params.limit !== undefined) p.limit = String(params.limit)
+    const qs = new URLSearchParams(p).toString()
+    return request<{
+      items: Report[]
+      total: number
+      page: number
+      limit: number
+      pages: number
+    }>(`/reports/my${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  /** Get a single report belonging to the current user — backed by GET /reports/my/:id */
+  getMy: (reportId: string) =>
+    request<Report>(`/reports/my/${reportId}`, {}, false),
 }
 
 // ─── FAQ API ──────────────────────────────────────────────────────────────────
 
 export const faqApi = {
   /** User-facing: visible FAQs only, optionally filtered */
+  // getVisible: (filters?: { category?: string }) => {
+  //   const params: Record<string, string> = {}
+  //   if (filters?.category) params.category = filters.category
+  //   return request<Faq[]>('/faqs', { params }, false)
+  // },
+
   getVisible: (filters?: { category?: string }) => {
-    const params: Record<string, string> = {}
-    if (filters?.category) params.category = filters.category
-    return request<Faq[]>('/faqs', { params }, false)
-  },
+  const params = new URLSearchParams()
+
+  if (filters?.category) {
+    params.set('category', filters.category)
+  }
+
+  const qs = params.toString()
+
+  return request<Faq[]>(
+    `/faqs${qs ? `?${qs}` : ''}`,
+    {},
+    false,
+  )
+},
 
   /** Admin: paginated FAQ list */
   getAll: (filters?: {

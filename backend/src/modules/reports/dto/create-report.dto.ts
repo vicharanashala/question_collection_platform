@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 import { ReportCategory } from '../../../shared/classes/enums';
 
 export class CreateReportDto {
@@ -15,9 +15,13 @@ export class CreateReportDto {
   @IsEnum(ReportCategory)
   category: ReportCategory;
 
-  /** Optional: ID of the entity this report relates to */
+  /**
+   * Optional: ID of the entity this report relates to.
+   * Mongo document IDs are ObjectId hex strings, not UUIDs.
+   */
   @IsOptional()
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   relatedEntityId?: string;
 
   /** Optional: type of the related entity ('question' | 'withdrawal' | 'wallet') */

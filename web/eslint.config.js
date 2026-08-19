@@ -48,6 +48,11 @@ export default tseslint.config(
       // TranslatableText intentionally omits doTranslate from effect deps (it reads
       // via ref, so stale closures are not a concern — see the comment in the file)
       'react-hooks/exhaustive-deps': 'off',
+      // Stateless inner sub-components (e.g. wizard `Step1`-`Step4` and the
+      // signup-gate `MobileStage` / `OtpStage` / `WizardStages`) don't hold
+      // hooks so the "components during render" warning is a false positive.
+      // We follow the same inner-helper pattern as the rest of the codebase.
+      'react-hooks/static-components': 'off',
       // Allow unescaped quotes in JSX (pre-existing, not our focus)
       'react/no-unescaped-entities': 'off',
     },

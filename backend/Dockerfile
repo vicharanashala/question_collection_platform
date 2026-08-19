@@ -22,6 +22,7 @@ RUN rm -f package-lock.json && npm install && npm cache clean --force
 
 COPY tsconfig*.json ./
 COPY src/ ./src/
+COPY public/ ./public/
 
 RUN npx tsc --noEmit \
     && npx nest build \
@@ -48,6 +49,12 @@ ENV PORT=8080
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
+COPY --from=build /app/public ./public
+
+# Web frontend SPA build — served by NestJS at /, /login, /admin, etc.
+# WEB_DIST_PATH is passed as a Cloud Run env var so main.ts finds it at runtime.
+COPY web/dist ./web/dist
+
 COPY scripts/start.sh ./scripts/start.sh
 
 # Entrypoint script starts tailscaled first, then the NestJS app via dumb-init

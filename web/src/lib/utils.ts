@@ -85,6 +85,27 @@ export function formatINRFull(n: number): string {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+/**
+ * Abbreviate large numbers for compact display using Indian notation.
+ * e.g. 1000 → "1K", 10500 → "10.5K", 100000 → "1L", 1500000 → "15L".
+ * Mirrors mobile/src/utils/currency.ts `formatINRCompact`.
+ */
+export function formatINRCompact(n: number): string {
+  if (n >= 10000000) {
+    const cr = n / 10000000
+    return cr % 1 === 0 ? `${cr}Cr` : `${cr.toFixed(1)}Cr`
+  }
+  if (n >= 100000) {
+    const l = n / 100000
+    return l % 1 === 0 ? `${l}L` : `${l.toFixed(1)}L`
+  }
+  if (n >= 1000) {
+    const k = n / 1000
+    return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`
+  }
+  return n.toLocaleString('en-IN', { minimumFractionDigits: 0 })
+}
+
 /** Returns the appropriate Tailwind text size class based on formatted length (INR, 2dp) */
 export function getBalanceTextClass(n: number): string {
   const len = n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).length

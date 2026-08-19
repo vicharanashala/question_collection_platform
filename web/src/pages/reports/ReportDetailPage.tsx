@@ -92,12 +92,12 @@ const PRIORITY_COLORS: Record<string, string> = {
   urgent: 'bg-destructive text-white',
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  open:        'bg-blue-500 text-white',
-  in_progress: 'bg-warning text-white',
-  resolved:    'bg-success text-white',
-  closed:      'bg-surface-variant text-text',
-}
+// const STATUS_COLORS: Record<string, string> = {
+//   open:        'bg-blue-500 text-white',
+//   in_progress: 'bg-warning text-white',
+//   resolved:    'bg-success text-white',
+//   closed:      'bg-surface-variant text-text',
+// }
 
 export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>()
@@ -170,7 +170,7 @@ export default function ReportDetailPage() {
   }
 
   const handleMarkClosed = () => {
-    if (report.status === 'closed') return
+    if (report?.status === 'closed') return
     setShowCloseModal(true)
   }
 

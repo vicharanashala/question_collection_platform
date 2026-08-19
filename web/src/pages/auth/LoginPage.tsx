@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { authApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { ShieldCheck, Loader2, ArrowLeft, CheckCircle, Smartphone } from 'lucide-react'
+import { Loader2, ArrowLeft, CheckCircle, Smartphone, Sprout } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { toast } from 'sonner'
 
 // ─── Resend countdown ──────────────────────────────────────────────────────
@@ -90,7 +91,9 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      await authApi.requestOtp(cleaned, true)
+      // Pass `false` (no `client:'web'`) so the backend accepts BOTH staff
+      // and new public users. The verify-otp step routes by role afterwards.
+      await authApi.requestOtp(cleaned, false)
       setSent(true)
       setStep(2)
       countdown.start()
@@ -113,21 +116,38 @@ export function LoginPage() {
     try {
       const res = await authApi.verifyOtp(mobile, cleaned)
 
+      // ── New user ────────────────────────────────────────────────────
+      // Backend returns `{ requiresRegistration, role }` for any user
+      // that doesn't have a name set yet. Public users (role='user')
+      // get sent to the signup wizard hosted on the home page modal.
+      // Staff accounts are blocked — the admin creates them server-side.
       if ('requiresRegistration' in res && res.requiresRegistration) {
-        toast.error(`Account not registered. Role: ${res.role ?? 'USER'}`)
+        if (res.role === 'user') {
+          // Navigate to /home with state.mobileNumber so the home page can
+          // open the complete-profile modal automatically.
+          navigate('/home', { state: { mobileNumber: mobile } })
+        } else {
+          toast.error('Your account is not yet activated. Please contact your administrator.')
+        }
         return
       }
 
+      // ── Existing user ──────────────────────────────────────────────
       const tokens = res.tokens!
       const user = res.user!
-
       login(
         { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
         { ...user, token: tokens.accessToken },
       )
 
-      toast.success('Welcome back!')
-      navigate('/dashboard', { replace: true })
+      // Route by role: public users → /home, staff → /dashboard
+      if (user.role === 'user') {
+        toast.success('Welcome back!')
+        navigate('/home', { replace: true })
+      } else {
+        toast.success('Welcome back!')
+        navigate('/dashboard', { replace: true })
+      }
     } catch (err) {
       toast.error(getErrorMessage(err, 'Invalid OTP'))
       setOtp('')
@@ -158,26 +178,28 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div className="auth-page dark flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
 
-      {/* Background decoration */}
+      {/* Background decoration — uses --primary so it picks up the mint-green glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-48 -top-48 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -left-32 -bottom-32 h-[22rem] w-[22rem] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute left-1/2 top-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-        <div className="absolute left-1/2 bottom-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="absolute -right-48 -top-48 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -left-32 -bottom-32 h-[22rem] w-[22rem] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="absolute left-1/2 bottom-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </div>
 
       {/* Login card */}
       <Card className="relative w-full max-w-sm shadow-xl border-border-subtle">
         <CardHeader className="pb-4 text-center">
-          {/* Logo mark */}
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20 ring-4 ring-primary/10">
-            <ShieldCheck className="h-8 w-8 text-primary-foreground" />
+          {/* Brand mark — AnnaDatha logo */}
+          <div className="mx-auto mb-5 h-16 w-16 drop-shadow-[0_4px_12px_rgba(0,98,57,0.35)]">
+            <BrandLogo className="h-16 w-16" />
           </div>
-          <CardTitle className="text-2xl font-extrabold tracking-tight">Admin Portal</CardTitle>
+          <CardTitle className="text-2xl font-extrabold tracking-tight text-primary">
+            Login Portal
+          </CardTitle>
           <CardDescription className="text-sm text-text-secondary px-2">
-            Sign in to manage users, questions, and content
+            Sign in with your mobile number to continue
           </CardDescription>
           <div className="mt-4">
             <StepDots step={step} />
@@ -298,10 +320,17 @@ export function LoginPage() {
         </CardContent>
       </Card>
 
-      <div className="absolute bottom-6 text-center">
+      <div className="absolute bottom-6 left-0 right-0 px-4 text-center space-y-1">
         <p className="text-xs text-text-tertiary">
-          Question Collection Platform &middot; Admin Dashboard
+          Question Collection Platform &middot; AnnaDatha
         </p>
+        <Link
+          to="/home/register"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+        >
+          <Sprout className="h-3.5 w-3.5" />
+          New here? Sign up as a public user &rarr;
+        </Link>
       </div>
     </div>
   )

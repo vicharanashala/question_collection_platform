@@ -99,7 +99,7 @@ export function WithdrawalsPage() {
   const [reasonDialog, setReasonDialog] = useState<{
     open: boolean
     withdrawalId: string
-    mode: 'approve' | 'reject'
+    mode: 'approve' | 'reject' | 'fail'
     amount: number
     userName: string
   } | null>(null)
@@ -177,35 +177,76 @@ export function WithdrawalsPage() {
     setFilterOpen(false)
   }
 
-  async function handleAction(id: string, action: 'approve' | 'reject' | 'reject_open' | 'fail', reason?: string) {
-    if (processingId !== null) return  // guard: prevent double-call
-    if (action === 'reject_open' || action === 'fail') {
-      const w = items.find((q) => q.id === id)
-      setReasonDialog({
-        open: true,
-        withdrawalId: id,
-        mode: action === 'fail' ? 'fail' : 'reject',
-        amount: w?.amount ?? 0,
-        userName: w?.user?.name ?? w?.user?.mobileNumber ?? '',
-      })
-      return
-    }
-    setProcessingId(id)
-    try {
-      if (action === 'fail') {
-        await adminApi.markWithdrawalFailed(id, reason ?? '')
-        toast.success('Withdrawal marked as failed — amount refunded to user')
-      } else {
-        await adminApi.processWithdrawal(id, { action, rejectionReason: reason })
-        toast.success(`Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`)
-      }
-      setItems((prev) => prev.filter((w) => w.id !== id))
-    } catch (e) {
-      toast.error(getErrorMessage(e, `Failed to ${action}`))
-    } finally {
-      setProcessingId(null)
-    }
+  // async function handleAction(id: string, action: 'approve' | 'reject' | 'reject_open' | 'fail', reason?: string) {
+  //   if (processingId !== null) return  // guard: prevent double-call
+  //   if (action === 'reject_open' || action === 'fail') {
+  //     const w = items.find((q) => q.id === id)
+  //     setReasonDialog({
+  //       open: true,
+  //       withdrawalId: id,
+  //       mode: action === 'fail' ? 'fail' : 'reject',
+  //       amount: w?.amount ?? 0,
+  //       userName: w?.user?.name ?? w?.user?.mobileNumber ?? '',
+  //     })
+  //     return
+  //   }
+  //   setProcessingId(id)
+  //   try {
+  //     if (action === 'fail') {
+  //       await adminApi.markWithdrawalFailed(id, reason ?? '')
+  //       toast.success('Withdrawal marked as failed — amount refunded to user')
+  //     } else {
+  //       await adminApi.processWithdrawal(id, { action, rejectionReason: reason })
+  //       toast.success(`Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`)
+  //     }
+  //     setItems((prev) => prev.filter((w) => w.id !== id))
+  //   } catch (e) {
+  //     toast.error(getErrorMessage(e, `Failed to ${action}`))
+  //   } finally {
+  //     setProcessingId(null)
+  //   }
+  // }
+
+  async function handleAction(
+  id: string,
+  action: 'approve' | 'reject' | 'reject_open' | 'fail',
+  reason?: string,
+) {
+  if (processingId !== null) return
+
+  if (action === 'reject_open' || action === 'fail') {
+    const w = items.find((q) => q.id === id)
+
+    setReasonDialog({
+      open: true,
+      withdrawalId: id,
+      mode: action === 'fail' ? 'fail' : 'reject',
+      amount: w?.amount ?? 0,
+      userName: w?.user?.name ?? w?.user?.mobileNumber ?? '',
+    })
+
+    return
   }
+
+  setProcessingId(id)
+
+  try {
+    await adminApi.processWithdrawal(id, {
+      action,
+      rejectionReason: reason,
+    })
+
+    toast.success(
+      `Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`,
+    )
+
+    setItems((prev) => prev.filter((w) => w.id !== id))
+  } catch (e) {
+    toast.error(getErrorMessage(e, `Failed to ${action}`))
+  } finally {
+    setProcessingId(null)
+  }
+}
 
   function activeFilterCount() {
     return Object.entries(activeFilters).filter(([k, v]) => {

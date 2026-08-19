@@ -5,24 +5,22 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { adminApi, getErrorMessage } from '@/api/client'
-import { useAuth } from '@/context/AuthContext'
+// import { useAuth } from '@/context/AuthContext'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatDate, formatINRFull, getBalanceTextClass } from '@/lib/utils'
 import {
   Wallet, ArrowUpRight, ArrowDownRight,
-  RefreshCw, TrendingUp, TrendingDown, Clock, Hash, X, Eye, XCircle,
-  CreditCard, Banknote, ArrowRightLeft, User,
+  RefreshCw, Eye, XCircle,
+  CreditCard, Banknote, ArrowRightLeft,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Transaction, Withdrawal } from '@/types'
+import type { Transaction, WalletSummary, Withdrawal } from '@/types'
 import { WithdrawalDetailModal } from '@/components/WithdrawalDetailModal'
 
 const TX_STATUS_COLORS: Record<string, string> = {
@@ -64,7 +62,8 @@ const VERIFICATION_COLORS: Record<string, string> = {
 interface WalletDetailModalProps {
   userId: string
   open: boolean
-  onClose: () => void
+  onClose: () => void,
+  summary?: WalletSummary
 }
 
 interface TxSummary {
@@ -74,8 +73,8 @@ interface TxSummary {
 }
 
 export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalProps) {
-  const { user: currentUser } = useAuth()
-  const isSuperAdmin = currentUser?.role === 'super_admin'
+  // const { user: currentUser } = useAuth()
+  // const isSuperAdmin = currentUser?.role === 'super_admin'
 
   const [txTab, setTxTab] = useState<'transactions' | 'withdrawals'>('transactions')
   const [txPage, setTxPage] = useState(1)

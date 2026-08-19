@@ -1,11 +1,13 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { PublicLayout } from '@/components/layout/PublicLayout'
 import { PrefetchProvider } from '@/context/PrefetchContext'
 import { lazyRoute } from '@/components/LazyRoute'
 import { LockedAccountModal } from '@/components/LockedAccountModal'
 import type { UserRole } from '@/types'
 
+// ── Staff / admin pages (existing) ─────────────────────────────────────────
 const LoginPage       = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
 const DashboardRouter = lazyRoute(() => import('@/pages/dashboard/DashboardRouter').then(m => ({ default: m.DashboardRouter })))
 const UsersPage       = lazyRoute(() => import('@/pages/users/UsersPage').then(m => ({ default: m.UsersPage })))
@@ -23,12 +25,29 @@ const FaqListPage   = lazyRoute(() => import('@/pages/faqs/FaqListPage').then(m 
 const FaqsPage      = lazyRoute(() => import('@/pages/faqs/FaqsPage').then(m => ({ default: m.FaqsPage })))
 const DistributionsPage = lazyRoute(() => import('@/pages/distributions/DistributionsPage').then(m => ({ default: m.DistributionsPage })))
 
-/** Pages visible per role */
+// ── Public-user pages (role="user") ────────────────────────────────────────
+const PublicRegisterPage             = lazyRoute(() => import('@/pages/auth/PublicRegisterPage').then(m => ({ default: m.PublicRegisterPage })))
+const PublicVerificationPendingPage  = lazyRoute(() => import('@/pages/public/PublicVerificationPendingPage').then(m => ({ default: m.PublicVerificationPendingPage })))
+const PublicHomePage                 = lazyRoute(() => import('@/pages/public/PublicHomePage').then(m => ({ default: m.PublicHomePage })))
+const PublicAskPage                  = lazyRoute(() => import('@/pages/public/PublicAskPage').then(m => ({ default: m.PublicAskPage })))
+const PublicQuestionsPage            = lazyRoute(() => import('@/pages/public/PublicQuestionsPage').then(m => ({ default: m.PublicQuestionsPage })))
+const PublicFaqsPage                 = lazyRoute(() => import('@/pages/public/PublicFaqsPage').then(m => ({ default: m.PublicFaqsPage })))
+const PublicProfilePage              = lazyRoute(() => import('@/pages/public/PublicProfilePage').then(m => ({ default: m.PublicProfilePage })))
+const PublicWalletPage               = lazyRoute(() => import('@/pages/public/PublicWalletPage').then(m => ({ default: m.PublicWalletPage })))
+const PublicReportsPage              = lazyRoute(() => import('@/pages/public/PublicReportsPage').then(m => ({ default: m.default })))
+const PublicReportDetailPage         = lazyRoute(() => import('@/pages/public/PublicReportDetailPage').then(m => ({ default: m.default })))
+const PublicPaymentMethodsPage       = lazyRoute(() => import('@/pages/public/PublicPaymentMethodsPage').then(m => ({ default: m.PublicPaymentMethodsPage })))
+const PublicTermsPage                = lazyRoute(() => import('@/pages/public/PublicTermsPage').then(m => ({ default: m.default })))
+const PublicPrivacyPage              = lazyRoute(() => import('@/pages/public/PublicPrivacyPage').then(m => ({ default: m.default })))
+const PublicNotificationsPage        = lazyRoute(() => import('@/pages/public/PublicNotificationsPage').then(m => ({ default: m.default })))
+const PublicLeaderboardPage          = lazyRoute(() => import('@/pages/public/PublicLeaderboardPage').then(m => ({ default: m.default })))
+
+/** Pages visible per role (staff / admin side) */
 const PAGE_ROLES: Record<string, UserRole[]> = {
   dashboard:   ['admin', 'super_admin', 'curator', 'finance', 'distributor'],
   users:       ['finance', 'admin', 'super_admin'],
   userDetail:  ['admin', 'super_admin', 'finance'],
-  questions:   ['user', 'curator', 'admin', 'super_admin'],
+  questions:   ['curator', 'admin', 'super_admin'],
   reviews:     ['curator', 'super_admin'],
   profile:     ['user', 'curator', 'finance', 'distributor', 'admin', 'super_admin'],
   settings:    ['super_admin'],
@@ -42,10 +61,58 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   distributions: ['distributor', 'admin', 'super_admin'],
 }
 
+/** If unauthenticated, send to /login. */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   if (isLoading) return null
   if (!isAuthenticated) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
+
+/**
+ * Blocks role="user" from entering the staff shell. Public users
+ * (`role="user"`) get redirected to their own app at `/public`.
+ */
+function StaffRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  if (user?.role === 'user') return <Navigate to="/home" replace />
+  return <>{children}</>
+}
+
+/**
+ * Root route gate: serves the public registration/wizard as the home
+ * page for unauthenticated visitors, sends authenticated role="user"
+ * accounts to their `/public` app, and falls through to the existing
+ * staff shell for staff users. Wraps the `/` route's element.
+ */
+function RootGate({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated, isLoading } = useAuth()
+  if (isLoading) return null
+  if (!isAuthenticated) {
+    // Visitors at "/" without auth get routed to /home/register where the
+    // mobile + OTP gate lives.
+    return <Navigate to="/home/register" replace />
+  }
+  if (user?.role === 'user') return <Navigate to="/home" replace />
+  return <>{children}</>
+}
+
+/**
+ * Public-side guard: must be authenticated AND must be role="user". Staff
+ * (admin/super_admin/curator/etc.) get bounced to the staff dashboard.
+ */
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth()
+  const location = useLocation()
+  const state = location.state as { mobileNumber?: string } | null
+  // Allow visitors who just verified their OTP (state.mobileNumber is set)
+  // through without full auth so they can complete the profile on /home via
+  // the modal. Without this carve-out they would be bounced to /login and
+  // would lose the post-OTP flow.
+  const postOtpNeedingProfile = !!state?.mobileNumber && !isAuthenticated
+  if (isLoading) return null
+  if (!isAuthenticated && !postOtpNeedingProfile) return <Navigate to="/login" replace />
+  if (user?.role && user.role !== 'user') return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
 
@@ -64,6 +131,16 @@ function RoleRoute({ pageKey }: { pageKey: string }) {
 }
 
 /**
+ * Decide where to send a freshly-authenticated user based on their role.
+ * Public users → /public. Staff users → /dashboard.
+ */
+function HomeRedirect() {
+  const { user } = useAuth()
+  if (user?.role === 'user') return <Navigate to="/home" replace />
+  return <Navigate to="/dashboard" replace />
+}
+
+/**
  * Outer shell — provides PrefetchContext to all routes.
  * All route components are code-split via React.lazy above.
  */
@@ -75,18 +152,26 @@ export default function App() {
       <LockedAccountModal />
 
       <Routes>
+        {/* ── Public auth pages (no auth required) ──────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/home/register" element={<PublicRegisterPage />} />
+        <Route path="/home/verification-pending" element={<PublicVerificationPendingPage />} />
 
+        {/* ── Root gate: home page for visitors, staff shell for staff ──── */}
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
+            <RootGate>
+              <ProtectedRoute>
+                <StaffRoute>
+                  <AppLayout />
+                </StaffRoute>
+              </ProtectedRoute>
+           </RootGate>
           }
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<><RoleRoute pageKey="dashboard" /><DashboardRouter /></>} />
+          <Route index element={<HomeRedirect />} />
+          <Route path="dashboard"   element={<><RoleRoute pageKey="dashboard" /><DashboardRouter /></>} />
           <Route path="users"      element={<><RoleRoute pageKey="users" /><UsersPage /></>} />
           <Route path="users/:userId" element={<><RoleRoute pageKey="userDetail" /><UserDetailPage /></>} />
           <Route path="questions"  element={<><RoleRoute pageKey="questions" /><QuestionsPage /></>} />
@@ -102,6 +187,33 @@ export default function App() {
           <Route path="admin/faqs"     element={<><RoleRoute pageKey="faqAdmin" /><FaqsPage     /></>} />
           <Route path="distributions"  element={<><RoleRoute pageKey="distributions" /><DistributionsPage /></>} />
         </Route>
+
+        {/* ── Public user shell (role="user" only) ───────────────────────── */}
+        <Route
+          path="/home"
+          element={
+            <PublicRoute>
+              <PublicLayout />
+            </PublicRoute>
+          }
+        >
+          <Route index               element={<PublicHomePage />} />
+          <Route path="ask"          element={<PublicAskPage />} />
+          <Route path="questions"    element={<PublicQuestionsPage />} />
+          <Route path="faqs"         element={<PublicFaqsPage />} />
+          <Route path="profile"      element={<PublicProfilePage />} />
+          <Route path="wallet"             element={<PublicWalletPage />} />
+          <Route path="reports"             element={<PublicReportsPage />} />
+          <Route path="reports/:reportId"   element={<PublicReportDetailPage />} />
+          <Route path="payment-methods"    element={<PublicPaymentMethodsPage />} />
+          <Route path="terms"              element={<PublicTermsPage />} />
+          <Route path="privacy"            element={<PublicPrivacyPage />} />
+          <Route path="notifications"      element={<PublicNotificationsPage />} />
+          <Route path="leaderboard"        element={<PublicLeaderboardPage />} />
+        </Route>
+
+        {/* ── Fallback ────────────────────────────────────────────────────── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </PrefetchProvider>
   )

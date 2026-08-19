@@ -7,9 +7,8 @@ import {
   Inject,
   forwardRef,
   Logger,
-  Optional,
 } from '@nestjs/common';
-import { SelectQueryBuilder, ILike, Between, In, DataSource } from 'typeorm';
+import { SelectQueryBuilder, ILike, Between, In } from 'typeorm';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { HotDataService } from '../../shared/database/cache/hot-data.service';
 import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
@@ -76,6 +75,7 @@ import {
   IUserPaymentDetailRepository,
 } from '../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { MongoTransactionService } from '../../shared/database/mongodb/mongo-transaction.service';
 
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
@@ -190,15 +190,8 @@ export class AdminService implements OnModuleInit {
     private readonly hotDataService: HotDataService,
     private readonly analyticsCacheService: AnalyticsCacheService,
     private readonly gdbService: GdbService,
-    @Inject(DataSource) @Optional()
-    private readonly dataSource?: DataSource,
+    private readonly mongoTransactionService: MongoTransactionService,
   ) {}
-
-  /** Non-null accessor — only valid when DB=postgres (TypeOrmCoreModule is loaded) */
-  private get ds(): DataSource {
-    if (!this.dataSource) throw new Error('DataSource is not available when DB=mongo');
-    return this.dataSource;
-  }
 
   private readonly logger = new Logger(AdminService.name);
 
@@ -357,39 +350,49 @@ export class AdminService implements OnModuleInit {
 
   async listUsers(dto: ListUsersDto) {
     const { page = 1, limit = 20, state, category, status, search, sortBy = 'createdAt', sortOrder = 'DESC' } = dto;
-    const qb = this.userRepo
-      .createQueryBuilder('u')
-      .select([
-        'u.id',
-        'u.mobileNumber',
-        'u.name',
-        'u.username',
-        'u.category',
-        'u.state',
-        'u.district',
-        'u.verificationStatus',
-        'u.role',
-        'u.createdAt',
-        'u.lastLoginAt',
-      ])
-      .skip((page - 1) * limit)
-      .take(limit);
 
-    if (state) qb.andWhere('u.state = :state', { state });
-    if (category) qb.andWhere('u.category = :category', { category });
-    if (status) qb.andWhere('u.verificationStatus = :status', { status });
+    // Built as a native Mongo filter rather than via createQueryBuilder().andWhere(<SQL string>) —
+    // the query builder's SQL-string translator only recognizes a handful of exact patterns
+    // (=, >=, <=, IN, LIKE/ILIKE); "!=" and multi-field "(...OR...)" clauses silently fall through
+    // to a broken fallback that produces an unmatchable filter key, so those conditions used to
+    // zero out the entire result set (e.g. excludeId, which the admin UI always sends).
+    const filter: Record<string, unknown> = {};
+    if (state) filter.state = state;
+    if (category) filter.category = category;
+    if (status) filter.verificationStatus = status;
     if (search) {
-      qb.andWhere(
-        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search OR u.username ILIKE :search)`,
-        { search: `%${search}%` },
-      );
+      const regex = { $regex: search, $options: 'i' };
+      filter.$or = [{ name: regex }, { mobileNumber: regex }, { username: regex }];
     }
-    if (dto.excludeId) qb.andWhere('u.id != :excludeId', { excludeId: dto.excludeId });
+    // Keep this a plain string, not a Types.ObjectId instance — the query builder's
+    // translateValue() recurses into any non-primitive object value (Object.entries()),
+    // which mangles a real ObjectId into its raw internal buffer. Mongoose casts a valid
+    // hex string to ObjectId automatically during query execution, so a string is both
+    // simpler and safe here.
+    if (dto.excludeId) filter._id = { $ne: dto.excludeId };
 
-    const sortCol = sortBy === 'verificationStatus' ? 'u.verificationStatus' : sortBy === 'state' ? 'u.state' : sortBy === 'name' ? 'u.name' : 'u.createdAt';
-    qb.orderBy(sortCol, sortOrder);
+    const sortField = sortBy === 'verificationStatus' ? 'verificationStatus' : sortBy === 'state' ? 'state' : sortBy === 'name' ? 'name' : 'createdAt';
 
-    const [items, total] = await qb.getManyAndCount();
+    const { data, total } = await this.userRepo.findAndCount(filter, {
+      pagination: { page, limit, sort: { [sortField]: sortOrder === 'ASC' ? 1 : -1 } },
+    });
+
+    // Project down to the same field set the admin user list has always returned
+    // (excludes otpHash and other internal-only fields on the User document).
+    const items = data.map((u) => ({
+      id: u.id,
+      mobileNumber: u.mobileNumber,
+      name: u.name,
+      username: u.username,
+      category: u.category,
+      state: u.state,
+      district: u.district,
+      verificationStatus: u.verificationStatus,
+      role: u.role,
+      createdAt: u.createdAt,
+      lastLoginAt: u.lastLoginAt,
+    }));
+
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
@@ -1850,27 +1853,14 @@ export class AdminService implements OnModuleInit {
     // Use existing referenceId if present, otherwise build a new one
     const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
 
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // 1. Reset withdrawal to PROCESSING and increment retry count
-      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
-        status: WithdrawalStatus.PROCESSING,
-        processedAt: new Date(),
-        orderId: referenceId,
-        razorpayPayoutId: null,
-        retryCount: (withdrawal.retryCount ?? 0) + 1,
-      });
-
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    // Reset withdrawal to PROCESSING and increment retry count
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: WithdrawalStatus.PROCESSING,
+      processedAt: new Date(),
+      orderId: referenceId,
+      razorpayPayoutId: null,
+      retryCount: (withdrawal.retryCount ?? 0) + 1,
+    });
 
     await this.logAudit({
       actorType: ActorType.ADMIN,
@@ -2084,56 +2074,40 @@ export class AdminService implements OnModuleInit {
       throw new BadRequestException(`Cannot mark withdrawal as failed in '${withdrawal.status}' status. Only PROCESSING withdrawals can be marked failed.`);
     }
 
-    const queryRunner = this.ds.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    await this.mongoTransactionService.runInTransaction(async (session) => {
       // 1. Mark withdrawal as FAILED
-      await queryRunner.manager.update(WithdrawalRequest, withdrawalId, {
+      await this.withdrawalRepo.update(withdrawalId, {
         status: WithdrawalStatus.FAILED,
         processedAt: new Date(),
         failureReason: reason ?? 'Marked failed by admin',
-      });
+      }, session);
 
       // 2. Mark the DEBIT transaction as FAILED and store the reason
-      await queryRunner.manager.update(
-        Transaction,
+      await this.transactionRepo.updateMany(
         { referenceId: withdrawalId, type: TransactionType.DEBIT },
         { status: TransactionStatus.FAILED, rejectionReason: reason ?? 'Marked failed by admin' },
+        session,
       );
 
-      // 3. Refund balance to wallet
-      await queryRunner.manager
-        .createQueryBuilder()
-        .update(Wallet)
-        .set({ balance: () => `balance + ${Number(withdrawal.amount)}` })
-        .where('id = :id', { id: withdrawal.walletId })
-        .execute();
+      // 3. Refund balance to wallet (atomic $inc — also returns the post-refund balance)
+      const newBalance = await this.walletRepo.incrementBalance(withdrawal.walletId, Number(withdrawal.amount), session);
 
-      // 4. Fetch updated wallet for balanceAfter on refund tx
-      const wallet = await queryRunner.manager.findOne(Wallet, { where: { id: withdrawal.walletId } });
-      const newBalance = wallet ? Number(wallet.balance) : 0;
+      // 4. Create refund CREDIT transaction
+      await this.transactionRepo.save({
+        walletId: withdrawal.walletId,
+        amount: Number(withdrawal.amount),
+        type: TransactionType.CREDIT,
+        source: TransactionSource.REFUND,
+        description: `Withdrawal failed${reason ? ': ' + reason : ''}`,
+        rejectionReason: reason ?? 'Marked failed by admin',
+        status: TransactionStatus.COMPLETED,
+        referenceId: withdrawalId,
+        balanceAfter: newBalance,
+      }, session);
+    });
 
-      // 5. Create refund CREDIT transaction
-      await queryRunner.manager.save(
-        queryRunner.manager.create(Transaction, {
-          walletId: withdrawal.walletId,
-          amount: Number(withdrawal.amount),
-          type: TransactionType.CREDIT,
-          source: TransactionSource.REFUND,
-          description: `Withdrawal failed${reason ? ': ' + reason : ''}`,
-          rejectionReason: reason ?? 'Marked failed by admin',
-          status: TransactionStatus.COMPLETED,
-          referenceId: withdrawalId,
-          balanceAfter: newBalance,
-        }),
-      );
-
-      await queryRunner.commitTransaction();
-
-      // Send two notifications: one for failed withdrawal, one for refund
-      const withdrawalForNotify = await this.withdrawalRepo.findOne({
+    // Send two notifications: one for failed withdrawal, one for refund
+    const withdrawalForNotify = await this.withdrawalRepo.findOne({
         where: { id: withdrawalId },
         relations: ['user'],
       });
@@ -2208,13 +2182,7 @@ export class AdminService implements OnModuleInit {
         newValue: { status: WithdrawalStatus.FAILED, reason },
       });
 
-      return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
   }
 
   /** Admin updates the failure reason on an already-failed withdrawal. */
@@ -3297,70 +3265,93 @@ export class AdminService implements OnModuleInit {
       sortBy = 'createdAt', sortOrder = 'DESC',
     } = dto;
 
-    const qb = this.walletRepo
-      .createQueryBuilder('w')
-      .innerJoinAndSelect('w.user', 'u')
-      .leftJoin('w.transactions', 'tx')
-      .select([
-        'w.id',
-        'w.balance',
-        'w.createdAt',
-        'w.updatedAt',
-        'u.id',
-        'u.name',
-        'u.mobileNumber',
-        'u.state',
-        'u.district',
-        'u.category',
-        'u.role',
-        'u.verificationStatus',
-        'u.createdAt',
-      ])
-      .addSelect(
-        "COALESCE(SUM(CASE WHEN tx.type = 'CREDIT' AND tx.source = 'REWARD' AND tx.status = 'COMPLETED' THEN tx.amount ELSE 0 END), 0)",
-        'totalEarned',
-      )
-      .addSelect(
-        "COALESCE(SUM(CASE WHEN tx.type = 'DEBIT' AND tx.source = 'WITHDRAWAL' AND tx.status = 'COMPLETED' THEN tx.amount ELSE 0 END), 0)",
-        'totalWithdrawn',
-      )
-      .groupBy('w.id')
-      .addGroupBy('u.id')
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    if (userId) qb.andWhere('u.id = :userId', { userId });
-    if (search) {
-      qb.andWhere(
-        `(u.name ILIKE :search OR u.mobileNumber ILIKE :search)`,
-        { search: `%${search}%` },
-      );
+    // Rebuilt as native Mongo filters + an in-memory join/aggregate instead of
+    // createQueryBuilder().innerJoinAndSelect()/SUM(CASE...)/groupBy() — none of those
+    // SQL constructs have a working Mongo-query-builder translation (joins aren't real
+    // joins there, and groupBy/addGroupBy are documented no-ops for Mongo), so this
+    // always returned zero rows. Wallet/transaction counts are small enough that
+    // fetching the filtered set and joining/aggregating in JS is simple and correct.
+    let ownerIdFilter: string[] | undefined;
+    if (userId) {
+      ownerIdFilter = [userId];
+    } else if (search || state) {
+      const userFilter: Record<string, unknown> = {};
+      if (state) userFilter.state = state;
+      if (search) {
+        const regex = { $regex: search, $options: 'i' };
+        userFilter.$or = [{ name: regex }, { mobileNumber: regex }];
+      }
+      const matchedUsers = await this.userRepo.findAll(userFilter);
+      ownerIdFilter = matchedUsers.map((u) => u.id);
+      if (ownerIdFilter.length === 0) {
+        return { items: [], total: 0, page, limit, pages: 0 };
+      }
     }
-    if (state) qb.andWhere('u.state = :state', { state });
 
-    const sortCol = sortBy === 'balance' ? 'w.balance' : 'w.createdAt';
-    qb.orderBy(sortCol, sortOrder);
+    const walletFilter: Record<string, unknown> = {};
+    if (ownerIdFilter) walletFilter.userId = { $in: ownerIdFilter };
 
-    const [items, total] = await qb.getManyAndCount();
-    return {
-      items: items.filter((w) => w.user).map((w) => ({
+    const allWallets = await this.walletRepo.findAll(walletFilter);
+    const ownerIds = [...new Set(allWallets.map((w) => w.userId))];
+    const owners = ownerIds.length ? await this.userRepo.findAll({ _id: { $in: ownerIds } }) : [];
+    const ownersById = new Map(owners.map((u) => [u.id, u]));
+
+    // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
+    // matching user (orphaned records) are excluded from both items and total.
+    const validWallets = allWallets.filter((w) => ownersById.has(w.userId));
+
+    const dir = sortOrder === 'ASC' ? 1 : -1;
+    validWallets.sort((a, b) => {
+      const av = sortBy === 'balance' ? Number(a.balance) : new Date(a.createdAt).getTime();
+      const bv = sortBy === 'balance' ? Number(b.balance) : new Date(b.createdAt).getTime();
+      return (av - bv) * dir;
+    });
+
+    const total = validWallets.length;
+    const pageWallets = validWallets.slice((page - 1) * limit, (page - 1) * limit + limit);
+    const walletIds = pageWallets.map((w) => w.id);
+
+    const transactions = walletIds.length
+      ? await this.transactionRepo.findAll({ walletId: { $in: walletIds } })
+      : [];
+
+    const sumsByWallet = new Map<string, { totalEarned: number; totalWithdrawn: number }>();
+    for (const tx of transactions) {
+      const entry = sumsByWallet.get(tx.walletId) ?? { totalEarned: 0, totalWithdrawn: 0 };
+      if (tx.type === TransactionType.CREDIT && tx.source === TransactionSource.REWARD && tx.status === TransactionStatus.COMPLETED) {
+        entry.totalEarned += Number(tx.amount);
+      }
+      if (tx.type === TransactionType.DEBIT && tx.source === TransactionSource.WITHDRAWAL && tx.status === TransactionStatus.COMPLETED) {
+        entry.totalWithdrawn += Number(tx.amount);
+      }
+      sumsByWallet.set(tx.walletId, entry);
+    }
+
+    const items = pageWallets.map((w) => {
+      const user = ownersById.get(w.userId)!;
+      const sums = sumsByWallet.get(w.id) ?? { totalEarned: 0, totalWithdrawn: 0 };
+      return {
         id: w.id,
-        userId: w.user.id,
+        userId: user.id,
         balance: Number(w.balance),
-        totalEarned: Number((w as unknown as { totalEarned: string }).totalEarned ?? 0),
-        totalWithdrawn: Number((w as unknown as { totalWithdrawn: string }).totalWithdrawn ?? 0),
+        totalEarned: sums.totalEarned,
+        totalWithdrawn: sums.totalWithdrawn,
         user: {
-          id: w.user.id,
-          name: w.user.name,
-          mobileNumber: w.user.mobileNumber,
-          state: w.user.state,
-          district: w.user.district,
-          category: w.user.category,
-          role: w.user.role,
-          verificationStatus: (w.user as { verificationStatus: string }).verificationStatus,
-          createdAt: w.user.createdAt,
+          id: user.id,
+          name: user.name,
+          mobileNumber: user.mobileNumber,
+          state: user.state,
+          district: user.district,
+          category: user.category,
+          role: user.role,
+          verificationStatus: user.verificationStatus,
+          createdAt: user.createdAt,
         },
-      })),
+      };
+    });
+
+    return {
+      items,
       total,
       page,
       limit,

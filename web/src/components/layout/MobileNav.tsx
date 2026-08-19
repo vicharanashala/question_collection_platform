@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/hooks/useLanguage'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -8,16 +10,19 @@ import {
   MessageSquare,
   CheckSquare,
   LogOut,
+  Languages,
   X,
 } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { BrandLogo } from '@/components/BrandLogo'
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/users', label: 'Users', icon: Users },
-  { to: '/questions', label: 'Questions', icon: MessageSquare },
-  { to: '/reviews', label: 'Review Queue', icon: CheckSquare, roles: ['curator', 'admin', 'super_admin'] },
+  { to: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { to: '/users', labelKey: 'nav.userManagement', icon: Users },
+  { to: '/questions', labelKey: 'nav.questions', icon: MessageSquare },
+  { to: '/reviews', labelKey: 'nav.reviewQueue', icon: CheckSquare, roles: ['curator', 'admin', 'super_admin'] },
 ]
 
 interface MobileNavProps {
@@ -28,6 +33,13 @@ interface MobileNavProps {
 
 export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
   const { user } = useAuth()
+  const { t } = useTranslation()
+  const { nativeName } = useLanguage()
+  const [languageOpen, setLanguageOpen] = useState(false)
+
+  // Role label translates to the active language.
+  const roleKey = user?.role ? `roles.${user.role}` : null
+  const roleLabel = roleKey ? t(roleKey) : ''
 
   // Close on route change
   useEffect(() => {
@@ -50,12 +62,14 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
         {/* Drawer header */}
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-              <span className="text-sm font-black text-sidebar-primary-foreground">QP</span>
+            <div className="flex h-8 w-8 items-center justify-center">
+              <BrandLogo className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-sm font-bold text-sidebar-foreground">QuestionPlatform</p>
-              <p className="text-xs text-sidebar-foreground/60 capitalize">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>
+              {roleLabel && (
+                <p className="text-xs text-sidebar-foreground/60 capitalize">{roleLabel}</p>
+              )}
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-sidebar-foreground">
@@ -65,7 +79,7 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {navItems.map(({ to, label, icon: Icon, roles }) => {
+          {navItems.map(({ to, labelKey, icon: Icon, roles }) => {
             if (roles && !roles.includes(user?.role as string)) return null
             return (
               <NavLink
@@ -81,7 +95,7 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
                 }
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {label}
+                {t(labelKey)}
               </NavLink>
             )
           })}
@@ -94,20 +108,30 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
               {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-sidebar-foreground">{user?.name || 'Admin'}</p>
+              <p className="truncate text-xs font-semibold text-sidebar-foreground">{user?.name || t('roles.admin')}</p>
               <p className="truncate text-xs text-sidebar-foreground/80">{user?.mobileNumber}</p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            onClick={() => setLanguageOpen(true)}
+            className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Languages className="h-4 w-4" />
+            <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
+            <span className="text-xs text-sidebar-foreground/60">{nativeName}</span>
+          </Button>
           <Button
             variant="ghost"
             onClick={() => { onLogout(); onClose() }}
             className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
-            Sign Out
+            {t('profile.signOut')}
           </Button>
         </div>
       </DialogContent>
+      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </Dialog>
   )
 }

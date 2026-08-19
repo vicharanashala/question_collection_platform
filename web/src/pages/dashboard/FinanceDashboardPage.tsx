@@ -11,12 +11,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/api/client'
-import { useAuth } from '@/context/AuthContext'
+// import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChartCard } from '@/components/charts/ChartCard'
 import { AreaChartComponent } from '@/components/charts/AreaChartComponent'
-import { BarChartComponent } from '@/components/charts/BarChartComponent'
+// import { BarChartComponent } from '@/components/charts/BarChartComponent'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatINR } from '@/lib/utils'
 import {
@@ -96,7 +96,7 @@ const TIME_RANGES: { value: string; label: string; days: number }[] = [
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function FinanceDashboardPage() {
-  const { user } = useAuth()
+  // const { user } = useAuth()
   const [timeRange, setTimeRange] = useState('30d')
   const [finSummary, setFinSummary] = useState<FinSummary | null>(null)
   const [finLoading, setFinLoading] = useState(true)

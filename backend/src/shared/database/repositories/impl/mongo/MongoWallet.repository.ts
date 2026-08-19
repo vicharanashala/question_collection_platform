@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { IWalletRepository } from '../../IWallet.repository';
 import { Wallet } from '../../../entities';
@@ -26,7 +26,7 @@ export class MongoWalletRepository
       .exec();
   }
 
-  async incrementBalance(walletId: string, amount: number): Promise<number> {
+  async incrementBalance(walletId: string, amount: number, session?: ClientSession): Promise<number> {
     const { Types } = await import('mongoose');
     // Atomic conditional update: only increment if the resulting balance is >= 0
     // This replaces the old find+set pattern and prevents race-condition overshoots
@@ -36,14 +36,16 @@ export class MongoWalletRepository
         { $inc: { balance: amount } } as Record<string, unknown>,
         { returnDocument: 'after' } as Record<string, unknown>,
       )
+      .session(session ?? null)
       .exec();
     if (!updated) throw new Error(`Wallet ${walletId} not found`);
     return Number((updated as unknown as Record<string, number>).balance);
   }
 
-  async decrement(filter: Record<string, unknown>, field: string, amount: number): Promise<void> {
+  async decrement(filter: Record<string, unknown>, field: string, amount: number, session?: ClientSession): Promise<void> {
     await this._model
       .updateMany(toMongoFilter(filter) as Record<string, unknown>, { $inc: { [field]: -amount } } as Record<string, unknown>)
+      .session(session ?? null)
       .exec();
   }
 }

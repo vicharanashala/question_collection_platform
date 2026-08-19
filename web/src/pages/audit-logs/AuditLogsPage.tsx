@@ -265,7 +265,7 @@ function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, 
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="Withdrawals" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="User Actions" fill="#a855f7" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Question Reviews" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Question Reviews" fill="#10b981" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Config Changes" fill="#f97316" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -789,7 +789,7 @@ export function AuditLogsPage() {
                         <span className="flex items-center gap-2">
                           <Users className="h-3 w-3" />
                           <span>{u.name}</span>
-                          <span className="text-text-tertiary text-xs">{u.mobile}</span>
+                          <span className="text-text-tertiary text-xs">{u.mobileNumber}</span>
                         </span>
                       </SelectItem>
                     ))}

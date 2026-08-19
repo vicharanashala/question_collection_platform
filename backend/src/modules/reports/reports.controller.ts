@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ReportsService } from './reports.service';
@@ -50,7 +51,7 @@ export class ReportsController {
   ) {
     const report = await this.reportsService.getMyReport(req.user.id, id);
     if (!report) {
-      throw new Error('Report not found');
+      throw new NotFoundException('Report not found');
     }
     return report;
   }

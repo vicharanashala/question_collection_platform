@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { MobileNav } from './MobileNav'
+import { Sidebar } from './Sidebar'
 
 export function AppLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)

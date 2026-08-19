@@ -17,7 +17,7 @@ import {
   Phone, MapPin, Calendar, Globe, HelpCircle, Edit2,
   Shield, CheckCircle, AlertCircle, Clock,
   Leaf, Users, GraduationCap, Building2, MapPinned,
-  TrendingUp, FileText, Award, Lock, User,
+  TrendingUp, FileText, Lock, User,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AuthUser } from '@/types'
@@ -67,7 +67,7 @@ function VerificationBadge({ status }: { status: string }) {
   )
 }
 
-function FieldRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function FieldRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
   return (
     <div className="flex items-center justify-between text-sm">
       <div className="flex items-center gap-2.5 text-text-tertiary">
@@ -709,10 +709,10 @@ export function ProfilePage() {
         <CardContent className="p-6">
           <div className="flex items-center gap-5 flex-wrap">
             <div className="relative shrink-0">
-              <div className="flex h-18 w-18 items-center justify-center rounded-2xl text-xl font-black bg-primary text-primary-foreground">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-black bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/20">
                 {initials}
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-surface bg-emerald-500" title="Active" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface bg-emerald-500" title="Active" />
             </div>
 
             <div className="flex-1 min-w-0">
