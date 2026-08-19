@@ -1056,13 +1056,8 @@ export function CompleteProfileWizard({
   }
 
   function handleLogout() {
-    if (
-      window.confirm(
-        "Log out without completing your profile? You can finish this later.",
-      )
-    ) {
-      logout();
-    }
+    logout();
+    navigate("/login", {replace: true});
   }
 
   function validateStep(s: 1 | 2 | 3 | 4): boolean {
