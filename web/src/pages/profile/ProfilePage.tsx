@@ -17,7 +17,7 @@ import {
   Phone, MapPin, Calendar, Globe, HelpCircle, Edit2,
   Shield, CheckCircle, AlertCircle, Clock,
   Leaf, Users, GraduationCap, Building2, MapPinned,
-  TrendingUp, FileText, Award, Lock, User,
+  TrendingUp, FileText, Lock, User,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AuthUser } from '@/types'
@@ -67,7 +67,7 @@ function VerificationBadge({ status }: { status: string }) {
   )
 }
 
-function FieldRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function FieldRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
   return (
     <div className="flex items-center justify-between text-sm">
       <div className="flex items-center gap-2.5 text-text-tertiary">

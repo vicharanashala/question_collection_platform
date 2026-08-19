@@ -288,13 +288,13 @@ export function PublicProfilePage() {
   }
 
   function handleReport() {
-    navigate('/public/reports')
+    navigate('/home/reports')
   }
   function handleTerms() {
-    navigate('/public/terms')
+    navigate('/home/terms')
   }
   function handlePrivacy() {
-    navigate('/public/privacy')
+    navigate('/home/privacy')
   }
   function handleContact() {
     const email = (import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined
@@ -657,13 +657,13 @@ export function PublicProfilePage() {
                 <ActionRow
                   icon={Wallet}
                   label={t('profile.paymentMethods')}
-                  onClick={() => navigate('/public/payment-methods')}
+                  onClick={() => navigate('/home/payment-methods')}
                 />
                 <ActionRow icon={Flag} label={t('report.title')} onClick={handleReport} />
                 <ActionRow
                   icon={HelpCircle}
                   label={t('profile.helpAndFeedback')}
-                  onClick={() => navigate('/public/faqs')}
+                  onClick={() => navigate('/home/faqs')}
                 />
                 <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={handleTerms} />
                 <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={handlePrivacy} />

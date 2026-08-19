@@ -789,7 +789,7 @@ export function AuditLogsPage() {
                         <span className="flex items-center gap-2">
                           <Users className="h-3 w-3" />
                           <span>{u.name}</span>
-                          <span className="text-text-tertiary text-xs">{u.mobile}</span>
+                          <span className="text-text-tertiary text-xs">{u.mobileNumber}</span>
                         </span>
                       </SelectItem>
                     ))}

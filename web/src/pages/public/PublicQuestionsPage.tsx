@@ -91,7 +91,7 @@ export function PublicQuestionsPage() {
           <h2 className="text-xl font-bold text-foreground lg:text-2xl">{t('submissions.title')}</h2>
           <p className="mt-0.5 text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
         </div>
-        <Button onClick={() => navigate('/public/ask')} className="bg-emerald-500 hover:bg-emerald-600">
+        <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600">
           <MessageSquarePlus className="h-4 w-4" />{t('question.askQuestion')}
         </Button>
       </div>
@@ -111,14 +111,14 @@ export function PublicQuestionsPage() {
           ) : items.length === 0 ? (
             <div className="p-10 text-center">
               <p className="text-sm font-medium text-text-secondary">{t('common.noQuestionsFound')}</p>
-              <Button onClick={() => navigate('/public/ask')} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
+              <Button onClick={() => navigate('/home/ask')} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
                 <MessageSquarePlus className="h-4 w-4" /> {t('common.askYourFirstQuestion')}
               </Button>
             </div>
           ) : (
             <ul className="divide-y divide-border-subtle">
               {items.map((q) => (
-                <li key={q.id} className="p-4 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer lg:p-5" onClick={() => q.id && navigate(`/public/questions/${q.id}`)}>
+                <li key={q.id} className="p-4 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer lg:p-5" onClick={() => q.id && navigate(`/home/questions/${q.id}`)}>
                   <div className="flex items-start gap-3">
                     {q.mediaUrls && q.mediaUrls.length > 0 && <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />}
                     {/* Text + meta stack on mobile; on desktop the meta (status/

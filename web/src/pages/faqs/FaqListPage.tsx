@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { faqApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'

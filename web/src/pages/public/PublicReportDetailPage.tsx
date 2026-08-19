@@ -91,7 +91,7 @@ export function PublicReportDetailPage(): ReactNode {
   if (!report) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 pb-4">
-        <Button variant="outline" onClick={() => navigate('/public/reports')}>
+        <Button variant="outline" onClick={() => navigate('/home/reports')}>
           <ArrowLeft className="h-4 w-4" />
           Back to reports
         </Button>
@@ -119,7 +119,7 @@ export function PublicReportDetailPage(): ReactNode {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => navigate('/public/reports')}
+        onClick={() => navigate('/home/reports')}
         className="rounded-full"
       >
         <ArrowLeft className="h-4 w-4" />

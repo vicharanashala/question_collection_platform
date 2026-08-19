@@ -75,7 +75,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
  */
 function StaffRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
-  if (user?.role === 'user') return <Navigate to="/public" replace />
+  if (user?.role === 'user') return <Navigate to="/home" replace />
   return <>{children}</>
 }
 
@@ -87,17 +87,13 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
  */
 function RootGate({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth()
-  const location = useLocation()
-  const regState = location.state as { mobileNumber?: string } | null
   if (isLoading) return null
   if (!isAuthenticated) {
-    // Visitors who just verified an OTP arrive at "/" with
-    // `state.mobileNumber` — let them straight into the wizard.
-    // Everyone else must enter the gating flow at /public/register first.
-    if (regState?.mobileNumber) return <PublicRegisterPage />
-    return <Navigate to="/public/register" replace />
+    // Visitors at "/" without auth get routed to /home/register where the
+    // mobile + OTP gate lives.
+    return <Navigate to="/home/register" replace />
   }
-  if (user?.role === 'user') return <Navigate to="/public" replace />
+  if (user?.role === 'user') return <Navigate to="/home" replace />
   return <>{children}</>
 }
 
@@ -107,8 +103,15 @@ function RootGate({ children }: { children: React.ReactNode }) {
  */
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
+  const location = useLocation()
+  const state = location.state as { mobileNumber?: string } | null
+  // Allow visitors who just verified their OTP (state.mobileNumber is set)
+  // through without full auth so they can complete the profile on /home via
+  // the modal. Without this carve-out they would be bounced to /login and
+  // would lose the post-OTP flow.
+  const postOtpNeedingProfile = !!state?.mobileNumber && !isAuthenticated
   if (isLoading) return null
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!isAuthenticated && !postOtpNeedingProfile) return <Navigate to="/login" replace />
   if (user?.role && user.role !== 'user') return <Navigate to="/dashboard" replace />
   return <>{children}</>
 }
@@ -133,7 +136,7 @@ function RoleRoute({ pageKey }: { pageKey: string }) {
  */
 function HomeRedirect() {
   const { user } = useAuth()
-  if (user?.role === 'user') return <Navigate to="/public" replace />
+  if (user?.role === 'user') return <Navigate to="/home" replace />
   return <Navigate to="/dashboard" replace />
 }
 
@@ -151,8 +154,8 @@ export default function App() {
       <Routes>
         {/* ── Public auth pages (no auth required) ──────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/public/register" element={<PublicRegisterPage />} />
-        <Route path="/public/verification-pending" element={<PublicVerificationPendingPage />} />
+        <Route path="/home/register" element={<PublicRegisterPage />} />
+        <Route path="/home/verification-pending" element={<PublicVerificationPendingPage />} />
 
         {/* ── Root gate: home page for visitors, staff shell for staff ──── */}
         <Route
@@ -164,7 +167,7 @@ export default function App() {
                   <AppLayout />
                 </StaffRoute>
               </ProtectedRoute>
-            </RootGate>
+           </RootGate>
           }
         >
           <Route index element={<HomeRedirect />} />
@@ -187,7 +190,7 @@ export default function App() {
 
         {/* ── Public user shell (role="user" only) ───────────────────────── */}
         <Route
-          path="/public"
+          path="/home"
           element={
             <PublicRoute>
               <PublicLayout />

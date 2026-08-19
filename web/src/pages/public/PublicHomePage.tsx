@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { adminApi, questionApi, walletApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { CompleteProfileModal } from '@/components/profile/CompleteProfileModal'
 import {
   Wallet, Trophy, Calendar, PenLine, Lightbulb, ArrowRight, Info, Leaf,
   Sprout, MapPin, CheckCircle2, Clock, PenSquare, Medal,
@@ -104,6 +105,7 @@ function currentTierIndex(approved: number): number {
 
 export function PublicHomePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const { t } = useTranslation()
   const [stats, setStats] = useState<Stats | null>(null)
@@ -111,6 +113,26 @@ export function PublicHomePage() {
   const [loading, setLoading] = useState(true)
   const [dailyLimit, setDailyLimit] = useState<number>(20)
   const [editWindowSec, setEditWindowSec] = useState<number>(0)
+
+
+
+  // ─── Complete-profile wizard modal ───────────────────────────────────────
+  // Opens automatically only when the visitor has just verified an OTP for
+  // the first time -- i.e. this is a *new* public user going through the
+  // registration flow. We detect this via the router state `mobileNumber`
+  // that `LoginPage` / `PublicRegisterPage` attach when navigating to
+  // `/home` after a successful `requiresRegistration: true` response.
+  //
+  // We deliberately do NOT show the modal for already-registered users,
+  // even if their profile data is somehow incomplete on the backend.
+  // Those users can edit their profile from the dedicated `/home/profile`
+  // page.
+  //
+  // The modal itself swallows backdrop / ESC / X-close attempts so the
+  // user is forced to either complete the wizard or stay on this page.
+  const locationState = location.state as { mobileNumber?: string } | null
+  const postOtpMobile = locationState?.mobileNumber?.replace(/\D/g, '').slice(-10) || null
+  const showProfileModal = !!postOtpMobile
 
   useEffect(() => {
     let alive = true
@@ -262,14 +284,14 @@ export function PublicHomePage() {
                 iconClass="text-emerald-600 dark:text-emerald-400"
                 label={t('home.askQuestion')}
                 sub={t('home.askQuestionSub')}
-                onClick={() => navigate('/public/ask')}
+onClick={() => navigate('/home/ask')}
               />
               <QuickAction
                 icon={<Wallet className="h-5 w-5 lg:h-6 lg:w-6" />}
                 iconClass="text-emerald-600 dark:text-emerald-400"
                 label={t('home.myWallet')}
                 sub={t('home.myWalletSub')}
-                onClick={() => navigate('/public/wallet')}
+                onClick={() => navigate('/home/wallet')}
               />
             </CardContent>
           </Card>
@@ -312,7 +334,7 @@ export function PublicHomePage() {
 
               <button
                 type="button"
-                onClick={() => navigate('/public/ask')}
+                onClick={() => navigate('/home/ask')}
                 className="mt-5 flex w-full items-center justify-between rounded-lg border border-border-subtle p-3 text-left transition-colors hover:border-emerald-300 dark:hover:border-emerald-800"
               >
                 <div className="flex items-center gap-3">
@@ -361,6 +383,19 @@ export function PublicHomePage() {
       </section>
 
       <p className="pt-2 text-center text-xs text-text-tertiary">{t('app.footer')}</p>
+
+      {/*
+        Complete-profile wizard modal. Renders only when the page detects an
+        incomplete profile. The modal is non-dismissible; the wizard inside
+        navigates to /home/verification-pending on success, which unmounts
+        the dashboard + modal together.
+      */}
+      {showProfileModal && (
+        <CompleteProfileModal
+          open={showProfileModal}
+          mobileNumber={postOtpMobile ?? user?.mobileNumber ?? ''}
+        />
+      )}
     </div>
   )
 }

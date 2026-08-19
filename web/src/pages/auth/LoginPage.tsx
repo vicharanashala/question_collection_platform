@@ -119,11 +119,13 @@ export function LoginPage() {
       // ── New user ────────────────────────────────────────────────────
       // Backend returns `{ requiresRegistration, role }` for any user
       // that doesn't have a name set yet. Public users (role='user')
-      // get sent to the signup wizard. Staff accounts are blocked —
-      // the admin creates them server-side.
+      // get sent to the signup wizard hosted on the home page modal.
+      // Staff accounts are blocked — the admin creates them server-side.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
-          navigate('/', { state: { mobileNumber: mobile } })
+          // Navigate to /home with state.mobileNumber so the home page can
+          // open the complete-profile modal automatically.
+          navigate('/home', { state: { mobileNumber: mobile } })
         } else {
           toast.error('Your account is not yet activated. Please contact your administrator.')
         }
@@ -138,10 +140,10 @@ export function LoginPage() {
         { ...user, token: tokens.accessToken },
       )
 
-      // Route by role: public users → /public, staff → /dashboard
+      // Route by role: public users → /home, staff → /dashboard
       if (user.role === 'user') {
         toast.success('Welcome back!')
-        navigate('/public', { replace: true })
+        navigate('/home', { replace: true })
       } else {
         toast.success('Welcome back!')
         navigate('/dashboard', { replace: true })
@@ -323,7 +325,7 @@ export function LoginPage() {
           Question Collection Platform &middot; AnnaDatha
         </p>
         <Link
-          to="/"
+          to="/home/register"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
         >
           <Sprout className="h-3.5 w-3.5" />

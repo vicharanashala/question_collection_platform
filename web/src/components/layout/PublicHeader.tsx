@@ -25,17 +25,17 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   const menuRef = useRef<HTMLDivElement>(null)
 
   const titles: Record<string, string> = {
-    '/public': t('nav.home'),
-    '/public/ask': t('nav.submit'),
-    '/public/questions': t('nav.submissions'),
-    '/public/faqs': t('faq.title'),
-    '/public/profile': t('nav.profile'),
-    '/public/wallet': t('nav.wallet'),
-    '/public/payment-methods': t('profile.paymentMethods'),
-    '/public/terms': t('profile.termsOfService'),
-    '/public/privacy': t('profile.privacyPolicy'),
-    '/public/notifications': t('notifications.title'),
-    '/public/leaderboard': t('leaderboard.title'),
+    '/home': t('nav.home'),
+    '/home/ask': t('nav.submit'),
+    '/home/questions': t('nav.submissions'),
+    '/home/faqs': t('faq.title'),
+    '/home/profile': t('nav.profile'),
+    '/home/wallet': t('nav.wallet'),
+    '/home/payment-methods': t('profile.paymentMethods'),
+    '/home/terms': t('profile.termsOfService'),
+    '/home/privacy': t('profile.privacyPolicy'),
+    '/home/notifications': t('notifications.title'),
+    '/home/leaderboard': t('leaderboard.title'),
   }
   const title = titles[pathname] ?? 'AnnaDatha'
   const initials = user ? getInitials(user.name || '', user.mobileNumber) : '?'
@@ -51,7 +51,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   // Refresh the unread badge on mount and whenever the user navigates away
   // from the notifications page (covers "just read some notifications").
   useEffect(() => {
-    if (pathname === '/public/notifications') return
+    if (pathname === '/home/notifications') return
     notificationApi.getNotifications({ page: 1, limit: 1 })
       .then((res) => setUnreadCount(res.unread))
       .catch(() => {})
@@ -75,7 +75,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
         <h1 className="text-base font-bold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate('/public/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label="Notifications" title="Notifications">
+        <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label="Notifications" title="Notifications">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-0.5 text-[9px] font-bold leading-none text-white">
@@ -89,7 +89,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
         <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
-        <button onClick={() => navigate('/public/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
+        <button onClick={() => navigate('/home/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
           <Trophy className="h-4 w-4" />
         </button>
         <div className="h-6 w-px bg-border-subtle" />
@@ -105,7 +105,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
                 <p className="text-xs text-text-tertiary truncate">{user?.mobileNumber}</p>
               </div>
               <div className="py-1">
-                <Link to="/public/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors">
+                <Link to="/home/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors">
                   <User className="h-4 w-4 text-text-tertiary" />
                   {t('nav.profile')}
                 </Link>

@@ -19,7 +19,7 @@ export function PublicPrivacyPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-4">
-      <Button variant="outline" size="sm" onClick={() => navigate('/public/profile')} className="rounded-full">
+      <Button variant="outline" size="sm" onClick={() => navigate('/home/profile')} className="rounded-full">
         <ArrowLeft className="h-4 w-4" />
         Back to profile
       </Button>

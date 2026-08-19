@@ -12,7 +12,7 @@ export function DashboardRouter() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (user?.role === 'user') navigate('/public', { replace: true })
+    if (user?.role === 'user') navigate('/home', { replace: true })
   }, [user, navigate])
 
   if (user?.role === 'user') return null

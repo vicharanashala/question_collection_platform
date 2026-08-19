@@ -17,11 +17,11 @@ interface PublicMobileNavProps {
 }
 
 const items = [
-  { to: '/public',           labelKey: 'nav.home',        icon: Home,             end: true },
-  { to: '/public/ask',       labelKey: 'nav.submit',      icon: MessageSquarePlus },
-  { to: '/public/questions', labelKey: 'nav.submissions', icon: ListChecks },
-  { to: '/public/wallet',    labelKey: 'nav.wallet',      icon: Wallet },
-  { to: '/public/profile',   labelKey: 'nav.profile',     icon: User },
+  { to: '/home',           labelKey: 'nav.home',        icon: Home,             end: true },
+  { to: '/home/ask',       labelKey: 'nav.submit',      icon: MessageSquarePlus },
+  { to: '/home/questions', labelKey: 'nav.submissions', icon: ListChecks },
+  { to: '/home/wallet',    labelKey: 'nav.wallet',      icon: Wallet },
+  { to: '/home/profile',   labelKey: 'nav.profile',     icon: User },
 ]
 
 export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {

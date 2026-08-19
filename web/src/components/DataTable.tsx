@@ -37,8 +37,8 @@ interface DataTableProps<T> {
   page: number
   totalPages: number
   totalCount: number
-  searchValue: string
-  onSearchChange: (v: string) => void
+  searchValue?: string
+  onSearchChange?: (v: string) => void
   onPageChange: (p: number) => void
   SkeletonRows?: number
   emptyMessage?: string
@@ -286,8 +286,8 @@ export function DataTable<T>({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search records..."
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={searchValue ?? ""}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="pl-9 pr-4"
           />
         </div>
