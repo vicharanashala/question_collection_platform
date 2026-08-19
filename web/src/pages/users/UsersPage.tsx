@@ -122,8 +122,8 @@ export function UsersPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-text">Users</h2>
-          <p className="text-sm text-text-tertiary">{total.toLocaleString()} total users</p>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">Users</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{total.toLocaleString()} total users</p>
         </div>
         {isSuperAdmin && (
           <Button onClick={openCreate} size="sm">
@@ -151,7 +151,7 @@ export function UsersPage() {
                 key={chip.value}
                 onClick={() => { setStatusFilter(chip.value); setPage(1) }}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all border',
+                  'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold transition-all border',
                   statusFilter === chip.value
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border-subtle bg-surface-variant text-text-secondary hover:border-primary/40 hover:text-text',
@@ -164,7 +164,7 @@ export function UsersPage() {
           </div>
           {isSuperAdmin && (
             <select
-              className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
+              className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
               value={roleFilter}
               onChange={(e) => { setRoleFilter(e.target.value); setPage(1) }}
             >
@@ -181,7 +181,7 @@ export function UsersPage() {
       {/* Table */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-variant/50">
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">User</th>
@@ -222,7 +222,7 @@ export function UsersPage() {
                       <td className="px-4 py-3">
                         <Link to={`/users/${u.id}`} className="flex items-center gap-3 group">
                           <div className={cn(
-                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold',
                             isLocked ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' : 'bg-primary/10 text-primary',
                           )}>
                             {(u.name || u.username || u.mobileNumber).slice(0, 2).toUpperCase()}
@@ -243,15 +243,15 @@ export function UsersPage() {
                                 </span>
                               )}
                             </div>
-                            {u.username && <p className="text-xs text-text-tertiary">@{u.username}</p>}
-                            <p className="text-xs text-text-tertiary">{u.mobileNumber}</p>
+                            {u.username && <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">@{u.username}</p>}
+                            <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{u.mobileNumber}</p>
                           </div>
                         </Link>
                       </td>
                       <td className="px-4 py-3">
                         <Badge
                           variant={u.role === 'super_admin' ? 'destructive' : u.role === 'admin' ? 'default' : 'secondary'}
-                          className="capitalize text-xs"
+                          className="capitalize text-[11px] sm:text-[11px] sm:text-xs"
                         >
                           {u.role.replace('_', ' ')}
                         </Badge>
@@ -259,7 +259,7 @@ export function UsersPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <StatusIcon className={cn('h-3.5 w-3.5', STATUS_COLORS[u.verificationStatus] ? 'text-text' : 'text-text-tertiary')} />
-                          <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold capitalize', STATUS_COLORS[u.verificationStatus] ?? 'bg-surface-variant text-text-secondary')}>
+                          <span className={cn('rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize', STATUS_COLORS[u.verificationStatus] ?? 'bg-surface-variant text-text-secondary')}>
                             {u.verificationStatus}
                           </span>
                         </div>
@@ -284,7 +284,7 @@ export function UsersPage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border-subtle px-4 py-3">
-            <p className="text-xs text-text-secondary">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
               Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
             </p>
             <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ export function UsersPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm text-text-secondary">
+              <span className="text-xs sm:text-xs sm:text-sm text-text-secondary">
                 Page {page} of {totalPages}
               </span>
               <Button
@@ -346,7 +346,7 @@ export function UsersPage() {
                 <Label htmlFor="cu-role">Role</Label>
                 <select
                   id="cu-role"
-                  className="mt-1 flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 py-2 text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
+                  className="mt-1 flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 py-2 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
                   value={form.role}
                   onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
                 >
@@ -360,7 +360,7 @@ export function UsersPage() {
                   <Label htmlFor="cu-category">Category</Label>
                   <select
                     id="cu-category"
-                    className="mt-1 flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 py-2 text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
+                    className="mt-1 flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 py-2 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                   >
@@ -412,7 +412,7 @@ export function UsersPage() {
               </div>
             </div>
 
-            {formError && <p className="text-sm text-destructive">{formError}</p>}
+            {formError && <p className="text-xs sm:text-xs sm:text-sm text-destructive">{formError}</p>}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>

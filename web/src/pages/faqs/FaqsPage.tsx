@@ -85,7 +85,7 @@ function FaqRow({
           <div className="flex items-start gap-2">
             <button className="flex-1 text-left" onClick={() => setOpen((o) => !o)}>
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-foreground leading-snug">
+                <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-snug">
                   {faq.question}
                 </p>
                 <span
@@ -100,7 +100,7 @@ function FaqRow({
                 </span>
               </div>
               {open && (
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-2 leading-relaxed whitespace-pre-wrap">
                   {faq.answer}
                 </p>
               )}
@@ -119,7 +119,7 @@ function FaqRow({
 
         <Badge
           variant={faq.isVisible ? 'default' : 'secondary'}
-          className="shrink-0 text-xs mt-0.5"
+          className="shrink-0 text-[11px] sm:text-[11px] sm:text-xs mt-0.5"
           style={
             faq.isVisible
               ? {
@@ -192,7 +192,7 @@ function PaginationControls({
 
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
         <span>
           {start}–{end} of {total}
         </span>
@@ -203,7 +203,7 @@ function PaginationControls({
             value={String(limit)}
             onValueChange={(v) => onLimit(Number(v))}
           >
-            <SelectTrigger className="h-7 w-16 text-xs">
+            <SelectTrigger className="h-7 w-16 text-[11px] sm:text-[11px] sm:text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -246,7 +246,7 @@ function PaginationControls({
               key={p}
               variant={p === page ? 'default' : 'ghost'}
               size="icon"
-              className="h-7 w-7 text-xs"
+              className="h-7 w-7 text-[11px] sm:text-[11px] sm:text-xs"
               onClick={() => onPage(p)}
             >
               {p}
@@ -339,7 +339,7 @@ function FaqDialog({
               onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
               aria-invalid={!!errors.question}
             />
-            {errors.question && <p className="text-xs text-destructive">{errors.question}</p>}
+            {errors.question && <p className="text-[11px] sm:text-[11px] sm:text-xs text-destructive">{errors.question}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -352,7 +352,7 @@ function FaqDialog({
               rows={5}
               aria-invalid={!!errors.answer}
             />
-            {errors.answer && <p className="text-xs text-destructive">{errors.answer}</p>}
+            {errors.answer && <p className="text-[11px] sm:text-[11px] sm:text-xs text-destructive">{errors.answer}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -377,8 +377,8 @@ function FaqDialog({
 
           <div className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">
             <div>
-              <p className="text-sm font-medium text-foreground">Visible to users</p>
-              <p className="text-xs text-muted-foreground">Hidden FAQs are not shown on the public FAQ page</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">Visible to users</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Hidden FAQs are not shown on the public FAQ page</p>
             </div>
             <Switch
               checked={form.isVisible}
@@ -600,8 +600,8 @@ export function FaqsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">FAQ Management</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">FAQ Management</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
             Manage frequently asked questions
           </p>
         </div>
@@ -644,8 +644,8 @@ export function FaqsPage() {
                 <Icon className="h-[18px] w-[18px]" style={{ color }} />
               </div>
               <div>
-                <p className="text-xl font-bold text-foreground">{value}</p>
-                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{value}</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</p>
               </div>
             </CardContent>
           </Card>
@@ -664,7 +664,7 @@ export function FaqsPage() {
             placeholder="Search questions or answers…"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-8 h-9 text-sm"
+            className="pl-8 h-9 text-xs sm:text-xs sm:text-sm"
           />
           {search && (
             <button
@@ -681,7 +681,7 @@ export function FaqsPage() {
           value={sortBy}
           onValueChange={(v) => { setSortBy(v as SortBy); setPage(1) }}
         >
-          <SelectTrigger className="h-9 w-40 text-xs">
+          <SelectTrigger className="h-9 w-40 text-[11px] sm:text-[11px] sm:text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -708,7 +708,7 @@ export function FaqsPage() {
           value={String(limit)}
           onValueChange={(v) => handleLimitChange(Number(v))}
         >
-          <SelectTrigger className="h-9 w-28 text-xs">
+          <SelectTrigger className="h-9 w-28 text-[11px] sm:text-[11px] sm:text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -727,7 +727,7 @@ export function FaqsPage() {
             <button
               key={cat.key}
               onClick={() => handleCategoryChange(cat.key)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-semibold transition-all"
               style={
                 isActive
                   ? {
@@ -768,12 +768,12 @@ export function FaqsPage() {
             >
               <HelpCircle className="h-7 w-7" style={{ color: activeCatMeta.color + '60' }} />
             </div>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
               {activeCat !== 'all' || search
                 ? `No FAQs matching your filters`
                 : 'No FAQs yet'}
             </p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-52">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1 max-w-52">
               {activeCat !== 'all' || search
                 ? 'Try adjusting your search or category filter'
                 : 'Create your first FAQ to get started'}
@@ -835,7 +835,7 @@ export function FaqsPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => { setActiveCat('all'); setPage(1) }}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="h-3 w-3" />
                 Clear category filter

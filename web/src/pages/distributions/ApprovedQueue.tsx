@@ -60,7 +60,7 @@ export function ApprovedQueue() {
 
       <Card>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead className="bg-surface text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-2 font-medium">Question</th>
@@ -83,10 +83,10 @@ export function ApprovedQueue() {
                   <td className="px-4 py-2 max-w-md">
                     <div className="line-clamp-2">{q.questionText}</div>
                   </td>
-                  <td className="px-4 py-2 text-xs text-muted-foreground">
+                  <td className="px-4 py-2 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                     {[q.state, q.district].filter(Boolean).join(' / ')}
                   </td>
-                  <td className="px-4 py-2 text-xs text-muted-foreground">
+                  <td className="px-4 py-2 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                     {q.reviewedAt ? new Date(q.reviewedAt).toLocaleDateString() : '—'}
                   </td>
                   <td className="px-4 py-2 text-right">

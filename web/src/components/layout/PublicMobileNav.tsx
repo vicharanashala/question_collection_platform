@@ -58,7 +58,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                 <BrandLogo className="h-9 w-9" />
               </div>
               <div>
-                <p className="text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
+                <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
                 <p className="text-[11px] text-text-tertiary leading-tight">{t('app.publicPortal')}</p>
               </div>
             </div>
@@ -75,7 +75,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                 end={end}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  `flex items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-text-secondary hover:bg-surface-variant hover:text-foreground'
@@ -90,17 +90,17 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
 
           <div className="absolute bottom-0 left-0 right-0 border-t border-border-subtle p-3 dark:border-border-subtle">
             <div className="mb-2 flex items-center gap-2 rounded-md bg-surface-variant px-3 py-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">
                 {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-foreground">{user?.name || 'Welcome'}</p>
+                <p className="truncate text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground">{user?.name || 'Welcome'}</p>
                 <p className="truncate text-[11px] text-text-tertiary">{user?.mobileNumber}</p>
               </div>
             </div>
             <button
               onClick={() => setLogoutOpen(true)}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               {t('profile.signOut')}

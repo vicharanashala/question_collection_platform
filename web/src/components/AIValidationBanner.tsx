@@ -70,7 +70,7 @@ export function AIValidationBanner({ result, onDismiss, className }: AIValidatio
     <div
       role={variant === 'error' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-sm',
+        'flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-xs sm:text-xs sm:text-sm',
         cls.container,
         className,
       )}

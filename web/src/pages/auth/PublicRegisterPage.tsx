@@ -98,7 +98,7 @@ const GATE_STAGE_LABELS: Record<GateStage, string> = {
 //           <div key={s} className="flex items-center gap-1.5">
 //             <div
 //               className={cn(
-//                 'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
+//                 'flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold',
 //                 isDone || isActive
 //                   ? 'bg-emerald-500 text-white'
 //                   : 'bg-muted text-muted-foreground',
@@ -129,7 +129,7 @@ function GateProgress({ stage }: { stage: GateStage }) {
           <div key={s} className="flex items-center gap-1.5">
             <div
               className={cn(
-                'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
+                'flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold',
                 isDone || isActive
                   ? 'bg-emerald-500 text-white'
                   : 'bg-muted text-muted-foreground',
@@ -197,10 +197,10 @@ const INITIAL_FORM: WizardFormState = {
 
 function LockedBanner({ info }: { info: AccountLockedInfo }) {
   return (
-    <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+    <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs sm:text-xs sm:text-sm text-rose-800">
       <p className="font-semibold">Account {info.status}</p>
-      {info.reason && <p className="mt-1 text-xs">{info.reason}</p>}
-      <p className="mt-1 text-xs">Contact support for help regaining access.</p>
+      {info.reason && <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs">{info.reason}</p>}
+      <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs">Contact support for help regaining access.</p>
     </div>
   )
 }
@@ -232,17 +232,17 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
           <Smartphone className="h-6 w-6" />
         </div>
-        <h2 className="text-lg font-bold text-foreground">Enter your mobile number</h2>
-        <p className="text-sm text-text-secondary">
+        <h2 className="text-base sm:text-base sm:text-lg font-bold text-foreground">Enter your mobile number</h2>
+        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">
           We&apos;ll send a 6-digit OTP to verify it&apos;s you.
         </p>
       </div>
       {lockedInfo && <LockedBanner info={lockedInfo} />}
       <form onSubmit={handleSendOtp} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text">Mobile Number</label>
+          <label className="text-xs sm:text-xs sm:text-sm font-medium text-text">Mobile Number</label>
           <div className="flex gap-2">
-            <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-sm font-semibold text-text-secondary shadow-xs">
+            <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-xs sm:text-xs sm:text-sm font-semibold text-text-secondary shadow-xs">
               +91
             </div>
             <Input
@@ -257,7 +257,7 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
               disabled={gateLoading}
             />
           </div>
-          <p className="text-xs text-text-secondary">Standard SMS rates may apply.</p>
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">Standard SMS rates may apply.</p>
         </div>
 
         <label
@@ -276,7 +276,7 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
             disabled={gateLoading}
             data-testid="terms-consent-checkbox"
           />
-          <span className="text-xs leading-relaxed text-foreground">
+          <span className="text-[11px] sm:text-[11px] sm:text-xs leading-relaxed text-foreground">
             I have read and agree to the{" "}
             <button
               type="button"
@@ -316,7 +316,7 @@ function MobileStage({ gateMobile, setGateMobile, gateLoading, lockedInfo, accep
         <div className="text-center">
           <Link
             to="/login"
-            className="inline-flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary"
+            className="inline-flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary hover:text-text-secondary"
           >
             <ArrowLeft className="h-3 w-3" /> Back to sign in
           </Link>
@@ -351,7 +351,7 @@ function LegalDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0">
         <DialogHeader className="px-6 py-4">
-          <DialogTitle className="flex items-center gap-2 text-base">
+          <DialogTitle className="flex items-center gap-2 text-sm sm:text-sm sm:text-base">
             <Icon className="h-4 w-4 text-emerald-600" />
             {title}
           </DialogTitle>
@@ -360,13 +360,13 @@ function LegalDialog({
           <ol className="space-y-4">
             {sections.map(({ id, title: sectionTitle, body }) => (
               <li key={id} className="space-y-1">
-                <h3 className="text-sm font-bold text-foreground">
+                <h3 className="text-xs sm:text-xs sm:text-sm font-bold text-foreground">
                   <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 align-middle dark:bg-emerald-500/20 dark:text-emerald-300">
                     {id}
                   </span>
                   {sectionTitle}
                 </h3>
-                <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs leading-relaxed text-text-secondary">{body}</p>
               </li>
             ))}
           </ol>
@@ -411,25 +411,25 @@ function OtpStage({
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
           <MailQuestion className="h-6 w-6" />
         </div>
-        <h2 className="text-lg font-bold text-foreground">Verify your mobile</h2>
-        <p className="text-sm text-text-secondary">Enter the 6-digit code we just sent.</p>
+        <h2 className="text-base sm:text-base sm:text-lg font-bold text-foreground">Verify your mobile</h2>
+        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Enter the 6-digit code we just sent.</p>
       </div>
       {lockedInfo && <LockedBanner info={lockedInfo} />}
       <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-variant/60 px-3 py-2">
         <Smartphone className="h-4 w-4 text-text-tertiary shrink-0" />
-        <span className="text-sm font-medium text-text">+91 {gateMobile}</span>
+        <span className="text-xs sm:text-xs sm:text-sm font-medium text-text">+91 {gateMobile}</span>
         <button
           type="button"
           onClick={handleChangeMobile}
           disabled={gateLoading}
-          className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+          className="ml-auto flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline disabled:opacity-50"
         >
           <ArrowLeft className="h-3 w-3" /> Change
         </button>
       </div>
       <form onSubmit={handleVerifyOtp} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text">One-Time Password</label>
+          <label className="text-xs sm:text-xs sm:text-sm font-medium text-text">One-Time Password</label>
           <Input
             ref={otpRef}
             type="text"
@@ -440,13 +440,13 @@ function OtpStage({
               setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
               setGateError('')
             }}
-            className="text-center text-2xl tracking-[0.4em] font-mono font-bold py-6"
+            className="text-center text-xl sm:text-2xl tracking-[0.4em] font-mono font-bold py-6"
             maxLength={6}
             autoComplete="one-time-code"
             disabled={gateLoading}
           />
-          {gateError && <p className="text-xs text-rose-600 text-center">{gateError}</p>}
-          <p className="text-xs text-text-secondary text-center">
+          {gateError && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600 text-center">{gateError}</p>}
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary text-center">
             Enter the 6-digit code sent to your mobile
           </p>
         </div>
@@ -460,7 +460,7 @@ function OtpStage({
             </>
           )}
         </Button>
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
           <button
             type="button"
             onClick={handleChangeMobile}
@@ -515,7 +515,7 @@ interface WizardFormStateProps {
 function Step1({ form, errors, setField }: WizardFormStateProps) {
   return (
     <div className="space-y-3">
-      <p className="text-sm text-text-secondary">Pick the option that best describes you.</p>
+      <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Pick the option that best describes you.</p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {USER_CATEGORIES.map((c) => {
           const active = form.category === c.value
@@ -523,15 +523,15 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
             <button key={c.value} type="button" onClick={() => setField('category', c.value)} className={cn('flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm', active ? `${c.ring} bg-emerald-50/50 dark:bg-emerald-950/20` : 'border-border-subtle hover:border-emerald-200')}>
               <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', c.iconBg, c.iconColor)}><CategoryIcon value={c.value} className="h-5 w-5" /></div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground">{c.label}</p>
-                <p className="mt-0.5 text-xs text-text-secondary">{c.description}</p>
+                <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground">{c.label}</p>
+                <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{c.description}</p>
               </div>
               {active && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
             </button>
           )
         })}
       </div>
-      {errors.category && <p className="text-xs text-rose-600">{errors.category}</p>}
+      {errors.category && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.category}</p>}
     </div>
   )
 }
@@ -539,14 +539,14 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
 function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistricts, loadingBlocks, loadingVillages, loadingKvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-text-secondary">We'll use this to match your questions with local experts.</p>
+      <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">We'll use this to match your questions with local experts.</p>
       <div className="space-y-1.5">
         <Label>State <span className="text-rose-600">*</span></Label>
         <Select value={form.state} onValueChange={(v) => { setField('state', v); setField('district', ''); setField('districtCode', ''); loadDistricts(v) }}>
           <SelectTrigger><SelectValue placeholder="Choose state" /></SelectTrigger>
           <SelectContent>{SUPPORTED_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
         </Select>
-        {errors.state && <p className="text-xs text-rose-600">{errors.state}</p>}
+        {errors.state && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.state}</p>}
       </div>
       <div className="space-y-1.5">
         <Label>District <span className="text-rose-600">*</span></Label>
@@ -565,12 +565,12 @@ function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistric
           <SelectContent>{districts.map((d) => <SelectItem key={d.code} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
         </Select>
         {loadingDistricts && (
-          <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+          <p className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
             <Loader2 className="h-3 w-3 animate-spin" />
             Loading districts…
           </p>
         )}
-        {errors.district && <p className="text-xs text-rose-600">{errors.district}</p>}
+        {errors.district && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.district}</p>}
       </div>
       {form.category === 'farmer' && (
         <div className="space-y-1.5">
@@ -590,12 +590,12 @@ function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistric
             <SelectContent>{blocks.map((b) => <SelectItem key={b.code} value={b.name}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
           {loadingBlocks && (
-            <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+            <p className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
               <Loader2 className="h-3 w-3 animate-spin" />
               Loading blocks…
             </p>
           )}
-          {errors.block && <p className="text-xs text-rose-600">{errors.block}</p>}
+          {errors.block && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.block}</p>}
         </div>
       )}
       {form.category === 'farmer' && form.block && (
@@ -613,7 +613,7 @@ function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistric
               <SelectContent>{villages.map((v) => <SelectItem key={v.code} value={v.name}>{v.name}</SelectItem>)}</SelectContent>
             </Select>
             {loadingVillages && (
-              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+              <p className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Loading villages…
               </p>
@@ -632,7 +632,7 @@ function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistric
               <SelectContent>{kvks.map((k) => <SelectItem key={k.code} value={k.name}>{k.name}</SelectItem>)}</SelectContent>
             </Select>
             {loadingKvks && (
-              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+              <p className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Loading KVKs…
               </p>
@@ -651,17 +651,17 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
         <div className="space-y-1.5">
           <Label>Full name <span className="text-rose-600">*</span></Label>
           <Input value={form.name} onChange={(e) => setField('name', e.target.value)} maxLength={80} placeholder="Your name" />
-          {errors.name && <p className="text-xs text-rose-600">{errors.name}</p>}
+          {errors.name && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.name}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Username <span className="text-rose-600">*</span></Label>
           <Input value={form.username} onChange={(e) => setField('username', e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase())} maxLength={20} placeholder="e.g. ram_kr" />
-          {errors.username && <p className="text-xs text-rose-600">{errors.username}</p>}
-          {usernameStatus === 'available' && <p className="text-xs text-emerald-700">âœ“ Available</p>}
+          {errors.username && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.username}</p>}
+          {usernameStatus === 'available' && <p className="text-[11px] sm:text-[11px] sm:text-xs text-emerald-700">âœ“ Available</p>}
           {usernameStatus === 'taken' && (
             <div className="space-y-1">
-              <p className="text-xs text-rose-600">Taken. Try one of these:</p>
-              <div className="flex flex-wrap gap-1.5">{usernameSuggestions.map((s) => <button key={s} type="button" onClick={() => setField('username', s)} className="rounded-full border border-emerald-200 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-50">{s}</button>)}</div>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">Taken. Try one of these:</p>
+              <div className="flex flex-wrap gap-1.5">{usernameSuggestions.map((s) => <button key={s} type="button" onClick={() => setField('username', s)} className="rounded-full border border-emerald-200 px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs text-emerald-700 hover:bg-emerald-50">{s}</button>)}</div>
             </div>
           )}
         </div>
@@ -673,12 +673,12 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
             <SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
             <SelectContent>{GENDER_OPTIONS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
           </Select>
-          {errors.gender && <p className="text-xs text-rose-600">{errors.gender}</p>}
+          {errors.gender && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.gender}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Age</Label>
           <Input type="number" min={1} max={120} value={form.age} onChange={(e) => setField('age', e.target.value)} placeholder="Optional" />
-          {errors.age && <p className="text-xs text-rose-600">{errors.age}</p>}
+          {errors.age && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.age}</p>}
         </div>
       </div>
       {form.category === 'farmer' && (
@@ -695,7 +695,7 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
               }}
               placeholder="e.g. 2.5"
             />
-            {errors.farmSize && <p className="text-xs text-rose-600">{errors.farmSize}</p>}
+            {errors.farmSize && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.farmSize}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>Primary crops <span className="text-rose-600">*</span></Label>
@@ -703,11 +703,11 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
               {CROP_OPTIONS.map((c) => {
                 const selected = form.cropType.includes(c.value)
                 return (
-                  <button key={c.value} type="button" onClick={() => setField('cropType', selected ? form.cropType.filter((x) => x !== c.value) : [...form.cropType, c.value])} className={cn('rounded-full border px-2.5 py-1 text-xs font-medium transition-colors', selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border-subtle text-text-secondary hover:border-emerald-300')}>{c.label}</button>
+                  <button key={c.value} type="button" onClick={() => setField('cropType', selected ? form.cropType.filter((x) => x !== c.value) : [...form.cropType, c.value])} className={cn('rounded-full border px-2.5 py-1 text-[11px] sm:text-[11px] sm:text-xs font-medium transition-colors', selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border-subtle text-text-secondary hover:border-emerald-300')}>{c.label}</button>
                 )
               })}
             </div>
-            {errors.cropType && <p className="text-xs text-rose-600">{errors.cropType}</p>}
+            {errors.cropType && <p className="text-[11px] sm:text-xs text-rose-600">{errors.cropType}</p>}
           </div>
         </>
       )}
@@ -722,7 +722,7 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
                 <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
               </SelectContent>
             </Select>
-            {errors.courseName && <p className="text-xs text-rose-600">{errors.courseName}</p>}
+            {errors.courseName && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.courseName}</p>}
             {form.courseName === OTHER_VALUE && (
               <Input className="mt-2" placeholder="Enter course name" value={form.courseNameOther} onChange={(e) => setField('courseNameOther', e.target.value)} />
             )}
@@ -730,7 +730,7 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
           <div className="space-y-1.5">
             <Label>College name <span className="text-rose-600">*</span></Label>
             <Input value={form.collegeName} onChange={(e) => setField('collegeName', e.target.value)} />
-            {errors.collegeName && <p className="text-xs text-rose-600">{errors.collegeName}</p>}
+            {errors.collegeName && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.collegeName}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>University</Label>
@@ -749,26 +749,26 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
                 <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
               </SelectContent>
             </Select>
-            {errors.organisationType && <p className="text-xs text-rose-600">{errors.organisationType}</p>}
+            {errors.organisationType && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organisationType}</p>}
             {form.organisationType === OTHER_VALUE && <Input className="mt-2" placeholder="Specify type" value={form.organisationTypeOther} onChange={(e) => setField('organisationTypeOther', e.target.value)} />}
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Organisation name <span className="text-rose-600">*</span></Label>
               <Input value={form.organizationName} onChange={(e) => setField('organizationName', e.target.value)} />
-              {errors.organizationName && <p className="text-xs text-rose-600">{errors.organizationName}</p>}
+              {errors.organizationName && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organizationName}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Your role <span className="text-rose-600">*</span></Label>
               <Input value={form.organizationRole} onChange={(e) => setField('organizationRole', e.target.value)} placeholder="e.g. Director" />
-              {errors.organizationRole && <p className="text-xs text-rose-600">{errors.organizationRole}</p>}
+              {errors.organizationRole && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organizationRole}</p>}
             </div>
           </div>
           {(form.category === 'fpo' || form.category === 'ngo') && (
             <div className="space-y-1.5">
               <Label>Number of farmers <span className="text-rose-600">*</span></Label>
               <Input type="number" min={1} value={form.numberOfFarmers} onChange={(e) => setField('numberOfFarmers', e.target.value)} />
-              {errors.numberOfFarmers && <p className="text-xs text-rose-600">{errors.numberOfFarmers}</p>}
+              {errors.numberOfFarmers && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.numberOfFarmers}</p>}
             </div>
           )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -778,12 +778,12 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
                 <SelectTrigger><SelectValue placeholder="Choose state" /></SelectTrigger>
                 <SelectContent>{SUPPORTED_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
               </Select>
-              {errors.organizationState && <p className="text-xs text-rose-600">{errors.organizationState}</p>}
+              {errors.organizationState && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organizationState}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>District <span className="text-rose-600">*</span></Label>
               <Input value={form.organizationDistrict} onChange={(e) => setField('organizationDistrict', e.target.value)} placeholder="District name" />
-              {errors.organizationDistrict && <p className="text-xs text-rose-600">{errors.organizationDistrict}</p>}
+              {errors.organizationDistrict && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organizationDistrict}</p>}
             </div>
           </div>
           {form.category === 'volunteer' && (
@@ -817,9 +817,9 @@ function Step4({ form, errors, setField }: WizardFormStateProps) {
           <SelectTrigger><SelectValue placeholder="Choose language" /></SelectTrigger>
           <SelectContent>{LANGUAGES.map((l) => <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>)}</SelectContent>
         </Select>
-        {errors.languagePreference && <p className="text-xs text-rose-600">{errors.languagePreference}</p>}
+        {errors.languagePreference && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.languagePreference}</p>}
       </div>
-      <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-sm text-foreground">
+      <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-xs sm:text-xs sm:text-sm text-foreground">
         <input type="checkbox" className="mt-0.5 h-4 w-4 accent-emerald-500" checked={form.consentGiven} onChange={(e) => setField('consentGiven', e.target.checked)} />
         <span>
           I have read and agree to the{' '}
@@ -841,8 +841,8 @@ function Step4({ form, errors, setField }: WizardFormStateProps) {
           . I agree that the information I provide will be used to answer my agriculture questions and improve services, and I understand my mobile number will receive SMS notifications.
         </span>
       </label>
-      {errors.consentGiven && <p className="text-xs text-rose-600">{errors.consentGiven}</p>}
-      <div className="rounded-lg border border-border-subtle bg-surface/50 p-4 text-xs text-text-secondary">
+      {errors.consentGiven && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.consentGiven}</p>}
+      <div className="rounded-lg border border-border-subtle bg-surface/50 p-4 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
         <p className="font-semibold text-foreground">What happens next?</p>
         <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
           <li>Your account will go through a quick verification (usually within 24 hours).</li>
@@ -884,7 +884,7 @@ function WizardStages({ form, errors, usernameStatus, usernameSuggestions, distr
   const stepProps: WizardFormStateProps = { form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, loadingDistricts, loadingBlocks, loadingVillages, loadingKvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }
   return (
     <>
-      <h2 className="mb-4 text-lg font-bold text-foreground">Step {step}: {STEP_KEYS[step - 1]}</h2>
+      <h2 className="mb-4 text-base sm:text-base sm:text-lg font-bold text-foreground">Step {step}: {STEP_KEYS[step - 1]}</h2>
       {step === 1 && <Step1 {...stepProps} />}
       {step === 2 && <Step2 {...stepProps} />}
       {step === 3 && <Step3 {...stepProps} />}
@@ -1304,8 +1304,8 @@ export function PublicRegisterPage() {
           <div className="h-14 w-14 mb-2 drop-shadow-[0_4px_12px_rgba(0,98,57,0.35)]">
             <BrandLogo className="h-14 w-14" />
           </div>
-          <h1 className="text-2xl font-extrabold text-primary">AnnaDatha</h1>
-          <p className="text-sm text-text-secondary">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-primary">AnnaDatha</h1>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">
             {stage === 'mobile' && 'Create your account'}
             {stage === 'otp' && 'Verify your mobile'}
             {stage === 'wizard' && 'Complete your profile'}
@@ -1322,7 +1322,7 @@ export function PublicRegisterPage() {
               const isActive = step === num
               return (
                 <div key={label} className="flex items-center gap-1.5">
-                  <div className={cn('flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold', isDone || isActive ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground')}>{isDone ? <CheckCircle2 className="h-4 w-4" /> : num}</div>
+                  <div className={cn('flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold', isDone || isActive ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground')}>{isDone ? <CheckCircle2 className="h-4 w-4" /> : num}</div>
                   <span className={cn('hidden text-xs sm:inline', isActive ? 'font-semibold text-foreground' : 'text-text-tertiary')}>{label}</span>
                   {i < STEP_KEYS.length - 1 && <div className="hidden h-px w-6 bg-border-subtle sm:block" />}
                 </div>
@@ -1388,7 +1388,7 @@ export function PublicRegisterPage() {
         </div>
 
         {!isGateStage && (
-          <p className="mt-4 text-center text-xs text-text-tertiary">
+          <p className="mt-4 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
             Signing up for <span className="font-semibold text-emerald-700">+91 {mobileNumber}</span>
           </p>
         )}

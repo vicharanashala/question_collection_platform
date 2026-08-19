@@ -59,7 +59,7 @@ function StatCard({ icon: Icon, iconClassName, value, label }: { icon: typeof Ba
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-extrabold text-foreground">{value}</p>
+        <p className="truncate text-xs sm:text-xs sm:text-sm font-extrabold text-foreground">{value}</p>
         <p className="truncate text-[11px] font-medium text-text-secondary">{label}</p>
       </div>
     </div>
@@ -76,15 +76,15 @@ function PodiumSlot({ entry, medal, height }: { entry: LeaderboardEntry; medal: 
       <div className="mb-2.5 flex flex-col items-center">
         {isWinner && <Star className={cn('mb-1 h-3.5 w-3.5', m.color)} fill="currentColor" />}
         <Avatar name={entry.name} size={isWinner ? 56 : 46} ring={m.ring} />
-        <p className="mt-2 max-w-[96px] truncate text-center text-xs font-bold text-foreground">{entry.name || 'Unknown'}</p>
-        <p className="truncate text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{formatINR(entry.totalEarned)}</p>
+        <p className="mt-2 max-w-[96px] truncate text-center text-[11px] sm:text-[11px] sm:text-xs font-bold text-foreground">{entry.name || 'Unknown'}</p>
+        <p className="truncate text-[11px] sm:text-[11px] sm:text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{formatINR(entry.totalEarned)}</p>
       </div>
       <div
         className={cn('flex w-full flex-col items-center justify-center gap-0.5 rounded-t-lg border', m.bg)}
         style={{ height, borderColor: 'transparent' }}
       >
         <Medal className={cn(isWinner ? 'h-6 w-6' : 'h-5 w-5', m.color)} />
-        <span className={cn('font-black', m.color, isWinner ? 'text-xl' : 'text-base')}>{entry.rank}</span>
+        <span className={cn('font-black', m.color, isWinner ? 'text-lg sm:text-xl' : 'text-sm sm:text-sm sm:text-base')}>{entry.rank}</span>
         <span className={cn('text-[9px] font-bold uppercase tracking-wide', m.color)}>{m.label}</span>
       </div>
     </div>
@@ -120,18 +120,18 @@ function ListRow({ entry }: { entry: LeaderboardEntry }) {
         isMe ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/30' : 'border-border-subtle bg-surface',
       )}
     >
-      <span className={cn('w-6 shrink-0 text-center text-sm font-extrabold', isMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
+      <span className={cn('w-6 shrink-0 text-center text-xs sm:text-xs sm:text-sm font-extrabold', isMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
         {entry.rank}
       </span>
       <Avatar name={entry.name} size={36} isCurrentUser={isMe} />
       <div className="min-w-0 flex-1">
-        <p className={cn('truncate text-sm', isMe ? 'font-extrabold text-foreground' : 'font-semibold text-foreground')}>
+        <p className={cn('truncate text-xs sm:text-xs sm:text-sm', isMe ? 'font-extrabold text-foreground' : 'font-semibold text-foreground')}>
           {entry.name || 'Unknown'}
         </p>
         {isMe && <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">You</p>}
       </div>
       <div className="shrink-0 text-right">
-        <p className={cn('text-sm font-extrabold', entry.totalEarned > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
+        <p className={cn('text-xs sm:text-xs sm:text-sm font-extrabold', entry.totalEarned > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
           {formatINR(entry.totalEarned)}
         </p>
         <p className="text-[11px] font-medium text-text-tertiary">
@@ -181,8 +181,8 @@ export function PublicLeaderboardPage(): ReactNode {
     <div className="mx-auto max-w-2xl space-y-5 pb-4">
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="p-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-foreground">Leaderboard</h1>
-          <p className="mt-0.5 text-sm text-text-secondary">
+          <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">Leaderboard</h1>
+          <p className="mt-0.5 text-xs sm:text-xs sm:text-sm text-text-secondary">
             {response ? `${response.total} participants` : 'Loading…'}
           </p>
         </CardContent>
@@ -192,7 +192,7 @@ export function PublicLeaderboardPage(): ReactNode {
         <Card>
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <p className="mt-3 text-sm font-medium">Loading leaderboard…</p>
+            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading leaderboard…</p>
           </CardContent>
         </Card>
       ) : sortedEntries.length === 0 ? (
@@ -201,8 +201,8 @@ export function PublicLeaderboardPage(): ReactNode {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-variant dark:bg-surface-variant">
               <Trophy className="h-12 w-12 text-text-tertiary" strokeWidth={1.75} />
             </div>
-            <h2 className="mt-5 text-xl font-extrabold text-foreground">No rankings yet</h2>
-            <p className="mt-2 max-w-sm text-sm text-text-secondary">
+            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">No rankings yet</h2>
+            <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">
               Submit and get questions approved to appear on the leaderboard.
             </p>
           </CardContent>
@@ -245,7 +245,7 @@ export function PublicLeaderboardPage(): ReactNode {
         </>
       )}
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">AnnaDatha &mdash; Made for Indian farmers</p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha &mdash; Made for Indian farmers</p>
     </div>
   )
 }

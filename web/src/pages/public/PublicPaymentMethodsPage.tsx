@@ -159,7 +159,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
-        <h2 className="text-lg font-bold text-foreground">{t('paymentMethods.addFormTitle')}</h2>
+        <h2 className="text-base sm:text-base sm:text-lg font-bold text-foreground">{t('paymentMethods.addFormTitle')}</h2>
 
         {/* Type toggle */}
         <div className="grid grid-cols-2 gap-2">
@@ -167,7 +167,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
             type="button"
             onClick={() => { setPayoutMethod('upi'); setFormError('') }}
             className={cn(
-              'flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors',
+              'flex items-center justify-center gap-2 rounded-lg border px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-xs sm:text-sm font-semibold transition-colors',
               payoutMethod === 'upi'
                 ? 'border-primary bg-primary/8 text-primary'
                 : 'border-border-subtle bg-surface text-text-secondary hover:bg-muted',
@@ -179,7 +179,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
             type="button"
             onClick={() => { setPayoutMethod('bank_transfer'); setFormError('') }}
             className={cn(
-              'flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors',
+              'flex items-center justify-center gap-2 rounded-lg border px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-xs sm:text-sm font-semibold transition-colors',
               payoutMethod === 'bank_transfer'
                 ? 'border-primary bg-primary/8 text-primary'
                 : 'border-border-subtle bg-surface text-text-secondary hover:bg-muted',
@@ -264,7 +264,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
         )}
 
         {formError && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/8 p-2.5 text-xs text-destructive">
+          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/8 p-2.5 text-[11px] sm:text-[11px] sm:text-xs text-destructive">
             <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <p>{formError}</p>
           </div>
@@ -273,12 +273,12 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
         <Button
           onClick={handleSubmit}
           disabled={submitting}
-          className="h-12 w-full bg-emerald-500 text-base font-semibold hover:bg-emerald-600"
+          className="h-12 w-full bg-emerald-500 text-sm sm:text-sm sm:text-base font-semibold hover:bg-emerald-600"
         >
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('paymentMethods.addAndVerify')}
         </Button>
 
-        <p className="text-center text-xs text-text-tertiary">
+        <p className="text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
           {t('paymentMethods.verificationChargeNote')}
         </p>
 
@@ -316,26 +316,26 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-foreground">
+              <p className="truncate text-xs sm:text-xs sm:text-sm font-bold text-foreground">
                 {isUpi
                   ? detail.displayValue
                   : `A/c ${detail.displayValue}${detail.bankName ? ` · ${detail.bankName}` : ''}`}
               </p>
-              <p className="mt-0.5 truncate text-xs text-text-secondary">
+              <p className="mt-0.5 truncate text-[10px] sm:text-[11px] sm:text-xs text-text-secondary">
                 {isUpi ? t('wallet.upiTab') : t('wallet.withdrawal.bank')}
                 {detail.accountHolderName && ` · ${detail.accountHolderName}`}
               </p>
               {!isUpi && detail.ifsc && (
-                <p className="mt-0.5 font-mono text-[10px] text-text-tertiary">IFSC {detail.ifsc}</p>
+                <p className="mt-0.5 font-mono text-[9px] sm:text-[10px] text-text-tertiary">IFSC {detail.ifsc}</p>
               )}
             </div>
-            <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', cfg.cls)}>
+            <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider', cfg.cls)}>
               {cfg.icon}
               {t(cfg.labelKey)}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <p className="text-[10px] text-text-tertiary">
+            <p className="text-[9px] sm:text-[10px] text-text-tertiary">
               {detail.status === 'verified' && detail.verifiedAt
                 ? t('paymentMethods.verifiedOn', { date: formatDate(detail.verifiedAt) })
                 : t('paymentMethods.addedOn', { date: formatDate(detail.createdAt) })}
@@ -344,7 +344,7 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
               <button
                 type="button"
                 onClick={() => onDelete(detail.id)}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
                 aria-label="Remove"
               >
                 <Trash2 className="h-3 w-3" />
@@ -412,7 +412,7 @@ export function PublicPaymentMethodsPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-xl font-bold text-foreground lg:text-2xl">{t('profile.paymentMethods')}</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-foreground lg:text-2xl">{t('profile.paymentMethods')}</h1>
         </div>
         <Button
           variant={mode === 'add' ? 'outline' : 'default'}
@@ -425,7 +425,7 @@ export function PublicPaymentMethodsPage() {
       </div>
 
       {/* ── Info banner ─────────────────────────────────────────── */}
-      <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 text-sm text-text-secondary dark:border-emerald-900/40 dark:bg-emerald-950/20">
+      <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 text-xs sm:text-xs sm:text-sm text-text-secondary dark:border-emerald-900/40 dark:bg-emerald-950/20">
         <Shield className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
         <p>{t('paymentMethods.verifyBanner')}</p>
       </div>
@@ -445,8 +445,8 @@ export function PublicPaymentMethodsPage() {
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-muted text-text-tertiary">
             <Wallet className="h-10 w-10" strokeWidth={1.5} />
           </div>
-          <p className="mt-5 text-lg font-bold text-foreground">{t('paymentMethods.emptyTitle')}</p>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="mt-5 text-base sm:text-base sm:text-lg font-bold text-foreground">{t('paymentMethods.emptyTitle')}</p>
+          <p className="mt-1 text-xs sm:text-xs sm:text-sm text-text-secondary">
             {t('paymentMethods.emptySubtitle')}
           </p>
           <Button
@@ -466,9 +466,9 @@ export function PublicPaymentMethodsPage() {
               ))}
             </ul>
             <div className="border-t border-border-subtle p-3">
-              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-text-secondary dark:border-amber-900/40 dark:bg-amber-950/20">
+              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50/60 p-2.5 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary dark:border-amber-900/40 dark:bg-amber-950/20">
                 <Smartphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
-                <p>{t('paymentMethods.mobileVerificationNote')}</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs">{t('paymentMethods.mobileVerificationNote')}</p>
               </div>
             </div>
           </CardContent>
@@ -479,11 +479,11 @@ export function PublicPaymentMethodsPage() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-lg border border-border-subtle bg-white p-5 shadow-xl dark:bg-surface">
-            <h3 className="text-base font-bold text-foreground">{t('paymentMethods.confirmRemoveTitle')}</h3>
-            <p className="mt-1.5 text-sm text-text-secondary">
+            <h3 className="text-sm sm:text-sm sm:text-base font-bold text-foreground">{t('paymentMethods.confirmRemoveTitle')}</h3>
+            <p className="mt-1.5 text-xs sm:text-xs sm:text-sm text-text-secondary">
               {t('paymentMethods.confirmRemoveMessage')}
             </p>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-3 sm:mt-4 flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setConfirmDelete(null)} disabled={deleting}>
                 {t('editProfile.cancel')}
               </Button>

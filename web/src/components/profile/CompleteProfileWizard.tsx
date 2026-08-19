@@ -202,7 +202,7 @@ interface WizardFormStateProps {
 function Step1({ form, errors, setField }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
         Pick the option that best describes you.
       </p>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
@@ -230,8 +230,8 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
                 <CategoryIcon value={c.value} className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-semibold text-foreground leading-tight">{c.label}</p>
-                <p className="hidden xs:block mt-0.5 text-[11px] sm:text-xs text-muted-foreground leading-snug">{c.description}</p>
+                <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-tight">{c.label}</p>
+                <p className="hidden xs:block mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-snug">{c.description}</p>
               </div>
               {active && (
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 shrink-0" />
@@ -241,7 +241,7 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
         })}
       </div>
       {errors.category && (
-        <p className="text-sm text-destructive">{errors.category}</p>
+        <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.category}</p>
       )}
     </div>
   );
@@ -266,7 +266,7 @@ function Step2({
 }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
         We&apos;ll use this to match your questions with local experts.
       </p>
 
@@ -289,7 +289,7 @@ function Step2({
           loading={loadingDistricts}
         />
         {errors.state && (
-          <p className="text-sm text-destructive">{errors.state}</p>
+          <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.state}</p>
         )}
       </div>
 
@@ -314,7 +314,7 @@ function Step2({
           loading={loadingDistricts}
         />
         {errors.district && (
-          <p className="text-sm text-destructive">{errors.district}</p>
+          <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.district}</p>
         )}
       </div>
 
@@ -340,7 +340,7 @@ function Step2({
             loading={loadingBlocks}
           />
           {errors.block && (
-            <p className="text-sm text-destructive">{errors.block}</p>
+            <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.block}</p>
           )}
         </div>
       )}
@@ -359,7 +359,7 @@ function Step2({
               loading={loadingVillages}
             />
             {errors.village && (
-              <p className="text-sm text-destructive">{errors.village}</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.village}</p>
             )}
           </div>
           <div className="space-y-1.5">
@@ -373,7 +373,7 @@ function Step2({
               loading={loadingKvks}
             />
             {errors.kvk && (
-              <p className="text-sm text-destructive">{errors.kvk}</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.kvk}</p>
             )}
           </div>
         </div>
@@ -408,7 +408,7 @@ function Step3({
             placeholder="Your name"
           />
           {errors.name && (
-            <p className="text-xs text-rose-600">{errors.name}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.name}</p>
           )}
         </div>
         <div className="space-y-1.5">
@@ -440,18 +440,18 @@ function Step3({
             )}
           </div>
           {errors.username && (
-            <p className="text-xs text-rose-600">{errors.username}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.username}</p>
           )}
           {usernameStatus === "taken" && (
             <div className="space-y-1">
-              <p className="text-xs text-rose-600">Taken. Try one of these:</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">Taken. Try one of these:</p>
               <div className="flex flex-wrap gap-1.5">
                 {usernameSuggestions.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setField("username", s)}
-                    className="rounded-full border border-emerald-200 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-50"
+                    className="rounded-full border border-emerald-200 px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs text-emerald-700 hover:bg-emerald-50"
                   >
                     {s}
                   </button>
@@ -482,7 +482,7 @@ function Step3({
             </SelectContent>
           </Select>
           {errors.gender && (
-            <p className="text-xs text-rose-600">{errors.gender}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.gender}</p>
           )}
         </div>
         <div className="space-y-1.5">
@@ -495,7 +495,7 @@ function Step3({
             onChange={(e) => setField("age", e.target.value)}
             placeholder="Optional"
           />
-          {errors.age && <p className="text-xs text-rose-600">{errors.age}</p>}
+          {errors.age && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.age}</p>}
         </div>
       </div>
       {form.category === "farmer" && (
@@ -512,7 +512,7 @@ function Step3({
               }}
               placeholder="e.g. 2.5"
             />
-            {errors.farmSize && <p className="text-xs text-rose-600">{errors.farmSize}</p>}
+            {errors.farmSize && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.farmSize}</p>}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -520,7 +520,7 @@ function Step3({
                 Primary crops <span className="text-rose-600">*</span>
               </Label>
               {form.cropType.length > 0 && (
-                <span className="text-xs text-emerald-600 font-medium">
+                <span className="text-[11px] sm:text-[11px] sm:text-xs text-emerald-600 font-medium">
                   {form.cropType.length} selected
                 </span>
               )}
@@ -578,7 +578,7 @@ function Step3({
                 {form.cropType.map((c) => (
                   <span
                     key={c}
-                    className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
                   >
                     {c}
                     <button
@@ -598,7 +598,7 @@ function Step3({
             <button
               type="button"
               onClick={() => setCropPickerOpen(true)}
-              className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
+              className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
             >
               See all {CROPS.length} crops
             </button>
@@ -611,7 +611,7 @@ function Step3({
             />
 
             {errors.cropType && (
-              <p className="text-xs text-rose-600">{errors.cropType}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.cropType}</p>
             )}
           </div>
         </>
@@ -639,7 +639,7 @@ function Step3({
               </SelectContent>
             </Select>
             {errors.courseName && (
-              <p className="text-xs text-rose-600">{errors.courseName}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.courseName}</p>
             )}
             {form.courseName === OTHER_VALUE && (
               <Input
@@ -650,7 +650,7 @@ function Step3({
               />
             )}
             {errors.courseNameOther && (
-              <p className="text-xs text-rose-600">{errors.courseNameOther}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.courseNameOther}</p>
             )}
           </div>
           <div className="space-y-1.5">
@@ -663,7 +663,7 @@ function Step3({
               placeholder="College / institution"
             />
             {errors.collegeName && (
-              <p className="text-xs text-rose-600">{errors.collegeName}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.collegeName}</p>
             )}
           </div>
           <div className="space-y-1.5">
@@ -701,7 +701,7 @@ function Step3({
               </SelectContent>
             </Select>
             {errors.organisationType && (
-              <p className="text-xs text-rose-600">{errors.organisationType}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organisationType}</p>
             )}
             {form.organisationType === OTHER_VALUE && (
               <Input
@@ -714,7 +714,7 @@ function Step3({
               />
             )}
             {errors.organisationTypeOther && (
-              <p className="text-xs text-rose-600">
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
                 {errors.organisationTypeOther}
               </p>
             )}
@@ -730,7 +730,7 @@ function Step3({
                 placeholder="Registered name"
               />
               {errors.organizationName && (
-                <p className="text-xs text-rose-600">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
                   {errors.organizationName}
                 </p>
               )}
@@ -745,7 +745,7 @@ function Step3({
                 placeholder="e.g. CEO, Field Officer"
               />
               {errors.organizationRole && (
-                <p className="text-xs text-rose-600">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
                   {errors.organizationRole}
                 </p>
               )}
@@ -765,7 +765,7 @@ function Step3({
                 placeholder="Approx."
               />
               {errors.numberOfFarmers && (
-                <p className="text-xs text-rose-600">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
                   {errors.numberOfFarmers}
                 </p>
               )}
@@ -797,7 +797,7 @@ function Step3({
                 </SelectContent>
               </Select>
               {errors.organizationState && (
-                <p className="text-xs text-rose-600">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
                   {errors.organizationState}
                 </p>
               )}
@@ -821,7 +821,7 @@ function Step3({
                 loading={loadingOrganizationDistricts}
               />
               {errors.organizationDistrict && (
-                <p className="text-xs text-rose-600">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
                   {errors.organizationDistrict}
                 </p>
               )}
@@ -874,7 +874,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
           <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300">
             <Languages className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-foreground">Preferred language</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Preferred language</p>
         </div>
         <Select
           value={form.languagePreference}
@@ -892,7 +892,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
           </SelectContent>
         </Select>
         {errors.languagePreference && (
-          <p className="mt-1.5 text-[11px] sm:text-xs text-rose-600">{errors.languagePreference}</p>
+          <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.languagePreference}</p>
         )}
       </div>
 
@@ -923,7 +923,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
           </button>
 
           <div className="flex-1 space-y-1.5 sm:space-y-2">
-            <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">
+            <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground leading-snug">
               I have read and agree to the{" "}
               <button
                 type="button"
@@ -941,7 +941,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
                 Privacy Policy
               </button>
             </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
               I agree that the information I provide will be used to answer my
               agriculture questions and improve services, and I understand my
               mobile number will receive SMS notifications.
@@ -949,7 +949,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
           </div>
         </div>
         {errors.consentGiven && (
-          <p className="mt-1.5 text-[11px] sm:text-xs text-rose-600">{errors.consentGiven}</p>
+          <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.consentGiven}</p>
         )}
       </div>
 
@@ -959,7 +959,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
           <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
             <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <p className="text-xs sm:text-sm font-semibold text-foreground">What happens next?</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">What happens next?</p>
         </div>
         <ul className="space-y-2 sm:space-y-2.5">
           {[
@@ -980,7 +980,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500 dark:bg-blue-950 dark:text-blue-400">
                 {item.icon}
               </span>
-              <span className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{item.text}</span>
+              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{item.text}</span>
             </li>
           ))}
         </ul>
@@ -1008,7 +1008,7 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 }) {
           <div key={label} className="relative z-10 flex flex-1 flex-col items-center">
             <div
               className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ring-2 ring-transparent",
+                "flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold ring-2 ring-transparent",
                 isDone
                   ? "bg-emerald-500 text-white ring-emerald-100 dark:ring-emerald-950"
                   : isActive
@@ -1405,10 +1405,10 @@ export function CompleteProfileWizard({
         <div className="flex items-center gap-3">
           <BrandLogo className="h-9 w-9" />
           <div>
-            <h1 className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">
+            <h1 className="text-sm sm:text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">
               AnnaDatha
             </h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">Complete your profile</p>
+            <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Complete your profile</p>
           </div>
         </div>
         <Button
@@ -1461,7 +1461,7 @@ export function CompleteProfileWizard({
               onClick={back}
               disabled={loading}
               size="sm"
-              className="gap-1.5 text-xs sm:text-sm"
+              className="gap-1.5 text-xs sm:text-xs sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -1473,7 +1473,7 @@ export function CompleteProfileWizard({
             <Button
               onClick={next}
               size="sm"
-              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-xs sm:text-sm"
             >
               <span>Continue</span>
               <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1483,7 +1483,7 @@ export function CompleteProfileWizard({
               onClick={submit}
               disabled={loading}
               size="sm"
-              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-xs sm:text-sm"
             >
               {loading ? (
                 <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />

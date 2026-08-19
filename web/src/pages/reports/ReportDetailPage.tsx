@@ -225,13 +225,13 @@ export default function ReportDetailPage() {
             className="h-5 w-5 cursor-pointer hover:text-foreground transition-colors"
             onClick={() => navigate('/reports')}
           />
-          <h1 className="text-lg font-semibold">Report Detail</h1>
+          <h1 className="text-base sm:text-base sm:text-lg font-semibold">Report Detail</h1>
         </div>
 
         {/* Status + Priority controls */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Status:</span>
+            <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">Status:</span>
             <Select
               value={report.status}
               onValueChange={handleStatusChange}
@@ -248,7 +248,7 @@ export default function ReportDetailPage() {
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Priority:</span>
+            <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">Priority:</span>
             <Select
               value={report.priority}
               onValueChange={handlePriorityChange}
@@ -316,11 +316,11 @@ export default function ReportDetailPage() {
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Metadata card */}
         <Card className="p-4 space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs sm:text-xs sm:text-sm">
             <div>
               <p className="text-muted-foreground">Reporter</p>
               <p className="font-medium">{report.user?.name ?? '—'}</p>
-              <p className="text-xs text-muted-foreground">{report.user?.mobileNumber ?? ''}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{report.user?.mobileNumber ?? ''}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Category</p>
@@ -342,7 +342,7 @@ export default function ReportDetailPage() {
 
           {report.relatedEntityId && (
             <div className="pt-2 border-t border-border">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
                 Related: {report.relatedEntityType} — #{report.relatedEntityId}
               </p>
             </div>
@@ -350,33 +350,33 @@ export default function ReportDetailPage() {
 
           {/* Title + description */}
           <div className="pt-2 border-t border-border">
-            <h2 className="font-semibold text-base mb-2">{report.title}</h2>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.description}</p>
+            <h2 className="font-semibold text-sm sm:text-sm sm:text-base mb-2">{report.title}</h2>
+            <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap">{report.description}</p>
           </div>
         </Card>
 
         {/* Reply thread */}
         {report.replies && report.replies.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            <h3 className="text-xs sm:text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Replies ({report.replies.length})
             </h3>
             {report.replies.map((reply) => (
               <Card key={reply.id} className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">
                     {(reply.admin?.name ?? 'A').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm">
+                      <span className="font-medium text-xs sm:text-xs sm:text-sm">
                         {reply.admin?.name ?? 'Admin'}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                         {formatDateTime(reply.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm whitespace-pre-wrap">{reply.message}</p>
+                    <p className="text-xs sm:text-xs sm:text-sm whitespace-pre-wrap">{reply.message}</p>
                   </div>
                 </div>
               </Card>
@@ -386,7 +386,7 @@ export default function ReportDetailPage() {
 
         {/* Reply form */}
         <Card className="p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          <h3 className="text-xs sm:text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Add Reply
           </h3>
 
@@ -394,7 +394,7 @@ export default function ReportDetailPage() {
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">Suggestions</span>
+              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-medium">Suggestions</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {(REPLY_SUGGESTIONS[report.category] ?? GENERAL_SUGGESTIONS).map((suggestion, i) => (
@@ -406,7 +406,7 @@ export default function ReportDetailPage() {
                     // scroll textarea into view smoothly
                     document.getElementById('reply-textarea')?.focus()
                   }}
-                  className="text-left text-xs px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-surface-variant hover:border-primary/40 transition-colors text-foreground shadow-sm"
+                  className="text-left text-[11px] sm:text-[11px] sm:text-xs px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-surface-variant hover:border-primary/40 transition-colors text-foreground shadow-sm"
                 >
                   {suggestion.length > 60 ? suggestion.slice(0, 57) + '...' : suggestion}
                 </button>
@@ -423,7 +423,7 @@ export default function ReportDetailPage() {
             maxLength={5000}
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               {replyText.length}/5000
             </span>
             <Button

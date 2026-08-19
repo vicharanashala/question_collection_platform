@@ -37,7 +37,7 @@ function VerificationBadge({ status }: { status: string }) {
     banned:        { label: 'Banned',        cls: 'bg-red-600 text-white' },
   }
   const { label, cls } = map[status] ?? { label: status, cls: 'bg-muted' }
-  return <span className={cn('inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize', cls)}>{label}</span>
+  return <span className={cn('inline-block rounded-full px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold capitalize', cls)}>{label}</span>
 }
 
 function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
@@ -51,7 +51,7 @@ function QuestionStatusBadge({ status }: { status: QuestionStatus }) {
   }
   const { label, dot, cls } = map[status] ?? { label: status, dot: 'bg-muted', cls: 'text-muted-foreground' }
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium', cls)}>
+    <span className={cn('inline-flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium', cls)}>
       <span className={cn('h-1.5 w-1.5 rounded-full', dot)} />
       {label}
     </span>
@@ -67,7 +67,7 @@ function PaymentStatusBadge({ status }: { status: string }) {
   }
   const { label, dot, cls } = map[status] ?? { label: status, dot: 'bg-muted', cls: 'text-muted-foreground' }
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium', cls)}>
+    <span className={cn('inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium', cls)}>
       <span className={cn('h-1.5 w-1.5 rounded-full', dot)} />
       {label}
     </span>
@@ -97,8 +97,8 @@ function StatsStrip({ questions }: { questions: Question[] }) {
         <Card key={label} className={cn('border-0', bg)}>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">{label}</p>
-              <p className={cn('mt-1 text-2xl font-extrabold', text)}>{value}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground">{label}</p>
+              <p className={cn('mt-1 text-xl sm:text-2xl font-extrabold', text)}>{value}</p>
             </div>
             <Icon className={cn('h-6 w-6 opacity-60', text)} />
           </CardContent>
@@ -118,7 +118,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       width: '280px',
       sortable: true,
       render: (q) => (
-        <span className="text-sm text-foreground line-clamp-2 leading-relaxed">{q.questionText}</span>
+        <span className="text-xs sm:text-xs sm:text-sm text-foreground line-clamp-2 leading-relaxed">{q.questionText}</span>
       ),
     },
     {
@@ -136,7 +136,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       filterable: true,
       filterOptions: [],  // derived from data
       render: (q) => (
-        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
           {(q.domains ?? []).join(', ') || '-'}
         </span>
       ),
@@ -149,7 +149,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       filterable: true,
       filterOptions: [],
       render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.season || '-'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">{q.season || '-'}</span>
       ),
     },
     {
@@ -158,7 +158,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       width: '100px',
       sortable: true,
       render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>
       ),
     },
     {
@@ -167,7 +167,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       width: '110px',
       sortable: true,
       render: (q) => (
-        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '-'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '-'}</span>
       ),
     },
     {
@@ -180,14 +180,14 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
             href={q.mediaUrls[0]}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-blue-600 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             <Image className="h-3 w-3" />
             {q.mediaUrls.length > 1 ? `${q.mediaUrls.length}` : ''}
           </a>
         ) : (
-          <span className="text-xs text-muted-foreground">-</span>
+          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">-</span>
         ),
     },
   ]
@@ -199,14 +199,14 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       key: 'questionText',
       header: 'Question',
       render: (q) => (
-        <span className="text-sm font-medium text-foreground line-clamp-2">{q.questionText}</span>
+        <span className="text-xs sm:text-xs sm:text-sm font-medium text-foreground line-clamp-2">{q.questionText}</span>
       ),
     },
     {
       key: 'submittedAt',
       header: 'Submitted',
       render: (q) => (
-        <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '-'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{formatDate(q.submittedAt) ?? '-'}</span>
       ),
     },
     {
@@ -218,7 +218,7 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       key: 'domains',
       header: 'Category',
       render: (q) => (
-        <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded capitalize">
+        <span className="text-[11px] sm:text-[11px] sm:text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded capitalize">
           {(q.domains ?? []).join(', ') || '-'}
         </span>
       ),
@@ -228,13 +228,13 @@ function buildQuestionCardColumns(): ColumnDef<Question>[] {
       key: 'season',
       header: 'Season',
       render: (q) => (
-        <span className="text-xs text-muted-foreground capitalize">{q.season || '-'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">{q.season || '-'}</span>
       ),
     },
     {
       key: 'cropType',
       header: 'Crop',
-      render: (q) => <span className="text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>,
+      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>,
     },
   ]
 }
@@ -245,8 +245,8 @@ interface DetailRowProps { label: string; value: React.ReactNode }
 function DetailRow({ label, value }: DetailRowProps) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border/60 last:border-0">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xs font-medium text-foreground text-right max-w-[180px] truncate capitalize">
+      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+      <span className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-foreground text-right max-w-[180px] truncate capitalize">
         {value}
       </span>
     </div>
@@ -467,7 +467,7 @@ setUser(r.user as UserType)
       {/* Back navigation */}
       <button
         onClick={() => navigate('/users')}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-2 text-xs sm:text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Users
       </button>
@@ -478,7 +478,7 @@ setUser(r.user as UserType)
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div className={cn(
-              'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-black text-white ring-2 ring-primary/20', avatarBg
+              'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg sm:text-lg sm:text-xl font-black text-white ring-2 ring-primary/20', avatarBg
             )}>
               {initials}
             </div>
@@ -487,8 +487,8 @@ setUser(r.user as UserType)
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between flex-wrap gap-3">
                 <div>
-                  <h2 className="text-xl font-extrabold text-foreground">{user.name || 'Unnamed User'}</h2>
-                  {user.username && <p className="text-sm text-text-tertiary mt-0.5">@{user.username}</p>}
+                  <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">{user.name || 'Unnamed User'}</h2>
+                  {user.username && <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-0.5">@{user.username}</p>}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <VerificationBadge status={user.verificationStatus} />
                     <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
@@ -528,7 +528,7 @@ setUser(r.user as UserType)
               </div>
 
               {/* Quick contact */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-xs sm:text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5" /> {user.mobileNumber}
                 </span>
@@ -567,11 +567,11 @@ setUser(r.user as UserType)
                 {isBanned ? 'Permanently Banned' : 'Account Suspended'}
               </p>
               {(user.suspendedReason ?? user.bannedReason) && (
-                <p className="mt-1 text-sm italic text-muted-foreground">
+                <p className="mt-1 text-xs sm:text-xs sm:text-sm italic text-muted-foreground">
                   "{user.suspendedReason ?? user.bannedReason}"
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <div className="mt-2 flex flex-wrap gap-4 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                 <span>
                   {isBanned ? 'Banned' : 'Suspended'} {formatDate(isBanned ? user.bannedAt : user.suspendedAt)}
                 </span>
@@ -607,7 +607,7 @@ setUser(r.user as UserType)
                 ) : (
                   <ShieldCheck className="h-4 w-4 text-blue-600" />
                 )}
-                <CardTitle className="text-sm font-semibold">Account Details</CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">Account Details</CardTitle>
               </div>
               <ChevronDown
                 className={cn(
@@ -715,9 +715,9 @@ setUser(r.user as UserType)
             >
               <div className="flex items-center gap-2">
                 <Leaf className="h-4 w-4 text-green-600" />
-                <CardTitle className="text-sm font-semibold">Crops</CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">Crops</CardTitle>
                 {crops.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">{crops.length}</Badge>
+                  <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{crops.length}</Badge>
                 )}
               </div>
               <ChevronDown
@@ -738,13 +738,13 @@ setUser(r.user as UserType)
               {crops.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                   <Leaf className="h-7 w-7 opacity-25" />
-                  <p className="text-xs">No crops added</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs">No crops added</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {crops.map((cropName, i) => (
                     <div key={i} className="flex items-center justify-between py-2 border-b border-border/60 last:border-0">
-                      <p className="text-sm font-medium text-foreground">{cropName}</p>
+                      <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">{cropName}</p>
                     </div>
                   ))}
                 </div>
@@ -766,9 +766,9 @@ setUser(r.user as UserType)
             >
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm font-semibold">Payment Methods</CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">Payment Methods</CardTitle>
                 {paymentDetails.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">{paymentDetails.length}</Badge>
+                  <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{paymentDetails.length}</Badge>
                 )}
               </div>
               <ChevronDown
@@ -789,7 +789,7 @@ setUser(r.user as UserType)
               {paymentDetails.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                   <CreditCard className="h-7 w-7 opacity-25" />
-                  <p className="text-xs">No payment methods added</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs">No payment methods added</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -797,7 +797,7 @@ setUser(r.user as UserType)
                     <div key={pd.id} className="flex items-start justify-between py-3 border-b border-border/60 last:border-0 gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-semibold text-foreground">
+                          <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground">
                             {pd.payoutMethod === 'bank_transfer' ? (
                               <span className="flex items-center gap-1.5">
                                 <Building2 className="h-3.5 w-3.5" />
@@ -812,18 +812,18 @@ setUser(r.user as UserType)
                           </span>
                           <PaymentStatusBadge status={pd.status} />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
                           {pd.displayValue}
                           {pd.payoutMethod === 'bank_transfer' && pd.ifsc && (
                             <span className="ml-2">IFSC: {pd.ifsc}</span>
                           )}
                         </p>
                         {pd.accountHolderName && (
-                          <p className="text-xs text-muted-foreground capitalize">
+                          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">
                             {pd.accountHolderName}
                           </p>
                         )}
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                           Added {formatDate(pd.createdAt) ?? '-'}
                           {pd.verifiedAt && (
                             <span className="ml-2 text-emerald-600">
@@ -846,8 +846,8 @@ setUser(r.user as UserType)
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm font-semibold">Questions</CardTitle>
-                <Badge variant="secondary" className="text-xs">{questions.length}</Badge>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">Questions</CardTitle>
+                <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{questions.length}</Badge>
               </div>
               {questions.length > 0 && (
                 <ViewToggle view={qView} onChange={(v) => { setQView(v); setQPage(1) }} />
@@ -859,8 +859,8 @@ setUser(r.user as UserType)
               <div className="flex flex-col items-center justify-center py-14 gap-3 border border-dashed border-border rounded-xl">
                 <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">No questions submitted yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Questions from this user will appear here</p>
+                  <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">No questions submitted yet</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">Questions from this user will appear here</p>
                 </div>
               </div>
             ) : qView === 'table' ? (
@@ -911,9 +911,9 @@ setUser(r.user as UserType)
             >
               <div className="flex items-center gap-2">
                 <ScrollText className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm font-semibold">Audit History</CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">Audit History</CardTitle>
                 {auditEntries.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">{auditEntries.length}</Badge>
+                  <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{auditEntries.length}</Badge>
                 )}
                 {auditLoading && (
                   <span className="ml-1 h-3 w-3 border border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -944,7 +944,7 @@ setUser(r.user as UserType)
               ) : auditEntries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                   <ScrollText className="h-7 w-7 opacity-25" />
-                  <p className="text-xs">No audit history for this user</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs">No audit history for this user</p>
                 </div>
               ) : (
                 <>
@@ -957,29 +957,29 @@ setUser(r.user as UserType)
                           className="flex items-start gap-3 rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20 hover:bg-muted/30 transition-colors"
                         >
                           {/* Avatar initials */}
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold shrink-0">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[11px] sm:text-[11px] sm:text-xs font-bold shrink-0">
                             {(entry.actorName ?? entry.actorId ?? 'S').charAt(0).toUpperCase()}
                           </div>
                           {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-semibold text-foreground">
+                              <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground">
                                 {entry.actorName
                                   ? `${entry.actorName} (${entry.actorRole ?? entry.actorType})`
                                   : entry.actorId ?? 'System'}
                               </span>
-                              <Badge variant="secondary" className="text-xs capitalize">
+                              <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs capitalize">
                                 {entry.action.replace(/_/g, ' ').toLowerCase()}
                               </Badge>
                             </div>
                             {entry.oldValue && entry.newValue && (
-                              <p className="mt-1 text-xs text-muted-foreground font-mono">
+                              <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
                                 {JSON.stringify(entry.oldValue)} → {JSON.stringify(entry.newValue)}
                               </p>
                             )}
                           </div>
                           {/* Timestamp */}
-                          <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap mt-0.5">
+                          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0 whitespace-nowrap mt-0.5">
                             {formatDateTime(entry.createdAt) ?? entry.createdAt}
                           </span>
                         </div>
@@ -989,22 +989,22 @@ setUser(r.user as UserType)
                   {/* Pagination */}
                   {auditEntries.length > AUDIT_PAGE_SIZE && (
                     <div className="flex items-center justify-between mt-3 pt-2 border-t border-border-subtle">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                         {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}-{Math.min(auditPage * AUDIT_PAGE_SIZE, auditEntries.length)} of {auditEntries.length}
                       </span>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
                           disabled={auditPage === 1}
-                          className="h-7 w-7 flex items-center justify-center rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          className="h-7 w-7 flex items-center justify-center rounded text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                           <ChevronLeft className="h-3.5 w-3.5" />
                         </button>
-                        <span className="text-xs text-muted-foreground px-1">{auditPage}</span>
+                        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground px-1">{auditPage}</span>
                         <button
                           onClick={() => setAuditPage((p) => p + 1)}
                           disabled={auditPage * AUDIT_PAGE_SIZE >= auditEntries.length}
-                          className="h-7 w-7 flex items-center justify-center rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          className="h-7 w-7 flex items-center justify-center rounded text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                           <ChevronRight className="h-3.5 w-3.5" />
                         </button>
@@ -1097,9 +1097,9 @@ setUser(r.user as UserType)
               {/* Missing fields warning */}
               {missingFields.length > 0 && (
                 <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3 space-y-1">
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Missing / Incomplete Fields</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Missing / Incomplete Fields</p>
                   {missingFields.map((f) => (
-                    <p key={f} className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1.5">
+                    <p key={f} className="text-[11px] sm:text-[11px] sm:text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1.5">
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
                       {f}
                     </p>
@@ -1122,8 +1122,8 @@ setUser(r.user as UserType)
                     { label: 'Gender', value: user.gender || '—' },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                      <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+                      <span className={cn('text-[11px] sm:text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
                     </div>
                   ))}
                 </div>
@@ -1141,8 +1141,8 @@ setUser(r.user as UserType)
                     ...(user.category === 'farmer' ? [{ label: 'KVK', value: user.kvk || '—' }] : []),
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                      <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+                      <span className={cn('text-[11px] sm:text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
                     </div>
                   ))}
                 </div>
@@ -1160,8 +1160,8 @@ setUser(r.user as UserType)
                       { label: 'Crops', value: user.crops?.length ? user.crops.join(', ') : '—' },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
-                        <span className="text-xs text-muted-foreground">{label}</span>
-                        <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+                        <span className={cn('text-[11px] sm:text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -1183,8 +1183,8 @@ setUser(r.user as UserType)
                       { label: 'Org. Village', value: user.organizationVillage || '—' },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
-                        <span className="text-xs text-muted-foreground">{label}</span>
-                        <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+                        <span className={cn('text-[11px] sm:text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -1202,8 +1202,8 @@ setUser(r.user as UserType)
                       { label: 'University', value: user.universityName || '—' },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
-                        <span className="text-xs text-muted-foreground">{label}</span>
-                        <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+                        <span className={cn('text-[11px] sm:text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -1220,8 +1220,8 @@ setUser(r.user as UserType)
                     { label: 'Last Login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : '—' },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between px-3 py-2.5 border-b border-border/60 last:border-0">
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                      <span className={cn('text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</span>
+                      <span className={cn('text-[11px] sm:text-xs font-medium', value === '—' ? 'text-muted-foreground/60' : 'text-foreground')}>{value}</span>
                     </div>
                   ))}
                 </div>

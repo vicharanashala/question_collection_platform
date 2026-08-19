@@ -71,7 +71,7 @@ export function CropPickerModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="flex max-h-[92dvh] sm:max-h-[85vh] max-w-2xl flex-col p-0 sm:p-0 max-md:bottom-0 max-md:top-auto max-md:translate-y-0 max-md:max-w-none max-md:rounded-b-none max-md:animate-in max-md:fade-in-0 max-md:slide-in-from-bottom-0">
         <DialogHeader className="border-b border-border-subtle px-4 py-3">
-          <DialogTitle className="text-base font-semibold">Select crops</DialogTitle>
+          <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">Select crops</DialogTitle>
         </DialogHeader>
 
         {/* Search */}
@@ -121,7 +121,7 @@ export function CropPickerModal({
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-8 text-center text-xs sm:text-xs sm:text-sm text-muted-foreground">
               No crops match your search
             </p>
           ) : (
@@ -160,7 +160,7 @@ export function CropPickerModal({
                     </div>
                     <span
                       className={cn(
-                        "line-clamp-2 text-center text-xs leading-tight",
+                        "line-clamp-2 text-center text-[11px] sm:text-[11px] sm:text-xs leading-tight",
                         isSelected
                           ? "font-semibold text-emerald-700 dark:text-emerald-300"
                           : "font-medium text-foreground",
@@ -181,7 +181,7 @@ export function CropPickerModal({
             <button
               type="button"
               onClick={() => setShowOther(true)}
-              className="flex w-full items-center justify-center rounded-md px-3 py-2 text-center text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
+              className="flex w-full items-center justify-center rounded-md px-3 py-2 text-center text-xs sm:text-xs sm:text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
             >
               Can't find your crop? Enter manually
             </button>
@@ -192,7 +192,7 @@ export function CropPickerModal({
         {selected.length > 0 && (
           <div className="sticky bottom-0 border-t border-border-subtle bg-surface px-4 py-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
                 {selected.length} selected{max > 0 ? ` / ${max} max` : ''}
               </p>
               <Button size="sm" onClick={handleClose} className="bg-emerald-600 hover:bg-emerald-700">

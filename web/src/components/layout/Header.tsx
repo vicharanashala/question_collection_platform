@@ -3,29 +3,28 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { useLanguage } from '@/hooks/useLanguage'
-import { LogOut, User, Menu, Sun, Moon, Languages, ChevronRight } from 'lucide-react'
+import { LogOut, User, Sun, Moon, ChevronRight, Languages } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
+import { BrandLogo } from '@/components/BrandLogo'
+import { useLanguage } from '@/hooks/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-interface HeaderProps {
-  onMobileMenuToggle?: () => void
-}
+interface HeaderProps {}
 
-export function Header({ onMobileMenuToggle }: HeaderProps) {
+export function Header({}: HeaderProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { t } = useTranslation()
-  const { nativeName } = useLanguage()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const { nativeName } = useLanguage()
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Title map keyed by route — translated via t() (i18next) so it re-renders
@@ -65,15 +64,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   return (
     <header className="flex h-14 items-center justify-between border-b border-border-subtle bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-2">
-        {/* Mobile menu toggle */}
-        <button
-          onClick={onMobileMenuToggle}
-          className="md:hidden rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
-          aria-label={t('chrome.openMenu')}
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <h1 className="text-base font-bold text-text">{title}</h1>
+        <BrandLogo className="h-8 w-8 shrink-0" />
+        <span className="text-sm sm:text-base font-bold text-text leading-tight">AnnaDatha</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -91,7 +83,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           )}
         </button>
 
-        {/* Language switcher quick-action */}
         <button
           onClick={() => setLanguageOpen(true)}
           className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
@@ -101,7 +92,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           <Languages className="h-4 w-4" />
         </button>
 
-        <div className="h-6 w-px bg-border-subtle" />
+
 
         {/* Profile dropdown */}
         <div className="relative" ref={menuRef}>
@@ -109,11 +100,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             onClick={() => setProfileOpen((o) => !o)}
             className="flex items-center gap-2 rounded-md p-1.5 hover:bg-accent transition-colors"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">
               {initials}
             </div>
             {user?.name && (
-              <span className="text-sm font-medium text-text hidden sm:block">{user.name}</span>
+              <span className="text-xs sm:text-xs sm:text-sm font-medium text-text hidden sm:block">{user.name}</span>
             )}
           </button>
 
@@ -121,15 +112,15 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <div className="absolute right-0 top-full mt-1.5 w-52 rounded-lg border border-border-subtle bg-surface shadow-md z-50 overflow-hidden">
               {/* User info */}
               <div className="border-b border-border-subtle px-3 py-2.5">
-                <p className="text-sm font-semibold text-text truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-text-tertiary truncate">{user?.mobileNumber}</p>
+                <p className="text-xs sm:text-xs sm:text-sm font-semibold text-text truncate">{user?.name || 'User'}</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary truncate">{user?.mobileNumber}</p>
               </div>
 
               {/* Menu items */}
               <div className="py-1">
                 <button
                   onClick={() => { toggleTheme(); setProfileOpen(false) }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs sm:text-xs sm:text-sm text-text hover:bg-accent transition-colors"
                 >
                   {theme === 'dark' ? (
                     <><Sun className="h-4 w-4 text-text-tertiary" />{t('profile.themeLight')}</>
@@ -137,19 +128,10 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                     <><Moon className="h-4 w-4 text-text-tertiary" />{t('profile.themeDark')}</>
                   )}
                 </button>
-                <button
-                  onClick={() => { setProfileOpen(false); setLanguageOpen(true) }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
-                >
-                  <Languages className="h-4 w-4 text-text-tertiary" />
-                  <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
-                  <span className="text-xs text-text-tertiary">{nativeName}</span>
-                  <ChevronRight className="h-4 w-4 text-text-tertiary" />
-                </button>
                 <Link
                   to="/profile"
                   onClick={() => setProfileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-text hover:bg-accent transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs sm:text-xs sm:text-sm text-text hover:bg-accent transition-colors"
                 >
                   <User className="h-4 w-4 text-text-tertiary" />
                   {t('nav.profile')}
@@ -159,7 +141,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               <div className="border-t border-border-subtle py-1">
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/5 transition-colors"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs sm:text-xs sm:text-sm text-destructive hover:bg-destructive/5 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                   {t('profile.signOut')}

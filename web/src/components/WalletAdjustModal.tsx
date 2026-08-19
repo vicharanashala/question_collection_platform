@@ -74,9 +74,9 @@ export function WalletAdjustModal({ open, userId, userName, currentBalance, onCl
 
         <div className="space-y-4 py-2">
           <div className="rounded-lg border border-border bg-muted/40 px-4 py-3">
-            <p className="text-xs text-muted-foreground mb-0.5">Adjusting balance for</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-0.5">Adjusting balance for</p>
             <p className="font-semibold text-foreground">{userName}</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
               Current balance:{' '}
               <span className="font-semibold tabular-nums">
                 ₹{formatINRFull(Number(currentBalance))}
@@ -97,7 +97,7 @@ export function WalletAdjustModal({ open, userId, userName, currentBalance, onCl
               onChange={(e) => { setAmount(e.target.value); setError('') }}
               disabled={adjusting}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               Positive = credit to wallet, Negative = debit from wallet
             </p>
           </div>
@@ -116,7 +116,7 @@ export function WalletAdjustModal({ open, userId, userName, currentBalance, onCl
           </div>
 
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-xs sm:text-xs sm:text-sm text-destructive">{error}</p>
           )}
         </div>
 

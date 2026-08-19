@@ -108,10 +108,10 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
       <DialogContent className="max-w-md w-full p-0 overflow-hidden">
         {/* Header */}
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-border-subtle shrink-0">
-          <DialogTitle className="text-base font-semibold">
+          <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">
             {mode === 'approve' ? 'Approve Withdrawal' : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
             {mode === 'approve'
               ? `You are about to approve a withdrawal of ₹${Number(amount).toLocaleString('en-IN')} for ${userName || 'this user'}.`
               : mode === 'reject'
@@ -126,7 +126,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
             <>
               {/* Suggested reasons */}
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground mb-2">
                   Suggested reasons <span className="text-muted-foreground/60 font-normal">(click to use)</span>
                 </p>
                 <div className="space-y-1.5">
@@ -135,7 +135,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
                       <button
                         type="button"
                         className={cn(
-                          'flex-1 text-left text-xs px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer',
+                          'flex-1 text-left text-[11px] sm:text-[11px] sm:text-xs px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer',
                           'hover:shadow-sm',
                           'border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:border-destructive/40',
                         )}
@@ -147,7 +147,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
                       <button
                         type="button"
                         className={cn(
-                          'shrink-0 text-xs px-2 py-1.5 rounded border transition-all duration-150 cursor-pointer',
+                          'shrink-0 text-[11px] sm:text-[11px] sm:text-xs px-2 py-1.5 rounded border transition-all duration-150 cursor-pointer',
                           'text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground',
                         )}
                         onClick={() => appendReason(suggestion)}
@@ -163,14 +163,14 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
               {/* Custom reason textarea */}
               <div className="space-y-1.5">
                 <Label htmlFor="withdrawal-reject-reason">
-                  Custom Reason <span className="text-muted-foreground/60 font-normal text-xs">(or write your own)</span>
+                  Custom Reason <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">(or write your own)</span>
                 </Label>
                 <textarea
                   ref={textareaRef}
                   id="withdrawal-reject-reason"
                   rows={4}
                   className={cn(
-                    'w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-sm resize-none',
+                    'w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm resize-none',
                     'focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus',
                     'placeholder:text-muted-foreground',
                     error ? 'border-destructive focus:ring-destructive' : '',
@@ -195,7 +195,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
                 />
                 <div className="flex justify-between items-center">
                   {error ? (
-                    <div className="flex items-center gap-1.5 text-destructive text-xs">
+                    <div className="flex items-center gap-1.5 text-destructive text-[11px] sm:text-[11px] sm:text-xs">
                       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                       {error}
                     </div>
@@ -203,7 +203,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
                     <span />
                   )}
                   <span
-                    className={`text-xs ${reason.length > MAX_REASON_LENGTH ? 'text-destructive' : reason.length > MAX_REASON_LENGTH * 0.9 ? 'text-yellow-600' : 'text-muted-foreground'}`}
+                    className={`text-[11px] sm:text-[11px] sm:text-xs ${reason.length > MAX_REASON_LENGTH ? 'text-destructive' : reason.length > MAX_REASON_LENGTH * 0.9 ? 'text-yellow-600' : 'text-muted-foreground'}`}
                   >
                     {reason.length}/{MAX_REASON_LENGTH}
                   </span>
@@ -220,7 +220,7 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
               <textarea
                 id="withdrawal-approve-note"
                 rows={4}
-                className="w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus placeholder:text-muted-foreground"
+                className="w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm resize-none focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus placeholder:text-muted-foreground"
                 placeholder="Add an optional note for this approval…"
                 value={reason}
                 maxLength={MAX_REASON_LENGTH}

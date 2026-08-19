@@ -29,7 +29,7 @@ export function LegalDocumentModal({ type, open, onOpenChange }: LegalDocumentMo
             </div>
             <div>
               <p className="font-semibold text-foreground">{title}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                 {sections.length} sections · June 2026
               </p>
             </div>
@@ -49,10 +49,10 @@ export function LegalDocumentModal({ type, open, onOpenChange }: LegalDocumentMo
                     className="flex w-full items-center justify-between px-3 py-2.5 text-left transition-colors hover:bg-surface-variant/40"
                   >
                     <span className="flex flex-1 items-center gap-2.5">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[11px] sm:text-[11px] sm:text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                         {id}
                       </span>
-                      <span className="text-sm font-medium text-foreground">{sectionTitle}</span>
+                      <span className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">{sectionTitle}</span>
                     </span>
                     {isOpen
                       ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -61,7 +61,7 @@ export function LegalDocumentModal({ type, open, onOpenChange }: LegalDocumentMo
                   </button>
                   {isOpen && (
                     <div className="border-t border-border-subtle px-3 py-2.5">
-                      <p className="text-xs leading-relaxed text-muted-foreground">{body}</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs leading-relaxed text-muted-foreground">{body}</p>
                     </div>
                   )}
                 </div>

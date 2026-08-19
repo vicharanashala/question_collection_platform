@@ -52,14 +52,14 @@ export function LanguageSwitcher({ open, onClose }: LanguageSwitcherProps) {
                 <div className="min-w-0 flex-1">
                   <p
                     className={cn(
-                      'truncate text-sm font-semibold',
+                      'truncate text-xs sm:text-sm font-semibold',
                       isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground',
                       isRTL && 'text-right',
                     )}
                   >
                     {lang.nativeName}
                   </p>
-                  <p className={cn('truncate text-xs', isSelected ? 'text-emerald-600 dark:text-emerald-500' : 'text-text-secondary')}>
+                  <p className={cn('truncate text-[11px] sm:text-[11px] sm:text-xs', isSelected ? 'text-emerald-600 dark:text-emerald-500' : 'text-text-secondary')}>
                     {lang.name}
                   </p>
                 </div>

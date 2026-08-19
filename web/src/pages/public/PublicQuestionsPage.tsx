@@ -88,8 +88,8 @@ export function PublicQuestionsPage() {
     <div className="mx-auto max-w-5xl space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground lg:text-2xl">{t('submissions.title')}</h2>
-          <p className="mt-0.5 text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground lg:text-2xl">{t('submissions.title')}</h2>
+          <p className="mt-0.5 text-xs sm:text-xs sm:text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
         </div>
         <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600">
           <MessageSquarePlus className="h-4 w-4" />{t('question.askQuestion')}
@@ -98,7 +98,7 @@ export function PublicQuestionsPage() {
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {STATUS_TABS.map((s) => (
-          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors', status === s.key ? 'bg-primary text-primary-foreground' : 'border border-border-subtle bg-surface text-text-secondary hover:border-primary/40 dark:hover:border-primary/60')}>
+          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold transition-colors', status === s.key ? 'bg-primary text-primary-foreground' : 'border border-border-subtle bg-surface text-text-secondary hover:border-primary/40 dark:hover:border-primary/60')}>
             {t(s.labelKey)}
           </button>
         ))}
@@ -110,7 +110,7 @@ export function PublicQuestionsPage() {
             <div className="flex items-center justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-500" /></div>
           ) : items.length === 0 ? (
             <div className="p-10 text-center">
-              <p className="text-sm font-medium text-text-secondary">{t('common.noQuestionsFound')}</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-medium text-text-secondary">{t('common.noQuestionsFound')}</p>
               <Button onClick={() => navigate('/home/ask')} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
                 <MessageSquarePlus className="h-4 w-4" /> {t('common.askYourFirstQuestion')}
               </Button>
@@ -126,8 +126,8 @@ export function PublicQuestionsPage() {
                         so a short question isn't left with empty space to its
                         right on a wide row. */}
                     <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-                      <p className="line-clamp-2 flex-1 text-sm font-medium text-foreground lg:line-clamp-1 lg:text-base">{q.questionText}</p>
-                      <div className="flex shrink-0 items-center gap-2 text-xs text-text-tertiary">
+                      <p className="line-clamp-2 flex-1 text-xs sm:text-sm font-medium text-foreground lg:line-clamp-1 lg:text-sm sm:text-base">{q.questionText}</p>
+                      <div className="flex shrink-0 items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
                         <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>{t(statusLabelKey(q.status))}</span>
                         <span>·</span>
                         <span>{formatDate(q.submittedAt)}</span>
@@ -143,7 +143,7 @@ export function PublicQuestionsPage() {
       </Card>
 
       {!loading && items.length > 0 && (
-        <div className="flex items-center justify-between text-xs text-text-secondary">
+        <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
           <span>{t('common.showing', { start, end, total })}</span>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="h-7 px-2">

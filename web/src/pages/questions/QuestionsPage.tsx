@@ -67,8 +67,8 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
   return (
     <div className="flex items-start gap-2.5">
       <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-      <span className="text-sm text-muted-foreground min-w-[110px]">{label}</span>
-      <span className="text-sm text-foreground font-medium">{value}</span>
+      <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground min-w-[110px]">{label}</span>
+      <span className="text-xs sm:text-xs sm:text-sm text-foreground font-medium">{value}</span>
     </div>
   )
 }
@@ -124,7 +124,7 @@ export function QuestionsPage() {
     {
       key: 'status', header: 'Status', width: '110px', sortable: true,
       render: (q) => (
-        <Badge className={cn('capitalize text-xs px-2 py-0.5 whitespace-nowrap', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+        <Badge className={cn('capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5 whitespace-nowrap', STATUS_COLORS[q.status] ?? 'bg-muted')}>
           {STATUS_LABELS[q.status] ?? q.status}
         </Badge>
       ),
@@ -132,13 +132,13 @@ export function QuestionsPage() {
     {
       key: 'questionText', header: 'Question', width: '280px', sortable: false,
       render: (q) => (
-        <span className="line-clamp-2 text-xs">{q.questionText}</span>
+        <span className="line-clamp-2 text-[11px] sm:text-xs">{q.questionText}</span>
       ),
     },
     {
       key: 'submittedBy', header: 'Submitted By', width: '130px', sortable: true,
       render: (q) => (
-        <span className="text-xs truncate block" title={q.user?.name ?? q.userName ?? q.userMobileNumber ?? ''}>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs truncate block" title={q.user?.name ?? q.userName ?? q.userMobileNumber ?? ''}>
           {q.user?.name ?? q.userName ?? q.userMobileNumber ?? '—'}
         </span>
       ),
@@ -146,7 +146,7 @@ export function QuestionsPage() {
     {
       key: 'domains', header: 'Category', width: '180px', sortable: true,
       render: (q) => (
-        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
           {(q.domains ?? []).join(', ') || '—'}
         </span>
       ),
@@ -154,36 +154,36 @@ export function QuestionsPage() {
     {
       key: 'cropType', header: 'Crop', width: '100px', sortable: true,
       render: (q) => (
-        <span className="text-xs capitalize">{q.cropType ?? '—'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">{q.cropType ?? '—'}</span>
       ),
     },
     {
       key: 'season', header: 'Season', width: '90px', sortable: true,
       render: (q) => (
-        <span className="text-xs capitalize">{SEASON_LABEL[q.season] ?? q.season ?? '—'}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">{SEASON_LABEL[q.season] ?? q.season ?? '—'}</span>
       ),
     },
     {
       key: 'location', header: 'Location', width: '140px', sortable: true,
       render: (q) => (
-        <span className="text-xs truncate block" title={[q.district, q.state].filter(Boolean).join(', ')}>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs truncate block" title={[q.district, q.state].filter(Boolean).join(', ')}>
           {[q.district, q.state].filter(Boolean).join(', ') || '—'}
         </span>
       ),
     },
     {
       key: 'submittedAt', header: 'Submitted', width: '120px', sortable: true,
-      render: (q) => <span className="text-xs text-muted-foreground">{formatDate(q.submittedAt)}</span>,
+      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{formatDate(q.submittedAt)}</span>,
     },
     {
       key: 'reviewedByName', header: 'Reviewed By', width: '120px', sortable: true,
-      render: (q) => <span className="text-xs truncate block">{q.reviewedByName ?? '—'}</span>,
+      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs truncate block">{q.reviewedByName ?? '—'}</span>,
     },
     {
       key: 'mediaCount', header: 'Media', width: '70px', sortable: false,
       render: (q) => q.mediaUrls && q.mediaUrls.length > 0 ? (
-        <span className="flex items-center gap-1 text-xs text-muted-foreground"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>
-      ) : <span className="text-xs text-muted-foreground">—</span>,
+        <span className="flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>
+      ) : <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">—</span>,
     },
   ]
 
@@ -241,14 +241,14 @@ export function QuestionsPage() {
       {/* ─── Page header ─── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Questions</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Questions</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
             All submitted questions
           </p>
         </div>
         <div className="flex items-center gap-3">
           {apiTotal > 0 && (
-            <span className="text-xs text-muted-foreground hidden sm:block">{apiTotal.toLocaleString()} total</span>
+            <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hidden sm:block">{apiTotal.toLocaleString()} total</span>
           )}
           <ViewToggle view={view} onChange={setView} />
         </div>
@@ -266,7 +266,7 @@ export function QuestionsPage() {
                   key={value}
                   onClick={() => { setStatusFilter(value); setPage(1) }}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150',
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium border transition-all duration-150',
                     statusFilter === value
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground',
@@ -310,14 +310,14 @@ export function QuestionsPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={cn('capitalize text-xs px-2 py-0.5', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
+                <Badge className={cn('capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5', STATUS_COLORS[detailQuestion.status] ?? 'bg-muted')}>
                   {STATUS_LABELS[detailQuestion.status] ?? detailQuestion.status}
                 </Badge>
                 {detailQuestion.domains?.length ? (
-                  <span className="text-xs text-muted-foreground capitalize">{detailQuestion.domains.join(', ')}</span>
+                  <span className="text-[11px] sm:text-xs text-muted-foreground capitalize">{detailQuestion.domains.join(', ')}</span>
                 ) : null}
 {detailQuestion.duplicateFlag && (
-                  <Badge variant="destructive" className="text-xs">
+                  <Badge variant="destructive" className="text-[11px] sm:text-[11px] sm:text-xs">
                     <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
                   </Badge>
                 )}
@@ -332,7 +332,7 @@ export function QuestionsPage() {
                 />
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                <InfoRow icon={Hash} label="Question ID" value={<span className="font-mono text-xs">{detailQuestion.id.slice(0, 8)}…</span>} />
+                <InfoRow icon={Hash} label="Question ID" value={<span className="font-mono text-[11px] sm:text-[11px] sm:text-xs">{detailQuestion.id.slice(0, 8)}…</span>} />
                 <InfoRow icon={Globe} label="Language" value={detailQuestion.language?.toUpperCase()} />
                 <InfoRow icon={Info} label="Category" value={(detailQuestion.domains ?? []).join(', ') || '—'} />
                 <InfoRow icon={Wheat} label="Crop Type" value={detailQuestion.cropType} />
@@ -350,7 +350,7 @@ export function QuestionsPage() {
               </div>
               {detailQuestion.mediaUrls && detailQuestion.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 mb-2 text-sm text-muted-foreground"><Film className="h-4 w-4" />Images</div>
+                  <div className="flex items-center gap-1.5 mb-2 text-xs sm:text-xs sm:text-sm text-muted-foreground"><Film className="h-4 w-4" />Images</div>
                   <div className="grid grid-cols-3 gap-2">
                     {detailQuestion.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).map((url, i) => (
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer">
@@ -363,7 +363,7 @@ export function QuestionsPage() {
 
               {detailQuestion.mediaUrls && detailQuestion.mediaUrls.filter(u => u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                     <Mic className="h-3 w-3" />Audio uploaded successfully
                   </span>
                 </div>

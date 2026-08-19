@@ -82,7 +82,7 @@ export function DistributionsList() {
 
       <Card>
         <CardContent className="p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead className="bg-surface text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-2 font-medium">Question</th>
@@ -105,7 +105,7 @@ export function DistributionsList() {
                   <td className="px-4 py-2 max-w-md">
                     <div className="line-clamp-2 text-foreground">{row.questionText}</div>
                     {row.notes && (
-                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">
                         Note: {row.notes}
                       </div>
                     )}
@@ -123,12 +123,12 @@ export function DistributionsList() {
                       </Badge>
                     )}
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground text-xs">
+                  <td className="px-4 py-2 text-muted-foreground text-[11px] sm:text-[11px] sm:text-xs">
                     {row.distributor?.name
                       || row.distributor?.username
                       || `${row.distributorId.slice(0, 8)}…`}
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground text-xs">{new Date(row.createdAt).toLocaleString()}</td>
+                  <td className="px-4 py-2 text-muted-foreground text-[11px] sm:text-[11px] sm:text-xs">{new Date(row.createdAt).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

@@ -20,13 +20,13 @@ export function Pagination({
   onLimit: (l: number) => void
 }) {
   return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-2 text-xs">
+    <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] sm:text-[11px] sm:text-xs">
       <div className="text-muted-foreground">
         Showing {total === 0 ? 0 : (page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
       </div>
       <div className="flex items-center gap-2">
         <Select value={String(limit)} onValueChange={(v) => onLimit(Number(v))}>
-          <SelectTrigger className="h-7 w-20 text-xs">
+          <SelectTrigger className="h-7 w-20 text-[11px] sm:text-[11px] sm:text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

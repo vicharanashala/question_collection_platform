@@ -29,8 +29,8 @@ export function PublicPrivacyPage() {
         <div className="mb-3 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
           <ShieldCheck className="h-8 w-8" />
         </div>
-        <h1 className="text-xl font-extrabold text-foreground">Privacy Policy</h1>
-        <p className="mt-1 text-xs text-text-secondary">
+        <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">Privacy Policy</h1>
+        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
           Last updated: June 2026 · {PRIVACY_POLICY_SECTIONS.length} sections
         </p>
       </div>
@@ -38,7 +38,7 @@ export function PublicPrivacyPage() {
       {/* Info banner */}
       <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 dark:bg-emerald-950/30">
         <Lock className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
-        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+        <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           Your data is stored securely and never sold to third parties.
         </p>
       </div>
@@ -55,10 +55,10 @@ export function PublicPrivacyPage() {
                 className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-variant/40"
               >
                 <span className="flex flex-1 items-center gap-3">
-                  <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                  <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[11px] sm:text-[11px] sm:text-xs font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
                     {id}
                   </span>
-                  <span className="text-sm font-semibold text-foreground">{title}</span>
+                  <span className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{title}</span>
                 </span>
                 {isOpen ? (
                   <ChevronUp className="h-4 w-4 shrink-0 text-text-tertiary" />
@@ -68,7 +68,7 @@ export function PublicPrivacyPage() {
               </button>
               {isOpen && (
                 <CardContent className="border-t border-border-subtle px-4 py-3">
-                  <p className="text-xs leading-relaxed text-text-secondary">{body}</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs leading-relaxed text-text-secondary">{body}</p>
                 </CardContent>
               )}
             </Card>
@@ -76,7 +76,7 @@ export function PublicPrivacyPage() {
         })}
       </div>
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
         AnnaDatha — Made for Indian farmers
       </p>
     </div>

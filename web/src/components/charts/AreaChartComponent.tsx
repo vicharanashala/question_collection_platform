@@ -33,8 +33,8 @@ function CustomTooltip({ active, payload, label, valueFormatter, labelFormatter 
   const displayLabel = labelFormatter ? labelFormatter(label ?? '') : String(label ?? '')
   return (
     <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
-      <p className="text-xs text-text-secondary">{displayLabel}</p>
-      <p className="mt-0.5 text-sm font-bold text-text">
+      <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{displayLabel}</p>
+      <p className="mt-0.5 text-xs sm:text-xs sm:text-sm font-bold text-text">
         {valueFormatter ? valueFormatter(value) : value?.toLocaleString()}
       </p>
     </div>

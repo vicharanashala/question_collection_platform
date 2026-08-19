@@ -57,8 +57,8 @@ function StatTile({ icon, label, value, iconClass }: StatTileProps) {
         <span className={cn('flex h-9 w-9 items-center justify-center rounded-lg lg:h-12 lg:w-12', iconClass)}>
           {icon}
         </span>
-        <p className="text-base font-bold leading-tight text-foreground lg:text-2xl">{value}</p>
-        <p className="text-[11px] leading-tight text-text-secondary lg:text-sm">{label}</p>
+        <p className="text-sm sm:text-base font-bold leading-tight text-foreground lg:text-2xl">{value}</p>
+        <p className="text-[11px] leading-tight text-text-secondary lg:text-xs sm:text-sm">{label}</p>
       </CardContent>
     </Card>
   )
@@ -80,8 +80,8 @@ function QuickAction({ icon, iconClass, label, sub, onClick }: QuickActionProps)
     >
       <span className={iconClass}>{icon}</span>
       <div className="min-w-0">
-        <p className="text-sm font-bold text-foreground lg:text-base">{label}</p>
-        <p className="text-xs text-text-secondary lg:text-sm">{sub}</p>
+        <p className="text-xs sm:text-sm font-bold text-foreground lg:text-sm sm:text-base">{label}</p>
+        <p className="text-[11px] sm:text-xs text-text-secondary lg:text-xs sm:text-sm">{sub}</p>
       </div>
     </button>
   )
@@ -202,18 +202,18 @@ export function PublicHomePage() {
           plain desktop-dashboard header treatment instead of a hero card. */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-text-secondary">{greeting},</p>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">{greeting},</p>
           <div className="mt-0.5 flex flex-wrap items-center gap-2.5">
             <h1 className="truncate text-2xl font-bold text-foreground lg:text-3xl">{name}</h1>
             {categoryText && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                 <Sprout className="h-3.5 w-3.5" />
                 {categoryText}
               </span>
             )}
           </div>
           {user?.state && (
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-text-secondary">
+            <div className="mt-1.5 flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
               <MapPin className="h-3.5 w-3.5" />
               <span className="truncate">
                 {user.state}
@@ -224,7 +224,7 @@ export function PublicHomePage() {
         </div>
 
         <div className="relative shrink-0">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-base font-bold text-emerald-700 dark:text-emerald-400 lg:h-12 lg:w-12 lg:text-lg">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-sm sm:text-base font-bold text-emerald-700 dark:text-emerald-400 lg:h-12 lg:w-12 lg:text-base sm:text-lg">
             {initials}
           </div>
           {isVerified && (
@@ -274,7 +274,7 @@ export function PublicHomePage() {
         {/* Quick Actions -- mirrors mobile home screen */}
         <section aria-labelledby="quick-actions-heading" className="flex flex-col lg:h-full">
           <div className="mb-3 flex items-center gap-1.5">
-            <h3 id="quick-actions-heading" className="text-base font-bold text-foreground">{t('home.quickActions')}</h3>
+            <h3 id="quick-actions-heading" className="text-sm sm:text-sm sm:text-base font-bold text-foreground">{t('home.quickActions')}</h3>
             <InfoTip label={t('home.aboutQuickActions')} description={t('home.quickActionsTip')} />
           </div>
           <Card className="lg:flex lg:flex-1 lg:flex-col lg:justify-center">
@@ -301,10 +301,10 @@ onClick={() => navigate('/home/ask')}
         <section aria-labelledby="earn-rewards-heading">
           <div className="mb-3">
             <div className="flex items-center gap-1.5">
-              <h3 id="earn-rewards-heading" className="text-base font-bold text-foreground">{t('home.earnRewards')}</h3>
+              <h3 id="earn-rewards-heading" className="text-sm sm:text-sm sm:text-base font-bold text-foreground">{t('home.earnRewards')}</h3>
               <InfoTip label={t('home.aboutRewards')} description={t('home.rewardsTip')} />
             </div>
-            <p className="text-xs text-text-secondary">{t('home.rewardSubtitle')}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{t('home.rewardSubtitle')}</p>
           </div>
 
           <Card>
@@ -321,11 +321,11 @@ onClick={() => navigate('/home/ask')}
                         <Leaf className="h-4 w-4 lg:h-5 lg:w-5" />
                       </div>
                       <div className="mt-3 text-center">
-                        <p className={cn('text-xs font-extrabold lg:text-sm', tier.text)}>{t(`home.${tier.key}`)}</p>
-                        <p className="mt-0.5 text-[10px] text-text-secondary lg:text-xs">
+                        <p className={cn('text-[11px] sm:text-xs font-extrabold lg:text-xs sm:text-sm', tier.text)}>{t(`home.${tier.key}`)}</p>
+                        <p className="mt-0.5 text-[10px] text-text-secondary lg:text-[11px] sm:text-xs">
                           {range.min}-{range.max}{t('home.questions')}
                         </p>
-                        <p className="mt-1 text-base font-extrabold text-foreground lg:text-lg">Rs.{range.reward}{t('home.perQuestion')}</p>
+                        <p className="mt-1 text-sm sm:text-base font-extrabold text-foreground lg:text-base sm:text-lg">Rs.{range.reward}{t('home.perQuestion')}</p>
                       </div>
                     </div>
                   )
@@ -340,8 +340,8 @@ onClick={() => navigate('/home/ask')}
                 <div className="flex items-center gap-3">
                   <Trophy className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   <div>
-                    <p className="text-sm font-bold text-foreground">{t('home.reachGold')}</p>
-                    <p className="text-xs text-text-secondary">{t('home.reachGoldSub')}</p>
+                    <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground">{t('home.reachGold')}</p>
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{t('home.reachGoldSub')}</p>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 shrink-0 text-text-tertiary" aria-hidden="true" />
@@ -355,7 +355,7 @@ onClick={() => navigate('/home/ask')}
           mobile, a 3-up row of tip cards on desktop */}
       <section aria-labelledby="submission-tips-heading">
         <div className="mb-3 flex items-center gap-1.5">
-          <h3 id="submission-tips-heading" className="text-base font-bold text-foreground">{t('home.submissionTips')}</h3>
+          <h3 id="submission-tips-heading" className="text-sm sm:text-sm sm:text-base font-bold text-foreground">{t('home.submissionTips')}</h3>
           <InfoTip label={t('home.aboutSubmissionTips')} description={t('home.guidelinesTip')} />
         </div>
         <Card>
@@ -363,11 +363,11 @@ onClick={() => navigate('/home/ask')}
             <ul className="divide-y divide-border-subtle sm:grid sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
               <li className="flex items-center gap-3 p-4">
                 <Calendar className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                <span className="text-sm text-foreground">{t('home.dailyLimitTip', { count: dailyLimit })}</span>
+                <span className="text-xs sm:text-xs sm:text-sm text-foreground">{t('home.dailyLimitTip', { count: dailyLimit })}</span>
               </li>
               <li className="flex items-center gap-3 p-4">
                 <PenLine className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-                <span className="text-sm text-foreground">
+                <span className="text-xs sm:text-xs sm:text-sm text-foreground">
                   {editWindowSec === 0
                     ? t('home.editWindowClosed')
                     : t('home.editWindowTip').replace('{seconds}', String(editWindowSec))}
@@ -375,14 +375,14 @@ onClick={() => navigate('/home/ask')}
               </li>
               <li className="flex items-center gap-3 p-4">
                 <Lightbulb className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
-                <span className="text-sm text-foreground">{t('home.aiCheckTip')}</span>
+                <span className="text-xs sm:text-xs sm:text-sm text-foreground">{t('home.aiCheckTip')}</span>
               </li>
             </ul>
           </CardContent>
         </Card>
       </section>
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">{t('app.footer')}</p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('app.footer')}</p>
 
       {/*
         Complete-profile wizard modal. Renders only when the page detects an

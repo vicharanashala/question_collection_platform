@@ -92,7 +92,7 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setQuery(''); setShowOther(false); setOtherText('') } }}>
       <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col p-0">
         <DialogHeader className="flex-row items-center justify-between border-b border-border-subtle px-4 py-3">
-          <DialogTitle className="text-base font-semibold">{t('question.cropType')}</DialogTitle>
+          <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">{t('question.cropType')}</DialogTitle>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -132,7 +132,7 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-text-tertiary">{t('common.noMatches', 'No matches')}</p>
+            <p className="py-8 text-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('common.noMatches', 'No matches')}</p>
           ) : (
             <div className="grid grid-cols-4 gap-x-2 gap-y-5">
               {filtered.map((c) => {
@@ -153,7 +153,7 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
                         </div>
                       )}
                     </div>
-                    <span className={`line-clamp-2 text-center text-xs leading-tight ${selected ? 'font-semibold text-emerald-700 dark:text-emerald-300' : 'font-medium text-foreground'}`}>
+                    <span className={`line-clamp-2 text-center text-[11px] sm:text-[11px] sm:text-xs leading-tight ${selected ? 'font-semibold text-emerald-700 dark:text-emerald-300' : 'font-medium text-foreground'}`}>
                       {c.label}
                     </span>
                   </button>
@@ -167,7 +167,7 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
             <button
               type="button"
               onClick={pickOther}
-              className="flex w-full items-center justify-center rounded-md px-3 py-2 text-center text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
+              className="flex w-full items-center justify-center rounded-md px-3 py-2 text-center text-xs sm:text-xs sm:text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
             >
               {t('question.cropOtherManually')}
             </button>
@@ -373,8 +373,8 @@ export function PublicAskPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 mb-4">
               <CheckCircle2 className="h-9 w-9 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">{t('question.submitted')}</h2>
-            <p className="mt-2 text-sm text-text-secondary max-w-sm">{t('question.successBody')}</p>
+            <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('question.submitted')}</h2>
+            <p className="mt-2 text-xs sm:text-xs sm:text-sm text-text-secondary max-w-sm">{t('question.successBody')}</p>
             <div className="mt-6 flex gap-3">
               <Button variant="outline" onClick={() => { setSubmitted(false); resetAll() }}>{t('question.submitAnother')}</Button>
               <Button onClick={() => navigate('/home/questions')}>{t('nav.submissions')}</Button>
@@ -393,19 +393,19 @@ export function PublicAskPage() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-bold text-foreground">{t('question.duplicateFoundTitle')}</h3>
-                <p className="text-xs text-text-secondary mt-1">{t('question.duplicateFoundMessage')}</p>
+                <h3 className="text-xs sm:text-xs sm:text-sm font-bold text-foreground">{t('question.duplicateFoundTitle')}</h3>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary mt-1">{t('question.duplicateFoundMessage')}</p>
               </div>
             </div>
             <div className="mt-4 rounded-lg border border-amber-200 bg-white p-4 dark:bg-surface">
-              <p className="text-sm font-semibold text-foreground">{duplicate.matchedQuestion}</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{duplicate.matchedQuestion}</p>
               {duplicate.matchedAnswer && (
                 <div className="mt-3 border-t border-amber-100 pt-3">
                   <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 dark:text-emerald-300">{t('question.duplicate.expertAnswer')}</p>
-                  <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{duplicate.matchedAnswer}</p>
+                  <p className="mt-1 text-xs sm:text-xs sm:text-sm text-foreground whitespace-pre-wrap">{duplicate.matchedAnswer}</p>
                 </div>
               )}
-              {duplicate.matchedUserName && <p className="mt-3 text-xs text-text-tertiary">{t('question.duplicate.answeredBy', { name: duplicate.matchedUserName })}</p>}
+              {duplicate.matchedUserName && <p className="mt-3 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('question.duplicate.answeredBy', { name: duplicate.matchedUserName })}</p>}
             </div>
             <div className="mt-5 flex gap-3">
               <Button variant="outline" onClick={() => { setDuplicate(null); resetAll() }}>{t('question.duplicate.askAnyway')}</Button>
@@ -427,11 +427,11 @@ export function PublicAskPage() {
           </Button>
         </div>
         <div>
-          <h2 className="text-xl font-bold text-foreground">{t('question.submitQuestion')}</h2>
-          <p className="text-sm text-text-secondary mt-0.5">{t('question.askSubtitle')}</p>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('question.submitQuestion')}</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">{t('question.askSubtitle')}</p>
         </div>
 
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs sm:text-xs sm:text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{t('question.notEditableAfterSubmission', 'This question is not editable after submission')}</span>
         </div>
@@ -445,11 +445,11 @@ export function PublicAskPage() {
               <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
                 <div className="space-y-4 lg:col-span-2">
                   <div className="rounded-lg border border-border-subtle bg-surface-variant/40 p-3.5">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <div className="flex items-center gap-2 text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
                       <MapPin className="h-4 w-4 text-emerald-600" />
                       {t('question.location')}
                     </div>
-                    <div className="mt-2 space-y-1 text-sm">
+                    <div className="mt-2 space-y-1 text-xs sm:text-xs sm:text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-text-tertiary">{t('question.state')}</span>
                         <span className="font-medium text-foreground">{previewMeta.state}</span>
@@ -465,7 +465,7 @@ export function PublicAskPage() {
                         </div>
                       )}
                     </div>
-                    <div className="mt-2 flex items-center gap-1.5 border-t border-border-subtle pt-2 text-xs text-text-tertiary">
+                    <div className="mt-2 flex items-center gap-1.5 border-t border-border-subtle pt-2 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
                       <Lock className="h-3 w-3" />
                       {t('question.locationLockedNote')}
                     </div>
@@ -474,13 +474,13 @@ export function PublicAskPage() {
                   {previewMeta.agroClimaticZone && (
                     <div className="space-y-1.5">
                       <Label>{t('question.agroClimaticZone', 'Agro-Climatic Zone')}</Label>
-                      <div className="inline-flex rounded-md bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                      <div className="inline-flex rounded-md bg-emerald-500/15 px-3 py-1.5 text-xs sm:text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                         {previewMeta.agroClimaticZone}
                       </div>
                     </div>
                   )}
 
-                  <div className="rounded-lg bg-muted px-3.5 py-2.5 text-xs text-text-secondary">
+                  <div className="rounded-lg bg-muted px-3.5 py-2.5 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
                     {t('question.dailyRemaining', { remaining: previewMeta.remainingToday, total: previewMeta.dailyLimit })}
                   </div>
                 </div>
@@ -488,7 +488,7 @@ export function PublicAskPage() {
                 <div className="flex flex-col gap-4 lg:col-span-3">
                   <div className="space-y-1.5">
                     <Label>{t('question.domainSelect')} <span className="text-rose-600">*</span></Label>
-                    <p className="text-xs text-text-tertiary">{t('question.selectOneOrMore', 'Select one or more')}</p>
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('question.selectOneOrMore', 'Select one or more')}</p>
                     <div className="flex flex-wrap gap-2 pt-0.5">
                       {DOMAINS.map((d) => {
                         const selected = domains.includes(d.value)
@@ -497,7 +497,7 @@ export function PublicAskPage() {
                             key={d.value}
                             type="button"
                             onClick={() => toggleDomain(d.value)}
-                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${selected ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700'}`}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium transition-colors ${selected ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700'}`}
                           >
                             {selected && <CheckCircle2 className="h-3.5 w-3.5" />}
                             {d.label}
@@ -523,7 +523,7 @@ export function PublicAskPage() {
                         id="crop"
                         type="button"
                         onClick={() => setCropPickerOpen(true)}
-                        className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+                        className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 py-1 text-xs sm:text-xs sm:text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
                       >
                         <span className={cropType ? 'text-text' : 'text-text-tertiary'}>
                           {cropType || t('question.pickCrop')}
@@ -572,7 +572,7 @@ export function PublicAskPage() {
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
         </Button>
-        <div className="text-xs text-text-tertiary">
+        <div className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
           {stats ? (
             <span className={atLimit ? 'text-rose-600 font-semibold' : 'text-emerald-700 dark:text-emerald-300 font-medium'}>
               {atLimit ? t('question.dailyLimitIndicator') : t('question.dailyLeftToday', { remaining: stats.remainingToday, total: stats.dailyLimit })}
@@ -581,8 +581,8 @@ export function PublicAskPage() {
         </div>
       </div>
       <div>
-        <h2 className="text-xl font-bold text-foreground">{t('question.askQuestion')}</h2>
-        <p className="text-sm text-text-secondary mt-0.5">{t('question.expertWillRespond')}</p>
+        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('question.askQuestion')}</h2>
+        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">{t('question.expertWillRespond')}</p>
       </div>
       <Card>
         <CardContent className="p-5 lg:p-6">
@@ -596,7 +596,7 @@ export function PublicAskPage() {
               <div className="flex flex-col gap-1.5 lg:col-span-3">
                 <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
                 <Textarea id="q" placeholder={t('question.questionExample')} value={questionText} onChange={(e) => setQuestionText(e.target.value)} rows={8} maxLength={MAX_QUESTION_CHARS} className="resize-none lg:flex-1" />
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs">
                   <span className="text-text-tertiary">{t('question.tipDetailed')}</span>
                   <span className={questionText.length > MAX_QUESTION_CHARS - 50 ? 'text-amber-600 font-semibold' : 'text-text-tertiary'}>{questionText.length}/{MAX_QUESTION_CHARS}</span>
                 </div>

@@ -69,11 +69,11 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
   return (
     <Card className="shadow-xs">
       <CardContent className="p-5">
-        <p className="text-sm text-text-tertiary">{label}</p>
-        <p className="mt-1 text-3xl font-extrabold text-text tabular-nums">
+        <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{label}</p>
+        <p className="mt-1 text-2xl sm:text-3xl font-extrabold text-text tabular-nums">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </p>
-        {sub && <p className="mt-1 text-xs text-text-tertiary">{sub}</p>}
+        {sub && <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{sub}</p>}
       </CardContent>
     </Card>
   )
@@ -82,23 +82,23 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 // ─── Value Diff ───────────────────────────────────────────────────────────────
 
 function ValueDiff({ old: oldVal, next: nextVal }: { old: Record<string, unknown> | null; next: Record<string, unknown> | null }) {
-  if (!oldVal && !nextVal) return <span className="text-text-tertiary text-xs">—</span>
+  if (!oldVal && !nextVal) return <span className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">—</span>
   const allKeys = new Set([...Object.keys(oldVal ?? {}), ...Object.keys(nextVal ?? {})])
   const changes = Array.from(allKeys).filter((k) => {
     const ov = oldVal?.[k]; const nv = nextVal?.[k]
     return JSON.stringify(ov) !== JSON.stringify(nv)
   })
-  if (!changes.length) return <span className="text-text-tertiary text-xs">—</span>
+  if (!changes.length) return <span className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">—</span>
   return (
     <div className="flex flex-col gap-0.5">
       {changes.slice(0, 3).map((k) => (
-        <span key={k} className="text-xs">
+        <span key={k} className="text-[11px] sm:text-[11px] sm:text-xs">
           <span className="text-destructive font-medium">{String(oldVal?.[k] ?? '∅')}</span>
           {' → '}
           <span className="text-success font-medium">{String(nextVal?.[k] ?? '∅')}</span>
         </span>
       ))}
-      {changes.length > 3 && <span className="text-xs text-text-tertiary">+{changes.length - 3} more</span>}
+      {changes.length > 3 && <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">+{changes.length - 3} more</span>}
     </div>
   )
 }
@@ -122,49 +122,49 @@ function LogDetail({ entry, onClose }: LogDetailProps) {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-3 text-xs sm:text-xs sm:text-sm">
             <div>
-              <p className="text-text-tertiary text-xs">Timestamp</p>
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Timestamp</p>
               <p className="font-medium">{formatDateTime(entry.createdAt) ?? entry.createdAt}</p>
             </div>
             <div>
-              <p className="text-text-tertiary text-xs">Actor</p>
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Actor</p>
               <p className="font-medium">
                 {entry.actorName ?? entry.actorId ?? 'System'}
-                {entry.actorRole && <span className="ml-1 text-xs text-text-tertiary">({entry.actorRole})</span>}
+                {entry.actorRole && <span className="ml-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">({entry.actorRole})</span>}
               </p>
             </div>
             <div>
-              <p className="text-text-tertiary text-xs">Actor Type</p>
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Actor Type</p>
               <p className="font-medium capitalize">{entry.actorType}</p>
             </div>
             <div>
-              <p className="text-text-tertiary text-xs">Action</p>
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Action</p>
               <Badge variant={actionColor(entry.action) as 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'}>{entry.action}</Badge>
             </div>
             <div>
-              <p className="text-text-tertiary text-xs">Entity Type</p>
-              <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${entityTypeColor(entry.entityType)}`}>
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Entity Type</p>
+              <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] sm:text-xs font-medium ${entityTypeColor(entry.entityType)}`}>
                 {entry.entityType ?? '—'}
               </span>
             </div>
             <div>
-              <p className="text-text-tertiary text-xs">Entity ID</p>
-              <p className="font-mono text-xs break-all">{entry.entityId ?? '—'}</p>
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Entity ID</p>
+              <p className="font-mono text-[11px] sm:text-[11px] sm:text-xs break-all">{entry.entityId ?? '—'}</p>
             </div>
           </div>
 
           {(entry.oldValue || entry.newValue) && (
             <div>
-              <p className="text-text-tertiary text-xs mb-1">Changes</p>
-              <div className="rounded border border-border-subtle bg-surface-variant p-3 text-xs font-mono space-y-1">
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">Changes</p>
+              <div className="rounded border border-border-subtle bg-surface-variant p-3 text-[11px] sm:text-[11px] sm:text-xs font-mono space-y-1">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-text-tertiary text-xs mb-1">Old Value</p>
+                    <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">Old Value</p>
                     <pre className="text-destructive whitespace-pre-wrap">{entry.oldValue ? JSON.stringify(entry.oldValue, null, 2) : '∅'}</pre>
                   </div>
                   <div>
-                    <p className="text-text-tertiary text-xs mb-1">New Value</p>
+                    <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">New Value</p>
                     <pre className="text-success whitespace-pre-wrap">{entry.newValue ? JSON.stringify(entry.newValue, null, 2) : '∅'}</pre>
                   </div>
                 </div>
@@ -174,8 +174,8 @@ function LogDetail({ entry, onClose }: LogDetailProps) {
 
           {entry.metadata && (
             <div>
-              <p className="text-text-tertiary text-xs mb-1">Metadata</p>
-              <pre className="rounded border border-border-subtle bg-surface-variant p-3 text-xs font-mono text-text-secondary overflow-auto max-h-40">
+              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">Metadata</p>
+              <pre className="rounded border border-border-subtle bg-surface-variant p-3 text-[11px] sm:text-[11px] sm:text-xs font-mono text-text-secondary overflow-auto max-h-40">
                 {JSON.stringify(entry.metadata, null, 2)}
               </pre>
             </div>
@@ -211,11 +211,11 @@ function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, 
       {/* Date filter */}
       <div className="flex items-end gap-3 flex-wrap">
         <div>
-          <Label className="text-xs">From</Label>
+          <Label className="text-[11px] sm:text-[11px] sm:text-xs">From</Label>
           <Input type="date" value={dateFilter.fromDate} onChange={(e) => onDateFilterChange({ ...dateFilter, fromDate: e.target.value })} className="mt-1 w-40" />
         </div>
         <div>
-          <Label className="text-xs">To</Label>
+          <Label className="text-[11px] sm:text-[11px] sm:text-xs">To</Label>
           <Input type="date" value={dateFilter.toDate} onChange={(e) => onDateFilterChange({ ...dateFilter, toDate: e.target.value })} className="mt-1 w-40" />
         </div>
       </div>
@@ -243,7 +243,7 @@ function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, 
       {chartData.length > 0 && (
         <Card className="shadow-xs">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Activity Over Time
             </CardTitle>
@@ -276,7 +276,7 @@ function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, 
       {/* Leaderboard */}
       <Card className="shadow-xs">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-sm sm:text-sm sm:text-base flex items-center gap-2">
             <ActivityIcon className="h-4 w-4" />
             Moderator Activity Leaderboard
           </CardTitle>
@@ -289,19 +289,19 @@ function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, 
               ))}
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-border-subtle text-left">
-                  <th className="pb-2 font-semibold text-text-secondary text-xs">#</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs">Actor</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs">Role</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Withdrawal Approved</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Withdrawal Rejected</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Questions Approved</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Questions Rejected</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Users Suspended</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Config Changed</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-xs text-center">Total</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">#</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Actor</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Role</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Withdrawal Approved</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Withdrawal Rejected</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Questions Approved</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Questions Rejected</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Users Suspended</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Config Changed</th>
+                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -314,7 +314,7 @@ function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, 
                     <td className="py-2.5 text-text-tertiary">{i + 1}</td>
                     <td className="py-2.5 font-medium">{actor.actorName}</td>
                     <td className="py-2.5">
-                      <Badge variant="secondary" className="text-xs">{actor.actorRole}</Badge>
+                      <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{actor.actorRole}</Badge>
                     </td>
                     <td className="py-2.5 text-center">{actor.withdrawalApproved}</td>
                     <td className="py-2.5 text-center">{actor.withdrawalRejected}</td>
@@ -394,7 +394,7 @@ function ActivityTab({
               />
             </div>
             <select
-              className="rounded border border-border-subtle bg-surface px-3 py-2 text-sm"
+              className="rounded border border-border-subtle bg-surface px-3 py-2 text-xs sm:text-xs sm:text-sm"
               value={filters.actorType ?? ''}
               onChange={(e) => onFiltersChange({ ...filters, actorType: e.target.value || undefined, page: 1 })}
             >
@@ -405,7 +405,7 @@ function ActivityTab({
               <option value="system">System</option>
             </select>
             <select
-              className="rounded border border-border-subtle bg-surface px-3 py-2 text-sm"
+              className="rounded border border-border-subtle bg-surface px-3 py-2 text-xs sm:text-xs sm:text-sm"
               value={filters.entityType ?? ''}
               onChange={(e) => onFiltersChange({ ...filters, entityType: e.target.value || undefined, page: 1 })}
             >
@@ -441,7 +441,7 @@ function ActivityTab({
           <div className="flex flex-wrap gap-3">
             {ACTION_OPTIONS.map(({ group, actions }) => (
               <div key={group} className="flex flex-col gap-1">
-                <p className="text-xs font-semibold text-text-tertiary">{group}</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text-tertiary">{group}</p>
                 <div className="flex flex-wrap gap-1">
                   {actions.map((action) => {
                     const active = selectedActions.has(action)
@@ -449,7 +449,7 @@ function ActivityTab({
                       <button
                         key={action}
                         onClick={() => toggleAction(action)}
-                        className={`rounded px-2 py-0.5 text-xs border transition-colors ${
+                        className={`rounded px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs border transition-colors ${
                           active
                             ? 'bg-primary text-primary-foreground border-primary'
                             : 'bg-surface text-text-secondary border-border-subtle hover:bg-surface-variant'
@@ -470,15 +470,15 @@ function ActivityTab({
       <Card className="shadow-xs">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-border-subtle text-left bg-surface-variant">
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-xs">Timestamp</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-xs">Actor</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-xs">Action</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-xs">Entity Type</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-xs">Entity ID</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-xs">Changes</th>
+                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Timestamp</th>
+                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Actor</th>
+                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Action</th>
+                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Entity Type</th>
+                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Entity ID</th>
+                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Changes</th>
                 </tr>
               </thead>
               <tbody>
@@ -504,32 +504,32 @@ function ActivityTab({
                       className="border-b border-border-subtle hover:bg-surface-variant cursor-pointer transition-colors"
                       onClick={() => onRowClick(entry)}
                     >
-                      <td className="px-4 py-3 text-text-secondary text-xs whitespace-nowrap">
+                      <td className="px-4 py-3 text-text-secondary text-[11px] sm:text-[11px] sm:text-xs whitespace-nowrap">
                         {formatDateTime(entry.createdAt) ?? entry.createdAt}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col">
-                          <span className="font-medium text-xs">{entry.actorName ?? entry.actorId ?? 'System'}</span>
+                          <span className="font-medium text-[11px] sm:text-[11px] sm:text-xs">{entry.actorName ?? entry.actorId ?? 'System'}</span>
                           {entry.actorRole && (
-                            <span className="text-xs text-text-tertiary">{entry.actorRole}</span>
+                            <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{entry.actorRole}</span>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <Badge
                           variant={actionColor(entry.action) as 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'}
-                          className="text-xs whitespace-nowrap"
+                          className="text-[11px] sm:text-[11px] sm:text-xs whitespace-nowrap"
                         >
                           {entry.action}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${entityTypeColor(entry.entityType)}`}>
+                        <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-medium ${entityTypeColor(entry.entityType)}`}>
                           {entry.entityType ?? '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-text-secondary">{entry.entityId ? `${entry.entityId.slice(0, 8)}...` : '—'}</span>
+                        <span className="font-mono text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{entry.entityId ? `${entry.entityId.slice(0, 8)}...` : '—'}</span>
                       </td>
                       <td className="px-4 py-3 max-w-48">
                         <ValueDiff old={entry.oldValue} next={entry.newValue} />
@@ -544,7 +544,7 @@ function ActivityTab({
           {/* Pagination */}
           {pages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-border-subtle">
-              <p className="text-sm text-text-secondary">
+              <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">
                 Page {page} of {pages} — {total.toLocaleString()} entries
               </p>
               <div className="flex items-center gap-2">
@@ -743,11 +743,11 @@ export function AuditLogsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-text flex items-center gap-2">
             <ScrollText className="h-6 w-6" />
             Audit Logs
           </h1>
-          <p className="text-sm text-text-secondary mt-0.5">
+          <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">
             Complete record of all admin and curator actions
           </p>
         </div>
@@ -758,7 +758,7 @@ export function AuditLogsPage() {
         <CardContent className="p-4">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <Label className="text-sm text-text-secondary whitespace-nowrap">Filter by Role</Label>
+              <Label className="text-xs sm:text-xs sm:text-sm text-text-secondary whitespace-nowrap">Filter by Role</Label>
               <Select value={selectedRole} onValueChange={handleRoleChange}>
                 <SelectTrigger className="w-36">
                   <SelectValue placeholder="All Roles" />
@@ -775,7 +775,7 @@ export function AuditLogsPage() {
 
             {selectedRole && (
               <div className="flex items-center gap-2">
-                <Label className="text-sm text-text-secondary whitespace-nowrap">
+                <Label className="text-xs sm:text-xs sm:text-sm text-text-secondary whitespace-nowrap">
                   {roleUsersLoading ? 'Loading users...' : 'Filter by User'}
                 </Label>
                 <Select value={selectedUserId} onValueChange={handleUserChange} disabled={roleUsersLoading}>
@@ -789,7 +789,7 @@ export function AuditLogsPage() {
                         <span className="flex items-center gap-2">
                           <Users className="h-3 w-3" />
                           <span>{u.name}</span>
-                          <span className="text-text-tertiary text-xs">{u.mobileNumber}</span>
+                          <span className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">{u.mobileNumber}</span>
                         </span>
                       </SelectItem>
                     ))}
@@ -810,7 +810,7 @@ export function AuditLogsPage() {
             )}
 
             {selectedRole && (
-              <span className="ml-auto text-sm text-text-tertiary">
+              <span className="ml-auto text-xs sm:text-xs sm:text-sm text-text-tertiary">
                 {selectedUserId
                   ? `Showing logs for: ${roleUsers.find(u => u.id === selectedUserId)?.name ?? selectedUserId}`
                   : `Showing consolidated logs for all ${selectedRole} users`}

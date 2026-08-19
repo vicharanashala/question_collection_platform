@@ -40,8 +40,8 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   const { name, value } = payload[0]
   return (
     <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
-      <p className="text-xs text-text-secondary">{name}</p>
-      <p className="mt-0.5 text-sm font-bold text-text">{value?.toLocaleString()}</p>
+      <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{name}</p>
+      <p className="mt-0.5 text-xs sm:text-xs sm:text-sm font-bold text-text">{value?.toLocaleString()}</p>
     </div>
   )
 }
@@ -84,12 +84,12 @@ export function DonutChartComponent({
       {(centerLabel || centerValue !== undefined) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           {centerValue !== undefined && (
-            <span className="text-xl font-extrabold text-text">
+            <span className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">
               {typeof centerValue === 'number' ? centerValue.toLocaleString() : centerValue}
             </span>
           )}
           {centerLabel && (
-            <span className="text-xs text-text-secondary">{centerLabel}</span>
+            <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{centerLabel}</span>
           )}
         </div>
       )}
@@ -101,13 +101,13 @@ export function DonutChartComponent({
             const value = segment.value ?? 0
             const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
             return (
-              <div key={segment.name ?? i} className="flex items-center justify-between text-sm">
+              <div key={segment.name ?? i} className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
                 <div className="flex items-center gap-2">
                   <div className={cn('h-2 w-2 rounded-full shrink-0')} style={{ backgroundColor: colors[i % colors.length] }} />
                   <span className="text-text capitalize">{(segment.name ?? '').replace('_', ' ')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-secondary">{pct}%</span>
+                  <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{pct}%</span>
                   <span className="font-semibold text-text">{value.toLocaleString()}</span>
                 </div>
               </div>

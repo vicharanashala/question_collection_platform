@@ -33,8 +33,8 @@ export function DistributionsPage() {
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div>
-          <h1 className="text-xl font-semibold">Distributions</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-lg sm:text-lg sm:text-xl font-semibold">Distributions</h1>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
             Distribute approved questions to one or more Indian states.
           </p>
         </div>
@@ -43,7 +43,7 @@ export function DistributionsPage() {
       <div className="border-b border-border px-6 flex gap-1">
         <button
           onClick={() => setTab('distributions')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-2 text-xs sm:text-xs sm:text-sm font-medium border-b-2 transition-colors ${
             effectiveTab === 'distributions'
               ? 'border-primary text-foreground'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -55,7 +55,7 @@ export function DistributionsPage() {
         {canAssign && (
           <button
             onClick={() => setTab('queue')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 text-xs sm:text-xs sm:text-sm font-medium border-b-2 transition-colors ${
               effectiveTab === 'queue'
                 ? 'border-primary text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground'

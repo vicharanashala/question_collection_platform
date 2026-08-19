@@ -71,7 +71,7 @@ export function SearchableSelect({
         onClick={() => !disabled && setOpen((o) => !o)}
         disabled={disabled}
         className={cn(
-          'flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface px-3 py-2 text-sm',
+          'flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface px-3 py-2 text-xs sm:text-xs sm:text-sm',
           'placeholder:text-text-tertiary',
           'focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2',
           'disabled:cursor-not-allowed disabled:opacity-50',
@@ -110,7 +110,7 @@ export function SearchableSelect({
                 }
               }}
               placeholder={placeholder}
-              className="h-9 flex-1 bg-transparent text-sm text-foreground placeholder:text-text-tertiary outline-none"
+              className="h-9 flex-1 bg-transparent text-xs sm:text-xs sm:text-sm text-foreground placeholder:text-text-tertiary outline-none"
             />
           </div>
 
@@ -125,7 +125,7 @@ export function SearchableSelect({
             className="overflow-y-auto max-h-48 sm:max-h-52 p-1"
           >
             <CommandPrimitive.List className="p-1">
-              <CommandPrimitive.Empty className="py-3 text-center text-xs text-muted-foreground">
+              <CommandPrimitive.Empty className="py-3 text-center text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                 {emptyMessage}
               </CommandPrimitive.Empty>
               <CommandPrimitive.Group className="p-1">
@@ -143,7 +143,7 @@ export function SearchableSelect({
                         setOpen(false)
                       }}
                       className={cn(
-                        'relative flex w-full cursor-default select-none items-center rounded-sm py-2 pl-8 pr-2 text-sm outline-none',
+                        'relative flex w-full cursor-default select-none items-center rounded-sm py-2 pl-8 pr-2 text-xs sm:text-xs sm:text-sm outline-none',
                         'focus:bg-surface-variant focus:text-foreground',
                         'data-[selected=true]:bg-emerald-50 data-[selected=true]:text-emerald-700 dark:data-[selected=true]:bg-emerald-950 dark:data-[selected=true]:text-emerald-300',
                         item.value === value &&

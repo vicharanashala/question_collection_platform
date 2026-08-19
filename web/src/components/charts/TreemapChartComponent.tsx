@@ -98,8 +98,8 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: any[] 
   if (!d) return null
   return (
     <div className="rounded-lg border border-border-subtle bg-surface px-3 py-2 shadow-md">
-      <p className="text-xs font-medium text-text">{d.name}</p>
-      <p className="mt-0.5 text-sm font-bold text-text">
+      <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text">{d.name}</p>
+      <p className="mt-0.5 text-xs sm:text-xs sm:text-sm font-bold text-text">
         {d.value?.toLocaleString()}
       </p>
     </div>
@@ -112,7 +112,7 @@ export function TreemapChartComponent({
 }: TreemapChartComponentProps) {
   if (!data.length) {
     return (
-      <div className="flex items-center justify-center text-sm text-text-tertiary" style={{ height }}>
+      <div className="flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary" style={{ height }}>
         No district data available
       </div>
     )

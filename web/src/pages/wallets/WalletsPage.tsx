@@ -110,11 +110,11 @@ export function WalletsPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-foreground flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-foreground flex items-center gap-2">
             <Wallet className="h-6 w-6" />
             Wallet Management
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-1">
             {total.toLocaleString('en-IN')} wallet{total !== 1 ? 's' : ''} total
           </p>
         </div>
@@ -132,11 +132,11 @@ export function WalletsPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Total Distributed</p>
-                <p className="mt-1 text-2xl font-extrabold text-success tabular-nums">
+                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Total Distributed</p>
+                <p className="mt-1 text-xl sm:text-2xl font-extrabold text-success tabular-nums">
                   ₹{formatINRFull(totalEarned)}
                 </p>
-                <p className="text-xs text-text-tertiary mt-1">Across all wallets</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Across all wallets</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-success" />
@@ -149,11 +149,11 @@ export function WalletsPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Total Withdrawn</p>
-                <p className="mt-1 text-2xl font-extrabold text-destructive tabular-nums">
+                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Total Withdrawn</p>
+                <p className="mt-1 text-xl sm:text-2xl font-extrabold text-destructive tabular-nums">
                   ₹{formatINRFull(totalWithdrawn)}
                 </p>
-                <p className="text-xs text-text-tertiary mt-1">All withdrawal payouts</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">All withdrawal payouts</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center">
                 <TrendingDown className="h-5 w-5 text-destructive" />
@@ -166,11 +166,11 @@ export function WalletsPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Active Balance</p>
-                <p className="mt-1 text-2xl font-extrabold text-primary tabular-nums">
+                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Active Balance</p>
+                <p className="mt-1 text-xl sm:text-2xl font-extrabold text-primary tabular-nums">
                   ₹{formatINRFull(totalBalance)}
                 </p>
-                <p className="text-xs text-text-tertiary mt-1">Available in wallets</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Available in wallets</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Wallet className="h-5 w-5 text-primary" />
@@ -214,7 +214,7 @@ export function WalletsPage() {
       {/* Wallets table */}
       <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">User</th>
@@ -252,10 +252,10 @@ export function WalletsPage() {
                         >
                           {wallet.user.name}
                         </button>
-                      <p className="text-xs text-muted-foreground">{wallet.user.mobileNumber} · {wallet.user.state}</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{wallet.user.mobileNumber} · {wallet.user.state}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="secondary" className="text-xs">{wallet.user.category}</Badge>
+                      <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{wallet.user.category}</Badge>
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-foreground tabular-nums">
                       ₹{formatINRFull(Number(wallet.balance))}
@@ -268,7 +268,7 @@ export function WalletsPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <Badge className={cn(
-                        'text-xs capitalize',
+                        'text-[11px] sm:text-[11px] sm:text-xs capitalize',
                         wallet.user.verificationStatus === 'verified' ? 'bg-success text-white' :
                         wallet.user.verificationStatus === 'pending' ? 'bg-warning text-white' :
                         wallet.user.verificationStatus === 'suspended' || wallet.user.verificationStatus === 'banned' ? 'bg-destructive text-white' :

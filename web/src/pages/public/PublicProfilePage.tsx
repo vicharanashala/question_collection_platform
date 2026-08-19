@@ -99,7 +99,7 @@ function SectionHeader({ icon: Icon, title, trailing }: SectionHeaderProps) {
       <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
         <Icon className="h-3.5 w-3.5" />
       </span>
-      <h3 className="flex-1 text-sm font-bold text-foreground">{title}</h3>
+      <h3 className="flex-1 text-xs sm:text-xs sm:text-sm font-bold text-foreground">{title}</h3>
       {trailing}
     </div>
   )
@@ -137,10 +137,10 @@ function AccountRow({ icon: Icon, label, value, isLast, onClick }: AccountRowPro
     <>
       <div className="flex min-w-0 items-center gap-2">
         <Icon className="h-3.5 w-3.5 shrink-0 text-text-tertiary" />
-        <span className="truncate text-sm font-medium text-text-tertiary">{label}</span>
+        <span className="truncate text-xs sm:text-xs sm:text-sm font-medium text-text-tertiary">{label}</span>
       </div>
       <div className="flex min-w-0 items-center gap-1 text-right">
-        <span className="truncate text-sm font-semibold text-foreground">
+        <span className="truncate text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
           {value || <span className="text-text-tertiary">{'—'}</span>}
         </span>
         {interactive && <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" />}
@@ -177,7 +177,7 @@ function ActionRow({ icon: Icon, label, onClick }: ActionRowProps) {
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
         <Icon className="h-4 w-4" />
       </span>
-      <span className="flex-1 text-sm font-semibold text-foreground">{label}</span>
+      <span className="flex-1 text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{label}</span>
       <ChevronRight className="h-4 w-4 text-text-tertiary" />
     </button>
   )
@@ -198,7 +198,7 @@ function StatTile({ icon: Icon, value, label, loading }: StatTileProps) {
         ) : (
           <Icon className="h-4 w-4 text-emerald-600" />
         )}
-        <p className="text-sm font-extrabold leading-tight text-foreground">{value}</p>
+        <p className="text-xs sm:text-xs sm:text-sm font-extrabold leading-tight text-foreground">{value}</p>
         <p className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">{label}</p>
       </CardContent>
     </Card>
@@ -302,7 +302,7 @@ export function PublicProfilePage() {
             {/* Avatar with ring + verified badge */}
             <div className="relative shrink-0">
               <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-emerald-100 p-0.5 dark:border-emerald-900/50">
-                <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-lg font-extrabold text-white">
+                <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-base sm:text-base sm:text-lg font-extrabold text-white">
                   {initials}
                 </div>
               </div>
@@ -315,11 +315,11 @@ export function PublicProfilePage() {
 
             {/* Name + meta */}
             <div className="min-w-0 flex-1 space-y-0.5">
-              <h2 className="truncate text-lg font-extrabold text-foreground">
+              <h2 className="truncate text-base sm:text-base sm:text-lg font-extrabold text-foreground">
                 {user.name || em}
               </h2>
               {user.mobileNumber && (
-                <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
                   <Phone className="h-3 w-3" />
                   <span>{user.mobileNumber}</span>
                 </div>
@@ -354,10 +354,10 @@ export function PublicProfilePage() {
               <Medal className="h-5 w-5" style={{ color: tierCfg.color }} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-base font-extrabold" style={{ color: tierCfg.color }}>
+              <p className="text-sm sm:text-sm sm:text-base font-extrabold" style={{ color: tierCfg.color }}>
                 {t(tierCfg.labelKey)} {t('profile.member')}
               </p>
-              <p className="text-xs font-medium text-text-secondary">
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary">
                 {t('profile.approvedQuestions', { count: approved })}
               </p>
             </div>
@@ -649,7 +649,7 @@ export function PublicProfilePage() {
           <button
             type="button"
             onClick={() => setLogoutOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs sm:text-xs sm:text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
           >
             <LogOut className="h-4 w-4" />
             {t('profile.signOut')}
@@ -657,7 +657,7 @@ export function PublicProfilePage() {
         </div>
       </div>
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
         AnnaDatha — Made for Indian farmers
       </p>
 
