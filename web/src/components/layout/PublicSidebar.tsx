@@ -82,7 +82,7 @@ export function PublicSidebar() {
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30 transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          Sign Out
+          {t('profile.signOut')}
         </button>
       </div>
 
@@ -90,14 +90,14 @@ export function PublicSidebar() {
       <Dialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign Out?</DialogTitle>
+            <DialogTitle>{t('profile.signOut')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to sign out of your AnnaDatha account?
+              {t('profile.signOutConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
-              Cancel
+              {t('profile.signOutCancel')}
             </Button>
             <Button
               variant="destructive"
@@ -107,7 +107,7 @@ export function PublicSidebar() {
                 navigate('/login', { replace: true })
               }}
             >
-              Sign Out
+              {t('profile.signOutAction')}
             </Button>
           </DialogFooter>
         </DialogContent>

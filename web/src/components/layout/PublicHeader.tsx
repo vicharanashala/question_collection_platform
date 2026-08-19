@@ -75,7 +75,7 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
         <h1 className="text-base font-bold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label="Notifications" title="Notifications">
+        <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('notifications.title')} title={t('notifications.title')}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-0.5 text-[9px] font-bold leading-none text-white">
@@ -83,10 +83,10 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
             </span>
           )}
         </button>
-        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label="Change language" title="Change language">
+        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('auth.selectLanguage')} title={t('auth.selectLanguage')}>
           <Languages className="h-4 w-4" />
         </button>
-        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
+        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
         <button onClick={() => navigate('/home/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
