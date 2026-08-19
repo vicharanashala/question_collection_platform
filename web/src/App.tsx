@@ -89,9 +89,9 @@ function RootGate({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth()
   if (isLoading) return null
   if (!isAuthenticated) {
-    // Visitors at "/" without auth get routed to /home/register where the
+    // Visitors at "/" without auth get routed to /register where the
     // mobile + OTP gate lives.
-    return <Navigate to="/home/register" replace />
+    return <Navigate to="/register" replace />
   }
   if (user?.role === 'user') return <Navigate to="/home" replace />
   return <>{children}</>
@@ -154,7 +154,7 @@ export default function App() {
       <Routes>
         {/* ── Public auth pages (no auth required) ──────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/home/register" element={<PublicRegisterPage />} />
+        <Route path="/register" element={<PublicRegisterPage />} />
         <Route path="/home/verification-pending" element={<PublicVerificationPendingPage />} />
 
         {/* ── Root gate: home page for visitors, staff shell for staff ──── */}

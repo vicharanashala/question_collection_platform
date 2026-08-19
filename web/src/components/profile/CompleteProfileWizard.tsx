@@ -90,6 +90,10 @@ interface WizardFormStateProps {
   blocks: LgdSubDistrict[]
   villages: LgdVillage[]
   kvks: LgdKvk[]
+  loadingDistricts: boolean
+  loadingBlocks: boolean
+  loadingVillages: boolean
+  loadingKvks: boolean
   setField: SetField
   loadDistricts: (stateName: string) => Promise<void>
   loadBlocks: (districtCode: string) => Promise<void>
@@ -133,7 +137,7 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
   )
 }
 
-function Step2({ form, errors, districts, blocks, villages, kvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }: WizardFormStateProps) {
+function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistricts, loadingBlocks, loadingVillages, loadingKvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-text-secondary">We&apos;ll use this to match your questions with local experts.</p>
@@ -155,11 +159,23 @@ function Step2({ form, errors, districts, blocks, villages, kvks, setField, load
             setField('districtCode', d?.code ?? '')
             loadBlocks(d?.code ?? '')
           }}
-          disabled={!form.state}
+          disabled={!form.state || loadingDistricts}
         >
-          <SelectTrigger><SelectValue placeholder={form.state ? 'Choose district' : 'Choose state first'} /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder={
+              loadingDistricts ? 'Loading districts…'
+              : !form.state ? 'Choose state first'
+              : 'Choose district'
+            } />
+          </SelectTrigger>
           <SelectContent>{districts.map((d) => <SelectItem key={d.code} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
         </Select>
+        {loadingDistricts && (
+          <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Loading districts…
+          </p>
+        )}
         {errors.district && <p className="text-xs text-rose-600">{errors.district}</p>}
       </div>
       {form.category === 'farmer' && (
@@ -173,11 +189,23 @@ function Step2({ form, errors, districts, blocks, villages, kvks, setField, load
               loadVillages(block?.code ?? '')
               loadKvks(form.districtCode)
             }}
-            disabled={!form.district}
+            disabled={!form.district || loadingBlocks}
           >
-            <SelectTrigger><SelectValue placeholder={form.district ? 'Choose block' : 'Choose district first'} /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder={
+                loadingBlocks ? 'Loading blocks…'
+                : !form.district ? 'Choose district first'
+                : 'Choose block'
+              } />
+            </SelectTrigger>
             <SelectContent>{blocks.map((b) => <SelectItem key={b.code} value={b.name}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
+          {loadingBlocks && (
+            <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Loading blocks…
+            </p>
+          )}
           {errors.block && <p className="text-xs text-rose-600">{errors.block}</p>}
         </div>
       )}
@@ -185,17 +213,41 @@ function Step2({ form, errors, districts, blocks, villages, kvks, setField, load
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Village</Label>
-            <Select value={form.village} onValueChange={(v) => setField('village', v)}>
-              <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+            <Select
+              value={form.village}
+              onValueChange={(v) => setField('village', v)}
+              disabled={loadingVillages}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingVillages ? 'Loading villages…' : 'Optional'} />
+              </SelectTrigger>
               <SelectContent>{villages.map((v) => <SelectItem key={v.code} value={v.name}>{v.name}</SelectItem>)}</SelectContent>
             </Select>
+            {loadingVillages && (
+              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading villages…
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Nearest KVK</Label>
-            <Select value={form.kvk} onValueChange={(v) => setField('kvk', v)}>
-              <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+            <Select
+              value={form.kvk}
+              onValueChange={(v) => setField('kvk', v)}
+              disabled={loadingKvks}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingKvks ? 'Loading KVKs…' : 'Optional'} />
+              </SelectTrigger>
               <SelectContent>{kvks.map((k) => <SelectItem key={k.code} value={k.name}>{k.name}</SelectItem>)}</SelectContent>
             </Select>
+            {loadingKvks && (
+              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading KVKs…
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -514,6 +566,13 @@ export function CompleteProfileWizard({ mobileNumber, onBack }: CompleteProfileW
   const [villages, setVillages] = useState<LgdVillage[]>([])
   const [kvks, setKvks] = useState<LgdKvk[]>([])
 
+  // Loading flags for cascading LGD lookups — used by Step2 to disable
+  // dependent dropdowns and render an inline spinner while data is in-flight.
+  const [loadingDistricts, setLoadingDistricts] = useState(false)
+  const [loadingBlocks, setLoadingBlocks] = useState(false)
+  const [loadingVillages, setLoadingVillages] = useState(false)
+  const [loadingKvks, setLoadingKvks] = useState(false)
+
   useEffect(() => {
     const u = form.username.trim()
     if (u.length < 3) { setUsernameStatus('idle'); setUsernameSuggestions([]); return }
@@ -595,6 +654,7 @@ export function CompleteProfileWizard({ mobileNumber, onBack }: CompleteProfileW
   async function loadDistricts(stateName: string) {
     setDistricts([]); setBlocks([]); setVillages([])
     if (!stateName) return
+    setLoadingDistricts(true)
     try {
       const res = await lgdApi.getStates()
       const target = stateName.trim().toLowerCase()
@@ -607,34 +667,42 @@ export function CompleteProfileWizard({ mobileNumber, onBack }: CompleteProfileW
       setDistricts(d.districts)
     } catch (err) {
       console.error('[loadDistricts] Failed to fetch districts:', err)
+    } finally {
+      setLoadingDistricts(false)
     }
   }
 
   async function loadBlocks(districtCode: string) {
     setBlocks([]); setVillages([])
     if (!districtCode) return
+    setLoadingBlocks(true)
     try {
       const d = await lgdApi.getSubDistricts(districtCode)
       setBlocks(d.subdistricts)
     } catch { /* ignore */ }
+    finally { setLoadingBlocks(false) }
   }
 
   async function loadVillages(blockCode: string) {
     setVillages([])
     if (!blockCode) return
+    setLoadingVillages(true)
     try {
       const v = await lgdApi.getVillages(blockCode)
       setVillages(v.villages)
     } catch { /* ignore */ }
+    finally { setLoadingVillages(false) }
   }
 
   async function loadKvks(districtCode: string) {
     setKvks([])
     if (!districtCode) return
+    setLoadingKvks(true)
     try {
       const k = await lgdApi.getKvks(districtCode)
       setKvks(k.kvks)
     } catch { /* ignore */ }
+    finally { setLoadingKvks(false) }
   }
 
   async function submit() {
@@ -692,6 +760,7 @@ export function CompleteProfileWizard({ mobileNumber, onBack }: CompleteProfileW
   const stepProps: WizardFormStateProps = {
     form, errors, usernameStatus, usernameSuggestions,
     districts, blocks, villages, kvks,
+    loadingDistricts, loadingBlocks, loadingVillages, loadingKvks,
     setField, loadDistricts, loadBlocks, loadVillages, loadKvks,
   }
 

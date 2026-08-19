@@ -325,7 +325,7 @@ export function LoginPage() {
           Question Collection Platform &middot; AnnaDatha
         </p>
         <Link
-          to="/home/register"
+          to="/register"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
         >
           <Sprout className="h-3.5 w-3.5" />

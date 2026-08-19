@@ -499,6 +499,12 @@ interface WizardFormStateProps {
   blocks: LgdSubDistrict[]
   villages: LgdVillage[]
   kvks: LgdKvk[]
+  /** Loading flags for cascading LGD dropdowns — disables dependent fields
+   *  and shows an inline spinner while the request is in-flight. */
+  loadingDistricts: boolean
+  loadingBlocks: boolean
+  loadingVillages: boolean
+  loadingKvks: boolean
   setField: SetField
   loadDistricts: (stateName: string) => Promise<void>
   loadBlocks: (districtCode: string) => Promise<void>
@@ -530,7 +536,7 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
   )
 }
 
-function Step2({ form, errors, districts, blocks, villages, kvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }: WizardFormStateProps) {
+function Step2({ form, errors, districts, blocks, villages, kvks, loadingDistricts, loadingBlocks, loadingVillages, loadingKvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-text-secondary">We'll use this to match your questions with local experts.</p>
@@ -544,19 +550,51 @@ function Step2({ form, errors, districts, blocks, villages, kvks, setField, load
       </div>
       <div className="space-y-1.5">
         <Label>District <span className="text-rose-600">*</span></Label>
-        <Select value={form.district} onValueChange={(v) => { const d = districts.find((x) => x.name === v); setField('district', v); setField('districtCode', d?.code ?? ''); loadBlocks(d?.code ?? '') }} disabled={!form.state}>
-          <SelectTrigger><SelectValue placeholder={form.state ? 'Choose district' : 'Choose state first'} /></SelectTrigger>
+        <Select
+          value={form.district}
+          onValueChange={(v) => { const d = districts.find((x) => x.name === v); setField('district', v); setField('districtCode', d?.code ?? ''); loadBlocks(d?.code ?? '') }}
+          disabled={!form.state || loadingDistricts}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={
+              loadingDistricts ? 'Loading districts…'
+              : !form.state ? 'Choose state first'
+              : 'Choose district'
+            } />
+          </SelectTrigger>
           <SelectContent>{districts.map((d) => <SelectItem key={d.code} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
         </Select>
+        {loadingDistricts && (
+          <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Loading districts…
+          </p>
+        )}
         {errors.district && <p className="text-xs text-rose-600">{errors.district}</p>}
       </div>
       {form.category === 'farmer' && (
         <div className="space-y-1.5">
           <Label>Block <span className="text-rose-600">*</span></Label>
-          <Select value={form.block} onValueChange={(v) => {const block = blocks.find((b) => b.name === v); setField('block', v); loadVillages(block?.code ?? ''); loadKvks(form.districtCode) }} disabled={!form.district}>
-            <SelectTrigger><SelectValue placeholder={form.district ? 'Choose block' : 'Choose district first'} /></SelectTrigger>
+          <Select
+            value={form.block}
+            onValueChange={(v) => {const block = blocks.find((b) => b.name === v); setField('block', v); loadVillages(block?.code ?? ''); loadKvks(form.districtCode) }}
+            disabled={!form.district || loadingBlocks}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={
+                loadingBlocks ? 'Loading blocks…'
+                : !form.district ? 'Choose district first'
+                : 'Choose block'
+              } />
+            </SelectTrigger>
             <SelectContent>{blocks.map((b) => <SelectItem key={b.code} value={b.name}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
+          {loadingBlocks && (
+            <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Loading blocks…
+            </p>
+          )}
           {errors.block && <p className="text-xs text-rose-600">{errors.block}</p>}
         </div>
       )}
@@ -564,17 +602,41 @@ function Step2({ form, errors, districts, blocks, villages, kvks, setField, load
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Village</Label>
-            <Select value={form.village} onValueChange={(v) => setField('village', v)}>
-              <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+            <Select
+              value={form.village}
+              onValueChange={(v) => setField('village', v)}
+              disabled={loadingVillages}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingVillages ? 'Loading villages…' : 'Optional'} />
+              </SelectTrigger>
               <SelectContent>{villages.map((v) => <SelectItem key={v.code} value={v.name}>{v.name}</SelectItem>)}</SelectContent>
             </Select>
+            {loadingVillages && (
+              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading villages…
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Nearest KVK</Label>
-            <Select value={form.kvk} onValueChange={(v) => setField('kvk', v)}>
-              <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+            <Select
+              value={form.kvk}
+              onValueChange={(v) => setField('kvk', v)}
+              disabled={loadingKvks}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingKvks ? 'Loading KVKs…' : 'Optional'} />
+              </SelectTrigger>
               <SelectContent>{kvks.map((k) => <SelectItem key={k.code} value={k.name}>{k.name}</SelectItem>)}</SelectContent>
             </Select>
+            {loadingKvks && (
+              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading KVKs…
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -795,6 +857,10 @@ interface WizardStagesProps {
   kvks: LgdKvk[]
   step: number
   loading: boolean
+  loadingDistricts: boolean
+  loadingBlocks: boolean
+  loadingVillages: boolean
+  loadingKvks: boolean
   setField: SetField
   loadDistricts: (stateName: string) => Promise<void>
   loadBlocks: (districtCode: string) => Promise<void>
@@ -805,8 +871,8 @@ interface WizardStagesProps {
   submit: () => void
 }
 
-function WizardStages({ form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, step, loading, setField, loadDistricts, loadBlocks, loadVillages, loadKvks, next, back, submit }: WizardStagesProps) {
-  const stepProps: WizardFormStateProps = { form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }
+function WizardStages({ form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, step, loading, loadingDistricts, loadingBlocks, loadingVillages, loadingKvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks, next, back, submit }: WizardStagesProps) {
+  const stepProps: WizardFormStateProps = { form, errors, usernameStatus, usernameSuggestions, districts, blocks, villages, kvks, loadingDistricts, loadingBlocks, loadingVillages, loadingKvks, setField, loadDistricts, loadBlocks, loadVillages, loadKvks }
   return (
     <>
       <h2 className="mb-4 text-lg font-bold text-foreground">Step {step}: {STEP_KEYS[step - 1]}</h2>
@@ -842,10 +908,10 @@ export function PublicRegisterPage() {
   const initialMobile = state?.mobileNumber ?? ''
 
   // The signup flow is split across two URLs:
-  //   /home/register → gate ("Create your account": mobile + OTP)
+  //   /register      → gate ("Create your account": mobile + OTP)
   //   /home          → dashboard hosting the wizard modal ("Complete your
   //                    profile": 4-step form)
-  // Pick the initial stage from the URL pathname: visitors at "/home/register"
+  // Pick the initial stage from the URL pathname: visitors at "/register"
   // start on "mobile" (or "otp" if they arrived with state.mobileNumber, e.g.
   // via the wizard's Back button). The wizard itself lives in the modal
   // mounted by PublicHomePage, no longer as a standalone page.
@@ -1014,6 +1080,13 @@ export function PublicRegisterPage() {
   const [villages, setVillages] = useState<LgdVillage[]>([])
   const [kvks, setKvks] = useState<LgdKvk[]>([])
 
+  // Loading flags for cascading LGD lookups — used by Step2 to disable
+  // dependent dropdowns and render an inline spinner while data is in-flight.
+  const [loadingDistricts, setLoadingDistricts] = useState(false)
+  const [loadingBlocks, setLoadingBlocks] = useState(false)
+  const [loadingVillages, setLoadingVillages] = useState(false)
+  const [loadingKvks, setLoadingKvks] = useState(false)
+
   useEffect(() => {
     const u = form.username.trim()
     if (u.length < 3) { setUsernameStatus('idle'); setUsernameSuggestions([]); return }
@@ -1088,17 +1161,18 @@ export function PublicRegisterPage() {
       setStep((s) => (Math.max(1, s - 1) as 1 | 2 | 3 | 4))
     } else {
       // Step 1 is the first wizard step. The wizard lives inside the modal on
-      // "/home"; the gating flow (mobile + OTP) lives at "/home/register". In
+      // "/home"; the gating flow (mobile + OTP) lives at "/register". In
       // the new URL split, "Back" from the wizard's first step returns to
       // the gating URL with the mobile number pre-filled so the user lands
       // on the OTP stage and can re-verify without re-entering their number.
-      navigate('/home/register', { state: { mobileNumber: verifiedMobile } })
+      navigate('/register', { state: { mobileNumber: verifiedMobile } })
     }
   }
 
   async function loadDistricts(stateName: string) {
     setDistricts([]); setBlocks([]); setVillages([])
     if (!stateName) return
+    setLoadingDistricts(true)
     try {
       const res = await lgdApi.getStates()
       // LGD state names are returned in English and may differ in casing or
@@ -1118,34 +1192,42 @@ export function PublicRegisterPage() {
       setDistricts(d.districts)
     } catch (err) {
       console.error('[loadDistricts] Failed to fetch districts:', err)
+    } finally {
+      setLoadingDistricts(false)
     }
   }
 
   async function loadBlocks(districtCode: string) {
     setBlocks([]); setVillages([])
     if (!districtCode) return
+    setLoadingBlocks(true)
     try {
       const d = await lgdApi.getSubDistricts(districtCode)
       setBlocks(d.subdistricts)
     } catch { /* ignore */ }
+    finally { setLoadingBlocks(false) }
   }
 
   async function loadVillages(blockCode: string) {
     setVillages([])
     if (!blockCode) return
+    setLoadingVillages(true)
     try {
       const v = await lgdApi.getVillages(blockCode)
       setVillages(v.villages)
     } catch { /* ignore */ }
+    finally { setLoadingVillages(false) }
   }
 
   async function loadKvks(districtCode: string) {
     setKvks([])
     if (!districtCode) return
+    setLoadingKvks(true)
     try {
       const k = await lgdApi.getKvks(districtCode)
       setKvks(k.kvks)
     } catch { /* ignore */ }
+    finally { setLoadingKvks(false) }
   }
 
   async function submit() {
@@ -1280,6 +1362,10 @@ export function PublicRegisterPage() {
               kvks={kvks}
               step={step}
               loading={loading}
+              loadingDistricts={loadingDistricts}
+              loadingBlocks={loadingBlocks}
+              loadingVillages={loadingVillages}
+              loadingKvks={loadingKvks}
               setField={setField}
               loadDistricts={loadDistricts}
               loadBlocks={loadBlocks}
