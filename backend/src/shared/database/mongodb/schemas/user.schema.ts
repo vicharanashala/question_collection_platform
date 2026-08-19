@@ -11,7 +11,7 @@ export class User {
   @Prop({ name: 'mobileNumber', type: String, unique: true, index: true, default: null })
   mobileNumber: string | null;
 
-  @Prop({ name: 'username', type: String, unique: true, sparse: true, index: true, default: null })
+  @Prop({ name: 'username', type: String, unique: true, sparse: true, index: true })
   username: string | null;
 
   @Prop({ default: '' })
