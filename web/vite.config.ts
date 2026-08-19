@@ -9,6 +9,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
 
+    // ─── Static assets ─────────────────────────────────────────────────────────
+    // Served as-is at "/" (e.g. web/assets/Crops/1.svg → /Crops/1.svg).
+    publicDir: 'assets',
+
     // ─── Aliases ───────────────────────────────────────────────────────────────
     resolve: {
       alias: {
