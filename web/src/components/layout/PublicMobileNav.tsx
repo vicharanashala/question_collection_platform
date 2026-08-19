@@ -1,14 +1,12 @@
-import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut, Languages } from 'lucide-react'
+import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
-import { useLanguage } from '@/hooks/useLanguage'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useState } from 'react'
 
 interface PublicMobileNavProps {
@@ -27,10 +25,8 @@ const items = [
 export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
-  const { nativeName } = useLanguage()
   const navigate = useNavigate()
   const [logoutOpen, setLogoutOpen] = useState(false)
-  const [languageOpen, setLanguageOpen] = useState(false)
 
   function handleSignOut() {
     setLogoutOpen(false)
@@ -103,14 +99,6 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
               </div>
             </div>
             <button
-              onClick={() => setLanguageOpen(true)}
-              className="mb-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors"
-            >
-              <Languages className="h-4 w-4" />
-              <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
-              <span className="text-xs text-text-tertiary">{nativeName}</span>
-            </button>
-            <button
               onClick={() => setLogoutOpen(true)}
               className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
             >
@@ -133,7 +121,6 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
         </DialogContent>
       </Dialog>
 
-      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </>
   )
 }

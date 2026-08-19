@@ -3,13 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { useLanguage } from '@/hooks/useLanguage'
-import { LogOut, User, Sun, Moon, Menu, Bell, Trophy, Languages, ChevronRight } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Menu, Bell, Trophy } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { notificationApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
   const { pathname } = useLocation()
@@ -17,10 +15,8 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { t } = useTranslation()
-  const { nativeName } = useLanguage()
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
-  const [languageOpen, setLanguageOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -83,9 +79,6 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
             </span>
           )}
         </button>
-        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('auth.selectLanguage')} title={t('auth.selectLanguage')}>
-          <Languages className="h-4 w-4" />
-        </button>
         <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
@@ -109,15 +102,6 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
                   <User className="h-4 w-4 text-text-tertiary" />
                   {t('nav.profile')}
                 </Link>
-                <button
-                  onClick={() => { setProfileOpen(false); setLanguageOpen(true) }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                >
-                  <Languages className="h-4 w-4 text-text-tertiary" />
-                  <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
-                  <span className="text-xs text-text-tertiary">{nativeName}</span>
-                  <ChevronRight className="h-4 w-4 text-text-tertiary" />
-                </button>
               </div>
               <div className="border-t border-border-subtle py-1">
                 <button onClick={() => setLogoutConfirmOpen(true)} className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
@@ -141,7 +125,6 @@ export function PublicHeader({ onMobileMenuToggle }: { onMobileMenuToggle?: () =
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </header>
   )
 }
