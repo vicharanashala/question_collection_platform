@@ -83,10 +83,9 @@ export const USER_CATEGORIES: UserCategoryOption[] = [
   { value: 'ngo', label: 'NGO Partner', description: 'I represent an NGO working with the community', color: '#DC2626', ring: 'border-rose-500', iconBg: 'bg-rose-100', iconColor: 'text-rose-700' },
 ]
 
-// Mirrors `mobile/src/utils/constants.ts:CROPS` (340+ entries, alphabetised).
-// The web used to ship a hand-curated 47-entry list that drifted from mobile.
-// We now derive `CROP_OPTIONS` from this full list so the web's Crop Type picker
-// matches the mobile app's alphabetised list shown in the question-ask flow.
+// Mirrors `mobile/src/utils/constants.ts:CROPS` (340+ entries, alphabetised) —
+// used by both the registration wizard's crop-image grid and the ask-question
+// flow's crop picker.
 export const CROPS = [
   'Adapathiyan', 'Agathi', 'Ailanthus or Matti', 'Ajwain (Carom seeds)',
   'Allspice', 'Almond', 'Aloe vera', 'Amaranth', 'Amaranthus', 'Amla',
@@ -179,55 +178,6 @@ export const CROPS = [
   'Wild jack or Aini', 'Wood apple', 'Yam',
 ] as const
 
-export const CROP_OPTIONS: { value: string; label: string }[] = [
-  { value: 'Rice', label: 'Rice (Paddy)' },
-  { value: 'Wheat', label: 'Wheat' },
-  { value: 'Maize', label: 'Maize (Corn)' },
-  { value: 'Bajra', label: 'Bajra (Pearl Millet)' },
-  { value: 'Jowar', label: 'Jowar (Sorghum)' },
-  { value: 'Ragi', label: 'Ragi (Finger Millet)' },
-  { value: 'Cotton', label: 'Cotton' },
-  { value: 'Sugarcane', label: 'Sugarcane' },
-  { value: 'Groundnut', label: 'Groundnut (Peanut)' },
-  { value: 'Soybean', label: 'Soybean' },
-  { value: 'Mustard', label: 'Mustard' },
-  { value: 'Sesame', label: 'Sesame (Til)' },
-  { value: 'Sunflower', label: 'Sunflower' },
-  { value: 'Tur', label: 'Tur (Arhar) Dal' },
-  { value: 'Moong', label: 'Moong (Green Gram)' },
-  { value: 'Urad', label: 'Urad (Black Gram)' },
-  { value: 'Chana', label: 'Chana (Bengal Gram)' },
-  { value: 'Masoor', label: 'Masoor (Lentil)' },
-  { value: 'Tomato', label: 'Tomato' },
-  { value: 'Onion', label: 'Onion' },
-  { value: 'Potato', label: 'Potato' },
-  { value: 'Brinjal', label: 'Brinjal (Eggplant)' },
-  { value: 'Okra', label: 'Okra (Lady Finger)' },
-  { value: 'Cabbage', label: 'Cabbage' },
-  { value: 'Cauliflower', label: 'Cauliflower' },
-  { value: 'Cucumber', label: 'Cucumber' },
-  { value: 'Pumpkin', label: 'Pumpkin' },
-  { value: 'Carrot', label: 'Carrot' },
-  { value: 'Radish', label: 'Radish' },
-  { value: 'Spinach', label: 'Spinach' },
-  { value: 'Chilli', label: 'Chilli' },
-  { value: 'Garlic', label: 'Garlic' },
-  { value: 'Ginger', label: 'Ginger' },
-  { value: 'Turmeric', label: 'Turmeric' },
-  { value: 'Banana', label: 'Banana' },
-  { value: 'Mango', label: 'Mango' },
-  { value: 'Papaya', label: 'Papaya' },
-  { value: 'Guava', label: 'Guava' },
-  { value: 'Pomegranate', label: 'Pomegranate' },
-  { value: 'Citrus', label: 'Citrus (Orange/Lemon)' },
-  { value: 'Apple', label: 'Apple' },
-  { value: 'Grapes', label: 'Grapes' },
-  { value: 'Watermelon', label: 'Watermelon' },
-  { value: 'Coconut', label: 'Coconut' },
-  { value: 'Tea', label: 'Tea' },
-  { value: 'Coffee', label: 'Coffee' },
-  { value: 'Other', label: 'Other' },
-]
 export const COURSE_OPTIONS: { value: string; label: string }[] = [
   { value: 'BSc Agriculture', label: 'BSc Agriculture' },
   { value: 'MSc Agriculture', label: 'MSc Agriculture' },

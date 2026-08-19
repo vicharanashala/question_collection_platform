@@ -14,6 +14,7 @@ import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Sear
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, CROPS } from '@/constants/public'
 import { MicButton } from '@/components/MicButton'
+import { CropImage } from '@/components/CropImage'
 import { AIValidationBanner } from '@/components/AIValidationBanner'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
@@ -89,7 +90,7 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setQuery(''); setShowOther(false); setOtherText('') } }}>
-      <DialogContent className="max-w-md p-0 sm:max-w-md">
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col p-0">
         <DialogHeader className="flex-row items-center justify-between border-b border-border-subtle px-4 py-3">
           <DialogTitle className="text-base font-semibold">{t('question.cropType')}</DialogTitle>
           <button
@@ -109,11 +110,11 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
               value={query}
               onChange={(e) => { setQuery(e.target.value); setShowOther(false) }}
               placeholder={t('admin.search')}
-              className="pl-9"
+              className="rounded-full bg-surface-variant pl-9"
             />
           </div>
         </div>
-        <div className="max-h-72 overflow-y-auto px-2 pb-2">
+        <div className="flex-1 overflow-y-auto px-4 py-3">
           {showOther ? (
             <div className="px-2 py-3 space-y-2">
               <Label htmlFor="other-crop">{t('question.enterCrop')}</Label>
@@ -133,31 +134,45 @@ function CropPickerModal({ open, onOpenChange, value, onChange }: CropPickerModa
           ) : filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-tertiary">{t('common.noMatches', 'No matches')}</p>
           ) : (
-            <ul className="py-1">
-              {filtered.map((c) => (
-                <li key={c.value}>
+            <div className="grid grid-cols-4 gap-x-2 gap-y-5">
+              {filtered.map((c) => {
+                const selected = value === c.value
+                return (
                   <button
+                    key={c.value}
                     type="button"
                     onClick={() => pickCrop(c.value)}
-                    className={`flex w-full items-center justify-between rounded-md px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface-variant ${value === c.value ? 'bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-950/30 dark:text-emerald-300' : 'text-foreground'}`}
+                    className="flex flex-col items-center gap-1.5"
+                    aria-pressed={selected}
                   >
-                    <span>{c.label}</span>
-                    {value === c.value && <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />}
+                    <div className={`relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 ${selected ? 'border-emerald-500' : 'border-border-subtle'}`}>
+                      <CropImage name={c.value} className="h-full w-full rounded-full" />
+                      {selected && (
+                        <div className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-surface bg-emerald-500 text-white">
+                          <CheckCircle2 className="h-3 w-3" />
+                        </div>
+                      )}
+                    </div>
+                    <span className={`line-clamp-2 text-center text-xs leading-tight ${selected ? 'font-semibold text-emerald-700 dark:text-emerald-300' : 'font-medium text-foreground'}`}>
+                      {c.label}
+                    </span>
                   </button>
-                </li>
-              ))}
-              <li>
-                <button
-                  type="button"
-                  onClick={pickOther}
-                  className="mt-1 flex w-full items-center rounded-md border-t border-border-subtle px-3 py-2.5 text-left text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
-                >
-                  {t('question.cropOtherManually')}
-                </button>
-              </li>
-            </ul>
+                )
+              })}
+            </div>
           )}
         </div>
+        {!showOther && (
+          <div className="border-t border-border-subtle px-4 py-3">
+            <button
+              type="button"
+              onClick={pickOther}
+              className="flex w-full items-center justify-center rounded-md px-3 py-2 text-center text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
+            >
+              {t('question.cropOtherManually')}
+            </button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
