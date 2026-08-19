@@ -81,7 +81,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <button
           onClick={toggleTheme}
           className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
-          aria-label={theme === 'dark' ? t('chrome.switchToLightMode') : t('chrome.switchToDarkMode')}
+          aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}
           title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}
         >
           {theme === 'dark' ? (

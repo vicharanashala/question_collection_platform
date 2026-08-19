@@ -249,7 +249,7 @@ export function PublicHomePage() {
         <StatTile
           icon={<CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5" />}
           label={t('home.today')}
-          value={loading ? '...' : stats ? `${stats.dailyCount} done` : '0'}
+          value={loading ? '...' : stats ? t('home.dailyCountDone', { count: stats.dailyCount }) : '0'}
           iconClass="text-blue-600 dark:text-blue-400"
         />
         <StatTile

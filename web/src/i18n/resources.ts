@@ -222,6 +222,7 @@ const resources = {
         "loading": "Loading...",
         "error": "Error",
         "retry": "Retry",
+        "close": "Close",
         "cancel": "Cancel",
         "confirm": "Confirm",
         "save": "Save",
@@ -346,7 +347,8 @@ const resources = {
         "reachGold": "Reach Gold Tier",
         "reachGoldSub": "Earn up to Rs.10 per question after 250 approvals",
         "submissionTips": "Submission Tips",
-        "currentTier": "Current tier"
+        "currentTier": "Current tier",
+        "dailyCountDone": "{{count}} done"
       },
       "iAcceptContinue": "I Accept & Continue",
       "invalidOtp": "Enter the complete 6-digit code",
@@ -554,6 +556,9 @@ const resources = {
         "title": "Submit Question",
         "location": "Location",
         "locationLockedNote": "Location is locked to your profile and cannot be changed",
+        "notEditableAfterSubmission": "This question is not editable after submission",
+        "agroClimaticZone": "Agro-Climatic Zone",
+        "selectOneOrMore": "Select one or more",
         "selectType": "Select Question Type",
         "text": "Text",
         "image": "Photo",
@@ -1539,7 +1544,9 @@ const resources = {
         "rewardSubtitle": "২৫১–৫০০ টা অনুমোদিত প্ৰশ্নৰ বাবে ১০ টকা",
         "reachGold": "গ'ল্ড টিয়াৰত উপনীত হওক",
         "reachGoldSub": "২৫০ টা অনুমোদনৰ পিছত প্ৰতি প্ৰশ্নত ১০ টকালৈকে উপাৰ্জন কৰক",
-        "submissionTips": "দাখিলৰ পৰামৰ্শসমূহ"
+        "submissionTips": "দাখিলৰ পৰামৰ্শসমূহ",
+        "currentTier": "বৰ্তমান স্তৰ",
+        "dailyCountDone": "{{count}} সম্পন্ন"
       },
       "iAcceptContinue": "মই গ্ৰহণ কৰিছো আৰু আগবাঢ়িছো",
       "invalidOtp": "সম্পূৰ্ণ ৬-ডিজিটৰ কোড দিয়ক",
@@ -2691,7 +2698,9 @@ const resources = {
         "rewardSubtitle": "২৫১–৫০০ অনুমোদিত প্রশ্নের জন্য ১০ টাকা",
         "reachGold": "গোল্ড স্তরে পৌঁছান",
         "reachGoldSub": "২৫০ টি অনুমোদনের পরে প্রতি প্রশ্নে ১০ টাকা পর্যন্ত আয় করুন",
-        "submissionTips": "জমা দেওয়ার টিপস"
+        "submissionTips": "জমা দেওয়ার টিপস",
+        "currentTier": "বর্তমান স্তর",
+        "dailyCountDone": "{{count}} সম্পন্ন"
       },
       "iAcceptContinue": "আমি সম্মত ও এগিয়ে যান",
       "invalidOtp": "সম্পূর্ণ ৬-ডিজিটের কোডটি লিখুন",
@@ -3843,7 +3852,9 @@ const resources = {
         "rewardSubtitle": "251–500 गनायथि मोनाय सोंथिनि थाखाय Rs.10",
         "reachGold": "सोना (Gold) थाखोआव सहै",
         "reachGoldSub": "250 गनायथि मोनायनि उनाव सोंथिफ्रामआव Rs.10 सिम आर्जि",
-        "submissionTips": "दैथायनायनि एबसे सुबुं थुनला"
+        "submissionTips": "दैथायनायनि एबसे सुबुं थुनला",
+        "currentTier": "दानि स्तर",
+        "dailyCountDone": "{{count}} जोबबाय"
       },
       "iAcceptContinue": "आं गनायो आरो आगौवायो",
       "invalidOtp": "आबुं ६-डिजिटनि कोड सोमावना हो",
@@ -4995,7 +5006,9 @@ const resources = {
         "rewardSubtitle": "251–500 मंजूर प्रश्नें लेई Rs.10",
         "reachGold": "गोल्ड टियर तगर पहुँचो",
         "reachGoldSub": "250 मंजूरी दे बाद प्रति प्रश्न Rs.10 तक कमाओ",
-        "submissionTips": "प्रश्न भेजने लेई सुझाव"
+        "submissionTips": "प्रश्न भेजने लेई सुझाव",
+        "currentTier": "मौजूदा स्तर",
+        "dailyCountDone": "{{count}} पूरे"
       },
       "iAcceptContinue": "मैं स्वीकार करदा/करदी हां ते अग्गें बधदा/बधदी हां",
       "invalidOtp": "पूरा 6-अंकें दा कोड पाओ",
@@ -6147,7 +6160,9 @@ const resources = {
         "rewardSubtitle": "251–500 મંજૂર પ્રશ્નો માટે રૂ. 10",
         "reachGold": "ગોલ્ડ સ્તરે પહોંચો",
         "reachGoldSub": "250 મંજૂરીઓ પછી પ્રતિ પ્રશ્ન રૂ. 10 સુધી કમાઓ",
-        "submissionTips": "સબમિશન ટિપ્સ"
+        "submissionTips": "સબમિશન ટિપ્સ",
+        "currentTier": "વર્તમાન સ્તર",
+        "dailyCountDone": "{{count}} પૂર્ણ"
       },
       "iAcceptContinue": "હું સ્વીકારું છું અને આગળ વધું છું",
       "invalidOtp": "સંપૂર્ણ 6-અંકનો કોડ દાખલ કરો",
@@ -7300,7 +7315,8 @@ const resources = {
         "reachGold": "गोल्ड टियर तक पहुँचें",
         "reachGoldSub": "250 स्वीकृतियों के बाद प्रति प्रश्न रु. 10 तक कमाएं",
         "submissionTips": "सबमिशन के सुझाव",
-        "currentTier": "वर्तमान स्तर"
+        "currentTier": "वर्तमान स्तर",
+        "dailyCountDone": "{{count}} पूर्ण"
       },
       "iAcceptContinue": "मैं स्वीकार करता हूँ और जारी रखें",
       "invalidOtp": "पूरा 6-अंकीय कोड दर्ज करें",
@@ -8478,7 +8494,9 @@ const resources = {
         "rewardSubtitle": "251–500 ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳಿಗೆ ರೂ.10",
         "reachGold": "ಚಿನ್ನದ (ಗೋಲ್ಡ್) ಹಂತವನ್ನು ತಲುಪಿ",
         "reachGoldSub": "250 ಅನುಮೋದನೆಗಳ ನಂತರ ಪ್ರತಿ ಪ್ರಶ್ನೆಗೆ ರೂ.10 ರವರೆಗೆ ಗಳಿಸಿ",
-        "submissionTips": "ಸಲ್ಲಿಕೆ ಸಲಹೆಗಳು"
+        "submissionTips": "ಸಲ್ಲಿಕೆ ಸಲಹೆಗಳು",
+        "currentTier": "ಪ್ರಸ್ತುತ ಹಂತ",
+        "dailyCountDone": "{{count}} ಪೂರ್ಣ"
       },
       "iAcceptContinue": "ನಾನು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ ಮತ್ತು ಮುಂದುವರಿಯುತ್ತೇನೆ",
       "invalidOtp": "ಸಂಪೂರ್ಣ 6-ಅಂಕಿಯ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ",
@@ -9630,7 +9648,9 @@ const resources = {
         "rewardSubtitle": "251–500 منظور گٔمتین سوالن پیٹھ Rs.10",
         "reachGold": "گولڈ درجے تام واچھیو",
         "reachGoldSub": "250 منظوری پتہٕ کماو پرتھ سوالس پیٹھ Rs.10 تام",
-        "submissionTips": "جمع کرنے ہنٛد مشورے"
+        "submissionTips": "جمع کرنے ہنٛد مشورے",
+        "currentTier": "حالی سطح",
+        "dailyCountDone": "{{count}} مکمل"
       },
       "iAcceptContinue": "بؤ چھُس قبول کران تہٕ جاری تھاوان",
       "invalidOtp": "پورا 6 ہندسَن ہنٛد کوڈ درج کٔریو",
@@ -10782,7 +10802,9 @@ const resources = {
         "rewardSubtitle": "२५१–५०० मान्य जाल्ल्या प्रस्नांखातीर रु.१०",
         "reachGold": "गोल्ड टियर पावात",
         "reachGoldSub": "२५० मान्यतायां उपरांत दर प्रस्नाफाटल्यान रु.१० पर्यंत जोडाात",
-        "submissionTips": "प्रस्न धाडपाचे सुचोवणे"
+        "submissionTips": "प्रस्न धाडपाचे सुचोवणे",
+        "currentTier": "सद्याचो स्तर",
+        "dailyCountDone": "{{count}} पूर्ण"
       },
       "iAcceptContinue": "म्हाका मान्य आसा आनी मुखार वचात",
       "invalidOtp": "पुराय ६-आकड्यांचो कोड घालात",
@@ -11934,7 +11956,9 @@ const resources = {
         "rewardSubtitle": "२५१–५०० स्वीकृत प्रश्न लेल १० टका",
         "reachGold": "गोल्ड स्तर पर पहुँछू",
         "reachGoldSub": "२५० स्वीकृतिक बाद प्रति प्रश्न १० टका धरि कमाऊ",
-        "submissionTips": "प्रश्न जमा करबाक सुझाव"
+        "submissionTips": "प्रश्न जमा करबाक सुझाव",
+        "currentTier": "वर्तमान स्तर",
+        "dailyCountDone": "{{count}} पूर्ण"
       },
       "iAcceptContinue": "हम स्वीकार करैत छी आ जारी राखैत छी",
       "invalidOtp": "पूरा ६-अंकक कोड दर्ज करु",
@@ -13086,7 +13110,9 @@ const resources = {
         "rewardSubtitle": "251–500 അംഗീകൃത ചോദ്യങ്ങൾക്ക് 10 രൂപ വീതം",
         "reachGold": "ഗോൾഡ് ലെവലിൽ എത്തുക",
         "reachGoldSub": "250 അംഗീകാരങ്ങൾക്ക് ശേഷം ഒരു ചോദ്യത്തിന് 10 രൂപ വരെ നേടുക",
-        "submissionTips": "ചോദ്യം സമർപ്പിക്കാനുള്ള നിർദ്ദേശങ്ങൾ"
+        "submissionTips": "ചോദ്യം സമർപ്പിക്കാനുള്ള നിർദ്ദേശങ്ങൾ",
+        "currentTier": "നിലവിലെ നില",
+        "dailyCountDone": "{{count}} പൂർത്തി"
       },
       "iAcceptContinue": "ഞാൻ അംഗീകരിച്ച് മുന്നോട്ട് പോകുന്നു",
       "invalidOtp": "മുഴുവൻ 6 അക്ക കോഡും നൽകുക",
@@ -14238,7 +14264,9 @@ const resources = {
         "rewardSubtitle": "অয়াবা পীরবা ২৫১–৫০০ ওয়াহংগীদমক লুপা ১০",
         "reachGold": "গোল্ড তিয়রদা য়ৌবীয়ু",
         "reachGoldSub": "২৫০ গী মতুংদা ওয়াহং অমমমদা লুপা ১০ ফাওবা ফংবীয়ু",
-        "submissionTips": "ওয়াহং থাবগী তিঅপশিং"
+        "submissionTips": "ওয়াহং থাবগী তিঅপশিং",
+        "currentTier": "হৌজিক্কী স্তর",
+        "dailyCountDone": "{{count}} লোইরে"
       },
       "iAcceptContinue": "ঐ য়ানবনি অমসুং মখা চতথবনি",
       "invalidOtp": "মপুং ফাবা ৬-দিজিৎকী কোড অদু চংহনবীয়ু",
@@ -15390,7 +15418,9 @@ const resources = {
         "rewardSubtitle": "२५१–५०० मंजूर प्रश्नांसाठी रु. १०",
         "reachGold": "गोल्ड टियर गाठा",
         "reachGoldSub": "२५० मंजुरींनंतर प्रति प्रश्न रु. १० पर्यंत कमवा",
-        "submissionTips": "सबमिशनसाठी टिप्स"
+        "submissionTips": "सबमिशनसाठी टिप्स",
+        "currentTier": "सध्याचा स्तर",
+        "dailyCountDone": "{{count}} पूर्ण"
       },
       "iAcceptContinue": "मी स्वीकारतो आणि पुढे जा",
       "invalidOtp": "पूर्ण ६-अंकी कोड प्रविष्ट करा",
@@ -16542,7 +16572,9 @@ const resources = {
         "rewardSubtitle": "२५१–५०० स्वीकृत प्रश्नहरूको लागि रु. १० प्रति प्रश्न",
         "reachGold": "Gold स्तरमा पुग्नुहोस्",
         "reachGoldSub": "२५० स्वीकृति पछि प्रति प्रश्न रु. १० सम्म कमाउनुहोस्",
-        "submissionTips": "प्रश्न पेस गर्ने सुझावहरू"
+        "submissionTips": "प्रश्न पेस गर्ने सुझावहरू",
+        "currentTier": "हालको तह",
+        "dailyCountDone": "{{count}} पूरा"
       },
       "iAcceptContinue": "म स्वीकार गर्छु र अगाडि बढ्छु",
       "invalidOtp": "पूरा ६-अङ्कको कोड राख्नुहोस्",
@@ -17694,7 +17726,9 @@ const resources = {
         "rewardSubtitle": "୨୫୧–୫୦୦ ଅନୁମୋଦିତ ପ୍ରଶ୍ନ ପାଇଁ ଟ. ୧୦",
         "reachGold": "ଗୋଲ୍ଡ ସ୍ତରରେ ପହଞ୍ଚନ୍ତୁ",
         "reachGoldSub": "୨୫୦ ଅନୁମୋଦନ ପରେ ପ୍ରତି ପ୍ରଶ୍ନ ପିଛା ଟ. ୧୦ ପର୍ଯ୍ୟନ୍ତ ରୋଜଗାର କରନ୍ତୁ",
-        "submissionTips": "ପ୍ରଶ୍ନ ଦାଖଲ ସମ୍ବନ୍ଧୀୟ ପରାମର୍ଶ"
+        "submissionTips": "ପ୍ରଶ୍ନ ଦାଖଲ ସମ୍ବନ୍ଧୀୟ ପରାମର୍ଶ",
+        "currentTier": "ବର୍ତ୍ତମାନ ସ୍ତର",
+        "dailyCountDone": "{{count}} ପୂର୍ଣ୍ଣ"
       },
       "iAcceptContinue": "ମୁଁ ଗ୍ରହଣ କରୁଛି ଏବଂ ଆଗକୁ ବଢ଼ୁଛି",
       "invalidOtp": "ସମ୍ପୂର୍ଣ୍ଣ ୬-ଅଙ୍କ ବିଶିଷ୍ଟ କୋଡ୍ ଦିଅନ୍ତୁ",
@@ -18844,7 +18878,9 @@ const resources = {
         "rewardSubtitle": "251–500 ਮਨਜ਼ੂਰਸ਼ੁਦਾ ਸਵਾਲਾਂ ਲਈ ਰੁ.10",
         "reachGold": "ਗੋਲਡ ਤਹਿ ਤੱਕ ਪਹੁੰਚੋ",
         "reachGoldSub": "250 ਮੰਜ਼ੂਰੀਆਂ ਤੋਂ ਬਾਅਦ ਪ੍ਰਤੀ ਸਵਾਲ ਰੁ.10 ਤੱਕ ਕਮਾਓ",
-        "submissionTips": "ਸਬਮਿਸ਼ਨ ਸੁਝਾਅ"
+        "submissionTips": "ਸਬਮਿਸ਼ਨ ਸੁਝਾਅ",
+        "currentTier": "ਮੌਜੂਦਾ ਪੱਧਰ",
+        "dailyCountDone": "{{count}} ਪੂਰੇ"
       },
       "iAcceptContinue": "ਮੈਂ ਸਵੀਕਾਰ ਕਰਦਾ/ਕਰਦੀ ਹਾਂ ਅਤੇ ਜਾਰੀ ਰੱਖੋ",
       "invalidOtp": "ਪੂਰਾ 6-ਅੰਕਾਂ ਦਾ ਕੋਡ ਦਰਜ ਕਰੋ",
@@ -20006,7 +20042,9 @@ const resources = {
         "rewardSubtitle": "२५१–५०० स्वीकृतप्रश्नानां कृते रूप्यकाणि १०",
         "reachGold": "स्वर्णस्तरं प्राप्नोतु",
         "reachGoldSub": "२५० स्वीकृत्यनन्तरं प्रतिप्रश्नं १० रूप्यकाणि यावत् अर्जयतु",
-        "submissionTips": "समर्पणपरामर्शाः"
+        "submissionTips": "समर्पणपरामर्शाः",
+        "currentTier": "वर्तमानस्तरः",
+        "dailyCountDone": "{{count}} कृतम्"
       },
       "iAcceptContinue": "अहं स्वीकरोमि अग्रे गच्छामि च",
       "invalidOtp": "पूर्णं ६-अङ्कीयसङ्केतं लिखतु",
@@ -21158,7 +21196,9 @@ const resources = {
         "rewardSubtitle": "᱒᱕᱑–᱕᱐᱐ ᱟᱸᱜᱳᱪ ᱟᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱞᱟᱹᱜᱤᱫ ᱑᱐ ᱴᱟᱠᱟ",
         "reachGold": "Gold ᱛᱷᱚᱠ ᱨᱮ ᱥᱮᱴᱮᱨᱚᱜ ᱢᱮ",
         "reachGoldSub": "᱒᱕᱐ ᱟᱸᱜᱳᱪ ᱛᱟᱭᱚᱢ ᱠᱩᱠᱞᱤ ᱯᱤᱪᱷᱤ ᱑᱐ ᱴᱟᱠᱟ ᱫᱷᱟᱹᱵᱤᱡ ᱟᱨᱡᱟᱣ ᱢᱮ",
-        "submissionTips": "ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱨᱮᱱᱟᱜ ᱵᱩᱫᱷᱤ ᱠᱚ"
+        "submissionTips": "ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱨᱮᱱᱟᱜ ᱵᱩᱫᱷᱤ ᱠᱚ",
+        "currentTier": "ᱱᱤᱛᱚᱜ ᱛᱷᱚᱨ",
+        "dailyCountDone": "{{count}} ᱦᱩᱭ ᱮᱱᱟ"
       },
       "iAcceptContinue": "ᱤᱧ ᱨᱮᱵᱮᱱ ᱟᱹᱧ ᱟᱨ ᱞᱟᱦᱟᱜ ᱟᱹᱧ",
       "invalidOtp": "ᱯᱩᱨᱟᱹ ᱖-ᱰᱤᱡᱤᱴ ᱠᱳᱰ ᱚᱞ ᱢᱮ",
@@ -22310,7 +22350,9 @@ const resources = {
         "rewardSubtitle": "251–500 منظور ٿيل سوالن تي Rs.10",
         "reachGold": "گولڊ ٽائر تائين پهچو",
         "reachGoldSub": "250 منظورين کان پوءِ في سوال Rs.10 تائين ڪمايو",
-        "submissionTips": "سوال جمع ڪرڻ جون هدايتون"
+        "submissionTips": "سوال جمع ڪرڻ جون هدايتون",
+        "currentTier": "مؤجوده سطح",
+        "dailyCountDone": "{{count}} مڪمل"
       },
       "iAcceptContinue": "مان قبول ڪريان ٿو/ٿي ۽ جاري رکان ٿو/ٿي",
       "invalidOtp": "مكمل 6 انگن جو ڪوڊ داخل ڪريو",
@@ -23462,7 +23504,9 @@ const resources = {
         "rewardSubtitle": "251–500 ஒப்புதலளிக்கப்பட்ட கேள்விகளுக்கு ரூ.10",
         "reachGold": "Gold நிலையை அடையுங்கள்",
         "reachGoldSub": "250 ஒப்புதல்களுக்குப் பிறகு ஒரு கேள்விக்கு ரூ.10 வரை சம்பாதிக்கவும்",
-        "submissionTips": "சமர்ப்பிக்கும் குறிப்புகள்"
+        "submissionTips": "சமர்ப்பிக்கும் குறிப்புகள்",
+        "currentTier": "தற்போதைய நிலை",
+        "dailyCountDone": "{{count}} முடிந்தன"
       },
       "iAcceptContinue": "நான் ஏற்கிறேன் & தொடர்கிறேன்",
       "invalidOtp": "முழுமையான 6-இலக்கக் குறியீட்டை உள்ளிடவும்",
@@ -24616,7 +24660,9 @@ const resources = {
         "rewardSubtitle": "251–500 ఆమోదించబడిన ప్రశ్నలకు రూ.10",
         "reachGold": "గోల్డ్ శ్రేణికి చేరుకోండి",
         "reachGoldSub": "250 ఆమోదాల తర్వాత ప్రశ్నకు రూ.10 వరకు సంపాదించండి",
-        "submissionTips": "సమర్పణ సూచనలు"
+        "submissionTips": "సమర్పణ సూచనలు",
+        "currentTier": "ప్రస్తుత స్థాయి",
+        "dailyCountDone": "{{count}} పూర్తయింది"
       },
       "iAcceptContinue": "నేను అంగీకరిస్తున్నాను & ముందుకు సాగుతున్నాను",
       "invalidOtp": "పూర్తి 6-అంకెల కోడ్‌ను నమోదు చేయండి",
@@ -25768,7 +25814,9 @@ const resources = {
         "rewardSubtitle": "251–500 منظور شدہ سوالات کے لیے 10 روپے",
         "reachGold": "گولڈ درجہ حاصل کریں",
         "reachGoldSub": "250 منظوریوں کے بعد فی سوال 10 روپے تک کمائیں",
-        "submissionTips": "جمع کرانے کے نکات"
+        "submissionTips": "جمع کرانے کے نکات",
+        "currentTier": "موجودہ سطح",
+        "dailyCountDone": "{{count}} مکمل"
       },
       "iAcceptContinue": "میں قبول کرتا/کرتی ہوں اور جاری رکھتا/رکھتی ہوں",
       "invalidOtp": "مکمل 6 ہندسوں کا کوڈ درج کریں",
