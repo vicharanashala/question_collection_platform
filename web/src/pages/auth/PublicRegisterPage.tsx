@@ -17,7 +17,7 @@
  * `state.mobileNumber` after OTP verification); such users land on
  * the `wizard` stage directly.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authApi, getErrorMessage, lgdApi } from '@/api/client'
 import { parseAccountLocked, type AccountLockedInfo } from '@/events/accountLockedEvents'
@@ -27,12 +27,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { CropImage } from '@/components/CropImage'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, ChevronDown, Search, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, User as UserIcon, Smartphone, MailQuestion, FileText, Shield } from 'lucide-react'
+import { CheckCircle2, Leaf, Users, GraduationCap, HandHeart, Building2, Loader2, ArrowLeft, ArrowRight, User as UserIcon, Smartphone, MailQuestion, FileText, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { BrandLogo } from '@/components/BrandLogo'
-import { LANGUAGES, USER_CATEGORIES, GENDER_OPTIONS, SUPPORTED_STATES, CROPS, COURSE_OPTIONS, ORG_TYPE_OPTIONS, SEASONS } from '@/constants/public'
+import { LANGUAGES, USER_CATEGORIES, GENDER_OPTIONS, SUPPORTED_STATES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS, SEASONS } from '@/constants/public'
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
 import type { LgdDistrict, LgdKvk, LgdSubDistrict, LgdVillage } from '@/api/client'
 import type { UserCategory } from '@/types'
@@ -583,85 +582,7 @@ function Step2({ form, errors, districts, blocks, villages, kvks, setField, load
   )
 }
 
-// ─── Primary crops picker (grid of images) ─────────────────────────────────────
-// Mirrors the mobile `Select` component's `layout="grid"` mode used on
-// RegisterScreen's farmer step: a searchable 3-column grid of circular crop
-// thumbnails, multi-select with a checkmark badge on the selected ones.
-interface CropGridPickerModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  value: string[]
-  onChange: (value: string[]) => void
-}
-
-function CropGridPickerModal({ open, onOpenChange, value, onChange }: CropGridPickerModalProps) {
-  const [query, setQuery] = useState('')
-
-  const filtered = useMemo(() => {
-    if (!query.trim()) return CROPS
-    const q = query.toLowerCase()
-    return CROPS.filter((c) => c.toLowerCase().includes(q))
-  }, [query])
-
-  function toggle(name: string) {
-    onChange(value.includes(name) ? value.filter((v) => v !== name) : [...value, name])
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setQuery('') }}>
-      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col p-0">
-        <DialogHeader className="border-b border-border-subtle px-4 py-3">
-          <DialogTitle className="text-base font-semibold">Primary Crop Types</DialogTitle>
-        </DialogHeader>
-        <div className="px-4 pt-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
-            <Input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search..." className="rounded-full bg-surface-variant pl-9" />
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-3">
-          {filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-text-tertiary">No matches</p>
-          ) : (
-            <div className="grid grid-cols-4 gap-x-2 gap-y-5">
-              {filtered.map((name) => {
-                const selected = value.includes(name)
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => toggle(name)}
-                    className="flex flex-col items-center gap-1.5"
-                    aria-pressed={selected}
-                  >
-                    <div className={cn('relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2', selected ? 'border-emerald-500' : 'border-border-subtle')}>
-                      <CropImage name={name} className="h-full w-full rounded-full" />
-                      {selected && (
-                        <div className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-surface bg-emerald-500 text-white">
-                          <CheckCircle2 className="h-3 w-3" />
-                        </div>
-                      )}
-                    </div>
-                    <span className={cn('line-clamp-2 text-center text-xs leading-tight', selected ? 'font-semibold text-emerald-700 dark:text-emerald-300' : 'font-medium text-foreground')}>
-                      {name}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center justify-between border-t border-border-subtle px-4 py-3">
-          <span className="text-xs text-text-secondary">{value.length > 0 ? `${value.length} selected` : 'Select one or more'}</span>
-          <Button type="button" size="sm" onClick={() => onOpenChange(false)}>Done</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: WizardFormStateProps) {
-  const [cropPickerOpen, setCropPickerOpen] = useState(false)
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -707,33 +628,15 @@ function Step3({ form, errors, usernameStatus, usernameSuggestions, setField }: 
           </div>
           <div className="space-y-1.5">
             <Label>Primary crops <span className="text-rose-600">*</span></Label>
-            <button
-              type="button"
-              onClick={() => setCropPickerOpen(true)}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface px-3 py-2 text-sm hover:border-emerald-300"
-            >
-              <span className={form.cropType.length === 0 ? 'text-text-tertiary' : 'text-foreground'}>
-                {form.cropType.length === 0 ? 'Choose crops' : `${form.cropType.length} crop${form.cropType.length > 1 ? 's' : ''} selected`}
-              </span>
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </button>
-            {form.cropType.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {form.cropType.map((c) => (
-                  <span key={c} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 py-0.5 pl-0.5 pr-2 text-xs font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
-                    <CropImage name={c} className="h-5 w-5 rounded-full" />
-                    {c}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-1.5">
+              {CROP_OPTIONS.map((c) => {
+                const selected = form.cropType.includes(c.value)
+                return (
+                  <button key={c.value} type="button" onClick={() => setField('cropType', selected ? form.cropType.filter((x) => x !== c.value) : [...form.cropType, c.value])} className={cn('rounded-full border px-2.5 py-1 text-xs font-medium transition-colors', selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-border-subtle text-text-secondary hover:border-emerald-300')}>{c.label}</button>
+                )
+              })}
+            </div>
             {errors.cropType && <p className="text-xs text-rose-600">{errors.cropType}</p>}
-            <CropGridPickerModal
-              open={cropPickerOpen}
-              onOpenChange={setCropPickerOpen}
-              value={form.cropType}
-              onChange={(v) => setField('cropType', v)}
-            />
           </div>
         </>
       )}
