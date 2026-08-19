@@ -16,6 +16,7 @@
  *   • navigating to `/home/verification-pending` on success
  */
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { authApi, lgdApi, getErrorMessage } from "@/api/client";
 import type {
@@ -28,13 +29,14 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from '@/components/ui/searchable-select'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
@@ -47,15 +49,24 @@ import {
   ArrowLeft,
   ArrowRight,
   User as UserIcon,
+  Check,
+  Languages,
+  Sparkles,
+  Clock,
+  Gift,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/BrandLogo";
+import { CropImage } from "@/components/CropImage";
+import { CropPickerModal } from "@/components/ui/crop-picker-modal";
+import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
 import {
   LANGUAGES,
   USER_CATEGORIES,
   GENDER_OPTIONS,
   SUPPORTED_STATES,
-  CROP_OPTIONS,
+  CROPS,
   COURSE_OPTIONS,
   ORG_TYPE_OPTIONS,
   SEASONS,
@@ -97,6 +108,7 @@ interface WizardFormState {
   numberOfFarmers: string;
   organizationState: string;
   organizationDistrict: string;
+  organizationDistrictCode: string;
   organizationBlock: string;
   organizationVillage: string;
   season: string;
@@ -130,6 +142,7 @@ const INITIAL_FORM: WizardFormState = {
   numberOfFarmers: "",
   organizationState: "",
   organizationDistrict: "",
+  organizationDistrictCode: "",
   organizationBlock: "",
   organizationVillage: "",
   season: "",
@@ -173,70 +186,26 @@ interface WizardFormStateProps {
   loadingBlocks: boolean;
   loadingVillages: boolean;
   loadingKvks: boolean;
+  organizationDistricts: LgdDistrict[];
+  loadingOrganizationDistricts: boolean;
+  loadOrganizationDistricts: (stateName: string) => Promise<void>;
   setField: SetField;
   loadDistricts: (stateName: string) => Promise<void>;
   loadBlocks: (districtCode: string) => Promise<void>;
   loadVillages: (blockCode: string) => Promise<void>;
   loadKvks: (districtCode: string) => Promise<void>;
+  cropPickerOpen: boolean;
+  setCropPickerOpen: (open: boolean) => void;
+  setLegalModal: (type: "terms" | "privacy" | null) => void;
 }
-
-// function Step1({ form, errors, setField }: WizardFormStateProps) {
-//   return (
-//     <div className="space-y-3 w">
-//       <p className="text-sm text-text-secondary">
-//         Pick the option that best describes you.
-//       </p>
-//       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-//         {USER_CATEGORIES.map((c) => {
-//           const active = form.category === c.value;
-//           return (
-//             <button
-//               key={c.value}
-//               type="button"
-//               onClick={() => setField("category", c.value)}
-//               className={cn(
-//                 "flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm",
-//                 active
-//                   ? `${c.ring} bg-emerald-50/50 dark:bg-emerald-950/20`
-//                   : "border-border-subtle hover:border-emerald-200",
-//               )}
-//             >
-//               <div
-//                 className={cn(
-//                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-//                   c.iconBg,
-//                   c.iconColor,
-//                 )}
-//               >
-//                 <CategoryIcon value={c.value} className="h-5 w-5" />
-//               </div>
-//               <div className="min-w-0 flex-1">
-//                 <p className="text-sm font-bold text-foreground">{c.label}</p>
-//                 <p className="mt-0.5 text-xs text-text-secondary">
-//                   {c.description}
-//                 </p>
-//               </div>
-//               {active && (
-//                 <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-//               )}
-//             </button>
-//           );
-//         })}
-//       </div>
-//       {errors.category && (
-//         <p className="text-xs text-rose-600">{errors.category}</p>
-//       )}
-//     </div>
-//   );
-// }
 
 function Step1({ form, errors, setField }: WizardFormStateProps) {
   return (
-    <div className="space-y-2 w">
-      <p className="text-sm text-text-secondary">
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
         Pick the option that best describes you.
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
         {USER_CATEGORIES.map((c) => {
           const active = form.category === c.value;
           return (
@@ -245,34 +214,34 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
               type="button"
               onClick={() => setField("category", c.value)}
               className={cn(
-                "flex items-center gap-3 rounded-xl border-2 px-4 py-2.5 text-left transition-all hover:shadow-sm",
+                "flex items-center gap-2.5 sm:gap-3 rounded-xl border-2 px-3 py-2.5 sm:px-4 sm:py-3.5 text-left transition-all",
                 active
-                  ? `${c.ring} bg-emerald-50/50 dark:bg-emerald-950/20`
-                  : "border-border-subtle hover:border-emerald-200",
+                  ? `${c.ring} border-emerald-300 bg-emerald-50/60 dark:border-emerald-700 dark:bg-emerald-950/20 shadow-sm`
+                  : "border-border hover:border-emerald-200 hover:shadow-sm",
               )}
             >
               <div
                 className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                  c.iconBg,
-                  c.iconColor,
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-11 sm:w-11 sm:rounded-xl",
+                  active ? c.iconBg.replace("text-", "bg-") : c.iconBg,
+                  active ? c.iconColor : c.iconColor,
                 )}
               >
-                <CategoryIcon value={c.value} className="h-4.5 w-4.5" />
+                <CategoryIcon value={c.value} className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground">{c.label}</p>
-                <p className="text-xs text-text-secondary">{c.description}</p>
+                <p className="text-xs sm:text-sm font-semibold text-foreground leading-tight">{c.label}</p>
+                <p className="hidden xs:block mt-0.5 text-[11px] sm:text-xs text-muted-foreground leading-snug">{c.description}</p>
               </div>
               {active && (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 shrink-0" />
               )}
             </button>
           );
         })}
       </div>
       {errors.category && (
-        <p className="text-xs text-rose-600">{errors.category}</p>
+        <p className="text-sm text-destructive">{errors.category}</p>
       )}
     </div>
   );
@@ -297,181 +266,114 @@ function Step2({
 }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-text-secondary">
+      <p className="text-sm text-muted-foreground">
         We&apos;ll use this to match your questions with local experts.
       </p>
+
+      {/* State */}
       <div className="space-y-1.5">
         <Label>
-          State <span className="text-rose-600">*</span>
+          State <span className="text-destructive">*</span>
         </Label>
-        <Select
+        <SearchableSelect
+          items={SUPPORTED_STATES.map((s) => ({ value: s.value, label: s.label }))}
           value={form.state}
           onValueChange={(v) => {
-            setField("state", v);
-            setField("district", "");
-            setField("districtCode", "");
-            loadDistricts(v);
+            setField("state", v)
+            setField("district", "")
+            setField("districtCode", "")
+            loadDistricts(v)
           }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Choose state" />
-          </SelectTrigger>
-          <SelectContent>
-            {SUPPORTED_STATES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Search state…"
+          disabled={loadingDistricts}
+          loading={loadingDistricts}
+        />
         {errors.state && (
-          <p className="text-xs text-rose-600">{errors.state}</p>
+          <p className="text-sm text-destructive">{errors.state}</p>
         )}
       </div>
+
+      {/* District */}
       <div className="space-y-1.5">
         <Label>
-          District <span className="text-rose-600">*</span>
+          District <span className="text-destructive">*</span>
         </Label>
-        <Select
+        <SearchableSelect
+          items={districts.map((d) => ({ value: d.name, label: d.name }))}
           value={form.district}
           onValueChange={(v) => {
-            const d = districts.find((x) => x.name === v);
-            setField("district", v);
-            setField("districtCode", d?.code ?? "");
-            loadBlocks(d?.code ?? "");
+            const d = districts.find((x) => x.name === v)
+            setField("district", v)
+            setField("districtCode", d?.code ?? "")
+            loadBlocks(d?.code ?? "")
           }}
+          placeholder={
+            !form.state ? "Choose state first" : "Search district…"
+          }
           disabled={!form.state || loadingDistricts}
-        >
-          <SelectTrigger>
-            <SelectValue
-              placeholder={
-                loadingDistricts
-                  ? "Loading districts…"
-                  : !form.state
-                    ? "Choose state first"
-                    : "Choose district"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {districts.map((d) => (
-              <SelectItem key={d.code} value={d.name}>
-                {d.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {loadingDistricts && (
-          <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Loading districts…
-          </p>
-        )}
+          loading={loadingDistricts}
+        />
         {errors.district && (
-          <p className="text-xs text-rose-600">{errors.district}</p>
+          <p className="text-sm text-destructive">{errors.district}</p>
         )}
       </div>
+
+      {/* Block — farmers only */}
       {form.category === "farmer" && (
         <div className="space-y-1.5">
           <Label>
-            Block <span className="text-rose-600">*</span>
+            Block <span className="text-destructive">*</span>
           </Label>
-          <Select
+          <SearchableSelect
+            items={blocks.map((b) => ({ value: b.name, label: b.name }))}
             value={form.block}
             onValueChange={(v) => {
-              const block = blocks.find((b) => b.name === v);
-              setField("block", v);
-              loadVillages(block?.code ?? "");
-              loadKvks(form.districtCode);
+              const block = blocks.find((b) => b.name === v)
+              setField("block", v)
+              loadVillages(block?.code ?? "")
+              loadKvks(form.districtCode)
             }}
+            placeholder={
+              !form.district ? "Choose district first" : "Search block…"
+            }
             disabled={!form.district || loadingBlocks}
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={
-                  loadingBlocks
-                    ? "Loading blocks…"
-                    : !form.district
-                      ? "Choose district first"
-                      : "Choose block"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {blocks.map((b) => (
-                <SelectItem key={b.code} value={b.name}>
-                  {b.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {loadingBlocks && (
-            <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Loading blocks…
-            </p>
-          )}
+            loading={loadingBlocks}
+          />
           {errors.block && (
-            <p className="text-xs text-rose-600">{errors.block}</p>
+            <p className="text-sm text-destructive">{errors.block}</p>
           )}
         </div>
       )}
+
+      {/* Village + KVK — farmers with block selected */}
       {form.category === "farmer" && form.block && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Village</Label>
-            <Select
+            <Label>Village <span className="text-destructive">*</span></Label>
+            <SearchableSelect
+              items={villages.map((v) => ({ value: v.name, label: v.name }))}
               value={form.village}
               onValueChange={(v) => setField("village", v)}
+              placeholder="Search village…"
               disabled={loadingVillages}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    loadingVillages ? "Loading villages…" : "Optional"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {villages.map((v) => (
-                  <SelectItem key={v.code} value={v.name}>
-                    {v.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {loadingVillages && (
-              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading villages…
-              </p>
+              loading={loadingVillages}
+            />
+            {errors.village && (
+              <p className="text-sm text-destructive">{errors.village}</p>
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Nearest KVK</Label>
-            <Select
+            <Label>Nearest KVK <span className="text-destructive">*</span></Label>
+            <SearchableSelect
+              items={kvks.map((k) => ({ value: k.name, label: k.name }))}
               value={form.kvk}
               onValueChange={(v) => setField("kvk", v)}
+              placeholder="Search KVK…"
               disabled={loadingKvks}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={loadingKvks ? "Loading KVKs…" : "Optional"}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {kvks.map((k) => (
-                  <SelectItem key={k.code} value={k.name}>
-                    {k.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {loadingKvks && (
-              <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading KVKs…
-              </p>
+              loading={loadingKvks}
+            />
+            {errors.kvk && (
+              <p className="text-sm text-destructive">{errors.kvk}</p>
             )}
           </div>
         </div>
@@ -485,7 +387,12 @@ function Step3({
   errors,
   usernameStatus,
   usernameSuggestions,
+  organizationDistricts,
+  loadingOrganizationDistricts,
+  loadOrganizationDistricts,
   setField,
+  cropPickerOpen,
+  setCropPickerOpen,
 }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
@@ -508,22 +415,32 @@ function Step3({
           <Label>
             Username <span className="text-rose-600">*</span>
           </Label>
-          <Input
-            value={form.username}
-            onChange={(e) =>
-              setField(
-                "username",
-                e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase(),
-              )
-            }
-            maxLength={20}
-            placeholder="e.g. ram_kr"
-          />
+          <div className="relative">
+            <Input
+              value={form.username}
+              onChange={(e) =>
+                setField(
+                  "username",
+                  e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase(),
+                )
+              }
+              maxLength={20}
+              placeholder="e.g. ram_kr"
+              className={cn(
+                "pr-8",
+                usernameStatus === "available" && "border-emerald-400 bg-emerald-50/50",
+              )}
+            />
+            {usernameStatus === "available" && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
+                <svg className="h-4 w-4" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            )}
+          </div>
           {errors.username && (
             <p className="text-xs text-rose-600">{errors.username}</p>
-          )}
-          {usernameStatus === "available" && (
-            <p className="text-xs text-emerald-700">✓ Available</p>
           )}
           {usernameStatus === "taken" && (
             <div className="space-y-1">
@@ -597,37 +514,102 @@ function Step3({
             />
             {errors.farmSize && <p className="text-xs text-rose-600">{errors.farmSize}</p>}
           </div>
-          <div className="space-y-1.5">
-            <Label>
-              Primary crops <span className="text-rose-600">*</span>
-            </Label>
-            <div className="flex flex-wrap gap-1.5">
-              {CROP_OPTIONS.map((c) => {
-                const selected = form.cropType.includes(c.value);
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>
+                Primary crops <span className="text-rose-600">*</span>
+              </Label>
+              {form.cropType.length > 0 && (
+                <span className="text-xs text-emerald-600 font-medium">
+                  {form.cropType.length} selected
+                </span>
+              )}
+            </div>
+
+            {/* Always-visible grid of 10 crop images */}
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {CROPS.slice(0, 10).map((crop) => {
+                const selected = form.cropType.includes(crop)
                 return (
                   <button
-                    key={c.value}
+                    key={crop}
                     type="button"
                     onClick={() =>
                       setField(
                         "cropType",
                         selected
-                          ? form.cropType.filter((x) => x !== c.value)
-                          : [...form.cropType, c.value],
+                          ? form.cropType.filter((x) => x !== crop)
+                          : [...form.cropType, crop],
                       )
                     }
                     className={cn(
-                      "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                      "relative flex flex-col items-center gap-1 rounded-lg border-2 p-1.5 transition-all",
                       selected
-                        ? "border-emerald-500 bg-emerald-500 text-white"
-                        : "border-border-subtle text-text-secondary hover:border-emerald-300",
+                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                        : "border-transparent hover:border-emerald-200",
                     )}
+                    aria-pressed={selected}
                   >
-                    {c.label}
+                    <div className="relative h-14 w-14 overflow-hidden rounded-full">
+                      <CropImage
+                        name={crop}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                      {selected && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/20">
+                          <CheckCircle2 className="h-5 w-5 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <span className={cn(
+                      "line-clamp-2 text-center text-[10px] leading-tight",
+                      selected ? "font-semibold text-emerald-700 dark:text-emerald-300" : "text-muted-foreground",
+                    )}>
+                      {crop}
+                    </span>
                   </button>
-                );
+                )
               })}
             </div>
+
+            {/* Selected crops summary + modal trigger */}
+            {form.cropType.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {form.cropType.map((c) => (
+                  <span
+                    key={c}
+                    className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                  >
+                    {c}
+                    <button
+                      type="button"
+                      onClick={() => setField("cropType", form.cropType.filter((x) => x !== c))}
+                      className="ml-0.5 leading-none hover:text-rose-500"
+                      aria-label={`Remove ${c}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* See all crops */}
+            <button
+              type="button"
+              onClick={() => setCropPickerOpen(true)}
+              className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
+            >
+              See all {CROPS.length} crops
+            </button>
+
+            <CropPickerModal
+              open={cropPickerOpen}
+              onOpenChange={setCropPickerOpen}
+              selected={form.cropType}
+              onSelectionChange={(crops) => setField("cropType", crops)}
+            />
+
             {errors.cropType && (
               <p className="text-xs text-rose-600">{errors.cropType}</p>
             )}
@@ -796,7 +778,12 @@ function Step3({
               </Label>
               <Select
                 value={form.organizationState}
-                onValueChange={(v) => setField("organizationState", v)}
+                onValueChange={(v) => {
+                  setField("organizationState", v)
+                  setField("organizationDistrict", "")
+                  setField("organizationDistrictCode", "")
+                  loadOrganizationDistricts(v)
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Choose state" />
@@ -819,12 +806,19 @@ function Step3({
               <Label>
                 District <span className="text-rose-600">*</span>
               </Label>
-              <Input
+              <SearchableSelect
+                items={organizationDistricts.map((d) => ({ value: d.name, label: d.name }))}
                 value={form.organizationDistrict}
-                onChange={(e) =>
-                  setField("organizationDistrict", e.target.value)
+                onValueChange={(v) => {
+                  const d = organizationDistricts.find((x) => x.name === v)
+                  setField("organizationDistrict", v)
+                  setField("organizationDistrictCode", d?.code ?? "")
+                }}
+                placeholder={
+                  !form.organizationState ? "Choose state first" : "Search district…"
                 }
-                placeholder="District name"
+                disabled={!form.organizationState || loadingOrganizationDistricts}
+                loading={loadingOrganizationDistricts}
               />
               {errors.organizationDistrict && (
                 <p className="text-xs text-rose-600">
@@ -871,13 +865,17 @@ function Step3({
   );
 }
 
-function Step4({ form, errors, setField }: WizardFormStateProps) {
+function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) {
   return (
-    <div className="space-y-4">
-      <div className="space-y-1.5">
-        <Label>
-          Preferred language <span className="text-rose-600">*</span>
-        </Label>
+    <div className="space-y-2 sm:space-y-3">
+      {/* ── Language card ── */}
+      <div className="rounded-xl border border-border bg-surface p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300">
+            <Languages className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-foreground">Preferred language</p>
+        </div>
         <Select
           value={form.languagePreference}
           onValueChange={(v) => setField("languagePreference", v)}
@@ -894,38 +892,97 @@ function Step4({ form, errors, setField }: WizardFormStateProps) {
           </SelectContent>
         </Select>
         {errors.languagePreference && (
-          <p className="text-xs text-rose-600">{errors.languagePreference}</p>
+          <p className="mt-1.5 text-[11px] sm:text-xs text-rose-600">{errors.languagePreference}</p>
         )}
       </div>
-      <label className="flex items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-sm text-foreground">
-        <input
-          type="checkbox"
-          className="mt-0.5 h-4 w-4 accent-emerald-500"
-          checked={form.consentGiven}
-          onChange={(e) => setField("consentGiven", e.target.checked)}
-        />
-        <span>
-          I have read and agree to the Terms of Service and Privacy Policy. I
-          agree that the information I provide will be used to answer my
-          agriculture questions and improve services, and I understand my mobile
-          number will receive SMS notifications.
-        </span>
-      </label>
-      {errors.consentGiven && (
-        <p className="text-xs text-rose-600">{errors.consentGiven}</p>
-      )}
-      <div className="rounded-lg border border-border-subtle bg-surface/50 p-4 text-xs text-text-secondary">
-        <p className="font-semibold text-foreground">What happens next?</p>
-        <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
-          <li>
-            Your account will go through a quick verification (usually within 24
-            hours).
-          </li>
-          <li>
-            Once verified you can ask questions, earn rewards, and access expert
-            answers.
-          </li>
-          <li>You&apos;ll get a notification when verification completes.</li>
+
+      {/* ── Consent card ── */}
+      <div
+        className={cn(
+          "rounded-xl border p-3 sm:p-4 transition-colors",
+          form.consentGiven
+            ? "border-emerald-300 bg-emerald-50/40"
+            : "border-border bg-surface",
+        )}
+      >
+        <div className="flex items-start gap-3">
+          {/* Custom checkbox */}
+          <button
+            type="button"
+            onClick={() => setField("consentGiven", !form.consentGiven)}
+            className={cn(
+              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all",
+              form.consentGiven
+                ? "border-emerald-500 bg-emerald-500"
+                : "border-border-subtle bg-surface hover:border-emerald-400",
+            )}
+          >
+            {form.consentGiven && (
+              <Check className="h-3 w-3 text-white" />
+            )}
+          </button>
+
+          <div className="flex-1 space-y-1.5 sm:space-y-2">
+            <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">
+              I have read and agree to the{" "}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setLegalModal("terms") }}
+                className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
+              >
+                Terms of Service
+              </button>{" "}
+              and{" "}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setLegalModal("privacy") }}
+                className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
+              >
+                Privacy Policy
+              </button>
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              I agree that the information I provide will be used to answer my
+              agriculture questions and improve services, and I understand my
+              mobile number will receive SMS notifications.
+            </p>
+          </div>
+        </div>
+        {errors.consentGiven && (
+          <p className="mt-1.5 text-[11px] sm:text-xs text-rose-600">{errors.consentGiven}</p>
+        )}
+      </div>
+
+      {/* ── What happens next card ── */}
+      <div className="rounded-xl border border-border bg-surface p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+            <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-foreground">What happens next?</p>
+        </div>
+        <ul className="space-y-2 sm:space-y-2.5">
+          {[
+            {
+              icon: <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />,
+              text: "Your account will go through a quick verification (usually within 24 hours).",
+            },
+            {
+              icon: <Gift className="h-3 w-3 sm:h-3.5 sm:w-3.5" />,
+              text: "Once verified you can ask questions, earn rewards, and access expert answers.",
+            },
+            {
+              icon: <Bell className="h-3 w-3 sm:h-3.5 sm:w-3.5" />,
+              text: "You&apos;ll get a notification when verification completes.",
+            },
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500 dark:bg-blue-950 dark:text-blue-400">
+                {item.icon}
+              </span>
+              <span className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{item.text}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>
@@ -934,38 +991,43 @@ function Step4({ form, errors, setField }: WizardFormStateProps) {
 
 function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 }) {
   return (
-    <div className="mb-5 flex items-center justify-center gap-1.5 sm:gap-2">
+    <div className="relative flex items-start justify-center px-2">
+      {/* Full-width track behind everything */}
+      <div className="absolute top-3 left-4 right-4 h-0.5 bg-border" />
+      <div
+        className="absolute top-3 left-4 h-0.5 bg-emerald-400 transition-all"
+        style={{
+          width: `calc(${((step - 1) / (STEP_KEYS.length - 1)) * 100}% - 1.5rem)`,
+        }}
+      />
       {STEP_KEYS.map((label, idx) => {
         const n = idx + 1;
         const isDone = n < step;
         const isActive = n === step;
         return (
-          <div key={label} className="flex items-center gap-1.5 sm:gap-2">
-            <div className="flex flex-col items-center">
-              <div
-                className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8",
-                  isDone || isActive
-                    ? "bg-emerald-500 text-white"
+          <div key={label} className="relative z-10 flex flex-1 flex-col items-center">
+            <div
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ring-2 ring-transparent",
+                isDone
+                  ? "bg-emerald-500 text-white ring-emerald-100 dark:ring-emerald-950"
+                  : isActive
+                    ? "bg-emerald-600 text-white ring-emerald-200 dark:ring-emerald-800"
                     : "bg-muted text-muted-foreground",
-                )}
-              >
-                {isDone ? <CheckCircle2 className="h-4 w-4" /> : n}
-              </div>
-              <span
-                className={cn(
-                  "mt-1 hidden max-w-[80px] text-center text-[10px] leading-tight sm:block",
-                  isActive
-                    ? "font-semibold text-foreground"
-                    : "text-text-tertiary",
-                )}
-              >
-                {label}
-              </span>
+              )}
+            >
+              {isDone ? <CheckCircle2 className="h-4 w-4" /> : n}
             </div>
-            {idx < STEP_KEYS.length - 1 && (
-              <div className="mb-4 sm:mb-5 h-px w-4 bg-border-subtle sm:w-6" />
-            )}
+            <span
+              className={cn(
+                "mt-1.5 whitespace-nowrap text-[11px] leading-tight hidden sm:block text-center",
+                isActive
+                  ? "font-semibold text-foreground"
+                  : "text-muted-foreground",
+              )}
+            >
+              {label}
+            </span>
           </div>
         );
       })}
@@ -991,6 +1053,9 @@ export function CompleteProfileWizard({
   const { login, logout } = useAuth();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [cropPickerOpen, setCropPickerOpen] = useState(false);
+  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
+  const directionRef = useRef<1 | -1>(1);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<WizardFormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1004,6 +1069,8 @@ export function CompleteProfileWizard({
   const [blocks, setBlocks] = useState<LgdSubDistrict[]>([]);
   const [villages, setVillages] = useState<LgdVillage[]>([]);
   const [kvks, setKvks] = useState<LgdKvk[]>([]);
+  const [organizationDistricts, setOrganizationDistricts] = useState<LgdDistrict[]>([]);
+  const [loadingOrganizationDistricts, setLoadingOrganizationDistricts] = useState(false);
 
   // Loading flags for cascading LGD lookups — used by Step2 to disable
   // dependent dropdowns and render an inline spinner while data is in-flight.
@@ -1069,8 +1136,11 @@ export function CompleteProfileWizard({
     if (s === 2) {
       if (!form.state) e.state = "Please choose a state";
       if (!form.district) e.district = "Please choose a district";
-      if (form.category === "farmer" && !form.block)
-        e.block = "Block is required for farmers";
+      if (form.category === "farmer") {
+        if (!form.block) e.block = "Block is required for farmers";
+        if (!form.village) e.village = "Village is required for farmers";
+        if (!form.kvk) e.kvk = "KVK is required for farmers";
+      }
     }
     if (s === 3) {
       if (!form.name.trim() || form.name.trim().length < 2)
@@ -1082,8 +1152,8 @@ export function CompleteProfileWizard({
         e.username =
           "That username is taken. Pick or click a suggestion below.";
       if (!form.gender) e.gender = "Please choose a gender";
-      if (form.age && (Number(form.age) < 1 || Number(form.age) > 120))
-        e.age = "Enter a valid age";
+      if (form.age && (Number(form.age) < 16 || Number(form.age) > 100))
+        e.age = "Age must be between 16 and 100";
       if (form.category === "farmer") {
         if (!form.farmSize.trim()) e.farmSize = "Farm size is required";
         if (form.cropType.length === 0) e.cropType = "Pick at least one crop";
@@ -1133,10 +1203,14 @@ export function CompleteProfileWizard({
   }
 
   function next() {
-    if (validateStep(step)) setStep((s) => Math.min(4, s + 1) as 1 | 2 | 3 | 4);
+    if (validateStep(step)) {
+      directionRef.current = 1;
+      setStep((s) => Math.min(4, s + 1) as 1 | 2 | 3 | 4);
+    }
   }
   function back() {
     if (step > 1) {
+      directionRef.current = -1;
       setStep((s) => Math.max(1, s - 1) as 1 | 2 | 3 | 4);
     } else if (onBack) {
       onBack();
@@ -1165,6 +1239,26 @@ export function CompleteProfileWizard({
       console.error("[loadDistricts] Failed to fetch districts:", err);
     } finally {
       setLoadingDistricts(false);
+    }
+  }
+
+  async function loadOrganizationDistricts(stateName: string) {
+    setOrganizationDistricts([]);
+    if (!stateName) return;
+    setLoadingOrganizationDistricts(true);
+    try {
+      const res = await lgdApi.getStates();
+      const target = stateName.trim().toLowerCase();
+      const match = res.states.find(
+        (s) => (s.name ?? "").trim().toLowerCase() === target,
+      );
+      if (!match) return;
+      const d = await lgdApi.getDistricts(match.code);
+      setOrganizationDistricts(d.districts);
+    } catch {
+      /* ignore */
+    } finally {
+      setLoadingOrganizationDistricts(false);
     }
   }
 
@@ -1296,48 +1390,78 @@ export function CompleteProfileWizard({
     loadBlocks,
     loadVillages,
     loadKvks,
+    organizationDistricts,
+    loadingOrganizationDistricts,
+    loadOrganizationDistricts,
+    cropPickerOpen,
+    setCropPickerOpen,
+    setLegalModal,
   };
 
   return (
-    <div className="space-y-1">
-      <Button
-        onClick={handleLogout}
-        className="absolute right-0 top-0 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs m-2 font-medium text-text-white hover:bg-red-700 hover:text-foreground transition-colors bg-red-500"
-      >
-        <LogOut className="h-3.5 w-3.5 text-white" />
-        Logout
-      </Button>
-      <div className="mb-1 flex flex-col items-center gap-0.5">
-        <BrandLogo className="h-8 w-8" />
-        <h1 className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
-          AnnaDatha
-        </h1>
-        <p className="text-xs text-text-secondary">Complete your profile</p>
+    <div className="flex h-[80vh] w-full flex-col">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 sm:px-6 pt-4 pb-3 sm:pt-5 sm:pb-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <BrandLogo className="h-9 w-9" />
+          <div>
+            <h1 className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">
+              AnnaDatha
+            </h1>
+            <p className="mt-0.5 text-xs text-muted-foreground">Complete your profile</p>
+          </div>
+        </div>
+        <Button
+          onClick={handleLogout}
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Logout
+        </Button>
       </div>
 
-      <StepIndicator step={step} />
+      {/* ── Step indicator ── */}
+      <div className="px-4 sm:px-6 pt-4 pb-2 sm:pt-5 shrink-0">
+        <StepIndicator step={step} />
+      </div>
 
-      {/* <h2 className="mb-3 text-base font-bold text-foreground sm:text-lg">
-        Step {step}: {STEP_KEYS[step - 1]}
-      </h2> */}
+      {/* ── Scrollable form area ── */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 min-h-0">
+        <AnimatePresence mode="wait" custom={directionRef.current}>
+          <motion.div
+            key={step}
+            custom={directionRef.current}
+            variants={{
+              enter: (dir: number) => ({ x: dir > 0 ? 56 : -56, opacity: 0 }),
+              center: { x: 0, opacity: 1 },
+              exit: (dir: number) => ({ x: dir > 0 ? -56 : 56, opacity: 0 }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="h-full"
+          >
+            {step === 1 && <Step1 {...stepProps} />}
+            {step === 2 && <Step2 {...stepProps} />}
+            {step === 3 && <Step3 {...stepProps} />}
+            {step === 4 && <Step4 {...stepProps} />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      <div className="mx-auto w-full w-2xl">
-        <h2 className="mb-3 text-base font-bold text-foreground sm:text-lg">
-          Step {step}: {STEP_KEYS[step - 1]}
-        </h2>
-
-        {step === 1 && <Step1 {...stepProps} />}
-        {step === 2 && <Step2 {...stepProps} />}
-        {step === 3 && <Step3 {...stepProps} />}
-        {step === 4 && <Step4 {...stepProps} />}
-
-        <div className="mt-5 flex items-center justify-between gap-2">
+      {/* ── Sticky footer ── */}
+      <div className="border-t border-border bg-surface px-4 sm:px-6 py-3 sm:py-4 shrink-0">
+        <div className="flex items-center justify-between gap-3">
           {onBack || step > 1 ? (
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={back}
               disabled={loading}
-              className="gap-1.5"
+              size="sm"
+              className="gap-1.5 text-xs sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -1348,27 +1472,42 @@ export function CompleteProfileWizard({
           {step < TOTAL_STEPS ? (
             <Button
               onClick={next}
-              className="bg-emerald-500 hover:bg-emerald-600 gap-1.5"
+              size="sm"
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
             >
-              Next
-              <ArrowRight className="h-4 w-4" />
+              <span>Continue</span>
+              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           ) : (
             <Button
               onClick={submit}
               disabled={loading}
-              className="bg-emerald-500 hover:bg-emerald-600 gap-1.5"
+              size="sm"
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
               ) : (
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               )}
-              Submit registration
+              <span>Submit registration</span>
             </Button>
           )}
         </div>
       </div>
+
+      {/* ── Modals ── */}
+      <CropPickerModal
+        open={cropPickerOpen}
+        onOpenChange={setCropPickerOpen}
+        selected={form.cropType}
+        onSelectionChange={(crops) => setField("cropType", crops)}
+      />
+      <LegalDocumentModal
+        type={legalModal ?? "terms"}
+        open={legalModal !== null}
+        onOpenChange={(open) => !open && setLegalModal(null)}
+      />
     </div>
   );
 }
