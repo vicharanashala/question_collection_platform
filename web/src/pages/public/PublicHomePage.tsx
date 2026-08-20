@@ -131,8 +131,13 @@ export function PublicHomePage() {
   // The modal itself swallows backdrop / ESC / X-close attempts so the
   // user is forced to either complete the wizard or stay on this page.
   const locationState = location.state as { mobileNumber?: string } | null
-  const postOtpMobile = locationState?.mobileNumber?.replace(/\D/g, '').slice(-10) || null
-  const showProfileModal = !!postOtpMobile
+  // Read mobileNumber from router state. After successful registration
+  // `locationState` is wiped by the login page, so the modal stays closed.
+  // Only show the modal for genuinely new users (not yet authenticated).
+  const postOtpMobile = locationState?.mobileNumber
+    ? locationState.mobileNumber.replace(/\D/g, '').slice(-10)
+    : null
+  const showProfileModal = !!postOtpMobile && !user
 
   useEffect(() => {
     let alive = true
@@ -395,7 +400,7 @@ onClick={() => navigate('/home/ask')}
       {showProfileModal && (
         <CompleteProfileModal
           open={showProfileModal}
-          mobileNumber={postOtpMobile ?? user?.mobileNumber ?? ''}
+          mobileNumber={postOtpMobile ?? ''}
         />
       )}
     </div>

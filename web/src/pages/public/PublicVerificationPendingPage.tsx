@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 /**
  * Shown immediately after a public user successfully registers.
  * The backend sets `verificationStatus = 'pending'` for new users.
- * Pressing "Continue" calls /auth/me; if the curator has already verified
+ * Pressing "Continue" calls /auth/me; if the admin has already verified
  * the user we route them into the public app, otherwise we let them in
  * with the still-pending status (questions can still be submitted).
  */
@@ -51,7 +51,7 @@ export function PublicVerificationPendingPage() {
         </div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">You're almost there!</h1>
         <p className="mt-2 text-xs sm:text-xs sm:text-sm text-text-secondary">
-          Your account has been created. A curator will review your details and verify you within 24–48 hours.
+          Your account has been created. An admin will review your details and verify you within 24–48 hours.
           You can already explore the app and submit a question.
         </p>
 
@@ -67,7 +67,7 @@ export function PublicVerificationPendingPage() {
             <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
             <div>
               <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Verification pending</p>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">A curator will review your profile soon.</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">An admin will review your profile soon.</p>
             </div>
           </div>
         </div>
