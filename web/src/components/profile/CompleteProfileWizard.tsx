@@ -197,6 +197,14 @@ interface WizardFormStateProps {
   cropPickerOpen: boolean;
   setCropPickerOpen: (open: boolean) => void;
   setLegalModal: (type: "terms" | "privacy" | null) => void;
+  districtFreeText: boolean;
+  setDistrictFreeText: (v: boolean) => void;
+  blockFreeText: boolean;
+  setBlockFreeText: (v: boolean) => void;
+  villageFreeText: boolean;
+  setVillageFreeText: (v: boolean) => void;
+  kvkFreeText: boolean;
+  setKvkFreeText: (v: boolean) => void;
 }
 
 function Step1({ form, errors, setField }: WizardFormStateProps) {
@@ -263,6 +271,14 @@ function Step2({
   loadBlocks,
   loadVillages,
   loadKvks,
+  districtFreeText,
+  setDistrictFreeText,
+  blockFreeText,
+  setBlockFreeText,
+  villageFreeText,
+  setVillageFreeText,
+  kvkFreeText,
+  setKvkFreeText,
 }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
@@ -312,7 +328,21 @@ function Step2({
           }
           disabled={!form.state || loadingDistricts}
           loading={loadingDistricts}
+          allowFreeText={!districtFreeText && districts.length === 0 && !loadingDistricts && !!form.state}
+          onFreeTextEntry={() => {
+            setDistrictFreeText(true)
+            setField("district", "")
+          }}
         />
+        {/* Free-text input when backend returned no data */}
+        {districtFreeText && (
+          <Input
+            value={form.district}
+            onChange={(e) => setField("district", e.target.value)}
+            placeholder="Type district name"
+            className="mt-1.5"
+          />
+        )}
         {errors.district && (
           <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.district}</p>
         )}
@@ -338,7 +368,21 @@ function Step2({
             }
             disabled={!form.district || loadingBlocks}
             loading={loadingBlocks}
+            allowFreeText={!blockFreeText && blocks.length === 0 && !loadingBlocks && !!form.district}
+            onFreeTextEntry={() => {
+              setBlockFreeText(true)
+              setField("block", "")
+            }}
           />
+          {/* Free-text input when backend returned no data */}
+          {blockFreeText && (
+            <Input
+              value={form.block}
+              onChange={(e) => setField("block", e.target.value)}
+              placeholder="Type block name"
+              className="mt-1.5"
+            />
+          )}
           {errors.block && (
             <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.block}</p>
           )}
@@ -357,7 +401,21 @@ function Step2({
               placeholder="Search village…"
               disabled={loadingVillages}
               loading={loadingVillages}
+              allowFreeText={!villageFreeText && villages.length === 0 && !loadingVillages && !!form.block}
+              onFreeTextEntry={() => {
+                setVillageFreeText(true)
+                setField("village", "")
+              }}
             />
+            {/* Free-text input when backend returned no data */}
+            {villageFreeText && (
+              <Input
+                value={form.village}
+                onChange={(e) => setField("village", e.target.value)}
+                placeholder="Type village name"
+                className="mt-1.5"
+              />
+            )}
             {errors.village && (
               <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.village}</p>
             )}
@@ -371,7 +429,21 @@ function Step2({
               placeholder="Search KVK…"
               disabled={loadingKvks}
               loading={loadingKvks}
+              allowFreeText={!kvkFreeText && kvks.length === 0 && !loadingKvks && !!form.districtCode}
+              onFreeTextEntry={() => {
+                setKvkFreeText(true)
+                setField("kvk", "")
+              }}
             />
+            {/* Free-text input when backend returned no data */}
+            {kvkFreeText && (
+              <Input
+                value={form.kvk}
+                onChange={(e) => setField("kvk", e.target.value)}
+                placeholder="Type KVK name"
+                className="mt-1.5"
+              />
+            )}
             {errors.kvk && (
               <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.kvk}</p>
             )}
@@ -528,7 +600,7 @@ function Step3({
 
             {/* Always-visible grid of 10 crop images */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {CROPS.slice(0, 10).map((crop) => {
+              {CROPS.slice(0, 9).map((crop) => {
                 const selected = form.cropType.includes(crop)
                 return (
                   <button
@@ -1079,6 +1151,12 @@ export function CompleteProfileWizard({
   const [loadingVillages, setLoadingVillages] = useState(false);
   const [loadingKvks, setLoadingKvks] = useState(false);
 
+  // Free-text mode — true when LGD backend returned no data for that field
+  const [districtFreeText, setDistrictFreeText] = useState(false);
+  const [blockFreeText, setBlockFreeText] = useState(false);
+  const [villageFreeText, setVillageFreeText] = useState(false);
+  const [kvkFreeText, setKvkFreeText] = useState(false);
+
   useEffect(() => {
     const u = form.username.trim();
     if (u.length < 3) {
@@ -1396,6 +1474,14 @@ export function CompleteProfileWizard({
     cropPickerOpen,
     setCropPickerOpen,
     setLegalModal,
+    districtFreeText,
+    setDistrictFreeText,
+    blockFreeText,
+    setBlockFreeText,
+    villageFreeText,
+    setVillageFreeText,
+    kvkFreeText,
+    setKvkFreeText,
   };
 
   return (

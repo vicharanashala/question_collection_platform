@@ -17,6 +17,10 @@ interface SearchableSelectProps {
   loading?: boolean
   className?: string
   emptyMessage?: string
+  /** When true, shows an "Enter manually…" option when the dropdown is open and items are empty (post-load). */
+  allowFreeText?: boolean
+  /** Called when user clicks "Enter manually…" to opt into free-text entry. */
+  onFreeTextEntry?: () => void
 }
 
 export function SearchableSelect({
@@ -28,6 +32,8 @@ export function SearchableSelect({
   loading,
   className,
   emptyMessage = 'No results found.',
+  allowFreeText,
+  onFreeTextEntry,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
@@ -113,6 +119,21 @@ export function SearchableSelect({
               className="h-9 flex-1 bg-transparent text-xs sm:text-xs sm:text-sm text-foreground placeholder:text-text-tertiary outline-none"
             />
           </div>
+
+          {/* Free-text option — shown only when items are empty (backend returned nothing) and allowFreeText is set */}
+          {allowFreeText && items.length === 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                onFreeTextEntry?.()
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-emerald-600 hover:bg-emerald-50 border-t border-border-subtle"
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full border border-emerald-400 text-[10px] font-bold text-emerald-600">+</span>
+              Enter manually…
+            </button>
+          )}
 
           {/* Command list */}
           <CommandPrimitive

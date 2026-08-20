@@ -151,15 +151,17 @@ export function PublicHomePage() {
       .finally(() => { if (alive) setLoading(false) })
 
     // Try to read the configured edit-window length so the tip row matches
-    // what staff have set. The endpoint is admin-scoped, so a public user
-    // gets a 403 and we fall back to "closed" (matches mobile).
-    adminApi.getConfig()
-      .then((res) => {
-        if (!alive) return
-        const found = (res.items ?? []).find((c) => c.key === 'question_edit_window_seconds')
-        setEditWindowSec(found?.value ?? 0)
-      })
-      .catch(() => { /* public users can't read admin config -- default 0 */ })
+    // what staff have set. The endpoint is admin-scoped — only attempt it
+    // for admin/finance roles so the 403 never occurs for regular users.
+    if (user && ['admin', 'super_admin', 'finance'].includes(user.role)) {
+      adminApi.getConfig()
+        .then((res) => {
+          if (!alive) return
+          const found = (res.items ?? []).find((c: any) => c.key === 'question_edit_window_seconds')
+          setEditWindowSec(found?.value ?? 0)
+        })
+        .catch((e) => console.warn(getErrorMessage(e, 'admin config')))
+    }
 
     return () => { alive = false }
   }, [])
