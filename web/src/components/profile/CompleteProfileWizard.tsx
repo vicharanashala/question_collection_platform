@@ -17,7 +17,6 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { authApi, lgdApi, getErrorMessage } from "@/api/client";
 import type {
   LgdDistrict,
@@ -73,6 +72,7 @@ import {
 } from "@/constants/public";
 import type { UserCategory } from "@/types";
 import { LogOut } from "lucide-react";
+import { SignOutDialog } from "@/components/SignOutDialog";
 
 const TOTAL_STEPS = 4;
 const STEP_KEYS = [
@@ -1121,8 +1121,7 @@ export function CompleteProfileWizard({
   mobileNumber,
   onBack,
 }: CompleteProfileWizardProps) {
-  const navigate = useNavigate();
-  const { login, logout } = useAuth();
+  const { login } = useAuth();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
@@ -1131,6 +1130,7 @@ export function CompleteProfileWizard({
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<WizardFormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<
     "idle" | "checking" | "available" | "taken"
   >("idle");
@@ -1202,8 +1202,7 @@ export function CompleteProfileWizard({
   }
 
   function handleLogout() {
-    logout();
-    navigate("/login", {replace: true});
+    setLogoutConfirmOpen(true)
   }
 
   function validateStep(s: 1 | 2 | 3 | 4): boolean {
@@ -1440,7 +1439,7 @@ export function CompleteProfileWizard({
       }
       const res = await authApi.register(payload);
       login(res.tokens, res.user);
-      navigate("/home/verification-pending", { replace: true });
+      window.location.href = '/home';
     } catch (err) {
       toast.error(
         getErrorMessage(err, "Registration failed. Please try again."),
@@ -1593,6 +1592,10 @@ export function CompleteProfileWizard({
         type={legalModal ?? "terms"}
         open={legalModal !== null}
         onOpenChange={(open) => !open && setLegalModal(null)}
+      />
+      <SignOutDialog
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
       />
     </div>
   );
