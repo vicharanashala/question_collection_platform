@@ -15,7 +15,7 @@ export function AppLayout() {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
+        <Header />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>

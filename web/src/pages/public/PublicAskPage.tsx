@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, MapPin, Lock, Info, Mic } from 'lucide-react'
 import { toast } from 'sonner'
-import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, CROPS } from '@/constants/public'
+import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
 import { MicButton } from '@/components/MicButton'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
 import { AIValidationBanner } from '@/components/AIValidationBanner'

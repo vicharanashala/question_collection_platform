@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, ChevronRight, Languages } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Languages } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -24,7 +24,7 @@ export function Header({}: HeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
-  const { nativeName } = useLanguage()
+  useLanguage()
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Title map keyed by route — translated via t() (i18next) so it re-renders
@@ -36,7 +36,7 @@ export function Header({}: HeaderProps) {
     '/reviews': t('pageTitle.reviewQueue'),
     '/profile': t('pageTitle.profile'),
   }
-  const title = titles[pathname] ?? t('pageTitle.questionPlatform')
+  titles[pathname]
   const initials = user ? getInitials(user.name || '', user.mobileNumber) : '?'
 
   // Close dropdown on outside click

@@ -21,7 +21,7 @@ export function PublicHeader() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
-  const { nativeName } = useLanguage()
+  useLanguage()
   const [unreadCount, setUnreadCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -38,7 +38,7 @@ export function PublicHeader() {
     '/home/notifications': t('notifications.title'),
     '/home/leaderboard': t('leaderboard.title'),
   }
-  const title = titles[pathname] ?? 'AnnaDatha'
+  titles[pathname]
   const initials = user ? getInitials(user.name || '', user.mobileNumber) : '?'
 
   useEffect(() => {
