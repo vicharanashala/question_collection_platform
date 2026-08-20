@@ -289,8 +289,7 @@ export function PublicAskPage() {
               )}
               {duplicate.matchedUserName && <p className="mt-3 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('question.duplicate.answeredBy', { name: duplicate.matchedUserName })}</p>}
             </div>
-            <div className="mt-5 flex gap-3">
-              <Button variant="outline" onClick={() => { setDuplicate(null); resetAll() }}>{t('question.duplicate.askAnyway')}</Button>
+            <div className="mt-5 flex justify-end">
               <Button onClick={() => navigate('/home')}>{t('question.duplicate.backHome')}</Button>
             </div>
           </CardContent>
