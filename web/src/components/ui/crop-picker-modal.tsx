@@ -14,8 +14,11 @@ interface CropPickerModalProps {
   /** Currently selected crop names */
   selected: string[]
   onSelectionChange: (crops: string[]) => void
-  /** Max crops allowed (0 = unlimited) */
+  /** Max crops allowed (0 = unlimited). In 'single' mode this is ignored. */
   max?: number
+  /** 'multi' shows Done+count footer; 'single' auto-closes on pick */
+  mode?: 'multi' | 'single'
+  title?: string
 }
 
 export function CropPickerModal({
@@ -24,6 +27,8 @@ export function CropPickerModal({
   selected,
   onSelectionChange,
   max = 0,
+  mode = 'multi',
+  title = 'Select crops',
 }: CropPickerModalProps) {
   const [query, setQuery] = useState('')
   const [showOther, setShowOther] = useState(false)
@@ -44,6 +49,11 @@ export function CropPickerModal({
     if (selected.includes(value)) {
       onSelectionChange(selected.filter((c) => c !== value))
     } else {
+      if (mode === 'single') {
+        onSelectionChange([value])
+        handleClose()
+        return
+      }
       if (max > 0 && selected.length >= max) return
       onSelectionChange([...selected, value])
     }
@@ -71,7 +81,7 @@ export function CropPickerModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="flex max-h-[92dvh] sm:max-h-[85vh] max-w-2xl flex-col p-0 sm:p-0 max-md:bottom-0 max-md:top-auto max-md:translate-y-0 max-md:max-w-none max-md:rounded-b-none max-md:animate-in max-md:fade-in-0 max-md:slide-in-from-bottom-0">
         <DialogHeader className="border-b border-border-subtle px-4 py-3">
-          <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">Select crops</DialogTitle>
+          <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">{title}</DialogTitle>
         </DialogHeader>
 
         {/* Search */}
@@ -188,8 +198,8 @@ export function CropPickerModal({
           </div>
         )}
 
-        {/* Footer with count + done */}
-        {selected.length > 0 && (
+        {/* Footer with count + done — hidden in single mode */}
+        {mode === 'multi' && selected.length > 0 && (
           <div className="sticky bottom-0 border-t border-border-subtle bg-surface px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
