@@ -1,18 +1,32 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { authApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { Loader2, ArrowLeft, CheckCircle, Smartphone } from 'lucide-react'
+import {
+  Loader2,
+  ArrowLeft,
+  CheckCircle,
+  Smartphone,
+  MicVocal,
+  Languages,
+  Wallet,
+  BookOpen,
+  Sun,
+  Moon,
+} from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
+import { LegalDocumentModal } from '@/components/ui/legal-document-modal'
 import { toast } from 'sonner'
 
 // ─── Resend countdown ──────────────────────────────────────────────────────
 
-const RESEND_COOLDOWN = 30 // seconds
+const RESEND_COOLDOWN = 30
 
 function useCountdown(initial = 0) {
   const [secs, setSecs] = useState(initial)
@@ -46,21 +60,222 @@ function useCountdown(initial = 0) {
   return { secs, active, start, stop }
 }
 
-// ─── Step indicator ────────────────────────────────────────────────────────
+// ─── Decorative orb ────────────────────────────────────────────────────────
 
-function StepDots({ step }: { step: 1 | 2 }) {
+function Orb({ className }: { className?: string }) {
   return (
-    <div className="flex items-center justify-center gap-2">
-      {[1, 2].map((n) => (
-        <div
-          key={n}
-          className={cn(
-            'h-1.5 rounded-full transition-all duration-300',
-            n === step ? 'w-5 bg-primary' : 'bg-text-tertiary/30',
-          )}
+    <div
+      className={cn(
+        'absolute rounded-full bg-[hsl(var(--primary))]/10 blur-3xl pointer-events-none',
+        className,
+      )}
+    />
+  )
+}
+
+// ─── Branding panel features ───────────────────────────────────────────────
+
+const FEATURES = [
+  {
+    icon: MicVocal,
+    heading: 'Voice & Text Questions',
+    body: 'Ask in your own language — Hindi, Tamil, Telugu, and 16 more Indian languages.',
+  },
+  {
+    icon: Wallet,
+    heading: 'Earn Rewards',
+    body: 'Get points for every approved question. Withdraw earnings via UPI or bank.',
+  },
+  {
+    icon: BookOpen,
+    heading: 'Expert Answers',
+    body: 'Curated FAQ knowledge base built by agricultural experts and community moderators.',
+  },
+  {
+    icon: Languages,
+    heading: '19 Indian Languages',
+    body: 'Full support for Assamese, Bengali, Gujarati, Kannada, Malayalam, Marathi, Odia, Punjabi, Tamil, Telugu, and more.',
+  },
+]
+
+// ─── Step 1: Mobile number ─────────────────────────────────────────────────
+
+function StepMobile({
+  mobile,
+  setMobile,
+  loading,
+  onSubmit,
+}: {
+  mobile: string
+  setMobile: (v: string) => void
+  loading: boolean
+  onSubmit: (e: React.FormEvent) => void
+}) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-xs sm:text-sm font-medium text-[hsl(var(--text))]">
+          Mobile Number
+        </label>
+        <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex items-center rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface-variant))] px-3 sm:px-4 text-sm font-semibold text-[hsl(var(--text-secondary))]">
+            +91
+          </div>
+          <Input
+            type="tel"
+            inputMode="tel"
+            placeholder="10-digit number"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+            className="flex-1 text-sm sm:text-base font-medium"
+            maxLength={10}
+            autoComplete="tel"
+          />
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+        {loading ? (
+          <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Sending OTP...</>
+        ) : (
+          'Send OTP'
+        )}
+      </Button>
+
+      <p className="text-center text-[11px] sm:text-xs text-[hsl(var(--text-tertiary))]">
+        A 6-digit code will be sent to your mobile
+      </p>
+    </form>
+  )
+}
+
+// ─── Step 2: OTP ───────────────────────────────────────────────────────────
+
+function StepOtp({
+  mobile,
+  otp,
+  setOtp,
+  loading,
+  countdown,
+  onSubmit,
+  onBack,
+  onResend,
+}: {
+  mobile: string
+  otp: string
+  setOtp: (v: string) => void
+  loading: boolean
+  countdown: ReturnType<typeof useCountdown>
+  onSubmit: (e: React.FormEvent) => void
+  onBack: () => void
+  onResend: () => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Focus input on mount
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, idx: number) => {
+    if (e.key === 'Backspace' && otp[idx] === '' && idx > 0) {
+      // Move focus to previous box when backspacing an empty box
+      const prev = inputRef.current?.parentElement?.children[idx - 1] as HTMLInputElement | undefined
+      prev?.focus()
+    }
+  }
+
+  const digits = otp.padEnd(6, ' ').split('')
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      {/* Mobile badge */}
+      <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface-variant))] px-3 py-2.5">
+        <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />
+        <span className="text-xs font-medium text-[hsl(var(--text))] flex-1">+91 {mobile}</span>
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1 text-[11px] text-[hsl(var(--primary))] hover:underline shrink-0"
+        >
+          <ArrowLeft className="h-3 w-3" /> Change
+        </button>
+      </div>
+
+      {/* OTP boxes */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-[hsl(var(--text))]">
+          One-Time Password
+        </label>
+        <div className="flex gap-1.5 justify-center">
+          {digits.map((d, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => inputRef.current?.focus()}
+              className={cn(
+                'flex h-10 w-9 items-center justify-center rounded-lg border text-lg font-bold font-mono transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-1',
+                d && d !== ' '
+                  ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 text-[hsl(var(--text))]'
+                  : 'border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface))] text-[hsl(var(--text-tertiary))]',
+              )}
+            >
+              {d && d !== ' ' ? d : ''}
+            </button>
+          ))}
+        </div>
+        <input
+          ref={inputRef}
+          type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          name="otp"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          onKeyDown={(e) => {
+            const idx = otp.length
+            handleKeyDown(e as unknown as KeyboardEvent<HTMLInputElement>, idx)
+          }}
+          autoComplete="one-time-code"
+          className="sr-only"
+          maxLength={6}
         />
-      ))}
-    </div>
+        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">
+          Enter the 6-digit code sent to your mobile
+        </p>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full"
+        size="lg"
+        disabled={loading || otp.length < 6}
+      >
+        {loading ? (
+          <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Verifying...</>
+        ) : (
+          <><CheckCircle className="mr-1.5 h-4 w-4" /> Verify & Sign In</>
+        )}
+      </Button>
+
+      <div className="flex items-center justify-center">
+        <button
+          type="button"
+          onClick={onResend}
+          disabled={countdown.active || loading}
+          className={cn(
+            'text-xs sm:text-sm font-medium transition-colors',
+            countdown.active
+              ? 'text-[hsl(var(--text-tertiary))] cursor-not-allowed'
+              : 'text-[hsl(var(--primary))] hover:underline',
+          )}
+        >
+          {countdown.active
+            ? `Resend in ${countdown.secs}s`
+            : "Didn't receive it? Resend"}
+        </button>
+      </div>
+    </form>
   )
 }
 
@@ -69,21 +284,14 @@ function StepDots({ step }: { step: 1 | 2 }) {
 export function LoginPage() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const { theme, toggleTheme } = useTheme()
 
   const [step, setStep] = useState<1 | 2>(1)
   const [mobile, setMobile] = useState('')
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
-  const [_sent, setSent] = useState(false)
   const countdown = useCountdown()
-
-  // Inline registration modal state
-
-
-  const otpRef = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    if (step === 2) otpRef.current?.focus()
-  }, [step])
+  const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | null>(null)
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault()
@@ -94,10 +302,7 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      // Pass `false` (no `client:'web'`) so the backend accepts BOTH staff
-      // and new public users. The verify-otp step routes by role afterwards.
       await authApi.requestOtp(cleaned, false)
-      setSent(true)
       setStep(2)
       countdown.start()
       toast.success('OTP sent to your mobile')
@@ -119,11 +324,6 @@ export function LoginPage() {
     try {
       const res = await authApi.verifyOtp(mobile, cleaned)
 
-      // ── New user ────────────────────────────────────────────────────
-      // Backend returns `{ requiresRegistration, role }` for any user
-      // that doesn't have a name set yet. Navigate to /home where the
-      // CompleteProfileModal will open automatically (via state). Staff
-      // accounts are blocked — the admin creates them server-side.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
           navigate('/home', { state: { mobileNumber: mobile }, replace: true })
@@ -133,7 +333,6 @@ export function LoginPage() {
         return
       }
 
-      // ── Existing user ──────────────────────────────────────────────
       const tokens = res.tokens!
       const user = res.user!
       login(
@@ -141,7 +340,6 @@ export function LoginPage() {
         { ...user, token: tokens.accessToken },
       )
 
-      // Route by role: public users → /home, staff → /dashboard
       if (user.role === 'user') {
         toast.success('Welcome back!')
         navigate('/home', { replace: true })
@@ -179,153 +377,162 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-page dark flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-background">
 
-      {/* Background decoration — uses --primary so it picks up the mint-green glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-48 -top-48 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -left-32 -bottom-32 h-[22rem] w-[22rem] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute left-1/2 top-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        <div className="absolute left-1/2 bottom-0 h-px w-96 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-      </div>
+      {/* ── Theme toggle — fixed top right of the entire page ─────────── */}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        className="fixed top-4 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-lg text-[hsl(var(--text-secondary))] transition-colors hover:bg-[hsl(var(--surface-variant))] hover:text-[hsl(var(--text))]"
+      >
+        {theme === 'light' ? (
+          <Moon className="h-4 w-4" />
+        ) : (
+          <Sun className="h-4 w-4" />
+        )}
+      </button>
 
-      {/* Login card */}
-      <Card className="relative w-full max-w-sm shadow-xl border-border-subtle">
-        <CardHeader className="pb-4 text-center">
-          {/* Brand mark — AnnaDatha logo */}
-          <div className="mx-auto mb-5 h-16 w-16 drop-shadow-[0_4px_12px_rgba(0,98,57,0.35)]">
-            <BrandLogo className="h-16 w-16" />
+      {/* ── Left branding panel ─────────────────────────────────────── */}
+      <div className="hidden lg:flex relative flex-col justify-between shrink-0 w-[46%] max-w-[480px] overflow-hidden bg-[hsl(var(--primary))] px-10 py-12 xl:px-14">
+
+        {/* Top: logo + brand name */}
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-white/15 p-2">
+            <BrandLogo className="h-full w-full" />
           </div>
-          <CardTitle className="text-xl sm:text-2xl font-extrabold tracking-tight text-primary">
-            Login Portal
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-xs sm:text-sm text-text-secondary px-2">
-            Sign in with your mobile number to continue
-          </CardDescription>
-          <div className="mt-4">
-            <StepDots step={step} />
+          <div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight leading-tight">
+              AnnaDatha
+            </h1>
+            <p className="text-white/60 text-sm">Farming Questions Platform</p>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="px-6 pb-6">
-          {step === 1 ? (
-            // ── Step 1: Mobile number ────────────────────────────────────────
-            <form onSubmit={handleSendOtp} className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-xs sm:text-sm font-medium text-text">
-                  Mobile Number
-                </label>
-                <div className="flex gap-2">
-                  <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-xs sm:text-xs sm:text-sm font-semibold text-text-secondary shadow-xs">
-                    +91
-                  </div>
-                  <Input
-                    type="tel"
-                    inputMode="tel"
-                    placeholder="98XXX XXXXX"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    className="flex-1 font-medium tracking-wide"
-                    maxLength={10}
-                    autoComplete="tel"
-                  />
+        {/* Centre: 4 feature bullets, clean and well-spaced */}
+        <div className="flex flex-col justify-center flex-1 py-10">
+          <ul className="space-y-6">
+            {FEATURES.map(({ icon: Icon, heading, body }) => (
+              <li key={heading} className="flex items-start gap-4">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                  <Icon className="h-4 w-4 text-white" />
                 </div>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
-                  We'll send a 6-digit OTP to this number
-                </p>
-              </div>
+                <div>
+                  <p className="text-sm font-semibold text-white leading-tight">{heading}</p>
+                  <p className="mt-0.5 text-xs text-white/55 leading-relaxed">{body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-              <Button type="submit" className="w-full shadow-md" size="lg" disabled={loading}>
-                {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending OTP...</>
-                ) : (
-                  'Continue'
-                )}
-              </Button>
-            </form>
-          ) : (
-            // ── Step 2: OTP ─────────────────────────────────────────────────
-            <form onSubmit={handleVerifyOtp} className="space-y-5">
-              {/* Mobile indicator */}
-              <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-variant/60 px-3 py-2">
-                <Smartphone className="h-4 w-4 text-text-tertiary shrink-0" />
-                <span className="text-xs sm:text-xs sm:text-sm font-medium text-text">+91 {mobile}</span>
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="ml-auto flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline"
-                >
-                  <ArrowLeft className="h-3 w-3" /> Change
-                </button>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-xs sm:text-sm font-medium text-text">
-                  One-Time Password
-                </label>
-                <Input
-                  ref={otpRef}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="● ● ● ● ● ●"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="text-center text-xl sm:text-2xl tracking-[0.4em] font-mono font-bold py-6"
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                />
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary text-center">
-                  Enter the 6-digit code sent to your mobile
-                </p>
-              </div>
-
-              <Button type="submit" className="w-full shadow-md" size="lg" disabled={loading}>
-                {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Sign In
-                  </>
-                )}
-              </Button>
-
-              <div className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="flex items-center gap-1 text-text-tertiary hover:text-text transition-colors"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Back
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={countdown.active || loading}
-                  className={cn(
-                    'font-medium transition-colors',
-                    countdown.active
-                      ? 'text-text-tertiary cursor-not-allowed'
-                      : 'text-primary hover:underline',
-                  )}
-                >
-                  {countdown.active
-                    ? `Resend in ${countdown.secs}s`
-                    : 'Resend OTP'}
-                </button>
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-        <p className="text-[11px] sm:text-xs text-text-tertiary">
-          Question Collection Platform &middot; AnnaDatha
+        {/* Bottom: simple footer */}
+        <p className="text-xs text-white/30">
+          &copy; {new Date().getFullYear()} AnnaDatha
         </p>
       </div>
+
+      {/* ── Right form panel ─────────────────────────────────────────── */}
+      <div className="flex flex-1 flex-col items-center justify-center px-5 py-8 relative overflow-hidden">
+
+        {/* Background gradient orbs — mobile only */}
+        <Orb className="-right-20 -top-24 w-[340px] h-[340px] lg:hidden opacity-50" />
+        <Orb className="-left-16 bottom-0 w-[260px] h-[260px] lg:hidden opacity-50" />
+
+        <div className="relative z-10 w-full max-w-sm">
+
+          {/* ── Mobile card ── */}
+          <Card className="w-full overflow-hidden shadow-lg border border-[hsl(var(--border-subtle))]">
+
+            {/* Card header — logo + title + tagline */}
+            <div className="flex flex-col items-center px-6 pt-7 pb-5 bg-[hsl(var(--primary))]">
+              <div className="mb-2.5 h-14 w-14 rounded-2xl bg-white/20 p-2 shadow-sm">
+                <BrandLogo className="h-full w-full" />
+              </div>
+              <h1 className="text-lg font-extrabold text-white tracking-tight">
+                AnnaDatha
+              </h1>
+              <p className="mt-0.5 text-xs text-white/70">
+                Farming Questions Platform
+              </p>
+            </div>
+
+            {/* Card body — form */}
+            <div className="px-6 py-5">
+
+              {/* Step heading */}
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-[hsl(var(--text))]">
+                  {step === 1 ? 'Sign in' : 'Verify OTP'}
+                </h2>
+                <p className="mt-0.5 text-xs text-[hsl(var(--text-secondary))]">
+                  {step === 1
+                    ? 'Enter your mobile number to continue'
+                    : `OTP sent to +91 ${mobile}`}
+                </p>
+              </div>
+
+              {/* Animated step forms */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.14 }}
+                >
+                  {step === 1 ? (
+                    <StepMobile
+                      mobile={mobile}
+                      setMobile={setMobile}
+                      loading={loading}
+                      onSubmit={handleSendOtp}
+                    />
+                  ) : (
+                    <StepOtp
+                      mobile={mobile}
+                      otp={otp}
+                      setOtp={setOtp}
+                      loading={loading}
+                      countdown={countdown}
+                      onSubmit={handleVerifyOtp}
+                      onBack={handleBack}
+                      onResend={handleResend}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Legal */}
+              <p className="mt-4 text-center text-[10px] text-[hsl(var(--text-tertiary))]">
+                By continuing, you agree to our{' '}
+                <button
+                  type="button"
+                  onClick={() => setLegalDoc('terms')}
+                  className="underline hover:text-[hsl(var(--text-secondary))]"
+                >
+                  Terms
+                </button>
+                {' '}and{' '}
+                <button
+                  type="button"
+                  onClick={() => setLegalDoc('privacy')}
+                  className="underline hover:text-[hsl(var(--text-secondary))]"
+                >
+                  Privacy Policy
+                </button>
+              </p>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Legal document modals */}
+      <LegalDocumentModal
+        type={legalDoc ?? 'terms'}
+        open={legalDoc !== null}
+        onOpenChange={(open) => !open && setLegalDoc(null)}
+      />
 
     </div>
   )
