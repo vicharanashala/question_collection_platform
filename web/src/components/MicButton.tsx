@@ -333,7 +333,7 @@ export function MicButton({
 
       <p
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium',
+          'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium',
           isRecording
             ? 'border-destructive/40 bg-destructive/10 text-destructive'
             : isUploading

@@ -15,7 +15,7 @@ export function AppLayout() {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onMobileMenuToggle={() => setMobileNavOpen(true)} />
+        <Header />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
@@ -25,12 +25,6 @@ export function AppLayout() {
       <MobileNav
         open={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
-        onLogout={() => {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('auth_user')
-          window.location.href = '/login'
-        }}
       />
     </div>
   )

@@ -16,6 +16,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { SignOutDialog } from '@/components/SignOutDialog'
 import { BrandLogo } from '@/components/BrandLogo'
 
 const navItems = [
@@ -28,14 +29,14 @@ const navItems = [
 interface MobileNavProps {
   open: boolean
   onClose: () => void
-  onLogout: () => void
 }
 
-export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
+export function MobileNav({ open, onClose }: MobileNavProps) {
   const { user } = useAuth()
   const { t } = useTranslation()
   const { nativeName } = useLanguage()
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   // Role label translates to the active language.
   const roleKey = user?.role ? `roles.${user.role}` : null
@@ -66,9 +67,9 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
               <BrandLogo className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>
               {roleLabel && (
-                <p className="text-xs text-sidebar-foreground/60 capitalize">{roleLabel}</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/60 capitalize">{roleLabel}</p>
               )}
             </div>
           </div>
@@ -87,7 +88,7 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
                 to={to}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-md px-3 py-2.5 text-xs sm:text-xs sm:text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
                       : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
@@ -104,12 +105,12 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
         {/* User info + logout */}
         <div className="border-t border-sidebar-border p-3 shrink-0">
           <div className="mb-2 flex items-center gap-2 rounded-md px-3 py-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-sidebar-primary-foreground">
               {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-sidebar-foreground">{user?.name || t('roles.admin')}</p>
-              <p className="truncate text-xs text-sidebar-foreground/80">{user?.mobileNumber}</p>
+              <p className="truncate text-[11px] sm:text-[11px] sm:text-xs font-semibold text-sidebar-foreground">{user?.name || t('roles.admin')}</p>
+              <p className="truncate text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/80">{user?.mobileNumber}</p>
             </div>
           </div>
           <Button
@@ -119,11 +120,11 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
           >
             <Languages className="h-4 w-4" />
             <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
-            <span className="text-xs text-sidebar-foreground/60">{nativeName}</span>
+            <span className="text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/60">{nativeName}</span>
           </Button>
           <Button
             variant="ghost"
-            onClick={() => { onLogout(); onClose() }}
+            onClick={() => { setLogoutConfirmOpen(true); onClose() }}
             className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
@@ -132,6 +133,7 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
         </div>
       </DialogContent>
       <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
+      <SignOutDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen} />
     </Dialog>
   )
 }

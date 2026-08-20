@@ -104,11 +104,11 @@ export function SettingsPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-text flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text flex items-center gap-2">
             <Settings2 className="h-6 w-6" />
             System Settings
           </h2>
-          <p className="text-sm text-text-tertiary mt-1">
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-1">
             Platform configuration values. Changes apply immediately and are audit-logged.
           </p>
         </div>
@@ -124,7 +124,7 @@ export function SettingsPage() {
       </div>
 
       {!isSuperAdmin && (
-        <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+        <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-xs sm:text-xs sm:text-sm text-warning">
           <Lock className="h-4 w-4 shrink-0" />
           Only <strong>super_admin</strong> can modify these settings.
         </div>
@@ -141,16 +141,16 @@ export function SettingsPage() {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-text-secondary truncate">
+                      <p className="text-xs sm:text-xs sm:text-sm text-text-secondary truncate">
                         {meta?.label ?? cfg.key}
                       </p>
-                      <p className="mt-1 text-2xl font-extrabold text-text tabular-nums">
+                      <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text tabular-nums">
                         {meta?.suffix === ' ₹' ? '₹' : ''}
                         {cfg.value}
                         {(meta?.suffix && meta?.suffix !== ' ₹') ? meta.suffix : ''}
                       </p>
                       {cfg.description && (
-                        <p className="mt-1 text-xs text-text-tertiary">{cfg.description}</p>
+                        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{cfg.description}</p>
                       )}
                     </div>
                     <Button
@@ -170,7 +170,7 @@ export function SettingsPage() {
       </div>
 
       {configs.length === 0 && !loading && (
-        <p className="text-center text-sm text-text-secondary py-12">No configuration items found.</p>
+        <p className="text-center text-xs sm:text-xs sm:text-sm text-text-secondary py-12">No configuration items found.</p>
       )}
 
       {/* Edit dialog */}

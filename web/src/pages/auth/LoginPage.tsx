@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { authApi, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { Loader2, ArrowLeft, CheckCircle, Smartphone, Sprout } from 'lucide-react'
+import { Loader2, ArrowLeft, CheckCircle, Smartphone } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { toast } from 'sonner'
 
@@ -77,6 +77,9 @@ export function LoginPage() {
   const [_sent, setSent] = useState(false)
   const countdown = useCountdown()
 
+  // Inline registration modal state
+
+
   const otpRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (step === 2) otpRef.current?.focus()
@@ -118,14 +121,12 @@ export function LoginPage() {
 
       // ── New user ────────────────────────────────────────────────────
       // Backend returns `{ requiresRegistration, role }` for any user
-      // that doesn't have a name set yet. Public users (role='user')
-      // get sent to the signup wizard hosted on the home page modal.
-      // Staff accounts are blocked — the admin creates them server-side.
+      // that doesn't have a name set yet. Navigate to /home where the
+      // CompleteProfileModal will open automatically (via state). Staff
+      // accounts are blocked — the admin creates them server-side.
       if ('requiresRegistration' in res && res.requiresRegistration) {
         if (res.role === 'user') {
-          // Navigate to /home with state.mobileNumber so the home page can
-          // open the complete-profile modal automatically.
-          navigate('/home', { state: { mobileNumber: mobile } })
+          navigate('/home', { state: { mobileNumber: mobile }, replace: true })
         } else {
           toast.error('Your account is not yet activated. Please contact your administrator.')
         }
@@ -195,10 +196,10 @@ export function LoginPage() {
           <div className="mx-auto mb-5 h-16 w-16 drop-shadow-[0_4px_12px_rgba(0,98,57,0.35)]">
             <BrandLogo className="h-16 w-16" />
           </div>
-          <CardTitle className="text-2xl font-extrabold tracking-tight text-primary">
+          <CardTitle className="text-xl sm:text-2xl font-extrabold tracking-tight text-primary">
             Login Portal
           </CardTitle>
-          <CardDescription className="text-sm text-text-secondary px-2">
+          <CardDescription className="text-xs sm:text-xs sm:text-sm text-text-secondary px-2">
             Sign in with your mobile number to continue
           </CardDescription>
           <div className="mt-4">
@@ -211,11 +212,11 @@ export function LoginPage() {
             // ── Step 1: Mobile number ────────────────────────────────────────
             <form onSubmit={handleSendOtp} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-text">
+                <label className="text-xs sm:text-xs sm:text-sm font-medium text-text">
                   Mobile Number
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-sm font-semibold text-text-secondary shadow-xs">
+                  <div className="flex items-center rounded-md border border-border-subtle bg-surface-variant px-3.5 text-xs sm:text-xs sm:text-sm font-semibold text-text-secondary shadow-xs">
                     +91
                   </div>
                   <Input
@@ -229,7 +230,7 @@ export function LoginPage() {
                     autoComplete="tel"
                   />
                 </div>
-                <p className="text-xs text-text-secondary">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
                   We'll send a 6-digit OTP to this number
                 </p>
               </div>
@@ -248,18 +249,18 @@ export function LoginPage() {
               {/* Mobile indicator */}
               <div className="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-variant/60 px-3 py-2">
                 <Smartphone className="h-4 w-4 text-text-tertiary shrink-0" />
-                <span className="text-sm font-medium text-text">+91 {mobile}</span>
+                <span className="text-xs sm:text-xs sm:text-sm font-medium text-text">+91 {mobile}</span>
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline"
+                  className="ml-auto flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline"
                 >
                   <ArrowLeft className="h-3 w-3" /> Change
                 </button>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-text">
+                <label className="text-xs sm:text-xs sm:text-sm font-medium text-text">
                   One-Time Password
                 </label>
                 <Input
@@ -269,11 +270,11 @@ export function LoginPage() {
                   placeholder="● ● ● ● ● ●"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="text-center text-2xl tracking-[0.4em] font-mono font-bold py-6"
+                  className="text-center text-xl sm:text-2xl tracking-[0.4em] font-mono font-bold py-6"
                   maxLength={6}
                   autoComplete="one-time-code"
                 />
-                <p className="text-xs text-text-secondary text-center">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary text-center">
                   Enter the 6-digit code sent to your mobile
                 </p>
               </div>
@@ -289,7 +290,7 @@ export function LoginPage() {
                 )}
               </Button>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
                 <button
                   type="button"
                   onClick={handleBack}
@@ -320,18 +321,12 @@ export function LoginPage() {
         </CardContent>
       </Card>
 
-      <div className="absolute bottom-6 left-0 right-0 px-4 text-center space-y-1">
-        <p className="text-xs text-text-tertiary">
+      <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
+        <p className="text-[11px] sm:text-xs text-text-tertiary">
           Question Collection Platform &middot; AnnaDatha
         </p>
-        <Link
-          to="/register"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-        >
-          <Sprout className="h-3.5 w-3.5" />
-          New here? Sign up as a public user &rarr;
-        </Link>
       </div>
+
     </div>
   )
 }

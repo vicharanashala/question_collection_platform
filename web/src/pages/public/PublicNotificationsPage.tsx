@@ -79,10 +79,10 @@ function NotificationRow({ item, onPress }: { item: Notification; onPress: () =>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="flex-1 truncate text-sm font-bold text-foreground">{item.title}</p>
+          <p className="flex-1 truncate text-xs sm:text-xs sm:text-sm font-bold text-foreground">{item.title}</p>
           {!item.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden />}
         </div>
-        <p className="mt-0.5 line-clamp-2 text-xs text-text-secondary">{item.body}</p>
+        <p className="mt-0.5 line-clamp-2 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{item.body}</p>
         <p className="mt-1 text-[11px] text-text-tertiary">{timeAgo(item.createdAt)}</p>
       </div>
     </button>
@@ -151,7 +151,7 @@ export function PublicNotificationsPage(): ReactNode {
     <div className="mx-auto max-w-2xl space-y-5 pb-4">
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="flex items-center justify-between gap-3 p-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-foreground">Notifications</h1>
+          <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">Notifications</h1>
           {unread > 0 && (
             <Button variant="outline" size="sm" onClick={handleMarkAllRead} className="rounded-full">
               <CheckCheck className="h-4 w-4" />
@@ -165,7 +165,7 @@ export function PublicNotificationsPage(): ReactNode {
         <Card>
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <p className="mt-3 text-sm font-medium">Loading notifications…</p>
+            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading notifications…</p>
           </CardContent>
         </Card>
       ) : notifications.length === 0 ? (
@@ -174,8 +174,8 @@ export function PublicNotificationsPage(): ReactNode {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-variant dark:bg-surface-variant">
               <Bell className="h-12 w-12 text-text-tertiary" strokeWidth={1.75} />
             </div>
-            <h2 className="mt-5 text-xl font-extrabold text-foreground">No notifications yet</h2>
-            <p className="mt-2 max-w-sm text-sm text-text-secondary">You&rsquo;re all caught up!</p>
+            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">No notifications yet</h2>
+            <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">You&rsquo;re all caught up!</p>
           </CardContent>
         </Card>
       ) : (
@@ -194,7 +194,7 @@ export function PublicNotificationsPage(): ReactNode {
         </div>
       )}
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">AnnaDatha &mdash; Made for Indian farmers</p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha &mdash; To Strengthen Indian Farmers</p>
     </div>
   )
 }

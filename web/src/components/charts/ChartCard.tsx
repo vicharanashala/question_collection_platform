@@ -17,8 +17,8 @@ export function ChartCard({ title, subtitle, className, children, action, noPadd
       <CardHeader className={cn('pb-2', noPadding ? 'px-5 pt-5 pb-0' : '')}>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-sm font-semibold text-text">{title}</CardTitle>
-            {subtitle && <p className="mt-0.5 text-xs text-text-secondary">{subtitle}</p>}
+            <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold text-text">{title}</CardTitle>
+            {subtitle && <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{subtitle}</p>}
           </div>
           {action}
         </div>

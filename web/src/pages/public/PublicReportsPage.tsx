@@ -121,10 +121,10 @@ function ReportCard({ report, onPress }: ReportCardProps) {
         </div>
 
         {/* Row 2: title */}
-        <p className="mt-2 line-clamp-2 text-sm font-bold text-foreground">{report.title}</p>
+        <p className="mt-2 line-clamp-2 text-xs sm:text-xs sm:text-sm font-bold text-foreground">{report.title}</p>
 
         {/* Row 3: description preview */}
-        <p className="mt-1 line-clamp-2 text-xs text-text-secondary">{report.description}</p>
+        <p className="mt-1 line-clamp-2 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{report.description}</p>
 
         {/* Row 4: footer */}
         <div className="mt-3 flex items-center justify-between">
@@ -203,7 +203,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
         <form onSubmit={handleSubmit} className="space-y-4 py-1">
           {/* Error banner */}
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 dark:bg-red-950/40 dark:border-red-900/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+            <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 dark:bg-red-950/40 dark:border-red-900/50 px-3 py-2 text-xs sm:text-xs sm:text-sm text-red-700 dark:text-red-300">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -223,7 +223,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
                     onClick={() => setCategory(opt.value)}
                     disabled={submitting}
                     className={cn(
-                      'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition-colors',
+                      'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-xs sm:text-xs sm:text-sm font-medium transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                       active
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
@@ -335,7 +335,7 @@ export function PublicReportsPage(): ReactNode {
       {/* Header card — title + "New Report" pill (matches mobile teal button) */}
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="flex items-center justify-between gap-3 p-4">
-          <h1 className="text-xl font-extrabold tracking-tight text-foreground">
+          <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
             Report an Issue
           </h1>
           <Button
@@ -354,7 +354,7 @@ export function PublicReportsPage(): ReactNode {
         <Card>
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <p className="mt-3 text-sm font-medium">Loading your reports…</p>
+            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading your reports…</p>
           </CardContent>
         </Card>
       ) : items.length === 0 ? (
@@ -364,8 +364,8 @@ export function PublicReportsPage(): ReactNode {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-variant dark:bg-surface-variant">
               <Flag className="h-12 w-12 text-text-tertiary" strokeWidth={1.75} />
             </div>
-            <h2 className="mt-5 text-xl font-extrabold text-foreground">No Reports Yet</h2>
-            <p className="mt-2 max-w-sm text-sm text-text-secondary">
+            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">No Reports Yet</h2>
+            <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">
               If you encounter an issue, submit a report and we&rsquo;ll get back to you.
             </p>
             <Button onClick={() => setFormOpen(true)} size="lg" className="mt-6">
@@ -394,8 +394,8 @@ export function PublicReportsPage(): ReactNode {
         onSubmit={handleCreateReport}
       />
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">
-        AnnaDatha &mdash; Made for Indian farmers
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
+        AnnaDatha &mdash; To Strengthen Indian Farmers
       </p>
     </div>
   )

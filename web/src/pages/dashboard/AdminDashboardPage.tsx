@@ -48,19 +48,19 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-text-tertiary truncate">{label}</p>
-            <p className="mt-1 text-3xl font-extrabold text-text tabular-nums">
+            <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary truncate">{label}</p>
+            <p className="mt-1 text-2xl sm:text-3xl font-extrabold text-text tabular-nums">
               {typeof value === 'number' ? formatNumber(value) : value}
             </p>
             {(change !== undefined || sub) && (
               <div className="mt-2 flex items-center gap-2">
                 {!isNeutral && (
-                  <span className={cn('flex items-center gap-0.5 text-xs font-semibold', trendColor)}>
+                  <span className={cn('flex items-center gap-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold', trendColor)}>
                     <TrendIcon className="h-3 w-3" />
                     {isPositive ? '+' : ''}{change}%
                   </span>
                 )}
-                {sub && <span className="text-xs text-text-tertiary truncate">{sub}</span>}
+                {sub && <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary truncate">{sub}</span>}
               </div>
             )}
           </div>
@@ -119,18 +119,18 @@ function ExportPanel({ disabled }: ExportPanelProps) {
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <Card className="absolute right-0 top-12 z-20 w-72 shadow-lg">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Export Data</CardTitle>
+              <CardTitle className="text-xs sm:text-xs sm:text-sm">Export Data</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-text-secondary mb-1.5 block">Data Type</label>
+                <label className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary mb-1.5 block">Data Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['questions', 'users', 'rewards', 'withdrawals'] as const).map((t) => (
                     <Button
                       key={t}
                       variant={dataType === t ? 'default' : 'outline'}
                       size="sm"
-                      className="text-xs capitalize"
+                      className="text-[11px] sm:text-[11px] sm:text-xs capitalize"
                       onClick={() => setDataType(t)}
                     >
                       {t}
@@ -139,14 +139,14 @@ function ExportPanel({ disabled }: ExportPanelProps) {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-text-secondary mb-1.5 block">Format</label>
+                <label className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary mb-1.5 block">Format</label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['csv', 'excel'] as const).map((f) => (
                     <Button
                       key={f}
                       variant={format === f ? 'default' : 'outline'}
                       size="sm"
-                      className="text-xs uppercase"
+                      className="text-[11px] sm:text-[11px] sm:text-xs uppercase"
                       onClick={() => setFormat(f)}
                     >
                       {f}
@@ -276,10 +276,10 @@ export function AdminDashboardPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-text">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text">
             Welcome back, {user?.name || 'Admin'}
           </h2>
-          <p className="text-sm text-text-tertiary">
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">
             Platform overview · {TIME_RANGES.find((r) => r.value === timeRange)?.label} period
           </p>
         </div>
@@ -291,7 +291,7 @@ export function AdminDashboardPage() {
                 variant={timeRange === r.value ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setTimeRange(r.value)}
-                className={cn('h-7 text-xs', timeRange !== r.value && 'text-text-tertiary')}
+                className={cn('h-7 text-[11px] sm:text-[11px] sm:text-xs', timeRange !== r.value && 'text-text-tertiary')}
               >
                 {r.label}
               </Button>
@@ -371,7 +371,7 @@ export function AdminDashboardPage() {
           title="Daily Question Volume"
           subtitle={`Last ${days} days`}
           action={
-            <div className="flex gap-4 text-xs">
+            <div className="flex gap-4 text-[11px] sm:text-[11px] sm:text-xs">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-primary" /> Submitted
               </span>
@@ -385,7 +385,7 @@ export function AdminDashboardPage() {
           }
         >
           {analyticsLoading ? (
-            <div className="h-56 flex items-center justify-center text-sm text-text-tertiary">
+            <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
               Loading…
             </div>
           ) : qAnalytics?.dailyVolume.length ? (
@@ -398,7 +398,7 @@ export function AdminDashboardPage() {
                 height={200}
                 valueFormatter={(v) => formatNumber(v)}
               />
-              <div className="flex gap-6 mt-2 px-1 pb-4 text-xs">
+              <div className="flex gap-6 mt-2 px-1 pb-4 text-[11px] sm:text-[11px] sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-success inline-block" />
                   Approved: {formatNumber(qAnalytics.summary.approved)}
@@ -410,7 +410,7 @@ export function AdminDashboardPage() {
               </div>
             </>
           ) : (
-            <div className="h-56 flex items-center justify-center text-sm text-text-tertiary">
+            <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
               No volume data available
             </div>
           )}
@@ -455,7 +455,7 @@ export function AdminDashboardPage() {
               valueFormatter={(v) => formatNumber(v)}
             />
           ) : (
-            <div className="h-52 flex items-center justify-center text-sm text-text-tertiary">
+            <div className="h-52 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
               No crop data available
             </div>
           )}
@@ -466,7 +466,7 @@ export function AdminDashboardPage() {
       <Card className="shadow-xs">
         <CardHeader className="pb-0">
           <div className="flex items-center gap-4">
-            <CardTitle className="text-sm">Deep Analytics</CardTitle>
+            <CardTitle className="text-xs sm:text-xs sm:text-sm">Deep Analytics</CardTitle>
             <div className="flex rounded-lg border border-border-subtle bg-surface p-1">
               {([
                 { key: 'questions', label: 'Questions' },
@@ -478,7 +478,7 @@ export function AdminDashboardPage() {
                   variant={tab === key ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setTab(key)}
-                  className={cn('h-7 text-xs', tab !== key && 'text-text-tertiary')}
+                  className={cn('h-7 text-[11px] sm:text-[11px] sm:text-xs', tab !== key && 'text-text-tertiary')}
                 >
                   {label}
                 </Button>
@@ -553,7 +553,7 @@ export function AdminDashboardPage() {
                         outerRadius={72}
                       />
                     ) : (
-                      <div className="h-40 flex items-center justify-center text-sm text-text-tertiary">No data</div>
+                      <div className="h-40 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">No data</div>
                     )}
                   </ChartCard>
                   <ChartCard title="Users by Category" subtitle="Farmer, FPO, Student…">
@@ -565,7 +565,7 @@ export function AdminDashboardPage() {
                         outerRadius={72}
                       />
                     ) : (
-                      <div className="h-40 flex items-center justify-center text-sm text-text-tertiary">No data</div>
+                      <div className="h-40 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">No data</div>
                     )}
                   </ChartCard>
                 </div>
@@ -629,7 +629,7 @@ export function AdminDashboardPage() {
               centerLabel="Total Users"
             />
           ) : (
-            <div className="flex items-center justify-center h-48 text-sm text-text-tertiary">No role data</div>
+            <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">No role data</div>
           )}
         </ChartCard>
 
@@ -642,7 +642,7 @@ export function AdminDashboardPage() {
               outerRadius={100}
             />
           ) : (
-            <div className="flex items-center justify-center h-48 text-sm text-text-tertiary">No category data</div>
+            <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">No category data</div>
           )}
         </ChartCard>
       </div>
@@ -653,7 +653,7 @@ export function AdminDashboardPage() {
           <div className="space-y-2 pt-1">
             <Link
               to="/users"
-              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
+              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-xs sm:text-xs sm:text-sm font-medium hover:bg-surface-variant transition-colors group"
             >
               <span className="flex items-center gap-3">
                 <Users className="h-4 w-4 text-primary" />
@@ -663,7 +663,7 @@ export function AdminDashboardPage() {
             </Link>
             <Link
               to="/questions"
-              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
+              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-xs sm:text-xs sm:text-sm font-medium hover:bg-surface-variant transition-colors group"
             >
               <span className="flex items-center gap-3">
                 <MessageSquare className="h-4 w-4 text-primary" />
@@ -673,7 +673,7 @@ export function AdminDashboardPage() {
             </Link>
             <Link
               to="/reviews"
-              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
+              className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-xs sm:text-xs sm:text-sm font-medium hover:bg-surface-variant transition-colors group"
             >
               <span className="flex items-center gap-3">
                 <ShieldCheck className="h-4 w-4 text-primary" />
@@ -691,14 +691,14 @@ export function AdminDashboardPage() {
         <ChartCard title="Recent Activity" subtitle="Latest platform actions" className="lg:col-span-2">
           <div className="space-y-3 max-h-56 overflow-y-auto">
             {(stats?.recentActivity ?? []).length === 0 ? (
-              <p className="text-sm text-text-tertiary py-4 text-center">No recent activity</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary py-4 text-center">No recent activity</p>
             ) : (
               (stats?.recentActivity ?? []).slice(0, 10).map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 text-sm">
+                <div key={entry.id} className="flex items-start gap-3 text-xs sm:text-xs sm:text-sm">
                   <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                   <div className="min-w-0 flex-1">
                     <p className="text-text leading-snug">{entry.description}</p>
-                    <p className="text-xs text-text-tertiary mt-0.5">
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-0.5">
                       {entry.performedBy} &middot;{' '}
                       {entry.performedAt
                         ? format(parseISO(entry.performedAt), 'MMM d, h:mm a')

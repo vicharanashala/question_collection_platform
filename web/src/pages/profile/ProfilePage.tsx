@@ -60,7 +60,7 @@ function VerificationBadge({ status }: { status: string }) {
     label: status, cls: 'bg-muted text-muted-foreground', icon: AlertCircle,
   }
   return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize', cls)}>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold capitalize', cls)}>
       <Icon className="h-3 w-3" />
       {label}
     </span>
@@ -69,7 +69,7 @@ function VerificationBadge({ status }: { status: string }) {
 
 function FieldRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
       <div className="flex items-center gap-2.5 text-text-tertiary">
         <Icon className="h-4 w-4" />
         {label}
@@ -305,8 +305,8 @@ function EditProfileDialog({
   }
 
   const rowCls = 'grid grid-cols-[140px_1fr] items-center gap-3'
-  const labelCls = 'text-sm text-text-secondary'
-  const inputCls = 'h-8 text-sm'
+  const labelCls = 'text-xs sm:text-xs sm:text-sm text-text-secondary'
+  const inputCls = 'h-8 text-xs sm:text-sm'
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -352,7 +352,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>Gender</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
                 value={form.gender}
                 onChange={(e) => set("gender", e.target.value)}
               >
@@ -367,7 +367,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>Language</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
                 value={form.languagePreference}
                 onChange={(e) => set("languagePreference", e.target.value)}
               >
@@ -380,7 +380,7 @@ function EditProfileDialog({
             </div>
             {/* Student fields shown in personal tab */}
             <Separator />
-            <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text-tertiary uppercase tracking-wide">
               Education (Student)
             </p>
             <div className={rowCls}>
@@ -417,7 +417,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>State</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
                 value={form.state}
                 onChange={(e) => onStateChange(e.target.value)}
               >
@@ -432,7 +432,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>District</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
                 value={form.district}
                 onChange={(e) => onDistrictChange(e.target.value)}
                 disabled={!form.state || loadingDistricts}
@@ -448,7 +448,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>Block</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
                 value={form.block}
                 onChange={(e) => onBlockChange(e.target.value)}
                 disabled={!form.district || loadingSubdistricts}
@@ -464,7 +464,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>Village</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
                 value={form.village}
                 onChange={(e) => onVillageChange(e.target.value)}
                 disabled={!form.block || loadingVillages}
@@ -480,7 +480,7 @@ function EditProfileDialog({
             <div className={rowCls}>
               <Label className={labelCls}>KVK</Label>
               <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
+                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
                 value={form.kvk}
                 onChange={(e) => onKvkChange(e.target.value)}
                 disabled={!form.district || loadingKvks}
@@ -567,7 +567,7 @@ function EditProfileDialog({
               />
             </div>
             <Separator />
-            <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text-tertiary uppercase tracking-wide">
               Org. Location
             </p>
             <div className={rowCls}>
@@ -655,8 +655,8 @@ function StatsStrip({ userId }: { userId: string }) {
         <Card key={label} className={cn('border-0 shadow-xs', bg)}>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">{label}</p>
-              <p className={cn('mt-1 text-2xl font-extrabold', text)}>{value}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground">{label}</p>
+              <p className={cn('mt-1 text-xl sm:text-2xl font-extrabold', text)}>{value}</p>
             </div>
             <Icon className={cn('h-7 w-7 opacity-60', text)} />
           </CardContent>
@@ -692,8 +692,8 @@ export function ProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold text-text">My Profile</h2>
-          <p className="text-sm text-text-tertiary mt-0.5">Manage your account and preferences</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text">My Profile</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-0.5">Manage your account and preferences</p>
         </div>
         <Button onClick={() => setEditOpen(true)}>
           <Edit2 className="h-4 w-4 mr-1.5" />
@@ -709,7 +709,7 @@ export function ProfilePage() {
         <CardContent className="p-6">
           <div className="flex items-center gap-5 flex-wrap">
             <div className="relative shrink-0">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-black bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/20">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full text-base sm:text-base sm:text-lg font-black bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/20">
                 {initials}
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface bg-emerald-500" title="Active" />
@@ -717,17 +717,17 @@ export function ProfilePage() {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-xl font-extrabold text-text truncate">{user.name || 'Unnamed User'}</h2>
-                <Badge variant="outline" className="capitalize text-xs">
+                <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text truncate">{user.name || 'Unnamed User'}</h2>
+                <Badge variant="outline" className="capitalize text-[11px] sm:text-[11px] sm:text-xs">
                   <Shield className="h-3 w-3 mr-1" />
                   {ROLE_LABELS[user.role] ?? user.role}
                 </Badge>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <VerificationBadge status={user.verificationStatus ?? 'pending'} />
-                <span className="text-sm text-text-tertiary">{user.mobileNumber}</span>
+                <span className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{user.mobileNumber}</span>
                 {user.category && (
-                  <Badge variant="secondary" className="capitalize text-xs">{user.category}</Badge>
+                  <Badge variant="secondary" className="capitalize text-[11px] sm:text-[11px] sm:text-xs">{user.category}</Badge>
                 )}
               </div>
             </div>
@@ -739,7 +739,7 @@ export function ProfilePage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <User className="h-4 w-4 text-primary" />
               Account Details
             </CardTitle>
@@ -758,7 +758,7 @@ export function ProfilePage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Shield className="h-4 w-4 text-primary" />
               Security & Access
             </CardTitle>
@@ -775,7 +775,7 @@ export function ProfilePage() {
       {/* Personal location */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
             <MapPinned className="h-4 w-4 text-primary" />
             Personal Location
           </CardTitle>
@@ -789,13 +789,13 @@ export function ProfilePage() {
               { label: 'Village',  value: user.village  || '—' },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-text-tertiary uppercase tracking-wide">{label}</span>
-                <span className="text-sm font-semibold text-text">{value}</span>
+                <span className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-tertiary uppercase tracking-wide">{label}</span>
+                <span className="text-xs sm:text-xs sm:text-sm font-semibold text-text">{value}</span>
               </div>
             ))}
           </div>
           {user.kvk && (
-            <div className="mt-3 flex items-center gap-2 text-sm">
+            <div className="mt-3 flex items-center gap-2 text-xs sm:text-xs sm:text-sm">
               <span className="font-medium text-text-tertiary">KVK:</span>
               <span className="text-text">{user.kvk}</span>
             </div>
@@ -807,7 +807,7 @@ export function ProfilePage() {
       {(user.age || user.gender) && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Personal Details</CardTitle>
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold">Personal Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.age    && <FieldRow icon={User} label="Age"     value={String(user.age)} />}
@@ -822,7 +822,7 @@ export function ProfilePage() {
         user.organizationName || user.organizationRole) && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
               Organisation
             </CardTitle>
@@ -841,8 +841,8 @@ export function ProfilePage() {
               { label: 'Org. Village',  value: user.organizationVillage  || '—' },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-text-tertiary uppercase tracking-wide">{label}</span>
-                <span className="text-sm font-semibold text-text">{value}</span>
+                <span className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-tertiary uppercase tracking-wide">{label}</span>
+                <span className="text-xs sm:text-xs sm:text-sm font-semibold text-text">{value}</span>
               </div>
             ))}
           </CardContent>
@@ -853,7 +853,7 @@ export function ProfilePage() {
       {user.category === 'farmer' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Leaf className="h-4 w-4 text-emerald-500" />
               Farming Details
             </CardTitle>
@@ -869,7 +869,7 @@ export function ProfilePage() {
       {user.category === 'student' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-purple-500" />
               Education Details
             </CardTitle>
@@ -885,7 +885,7 @@ export function ProfilePage() {
       {(user.category === 'volunteer' || user.category === 'ngo') && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Building2 className="h-4 w-4 text-orange-500" />
               Volunteer / NGO Details
             </CardTitle>
@@ -901,14 +901,14 @@ export function ProfilePage() {
       {/* Preferences */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             Preferences
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-sm text-text-tertiary">
+            <div className="flex items-center gap-2.5 text-xs sm:text-xs sm:text-sm text-text-tertiary">
               <HelpCircle className="h-4 w-4" />
               Help & FAQ
             </div>

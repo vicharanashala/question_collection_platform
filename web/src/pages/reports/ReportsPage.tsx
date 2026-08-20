@@ -135,7 +135,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <Flag className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold">Reports</h1>
+          <h1 className="text-base sm:text-base sm:text-lg font-semibold">Reports</h1>
           <Badge variant="secondary">{total} total</Badge>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function ReportsPage() {
 
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs sm:text-xs sm:text-sm">
           <thead className="sticky top-0 bg-surface border-b border-border">
             <tr className="text-left text-muted-foreground">
               <th className="px-4 py-3 font-medium">Reporter</th>
@@ -238,12 +238,12 @@ export default function ReportsPage() {
               >
                 <td className="px-4 py-3">
                   <div className="font-medium">{report.user?.name ?? '—'}</div>
-                  <div className="text-xs text-muted-foreground">{report.user?.mobileNumber ?? ''}</div>
+                  <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{report.user?.mobileNumber ?? ''}</div>
                 </td>
                 <td className="px-4 py-3 max-w-xs">
                   <div className="truncate font-medium">{report.title}</div>
                   {report.relatedEntityId && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                       Ref: {report.relatedEntityType} #{report.relatedEntityId.slice(0, 8)}
                     </div>
                   )}
@@ -259,7 +259,7 @@ export default function ReportsPage() {
                     onValueChange={(p) => handlePriorityChange(report.id, p)}
                     disabled={updatingPriorityId === report.id}
                   >
-                    <SelectTrigger className={`w-24 h-6 text-xs ${PRIORITY_COLORS[report.priority] ?? 'bg-surface-variant text-text'}`}>
+                    <SelectTrigger className={`w-24 h-6 text-[11px] sm:text-[11px] sm:text-xs ${PRIORITY_COLORS[report.priority] ?? 'bg-surface-variant text-text'}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -296,7 +296,7 @@ export default function ReportsPage() {
       {/* Pagination */}
       {pages > 1 && (
         <div className="flex items-center justify-between px-6 py-3 border-t border-border bg-surface">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
             Page {page} of {pages} — {total} total
           </span>
           <div className="flex items-center gap-2">

@@ -73,7 +73,7 @@ export function AssignStatesDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <div className="rounded-md border border-border bg-surface p-3 text-sm line-clamp-3">
+          <div className="rounded-md border border-border bg-surface p-3 text-xs sm:text-xs sm:text-sm line-clamp-3">
             {question.questionText}
           </div>
 
@@ -93,7 +93,7 @@ export function AssignStatesDialog({
                   key={s}
                   type="button"
                   onClick={() => toggleState(s)}
-                  className={`text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${
+                  className={`text-left text-[11px] sm:text-[11px] sm:text-xs px-2 py-1.5 rounded-md border transition-colors ${
                     selected
                       ? 'border-primary bg-primary/10 text-foreground'
                       : 'border-border hover:bg-surface'
@@ -118,7 +118,7 @@ export function AssignStatesDialog({
           </div>
 
           {result && (
-            <div className="rounded-md border border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900 p-3 text-xs">
+            <div className="rounded-md border border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900 p-3 text-[11px] sm:text-[11px] sm:text-xs">
               <div className="font-medium text-green-700 dark:text-green-300">
                 {result.insertedCount === 0 && result.skippedStates.length === 0
                   ? '✓ Moved to final with no state assignment'

@@ -260,11 +260,11 @@ export function WithdrawalsPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-foreground flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-foreground flex items-center gap-2">
             <CreditCard className="h-6 w-6" />
             Withdrawals
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-1">
             {total.toLocaleString('en-IN')} withdrawal{total !== 1 ? 's' : ''} total
           </p>
         </div>
@@ -277,7 +277,7 @@ export function WithdrawalsPage() {
             <Filter className="h-4 w-4 mr-1.5" />
             Filters
             {activeFilterCount() > 0 && (
-              <Badge variant="default" className="ml-1.5 h-5 w-5 p-0 justify-center items-center text-xs">
+              <Badge variant="default" className="ml-1.5 h-5 w-5 p-0 justify-center items-center text-[11px] sm:text-[11px] sm:text-xs">
                 {activeFilterCount()}
               </Badge>
             )}
@@ -292,7 +292,7 @@ export function WithdrawalsPage() {
             if (k === 'sortBy') return v !== '_default'
             return v && v.trim().length > 0
           }).map(([k, v]) => (
-            <Badge key={k} variant="secondary" className="flex items-center gap-1 px-2 py-1 text-xs">
+            <Badge key={k} variant="secondary" className="flex items-center gap-1 px-2 py-1 text-[11px] sm:text-[11px] sm:text-xs">
               <span className="text-muted-foreground capitalize">{k}:</span> {v}
               <button
                 onClick={() => {
@@ -307,7 +307,7 @@ export function WithdrawalsPage() {
               </button>
             </Badge>
           ))}
-          <Button variant="ghost" size="sm" className="text-xs h-6" onClick={resetFilters}>
+          <Button variant="ghost" size="sm" className="text-[11px] sm:text-[11px] sm:text-xs h-6" onClick={resetFilters}>
             Clear all
           </Button>
         </div>
@@ -316,7 +316,7 @@ export function WithdrawalsPage() {
       {/* Table */}
       <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">User</th>
@@ -355,7 +355,7 @@ export function WithdrawalsPage() {
                         >
                           {w.user?.name ?? w.user?.mobileNumber ?? 'Unknown'}
                         </button>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                         {w.user?.mobileNumber ?? ''} · {w.user?.state ?? ''}
                       </div>
                     </td>
@@ -364,7 +364,7 @@ export function WithdrawalsPage() {
                       ₹{Number(w.amount).toLocaleString('en-IN')}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={cn('inline-block rounded-full px-2 py-0.5 text-xs font-semibold', STATUS_COLORS[w.status] ?? 'bg-muted')}>
+                      <span className={cn('inline-block rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold', STATUS_COLORS[w.status] ?? 'bg-muted')}>
                         {w.status}
                       </span>
                     </td>
@@ -420,7 +420,7 @@ export function WithdrawalsPage() {
         {/* Pagination */}
         {total > limit && (
           <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/30">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               Showing {items.length} of {total.toLocaleString('en-IN')} results
             </p>
             <div className="flex items-center gap-1">
@@ -432,7 +432,7 @@ export function WithdrawalsPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm px-2">Page {page} of {totalPages}</span>
+              <span className="text-xs sm:text-xs sm:text-sm px-2">Page {page} of {totalPages}</span>
               <Button
                 variant="outline"
                 size="sm"
@@ -465,7 +465,7 @@ export function WithdrawalsPage() {
               <div className="space-y-1.5">
                 <Label>Status</Label>
                 <select
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.status}
                   onChange={(e) => setDraftFilters((f) => ({ ...f, status: e.target.value }))}
                 >
@@ -477,7 +477,7 @@ export function WithdrawalsPage() {
               <div className="space-y-1.5">
                 <Label>State</Label>
                 <select
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.state}
                   onChange={(e) => setDraftFilters((f) => ({ ...f, state: e.target.value }))}
                 >
@@ -492,7 +492,7 @@ export function WithdrawalsPage() {
               <div className="space-y-1.5">
                 <Label>Sort By</Label>
                 <select
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.sortBy}
                   onChange={(e) => setDraftFilters((f) => ({ ...f, sortBy: e.target.value }))}
                 >

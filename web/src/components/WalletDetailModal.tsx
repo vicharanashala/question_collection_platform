@@ -202,11 +202,11 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
       <DialogContent className="max-w-6xl p-0 gap-0 overflow-hidden" style={{ maxHeight: '90vh' }}>
         <DialogHeader className="px-6 py-4 border-b border-border-subtle shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+            <DialogTitle className="flex items-center gap-2 text-lg sm:text-lg sm:text-xl font-bold">
               <Wallet className="h-5 w-5 text-primary" />
               Wallet Details
               {walletUser && (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
+                <span className="text-xs sm:text-xs sm:text-sm font-normal text-muted-foreground ml-2">
                   · {walletUser.name}
                 </span>
               )}
@@ -221,7 +221,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
             {/* User card */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold uppercase shrink-0">
+                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg sm:text-lg sm:text-xl font-bold uppercase shrink-0">
                   {walletUser?.name ? walletUser.name.charAt(0) : (loadingWallet ? '' : '?')}
                   {isLoading && <Skeleton className="h-10 w-10 rounded-full" />}
                 </div>
@@ -234,7 +234,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   ) : (
                     <>
                       <p className="font-bold text-foreground truncate">{walletUser?.name ?? '—'}</p>
-                      <p className="text-sm text-muted-foreground font-mono">{walletUser?.mobileNumber ?? '—'}</p>
+                      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground font-mono">{walletUser?.mobileNumber ?? '—'}</p>
                     </>
                   )}
                 </div>
@@ -243,13 +243,13 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               {!isLoading && walletUser && (
                 <div className="flex flex-wrap gap-1.5">
                   {walletUser.category && (
-                    <Badge variant="secondary" className="text-xs">{walletUser.category}</Badge>
+                    <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{walletUser.category}</Badge>
                   )}
                   {walletUser.role && (
-                    <Badge variant="secondary" className="text-xs capitalize">{walletUser.role}</Badge>
+                    <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs capitalize">{walletUser.role}</Badge>
                   )}
                   {walletUser.verificationStatus && (
-                    <Badge className={cn('text-xs capitalize', VERIFICATION_COLORS[walletUser.verificationStatus] ?? 'bg-muted')}>
+                    <Badge className={cn('text-[11px] sm:text-xs capitalize', VERIFICATION_COLORS[walletUser.verificationStatus] ?? 'bg-muted')}>
                       {walletUser.verificationStatus}
                     </Badge>
                   )}
@@ -257,12 +257,12 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               )}
 
               {!isLoading && walletUser?.state && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
                   <span>{walletUser.state}</span>
                 </p>
               )}
               {!isLoading && walletUser?.createdAt && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                   Joined {formatDate(walletUser.createdAt) ?? new Date(walletUser.createdAt).toLocaleDateString('en-IN')}
                 </p>
               )}
@@ -270,7 +270,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
 
             {/* Balance card */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Balance</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Balance</p>
               {isLoading ? (
                 <Skeleton className="h-10 w-36" />
               ) : (
@@ -279,7 +279,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                 </p>
               )}
               <div className="space-y-2 pt-2 border-t border-border-subtle">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <ArrowDownRight className="h-3.5 w-3.5 text-success" />
                     Total Earned
@@ -292,7 +292,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <ArrowUpRight className="h-3.5 w-3.5 text-destructive" />
                     Total Withdrawn
@@ -320,18 +320,18 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">Transactions</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Transactions</p>
                     </div>
-                    <p className="text-2xl font-bold text-foreground tabular-nums">
+                    <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                       {txSummary.totalTransactions}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <Banknote className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">Withdrawals</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Withdrawals</p>
                     </div>
-                    <p className="text-2xl font-bold text-foreground tabular-nums">{wdTotal}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{wdTotal}</p>
                   </div>
                 </>
               )}
@@ -340,28 +340,28 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
             {/* Net summary */}
             {!isLoading && (
               <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-                <p className="text-xs text-muted-foreground mb-2 font-medium">Net Flow</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-2 font-medium">Net Flow</p>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
                       <ArrowDownRight className="h-3 w-3 text-success" /> Credits
                     </span>
-                    <span className="text-xs font-semibold text-success tabular-nums">
+                    <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-success tabular-nums">
                       +₹{formatINRFull(Number(txSummary.totalCredits))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
                       <ArrowUpRight className="h-3 w-3 text-destructive" /> Debits
                     </span>
-                    <span className="text-xs font-semibold text-destructive tabular-nums">
+                    <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive tabular-nums">
                       -₹{formatINRFull(Number(txSummary.totalDebits))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-t border-border-subtle pt-1.5">
-                    <span className="text-xs font-medium text-foreground">Net</span>
+                    <span className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-foreground">Net</span>
                     <span className={cn(
-                      'text-xs font-bold tabular-nums',
+                      'text-[11px] sm:text-xs font-bold tabular-nums',
                       txSummary.totalCredits - txSummary.totalDebits >= 0 ? 'text-success' : 'text-destructive',
                     )}>
                       {txSummary.totalCredits - txSummary.totalDebits >= 0 ? '+' : ''}
@@ -386,7 +386,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   <ArrowRightLeft className="h-3.5 w-3.5" />
                   Transactions
                   {!isLoading && txSummary.totalTransactions > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-1.5 text-[11px] sm:text-[11px] sm:text-xs">
                       {txSummary.totalTransactions}
                     </Badge>
                   )}
@@ -395,7 +395,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   <Banknote className="h-3.5 w-3.5" />
                   Withdrawals
                   {wdTotal > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 text-xs">{wdTotal}</Badge>
+                    <Badge variant="secondary" className="ml-1.5 text-[11px] sm:text-[11px] sm:text-xs">{wdTotal}</Badge>
                   )}
                 </TabsTrigger>
               </TabsList>
@@ -403,7 +403,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               {/* ── Transactions tab ────────────────────── */}
               <TabsContent value="transactions" className="flex flex-col flex-1 min-h-0 mt-3">
                 <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1 min-h-0">
-                  <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+                  <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
                     <span className="w-8 text-center">#</span>
                     <span>Details</span>
                     <span>Type</span>
@@ -427,7 +427,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                     ) : transactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-20 gap-2">
                         <ArrowRightLeft className="h-10 w-10 text-muted-foreground/30" />
-                        <p className="text-sm font-medium text-muted-foreground">No transactions yet</p>
+                        <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">No transactions yet</p>
                       </div>
                     ) : (
                       transactions.map((tx, idx) => (
@@ -435,23 +435,23 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                           key={tx.id}
                           className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
                         >
-                          <span className="text-xs text-muted-foreground w-8 text-center tabular-nums">
+                          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground w-8 text-center tabular-nums">
                             {(txPage - 1) * limit + idx + 1}
                           </span>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
+                            <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground truncate">
                               {TX_SOURCE_LABELS[tx.source] ?? tx.source}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground truncate">
                               {tx.description ?? '—'}
                             </p>
                             {tx.rejectionReason && (
-                              <p className="text-xs text-destructive font-medium mt-0.5 flex items-center gap-1">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs text-destructive font-medium mt-0.5 flex items-center gap-1">
                                 <XCircle className="h-3 w-3 shrink-0" />
                                 {tx.rejectionReason}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground/70 mt-0.5">
+                            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground/70 mt-0.5">
                               {formatDate(tx.createdAt) ?? new Date(tx.createdAt).toLocaleDateString('en-IN')}
                             </p>
                             {tx.referenceId && (
@@ -460,19 +460,19 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                               </p>
                             )}
                           </div>
-                          <div className={cn('flex items-center gap-1 text-xs font-semibold', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
+                          <div className={cn('flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs font-semibold', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                             {tx.type === 'credit'
                               ? <ArrowDownRight className="h-3.5 w-3.5 shrink-0" />
                               : <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
                             }
                             <span className="capitalize">{tx.type}</span>
                           </div>
-                          <p className={cn('text-sm font-bold tabular-nums text-right', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
+                          <p className={cn('text-xs sm:text-xs sm:text-sm font-bold tabular-nums text-right', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                             {tx.type === 'credit' ? '+' : '−'}₹{formatINRFull(Number(tx.amount))}
                           </p>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className={cn(
-                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
+                              'inline-block rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize',
                               TX_STATUS_COLORS[tx.status] ?? 'bg-muted',
                             )}>
                               {tx.status}
@@ -496,7 +496,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                 {!isLoading && transactions.length > 0 && (
                   <div className="flex justify-end mt-2 shrink-0">
                     <Button
-                      variant="outline" size="sm" className="text-xs"
+                      variant="outline" size="sm" className="text-[11px] sm:text-[11px] sm:text-xs"
                       onClick={() => fetchTransactions(txPage + 1)}
                       disabled={loadingTx}
                     >
@@ -510,7 +510,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
               {/* ── Withdrawals tab ─────────────────────── */}
               <TabsContent value="withdrawals" className="flex flex-col flex-1 min-h-0 mt-3">
                 <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1">
-                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
                     <span>Request ID</span>
                     <span>Payout Method</span>
                     <span className="text-right">Amount</span>
@@ -532,7 +532,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                     ) : withdrawals.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-20 gap-2">
                         <Banknote className="h-10 w-10 text-muted-foreground/30" />
-                        <p className="text-sm font-medium text-muted-foreground">No withdrawals yet</p>
+                        <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">No withdrawals yet</p>
                       </div>
                     ) : (
                       withdrawals.map((wd) => (
@@ -541,50 +541,50 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                           className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-mono text-muted-foreground truncate">{wd.id}</p>
-                            <p className="text-xs text-muted-foreground/70 mt-0.5">
+                            <p className="text-[11px] sm:text-[11px] sm:text-xs font-mono text-muted-foreground truncate">{wd.id}</p>
+                            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground/70 mt-0.5">
                               {formatDate(wd.createdAt) ?? new Date(wd.createdAt).toLocaleDateString('en-IN')}
                             </p>
                             {wd.processedAt && (
-                              <p className="text-xs text-muted-foreground/70">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground/70">
                                 Processed {formatDate(wd.processedAt)}
                               </p>
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground capitalize flex items-center gap-1.5">
+                            <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground capitalize flex items-center gap-1.5">
                               <CreditCard className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               {wd.payoutMethod}
                             </p>
                             {wd.payoutDetails && typeof wd.payoutDetails === 'object' && (
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground truncate">
                                 {Object.values(wd.payoutDetails as Record<string, unknown>).filter(Boolean).join(' · ') || '—'}
                               </p>
                             )}
                           </div>
-                          <p className="text-sm font-bold text-foreground tabular-nums text-right">
+                          <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground tabular-nums text-right">
                             ₹{formatINRFull(Number(wd.amount))}
                           </p>
                           <div className="min-w-0">
                             {(wd.utrNumber || wd.razorpayPayoutId) ? (
                               <div className="flex flex-col gap-0.5">
                                 {wd.utrNumber && (
-                                  <p className="text-xs font-mono text-muted-foreground" title="UTR Number">
+                                  <p className="text-[11px] sm:text-[11px] sm:text-xs font-mono text-muted-foreground" title="UTR Number">
                                     UTR: {wd.utrNumber}
                                   </p>
                                 )}
                                 {wd.razorpayPayoutId && (
-                                  <p className="text-xs font-mono text-muted-foreground" title="Razorpay Payout ID">
+                                  <p className="text-[11px] sm:text-[11px] sm:text-xs font-mono text-muted-foreground" title="Razorpay Payout ID">
                                     RZ: {wd.razorpayPayoutId}
                                   </p>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-xs text-muted-foreground/50">—</span>
+                              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground/50">—</span>
                             )}
                           </div>
                           <span className={cn(
-                            'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize shrink-0',
+                            'inline-block rounded-full px-2 py-0.5 text-[11px] sm:text-xs font-semibold capitalize shrink-0',
                             WD_STATUS_COLORS[wd.status] ?? 'bg-muted',
                           )}>
                             {wd.status}
@@ -610,7 +610,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                 {wdTotal > withdrawals.length && !isLoading && (
                   <div className="flex justify-end mt-2 shrink-0">
                     <Button
-                      variant="outline" size="sm" className="text-xs"
+                      variant="outline" size="sm" className="text-[11px] sm:text-[11px] sm:text-xs"
                       onClick={() => fetchWithdrawals(wdPage + 1)}
                       disabled={loadingWd}
                     >

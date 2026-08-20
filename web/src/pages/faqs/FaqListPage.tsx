@@ -40,7 +40,7 @@ function FaqItem({ item }: { item: Faq }) {
         {/* Question */}
         <div className="flex-1">
           <div className="flex items-start justify-between gap-2">
-            <span className="text-sm font-semibold text-foreground leading-snug">
+            <span className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-snug">
               {item.question}
             </span>
             <span className="shrink-0 mt-0.5 text-muted-foreground">
@@ -52,7 +52,7 @@ function FaqItem({ item }: { item: Faq }) {
           </div>
 
           {open && (
-            <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+            <p className="mt-2.5 text-xs sm:text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
               {item.answer}
             </p>
           )}
@@ -99,8 +99,8 @@ export function FaqListPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h2 className="text-xl font-bold text-foreground">Help & FAQ</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Help & FAQ</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
             Find answers to common questions
           </p>
         </div>
@@ -117,7 +117,7 @@ export function FaqListPage() {
             <button
               key={cat.key}
               onClick={() => setActiveCat(cat.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all ${
                 isActive
                   ? 'text-white shadow-sm'
                   : 'bg-surface border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
@@ -143,10 +143,10 @@ export function FaqListPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <HelpCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">
               No FAQs available yet
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
               Check back later for help content
             </p>
           </CardContent>
@@ -155,7 +155,7 @@ export function FaqListPage() {
         <>
           {/* Results count */}
           <div className="flex items-center justify-between px-1">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               {items.length} {items.length === 1 ? 'article' : 'articles'}
             </p>
           </div>

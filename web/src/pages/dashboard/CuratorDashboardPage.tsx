@@ -53,19 +53,19 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-text-tertiary truncate">{label}</p>
-            <p className="mt-1 text-3xl font-extrabold text-text tabular-nums">
+            <p className="text-xs sm:text-sm text-text-tertiary truncate">{label}</p>
+            <p className="mt-1 text-2xl sm:text-3xl font-extrabold text-text tabular-nums">
               {typeof value === 'number' ? formatNumber(value) : value}
             </p>
             {(change !== undefined || sub) && (
               <div className="mt-2 flex items-center gap-2">
                 {!isNeutral && (
-                  <span className={cn('flex items-center gap-0.5 text-xs font-semibold', trendColor)}>
+                  <span className={cn('flex items-center gap-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold', trendColor)}>
                     <TrendIcon className="h-3 w-3" />
                     {isPositive ? '+' : ''}{change}%
                   </span>
                 )}
-                {sub && <span className="text-xs text-text-tertiary truncate">{sub}</span>}
+                {sub && <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary truncate">{sub}</span>}
               </div>
             )}
           </div>
@@ -137,12 +137,12 @@ export function CuratorDashboardPage() {
   }))
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-text">Review Dashboard</h2>
-          <p className="text-sm text-text-tertiary">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text">Review Dashboard</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">
             Curator overview · last 30 days
           </p>
         </div>
@@ -153,7 +153,7 @@ export function CuratorDashboardPage() {
               variant={timeRange === r.value ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setTimeRange(r.value)}
-              className={cn('h-7 text-xs', timeRange !== r.value && 'text-text-tertiary')}
+              className={cn('h-7 text-[11px] sm:text-[11px] sm:text-xs', timeRange !== r.value && 'text-text-tertiary')}
             >
               {r.label}
             </Button>
@@ -195,8 +195,8 @@ export function CuratorDashboardPage() {
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-destructive">SLA Breach Warning</p>
-              <p className="text-xs text-text-secondary mt-0.5">
+              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-destructive">SLA Breach Warning</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary mt-0.5">
                 Average review turnaround is{' '}
                 <span className="font-semibold">{performance.avgReviewTurnaroundMinutes}m</span> —
                 above the 60-minute target.
@@ -216,7 +216,7 @@ export function CuratorDashboardPage() {
           title="Daily Submission Volume"
           subtitle={`Last 30 days — submitted, approved, rejected`}
           action={
-            <div className="flex gap-4 text-xs">
+            <div className="flex gap-4 text-[11px] sm:text-[11px] sm:text-xs">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-primary" /> Submitted
               </span>
@@ -239,7 +239,7 @@ export function CuratorDashboardPage() {
               valueFormatter={(v) => formatNumber(v)}
             />
           ) : (
-            <div className="h-48 flex items-center justify-center text-sm text-text-tertiary">
+            <div className="h-48 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
               No volume data available
             </div>
           )}
@@ -284,7 +284,7 @@ export function CuratorDashboardPage() {
         <div className="grid gap-3 md:grid-cols-2 pt-1">
           <Link
             to="/reviews"
-            className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
+            className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-xs sm:text-xs sm:text-sm font-medium hover:bg-surface-variant transition-colors group"
           >
             <span className="flex items-center gap-3">
               <CheckSquare className="h-4 w-4 text-primary" />
@@ -298,7 +298,7 @@ export function CuratorDashboardPage() {
           </Link>
           <Link
             to="/questions"
-            className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-sm font-medium hover:bg-surface-variant transition-colors group"
+            className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-xs sm:text-xs sm:text-sm font-medium hover:bg-surface-variant transition-colors group"
           >
             <span className="flex items-center gap-3">
               <MessageSquare className="h-4 w-4 text-primary" />

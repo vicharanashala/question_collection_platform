@@ -29,8 +29,8 @@ export function VideoSection() {
           <Play className="h-5 w-5 text-primary fill-primary ml-0.5" />
         </div>
         <div className="text-left">
-          <p className="text-sm font-semibold text-foreground">Watch Video Guide</p>
-          <p className="text-xs text-muted-foreground">Tap to watch the FAQ video</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Watch Video Guide</p>
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Tap to watch the FAQ video</p>
         </div>
       </button>
 
@@ -39,7 +39,7 @@ export function VideoSection() {
         <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0">
           {/* Modal header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
-            <p className="text-sm font-semibold text-foreground">Video Guide</p>
+            <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Video Guide</p>
             <button
               className="p-1.5 rounded-md hover:bg-surface-variant transition-colors text-muted-foreground hover:text-foreground"
               onClick={() => setOpen(false)}

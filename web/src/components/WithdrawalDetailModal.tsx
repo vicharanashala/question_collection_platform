@@ -71,7 +71,7 @@ function Copyable({ value }: { value: string }) {
   }
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className="truncate font-mono text-sm font-medium text-foreground">{value}</span>
+      <span className="truncate font-mono text-xs sm:text-xs sm:text-sm font-medium text-foreground">{value}</span>
       <button
         type="button"
         onClick={copy}
@@ -247,13 +247,13 @@ export function WithdrawalDetailModal({
                   <Banknote className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <DialogTitle className="text-base font-bold leading-none">Withdrawal Request</DialogTitle>
+                  <DialogTitle className="text-sm sm:text-sm sm:text-base font-bold leading-none">Withdrawal Request</DialogTitle>
                   {/* ID */}
-                  <p className="text-xs text-muted-foreground font-mono mt-1">{w.id}</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono mt-1">{w.id}</p>
                 </div>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-3xl font-extrabold text-foreground tabular-nums leading-none">
+                <p className="text-2xl sm:text-3xl font-extrabold text-foreground tabular-nums leading-none">
                   ₹{Number(w.amount).toLocaleString('en-IN')}
                 </p>
               </div>
@@ -262,13 +262,13 @@ export function WithdrawalDetailModal({
             {/* Status + attempt badge row */}
             <div className="flex items-center gap-2 mt-3">
               <span className={cn(
-                'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize',
+                'inline-block rounded-full px-2.5 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize',
                 STATUS_COLORS[w.status] ?? 'bg-muted',
               )}>
                 {STATUS_LABELS[w.status] ?? w.status}
               </span>
               {(w.retryCount ?? 0) > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                   <RefreshCw className="h-3 w-3" />
                   Attempt {(w.retryCount ?? 0) + 1}
                 </span>
@@ -280,10 +280,10 @@ export function WithdrawalDetailModal({
               <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 mt-3">
                 <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-destructive">
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive">
                     {w.status === 'failed' ? 'Failure Reason' : 'Rejection Reason'}
                   </p>
-                  <p className="text-sm text-foreground mt-0.5">
+                  <p className="text-xs sm:text-xs sm:text-sm text-foreground mt-0.5">
                     {w.status === 'failed' ? w.failureReason : w.rejectionReason}
                   </p>
                 </div>
@@ -327,20 +327,20 @@ export function WithdrawalDetailModal({
                       />
                     )}
                     <div className="col-span-2">
-                      <p className="text-xs text-muted-foreground mb-1">Payout Method</p>
-                      <Badge variant="secondary" className="text-xs capitalize font-medium">
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">Payout Method</p>
+                      <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs capitalize font-medium">
                         {w.payoutMethod?.replace(/_/g, ' ') ?? '—'}
                       </Badge>
                     </div>
                     {w.utrNumber && (
                       <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">UTR Number</p>
+                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">UTR Number</p>
                         <Copyable value={w.utrNumber} />
                       </div>
                     )}
                     {w.razorpayPayoutId && (
                       <div className="col-span-2">
-                        <p className="text-xs text-muted-foreground mb-1">Razorpay Payout ID</p>
+                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">Razorpay Payout ID</p>
                         <Copyable value={w.razorpayPayoutId} />
                       </div>
                     )}
@@ -353,13 +353,13 @@ export function WithdrawalDetailModal({
                     <div className="grid grid-cols-2 gap-3">
                       {payoutFields.map(({label, value }) => (
                         <div key={label} className="col-span-1">
-                          <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">{label}</p>
                           <Copyable value={value} />
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground italic">No payout details recorded.</p>
+                    <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground italic">No payout details recorded.</p>
                   )}
                 </Section>
 
@@ -384,23 +384,23 @@ export function WithdrawalDetailModal({
                               }
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-semibold text-foreground capitalize">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground capitalize">
                                 {tx.source.toLowerCase()} · {tx.description ?? tx.type}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                                 {formatDisplayDate(tx.createdAt)}
                               </p>
                             </div>
                           </div>
                           <div className="text-right shrink-0">
                             <p className={cn(
-                              'text-sm font-bold tabular-nums',
+                              'text-xs sm:text-sm font-bold tabular-nums',
                               tx.source.toLowerCase() === 'withdrawal' ? 'text-foreground' : 'text-success',
                             )}>
                               {tx.source.toLowerCase() === 'withdrawal' ? '-' : '+'}₹{Number(tx.amount).toLocaleString('en-IN')}
                             </p>
                             <span className={cn(
-                              'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize mt-0.5',
+                              'inline-block rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize mt-0.5',
                               tx.status === 'completed' && 'bg-success/10 text-success',
                               tx.status === 'failed'    && 'bg-destructive/10 text-destructive',
                               tx.status === 'pending'   && 'bg-muted text-muted-foreground',
@@ -436,16 +436,16 @@ export function WithdrawalDetailModal({
                                 }
                               </div>
                               <div className="min-w-0">
-                                <p className="text-xs font-semibold text-foreground capitalize">
+                                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground capitalize">
                                   Attempt {idx + 1} · {pl.status}
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                                   {pl.orderId && <span className="font-mono mr-2">{pl.orderId}</span>}
                                   {pl.pinelabsTransactionId && <span className="font-mono mr-2">PL: {pl.pinelabsTransactionId}</span>}
                                   {pl.razorpayPayoutId && <span className="font-mono mr-2">RZ: {pl.razorpayPayoutId}</span>}
                                 </p>
                                 {(pl.utrNumber || pl.razorpayPayoutId) && (
-                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                  <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                                     {pl.utrNumber && <span className="font-mono mr-2">UTR: {pl.utrNumber}</span>}
                                     {pl.razorpayPayoutId && <span className="font-mono">RZ Payout: {pl.razorpayPayoutId}</span>}
                                   </p>
@@ -453,11 +453,11 @@ export function WithdrawalDetailModal({
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                                 {pl.attemptedAt ? formatDisplayDate(pl.attemptedAt) : '—'}
                               </p>
                               <span className={cn(
-                                'inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize mt-0.5',
+                                'inline-block rounded-full px-2 py-0.5 text-[11px] sm:text-xs font-semibold capitalize mt-0.5',
                                 pl.status === 'failed'    && 'bg-destructive/10 text-destructive',
                                 pl.status === 'success'   && 'bg-success/10 text-success',
                                 pl.status === 'pending'   && 'bg-muted text-muted-foreground',
@@ -470,21 +470,21 @@ export function WithdrawalDetailModal({
 
                           {pl.errorCode && (
                             <div className="mt-2 rounded-md bg-destructive/5 border border-destructive/20 px-3 py-2">
-                              <p className="text-xs font-semibold text-destructive">
+                              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive">
                                 {pl.errorCode}
                               </p>
                               {pl.errorMessage && (
-                                <p className="text-xs text-foreground mt-0.5">{pl.errorMessage}</p>
+                                <p className="text-[11px] sm:text-[11px] sm:text-xs text-foreground mt-0.5">{pl.errorMessage}</p>
                               )}
                             </div>
                           )}
 
                           {pl.rawResponse && Object.keys(pl.rawResponse).length > 0 && (
                             <details className="mt-2">
-                              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                              <summary className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground cursor-pointer hover:text-foreground">
                                 Raw response ({Object.keys(pl.rawResponse).length} fields)
                               </summary>
-                              <pre className="mt-1 rounded bg-muted p-2 text-xs font-mono text-muted-foreground overflow-auto max-h-32">
+                              <pre className="mt-1 rounded bg-muted p-2 text-[11px] sm:text-[11px] sm:text-xs font-mono text-muted-foreground overflow-auto max-h-32">
                                 {JSON.stringify(pl.rawResponse, null, 2)}
                               </pre>
                             </details>
@@ -501,7 +501,7 @@ export function WithdrawalDetailModal({
                   <div className="flex items-center justify-between mb-3">
                     <button
                       onClick={loadAuditHistory}
-                      className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                      className="flex items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
                     >
                       {auditLoading
                         ? <span className="h-3 w-3 border border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -513,7 +513,7 @@ export function WithdrawalDetailModal({
                           : `${auditEntries.length} audit ${auditEntries.length === 1 ? 'entry' : 'entries'}`}
                     </button>
                     {!auditCollapsed && auditEntries.length > 0 && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                         {auditEntries.length} total
                       </span>
                     )}
@@ -523,7 +523,7 @@ export function WithdrawalDetailModal({
                   {!auditCollapsed && auditEntries.length === 0 && !auditLoading && (
                     <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                       <ScrollText className="h-7 w-7 opacity-25" />
-                      <p className="text-xs">No audit history for this withdrawal</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs">No audit history for this withdrawal</p>
                     </div>
                   )}
 
@@ -548,29 +548,29 @@ export function WithdrawalDetailModal({
                               className="flex items-start gap-3 rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20 hover:bg-muted/30 transition-colors"
                             >
                               {/* Avatar initials */}
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold shrink-0">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[11px] sm:text-[11px] sm:text-xs font-bold shrink-0">
                                 {(entry.actorName ?? entry.actorId ?? 'S').charAt(0).toUpperCase()}
                               </div>
                               {/* Content */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs font-semibold text-foreground">
+                                  <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground">
                                     {entry.actorName
                                       ? `${entry.actorName} (${entry.actorRole ?? entry.actorType})`
                                       : entry.actorId ?? 'System'}
                                   </span>
                                 </div>
-                                <Badge variant="secondary" className="mt-1 text-xs capitalize">
+                                <Badge variant="secondary" className="mt-1 text-[11px] sm:text-[11px] sm:text-xs capitalize">
                                   {entry.action.replace(/_/g, ' ').toLowerCase()}
                                 </Badge>
                                 {entry.oldValue && entry.newValue && (
-                                  <p className="mt-1 text-xs text-muted-foreground font-mono">
+                                  <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
                                     {JSON.stringify(entry.oldValue)} → {JSON.stringify(entry.newValue)}
                                   </p>
                                 )}
                               </div>
                               {/* Timestamp */}
-                              <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap mt-1">
+                              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0 whitespace-nowrap mt-1">
                                 {formatDisplayDate(entry.createdAt)}
                               </span>
                             </div>
@@ -580,22 +580,22 @@ export function WithdrawalDetailModal({
                       {/* Pagination */}
                       {auditEntries.length > AUDIT_PAGE_SIZE && (
                         <div className="flex items-center justify-between mt-3 pt-2 border-t border-border-subtle">
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                             {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}–{Math.min(auditPage * AUDIT_PAGE_SIZE, auditEntries.length)} of {auditEntries.length}
                           </span>
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
                               disabled={auditPage === 1}
-                              className="h-7 w-7 flex items-center justify-center rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <ChevronLeft className="h-3.5 w-3.5" />
                             </button>
-                            <span className="text-xs text-muted-foreground px-1">{auditPage}</span>
+                            <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground px-1">{auditPage}</span>
                             <button
                               onClick={() => setAuditPage((p) => p + 1)}
                               disabled={auditPage * AUDIT_PAGE_SIZE >= auditEntries.length}
-                              className="h-7 w-7 flex items-center justify-center rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="h-7 w-7 flex items-center justify-center rounded text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             >
                               <ChevronRight className="h-3.5 w-3.5" />
                             </button>
@@ -692,8 +692,8 @@ export function WithdrawalDetailModal({
             {!readOnly && !isPending && (w.status === 'completed' || w.status === 'rejected') && (
               <div className="flex items-center gap-1.5">
                 {w.status === 'completed'
-                  ? <><BadgeCheck className="h-4 w-4 text-success mr-1" /><span className="text-xs text-muted-foreground">Withdrawal completed</span></>
-                  : <><XCircle className="h-4 w-4 text-muted-foreground mr-1" /><span className="text-xs text-muted-foreground">Withdrawal rejected</span></>
+                  ? <><BadgeCheck className="h-4 w-4 text-success mr-1" /><span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Withdrawal completed</span></>
+                  : <><XCircle className="h-4 w-4 text-muted-foreground mr-1" /><span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Withdrawal rejected</span></>
                 }
               </div>
             )}
@@ -732,7 +732,7 @@ function Section({
     <div className="rounded-xl border border-border bg-card">
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle">
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
+        <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
       <div className="p-3.5">
         {children}
@@ -744,8 +744,8 @@ function Section({
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
-      <p className="text-sm font-semibold text-foreground">
+      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
         {value || <span className="italic text-muted-foreground/60">—</span>}
       </p>
     </div>

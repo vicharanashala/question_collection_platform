@@ -45,13 +45,13 @@ export function BulletChartComponent({
             style={{ height: 36 }}
           >
             {/* Rank */}
-            <span className="w-5 text-right text-xs font-mono text-text-tertiary shrink-0">
+            <span className="w-5 text-right text-[11px] sm:text-[11px] sm:text-xs font-mono text-text-tertiary shrink-0">
               {i + 1}
             </span>
 
             {/* Name */}
             <span
-              className="w-20 truncate text-xs font-medium text-text shrink-0"
+              className="w-20 truncate text-[11px] sm:text-[11px] sm:text-xs font-medium text-text shrink-0"
               title={d.name}
             >
               {d.name}
@@ -74,7 +74,7 @@ export function BulletChartComponent({
             </div>
 
             {/* Value label */}
-            <span className="w-10 text-right text-xs font-semibold text-text shrink-0 tabular-nums">
+            <span className="w-10 text-right text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text shrink-0 tabular-nums">
               {valueFormatter(d.value)}
             </span>
           </div>
@@ -82,7 +82,7 @@ export function BulletChartComponent({
       })}
 
       {data.length === 0 && (
-        <div className="flex items-center justify-center h-full text-sm text-text-tertiary">
+        <div className="flex items-center justify-center h-full text-xs sm:text-xs sm:text-sm text-text-tertiary">
           No data available
         </div>
       )}

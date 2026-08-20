@@ -89,7 +89,7 @@ export function LockedAccountModal() {
               <PauseCircle className="h-7 w-7 text-amber-600" />
             )}
           </div>
-          <DialogTitle className={cn("text-xl font-black", accentCls)}>
+          <DialogTitle className={cn("text-lg sm:text-lg sm:text-xl font-black", accentCls)}>
             {isBan ? "Account Permanently Banned" : "Account Suspended"}
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground">
@@ -104,7 +104,7 @@ export function LockedAccountModal() {
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
                 Reason
               </p>
-              <p className="text-sm text-foreground italic">
+              <p className="text-xs sm:text-xs sm:text-sm text-foreground italic">
                 &ldquo;{lockedInfo.reason}&rdquo;
               </p>
             </div>
@@ -113,7 +113,7 @@ export function LockedAccountModal() {
             <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
               {dateLabel}
             </p>
-            <p className="text-sm text-foreground">
+            <p className="text-xs sm:text-xs sm:text-sm text-foreground">
               {formatDate(date)}
               {!isBan && lockedInfo.suspendedUntil && (
                 <span className="text-muted-foreground">
@@ -127,13 +127,13 @@ export function LockedAccountModal() {
 
         {SUPPORT_EMAIL ? (
           <div className="flex flex-col items-center gap-2">
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">
               If you believe this was a mistake, contact support
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(isBan ? "Account ban appeal" : "Account suspension appeal")}`}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold",
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold",
                 isBan
                   ? "border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/30"
                   : "border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950/30",
@@ -155,7 +155,7 @@ export function LockedAccountModal() {
             </a>
           </div>
         ) : (
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-center text-muted-foreground">
             If you believe this was a mistake, contact support.
           </p>
         )}

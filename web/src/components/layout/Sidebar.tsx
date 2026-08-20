@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -12,16 +12,13 @@ import {
   CreditCard,
   LogOut,
   Wallet,
-ScrollText,
+  ScrollText,
   Flag,
   HelpCircle,
   Send,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { SignOutDialog } from '@/components/SignOutDialog'
 
 // Nav items use a translation key (`labelKey`) instead of a literal so the
 // sidebar re-renders in the active language via i18next's `t()`.
@@ -41,8 +38,7 @@ const navItems = [
 
 export function Sidebar() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   // Role label is a translation key so each role renders in the active
@@ -58,9 +54,9 @@ export function Sidebar() {
           <BrandLogo className="h-8 w-8" />
         </div>
         <div className="ml-3">
-          <p className="text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-bold text-sidebar-foreground">{t('app.staffPortal')}</p>
           {roleLabel && (
-            <p className="text-xs text-sidebar-foreground/60 capitalize">{roleLabel}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/60 capitalize">{roleLabel}</p>
           )}
         </div>
       </div>
@@ -75,7 +71,7 @@ export function Sidebar() {
               to={to}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
@@ -92,49 +88,24 @@ export function Sidebar() {
       {/* User + Logout */}
       <div className="border-t border-sidebar-border p-3">
         <div className="mb-2 flex items-center gap-2 rounded-md px-3 py-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">
             {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-sidebar-foreground">{user?.name || t('roles.admin')}</p>
-            <p className="truncate text-xs text-sidebar-foreground/80">{user?.mobileNumber}</p>
+            <p className="truncate text-[11px] sm:text-[11px] sm:text-xs font-semibold text-sidebar-foreground">{user?.name || t('roles.admin')}</p>
+            <p className="truncate text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/80">{user?.mobileNumber}</p>
           </div>
         </div>
         <button
           onClick={() => setLogoutConfirmOpen(true)}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {t('profile.signOut')}
         </button>
       </div>
 
-      {/* Logout confirmation */}
-      <Dialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('profile.signOut')}</DialogTitle>
-            <DialogDescription>
-              {t('profile.signOutConfirm')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
-              {t('profile.signOutCancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setLogoutConfirmOpen(false)
-                logout()
-                navigate('/login', { replace: true })
-              }}
-            >
-              {t('profile.signOutAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SignOutDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen} />
     </aside>
   )
 }

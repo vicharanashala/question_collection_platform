@@ -81,7 +81,7 @@ export function PublicReportDetailPage(): ReactNode {
         <Card>
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <p className="mt-3 text-sm font-medium">Loading report…</p>
+            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading report…</p>
           </CardContent>
         </Card>
       </div>
@@ -100,8 +100,8 @@ export function PublicReportDetailPage(): ReactNode {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <p className="mt-4 text-sm font-medium text-foreground">Report not found</p>
-            <p className="mt-1 text-xs text-text-secondary">
+            <p className="mt-4 text-xs sm:text-xs sm:text-sm font-medium text-foreground">Report not found</p>
+            <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
               It may have been removed or you no longer have access.
             </p>
           </CardContent>
@@ -146,7 +146,7 @@ export function PublicReportDetailPage(): ReactNode {
             </span>
           </div>
 
-          <h1 className="text-xl font-extrabold leading-tight text-foreground">
+          <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold leading-tight text-foreground">
             {report.title}
           </h1>
         </CardContent>
@@ -155,10 +155,10 @@ export function PublicReportDetailPage(): ReactNode {
       {/* Description */}
       <Card>
         <CardContent className="space-y-2 p-4">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-text-secondary">
+          <h2 className="text-[11px] sm:text-[11px] sm:text-xs font-bold uppercase tracking-wide text-text-secondary">
             Description
           </h2>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          <p className="whitespace-pre-wrap text-xs sm:text-xs sm:text-sm leading-relaxed text-foreground">
             {report.description}
           </p>
         </CardContent>
@@ -168,7 +168,7 @@ export function PublicReportDetailPage(): ReactNode {
       <Card>
         <CardContent className="space-y-3 p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-wide text-text-secondary">
+            <h2 className="text-[11px] sm:text-[11px] sm:text-xs font-bold uppercase tracking-wide text-text-secondary">
               Replies
             </h2>
             <span className="rounded-full bg-surface-variant px-2 py-0.5 text-[11px] font-bold text-text-secondary">
@@ -179,8 +179,8 @@ export function PublicReportDetailPage(): ReactNode {
           {replies.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border-subtle py-8 text-center">
               <MessageSquareText className="h-7 w-7 text-text-tertiary" />
-              <p className="mt-2 text-sm font-medium text-foreground">No replies yet</p>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-2 text-xs sm:text-xs sm:text-sm font-medium text-foreground">No replies yet</p>
+              <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
                 We&rsquo;ll respond soon.
               </p>
             </div>
@@ -192,19 +192,19 @@ export function PublicReportDetailPage(): ReactNode {
                   className="rounded-lg border border-border-subtle bg-surface-variant/40 p-3"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">
                       {(reply.admin?.name ?? 'A').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                        <span className="text-sm font-semibold text-foreground">
+                        <span className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
                           {reply.admin?.name ?? 'Admin'}
                         </span>
                         <span className="text-[11px] text-text-tertiary">
                           {formatDateTime(reply.createdAt)}
                         </span>
                       </div>
-                      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-text">
+                      <p className="mt-1 whitespace-pre-wrap text-xs sm:text-xs sm:text-sm leading-relaxed text-text">
                         {reply.message}
                       </p>
                     </div>
@@ -216,8 +216,8 @@ export function PublicReportDetailPage(): ReactNode {
         </CardContent>
       </Card>
 
-      <p className="pt-2 text-center text-xs text-text-tertiary">
-        AnnaDatha &mdash; Made for Indian farmers
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
+        AnnaDatha &mdash; To Strengthen Indian Farmers
       </p>
     </div>
   )

@@ -151,7 +151,7 @@ export function TranslatableText({
   return (
     <div className={cn('space-y-2', className)}>
       {/* Currently displayed text (original or translated) */}
-      <div className="text-sm text-text leading-relaxed whitespace-pre-wrap">
+      <div className="text-xs sm:text-xs sm:text-sm text-text leading-relaxed whitespace-pre-wrap">
         {translated ?? text}
       </div>
 
@@ -167,7 +167,7 @@ export function TranslatableText({
               setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
               setShowDropdown(true)
             }}
-            className="flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-border-subtle bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs px-2 py-1 rounded border border-border-subtle bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           >
             <Languages className="h-3 w-3" />
             {selectedLang ? langLabel : 'Language'}
@@ -191,7 +191,7 @@ export function TranslatableText({
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleLangSelect(code) }}
                   className={cn(
-                    'w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors',
+                    'w-full text-left px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs hover:bg-muted transition-colors',
                     selectedLang === code ? 'text-primary font-semibold bg-primary/5' : 'text-foreground',
                   )}
                 >
@@ -208,7 +208,7 @@ export function TranslatableText({
             type="button"
             onClick={(e) => { e.stopPropagation(); doTranslate() }}
             disabled={!text.trim()}
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline font-medium"
+            className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline disabled:opacity-50 disabled:no-underline font-medium"
           >
             <Languages className="h-3 w-3" />
             Translate to {langLabel}
@@ -219,7 +219,7 @@ export function TranslatableText({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+            className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline font-medium"
           >
             <Languages className="h-3 w-3" />
             Show {langLabel}
@@ -227,7 +227,7 @@ export function TranslatableText({
         )}
 
         {!isSameLang && loading && (
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
             <Loader className="h-3 w-3 animate-spin" />
             Translating…
           </span>
@@ -237,7 +237,7 @@ export function TranslatableText({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setExpanded(false) }}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground"
           >
             <ChevronUp className="h-3 w-3" />
             Hide {langLabel}
@@ -248,7 +248,7 @@ export function TranslatableText({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setTranslated(null); setExpanded(false) }}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground"
           >
             <ChevronUp className="h-3 w-3" />
             Original
@@ -259,16 +259,16 @@ export function TranslatableText({
       {/* Inline / expanded translated text */}
       {(inline || expanded) && translated && (
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-primary">
             <Languages className="h-3.5 w-3.5" />
             {langLabel}
           </div>
-          <p className="text-sm text-text leading-relaxed whitespace-pre-wrap">{translated}</p>
+          <p className="text-xs sm:text-xs sm:text-sm text-text leading-relaxed whitespace-pre-wrap">{translated}</p>
         </div>
       )}
 
       {error && (
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-[11px] sm:text-[11px] sm:text-xs text-destructive">{error}</p>
       )}
     </div>
   )

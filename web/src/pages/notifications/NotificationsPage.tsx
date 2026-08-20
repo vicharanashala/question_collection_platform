@@ -106,8 +106,8 @@ export function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Notifications</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Notifications</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`
               : 'You\'re all caught up'}
@@ -140,8 +140,8 @@ export function NotificationsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BellOff className="h-12 w-12 text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No notifications yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">No notifications yet</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
               We&apos;ll notify you when something important happens
             </p>
           </CardContent>
@@ -150,7 +150,7 @@ export function NotificationsPage() {
         <div className="space-y-6">
           {Object.entries(groups).map(([date, notifs]) => (
             <div key={date}>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
                 {date}
               </p>
               <Card>
@@ -175,17 +175,17 @@ export function NotificationsPage() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className={cn('text-sm font-semibold', !notif.isRead ? 'text-foreground' : 'text-muted-foreground')}>
+                            <p className={cn('text-xs sm:text-xs sm:text-sm font-semibold', !notif.isRead ? 'text-foreground' : 'text-muted-foreground')}>
                               {notif.title}
                             </p>
                             {!notif.isRead && (
                               <span className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-relaxed">
                             {notif.body}
                           </p>
-                          <p className="text-xs text-muted-foreground/60 mt-1">
+                          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground/60 mt-1">
                             {new Date(notif.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -193,7 +193,7 @@ export function NotificationsPage() {
                         {/* Mark-read button when read */}
                         {notif.isRead && marking !== notif.id && (
                           <button
-                            className="shrink-0 text-xs text-muted-foreground hover:text-primary transition-colors mt-0.5"
+                            className="shrink-0 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-primary transition-colors mt-0.5"
                             onClick={(e) => { e.stopPropagation(); handleMarkRead(notif.id) }}
                             title="Mark as unread"
                           >
@@ -201,7 +201,7 @@ export function NotificationsPage() {
                           </button>
                         )}
                         {marking === notif.id && (
-                          <span className="shrink-0 text-xs text-muted-foreground mt-0.5">...</span>
+                          <span className="shrink-0 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">...</span>
                         )}
                       </div>
                     )

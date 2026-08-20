@@ -54,7 +54,7 @@ export function RankedBarList({
 
             {/* Name */}
             <span
-              className="w-20 truncate text-xs font-medium text-text capitalize shrink-0"
+              className="w-20 truncate text-[11px] sm:text-[11px] sm:text-xs font-medium text-text capitalize shrink-0"
               title={d.name}
             >
               {d.name.replace(/_/g, ' ')}
@@ -72,7 +72,7 @@ export function RankedBarList({
             </div>
 
             {/* Value */}
-            <span className="w-10 text-right text-xs font-semibold text-text tabular-nums shrink-0">
+            <span className="w-10 text-right text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text tabular-nums shrink-0">
               {valueFormatter(d.value)}
             </span>
 
@@ -87,7 +87,7 @@ export function RankedBarList({
       })}
 
       {data.length === 0 && (
-        <div className="flex items-center justify-center h-full text-sm text-text-tertiary">
+        <div className="flex items-center justify-center h-full text-xs sm:text-xs sm:text-sm text-text-tertiary">
           No data available
         </div>
       )}

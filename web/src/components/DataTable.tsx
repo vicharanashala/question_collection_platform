@@ -131,7 +131,7 @@ function ActiveFiltersBar({ filters, columns, onRemove, onClearAll }: ActiveFilt
 
   return (
     <div className="flex items-center flex-wrap gap-2">
-      <span className="text-xs text-muted-foreground shrink-0">Active filters:</span>
+      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0">Active filters:</span>
       {entries.map(([key, values]) => {
         const col = columns.find((c) => c.key === key)
         const label = col?.header ?? key
@@ -142,7 +142,7 @@ function ActiveFiltersBar({ filters, columns, onRemove, onClearAll }: ActiveFilt
             <Badge
               key={`${key}:${v}`}
               variant="secondary"
-              className="flex items-center gap-1 pl-2 pr-1.5 text-xs font-medium"
+              className="flex items-center gap-1 pl-2 pr-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium"
             >
               <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}:</span>
               {display}
@@ -159,7 +159,7 @@ function ActiveFiltersBar({ filters, columns, onRemove, onClearAll }: ActiveFilt
       })}
       <button
         onClick={onClearAll}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+        className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
       >
         Clear all
       </button>
@@ -306,7 +306,7 @@ export function DataTable<T>({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    'h-8 gap-1.5 text-xs px-2.5',
+                    'h-8 gap-1.5 text-[11px] sm:text-[11px] sm:text-xs px-2.5',
                     selected.length > 0 && 'border-primary/50 bg-primary/5 text-primary',
                   )}
                 >
@@ -323,7 +323,7 @@ export function DataTable<T>({
                 {/* Select All / None */}
                 <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border-subtle">
                   <button
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => clearFilter(col.key)}
                   >
                     {selected.length === 0 ? 'Select all' : 'Clear'}
@@ -349,7 +349,7 @@ export function DataTable<T>({
 
         {/* Results count */}
         {hasActiveFilters && (
-          <span className="text-xs text-muted-foreground shrink-0 ml-auto">
+          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0 ml-auto">
             {showingCount} of {totalRows} result{totalRows !== 1 ? 's' : ''}
           </span>
         )}
@@ -372,10 +372,10 @@ export function DataTable<T>({
           <DataTableSkeleton rows={SkeletonRows} cols={columns.length} />
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
-            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+            <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{emptyMessage}</p>
             {hasActiveFilters && (
               <button
-                className="text-xs text-primary hover:underline"
+                className="text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline"
                 onClick={clearAllFilters}
               >
                 Clear filters
@@ -390,7 +390,7 @@ export function DataTable<T>({
                 <div
                   key={col.key}
                   className={cn(
-                    'flex items-center gap-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide shrink-0',
+                    'flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide shrink-0',
                     col.sortable && 'cursor-pointer hover:text-foreground transition-colors',
                     col.textAlign === 'center' && 'justify-center',
                     col.textAlign === 'right' && 'justify-end',
@@ -418,7 +418,7 @@ export function DataTable<T>({
                   <div
                     key={col.key}
                     className={cn(
-                      'shrink-0 text-sm text-foreground flex items-center',
+                      'shrink-0 text-xs sm:text-sm text-foreground flex items-center',
                       col.textAlign === 'center' && 'justify-center',
                       col.textAlign === 'right' && 'justify-end',
                     )}
@@ -436,14 +436,14 @@ export function DataTable<T>({
       {/* ── Pagination ──────────────────────────────────── */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
             {(page - 1) * showingCount + 1}–{Math.min(page * showingCount, totalCount)} of {totalCount.toLocaleString()}
           </p>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-xs text-muted-foreground px-2 min-w-[80px] text-center tabular-nums">
+            <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground px-2 min-w-[80px] text-center tabular-nums">
               {page} / {totalPages}
             </span>
             <Button variant="outline" size="sm" onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages}>
@@ -470,7 +470,7 @@ export function ViewToggle({
       <button
         onClick={() => onChange('table')}
         className={cn(
-          'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors',
+          'flex items-center gap-1.5 px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium transition-colors',
           view === 'table'
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -483,7 +483,7 @@ export function ViewToggle({
       <button
         onClick={() => onChange('card')}
         className={cn(
-          'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors',
+          'flex items-center gap-1.5 px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium transition-colors',
           view === 'card'
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -519,7 +519,7 @@ export function CardView<T extends { id: string }>({
   if (data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-2 border border-border-subtle rounded-xl">
-        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{emptyMessage}</p>
       </div>
     )
   }
@@ -551,7 +551,7 @@ export function CardView<T extends { id: string }>({
                   <div className="mb-1.5">{labelCol.render(row)}</div>
                 )}
                 {subCol && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                     {subCol.render(row)}
                   </p>
                 )}
@@ -561,10 +561,10 @@ export function CardView<T extends { id: string }>({
             <div className="px-4 py-3 space-y-1.5">
               {metaCols.map((col) => (
                 <div key={col.key} className="flex items-start gap-2">
-                  <span className="text-xs text-muted-foreground shrink-0 min-w-[80px]">
+                  <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0 min-w-[80px]">
                     {col.header}
                   </span>
-                  <span className="text-xs text-foreground font-medium leading-snug">
+                  <span className="text-[11px] sm:text-[11px] sm:text-xs text-foreground font-medium leading-snug">
                     {col.render(row)}
                   </span>
                 </div>
@@ -577,14 +577,14 @@ export function CardView<T extends { id: string }>({
 
     {totalPages > 1 && (
       <div className="flex items-center justify-between pt-2">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
           {(page - 1) * data.length + 1}–{Math.min(page * data.length, totalCount)} of {totalCount.toLocaleString()}
         </p>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="sm" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-xs text-muted-foreground px-2 min-w-[80px] text-center tabular-nums">
+          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground px-2 min-w-[80px] text-center tabular-nums">
             {page} / {totalPages}
           </span>
           <Button variant="outline" size="sm" onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages}>

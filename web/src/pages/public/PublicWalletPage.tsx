@@ -97,7 +97,7 @@ function FilterPill({ label, active, onClick }: FilterPillProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        'shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+        'shrink-0 rounded-full border px-3 py-1 text-[11px] sm:text-[11px] sm:text-xs font-semibold transition-colors',
         active
           ? 'border-primary bg-primary text-white'
           : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 dark:hover:border-emerald-700',
@@ -126,8 +126,8 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="rounded-md border border-border-subtle bg-muted/30 p-3 text-center">
-            <p className="text-xs uppercase tracking-wider text-text-tertiary">Amount</p>
-            <p className={cn('mt-1 text-2xl font-extrabold tabular-nums', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs uppercase tracking-wider text-text-tertiary">Amount</p>
+            <p className={cn('mt-1 text-xl sm:text-2xl font-extrabold tabular-nums', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
               {tx.type === 'credit' ? '+' : '−'}₹{formatINRFull(Number(tx.amount))}
             </p>
             {tx.balanceAfter != null && (
@@ -144,7 +144,7 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
             </span>
           } />
           {tx.description && <Row label={t('wallet.txDescription')} value={tx.description} />}
-          {tx.referenceId && <Row label="Reference" value={<span className="font-mono text-xs">{tx.referenceId}</span>} />}
+          {tx.referenceId && <Row label="Reference" value={<span className="font-mono text-[11px] sm:text-[11px] sm:text-xs">{tx.referenceId}</span>} />}
           {tx.rejectionReason && <Row label={t('wallet.rejectionReason')} value={<span className="text-destructive">{tx.rejectionReason}</span>} />}
           <Row label={t('wallet.txDate')} value={formatDateTime(tx.createdAt)} />
         </div>
@@ -155,7 +155,7 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-3 gap-2 text-sm">
+    <div className="grid grid-cols-3 gap-2 text-xs sm:text-xs sm:text-sm">
       <span className="text-text-tertiary">{label}</span>
       <div className="col-span-2 font-medium text-foreground">{value}</div>
     </div>
@@ -183,8 +183,8 @@ function StatCard({ icon, label, value, tone }: StatCardProps) {
       <div className={cn('flex h-7 w-7 items-center justify-center rounded-md bg-white/70 dark:bg-black/20 lg:h-9 lg:w-9', p.text)}>
         {icon}
       </div>
-      <p className={cn('mt-2 text-lg font-extrabold tabular-nums leading-none lg:text-xl', p.value)}>{value}</p>
-      <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-text-tertiary lg:text-xs">{label}</p>
+      <p className={cn('mt-2 text-base sm:text-lg font-extrabold tabular-nums leading-none lg:text-lg sm:text-xl', p.value)}>{value}</p>
+      <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-text-tertiary lg:text-[11px] sm:text-xs">{label}</p>
     </div>
   )
 }
@@ -372,7 +372,7 @@ export function PublicWalletPage() {
       <div className="mx-auto max-w-5xl space-y-5">
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">{t('wallet.title')}</h2>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('wallet.title')}</h2>
           <div className="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -390,7 +390,7 @@ export function PublicWalletPage() {
             </Tooltip>
             <Link
               to="/home/payment-methods"
-              className="flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:bg-emerald-400/15 dark:text-emerald-300"
+              className="flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20 dark:bg-emerald-400/15 dark:text-emerald-300"
             >
               <CreditCard className="h-3.5 w-3.5" />
               {t('profile.paymentMethods')}
@@ -402,18 +402,18 @@ export function PublicWalletPage() {
         <div className="overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-5 text-white shadow-md dark:from-emerald-700 dark:via-emerald-800 dark:to-teal-900 lg:p-7">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider opacity-90">
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold uppercase tracking-wider opacity-90">
                 <WalletIcon className="h-3.5 w-3.5" />
                 {t('wallet.availableBalance')}
               </div>
               <p className="mt-2 text-4xl font-extrabold tabular-nums leading-tight sm:text-5xl">
                 ₹{formatINRFull(balance ?? 0)}
               </p>
-              <p className="mt-1 text-xs opacity-80">Indian Rupees</p>
+              <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs opacity-80">Indian Rupees</p>
             </div>
             <div className="shrink-0">
               {belowMin ? (
-                <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+                <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold backdrop-blur">
                   <Info className="h-3.5 w-3.5 opacity-90" />
                   {t('wallet.minToWithdraw', { amount: minWithdrawal.toLocaleString('en-IN') })}
                 </div>
@@ -421,7 +421,7 @@ export function PublicWalletPage() {
                 <button
                   type="button"
                   onClick={openWithdraw}
-                  className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur transition-colors hover:bg-white/25"
+                  className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold backdrop-blur transition-colors hover:bg-white/25"
                 >
                   <ArrowUpRight className="h-3.5 w-3.5" />
                   {t('wallet.withdraw')}
@@ -455,7 +455,7 @@ export function PublicWalletPage() {
 
         {/* ── Withdraw info banner (when balance < min) ──────────── */}
         {belowMin && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-text-secondary dark:border-amber-900/50 dark:bg-amber-950/20">
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs sm:text-xs sm:text-sm text-text-secondary dark:border-amber-900/50 dark:bg-amber-950/20">
             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
             <p>
               {t('wallet.earnMoreToUnlock', {
@@ -469,10 +469,10 @@ export function PublicWalletPage() {
         <Card>
           <CardContent className="space-y-3 p-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-foreground">
+              <h3 className="text-sm sm:text-sm sm:text-base font-bold text-foreground">
                 {t('wallet.transactionHistory')}
                 {hasActiveFilters && (
-                  <span className="ml-1 text-sm font-semibold text-primary">
+                  <span className="ml-1 text-xs sm:text-xs sm:text-sm font-semibold text-primary">
                     ({filteredTransactions.length})
                   </span>
                 )}
@@ -482,7 +482,7 @@ export function PublicWalletPage() {
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="text-xs font-semibold text-primary hover:underline"
+                    className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-primary hover:underline"
                   >
                     {t('wallet.clearFilters')}
                   </button>
@@ -572,10 +572,10 @@ export function PublicWalletPage() {
             ) : filteredTransactions.length === 0 ? (
               <div className="py-10 text-center">
                 <Receipt className="mx-auto h-12 w-12 text-text-tertiary/60" strokeWidth={1.5} />
-                <p className="mt-3 text-sm font-bold text-foreground">
+                <p className="mt-3 text-xs sm:text-xs sm:text-sm font-bold text-foreground">
                   {hasActiveFilters ? t('wallet.noMatchingTransactions') : t('wallet.noTransactions')}
                 </p>
-                <p className="mt-1 text-xs text-text-secondary">
+                <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
                   {hasActiveFilters
                     ? t('wallet.noMatchingTransactionsDesc')
                     : t('wallet.noTransactionsDesc')}
@@ -606,7 +606,7 @@ export function PublicWalletPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">
+                            <p className="truncate text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
                               {TX_SOURCE_LABELS[tx.source] ?? tx.source}
                               {tx.status === 'pending' && (
                                 <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-warning">Pending</span>
@@ -618,12 +618,12 @@ export function PublicWalletPage() {
                                 <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">Reversed</span>
                               )}
                             </p>
-                            <p className="mt-0.5 truncate text-xs text-text-secondary">
+                            <p className="mt-0.5 truncate text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
                               {tx.description ?? formatRel(tx.createdAt)}
                             </p>
                           </div>
                           <div className="shrink-0 text-right">
-                            <p className={cn('text-sm font-extrabold tabular-nums', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
+                            <p className={cn('text-xs sm:text-xs sm:text-sm font-extrabold tabular-nums', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                               {tx.type === 'credit' ? '+' : '−'}₹{formatINRFull(Number(tx.amount))}
                             </p>
                             <p className="mt-0.5 text-[10px] text-text-tertiary">{formatRel(tx.createdAt)}</p>
@@ -659,7 +659,7 @@ export function PublicWalletPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-text-tertiary">AnnaDatha · Made for Indian farmers</p>
+        <p className="text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha · To Strengthen Indian Farmers</p>
       </div>
 
       <TxDetailDialog tx={selectedTx} open={selectedTx !== null} onClose={() => setSelectedTx(null)} />
@@ -679,14 +679,14 @@ export function PublicWalletPage() {
               <p className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
                 {t('wallet.availableBalance')}
               </p>
-              <p className="mt-1 text-2xl font-extrabold tabular-nums text-foreground">
+              <p className="mt-1 text-xl sm:text-2xl font-extrabold tabular-nums text-foreground">
                 ₹{formatINRFull(balance ?? 0)}
               </p>
             </div>
 
             <div>
               <div className="flex h-12 items-center gap-1.5 rounded-md border border-border-subtle bg-background px-3">
-                <span className="text-lg font-bold text-text-secondary">₹</span>
+                <span className="text-base sm:text-base sm:text-lg font-bold text-text-secondary">₹</span>
                 <Input
                   type="text"
                   inputMode="decimal"
@@ -695,11 +695,11 @@ export function PublicWalletPage() {
                   onChange={(e) => setWithdrawAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                   maxLength={8}
                   autoFocus
-                  className="h-full border-0 p-0 text-lg font-bold shadow-none focus-visible:ring-0"
+                  className="h-full border-0 p-0 text-base sm:text-base sm:text-lg font-bold shadow-none focus-visible:ring-0"
                 />
               </div>
               {!isValidAmount && withdrawAmount.length > 0 && (
-                <p className="mt-1.5 text-xs font-medium text-destructive">
+                <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs font-medium text-destructive">
                   {!isNaN(parsedAmount) && parsedAmount > (balance ?? 0)
                     ? t('wallet.exceedBalance')
                     : t('wallet.minWithdrawalError', { amount: minWithdrawal.toLocaleString('en-IN') })}
@@ -718,17 +718,17 @@ export function PublicWalletPage() {
                 </div>
               ) : paymentDetails.length === 0 ? (
                 <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-center">
-                  <p className="text-sm font-bold text-warning">{t('paymentMethods.emptyTitle')}</p>
+                  <p className="text-xs sm:text-xs sm:text-sm font-bold text-warning">{t('paymentMethods.emptyTitle')}</p>
                   <Link
                     to="/home/payment-methods"
-                    className="mt-1 inline-block text-xs font-semibold text-emerald-700 underline dark:text-emerald-400"
+                    className="mt-1 inline-block text-[11px] sm:text-[11px] sm:text-xs font-semibold text-emerald-700 underline dark:text-emerald-400"
                     onClick={() => setWithdrawOpen(false)}
                   >
                     {t('profile.paymentMethods')}
                   </Link>
                 </div>
               ) : verifiedPaymentDetails.length === 0 ? (
-                <p className="py-3 text-center text-xs italic text-text-tertiary">
+                <p className="py-3 text-center text-[11px] sm:text-[11px] sm:text-xs italic text-text-tertiary">
                   {t('wallet.paymentMethodNotVerified')}
                 </p>
               ) : (
@@ -749,11 +749,11 @@ export function PublicWalletPage() {
                         ? <AtSign className={cn('h-4 w-4 shrink-0', selectedPaymentDetailId === detail.id ? 'text-primary' : 'text-text-secondary')} />
                         : <Building2 className={cn('h-4 w-4 shrink-0', selectedPaymentDetailId === detail.id ? 'text-primary' : 'text-text-secondary')} />}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-foreground">
+                        <p className="truncate text-xs sm:text-xs sm:text-sm font-bold text-foreground">
                           {detail.payoutMethod === 'upi' ? detail.displayValue : `A/c ${detail.displayValue}`}
                         </p>
                         {detail.payoutMethod === 'bank_transfer' && detail.bankName && (
-                          <p className="text-xs text-text-secondary">{detail.bankName}</p>
+                          <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{detail.bankName}</p>
                         )}
                       </div>
                       {selectedPaymentDetailId === detail.id && (
@@ -766,7 +766,7 @@ export function PublicWalletPage() {
             </div>
 
             {payoutError && (
-              <p className="text-xs font-medium text-destructive">{payoutError}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-destructive">{payoutError}</p>
             )}
           </div>
 

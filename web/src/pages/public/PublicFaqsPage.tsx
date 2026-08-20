@@ -24,12 +24,12 @@ function FaqItem({ item }: { item: Faq }) {
         <div className="w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: cat.color }} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <span className="text-sm font-semibold text-foreground leading-snug">{item.question}</span>
+            <span className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-snug">{item.question}</span>
             <span className="shrink-0 mt-0.5 text-muted-foreground">
               {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </span>
           </div>
-          {open && <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{item.answer}</p>}
+          {open && <p className="mt-2.5 text-xs sm:text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{item.answer}</p>}
         </div>
       </button>
     </div>
@@ -58,15 +58,15 @@ export function PublicFaqsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-foreground">Help &amp; FAQ</h2>
-        <p className="text-sm text-text-secondary mt-0.5">Find answers to common questions.</p>
+        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Help &amp; FAQ</h2>
+        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">Find answers to common questions.</p>
       </div>
       <VideoSection />
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {CATEGORIES.map((cat) => {
           const isActive = activeCat === cat.key
           return (
-            <button key={cat.key} onClick={() => setActiveCat(cat.key)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
+            <button key={cat.key} onClick={() => setActiveCat(cat.key)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all',
               isActive ? 'text-white shadow-sm' : 'bg-surface border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground')}
               style={isActive ? { backgroundColor: cat.color } : {}}>
               {cat.label}
@@ -82,14 +82,14 @@ export function PublicFaqsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <HelpCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No FAQs available yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Check back later for help content</p>
+            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">No FAQs available yet</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">Check back later for help content</p>
           </CardContent>
         </Card>
       ) : (
         <>
           <div className="flex items-center justify-between px-1">
-            <p className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'article' : 'articles'}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'article' : 'articles'}</p>
           </div>
           <Card><CardContent className="p-0">{items.map((item) => <FaqItem key={item.id} item={item} />)}</CardContent></Card>
         </>
