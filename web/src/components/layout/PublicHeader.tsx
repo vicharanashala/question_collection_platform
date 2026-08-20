@@ -67,10 +67,14 @@ export function PublicHeader() {
 
   return (
     <header className="relative z-30 flex h-14 items-center justify-between border-b border-border-subtle bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-border-subtle dark:bg-surface/80">
-      <div className="flex items-center gap-2">
+      <button
+        onClick={() => navigate('/home')}
+        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        aria-label="AnnaDatha — go to home"
+      >
         <BrandLogo className="h-8 w-8 shrink-0" />
         <span className="text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
-      </div>
+      </button>
       <div className="flex items-center gap-2">
         <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('notifications.title')} title={t('notifications.title')}>
           <Bell className="h-4 w-4" />

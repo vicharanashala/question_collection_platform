@@ -20,15 +20,16 @@ import { useAuth } from '@/context/AuthContext'
 import { questionApi, walletApi } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
+  Dialog, DialogContent, DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Phone, Leaf, Wallet, Calendar, Trophy, Medal,
   CheckCircle2, Clock, Eye, AlertCircle, XCircle,
   AtSign, Tag, Users, MapPin, Building2, MapPinned, Home, School,
-  ChevronRight, LogOut, Flag, ShieldCheck,
+  ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
   CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
 } from 'lucide-react'
@@ -344,34 +345,49 @@ export function PublicProfilePage() {
       </Card>
 
       {/* — 2. Tier card ———————————————————————————————————————— */}
-      <Card className="overflow-hidden">
+      <Card
+        className="overflow-hidden"
+        style={{
+          backgroundColor: tierCfg.color + '10',
+          border: `1.5px solid ${tierCfg.color}30`,
+          borderTop: `3px solid ${tierCfg.color}`,
+        }}
+      >
         <CardContent className="space-y-3 p-4">
+          {/* Header row */}
           <div className="flex items-center gap-3">
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
-              style={{ backgroundColor: tierCfg.color + '20' }}
+              style={{ backgroundColor: tierCfg.color + '22' }}
             >
               <Medal className="h-5 w-5" style={{ color: tierCfg.color }} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm sm:text-sm sm:text-base font-extrabold" style={{ color: tierCfg.color }}>
+              <p
+                className="text-sm font-extrabold tracking-wide sm:text-base"
+                style={{ color: tierCfg.color }}
+              >
                 {t(tierCfg.labelKey)} {t('profile.member')}
               </p>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary">
+              <p className="text-[11px] font-medium text-text-secondary sm:text-xs">
                 {t('profile.approvedQuestions', { count: approved })}
               </p>
             </div>
             {tier !== 'gold' && (
               <div
-                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
-                style={{ backgroundColor: tierCfg.color + '18', color: tierCfg.color }}
+                className="flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                style={{ backgroundColor: tierCfg.color + '1a', color: tierCfg.color }}
               >
-                {t('profile.toNextTier', { count: remaining, tier: t(TIER_CONFIG[tierCfg.next!].labelKey) })}
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{ color: tierCfg.color }}>
+                  <path d="M4 1L7 4L4 7M1 4H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {remaining}
               </div>
             )}
           </div>
 
-          {tier !== 'gold' && (
+          {/* Progress / gold banner */}
+          {tier !== 'gold' ? (
             <div className="space-y-1">
               <div
                 className="h-1.5 w-full overflow-hidden rounded-full"
@@ -382,23 +398,49 @@ export function PublicProfilePage() {
                   style={{ width: Math.round(progress * 100) + '%', backgroundColor: tierCfg.color }}
                 />
               </div>
-              <p className="text-center text-[11px] font-medium text-text-tertiary">
-                {t('profile.moreToNextTier', { count: remaining, tier: t(TIER_CONFIG[tierCfg.next!].labelKey) })}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-medium text-text-tertiary">
+                  {t('profile.moreToNextTier', { count: remaining, tier: t(TIER_CONFIG[tierCfg.next!].labelKey) })}
+                </p>
+                <p className="text-[10px] font-bold" style={{ color: tierCfg.color }}>
+                  {nextThreshold} pts
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="flex items-center justify-center gap-2 rounded-lg py-2.5"
+              style={{ backgroundColor: tierCfg.color + '1a', color: tierCfg.color }}
+            >
+              <Trophy className="h-4 w-4" style={{ color: tierCfg.color }} />
+              <span className="text-xs font-bold">
+                {t('profile.maxTierReached', "You've reached the highest tier!")}
+              </span>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-            {(['bronze', 'silver', 'gold'] as Tier[]).map((tierKey) => {
+          {/* Milestone dots */}
+          <div
+            className="grid grid-cols-3 gap-2 pt-3"
+            style={{ borderTop: `1px solid ${tierCfg.color}30` }}
+          >
+            {(['bronze', 'silver', 'gold'] as Tier[]).map((tierKey, idx) => {
               const tcfg = TIER_CONFIG[tierKey]
               const reached = approved >= tcfg.threshold
               return (
                 <div key={tierKey} className="flex flex-col items-center gap-1">
                   <div
-                    className="flex h-5 w-5 items-center justify-center rounded-full"
-                    style={{ backgroundColor: reached ? tcfg.color : '#e2e8f0' }}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border"
+                    style={{
+                      backgroundColor: reached ? tcfg.color : 'transparent',
+                      borderColor: reached ? 'transparent' : '#94a3b8',
+                    }}
                   >
-                    {reached && <CheckCircle2 className="h-3 w-3 text-white" />}
+                    {reached ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                    ) : (
+                      <span className="text-[9px] font-bold text-text-tertiary">{idx + 1}</span>
+                    )}
                   </div>
                   <p
                     className="text-[11px] font-bold"
@@ -406,7 +448,7 @@ export function PublicProfilePage() {
                   >
                     {t(tcfg.labelKey)}
                   </p>
-                  <p className="text-[10px] font-medium text-text-tertiary">{tcfg.threshold}</p>
+                  <p className="text-[10px] font-medium text-text-tertiary">{tcfg.threshold}+</p>
                 </div>
               )
             })}
@@ -663,22 +705,45 @@ export function PublicProfilePage() {
 
       {/* — Logout confirmation dialog ———————————————— */}
       <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('profile.signOut')}?</DialogTitle>
-            <DialogDescription>
+        <DialogContent hideCloseButton className="gap-0 overflow-hidden p-0 sm:max-w-md">
+          {/* Coloured top band */}
+          <div className="flex flex-col items-center gap-3 bg-gradient-to-b from-rose-50 to-white px-6 pt-6 pb-5 dark:from-rose-950/40 dark:to-surface">
+            {/* Icon circle */}
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/50">
+              <LogOut className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+            </div>
+            <DialogTitle className="text-center text-lg font-bold text-foreground sm:text-xl">
+              {t('profile.signOut')}?
+            </DialogTitle>
+            <p className="text-center text-sm text-text-secondary">
               {t('profile.signOutConfirm')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutOpen(false)}>
+            </p>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col gap-2 px-6 pb-6 pt-1 sm:flex-row sm:pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setLogoutOpen(false)}
+              className="flex-1 justify-center"
+            >
               {t('editProfile.cancel')}
             </Button>
-            <Button variant="destructive" onClick={handleLogout}>
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              className="flex-1 justify-center gap-2"
+            >
               <LogOut className="h-4 w-4" />
               {t('profile.signOutAction')}
             </Button>
-          </DialogFooter>
+          </div>
+
+          {/* Close button — visible on mobile via [&>button]:hidden override above */}
+          <DialogPrimitive.Close className="absolute right-3 top-3 rounded-sm opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus sm:right-4 sm:top-4">
+            <X className="h-4 w-4 text-text-tertiary" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
         </DialogContent>
       </Dialog>
     </div>
