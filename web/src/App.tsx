@@ -26,7 +26,7 @@ const FaqsPage      = lazyRoute(() => import('@/pages/faqs/FaqsPage').then(m => 
 const DistributionsPage = lazyRoute(() => import('@/pages/distributions/DistributionsPage').then(m => ({ default: m.DistributionsPage })))
 
 // ── Public-user pages (role="user") ────────────────────────────────────────
-
+const PublicRegisterPage             = lazyRoute(() => import('@/pages/auth/PublicRegisterPage').then(m => ({ default: m.PublicRegisterPage })))
 const PublicVerificationPendingPage  = lazyRoute(() => import('@/pages/public/PublicVerificationPendingPage').then(m => ({ default: m.PublicVerificationPendingPage })))
 const PublicHomePage                 = lazyRoute(() => import('@/pages/public/PublicHomePage').then(m => ({ default: m.PublicHomePage })))
 const PublicAskPage                  = lazyRoute(() => import('@/pages/public/PublicAskPage').then(m => ({ default: m.PublicAskPage })))
@@ -154,7 +154,7 @@ export default function App() {
       <Routes>
         {/* ── Public auth pages (no auth required) ──────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/register" element={<PublicRegisterPage />} />
         <Route path="/home/verification-pending" element={<PublicVerificationPendingPage />} />
 
         {/* ── Root gate: home page for visitors, staff shell for staff ──── */}
