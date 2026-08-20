@@ -16,6 +16,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { SignOutDialog } from '@/components/SignOutDialog'
 import { BrandLogo } from '@/components/BrandLogo'
 
 const navItems = [
@@ -28,14 +29,14 @@ const navItems = [
 interface MobileNavProps {
   open: boolean
   onClose: () => void
-  onLogout: () => void
 }
 
-export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
+export function MobileNav({ open, onClose }: MobileNavProps) {
   const { user } = useAuth()
   const { t } = useTranslation()
   const { nativeName } = useLanguage()
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   // Role label translates to the active language.
   const roleKey = user?.role ? `roles.${user.role}` : null
@@ -123,7 +124,7 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
           </Button>
           <Button
             variant="ghost"
-            onClick={() => { onLogout(); onClose() }}
+            onClick={() => { setLogoutConfirmOpen(true); onClose() }}
             className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
@@ -132,6 +133,7 @@ export function MobileNav({ open, onClose, onLogout }: MobileNavProps) {
         </div>
       </DialogContent>
       <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
+      <SignOutDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen} />
     </Dialog>
   )
 }

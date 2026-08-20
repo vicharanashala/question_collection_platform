@@ -1,13 +1,10 @@
 import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import { SignOutDialog } from '@/components/SignOutDialog'
 
 interface PublicMobileNavProps {
   open: boolean
@@ -24,16 +21,8 @@ const items = [
 
 export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
   const [logoutOpen, setLogoutOpen] = useState(false)
-
-  function handleSignOut() {
-    setLogoutOpen(false)
-    onClose()
-    logout()
-    navigate('/login', { replace: true })
-  }
 
   return (
     <>
@@ -109,18 +98,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
         </div>
       </div>
 
-      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('profile.signOut')}</DialogTitle>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutOpen(false)}>{t('profile.signOutCancel')}</Button>
-            <Button variant="destructive" onClick={handleSignOut}>{t('profile.signOutAction')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      <SignOutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
     </>
   )
 }

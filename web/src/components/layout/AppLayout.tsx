@@ -25,12 +25,6 @@ export function AppLayout() {
       <MobileNav
         open={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
-        onLogout={() => {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('auth_user')
-          window.location.href = '/login'
-        }}
       />
     </div>
   )

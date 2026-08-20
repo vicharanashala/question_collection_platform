@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -12,16 +12,13 @@ import {
   CreditCard,
   LogOut,
   Wallet,
-ScrollText,
+  ScrollText,
   Flag,
   HelpCircle,
   Send,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { SignOutDialog } from '@/components/SignOutDialog'
 
 // Nav items use a translation key (`labelKey`) instead of a literal so the
 // sidebar re-renders in the active language via i18next's `t()`.
@@ -41,8 +38,7 @@ const navItems = [
 
 export function Sidebar() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   // Role label is a translation key so each role renders in the active
@@ -109,32 +105,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Logout confirmation */}
-      <Dialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('profile.signOut')}</DialogTitle>
-            <DialogDescription>
-              {t('profile.signOutConfirm')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
-              {t('profile.signOutCancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setLogoutConfirmOpen(false)
-                logout()
-                navigate('/login', { replace: true })
-              }}
-            >
-              {t('profile.signOutAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SignOutDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen} />
     </aside>
   )
 }

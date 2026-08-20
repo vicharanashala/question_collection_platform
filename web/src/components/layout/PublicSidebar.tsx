@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -12,10 +12,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { SignOutDialog } from '@/components/SignOutDialog'
 
 const navItems = [
   { to: '/home',           labelKey: 'nav.home',        icon: Home,             end: true },
@@ -26,9 +23,8 @@ const navItems = [
 ]
 
 export function PublicSidebar() {
-  const navigate = useNavigate()
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   return (
@@ -86,32 +82,7 @@ export function PublicSidebar() {
         </button>
       </div>
 
-      {/* Logout confirmation */}
-      <Dialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('profile.signOut')}</DialogTitle>
-            <DialogDescription>
-              {t('profile.signOutConfirm')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
-              {t('profile.signOutCancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setLogoutConfirmOpen(false)
-                logout()
-                navigate('/login', { replace: true })
-              }}
-            >
-              {t('profile.signOutAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SignOutDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen} />
     </aside>
   )
 }

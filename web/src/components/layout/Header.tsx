@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -8,17 +8,13 @@ import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { SignOutDialog } from '@/components/SignOutDialog'
 
 interface HeaderProps {}
 
 export function Header({}: HeaderProps) {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { t } = useTranslation()
   const [profileOpen, setProfileOpen] = useState(false)
@@ -51,14 +47,8 @@ export function Header({}: HeaderProps) {
   }, [])
 
   function handleLogout() {
-    setLogoutConfirmOpen(true)
-  }
-
-  function confirmLogout() {
-    setLogoutConfirmOpen(false)
     setProfileOpen(false)
-    logout()
-    navigate('/login', { replace: true })
+    setLogoutConfirmOpen(true)
   }
 
   return (
@@ -152,26 +142,11 @@ export function Header({}: HeaderProps) {
         </div>
       </div>
 
-      {/* Logout confirmation */}
-      <Dialog open={logoutConfirmOpen} onOpenChange={(v) => { setLogoutConfirmOpen(v) }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('profile.signOut')}</DialogTitle>
-            <DialogDescription>
-              {t('profile.signOutConfirm')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLogoutConfirmOpen(false)}>
-              {t('profile.signOutCancel')}
-            </Button>
-            <Button variant="destructive" onClick={confirmLogout}>
-              {t('profile.signOutAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      <SignOutDialog
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+        onSignOut={() => setProfileOpen(false)}
+      />
       <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
     </header>
   )
