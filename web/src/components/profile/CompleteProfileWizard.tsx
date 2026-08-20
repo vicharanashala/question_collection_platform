@@ -981,7 +981,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
           {/* Custom checkbox */}
           <button
             type="button"
-            onClick={() => setField("consentGiven", !form.consentGiven)}
+            onClick={(e) => { e.stopPropagation(); setField("consentGiven", !form.consentGiven) }}
             className={cn(
               "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all",
               form.consentGiven
@@ -1439,7 +1439,7 @@ export function CompleteProfileWizard({
       }
       const res = await authApi.register(payload);
       login(res.tokens, res.user);
-      window.location.href = '/home';
+      window.location.href = '/home/verification-pending';
     } catch (err) {
       toast.error(
         getErrorMessage(err, "Registration failed. Please try again."),

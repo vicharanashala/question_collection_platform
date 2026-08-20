@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Play, X } from 'lucide-react'
+import { Play, X, VideoOff } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 /// <reference types="vite/client" />
 
 /**
  * YouTube embed URL (e.g. https://www.youtube.com/embed/VIDEO_ID?rel=0&modestbranding=1)
  * Set VITE_PUBLIC_FAQ_VIDEO_URL in web/.env
+ * Set VITE_PUBLIC_FAQ_VIDEO_DISABLED=true to disable the video section while keeping it visible.
  */
 const VIDEO_URL = (import.meta as any).env?.VITE_PUBLIC_FAQ_VIDEO_URL as string | undefined
+const VIDEO_DISABLED = (import.meta as any).env?.VITE_PUBLIC_FAQ_VIDEO_DISABLED === 'true'
 
 function isYouTubeEmbedUrl(url: string): boolean {
   return /youtube\.com\/embed\//.test(url)
@@ -16,7 +18,23 @@ function isYouTubeEmbedUrl(url: string): boolean {
 export function VideoSection() {
   const [open, setOpen] = useState(false)
 
+  // No URL configured — show nothing
   if (!VIDEO_URL) return null
+
+  // Disabled via env — show muted non-interactive button
+  if (VIDEO_DISABLED) {
+    return (
+      <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border-subtle bg-surface opacity-50 cursor-not-allowed">
+        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <VideoOff className="h-5 w-5 text-text-tertiary" />
+        </div>
+        <div className="text-left">
+          <p className="text-xs font-semibold text-foreground">Watch Video Guide</p>
+          <p className="text-[11px] text-muted-foreground">Video guide coming soon</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
