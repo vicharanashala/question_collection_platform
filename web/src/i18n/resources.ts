@@ -71,7 +71,7 @@ const resources = {
         "tagline": "Your district, in your language",
         "staffPortal": "QuestionPlatform",
         "publicPortal": "Public Portal",
-        "footer": "AnnaDatha - Made for Indian farmers"
+        "footer": "AnnaDatha - To Strengthen Indian Farmers"
       },
       "chrome": {
         "openMenu": "Open menu",

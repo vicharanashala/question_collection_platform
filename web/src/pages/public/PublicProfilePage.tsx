@@ -700,7 +700,7 @@ export function PublicProfilePage() {
       </div>
 
       <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
-        AnnaDatha — Made for Indian farmers
+        AnnaDatha — To Strengthen Indian Farmers
       </p>
 
       {/* — Logout confirmation dialog ———————————————— */}

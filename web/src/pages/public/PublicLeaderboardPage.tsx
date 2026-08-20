@@ -245,7 +245,7 @@ export function PublicLeaderboardPage(): ReactNode {
         </>
       )}
 
-      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha &mdash; Made for Indian farmers</p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha &mdash; To Strengthen Indian Farmers</p>
     </div>
   )
 }

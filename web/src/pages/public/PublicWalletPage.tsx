@@ -659,7 +659,7 @@ export function PublicWalletPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha · Made for Indian farmers</p>
+        <p className="text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha · To Strengthen Indian Farmers</p>
       </div>
 
       <TxDetailDialog tx={selectedTx} open={selectedTx !== null} onClose={() => setSelectedTx(null)} />
