@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, MessageSquarePlus, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -85,23 +86,36 @@ export function PublicQuestionsPage() {
   const end = Math.min(page * limit, total)
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-5">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground lg:text-2xl">{t('submissions.title')}</h2>
-          <p className="mt-0.5 text-xs sm:text-xs sm:text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('submissions.title')}</h2>
+          <p className="mt-0.5 text-xs sm:text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
         </div>
-        <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600">
-          <MessageSquarePlus className="h-4 w-4" />{t('question.askQuestion')}
+        <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600 shrink-0" aria-label={t('question.askQuestion')}>
+          <MessageSquarePlus className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">{t('question.askQuestion')}</span>
         </Button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="hidden sm:flex gap-2 overflow-x-auto pb-1">
         {STATUS_TABS.map((s) => (
-          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold transition-colors', status === s.key ? 'bg-primary text-primary-foreground' : 'border border-border-subtle bg-surface text-text-secondary hover:border-primary/40 dark:hover:border-primary/60')}>
+          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-[11px] sm:text-xs font-semibold transition-colors', status === s.key ? 'bg-primary text-primary-foreground' : 'border border-border-subtle bg-surface text-text-secondary hover:border-primary/40 dark:hover:border-primary/60')}>
             {t(s.labelKey)}
           </button>
         ))}
+      </div>
+      <div className="sm:hidden">
+        <Select value={status} onValueChange={(v) => { setStatus(v as typeof status); setPage(1) }}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t('submissions.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_TABS.map((s) => (
+              <SelectItem key={s.key || 'all'} value={s.key}>{t(s.labelKey)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -109,8 +123,8 @@ export function PublicQuestionsPage() {
           {loading ? (
             <div className="flex items-center justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-500" /></div>
           ) : items.length === 0 ? (
-            <div className="p-10 text-center">
-              <p className="text-xs sm:text-xs sm:text-sm font-medium text-text-secondary">{t('common.noQuestionsFound')}</p>
+            <div className="p-8 sm:p-10 text-center">
+              <p className="text-xs sm:text-sm font-medium text-text-secondary">{t('common.noQuestionsFound')}</p>
               <Button onClick={() => navigate('/home/ask')} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
                 <MessageSquarePlus className="h-4 w-4" /> {t('common.askYourFirstQuestion')}
               </Button>
@@ -118,20 +132,18 @@ export function PublicQuestionsPage() {
           ) : (
             <ul className="divide-y divide-border-subtle">
               {items.map((q) => (
-                <li key={q.id} className="p-4 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer lg:p-5" onClick={() => q.id && navigate(`/home/questions/${q.id}`)}>
+                <li key={q.id} className="p-4 sm:p-5 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer" onClick={() => q.id && navigate(`/home/questions/${q.id}`)}>
                   <div className="flex items-start gap-3">
                     {q.mediaUrls && q.mediaUrls.length > 0 && <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />}
-                    {/* Text + meta stack on mobile; on desktop the meta (status/
-                        date/crop) moves beside the text instead of below it,
-                        so a short question isn't left with empty space to its
-                        right on a wide row. */}
+                    {/* Text + meta stack on mobile; side-by-side on desktop so a short
+                        question doesn't leave empty space on a wide row. */}
                     <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-                      <p className="line-clamp-2 flex-1 text-xs sm:text-sm font-medium text-foreground lg:line-clamp-1 lg:text-sm sm:text-base">{q.questionText}</p>
-                      <div className="flex shrink-0 items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
+                      <p className="line-clamp-2 flex-1 text-xs sm:text-sm font-medium text-foreground lg:line-clamp-1 lg:text-sm">{q.questionText}</p>
+                      <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
                         <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>{t(statusLabelKey(q.status))}</span>
                         <span>·</span>
                         <span>{formatDate(q.submittedAt)}</span>
-                        {q.cropType && <><span>·</span><span>{q.cropType}</span></>}
+                        {q.cropType && <><span>·</span><span className="hidden sm:inline">{q.cropType}</span></>}
                       </div>
                     </div>
                   </div>

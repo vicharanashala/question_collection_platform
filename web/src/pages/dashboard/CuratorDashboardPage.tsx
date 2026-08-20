@@ -53,7 +53,7 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary truncate">{label}</p>
+            <p className="text-xs sm:text-sm text-text-tertiary truncate">{label}</p>
             <p className="mt-1 text-2xl sm:text-3xl font-extrabold text-text tabular-nums">
               {typeof value === 'number' ? formatNumber(value) : value}
             </p>
@@ -137,7 +137,7 @@ export function CuratorDashboardPage() {
   }))
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>

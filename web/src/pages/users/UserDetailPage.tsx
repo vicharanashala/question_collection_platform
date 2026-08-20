@@ -463,7 +463,7 @@ setUser(r.user as UserType)
   const avatarBg = isBanned ? 'bg-red-600' : isSuspended ? 'bg-amber-500' : 'bg-blue-600'
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-5">
       {/* Back navigation */}
       <button
         onClick={() => navigate('/users')}
@@ -478,7 +478,7 @@ setUser(r.user as UserType)
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div className={cn(
-              'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg sm:text-lg sm:text-xl font-black text-white ring-2 ring-primary/20', avatarBg
+              'flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-lg sm:text-xl font-black text-white ring-2 ring-primary/20', avatarBg
             )}>
               {initials}
             </div>
@@ -487,7 +487,7 @@ setUser(r.user as UserType)
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between flex-wrap gap-3">
                 <div>
-                  <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">{user.name || 'Unnamed User'}</h2>
+                  <h2 className="text-lg sm:text-xl font-extrabold text-foreground">{user.name || 'Unnamed User'}</h2>
                   {user.username && <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-0.5">@{user.username}</p>}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <VerificationBadge status={user.verificationStatus} />

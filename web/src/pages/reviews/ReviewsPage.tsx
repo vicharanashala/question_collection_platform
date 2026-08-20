@@ -757,7 +757,7 @@ export function ReviewsPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Review Queue</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">Review Queue</h2>
           <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
             {total > 0 ? `${total} question${total === 1 ? '' : 's'} pending review` : 'No questions pending'}
           </p>

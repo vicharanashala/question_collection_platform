@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -237,11 +238,11 @@ export function QuestionsPage() {
   ]
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-5">
       {/* ─── Page header ─── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Questions</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">Questions</h2>
           <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
             All submitted questions
           </p>
@@ -257,16 +258,16 @@ export function QuestionsPage() {
       {/* ─── Filter bar ─── */}
       <Card>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4">
-          {/* Status filter chips */}
+          {/* Status filter chips — pills on desktop, dropdown on mobile */}
           <div className="flex items-center gap-2 flex-wrap">
             <ListFilter className="h-4 w-4 text-muted-foreground shrink-0" />
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="hidden sm:flex items-center gap-1.5 flex-wrap">
               {statusOptions.map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => { setStatusFilter(value); setPage(1) }}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium border transition-all duration-150',
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150',
                     statusFilter === value
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground',
@@ -275,6 +276,18 @@ export function QuestionsPage() {
                   {label}
                 </button>
               ))}
+            </div>
+            <div className="sm:hidden flex-1">
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as typeof statusFilter); setPage(1) }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>{statusOptions.find(o => o.value === statusFilter)?.label ?? 'All'}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
