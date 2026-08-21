@@ -25,7 +25,7 @@ export function PublicLayout() {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <PublicHeader />
+        <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 md:pb-6">
           <Outlet />
         </main>

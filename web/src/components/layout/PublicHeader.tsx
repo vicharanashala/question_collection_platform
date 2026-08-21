@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Bell, Trophy, Languages } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Bell, Trophy, Languages, Menu } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -11,7 +11,12 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { notificationApi } from '@/api/client'
 import { SignOutDialog } from '@/components/SignOutDialog'
 
-export function PublicHeader() {
+interface PublicHeaderProps {
+  /** Open the mobile drawer. Wired up by `PublicLayout`; only used on small screens. */
+  onOpenMobileNav?: () => void
+}
+
+export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -64,14 +69,29 @@ export function PublicHeader() {
 
   return (
     <header className="relative z-30 flex h-14 items-center justify-between border-b border-border-subtle bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-border-subtle dark:bg-surface/80">
-      <button
-        onClick={() => navigate('/home')}
-        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        aria-label="AnnaDatha — go to home"
-      >
-        <BrandLogo className="h-8 w-8 shrink-0" />
-        <span className="text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
-      </button>
+      <div className="flex items-center gap-2">
+        {/* Hamburger — opens the mobile drawer. Hidden on `md` and above
+            where the desktop sidebar is always visible. */}
+        {onOpenMobileNav && (
+          <button
+            type="button"
+            onClick={onOpenMobileNav}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-accent hover:text-text transition-colors md:hidden"
+            aria-label={t('chrome.openMenu')}
+            title={t('chrome.openMenu')}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        <button
+          onClick={() => navigate('/home')}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          aria-label="AnnaDatha — go to home"
+        >
+          <BrandLogo className="h-8 w-8 shrink-0" />
+          <span className="text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+        </button>
+      </div>
       <div className="flex items-center gap-2">
         <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('notifications.title')} title={t('notifications.title')}>
           <Bell className="h-4 w-4" />
