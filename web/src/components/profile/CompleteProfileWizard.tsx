@@ -423,7 +423,7 @@ function Step2({
           <div className="space-y-1.5">
             <Label>Nearest KVK <span className="text-destructive">*</span></Label>
             <SearchableSelect
-              items={kvks.map((k) => ({ value: k.a, label: k.address }))}
+              items={kvks.map((k) => ({ value: k.address, label: k.address }))}
               value={form.kvk}
               onValueChange={(v) => setField("kvk", v)}
               placeholder="Search KVK…"
