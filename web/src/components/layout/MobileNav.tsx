@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -9,7 +9,14 @@ import {
   Users,
   MessageSquare,
   CheckSquare,
+  Settings2,
+  CreditCard,
   LogOut,
+  Wallet,
+  ScrollText,
+  Flag,
+  HelpCircle,
+  Send,
   Languages,
   X,
 } from 'lucide-react'
@@ -19,11 +26,20 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { SignOutDialog } from '@/components/SignOutDialog'
 import { BrandLogo } from '@/components/BrandLogo'
 
+// Mirror of `Sidebar.tsx` navItems — kept in sync so the mobile drawer
+// shows exactly what the desktop sidebar would for the active role.
 const navItems = [
-  { to: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
-  { to: '/users', labelKey: 'nav.userManagement', icon: Users },
-  { to: '/questions', labelKey: 'nav.questions', icon: MessageSquare },
-  { to: '/reviews', labelKey: 'nav.reviewQueue', icon: CheckSquare, roles: ['curator', 'admin', 'super_admin'] },
+  { to: '/dashboard',      labelKey: 'nav.dashboard',      icon: LayoutDashboard, roles: ['user', 'curator', 'finance', 'distributor', 'admin', 'super_admin'] },
+  { to: '/users',          labelKey: 'nav.userManagement', icon: Users,           roles: ['finance', 'admin', 'super_admin'] },
+  { to: '/questions',      labelKey: 'nav.questions',      icon: MessageSquare,   roles: ['user', 'curator', 'admin', 'super_admin'] },
+  { to: '/reviews',        labelKey: 'nav.reviewQueue',    icon: CheckSquare,     roles: ['curator', 'super_admin'] },
+  { to: '/distributions',  labelKey: 'nav.distributions',  icon: Send,            roles: ['distributor', 'admin', 'super_admin'] },
+  { to: '/withdrawals',    labelKey: 'nav.withdrawals',    icon: CreditCard,      roles: ['finance', 'admin', 'super_admin'] },
+  { to: '/wallets',        labelKey: 'nav.wallets',        icon: Wallet,          roles: ['finance', 'admin', 'super_admin'] },
+  { to: '/settings',       labelKey: 'nav.settings',       icon: Settings2,       roles: ['super_admin'] },
+  { to: '/audit-logs',     labelKey: 'nav.auditLogs',      icon: ScrollText,      roles: ['super_admin', 'admin'] },
+  { to: '/reports',        labelKey: 'nav.reports',        icon: Flag,            roles: ['admin', 'super_admin', 'curator'] },
+  { to: '/admin/faqs',     labelKey: 'nav.faqManagement',  icon: HelpCircle,      roles: ['admin', 'super_admin'] },
 ]
 
 interface MobileNavProps {
@@ -35,6 +51,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
   const { user } = useAuth()
   const { t } = useTranslation()
   const { nativeName } = useLanguage()
+  const { pathname } = useLocation()
   const [languageOpen, setLanguageOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
@@ -42,10 +59,11 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
   const roleKey = user?.role ? `roles.${user.role}` : null
   const roleLabel = roleKey ? t(roleKey) : ''
 
-  // Close on route change
+  // Close on route change so the user sees the freshly-navigated content.
   useEffect(() => {
     if (open) onClose()
-  }, [location.pathname])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   // Trap scroll
   useEffect(() => {
@@ -81,11 +99,12 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {navItems.map(({ to, labelKey, icon: Icon, roles }) => {
-            if (roles && !roles.includes(user?.role as string)) return null
+            if (!roles?.includes(user?.role as string)) return null
             return (
               <NavLink
                 key={to}
                 to={to}
+                onClick={onClose}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-md px-3 py-2.5 text-xs sm:text-xs sm:text-sm font-medium transition-colors',
