@@ -558,14 +558,15 @@ function Step3({
           )}
         </div>
         <div className="space-y-1.5">
-          <Label>Age</Label>
+          <Label>Age <span className="text-rose-600">*</span></Label>
           <Input
             type="number"
             min={1}
             max={120}
             value={form.age}
             onChange={(e) => setField("age", e.target.value)}
-            placeholder="Optional"
+            placeholder="Your Age"
+            required
           />
           {errors.age && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.age}</p>}
         </div>
@@ -1229,8 +1230,8 @@ export function CompleteProfileWizard({
         e.username =
           "That username is taken. Pick or click a suggestion below.";
       if (!form.gender) e.gender = "Please choose a gender";
-      if (form.age && (Number(form.age) < 16 || Number(form.age) > 100))
-        e.age = "Age must be between 16 and 100";
+      if (!form.age || form.age && (Number(form.age) < 16 || Number(form.age) > 100))
+        e.age = "Age is required and must be between 16 and 100";
       if (form.category === "farmer") {
         if (!form.farmSize.trim()) e.farmSize = "Farm size is required";
         if (form.cropType.length === 0) e.cropType = "Pick at least one crop";
