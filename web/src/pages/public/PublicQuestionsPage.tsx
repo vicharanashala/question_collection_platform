@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, MessageSquarePlus, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { QuestionDetailModal } from '@/components/submissions/QuestionDetailModal'
 import type { Question } from '@/types'
 
 const STATUS_TABS: { key: '' | 'pending' | 'approved' | 'rejected' | 'held' | 'moved_to_final'; labelKey: string }[] = [
@@ -51,6 +52,10 @@ export function PublicQuestionsPage() {
   const [page, setPage] = useState(1)
   const limit = 20
   const [total, setTotal] = useState(0)
+  // Selected question for the read-only detail dialog — null when closed.
+  // Kept as `id` (not the full object) so the modal owns its own fetch / cache
+  // and we never have to keep two copies of the question in sync.
+  const [openQuestionId, setOpenQuestionId] = useState<string | null>(null)
 
   /** Format an ISO timestamp as a localised relative-time string. */
   function formatDate(s: string) {
@@ -132,7 +137,19 @@ export function PublicQuestionsPage() {
           ) : (
             <ul className="divide-y divide-border-subtle">
               {items.map((q) => (
-                <li key={q.id} className="p-4 sm:p-5 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer" onClick={() => q.id && navigate(`/home/questions/${q.id}`)}>
+                <li
+                  key={q.id}
+                  className="p-4 sm:p-5 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer"
+                  onClick={() => q.id && setOpenQuestionId(q.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && q.id) {
+                      e.preventDefault()
+                      setOpenQuestionId(q.id)
+                    }
+                  }}
+                >
                   <div className="flex items-start gap-3">
                     {q.mediaUrls && q.mediaUrls.length > 0 && <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />}
                     {/* Text + meta stack on mobile; side-by-side on desktop so a short
@@ -168,6 +185,15 @@ export function PublicQuestionsPage() {
           </div>
         </div>
       )}
+
+      {/* Read-only detail dialog — opens when a list row is clicked and closes
+          when the user dismisses it (X button, Escape, or outside click). The
+          dialog fetches its own question via `questionApi.getQuestion`. */}
+      <QuestionDetailModal
+        open={openQuestionId !== null}
+        onOpenChange={(open) => { if (!open) setOpenQuestionId(null) }}
+        questionId={openQuestionId}
+      />
     </div>
   )
 }
