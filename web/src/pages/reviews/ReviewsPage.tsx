@@ -1,192 +1,312 @@
-import { useState, useEffect, useRef } from 'react'
-import { curatorApi, getErrorMessage } from '@/api/client'
-import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
-import { cn, formatDate } from '@/lib/utils'
+import { useState, useEffect, useRef } from "react";
+import { curatorApi, getErrorMessage } from "@/api/client";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { cn, formatDate } from "@/lib/utils";
 import {
-  CheckCircle, XCircle, PauseCircle,
-  Clock, Star,
-  MapPin, Wheat, Film, Hash,
-  User, ThumbsUp, Ban, ListFilter,
-  Globe, X, Mic,
+  CheckCircle,
+  XCircle,
+  PauseCircle,
+  Clock,
+  Star,
+  MapPin,
+  Wheat,
+  Film,
+  Hash,
+  User,
+  ThumbsUp,
+  Ban,
+  ListFilter,
+  Globe,
+  X,
+  Mic,
   CopyCheck,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import type { Question, QuestionStatus } from '@/types'
-import { TranslatableText } from '@/components/TranslatableText'
-import { DataTable, type ColumnDef } from '@/components/DataTable'
+} from "lucide-react";
+import { toast } from "sonner";
+import type { Question, QuestionStatus } from "@/types";
+import { TranslatableText } from "@/components/TranslatableText";
+import { DataTable, type ColumnDef } from "@/components/DataTable";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:    'bg-warning text-white',
-  held:       'bg-amber-500 text-white',
-  approved:   'bg-success text-white',
-  rejected:   'bg-destructive text-white',
-}
+  pending: "bg-warning text-white",
+  held: "bg-amber-500 text-white",
+  approved: "bg-success text-white",
+  rejected: "bg-destructive text-white",
+};
 
 const STATUS_LABELS: Record<string, string> = {
-  pending:    'Pending',
-  held:       'On Hold',
-  approved:   'Approved',
-  rejected:   'Rejected',
-}
+  pending: "Pending",
+  held: "On Hold",
+  approved: "Approved",
+  rejected: "Rejected",
+};
 
-const REVIEWABLE_STATUSES: QuestionStatus[] = ['pending', 'held']
+const REVIEWABLE_STATUSES: QuestionStatus[] = ["pending", "held"];
 
 // ─── Review Detail Modal ──────────────────────────────────────────────────────
 
-type ReviewAction = 'approve' | 'reject' | 'hold'
+type ReviewAction = "approve" | "reject" | "hold";
 
 interface ReviewDetailModalProps {
-  question: Question
-  onClose: () => void
-  onAction: (action: ReviewAction, questionText: string) => void
-  actionLoading: boolean
-  selectedLang: string
-  onLangChange: (lang: string) => void
+  question: Question;
+  onClose: () => void;
+  onAction: (action: ReviewAction, questionText: string) => void;
+  actionLoading: boolean;
+  selectedLang: string;
+  onLangChange: (lang: string) => void;
 }
 
-function MetaItem({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null | undefined }) {
-  if (!value) return null
+function MetaItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | null | undefined;
+}) {
+  if (!value) return null;
   return (
     <div className="flex items-start gap-2">
       <Icon className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
       <div>
-        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{label}</p>
-        <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">{value}</p>
+        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">
+          {value}
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
-function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, selectedLang, onLangChange }: ReviewDetailModalProps) {
+function ReviewDetailModal({
+  question: q,
+  onClose,
+  onAction,
+  actionLoading,
+  selectedLang,
+  onLangChange,
+}: ReviewDetailModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-2xl bg-surface rounded-2xl shadow-2xl border border-border-subtle overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle shrink-0">
           <div className="flex items-center gap-3">
-            <Badge className={cn('capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+            <Badge
+              className={cn(
+                "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
+                STATUS_COLORS[q.status] ?? "bg-muted",
+              )}
+            >
               {STATUS_LABELS[q.status] ?? q.status}
             </Badge>
-            <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">{q.id.slice(0, 8)}…</span>
+            <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">
+              {q.id.slice(0, 8)}…
+            </span>
             <div className="flex items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-              {q.mediaUrls && q.mediaUrls.length > 0 && <span className="flex items-center gap-1"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>}
-
+              {q.mediaUrls && q.mediaUrls.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <Film className="h-3 w-3" />
+                  {q.mediaUrls.length}
+                </span>
+              )}
             </div>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-
           {/* Question text */}
           <div className="bg-muted/60 rounded-xl p-4">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Question
+            </p>
             <TranslatableText
               text={q.questionText}
               selectedLang={selectedLang}
               onLangChange={onLangChange}
-              sourceLanguage={q.language ?? 'en'}
+              sourceLanguage={q.language ?? "en"}
               inline
             />
           </div>
 
           {/* Status reason */}
-          {q.status === 'held' && q.heldReason && (
+          {q.status === "held" && q.heldReason && (
             <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-warning uppercase tracking-wide mb-1">Hold Reason</p>
-              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">{q.heldReason}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-warning uppercase tracking-wide mb-1">
+                Hold Reason
+              </p>
+              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
+                {q.heldReason}
+              </p>
             </div>
           )}
-          {q.status === 'rejected' && q.rejectionReason && (
+          {q.status === "rejected" && q.rejectionReason && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive uppercase tracking-wide mb-1">Rejection Reason</p>
-              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">{q.rejectionReason}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive uppercase tracking-wide mb-1">
+                Rejection Reason
+              </p>
+              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
+                {q.rejectionReason}
+              </p>
             </div>
           )}
-          {q.status === 'approved' && q.approvalReason && (
+          {q.status === "approved" && q.approvalReason && (
             <div className="rounded-xl border border-success/30 bg-success/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-success uppercase tracking-wide mb-1">Approval Reason</p>
-              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">{q.approvalReason}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-success uppercase tracking-wide mb-1">
+                Approval Reason
+              </p>
+              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
+                {q.approvalReason}
+              </p>
             </div>
           )}
 
           {/* Details grid */}
           <div>
-            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Details</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              Details
+            </p>
             <div className="grid grid-cols-2 gap-3">
-              <MetaItem icon={Star}    label="Category"  value={(q.domains ?? []).join(', ') || '—'} />
-              <MetaItem icon={Wheat}   label="Crop"      value={q.cropType} />
-              <MetaItem icon={Hash}    label="Season"    value={q.season} />
-              <MetaItem icon={MapPin}  label="State"     value={q.state} />
-              <MetaItem icon={MapPin}  label="District"  value={q.district} />
-              {q.block && <MetaItem icon={MapPin} label="Block" value={q.block} />}
-              <MetaItem icon={Globe}   label="Language"  value={q.language?.toUpperCase()} />
-              <MetaItem icon={Clock}   label="Submitted" value={formatDate(q.submittedAt)} />
+              <MetaItem
+                icon={Star}
+                label="Category"
+                value={(q.domains ?? []).join(", ") || "—"}
+              />
+              <MetaItem icon={Wheat} label="Crop" value={q.cropType} />
+              <MetaItem icon={Hash} label="Season" value={q.season} />
+              <MetaItem icon={MapPin} label="State" value={q.state} />
+              <MetaItem icon={MapPin} label="District" value={q.district} />
+              {q.block && (
+                <MetaItem icon={MapPin} label="Block" value={q.block} />
+              )}
+              <MetaItem
+                icon={Globe}
+                label="Language"
+                value={q.language?.toUpperCase()}
+              />
+              <MetaItem
+                icon={Clock}
+                label="Submitted"
+                value={formatDate(q.submittedAt)}
+              />
             </div>
           </div>
 
           {/* Submitted by */}
           {q.user && (
             <div className="rounded-xl border border-border-subtle p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Submitted By</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Submitted By
+              </p>
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-primary/10 p-2.5"><User className="h-4 w-4 text-primary" /></div>
+                <div className="rounded-full bg-primary/10 p-2.5">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
                 <div>
-                  <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{q.user.name}</p>
-                  {q.user.mobileNumber && <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">{q.user.mobileNumber}</p>}
+                  <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
+                    {q.user.name}
+                  </p>
+                  {q.user.mobileNumber && (
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
+                      {q.user.mobileNumber}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
           {/* Images */}
-          {q.mediaUrls && q.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
-            <div>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Images</p>
-              <div className="grid grid-cols-3 gap-2">
-                {q.mediaUrls.filter(u => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                    {url.match(/\.(mp4|mov|avi|m4v)$/i) ? (
-                      <div className="rounded-lg border bg-muted flex items-center justify-center h-24 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><Film className="h-4 w-4" /> Video</span>
-                      </div>
-                    ) : (
-                      <img src={url} alt={`img-${i}`} className="rounded-lg border w-full h-24 object-cover hover:opacity-80 transition-opacity" />
-                    )}
-                  </a>
-                ))}
+          {q.mediaUrls &&
+            q.mediaUrls.filter(
+              (u) => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
+            ).length > 0 && (
+              <div>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Images
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {q.mediaUrls
+                    .filter(
+                      (u) => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
+                    )
+                    .map((url, i) => (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        {url.match(/\.(mp4|mov|avi|m4v)$/i) ? (
+                          <div className="rounded-lg border bg-muted flex items-center justify-center h-24 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                              <Film className="h-4 w-4" /> Video
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={url}
+                            alt={`img-${i}`}
+                            className="rounded-lg border w-full h-24 object-cover hover:opacity-80 transition-opacity"
+                          />
+                        )}
+                      </a>
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Audio */}
-          {q.mediaUrls && q.mediaUrls.filter(u => u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
-            <div>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Audio</p>
-              <div className="space-y-2">
-                {q.mediaUrls.filter(u => u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i)).length > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                    <Mic className="h-3 w-3" />Audio uploaded successfully
-                  </span>
-                )}
+          {q.mediaUrls &&
+            q.mediaUrls.filter((u) =>
+              u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
+            ).length > 0 && (
+              <div>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Audio
+                </p>
+                <div className="space-y-2">
+                  {q.mediaUrls.filter((u) =>
+                    u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
+                  ).length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+                      <Mic className="h-3 w-3" />
+                      Audio uploaded successfully
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Previous review */}
           {q.reviewedByName && (
             <div className="rounded-xl border border-border-subtle p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Previous Review</p>
-              <p className="text-xs sm:text-xs sm:text-sm text-foreground">Reviewed by <span className="font-medium">{q.reviewedByName}</span></p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Previous Review
+              </p>
+              <p className="text-xs sm:text-xs sm:text-sm text-foreground">
+                Reviewed by{" "}
+                <span className="font-medium">{q.reviewedByName}</span>
+              </p>
             </div>
           )}
         </div>
@@ -194,24 +314,26 @@ function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, sele
         {/* Action footer */}
         {REVIEWABLE_STATUSES.includes(q.status) ? (
           <div className="shrink-0 border-t border-border-subtle px-6 py-4 space-y-3">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">Choose an action — you will be asked to provide a reason.</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">
+              Choose an action — you will be asked to provide a reason.
+            </p>
             <div className="grid grid-cols-3 gap-2">
               <button
-                onClick={() => onAction('approve', q.questionText)}
+                onClick={() => onAction("approve", q.questionText)}
                 disabled={actionLoading}
                 className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs sm:text-xs sm:text-sm font-semibold bg-success/10 text-success hover:bg-success/20 border border-success/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle className="h-5 w-5" /> Approve
               </button>
               <button
-                onClick={() => onAction('hold', q.questionText)}
+                onClick={() => onAction("hold", q.questionText)}
                 disabled={actionLoading}
                 className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs sm:text-xs sm:text-sm font-semibold bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <PauseCircle className="h-5 w-5" /> Hold
               </button>
               <button
-                onClick={() => onAction('reject', q.questionText)}
+                onClick={() => onAction("reject", q.questionText)}
                 disabled={actionLoading}
                 className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs sm:text-xs sm:text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -221,108 +343,136 @@ function ReviewDetailModal({ question: q, onClose, onAction, actionLoading, sele
           </div>
         ) : (
           <div className="shrink-0 border-t border-border-subtle px-6 py-4 text-center">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">This question has already been reviewed.</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+              This question has already been reviewed.
+            </p>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Reason Modal ─────────────────────────────────────────────────────────────
 
 interface ReasonModalProps {
-  action: ReviewAction
-  questionId: string
-  questionText: string
-  onConfirm: (id: string, action: ReviewAction, reason: string) => void
-  onCancel: () => void
-  loading: boolean
+  action: ReviewAction;
+  questionId: string;
+  questionText: string;
+  onConfirm: (id: string, action: ReviewAction, reason: string) => void;
+  onCancel: () => void;
+  loading: boolean;
 }
 
-function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, loading }: ReasonModalProps) {
-  const [reason, setReason] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+function ReasonModal({
+  action,
+  questionId,
+  questionText,
+  onConfirm,
+  onCancel,
+  loading,
+}: ReasonModalProps) {
+  const [reason, setReason] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setReason('')
-    setTimeout(() => textareaRef.current?.focus(), 50)
-  }, [action])
+    setReason("");
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [action]);
 
-  const isApprove = action === 'approve'
-  const isReject  = action === 'reject'
-  const isHold    = action === 'hold'
+  const isApprove = action === "approve";
+  const isReject = action === "reject";
+  const isHold = action === "hold";
 
   const SUGGESTED_REASONS: Record<ReviewAction, string[]> = {
     approve: [
-      'Clear crop context with specific variety and growth stage',
-      'Actionable query that can be answered with agricultural expertise',
-      'Sufficient detail provided — location, crop, and issue clearly stated',
-      'Relevant to farming community — pest, nutrition, or weather query',
-      'Duplicate of a valid question but well-formed and worth approving',
+      "Clear crop context with specific variety and growth stage",
+      "Actionable query that can be answered with agricultural expertise",
+      "Sufficient detail provided — location, crop, and issue clearly stated",
+      "Relevant to farming community — pest, nutrition, or weather query",
+      "Duplicate of a valid question but well-formed and worth approving",
     ],
     reject: [
-      'Off-topic — not related to agriculture or farming',
-      'Duplicate question already answered in the database',
-      'Insufficient detail — crop, location, or issue not specified',
-      'Inappropriate content — abusive, promotional, or irrelevant',
-      'Unintelligible — cannot understand the query from the text',
-      'Opinion-seeking — not a factual or actionable question',
+      "Off-topic — not related to agriculture or farming",
+      "Duplicate question already answered in the database",
+      "Insufficient detail — crop, location, or issue not specified",
+      "Inappropriate content — abusive, promotional, or irrelevant",
+      "Unintelligible — cannot understand the query from the text",
+      "Opinion-seeking — not a factual or actionable question",
     ],
     hold: [
-      'Requires expert domain knowledge beyond general farming advice',
-      'Crop context unclear — needs clarification on variety or region',
-      'Ambiguous symptoms — could be multiple issues, needs more info',
-      'Sensitive or region-specific query that needs local expert review',
-      'Complex multi-part question — split and re-submit recommended',
+      "Requires expert domain knowledge beyond general farming advice",
+      "Crop context unclear — needs clarification on variety or region",
+      "Ambiguous symptoms — could be multiple issues, needs more info",
+      "Sensitive or region-specific query that needs local expert review",
+      "Complex multi-part question — split and re-submit recommended",
     ],
-  }
+  };
 
   function appendReason(suggestion: string) {
-    setReason((prev) => (prev ? `${prev}\n${suggestion}` : suggestion))
-    textareaRef.current?.focus()
+    setReason((prev) => (prev ? `${prev}\n${suggestion}` : suggestion));
+    textareaRef.current?.focus();
   }
 
   function selectOnly(suggestion: string) {
-    setReason(suggestion)
-    textareaRef.current?.focus()
+    setReason(suggestion);
+    textareaRef.current?.focus();
   }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+      />
       <div className="relative w-full max-w-lg bg-surface rounded-2xl shadow-2xl border border-border-subtle overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className={cn(
-          'flex items-center gap-3 px-6 py-4 shrink-0',
-          isApprove && 'bg-success/10',
-          isReject  && 'bg-destructive/10',
-          isHold    && 'bg-warning/10',
-        )}>
-          <div className={cn(
-            'rounded-full p-2.5',
-            isApprove ? 'bg-success/20 text-success' :
-            isReject  ? 'bg-destructive/20 text-destructive' :
-                        'bg-warning/20 text-warning',
-          )}>
-            {isApprove ? <ThumbsUp className="h-5 w-5" /> :
-             isReject  ? <Ban className="h-5 w-5" /> :
-                         <PauseCircle className="h-5 w-5" />}
+        <div
+          className={cn(
+            "flex items-center gap-3 px-6 py-4 shrink-0",
+            isApprove && "bg-success/10",
+            isReject && "bg-destructive/10",
+            isHold && "bg-warning/10",
+          )}
+        >
+          <div
+            className={cn(
+              "rounded-full p-2.5",
+              isApprove
+                ? "bg-success/20 text-success"
+                : isReject
+                  ? "bg-destructive/20 text-destructive"
+                  : "bg-warning/20 text-warning",
+            )}
+          >
+            {isApprove ? (
+              <ThumbsUp className="h-5 w-5" />
+            ) : isReject ? (
+              <Ban className="h-5 w-5" />
+            ) : (
+              <PauseCircle className="h-5 w-5" />
+            )}
           </div>
           <div>
             <h3 className="text-sm sm:text-sm sm:text-base font-semibold text-foreground">
-              {isApprove ? 'Approve' : isReject ? 'Reject' : 'Hold'} Question
+              {isApprove ? "Approve" : isReject ? "Reject" : "Hold"} Question
             </h3>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-              {isReject ? 'This reason will be shared with the farmer.' : 'This reason is recorded for audit.'}
+              {isReject
+                ? "This reason will be shared with the farmer."
+                : "This reason is recorded for audit."}
             </p>
           </div>
         </div>
 
         {/* Question preview */}
         <div className="px-6 py-3 border-b border-border-subtle bg-muted/30 shrink-0">
-          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wide">Question</p>
-          <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed line-clamp-3">{questionText}</p>
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wide">
+            Question
+          </p>
+          <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed line-clamp-3">
+            {questionText}
+          </p>
         </div>
 
         {/* Scrollable body */}
@@ -330,20 +480,23 @@ function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, lo
           {/* Suggested reasons */}
           <div>
             <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground mb-2">
-              Suggested reasons <span className="text-muted-foreground/60 font-normal">(click to use)</span>
+              Suggested reasons{" "}
+              <span className="text-muted-foreground/60 font-normal">
+                (click to use)
+              </span>
             </p>
             <div className="space-y-1.5">
               {SUGGESTED_REASONS[action].map((suggestion, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <button
                     className={cn(
-                      'flex-1 text-left text-[11px] sm:text-[11px] sm:text-xs px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer',
-                      'hover:shadow-sm',
+                      "flex-1 text-left text-[11px] sm:text-[11px] sm:text-xs px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer",
+                      "hover:shadow-sm",
                       isApprove
-                        ? 'border-success/20 bg-success/5 text-success hover:bg-success/10 hover:border-success/40'
+                        ? "border-success/20 bg-success/5 text-success hover:bg-success/10 hover:border-success/40"
                         : isReject
-                        ? 'border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:border-destructive/40'
-                        : 'border-warning/20 bg-warning/5 text-warning hover:bg-warning/10 hover:border-warning/40',
+                          ? "border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:border-destructive/40"
+                          : "border-warning/20 bg-warning/5 text-warning hover:bg-warning/10 hover:border-warning/40",
                     )}
                     onClick={() => selectOnly(suggestion)}
                     title="Replace reason with this suggestion"
@@ -352,8 +505,8 @@ function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, lo
                   </button>
                   <button
                     className={cn(
-                      'shrink-0 text-[11px] sm:text-[11px] sm:text-xs px-2 py-1.5 rounded border transition-all duration-150 cursor-pointer',
-                      'text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground',
+                      "shrink-0 text-[11px] sm:text-[11px] sm:text-xs px-2 py-1.5 rounded border transition-all duration-150 cursor-pointer",
+                      "text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground",
                     )}
                     onClick={() => appendReason(suggestion)}
                     title="Add as additional reason"
@@ -368,44 +521,56 @@ function ReasonModal({ action, questionId, questionText, onConfirm, onCancel, lo
           {/* Custom reason textarea */}
           <div>
             <Label className="text-xs sm:text-xs sm:text-sm font-medium text-foreground mb-2 block">
-              Custom Reason <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">(or write your own)</span>
+              Custom Reason{" "}
+              <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">
+                (or write your own)
+              </span>
             </Label>
             <textarea
               ref={textareaRef}
               rows={4}
               placeholder={
-                isApprove ? 'Describe why this question is approved...' :
-                isReject  ? 'Describe why this question is rejected...' :
-                            'Describe why this question needs further review...'
+                isApprove
+                  ? "Describe why this question is approved..."
+                  : isReject
+                    ? "Describe why this question is rejected..."
+                    : "Describe why this question needs further review..."
               }
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full rounded-lg border border-border-subtle bg-background px-3 py-2.5 text-xs sm:text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
             />
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1.5">
-              Be specific — a clear reason helps farmers understand the outcome and curators maintain quality.
+              Be specific — a clear reason helps farmers understand the outcome
+              and curators maintain quality.
             </p>
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-subtle bg-muted/20 shrink-0">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>Cancel</Button>
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
+            Cancel
+          </Button>
           <Button
             className={cn(
-              isApprove && 'bg-success hover:bg-success/90 text-white',
-              isReject  && 'bg-destructive hover:bg-destructive/90 text-white',
-              isHold    && 'bg-warning hover:bg-warning/90 text-white',
+              isApprove && "bg-success hover:bg-success/90 text-white",
+              isReject && "bg-destructive hover:bg-destructive/90 text-white",
+              isHold && "bg-warning hover:bg-warning/90 text-white",
             )}
-            onClick={() => reason.trim() && onConfirm(questionId, action, reason.trim())}
+            onClick={() =>
+              reason.trim() && onConfirm(questionId, action, reason.trim())
+            }
             disabled={loading || !reason.trim()}
           >
-            {loading ? 'Processing...' : `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`}
+            {loading
+              ? "Processing..."
+              : `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`}
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Table columns ────────────────────────────────────────────────────────────
@@ -416,63 +581,129 @@ function buildColumns(
 ): ColumnDef<Question>[] {
   return [
     {
-      key: '_slno', header: '#', width: '50px', textAlign: 'center',
-      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{(q as Question & { _slno: number })._slno}</span>,
+      key: "_slno",
+      header: "#",
+      width: "50px",
+      textAlign: "center",
+      render: (q) => (
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+          {(q as Question & { _slno: number })._slno}
+        </span>
+      ),
     },
     {
-      key: 'status', header: 'Status', width: '110px', sortable: true,
+      key: "status",
+      header: "Status",
+      width: "110px",
+      sortable: true,
       render: (q) => (
         <div className="flex justify-start">
-          <Badge className={cn('capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5 whitespace-nowrap', STATUS_COLORS[q.status] ?? 'bg-muted')}>
+          <Badge
+            className={cn(
+              "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5 whitespace-nowrap",
+              STATUS_COLORS[q.status] ?? "bg-muted",
+            )}
+          >
             {STATUS_LABELS[q.status] ?? q.status}
           </Badge>
         </div>
       ),
     },
     {
-      key: 'questionText', header: 'Question', width: '280px', sortable: true,
-      render: (q) => <span className="text-[11px] sm:text-xs" title={q.questionText}>{q.questionText.length > 45 ? q.questionText.slice(0, 45) + '…' : q.questionText}</span>,
-    },
-    {
-      key: 'domains', header: 'Domain', width: '110px', sortable: true,
-      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">{(q.domains ?? []).join(', ') || '—'}</span>,
-    },
-    {
-      key: 'cropType', header: 'Crop', width: '90px', sortable: true,
-      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">{q.cropType ?? '—'}</span>,
-    },
-    {
-      key: 'location', header: 'Location', width: '130px', sortable: true,
+      key: "questionText",
+      header: "Question",
+      width: "280px",
+      sortable: true,
       render: (q) => (
-        <span className="text-[11px] sm:text-[11px] sm:text-xs truncate block" title={[q.district, q.state].filter(Boolean).join(', ')}>
-          {[q.district, q.state].filter(Boolean).join(', ') || '—'}
+        <span className="text-[11px] sm:text-xs" title={q.questionText}>
+          {q.questionText.length > 45
+            ? q.questionText.slice(0, 45) + "…"
+            : q.questionText}
         </span>
       ),
     },
     {
-      key: 'submittedAt', header: 'Submitted', width: '110px', textAlign: 'left', sortable: true,
-      render: (q) => <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{formatDate(q.submittedAt)}</span>,
+      key: "domains",
+      header: "Domain",
+      width: "110px",
+      sortable: true,
+      render: (q) => (
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">
+          {(q.domains ?? []).join(", ") || "—"}
+        </span>
+      ),
     },
     {
-      key: 'media', header: 'Media', width: '60px', textAlign: 'center',
-      render: (q) => q.mediaUrls && q.mediaUrls.length > 0
-        ? <span className="flex items-center justify-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground"><Film className="h-3 w-3" />{q.mediaUrls.length}</span>
-        : <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">—</span>,
+      key: "cropType",
+      header: "Crop",
+      width: "90px",
+      sortable: true,
+      render: (q) => (
+        <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">
+          {q.cropType ?? "—"}
+        </span>
+      ),
     },
     {
-      key: '_actions',
-      header: 'Actions',
-      width: '120px',
-      textAlign: 'center',
+      key: "location",
+      header: "Location",
+      width: "130px",
+      sortable: true,
+      render: (q) => (
+        <span
+          className="text-[11px] sm:text-[11px] sm:text-xs truncate block"
+          title={[q.district, q.state].filter(Boolean).join(", ")}
+        >
+          {[q.district, q.state].filter(Boolean).join(", ") || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "submittedAt",
+      header: "Submitted",
+      width: "110px",
+      textAlign: "left",
+      sortable: true,
+      render: (q) => (
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+          {formatDate(q.submittedAt)}
+        </span>
+      ),
+    },
+    {
+      key: "media",
+      header: "Media",
+      width: "60px",
+      textAlign: "center",
+      render: (q) =>
+        q.mediaUrls && q.mediaUrls.length > 0 ? (
+          <span className="flex items-center justify-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+            <Film className="h-3 w-3" />
+            {q.mediaUrls.length}
+          </span>
+        ) : (
+          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+            —
+          </span>
+        ),
+    },
+    {
+      key: "_actions",
+      header: "Actions",
+      width: "120px",
+      textAlign: "center",
       render: (q) => (
         <button
-          onClick={(e) => { e.stopPropagation(); onCheckDuplicate(q) }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onCheckDuplicate(q);
+          }}
           disabled={checkDuplicateLoadingId === q.id}
           title="Check for duplicate questions in the approved database"
           className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-[11px] sm:text-xs font-medium border transition-all duration-150',
-            'border-warning/30 bg-warning/10 text-warning hover:bg-warning/20 hover:border-warning/50',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
+            "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-[11px] sm:text-xs font-medium border transition-all duration-150",
+            "border-warning/30 bg-warning/10 text-warning hover:bg-warning/20 hover:border-warning/50",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
           )}
         >
           {checkDuplicateLoadingId === q.id ? (
@@ -484,27 +715,27 @@ function buildColumns(
         </button>
       ),
     },
-  ]
+  ];
 }
 
 // ─── Duplicate Found Modal ─────────────────────────────────────────────────────
 
 interface DuplicateData {
-  matchedQuestion: string
-  matchedAnswer: string | null
-  similarityScore: number | null
-  matchedUserName: string | null
+  matchedQuestion: string;
+  matchedAnswer: string | null;
+  similarityScore: number | null;
+  matchedUserName: string | null;
 }
 
 interface DuplicateFoundModalProps {
   /** The question currently being checked (from the queue) */
-  currentQuestion: Question
-  duplicate: DuplicateData
-  onReject: (id: string) => void
-  onDismiss: () => void
-  rejectLoading: boolean
-  selectedLang: string
-  onLangChange: (lang: string) => void
+  currentQuestion: Question;
+  duplicate: DuplicateData;
+  onReject: (id: string) => void;
+  onDismiss: () => void;
+  rejectLoading: boolean;
+  selectedLang: string;
+  onLangChange: (lang: string) => void;
 }
 
 function DuplicateFoundModal({
@@ -518,7 +749,10 @@ function DuplicateFoundModal({
 }: DuplicateFoundModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onDismiss} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onDismiss}
+      />
       <div className="relative w-full max-w-lg bg-surface rounded-2xl shadow-2xl border border-destructive/30 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 border-b border-destructive/20 bg-destructive/5 shrink-0">
@@ -526,7 +760,9 @@ function DuplicateFoundModal({
             <CopyCheck className="h-5 w-5 text-destructive" />
           </div>
           <div>
-            <h3 className="text-sm sm:text-sm sm:text-base font-semibold text-destructive">Duplicate Question Found</h3>
+            <h3 className="text-sm sm:text-sm sm:text-base font-semibold text-destructive">
+              Duplicate Question Found
+            </h3>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               This question is similar to an existing approved question.
               {duplicate.similarityScore != null && (
@@ -550,16 +786,22 @@ function DuplicateFoundModal({
                 </p>
                 <div className="rounded-xl border border-border-subtle bg-muted/60 p-4 space-y-3">
                   <div>
-                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">Q</p>
-                    <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">{duplicate.matchedQuestion}</p>
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">
+                      Q
+                    </p>
+                    <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
+                      {duplicate.matchedQuestion}
+                    </p>
                   </div>
                   <div className="border-t border-border-subtle pt-3">
-                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">A</p>
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">
+                      A
+                    </p>
                     <TranslatableText
                       text={duplicate.matchedAnswer}
                       selectedLang={selectedLang}
                       onLangChange={onLangChange}
-                      sourceLanguage={currentQuestion.language ?? 'en'}
+                      sourceLanguage={currentQuestion.language ?? "en"}
                       inline
                     />
                   </div>
@@ -571,7 +813,9 @@ function DuplicateFoundModal({
               <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                 Existing Question
               </p>
-              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">{duplicate.matchedQuestion}</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
+                {duplicate.matchedQuestion}
+              </p>
             </div>
           )}
 
@@ -581,12 +825,14 @@ function DuplicateFoundModal({
               Question You Are Reviewing
             </p>
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">Q</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">
+                Q
+              </p>
               <TranslatableText
                 text={currentQuestion.questionText}
                 selectedLang={selectedLang}
                 onLangChange={onLangChange}
-                sourceLanguage={currentQuestion.language ?? 'en'}
+                sourceLanguage={currentQuestion.language ?? "en"}
                 inline
               />
             </div>
@@ -603,105 +849,126 @@ function DuplicateFoundModal({
             onClick={() => onReject(currentQuestion.id)}
             disabled={rejectLoading}
           >
-            {rejectLoading ? 'Rejecting...' : 'Reject Question'}
+            {rejectLoading ? "Rejecting..." : "Reject Question"}
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Status filter chips ──────────────────────────────────────────────────────
 
 const STATUS_FILTER_OPTIONS = [
-  { value: '',           label: 'All' },
-  { value: 'pending',    label: 'Pending' },
-  { value: 'held',       label: 'On Hold' },
-  { value: 'approved',   label: 'Approved' },
-  { value: 'rejected',   label: 'Rejected' },
-]
+  { value: "", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "held", label: "On Hold" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
-  const [questions, setQuestions]         = useState<Question[]>([])
-  const [total, setTotal]                 = useState(0)
-  const [page, setPage]                   = useState(1)
-  const [statusFilter, setStatusFilter]   = useState('')
-  const [search, setSearch]               = useState('')
-  const [loading, setLoading]             = useState(false)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
-  const [detailOpen, setDetailOpen]       = useState(false)
-  const [pendingAction, setPendingAction] = useState<{ action: ReviewAction; questionText: string } | null>(null)
-  const [langByQuestionId, setLangByQuestionId] = useState<Record<string, string>>({})
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
+    null,
+  );
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    action: ReviewAction;
+    questionText: string;
+  } | null>(null);
+  const [langByQuestionId, setLangByQuestionId] = useState<
+    Record<string, string>
+  >({});
 
   /** "Check Duplicate" state */
-  const [checkDuplicateLoadingId, setCheckDuplicateLoadingId] = useState<string | null>(null)
+  const [checkDuplicateLoadingId, setCheckDuplicateLoadingId] = useState<
+    string | null
+  >(null);
   const [duplicateData, setDuplicateData] = useState<{
-    question: Question
-    duplicate: DuplicateData
-  } | null>(null)
+    question: Question;
+    duplicate: DuplicateData;
+  } | null>(null);
 
-  const limit = 15
-  const debouncedSearch = useDebouncedValue(search, 400)
+  const limit = 15;
+  const debouncedSearch = useDebouncedValue(search, 400);
 
-  const getLang = (id: string) => langByQuestionId[id] ?? ''
-  const setLang = (id: string, lang: string) => setLangByQuestionId((prev) => ({ ...prev, [id]: lang }))
+  const getLang = (id: string) => langByQuestionId[id] ?? "";
+  const setLang = (id: string, lang: string) =>
+    setLangByQuestionId((prev) => ({ ...prev, [id]: lang }));
 
   const openDetail = (q: Question) => {
-    setSelectedQuestion(q)
-    setDetailOpen(true)
-  }
+    setSelectedQuestion(q);
+    setDetailOpen(true);
+  };
 
   useEffect(() => {
-    setPage(1)
-    setSelectedQuestion(null)
-    setDetailOpen(false)
-    setDuplicateData(null)
-  }, [debouncedSearch, statusFilter])
+    setPage(1);
+    setSelectedQuestion(null);
+    setDetailOpen(false);
+    setDuplicateData(null);
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
-    setLoading(true)
-    curatorApi.getReviewQueue({
-      page,
-      limit,
-      status: statusFilter || undefined,
-      search: debouncedSearch || undefined,
-    })
-      .then((res) => {
-        const start = (page - 1) * limit
-        setQuestions(res.items.map((q, i) => ({ ...q, _slno: start + i + 1 })) as Question[])
-        setTotal(res.total)
+    setLoading(true);
+    curatorApi
+      .getReviewQueue({
+        page,
+        limit,
+        status: statusFilter || undefined,
+        search: debouncedSearch || undefined,
       })
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load review queue')))
-      .finally(() => setLoading(false))
-  }, [page, debouncedSearch, statusFilter])
+      .then((res) => {
+        const start = (page - 1) * limit;
+        setQuestions(
+          res.items.map((q, i) => ({
+            ...q,
+            _slno: start + i + 1,
+          })) as Question[],
+        );
+        setTotal(res.total);
+      })
+      .catch((e) =>
+        toast.error(getErrorMessage(e, "Failed to load review queue")),
+      )
+      .finally(() => setLoading(false));
+  }, [page, debouncedSearch, statusFilter]);
 
   /**
    * Call the /check-duplicate endpoint. If a duplicate is found, open the
    * DuplicateFoundModal so the curator can see the existing Q&A and reject.
    */
   function checkDuplicateAndShowModal(q: Question) {
-    setCheckDuplicateLoadingId(q.id)
-    curatorApi.checkDuplicate(q.id)
+    setCheckDuplicateLoadingId(q.id);
+    curatorApi
+      .checkDuplicate(q.id)
       .then((result) => {
         if (result.isDuplicate) {
           setDuplicateData({
             question: q,
             duplicate: {
-              matchedQuestion: result.matchedQuestion ?? '',
+              matchedQuestion: result.matchedQuestion ?? "",
               matchedAnswer: result.matchedAnswer ?? null,
               similarityScore: result.similarityScore ?? null,
               matchedUserName: result.matchedUserName ?? null,
             },
-          })
+          });
         } else {
-          toast.success('No duplicate found — this question is unique.')
+          toast.success("No duplicate found — this question is unique.");
         }
       })
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to check for duplicates')))
-      .finally(() => setCheckDuplicateLoadingId(null))
+      .catch((e) =>
+        toast.error(getErrorMessage(e, "Failed to check for duplicates")),
+      )
+      .finally(() => setCheckDuplicateLoadingId(null));
   }
 
   /**
@@ -709,66 +976,94 @@ export function ReviewsPage() {
    * Immediately rejects with a generated duplicate-rejection reason.
    */
   function rejectFromDuplicateModal(questionId: string) {
-    setActionLoading(true)
-    const reason = 'Duplicate of an existing approved question in the knowledge base'
-    curatorApi.reviewQuestion(questionId, { action: 'reject', reason })
+    setActionLoading(true);
+    const reason =
+      "Duplicate of an existing approved question in the knowledge base";
+    curatorApi
+      .reviewQuestion(questionId, { action: "reject", reason })
       .then(() => {
-        toast.success('Question rejected as duplicate')
-        setDuplicateData(null)
-        setQuestions((qs) => qs.filter((q) => q.id !== questionId))
+        toast.success("Question rejected as duplicate");
+        setDuplicateData(null);
+        setQuestions((qs) => qs.filter((q) => q.id !== questionId));
       })
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to reject question')))
-      .finally(() => setActionLoading(false))
+      .catch((e) =>
+        toast.error(getErrorMessage(e, "Failed to reject question")),
+      )
+      .finally(() => setActionLoading(false));
   }
 
   function doAction(id: string, action: ReviewAction, reason: string) {
-    setActionLoading(true)
-    curatorApi.reviewQuestion(id, {
-      action,
-      reason,
-      ...(action === 'hold' ? { heldReason: reason } : {}),
-    })
+    setActionLoading(true);
+    curatorApi
+      .reviewQuestion(id, {
+        action,
+        reason,
+        ...(action === "hold" ? { heldReason: reason } : {}),
+      })
       .then((result) => {
-        if (action === 'approve') {
-          toast.success(result?.rewardCredited != null ? `Approved — ₹${result.rewardCredited} credited` : 'Approved')
-        } else if (action === 'reject') {
-          toast.success('Question rejected')
+        if (action === "approve") {
+          toast.success(
+            result?.rewardCredited != null
+              ? `Approved — ₹${result.rewardCredited} credited`
+              : "Approved",
+          );
+        } else if (action === "reject") {
+          toast.success("Question rejected");
         } else {
-          toast.success('Question put on hold')
+          toast.success("Question put on hold");
         }
-        setQuestions((qs) => qs.filter((q) => q.id !== id))
-        setDetailOpen(false)
-        setSelectedQuestion(null)
+        setQuestions((qs) => qs.filter((q) => q.id !== id));
+        setDetailOpen(false);
+        setSelectedQuestion(null);
       })
       .catch((e) => toast.error(getErrorMessage(e, `Failed to ${action}`)))
-      .finally(() => setActionLoading(false))
+      .finally(() => setActionLoading(false));
   }
 
   function openActionModal(action: ReviewAction, questionText: string) {
-    setPendingAction({ action, questionText })
+    setPendingAction({ action, questionText });
   }
 
-  const totalPages = Math.ceil(total / limit)
-  const columns = buildColumns(checkDuplicateAndShowModal, checkDuplicateLoadingId)
-  const emptyMessage = search || statusFilter ? 'No questions match your filters' : 'No questions in queue'
+  const totalPages = Math.ceil(total / limit);
+  const columns = buildColumns(
+    checkDuplicateAndShowModal,
+    checkDuplicateLoadingId,
+  );
+  const emptyMessage =
+    search || statusFilter
+      ? "No questions match your filters"
+      : "No questions in queue";
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col">
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">Review Queue</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">
+            Review Queue
+          </h2>
           <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-            {total > 0 ? `${total} question${total === 1 ? '' : 's'} pending review` : 'No questions pending'}
+            {total > 0
+              ? `${total} question${total === 1 ? "" : "s"} pending review`
+              : "No questions pending"}
           </p>
         </div>
         {total > 0 && (
-          <div className={cn(
-            'flex items-center gap-2 rounded-full px-3 py-1.5 border text-[11px] sm:text-xs font-medium',
-            total > 50 ? 'border-warning/40 bg-warning/10 text-warning' : 'border-success/40 bg-success/10 text-success',
-          )}>
-            <div className={cn('h-2 w-2 rounded-full', total > 50 ? 'bg-warning' : 'bg-success')} />
-            {total > 50 ? 'Queue is busy' : 'Queue is manageable'}
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded-full px-3 py-1.5 border text-[11px] sm:text-xs font-medium",
+              total > 50
+                ? "border-warning/40 bg-warning/10 text-warning"
+                : "border-success/40 bg-success/10 text-success",
+            )}
+          >
+            <div
+              className={cn(
+                "h-2 w-2 rounded-full",
+                total > 50 ? "bg-warning" : "bg-success",
+              )}
+            />
+            {total > 50 ? "Queue is busy" : "Queue is manageable"}
           </div>
         )}
       </div>
@@ -780,15 +1075,25 @@ export function ReviewsPage() {
           {STATUS_FILTER_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
-              onClick={() => { setStatusFilter(value); setPage(1) }}
+              onClick={() => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium border transition-all duration-150',
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium border transition-all duration-150",
                 statusFilter === value
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground',
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground",
               )}
             >
-              {value !== '' && <span className={cn('h-1.5 w-1.5 rounded-full', STATUS_COLORS[value])} />}
+              {value !== "" && (
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    STATUS_COLORS[value],
+                  )}
+                />
+              )}
               {label}
             </button>
           ))}
@@ -817,7 +1122,10 @@ export function ReviewsPage() {
       {selectedQuestion && detailOpen && (
         <ReviewDetailModal
           question={selectedQuestion}
-          onClose={() => { setDetailOpen(false); setSelectedQuestion(null) }}
+          onClose={() => {
+            setDetailOpen(false);
+            setSelectedQuestion(null);
+          }}
           onAction={openActionModal}
           actionLoading={actionLoading}
           selectedLang={getLang(selectedQuestion.id)}
@@ -833,30 +1141,35 @@ export function ReviewsPage() {
           questionText={pendingAction.questionText}
           onConfirm={(id, action, reason) => {
             // For approve, run duplicate check first before sending the approval
-            if (action === 'approve') {
-              setPendingAction(null)
-              setActionLoading(true)
-              curatorApi.checkDuplicate(id)
+            if (action === "approve") {
+              setPendingAction(null);
+              setActionLoading(true);
+              curatorApi
+                .checkDuplicate(id)
                 .then((result) => {
                   if (result.isDuplicate) {
                     setDuplicateData({
                       question: selectedQuestion,
                       duplicate: {
-                        matchedQuestion: result.matchedQuestion ?? '',
+                        matchedQuestion: result.matchedQuestion ?? "",
                         matchedAnswer: result.matchedAnswer ?? null,
                         similarityScore: result.similarityScore ?? null,
                         matchedUserName: result.matchedUserName ?? null,
                       },
-                    })
+                    });
                   } else {
-                    doAction(id, action, reason)
+                    doAction(id, action, reason);
                   }
                 })
-                .catch((e) => toast.error(getErrorMessage(e, 'Failed to check for duplicates')))
-                .finally(() => setActionLoading(false))
+                .catch((e) =>
+                  toast.error(
+                    getErrorMessage(e, "Failed to check for duplicates"),
+                  ),
+                )
+                .finally(() => setActionLoading(false));
             } else {
-              setPendingAction(null)
-              doAction(id, action, reason)
+              setPendingAction(null);
+              doAction(id, action, reason);
             }
           }}
           onCancel={() => setPendingAction(null)}
@@ -877,5 +1190,5 @@ export function ReviewsPage() {
         />
       )}
     </div>
-  )
+  );
 }

@@ -716,10 +716,13 @@ export class AdminService implements OnModuleInit {
     }
 
     // Step 2: GDB semantic duplicate check
+    // Pass the question's stored language so non-English text gets translated
+    // to English before the semantic GDB search.
     const gdbResult = await this.gdbService.checkDuplicate({
       questionText: question.questionText,
       crop: question.cropType ?? '',
       state: question.state ?? '',
+      languageCode: question.language,
     });
 
     if (gdbResult.isDuplicate) {
