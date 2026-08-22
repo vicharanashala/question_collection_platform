@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "demo-question-collection-project",
+    "production": "your-real-prod-project-id"
+  }
+}
