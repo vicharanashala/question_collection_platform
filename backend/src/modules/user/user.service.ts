@@ -1,15 +1,34 @@
-import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
-import { User, AuditLog, Notification, Question, Transaction } from '../../shared/database/entities';
-import { AuditAction, ActorType, QuestionStatus, TransactionType, TransactionSource, TransactionStatus, UserRole } from '../../shared/classes/enums';
-import { UpdateProfileDto, UpdateCropDetailsDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+} from "@nestjs/common";
+import {
+  User,
+  AuditLog,
+  Notification,
+  Question,
+  Transaction,
+} from "../../shared/database/entities";
+import {
+  AuditAction,
+  ActorType,
+  QuestionStatus,
+  TransactionType,
+  TransactionSource,
+  TransactionStatus,
+  UserRole,
+} from "../../shared/classes/enums";
+import { UpdateProfileDto, UpdateCropDetailsDto } from "./dto";
 import {
   IUserRepository,
   IAuditLogRepository,
   INotificationRepository,
   IQuestionRepository,
   ITransactionRepository,
-} from '../../shared/database/repositories';
-import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+} from "../../shared/database/repositories";
+import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 
 @Injectable()
 export class UserService {
@@ -29,7 +48,7 @@ export class UserService {
   async getProfile(userId: string): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     return user;
   }
@@ -42,7 +61,7 @@ export class UserService {
   ): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     const oldValue: Record<string, unknown> = {};
@@ -63,7 +82,7 @@ export class UserService {
       actorType,
       actorId ?? userId,
       AuditAction.USER_PROFILE_UPDATED,
-      'User',
+      "User",
       userId,
       oldValue,
       newValue,
@@ -76,10 +95,13 @@ export class UserService {
    * Replace the user's crop list. Thin wrapper around updateProfile.
    * Kept for backwards-compatible /me/crops endpoint.
    */
-  async updateCropDetails(userId: string, dto: UpdateCropDetailsDto): Promise<string[]> {
+  async updateCropDetails(
+    userId: string,
+    dto: UpdateCropDetailsDto,
+  ): Promise<string[]> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     user.crops = dto.crops ?? [];
     await this.userRepo.save(user);
@@ -124,103 +146,55 @@ export class UserService {
       name: string;
       totalEarned: number;
       totalQuestions: number;
-      medal: 'gold' | 'silver' | 'bronze' | null;
+      medal: string | null;
       isCurrentUser: boolean;
     }>;
     userRank: number | null;
     total: number;
   }> {
     const limit = Math.min(100, Math.max(1, options.limit ?? 20));
+
     const offset = Math.max(0, options.offset ?? 0);
 
-    // Build the earned subquery as a plain SQL string with hardcoded enum values
-    // so it can be safely embedded in the outer LEFT JOIN without param conflicts.
-    const earnedSubSql = `
-      SELECT w.user_id AS "userId", SUM(tx.amount)::float AS "totalEarned"
-      FROM transactions tx
-      JOIN wallets w ON w.id = tx.wallet_id
-      JOIN users u ON u.id = w.user_id AND u.role = '${UserRole.USER}'
-      WHERE tx.type = '${TransactionType.CREDIT}'
-        AND tx.source = '${TransactionSource.REWARD}'
-        AND tx.status = '${TransactionStatus.COMPLETED}'
-      GROUP BY w.user_id
-    `;
+    // Get ONLY the requested page from MongoDB
+    const { entries: rows, total } = await this.userRepo.getLeaderboard({
+      limit,
+      offset,
+    });
 
-    // Build the approved-questions subquery as a plain SQL string as well
-    const questionsSubSql = `
-      SELECT user_id AS "userId", COUNT(*)::int AS "totalQuestions"
-      FROM questions q
-      JOIN users u ON u.id = q.user_id AND u.role = '${UserRole.USER}'
-      WHERE q.status = '${QuestionStatus.APPROVED}'
-      GROUP BY q.user_id
-    `;
-
-    // Main query: join users with both aggregate subqueries — farmer users only
-    const qb = this.userRepo
-      .createQueryBuilder('u') as any;
-
-    void qb.leftJoin(`(${earnedSubSql.trim()})`, 'e', 'e."userId" = u.id');
-    void qb.leftJoin(`(${questionsSubSql.trim()})`, 'qc', 'qc."userId" = u.id');
-    void qb.select([
-      'u.id AS "userId"',
-      'u.name AS name',
-      'COALESCE(e."totalEarned", 0) AS "totalEarned"',
-      'COALESCE(qc."totalQuestions", 0) AS "totalQuestions"',
-    ]);
-    void qb.where('u.role = :userRole', { userRole: UserRole.USER });
-    void qb.andWhere('COALESCE(qc."totalQuestions", 0) > 0');
-    void qb.orderBy('"totalQuestions"', 'DESC');
-    void qb.addOrderBy('"totalEarned"', 'DESC');
-
-    const allRows: Array<{
-      userId: string;
-      name: string;
-      totalEarned: number;
-      totalQuestions: number;
-    }> = await (qb.getRawMany() as Promise<Array<Record<string, unknown>>>).then(rows =>
-      rows.map(r => ({
-        userId: String(r.userId),
-        name: String(r.name),
-        totalEarned: Number(r.totalEarned ?? 0),
-        totalQuestions: Number(r.totalQuestions ?? 0),
-      }))
-    );
-
-    const total = allRows.length;
-
-    // Assign sequential unique ranks (1, 2, 3 …) — each user gets a distinct number
-    const ranked = allRows.map((row, index) => ({
+    // Assign the GLOBAL rank, not page-relative rank
+    const ranked = rows.map((row, index) => ({
       ...row,
-      rank: index + 1,
+      rank: offset + index + 1,
     }));
 
-    // Find requesting user's rank
-    const userRankEntry = ranked.find((r) => r.userId === userId);
-    const userRank = userRankEntry?.rank ?? null;
+    // TODO: calculate this properly in Step 3
+    const userRank = await this.userRepo.getLeaderboardRank({
+      userId,
+    });
 
-    // Build medal map
-    const medalMap: Record<number, 'gold' | 'silver' | 'bronze' | null> = {};
-    for (const entry of ranked) {
-      if (entry.rank === 1) medalMap[entry.rank] = 'gold';
-      else if (entry.rank === 2) medalMap[entry.rank] = 'silver';
-      else if (entry.rank === 3) medalMap[entry.rank] = 'bronze';
-      else medalMap[entry.rank] = null;
-    }
-
-    // Paginate slice
-    const slice = ranked.slice(offset, offset + limit);
-
-    const entries = slice.map((row) => ({
+    const entries = ranked.map((row) => ({
       rank: row.rank,
-      userId: row.userId,
+      userId: row.id,
       name: row.name,
       totalEarned: row.totalEarned,
       totalQuestions: row.totalQuestions,
-      medal: medalMap[row.rank] ?? null,
-      isCurrentUser: row.userId === userId,
+      medal:
+        row.rank === 1
+          ? "gold"
+          : row.rank === 2
+            ? "silver"
+            : row.rank === 3
+              ? "bronze"
+              : null,
+      isCurrentUser: row.id === userId,
     }));
 
-    return { entries, userRank, total };
+    return {
+      entries,
+      userRank,
+      total,
+    };
   }
 
   async markAsRead(userId: string, notificationId: string): Promise<void> {
@@ -228,7 +202,10 @@ export class UserService {
   }
 
   async markAllNotificationsRead(userId: string): Promise<void> {
-    await this.notifRepo.updateMany({ userId, isRead: false }, { isRead: true });
+    await this.notifRepo.updateMany(
+      { userId, isRead: false },
+      { isRead: true },
+    );
   }
 
   async createNotification(params: {
