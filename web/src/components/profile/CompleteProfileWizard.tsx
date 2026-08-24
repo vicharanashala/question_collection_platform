@@ -422,7 +422,7 @@ function Step2({
           <div className="space-y-1.5">
             <Label>Nearest KVK <span className="text-destructive">*</span></Label>
             <SearchableSelect
-              items={kvks.map((k) => ({ value: k.name, label: k.name }))}
+              items={kvks.map((k) => ({ value: k.address, label: k.address }))}
               value={form.kvk}
               onValueChange={(v) => setField("kvk", v)}
               placeholder="Search KVK…"
@@ -1292,8 +1292,8 @@ export function CompleteProfileWizard({
         e.username =
           "That username is taken. Pick or click a suggestion below.";
       if (!form.gender) e.gender = "Please choose a gender";
-      if (form.age && (Number(form.age) < 16 || Number(form.age) > 100))
-        e.age = "Age must be between 16 and 100";
+      if (!form.age || form.age && (Number(form.age) < 16 || Number(form.age) > 100))
+        e.age = "Age is required and must be between 16 and 100";
       if (form.category === "farmer") {
         if (!form.farmSize.trim()) e.farmSize = "Farm size is required";
         if (form.cropType.length === 0) e.cropType = "Pick at least one crop";

@@ -3,6 +3,7 @@ import { Loader2, Mic, MicOff, Square, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { speechApi, toSarvamLang } from '@/api/speech'
+import { storageApi } from '@/api/storage'
 import { cn } from '@/lib/utils'
 
 type MicState = 'idle' | 'recording' | 'uploading' | 'done' | 'error'
@@ -41,9 +42,18 @@ interface MicButtonProps {
  * Implementation:
  *   - Uses the browser `MediaRecorder` API (no third-party libs)
  *   - Captures audio as a webm blob (Chromium, Firefox) or mp4 blob (Safari)
- *   - On stop, uploads the blob to `/api/speech/stt` via `speechApi.speechToText`
+ *   - On stop, two-step STT flow (matches the mobile `SttMicButton` archival):
+ *       1. Upload the blob to GCS via `storageApi.uploadAudio`
+ *          → `POST /storage/upload/audio` → returns `{ url, sizeBytes }`
+ *          → server persists the audio via `GcpStorageService` (Firebase
+ *            Storage emulator in dev, real GCS in prod)
+ *       2. Transcribe the same blob via `speechApi.speechToText`
+ *          → `POST /speech/stt` → returns `{ text }`
  *   - On success, emits the transcribed text via `onTranscribed` and pops a
  *     success toast; on failure, pops an error toast
+ *   - If the GCS upload fails the transcription still proceeds — the
+ *     archive is best-effort, the transcript is what the user actually
+ *     needs to continue with their question.
  *
  * Browser support:
  *   - Modern Chromium / Edge / Firefox / Safari 14.1+
@@ -138,6 +148,25 @@ export function MicButton({
 
       try {
         const sarvamCode = languageCode === 'unknown' ? 'unknown' : toSarvamLang(languageCode)
+
+        // Step 1 — Archive the recording to GCS via /storage/upload/audio.
+        // This mirrors the mobile `storageApi.uploadAudio()` call so the
+        // backend `GcpStorageService` is invoked and the audio is persisted
+        // (Firebase Storage emulator in dev, real GCS in prod). Best-effort:
+        // a failure here is logged but does NOT block transcription — the
+        // user has already recorded the audio and still needs the transcript.
+        try {
+          const uploaded = await storageApi.uploadAudio(blob, filename)
+          // eslint-disable-next-line no-console
+          console.info('[MicButton] audio archived to GCS:', uploaded.url)
+        } catch (uploadErr) {
+          console.warn(
+            '[MicButton] audio archival failed (continuing with transcription):',
+            uploadErr,
+          )
+        }
+
+        // Step 2 — Transcribe via /speech/stt.
         const result = await speechApi.speechToText(blob, sarvamCode, filename)
         const text = (result.text ?? '').trim()
         if (!text) {
