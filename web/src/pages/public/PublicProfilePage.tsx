@@ -481,10 +481,17 @@ export function PublicProfilePage() {
 
           {/* Organization Location — FPO / NGO */}
           {(cat === 'fpo' || cat === 'ngo') &&
-            (user.organizationState || user.organizationDistrict || user.organizationBlock || user.organizationVillage) && (
+            ((user.organizationState && user.organizationState.length > 0) ||
+              user.organizationDistrict || user.organizationBlock || user.organizationVillage) && (
               <AccountCard icon={MapPin} title={t('profile.organisationLocation')} className="lg:flex-1 lg:basis-[320px]">
                 <>
-                  {user.organizationState && <AccountRow icon={MapPin} label={t('profile.state')} value={user.organizationState} />}
+                  {user.organizationState && user.organizationState.length > 0 && (
+                    <AccountRow
+                      icon={MapPin}
+                      label={t('profile.state')}
+                      value={user.organizationState.join(', ')}
+                    />
+                  )}
                   {user.organizationDistrict && <AccountRow icon={Building2} label={t('profile.district')} value={user.organizationDistrict} />}
                   {user.organizationBlock && <AccountRow icon={MapPinned} label={t('profile.block')} value={user.organizationBlock} />}
                   {user.organizationVillage && <AccountRow icon={Home} label={t('profile.village')} value={user.organizationVillage} isLast />}

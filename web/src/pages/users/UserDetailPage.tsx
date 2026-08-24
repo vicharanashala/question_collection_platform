@@ -652,14 +652,18 @@ setUser(r.user as UserType)
 
               {/* Organisation */}
               {(user.organizationName || user.organizationRole ||
-                user.organizationState || user.organizationDistrict ||
+                (user.organizationState && user.organizationState.length > 0) ||
+                user.organizationDistrict ||
                 user.organizationBlock || user.organizationVillage) && (
                 <div className="space-y-1">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Organisation</p>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-0">
                     {user.organizationName && <DetailRow label="Name" value={user.organizationName} />}
                     {user.organizationRole && <DetailRow label="Role" value={user.organizationRole} />}
-                    <DetailRow label="Org. State" value={user.organizationState ?? '-'} />
+                    <DetailRow
+                      label="Org. State(s)"
+                      value={user.organizationState && user.organizationState.length > 0 ? user.organizationState.join(', ') : '-'}
+                    />
                     <DetailRow label="Org. District" value={user.organizationDistrict ?? '-'} />
                     <DetailRow label="Org. Block" value={user.organizationBlock ?? '-'} />
                     <DetailRow label="Org. Village" value={user.organizationVillage ?? '-'} />
@@ -1177,7 +1181,7 @@ setUser(r.user as UserType)
                       { label: 'Org. Type', value: user.organisationType || '—' },
                       { label: 'Name', value: user.organizationName || '—' },
                       { label: 'Role', value: user.organizationRole || '—' },
-                      { label: 'Org. State', value: user.organizationState || '—' },
+                      { label: 'Org. State(s)', value: user.organizationState && user.organizationState.length > 0 ? user.organizationState.join(', ') : '—' },
                       { label: 'Org. District', value: user.organizationDistrict || '—' },
                       { label: 'Org. Block', value: user.organizationBlock || '—' },
                       { label: 'Org. Village', value: user.organizationVillage || '—' },

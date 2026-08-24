@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/hooks/useLanguage'
+import type { SupportedLanguageCode } from '@/i18n'
 import { authApi, adminApi, lgdApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -99,12 +101,36 @@ interface EditForm {
   organizationName: string
   organizationRole: string
   numberOfFarmers: string
+  /**
+   * `organizationState` is stored as `string[]` on the server (an organisation
+   * can operate in multiple states). The edit dialog renders this as a
+   * comma-separated text input for simplicity — we split it back into an array
+   * on save and join it for display.
+   */
   organizationState: string
   organizationDistrict: string
   organizationBlock: string
   organizationVillage: string
   season: string
   languagePreference: string
+}
+
+function blank(s: string | null | undefined) { return s ?? '' }
+
+/** Convert the server-side `string[] | null` into a comma-separated display string. */
+function orgStatesToString(states: string[] | null | undefined): string {
+  return states && states.length > 0 ? states.join(', ') : ''
+}
+
+/**
+ * Convert the comma-separated text input back to a `string[]`. Filters out
+ * blank entries so a trailing comma doesn't add an empty string.
+ */
+function parseOrgStates(text: string): string[] {
+  return text
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
 }
 
 function EditProfileDialog({
@@ -118,6 +144,7 @@ function EditProfileDialog({
   onClose: () => void
   onSaved: (u: AuthUser) => void
 }) {
+  const { setLanguage } = useLanguage()
   const [tab, setTab] = useState('personal')
   const [saving, setSaving] = useState(false)
 
@@ -161,8 +188,6 @@ function EditProfileDialog({
     }
   }, [open])
 
-  function blank(s: string | null | undefined) { return s ?? '' }
-
   const [form, setForm] = useState<EditForm>({
     name:               blank(user.name),
     age:                user.age            ? String(user.age)            : '',
@@ -181,7 +206,7 @@ function EditProfileDialog({
     organizationName:   blank(user.organizationName),
     organizationRole:   blank(user.organizationRole),
     numberOfFarmers:    user.numberOfFarmers != null ? String(user.numberOfFarmers) : '',
-    organizationState:   blank(user.organizationState),
+    organizationState:   orgStatesToString(user.organizationState),
     organizationDistrict: blank(user.organizationDistrict),
     organizationBlock:   blank(user.organizationBlock),
     organizationVillage: blank(user.organizationVillage),
@@ -210,7 +235,7 @@ function EditProfileDialog({
         organizationName:   blank(user.organizationName),
         organizationRole:   blank(user.organizationRole),
         numberOfFarmers:    user.numberOfFarmers != null ? String(user.numberOfFarmers) : '',
-        organizationState:   blank(user.organizationState),
+        organizationState:   orgStatesToString(user.organizationState),
         organizationDistrict: blank(user.organizationDistrict),
         organizationBlock:   blank(user.organizationBlock),
         organizationVillage: blank(user.organizationVillage),
@@ -286,7 +311,7 @@ function EditProfileDialog({
       if (form.organizationName)      payload.organizationName     = form.organizationName
       if (form.organizationRole)      payload.organizationRole     = form.organizationRole
       if (form.numberOfFarmers)       payload.numberOfFarmers      = parseInt(form.numberOfFarmers) || 0
-      if (form.organizationState)     payload.organizationState    = form.organizationState
+      if (form.organizationState)     payload.organizationState    = parseOrgStates(form.organizationState)
       if (form.organizationDistrict)  payload.organizationDistrict = form.organizationDistrict
       if (form.organizationBlock)     payload.organizationBlock    = form.organizationBlock
       if (form.organizationVillage)   payload.organizationVillage  = form.organizationVillage
@@ -369,7 +394,14 @@ function EditProfileDialog({
               <select
                 className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
                 value={form.languagePreference}
-                onChange={(e) => set("languagePreference", e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value
+                  set("languagePreference", v)
+                  // Live preview — switch the whole app's i18n language so the
+                  // page re-renders in the chosen language immediately. The
+                  // choice is also sent to the backend on Save.
+                  void setLanguage(v as SupportedLanguageCode)
+                }}
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.value} value={l.value}>
@@ -571,11 +603,12 @@ function EditProfileDialog({
               Org. Location
             </p>
             <div className={rowCls}>
-              <Label className={labelCls}>Org. State</Label>
+              <Label className={labelCls}>Org. State(s)</Label>
               <Input
                 className={inputCls}
                 value={form.organizationState}
                 onChange={(e) => set("organizationState", e.target.value)}
+                placeholder="e.g. Assam, Bihar, Arunachal Pradesh"
               />
             </div>
             <div className={rowCls}>
@@ -670,6 +703,7 @@ function StatsStrip({ userId }: { userId: string }) {
 
 export function ProfilePage() {
   const { user, updateUser } = useAuth()
+  const { setLanguage } = useLanguage()
   const navigate = useNavigate()
   const [editOpen, setEditOpen] = useState(false)
 
@@ -680,9 +714,12 @@ export function ProfilePage() {
 
   function handleSaved(updated: AuthUser) {
     updateUser({ ...updated })
-    // also sync language into localStorage for i18n
+    // Switch the whole app's i18n language to match the saved preference so
+    // the page re-renders in the new language immediately (the EditProfileDialog
+    // already calls setLanguage for live preview, but the user might save
+    // without changing the select — sync here too to keep them consistent).
     if (updated.languagePreference) {
-      localStorage.setItem('language', updated.languagePreference)
+      void setLanguage(updated.languagePreference as SupportedLanguageCode)
     }
   }
 

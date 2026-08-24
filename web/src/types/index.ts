@@ -31,7 +31,7 @@ export interface User {
   universityName:   string | null;
   organizationName:     string | null;
   organizationRole:     string | null;
-  organizationState:    string | null;
+  organizationState:    string[] | null;
   organizationDistrict: string | null;
   organizationBlock:    string | null;
   organizationVillage:  string | null;
@@ -156,7 +156,7 @@ export interface AuthUser {
   organizationName?:     string | null;
   organizationRole?:     string | null;
   numberOfFarmers?:      number | null;
-  organizationState?:    string | null;
+  organizationState?:    string[] | null;
   organizationDistrict?: string | null;
   organizationBlock?:    string | null;
   organizationVillage?:  string | null;

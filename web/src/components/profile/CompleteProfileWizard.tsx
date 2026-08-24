@@ -73,6 +73,8 @@ import {
 import type { UserCategory } from "@/types";
 import { LogOut } from "lucide-react";
 import { SignOutDialog } from "@/components/SignOutDialog";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { SupportedLanguageCode } from "@/i18n";
 
 const TOTAL_STEPS = 4;
 const STEP_KEYS = [
@@ -204,6 +206,13 @@ interface WizardFormStateProps {
   setVillageFreeText: (v: boolean) => void;
   kvkFreeText: boolean;
   setKvkFreeText: (v: boolean) => void;
+  /**
+   * Switch the whole app's i18n language immediately (and persist to
+   * localStorage `appLanguage`). Called from Step 4's language <Select> so the
+   * entire UI re-renders in the chosen language as soon as the user picks
+   * one — not just on form submit.
+   */
+  setLanguage: (code: SupportedLanguageCode) => Promise<void>;
 }
 
 function Step1({ form, errors, setField }: WizardFormStateProps) {
@@ -999,7 +1008,19 @@ function Step3({
   );
 }
 
-function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) {
+function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFormStateProps) {
+  // When the user picks a language, switch the whole app to that language
+  // immediately (i18n.changeLanguage + localStorage persistence + <html dir/lang>
+  // sync are all handled by `setLanguage`/the i18n config). This is the live
+  // preview — the user's choice is still sent to the backend on Submit.
+  const handleLanguageChange = (v: string) => {
+    setField("languagePreference", v);
+    // LANGUAGES is a superset of SupportedLanguageCode — every wizard entry
+    // is a supported code, so the cast is safe. `setLanguage` itself is
+    // idempotent for unknown codes (it just calls i18n.changeLanguage).
+    void setLanguage(v as SupportedLanguageCode);
+  };
+
   return (
     <div className="space-y-2 sm:space-y-3">
       {/* ── Language card ── */}
@@ -1012,7 +1033,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
         </div>
         <Select
           value={form.languagePreference}
-          onValueChange={(v) => setField("languagePreference", v)}
+          onValueChange={handleLanguageChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Choose language" />
@@ -1184,6 +1205,7 @@ export function CompleteProfileWizard({
   onBack,
 }: CompleteProfileWizardProps) {
   const { login } = useAuth();
+  const { language: activeLanguage, setLanguage } = useLanguage();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
@@ -1191,7 +1213,14 @@ export function CompleteProfileWizard({
   const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
   const directionRef = useRef<1 | -1>(1);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<WizardFormState>(INITIAL_FORM);
+  // Seed the language preference from the currently active i18n language so a
+  // returning user sees their saved choice pre-selected instead of always 'en'.
+  // Falls back to the module-level INITIAL_FORM value ('en') when no language
+  // has been resolved yet.
+  const [form, setForm] = useState<WizardFormState>(() => ({
+    ...INITIAL_FORM,
+    languagePreference: activeLanguage || INITIAL_FORM.languagePreference,
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<
@@ -1328,8 +1357,6 @@ export function CompleteProfileWizard({
           e.numberOfFarmers = "Number of farmers is required";
         if (!form.organizationState)
           e.organizationState = "Organisation state is required";
-        if (!form.organizationDistrict.trim())
-          e.organizationDistrict = "District is required";
       }
     }
     if (s === 4) {
@@ -1343,6 +1370,7 @@ export function CompleteProfileWizard({
   }
 
   function next() {
+    console.log("Button is clicked");
     if (validateStep(step)) {
       directionRef.current = 1;
       setStep((s) => Math.min(4, s + 1) as 1 | 2 | 3 | 4);
@@ -1491,7 +1519,6 @@ export function CompleteProfileWizard({
           ? parseInt(form.numberOfFarmers.trim(), 10)
           : undefined;
         payload.organizationState = form.organizationState;
-        payload.organizationDistrict = form.organizationDistrict.trim();
         payload.organizationBlock = form.organizationBlock.trim() || undefined;
         payload.organizationVillage =
           form.organizationVillage.trim() || undefined;
@@ -1548,6 +1575,7 @@ export function CompleteProfileWizard({
     setVillageFreeText,
     kvkFreeText,
     setKvkFreeText,
+    setLanguage,
   };
 
   return (

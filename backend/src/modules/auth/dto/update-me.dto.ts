@@ -101,9 +101,10 @@ export class UpdateMeDto {
   numberOfFarmers?: number;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  organizationState?: string;
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(100, { each: true })
+  organizationState?: string[];
 
   @IsOptional()
   @IsString()

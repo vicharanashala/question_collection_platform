@@ -6,7 +6,7 @@ import { IUserRepository } from "../../IUser.repository";
 import { User } from "../../../entities";
 import { Question } from "../../../entities";
 import { Wallet } from "../../../entities";
-import { QuestionStatus, UserCategory } from "../../../../classes/enums";
+import { QuestionStatus, UserCategory, VerificationStatus } from "../../../../classes/enums";
 import type { LeaderboardEntry } from "../../IUser.repository";
 import { UserRole } from "../../../../classes/enums";
 import {
@@ -211,6 +211,7 @@ export class MongoUserRepository
 
   const userFilter: Record<string, unknown> = {
     role: UserRole.USER,
+     verificationStatus: VerificationStatus.VERIFIED,
   };
 
   if (state) {
@@ -492,6 +493,7 @@ export class MongoUserRepository
 
   const userFilter: Record<string, unknown> = {
     role: UserRole.USER,
+    verificationStatus: VerificationStatus.VERIFIED,
   };
 
   if (state) {

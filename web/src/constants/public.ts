@@ -290,6 +290,10 @@ export const ORG_TYPE_OPTIONS: { value: string; label: string }[] = [
   {value: "Goverment", label: "Goverment"},
   {value: "Private", label: "Private"},
   {value: "NGO", label: "NGO"},
+  {value: "Educational Institution", label: "Educational Institution"},
+  {value: "Research Institution", label: "Research Institution"},
+  {value: "Non-Profit", label: "Non-Profit"},
+  {value: "Cooperative", label:"Cooperative"}
   // { value: 'Other', label: 'Other' },
 ]
 

@@ -143,9 +143,13 @@ export class User {
   @Column({ name: 'number_of_farmers', type: 'integer', nullable: true })
   numberOfFarmers: number | null;
 
-  /** Organisation state — fpo / ngo / volunteer */
-  @Column({ name: 'organization_state', type: 'varchar', length: 100, nullable: true })
-  organizationState: string | null;
+  /**
+   * Organisation state(s) — fpo / ngo / volunteer.
+   * An organisation can operate in multiple Indian states, so this is stored
+   * as a text[] column (PostgreSQL native array).
+   */
+  @Column({ name: 'organization_state', type: 'text', array: true, nullable: true })
+  organizationState: string[] | null;
 
   /** Organisation district — fpo / ngo / volunteer */
   @Column({ name: 'organization_district', type: 'varchar', length: 100, nullable: true })
