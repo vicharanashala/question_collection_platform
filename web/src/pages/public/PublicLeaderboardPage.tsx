@@ -10,9 +10,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Banknote, HelpCircle, Trophy, Medal, Star, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { LeaderboardEntry, LeaderboardResponse } from '@/types'
+import type { LeaderboardEntry } from '@/types'
 
-const FETCH_LIMIT = 100
+// const FETCH_LIMIT = 100
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

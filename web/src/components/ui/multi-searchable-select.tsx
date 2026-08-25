@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 export { SearchableSelect, type SelectItem } from './searchable-select'
 
 interface MultiSearchableSelectProps {
-  items: SelectItem[]
+  items: {label: string, value: string}[]
   values: string[]
   onValuesChange: (values: string[]) => void
   placeholder?: string
