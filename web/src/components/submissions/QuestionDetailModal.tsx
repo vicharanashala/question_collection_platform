@@ -210,9 +210,6 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
           </div>
 
           <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
-            {question.language && (
-              <ContextRow icon={Globe} label={t('question.language')} value={question.language} />
-            )}
             {question.domains && question.domains.length > 0 && (
               <ContextRow
                 icon={Hash}

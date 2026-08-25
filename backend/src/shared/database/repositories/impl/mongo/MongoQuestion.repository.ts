@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { IQuestionRepository } from '../../IQuestion.repository';
+import {
+  DailyVolumeRow,
+  IQuestionRepository,
+} from '../../IQuestion.repository';
 import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex } from '../../../abstractions/mongo-utils';
@@ -69,5 +72,126 @@ export class MongoQuestionRepository
         { $project: { _id: 0, userId: '$_id', approvedCount: 1 } },
       ])
       .exec() as Promise<Array<{ userId: string; approvedCount: number }>>;
+  }
+
+  // ─── Aggregations (native MongoDB pipelines) ─────────────────────────────
+
+  async countByStatuses(
+    statuses: QuestionStatus[],
+  ): Promise<Array<{ status: QuestionStatus; count: number }>> {
+    if (statuses.length === 0) return [];
+    const rows = await this._model
+      .aggregate<{ _id: QuestionStatus; count: number }>([
+        { $match: { status: { $in: statuses } } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ])
+      .exec();
+    return rows.map((r) => ({ status: r._id, count: r.count }));
+  }
+
+  async dailyVolumeSince(from: Date): Promise<DailyVolumeRow[]> {
+    const rows = await this._model
+      .aggregate<{
+        _id: string;
+        submitted: number;
+        approved: number;
+        rejected: number;
+        held: number;
+      }>([
+        { $match: { submittedAt: { $gte: from } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$submittedAt' },
+            },
+            submitted: { $sum: 1 },
+            approved: {
+              $sum: { $cond: [{ $eq: ['$status', QuestionStatus.APPROVED] }, 1, 0] },
+            },
+            rejected: {
+              $sum: { $cond: [{ $eq: ['$status', QuestionStatus.REJECTED] }, 1, 0] },
+            },
+            held: {
+              $sum: { $cond: [{ $eq: ['$status', QuestionStatus.HELD] }, 1, 0] },
+            },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ])
+      .exec();
+    return rows.map((r) => ({
+      date: r._id,
+      submitted: r.submitted,
+      approved: r.approved,
+      rejected: r.rejected,
+      held: r.held,
+    }));
+  }
+
+  async topFieldSince(
+    field: 'cropType' | 'state',
+    from: Date,
+    limit: number,
+  ): Promise<Array<{ key: string; count: number }>> {
+    const rows = await this._model
+      .aggregate<{ _id: string; count: number }>([
+        { $match: { submittedAt: { $gte: from } } },
+        { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: limit },
+      ])
+      .exec();
+    return rows
+      .filter((r) => r._id != null && r._id !== '')
+      .map((r) => ({ key: String(r._id), count: r.count }));
+  }
+
+  async topDomainsSince(
+    from: Date,
+    limit: number,
+  ): Promise<Array<{ domain: string; count: number }>> {
+    const rows = await this._model
+      .aggregate<{ _id: string; count: number }>([
+        { $match: { submittedAt: { $gte: from } } },
+        { $unwind: '$domains' },
+        { $group: { _id: '$domains', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: limit },
+      ])
+      .exec();
+    return rows
+      .filter((r) => r._id != null && r._id !== '')
+      .map((r) => ({ domain: String(r._id), count: r.count }));
+  }
+
+  async avgReviewTurnaroundMinutesSince(
+    from: Date,
+    statuses: QuestionStatus[],
+  ): Promise<number | null> {
+    if (statuses.length === 0) return null;
+    const row = await this._model
+      .aggregate<{ avgMs: number | null }>([
+        {
+          $match: {
+            reviewedAt: { $ne: null, $gte: from },
+            status: { $in: statuses },
+          },
+        },
+        {
+          $project: {
+            turnaroundMs: { $subtract: ['$reviewedAt', '$submittedAt'] },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            avgMs: { $avg: '$turnaroundMs' },
+          },
+        },
+      ])
+      .exec();
+    const avgMs = row[0]?.avgMs;
+    if (avgMs == null) return null;
+    return Math.round(avgMs / 60000);
   }
 }
