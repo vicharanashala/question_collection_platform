@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import {
   MessageSquareText, ImageIcon, Mic, MapPin, Wheat,
-  CloudRain, Globe, Hash, Loader2, AlertCircle,
+  CloudRain, Hash, Loader2, AlertCircle,
 } from 'lucide-react'
 import { cn, formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
