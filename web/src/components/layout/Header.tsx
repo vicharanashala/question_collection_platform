@@ -9,6 +9,7 @@ import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { SignOutDialog } from '@/components/SignOutDialog'
+import { isEndUser } from '@/lib/roles'
 
 interface HeaderProps {
   /** Open the mobile drawer. Wired up by `AppLayout`; only used on small screens. */
@@ -89,16 +90,19 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
           )}
         </button>
 
-        <button
-          onClick={() => setLanguageOpen(true)}
-          className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
-          aria-label={t('auth.selectLanguage')}
-          title={t('auth.selectLanguage')}
-        >
-          <Languages className="h-4 w-4" />
-        </button>
-
-
+        {/* Language switcher — only visible to end users. Staff roles
+            (admin, curator, finance, super_admin, distributor) are locked
+            to English. */}
+        {isEndUser(user) && (
+          <button
+            onClick={() => setLanguageOpen(true)}
+            className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
+            aria-label={t('auth.selectLanguage')}
+            title={t('auth.selectLanguage')}
+          >
+            <Languages className="h-4 w-4" />
+          </button>
+        )}
 
         {/* Profile dropdown */}
         <div className="relative" ref={menuRef}>

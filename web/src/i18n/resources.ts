@@ -1251,8 +1251,41 @@ const resources = {
           "invalidIfsc": "IFSC must be 11 characters (e.g. SBIN0001234)",
           "missingHolderName": "Enter the account holder name"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "as": {
     "common": {
@@ -2416,8 +2449,41 @@ const resources = {
           "invalidIfsc": "IFSC ১১ আখৰৰ হ'ব লাগিব (যেনে SBIN0001234)",
           "missingHolderName": "একাউণ্ট ধাৰকৰ নাম দিয়ক"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "bn": {
     "common": {
@@ -3581,8 +3647,41 @@ const resources = {
           "invalidIfsc": "IFSC অবশ্যই ১১ অক্ষরের হতে হবে (যেমন SBIN0001234)",
           "missingHolderName": "একাউন্ট ধারকের নাম লিখুন"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "brx": {
     "common": {
@@ -4746,8 +4845,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 आखरनि जाबग्रा (जेरै SBIN0001234)",
           "missingHolderName": "एकाउन्ट होल्डरनि मुं सोमाव"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "doi": {
     "common": {
@@ -5911,8 +6043,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरां दा होना चाहिदा (जियां SBIN0001234)",
           "missingHolderName": "खाता धारक दा नां पाओ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "gu": {
     "common": {
@@ -7076,8 +7241,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 અક્ષરોનો હોવો જોઈએ (દા.ત. SBIN0001234)",
           "missingHolderName": "ખાતાધારકનું નામ દાખલ કરો"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "hi": {
     "common": {
@@ -8267,8 +8465,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरों का होना चाहिए (जैसे SBIN0001234)",
           "missingHolderName": "खाताधारक का नाम दर्ज करें"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "समीक्षा डैशबोर्ड",
+        "subtitle": "क्यूरेटर अवलोकन · पिछले 30 दिन",
+        "range30d": "30 दिन",
+        "range7d": "7 दिन",
+        "range90d": "90 दिन",
+        "statQueue": "समीक्षा कतार",
+        "statQueueSub": "{{count}} कार्रवाई लंबित",
+        "statApproved": "स्वीकृत",
+        "statApprovedSub": "{{rate}}% स्वीकृति दर",
+        "statRejected": "अस्वीकृत",
+        "statRejectedSub": "{{count}} कुल सबमिट किए गए",
+        "slaTitle": "SLA उल्लंघन चेतावनी",
+        "slaMessage": "औसत समीक्षा टर्नअराउंड <bold>{{minutes}} मिनट</bold> है — 60 मिनट के लक्ष्य से अधिक।",
+        "slaQueueNote": "कतार में <bold>{{count}}</bold> प्रश्न हैं।",
+        "dailyVolumeTitle": "दैनिक सबमिशन वॉल्यूम",
+        "dailyVolumeSub": "पिछले 30 दिन — सबमिट किए गए, स्वीकृत, अस्वीकृत",
+        "legendSubmitted": "सबमिट किए गए",
+        "legendApproved": "स्वीकृत",
+        "legendRejected": "अस्वीकृत",
+        "queueByStatusTitle": "स्थिति के अनुसार कतार",
+        "queueByStatusSub": "वर्तमान वितरण",
+        "topStatesTitle": "वॉल्यूम के अनुसार शीर्ष राज्य",
+        "topStatesSub": "प्रति राज्य सबमिट किए गए प्रश्न",
+        "topCropsTitle": "शीर्ष फसलें",
+        "topCropsSub": "फसल प्रकार के अनुसार प्रश्न वितरण",
+        "quickActionsTitle": "त्वरित कार्रवाइयां",
+        "quickActionsSub": "प्लेटफ़ॉर्म पर नेविगेट करें",
+        "actionReviewQueue": "समीक्षा कतार",
+        "actionAllQuestions": "सभी प्रश्न",
+        "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
+        "loadError": "क्यूरेटर आँकड़े लोड करने में विफल",
+      },}
   },
   "kn": {
     "common": {
@@ -9432,8 +9663,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 ಅಕ್ಷರಗಳಾಗಿರಬೇಕು (ಉದಾ. SBIN0001234)",
           "missingHolderName": "ಖಾತೆದಾರರ ಹೆಸರನ್ನು ನಮೂದಿಸಿ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ks": {
     "common": {
@@ -10597,8 +10861,41 @@ const resources = {
           "invalidIfsc": "IFSC گژھہِ 11 اکشرن ہیوُن (مثال SBIN0001234)",
           "missingHolderName": "درج کٔریو اکاؤنٹ ہولڈرُک ناو"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "kok": {
     "common": {
@@ -11762,8 +12059,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरांचो आसपाक जाय (देखीक SBIN0001234)",
           "missingHolderName": "खातेदाराचें नांव घालात"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "mai": {
     "common": {
@@ -12927,8 +13257,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरक होबाक चाही (जेना SBIN0001234)",
           "missingHolderName": "खाताधारकक नाम दर्ज करू"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ml": {
     "common": {
@@ -14092,8 +14455,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 അക്ഷരങ്ങൾ ഉള്ളതായിരിക്കണം (ഉദാ. SBIN0001234)",
           "missingHolderName": "അക്കൗണ്ട് ഉടമയുടെ പേര് നൽകുക"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "mni": {
     "common": {
@@ -15257,8 +15653,41 @@ const resources = {
           "invalidIfsc": "IFSC অসি 11 মায়েক ওইগদবনি (খুদম SBIN0001234)",
           "missingHolderName": "একান্ত মপুগী মিং ইবীয়ু"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "mr": {
     "common": {
@@ -16422,8 +16851,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरांचा असावा (उदा. SBIN0001234)",
           "missingHolderName": "खातेदाराचे नाव प्रविष्ट करा"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ne": {
     "common": {
@@ -17587,8 +18049,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 वर्णको हुनुपर्छ (जस्तै SBIN0001234)",
           "missingHolderName": "खातावालाको नाम राख्नुहोस्"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "or": {
     "common": {
@@ -18750,8 +19245,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 ଅକ୍ଷର ବିଶିଷ୍ଟ ହେବା ଆବଶ୍ୟକ (ଯଥା SBIN0001234)",
           "missingHolderName": "ଖାତାଧାରୀଙ୍କ ନାମ ଦିଅନ୍ତୁ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "pa": {
     "common": {
@@ -19915,8 +20443,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ (ਜਿਵੇਂ SBIN0001234)",
           "missingHolderName": "ਖਾਤਾਧਾਰਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "sa": {
     "common": {
@@ -21090,8 +21651,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षराणां भवितुमर्हति (यथा SBIN0001234)",
           "missingHolderName": "खाताधारकस्य नाम लिखतु"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "sat": {
     "common": {
@@ -22255,8 +22849,41 @@ const resources = {
           "invalidIfsc": "IFSC ᱫᱚ 11 ᱚᱠᱛᱚ ᱠᱟᱱᱟ ᱞᱟᱹᱜᱤᱫ (ᱡᱮᱞᱮᱠᱟ SBIN0001234)",
           "missingHolderName": "ᱮᱠᱟᱣᱩᱱᱴ ᱢᱟᱹᱞᱤᱠ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "sd": {
     "common": {
@@ -23420,8 +24047,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 اکرن جو هجڻ گھرجي (مثال طور SBIN0001234)",
           "missingHolderName": "اکائونٽ هولڊر جو نالو داخل ڪريو"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ta": {
     "common": {
@@ -24585,8 +25245,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 எழுத்துக்களாக இருக்க வேண்டும் (எ.கா. SBIN0001234)",
           "missingHolderName": "கணக்கு வைத்திருப்பவர் பெயரை உள்ளிடவும்"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "te": {
     "common": {
@@ -25752,8 +26445,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 అక్షరాలుగా ఉండాలి (ఉదా. SBIN0001234)",
           "missingHolderName": "ఖాతాదారుని పేరును నమోదు చేయండి"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ur": {
     "common": {
@@ -26917,8 +27643,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 حروف کا ہونا چاہیے (مثلاً SBIN0001234)",
           "missingHolderName": "اکاؤنٹ ہولڈر کا نام درج کریں"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   }
 }
 export default resources;

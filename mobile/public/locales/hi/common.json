@@ -1248,5 +1248,38 @@
   "tooltip": {
     "info": "जानकारी",
     "gotIt": "समझ गया"
+  },
+  "curatorDashboard": {
+    "title": "समीक्षा डैशबोर्ड",
+    "subtitle": "क्यूरेटर अवलोकन · पिछले 30 दिन",
+    "range30d": "30 दिन",
+    "range7d": "7 दिन",
+    "range90d": "90 दिन",
+    "statQueue": "समीक्षा कतार",
+    "statQueueSub": "{{count}} कार्रवाई लंबित",
+    "statApproved": "स्वीकृत",
+    "statApprovedSub": "{{rate}}% स्वीकृति दर",
+    "statRejected": "अस्वीकृत",
+    "statRejectedSub": "{{count}} कुल सबमिट किए गए",
+    "slaTitle": "SLA उल्लंघन चेतावनी",
+    "slaMessage": "औसत समीक्षा टर्नअराउंड <bold>{{minutes}} मिनट</bold> है — 60 मिनट के लक्ष्य से अधिक।",
+    "slaQueueNote": "कतार में <bold>{{count}}</bold> प्रश्न हैं।",
+    "dailyVolumeTitle": "दैनिक सबमिशन वॉल्यूम",
+    "dailyVolumeSub": "पिछले 30 दिन — सबमिट किए गए, स्वीकृत, अस्वीकृत",
+    "legendSubmitted": "सबमिट किए गए",
+    "legendApproved": "स्वीकृत",
+    "legendRejected": "अस्वीकृत",
+    "queueByStatusTitle": "स्थिति के अनुसार कतार",
+    "queueByStatusSub": "वर्तमान वितरण",
+    "topStatesTitle": "वॉल्यूम के अनुसार शीर्ष राज्य",
+    "topStatesSub": "प्रति राज्य सबमिट किए गए प्रश्न",
+    "topCropsTitle": "शीर्ष फसलें",
+    "topCropsSub": "फसल प्रकार के अनुसार प्रश्न वितरण",
+    "quickActionsTitle": "त्वरित कार्रवाइयां",
+    "quickActionsSub": "प्लेटफ़ॉर्म पर नेविगेट करें",
+    "actionReviewQueue": "समीक्षा कतार",
+    "actionAllQuestions": "सभी प्रश्न",
+    "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
+    "loadError": "क्यूरेटर आँकड़े लोड करने में विफल"
   }
 }

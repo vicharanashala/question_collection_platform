@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { SignOutDialog } from '@/components/SignOutDialog'
 import { BrandLogo } from '@/components/BrandLogo'
+import { isEndUser } from '@/lib/roles'
 
 // Mirror of `Sidebar.tsx` navItems — kept in sync so the mobile drawer
 // shows exactly what the desktop sidebar would for the active role.
@@ -132,15 +133,20 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
               <p className="truncate text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/80">{user?.mobileNumber}</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            onClick={() => setLanguageOpen(true)}
-            className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <Languages className="h-4 w-4" />
-            <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
-            <span className="text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/60">{nativeName}</span>
-          </Button>
+          {/* Language switcher — end users only. Staff roles (admin,
+              curator, finance, super_admin, distributor) are locked to
+              English and the modal itself also returns null for them. */}
+          {isEndUser(user) && (
+            <Button
+              variant="ghost"
+              onClick={() => setLanguageOpen(true)}
+              className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <Languages className="h-4 w-4" />
+              <span className="flex-1 text-left">{t('auth.selectLanguage')}</span>
+              <span className="text-[11px] sm:text-[11px] sm:text-xs text-sidebar-foreground/60">{nativeName}</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={() => { setLogoutConfirmOpen(true); onClose() }}

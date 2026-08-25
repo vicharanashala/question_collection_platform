@@ -1248,5 +1248,38 @@
   "tooltip": {
     "info": "معلومات",
     "gotIt": "سمجھ گیا"
+  },
+  "curatorDashboard": {
+    "title": "Review Dashboard",
+    "subtitle": "Curator overview · last 30 days",
+    "range30d": "30D",
+    "range7d": "7D",
+    "range90d": "90D",
+    "statQueue": "Review Queue",
+    "statQueueSub": "{{count}} awaiting action",
+    "statApproved": "Approved",
+    "statApprovedSub": "{{rate}}% approval rate",
+    "statRejected": "Rejected",
+    "statRejectedSub": "{{count}} total submitted",
+    "slaTitle": "SLA Breach Warning",
+    "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+    "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+    "dailyVolumeTitle": "Daily Submission Volume",
+    "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+    "legendSubmitted": "Submitted",
+    "legendApproved": "Approved",
+    "legendRejected": "Rejected",
+    "queueByStatusTitle": "Queue by Status",
+    "queueByStatusSub": "Current distribution",
+    "topStatesTitle": "Top States by Volume",
+    "topStatesSub": "Questions submitted per state",
+    "topCropsTitle": "Top Crops",
+    "topCropsSub": "Question distribution by crop type",
+    "quickActionsTitle": "Quick Actions",
+    "quickActionsSub": "Navigate the platform",
+    "actionReviewQueue": "Review Queue",
+    "actionAllQuestions": "All Questions",
+    "noVolumeData": "No volume data available",
+    "loadError": "Failed to load curator stats"
   }
 }

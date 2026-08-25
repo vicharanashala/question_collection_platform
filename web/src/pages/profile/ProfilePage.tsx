@@ -15,6 +15,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { cn, getInitials, formatDate } from '@/lib/utils'
+import { isEndUser } from '@/lib/roles'
 import {
   Phone, MapPin, Calendar, Globe, HelpCircle, Edit2,
   Shield, CheckCircle, AlertCircle, Clock,
@@ -316,7 +317,14 @@ function EditProfileDialog({
       if (form.organizationBlock)     payload.organizationBlock    = form.organizationBlock
       if (form.organizationVillage)   payload.organizationVillage  = form.organizationVillage
       if (form.season)                payload.season               = form.season
-      if (form.languagePreference)    payload.languagePreference   = form.languagePreference
+      if (isEndUser(user)) {
+        // End users keep their saved language preference.
+        if (form.languagePreference) payload.languagePreference = form.languagePreference
+      } else {
+        // Staff roles are locked to English regardless of any stale value in
+        // the form (e.g. 'hi' carried over from a previous profile version).
+        payload.languagePreference = 'en'
+      }
 
       const { user: updated } = await authApi.updateMe(payload)
       onSaved(updated)
@@ -391,24 +399,32 @@ function EditProfileDialog({
             </div>
             <div className={rowCls}>
               <Label className={labelCls}>Language</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
-                value={form.languagePreference}
-                onChange={(e) => {
-                  const v = e.target.value
-                  set("languagePreference", v)
-                  // Live preview — switch the whole app's i18n language so the
-                  // page re-renders in the chosen language immediately. The
-                  // choice is also sent to the backend on Save.
-                  void setLanguage(v as SupportedLanguageCode)
-                }}
-              >
-                {LANGUAGES.map((l) => (
-                  <option key={l.value} value={l.value}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
+              {/* End users may pick any of the 22 supported languages. Staff
+                  roles (admin, curator, finance, super_admin, distributor)
+                  are locked to English — the UI selector is hidden and the
+                  submitted value is forced to 'en' on save. */}
+              {isEndUser(user) ? (
+                <select
+                  className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
+                  value={form.languagePreference}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    set("languagePreference", v)
+                    // Live preview — switch the whole app's i18n language so the
+                    // page re-renders in the chosen language immediately. The
+                    // choice is also sent to the backend on Save.
+                    void setLanguage(v as SupportedLanguageCode)
+                  }}
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.value} value={l.value}>
+                      {l.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-xs sm:text-xs sm:text-sm text-text-secondary">English</span>
+              )}
             </div>
             {/* Student fields shown in personal tab */}
             <Separator />

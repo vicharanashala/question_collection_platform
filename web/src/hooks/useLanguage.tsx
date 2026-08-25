@@ -6,10 +6,18 @@
  * `<html dir/lang>` sync are delegated to the existing i18n config
  * (`web/src/i18n/index.ts`) so there is exactly one source of truth for the
  * active language.
+ *
+ * Role-based locale lock: only the `user` role may change language. Every
+ * other role (admin, super_admin, curator, finance, distributor) is forced
+ * to English. The switcher UI is hidden separately in each component; this
+ * hook is the defence-in-depth that guarantees any code path that calls
+ * `setLanguage(...)` for a staff user is a no-op.
  */
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { i18n as I18nInstance } from 'i18next'
+import { useAuth } from '@/context/AuthContext'
+import { isEndUser } from '@/lib/roles'
 import {
   RTL_LANGUAGES,
   SUPPORTED_LANGUAGES,
@@ -45,9 +53,28 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // useTranslation subscribes to i18next's language events; consumers
   // re-render automatically when `i18n.language` changes.
   const { i18n: i18nInstance } = useTranslation()
+  const { user } = useAuth()
+
+  const userMayChangeLanguage = isEndUser(user)
+
+  // Force English whenever a staff user is signed in (or when a previously-
+  // end-user session transitions to a staff role). Runs on mount AND on
+  // every user change so stale `appLanguage` cache from a prior session
+  // (or a different role) cannot leak through.
+  useEffect(() => {
+    if (userMayChangeLanguage) return
+    if (i18nInstance.language === 'en') return
+    void i18nInstance.changeLanguage('en').then(() => {
+      try { localStorage.setItem('appLanguage', 'en') } catch { /* noop */ }
+    })
+  }, [i18nInstance, userMayChangeLanguage, user])
 
   const setLanguage = useCallback(
     async (code: SupportedLanguageCode) => {
+      // Staff roles are locked to English — silently ignore any switch
+      // attempt so direct API calls, profile updates, or future code
+      // paths can't override the lock from the UI layer alone.
+      if (!userMayChangeLanguage) return
       await i18nInstance.changeLanguage(code)
       // Persistence (localStorage `appLanguage`) and <html dir/lang> sync are
       // already handled by:
@@ -55,7 +82,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       //     lookupLocalStorage: 'appLanguage') in @/i18n.
       //   - i18n.on('languageChanged', …) in @/i18n.
     },
-    [i18nInstance],
+    [i18nInstance, userMayChangeLanguage],
   )
 
   const value = useMemo<LanguageContextValue>(() => {
