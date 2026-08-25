@@ -207,6 +207,33 @@ export function PublicAskPage() {
 
     setSubmitting(true)
     try {
+      // ─── Duplicate pre-check (mirrors the step-1 Continue button) ─────────
+      // Run `questionApi.preview` *before* actually submitting so the user sees
+      // the duplicate warning screen without us hitting `/questions` first.
+      // Behaviour is symmetric with `handleContinue`: if the backend flags a
+      // duplicate, the question is saved as REJECTED server-side (counts
+      // against the daily limit) and we show the duplicate screen instead
+      // of advancing to the success state.
+      const previewRes = await questionApi.preview({
+        questionText: questionText.trim(),
+        mediaType: 'none',
+        mediaUrls: [],
+      })
+      if (previewRes.duplicate?.isDuplicate) {
+        setDuplicate({
+          matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+          matchedAnswer: previewRes.duplicate.matchedAnswer,
+          similarityScore: previewRes.duplicate.similarityScore,
+          matchedUserName: previewRes.duplicate.matchedUserName,
+        })
+        // Refresh stats — the duplicate rejection consumed one of today's slots.
+        questionApi.getMyStats()
+          .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
+          .catch(() => undefined)
+        return
+      }
+
+      // ─── No duplicate → proceed with the actual submission ─────────────────
       const res = await questionApi.submitQuestion({
         questionText: questionText.trim(),
         domains,
@@ -219,6 +246,10 @@ export function PublicAskPage() {
         mediaType: 'none',
       })
       if (res.duplicate?.isDuplicate) {
+        // Defensive: if the user edited the question text on step 2 (very
+        // unusual) and it now matches something the preview pass didn't see
+        // (e.g. a race against a freshly-approved question), surface the
+        // warning screen the same way.
         setDuplicate({
           matchedQuestion: res.duplicate.matchedQuestion ?? '',
           matchedAnswer: res.duplicate.matchedAnswer,

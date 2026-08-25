@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, Clock, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react'
@@ -12,10 +13,16 @@ import { toast } from 'sonner'
  * Pressing "Continue" calls /auth/me; if the admin has already verified
  * the user we route them into the public app, otherwise we let them in
  * with the still-pending status (questions can still be submitted).
+ *
+ * All UI text is translated via the i18n namespace `verificationPending.*`.
+ * When the user picks a language in the profile-completion wizard's Step 4,
+ * `useLanguage().setLanguage()` flips i18n's active language, which fires
+ * `languageChanged` and re-renders this page in the chosen language.
  */
 export function PublicVerificationPendingPage() {
   const navigate = useNavigate()
   const { user, updateUser } = useAuth()
+  const { t } = useTranslation()
   const [status, setStatus] = useState<string>(user?.verificationStatus ?? 'pending')
   const [checking, setChecking] = useState(false)
 
@@ -31,11 +38,11 @@ export function PublicVerificationPendingPage() {
       updateUser(fresh)
       setStatus(fresh.verificationStatus ?? 'pending')
       if (fresh.verificationStatus === 'verified') {
-        toast.success('You are verified! Welcome to AnnaDatha.')
+        toast.success(t('verificationPending.toastVerified'))
       }
       navigate('/home', { replace: true })
     } catch {
-      toast.error('Could not check status. Please try again.')
+      toast.error(t('verificationPending.toastCheckFailed'))
       // Still let them in — the dashboard will just show pending state.
       navigate('/home', { replace: true })
     } finally {
@@ -49,34 +56,39 @@ export function PublicVerificationPendingPage() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40 mx-auto mb-4">
           <ShieldCheck className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">You're almost there!</h1>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">{t('verificationPending.welcomeHeading')}</h1>
         <p className="mt-2 text-xs sm:text-xs sm:text-sm text-text-secondary">
-          Your account has been created. An admin will review your details and verify you within 24–48 hours.
-          You can already explore the app and submit a question.
+          {t('verificationPending.welcomeDescription')}
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-3 text-left">
           <div className="flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
             <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Account created</p>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">Your details are saved.</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{t('verificationPending.accountCreated')}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{t('verificationPending.detailsSaved')}</p>
             </div>
           </div>
           <div className="flex items-start gap-3 rounded-lg border border-amber-100 bg-amber-50/40 p-3">
             <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
             <div>
-              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Verification pending</p>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">An admin will review your profile soon.</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{t('verificationPending.pendingCardTitle')}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{t('verificationPending.pendingCardHint')}</p>
             </div>
           </div>
         </div>
 
-        <p className="mt-4 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">Current status: <span className="font-semibold capitalize">{status}</span></p>
+        <p className="mt-4 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
+          <Trans
+            i18nKey="verificationPending.currentStatus"
+            values={{ status }}
+            components={{ bold: <span className="font-semibold capitalize" /> }}
+          />
+        </p>
 
         <Button onClick={checkNow} disabled={checking} className="mt-5 w-full bg-emerald-500 hover:bg-emerald-600">
           {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-          {checking ? 'Checking…' : 'Continue to AnnaDatha'}
+          {checking ? t('verificationPending.checkingStatus') : t('verificationPending.continueToApp')}
         </Button>
       </div>
     </div>

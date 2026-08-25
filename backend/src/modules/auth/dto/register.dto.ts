@@ -10,8 +10,30 @@ import {
   IsInt,
   Min,
   Matches,
+  IsArray,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { UserCategory } from '../../../shared/classes/enums';
+
+/**
+ * Normalise `organizationState` so it always becomes a string[] before
+ * validation, regardless of whether the client sends:
+ *   - an array  (web wizard — multi-select): ["Assam", "Bihar"]
+ *   - a string  (mobile app — single select): "Uttar Pradesh"
+ *   - null/undefined
+ */
+const ToStateArray = () =>
+  Transform(({ value }) => {
+    if (value === null || value === undefined) return null;
+    if (Array.isArray(value)) {
+      return value.filter((v) => typeof v === 'string' && v.trim().length > 0);
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? [trimmed] : [];
+    }
+    return value;
+  });
 
 export const SUPPORTED_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -150,11 +172,18 @@ export class RegisterDto {
   @Min(1)
   numberOfFarmers?: number;
 
-  /** Organisation state — fpo / ngo / volunteer. */
+  /**
+   * Organisation state(s) — fpo / ngo / volunteer.
+   * An organisation can have offices in multiple Indian states, so this
+   * is an array. Accepts either a string[] (web multi-select) or a single
+   * string (mobile single-select) — both are normalised to string[].
+   */
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  organizationState?: string;
+  @ToStateArray()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(100, { each: true })
+  organizationState?: string[];
 
   /** Organisation district — fpo / ngo / volunteer. */
   @IsOptional()

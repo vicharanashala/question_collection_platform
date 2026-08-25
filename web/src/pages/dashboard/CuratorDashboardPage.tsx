@@ -14,6 +14,7 @@
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { curatorApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -80,13 +81,14 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 
-const TIME_RANGES: { value: string; label: string; days: number }[] = [
-  { value: '30d', label: '30D', days: 30 },
-  { value: '7d', label: '7D', days: 7 },
-  { value: '90d', label: '90D', days: 90 },
+const TIME_RANGES: { value: string; labelKey: 'range30d' | 'range7d' | 'range90d'; days: number }[] = [
+  { value: '30d', labelKey: 'range30d', days: 30 },
+  { value: '7d', labelKey: 'range7d', days: 7 },
+  { value: '90d', labelKey: 'range90d', days: 90 },
 ]
 
 export function CuratorDashboardPage() {
+  const { t } = useTranslation()
   const [timeRange, setTimeRange] = useState('30d')
   const [stats, setStats] = useState<CuratorStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -95,9 +97,9 @@ export function CuratorDashboardPage() {
   useEffect(() => {
     curatorApi.getCuratorStats()
       .then(setStats)
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load curator stats')))
+      .catch((e) => toast.error(getErrorMessage(e, t('curatorDashboard.loadError'))))
       .finally(() => setLoading(false))
-  }, [])
+  }, [t])
 
   if (loading) return <DashboardSkeleton />
   if (!stats) return null
@@ -141,9 +143,9 @@ export function CuratorDashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-text">Review Dashboard</h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text">{t('curatorDashboard.title')}</h2>
           <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">
-            Curator overview · last 30 days
+            {t('curatorDashboard.subtitle')}
           </p>
         </div>
         <div className="flex items-center rounded-lg border border-border-subtle bg-surface p-1 shadow-xs">
@@ -155,34 +157,34 @@ export function CuratorDashboardPage() {
               onClick={() => setTimeRange(r.value)}
               className={cn('h-7 text-[11px] sm:text-[11px] sm:text-xs', timeRange !== r.value && 'text-text-tertiary')}
             >
-              {r.label}
+              {t(`curatorDashboard.${r.labelKey}`)}
             </Button>
           ))}
         </div>
       </div>
 
       {/* Primary stat cards */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard
           icon={CheckSquare}
-          label="Review Queue"
+          label={t('curatorDashboard.statQueue')}
           value={formatNumber(queue.total)}
-          sub={`${formatNumber(pendingTotal)} awaiting action`}
+          sub={t('curatorDashboard.statQueueSub', { count: formatNumber(pendingTotal) })}
           variant="warning"
         />
         <StatCard
           icon={CheckCircle}
-          label="Approved"
+          label={t('curatorDashboard.statApproved')}
           value={formatNumber(performance.approved30Days)}
-          sub={`${performance.approvalRate}% approval rate`}
+          sub={t('curatorDashboard.statApprovedSub', { rate: performance.approvalRate })}
           change={performance.approvalRateChange}
           variant="success"
         />
         <StatCard
           icon={Ban}
-          label="Rejected"
+          label={t('curatorDashboard.statRejected')}
           value={formatNumber(performance.rejected30Days)}
-          sub={`${stats.volume.last30Days} total submitted`}
+          sub={t('curatorDashboard.statRejectedSub', { count: stats.volume.last30Days })}
           variant="danger"
         />
       </div>
@@ -195,13 +197,19 @@ export function CuratorDashboardPage() {
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </div>
             <div>
-              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-destructive">SLA Breach Warning</p>
+              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-destructive">{t('curatorDashboard.slaTitle')}</p>
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary mt-0.5">
-                Average review turnaround is{' '}
-                <span className="font-semibold">{performance.avgReviewTurnaroundMinutes}m</span> —
-                above the 60-minute target.
+                <Trans
+                  i18nKey="curatorDashboard.slaMessage"
+                  values={{ minutes: performance.avgReviewTurnaroundMinutes }}
+                  components={{ bold: <span className="font-semibold" /> }}
+                />
                 {queue.total > 0 && (
-                  <span> <span className="font-semibold">{formatNumber(queue.total)}</span> questions in queue.</span>
+                  <> {' '}<Trans
+                    i18nKey="curatorDashboard.slaQueueNote"
+                    values={{ count: formatNumber(queue.total) }}
+                    components={{ bold: <span className="font-semibold" /> }}
+                  /></>
                 )}
               </p>
             </div>
@@ -213,18 +221,18 @@ export function CuratorDashboardPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard
           className="xl:col-span-2"
-          title="Daily Submission Volume"
-          subtitle={`Last 30 days — submitted, approved, rejected`}
+          title={t('curatorDashboard.dailyVolumeTitle')}
+          subtitle={t('curatorDashboard.dailyVolumeSub')}
           action={
             <div className="flex gap-4 text-[11px] sm:text-[11px] sm:text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-primary" /> Submitted
+                <span className="h-2 w-2 rounded-full bg-primary" /> {t('curatorDashboard.legendSubmitted')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-success" /> Approved
+                <span className="h-2 w-2 rounded-full bg-success" /> {t('curatorDashboard.legendApproved')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-destructive" /> Rejected
+                <span className="h-2 w-2 rounded-full bg-destructive" /> {t('curatorDashboard.legendRejected')}
               </span>
             </div>
           }
@@ -240,12 +248,12 @@ export function CuratorDashboardPage() {
             />
           ) : (
             <div className="h-48 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
-              No volume data available
+              {t('curatorDashboard.noVolumeData')}
             </div>
           )}
         </ChartCard>
 
-        <ChartCard title="Queue by Status" subtitle="Current distribution">
+        <ChartCard title={t('curatorDashboard.queueByStatusTitle')} subtitle={t('curatorDashboard.queueByStatusSub')}>
           <BarChartComponent
             data={queueBarData}
             dataKey="value"
@@ -258,7 +266,7 @@ export function CuratorDashboardPage() {
 
       {/* Charts row 2: State + Crop breakdown */}
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Top States by Volume" subtitle="Questions submitted per state">
+        <ChartCard title={t('curatorDashboard.topStatesTitle')} subtitle={t('curatorDashboard.topStatesSub')}>
           <BarChartComponent
             data={stateBarData}
             dataKey="value"
@@ -268,7 +276,7 @@ export function CuratorDashboardPage() {
           />
         </ChartCard>
 
-        <ChartCard title="Top Crops" subtitle="Question distribution by crop type">
+        <ChartCard title={t('curatorDashboard.topCropsTitle')} subtitle={t('curatorDashboard.topCropsSub')}>
           <BarChartComponent
             data={cropBarData}
             dataKey="value"
@@ -280,7 +288,7 @@ export function CuratorDashboardPage() {
       </div>
 
       {/* Quick actions */}
-      <ChartCard title="Quick Actions" subtitle="Navigate the platform">
+      <ChartCard title={t('curatorDashboard.quickActionsTitle')} subtitle={t('curatorDashboard.quickActionsSub')}>
         <div className="grid gap-3 md:grid-cols-2 pt-1">
           <Link
             to="/reviews"
@@ -288,7 +296,7 @@ export function CuratorDashboardPage() {
           >
             <span className="flex items-center gap-3">
               <CheckSquare className="h-4 w-4 text-primary" />
-              Review Queue
+              {t('curatorDashboard.actionReviewQueue')}
             </span>
             {queue.total > 0 ? (
               <Badge variant="destructive">{formatNumber(queue.total)}</Badge>
@@ -302,7 +310,7 @@ export function CuratorDashboardPage() {
           >
             <span className="flex items-center gap-3">
               <MessageSquare className="h-4 w-4 text-primary" />
-              All Questions
+              {t('curatorDashboard.actionAllQuestions')}
             </span>
             <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
           </Link>

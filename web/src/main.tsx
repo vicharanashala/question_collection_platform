@@ -13,9 +13,11 @@ import './index.css'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <LanguageProvider>
-        <ThemeProvider>
-          <AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          {/* LanguageProvider sits inside AuthProvider so it can read the
+              current user via useAuth() and force English for staff roles. */}
+          <LanguageProvider>
             <TooltipProvider>
               <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
                 <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
@@ -24,9 +26,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               </Suspense>
               <Toaster />
             </TooltipProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </LanguageProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

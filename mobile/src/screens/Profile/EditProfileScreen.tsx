@@ -11,6 +11,7 @@ import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../hooks/useLanguage';
 import { userApi, lgdApi } from '../../api/client';
 import { LANGUAGES, CROP_OPTIONS, COURSE_OPTIONS, ORG_TYPE_OPTIONS } from '../../utils/constants';
 import { tokens } from '../../utils/theme';
@@ -45,8 +46,12 @@ export function EditProfileScreen({ navigation }: Props) {
   console.log("User found out", user);
   const { showToast } = useToast();
   const { t } = useTranslation();
+  const { setLanguage: setI18nLanguage } = useLanguage();
 
   const isPrivileged = PRIVILEGED_ROLES.includes(user?.role as UserRole);
+  // Staff roles (admin, super_admin, curator, finance) are locked to English —
+  // hide the language picker and force the saved value to 'en' on submit.
+  const maySwitchLanguage = user?.role === UserRole.USER;
 
   const [name, setName] = useState(user?.name ?? '');
   const [selectedState, setSelectedState] = useState(user?.state ?? '');
@@ -210,7 +215,10 @@ export function EditProfileScreen({ navigation }: Props) {
         state: selectedState,
         district: selectedDistrict.trim(),
         block: block.trim() || undefined,
-        languagePreference: language,
+        // Staff roles are locked to English — ignore whatever the local
+        // `language` state still holds (could be a stale non-English value
+        // from before this user was upgraded to staff).
+        languagePreference: maySwitchLanguage ? language : 'en',
       };
 
       // Category-specific fields — only for non-privileged users
@@ -280,12 +288,23 @@ export function EditProfileScreen({ navigation }: Props) {
                   error={errors.name}
                   autoCapitalize="words"
                 />
-                <Select
-                  label={t('editProfile.preferredLanguage')}
-                  value={language}
-                  options={languageOptions}
-                  onChange={setLanguage}
-                />
+                {/* End users may pick any of the 22 supported languages.
+                    Staff roles are locked to English — the selector is
+                    hidden and the saved value is forced to 'en' on submit. */}
+                {maySwitchLanguage && (
+                  <Select
+                    label={t('editProfile.preferredLanguage')}
+                    value={language}
+                    options={languageOptions}
+                    onChange={(v) => {
+                      setLanguage(v);
+                      // Live preview — switch the whole app's i18n language
+                      // so the screen re-renders immediately. The choice is
+                      // also sent to the backend on Save.
+                      void setI18nLanguage(v as any);
+                    }}
+                  />
+                )}
               </View>
             </FieldGroup>
 

@@ -12,6 +12,7 @@ import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { getLanguageName } from '../../utils/languageDetection';
 import { tokens } from '../../utils/theme';
 import type { SupportedLanguageCode } from '../../i18n';
+import { UserRole } from '../../types';
 
 export function AdminProfileScreen() {
   const { theme, preference, setPreference } = useTheme();
@@ -20,6 +21,9 @@ export function AdminProfileScreen() {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const { language } = useLanguage();
+  // Staff roles (admin, super_admin, curator, finance) are locked to English
+  // — hide the Language row and keep the modal closed even if somehow shown.
+  const maySwitchLanguage = user?.role === UserRole.USER;
 
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -92,23 +96,25 @@ export function AdminProfileScreen() {
           <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
         </TouchableOpacity>
 
-        {/* ── Language ──────────────────────────────────────── */}
-        <TouchableOpacity
-          style={[styles.actionRow, { backgroundColor: c.surface }]}
-          activeOpacity={0.75}
-          onPress={() => setLangModalVisible(true)}
-        >
-          <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
-            <Ionicons name="language-outline" size={17} color={c.primary} />
-          </View>
-          <View style={styles.actionTextCol}>
-            <Text style={[styles.actionTitle, { color: c.text }]}>{t('auth.selectLanguage')}</Text>
-            <Text style={[styles.actionSub, { color: c.textSecondary }]}>
-              {getLanguageName(language as SupportedLanguageCode)}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
-        </TouchableOpacity>
+        {/* ── Language — end users only. Staff roles are locked to English. */}
+        {maySwitchLanguage && (
+          <TouchableOpacity
+            style={[styles.actionRow, { backgroundColor: c.surface }]}
+            activeOpacity={0.75}
+            onPress={() => setLangModalVisible(true)}
+          >
+            <View style={[styles.actionIconWrap, { backgroundColor: c.primary + '18' }]}>
+              <Ionicons name="language-outline" size={17} color={c.primary} />
+            </View>
+            <View style={styles.actionTextCol}>
+              <Text style={[styles.actionTitle, { color: c.text }]}>{t('auth.selectLanguage')}</Text>
+              <Text style={[styles.actionSub, { color: c.textSecondary }]}>
+                {getLanguageName(language as SupportedLanguageCode)}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
+          </TouchableOpacity>
+        )}
 
         {/* ── Appearance / Theme ─────────────────────────────── */}
         <View style={[styles.themeCard, { backgroundColor: c.surface }]}>

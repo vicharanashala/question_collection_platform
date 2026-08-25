@@ -10,7 +10,6 @@ import {
   Req,
   HttpCode,
   HttpStatus,
-  ParseUUIDPipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
@@ -68,7 +67,7 @@ export class QuestionController {
   @Get(':id')
   @Cacheable('question', 300)
   async getOne(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
   ) {
     return this.questionService.findOne(id, req.user.id);
@@ -78,7 +77,7 @@ export class QuestionController {
   @Patch(':id')
   @CacheInvalidate('hot:today:*', 'hot:total_approved')
   async update(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @Body() dto: UpdateQuestionDto,
     @Req() req: AuthenticatedRequest,
   ) {
@@ -110,7 +109,7 @@ export class QuestionController {
   @HttpCode(HttpStatus.OK)
   @CacheInvalidate('leaderboard:top_users', 'hot:*', 'analytics:*', 'query:review_queue*')
   async approve(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @Body('reason') reason: string | undefined,
     @Req() req: AuthenticatedRequest,
   ) {
@@ -123,7 +122,7 @@ export class QuestionController {
   @HttpCode(HttpStatus.OK)
   @CacheInvalidate('hot:*', 'analytics:*')
   async reject(
-    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('id') id: string,
     @Body('reason') reason: string,
     @Req() req: AuthenticatedRequest,
   ) {

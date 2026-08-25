@@ -236,10 +236,14 @@ export class QuestionService {
 
     // 4c. GDB semantic duplicate check — run after our DB check; may add additional
     //     context (matchedAnswer, similarityScore) if GDB has a confident match.
+    //     Pass the question's language (from the DTO if the client supplied it,
+    //     otherwise the user's languagePreference) so non-English question text
+    //     is translated to English before the semantic GDB search.
     const duplicateResult = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
       crop: cropType,
       state: user.state,
+      languageCode: dto.language ?? user.languagePreference,
     });
 
     // Derive agro-climatic zone from user's profile state.
@@ -550,10 +554,13 @@ export class QuestionService {
 
     // 4. GDB semantic search runs second — may add matchedAnswer + similarityScore
     //    if GDB has a confident match beyond what our DB found.
+    //    PreviewQuestionDto has no `language` field, so always fall back to
+    //    the user's languagePreference so non-English text gets translated.
     const gdbDup = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
       crop: inferred.crop,
       state,
+      languageCode: user.languagePreference,
     });
 
     // 5. Derive season from current month (India-centric calendar)

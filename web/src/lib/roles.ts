@@ -60,3 +60,13 @@ export function isFinance(user: AuthUser | null | undefined): boolean {
 export function isCurator(user: AuthUser | null | undefined): boolean {
   return user?.role === 'curator'
 }
+
+/**
+ * Returns true only for the end-user role (the farmer/student/etc. public app).
+ * Every other role (admin, super_admin, curator, finance, distributor) is
+ * considered staff and uses the English-only UI — language switching is
+ * reserved for end users.
+ */
+export function isEndUser(user: AuthUser | null | undefined): boolean {
+  return user?.role === 'user'
+}

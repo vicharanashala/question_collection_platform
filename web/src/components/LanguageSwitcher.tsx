@@ -7,12 +7,19 @@
  *
  * Persistence and `<html dir/lang>` sync are delegated to `@/i18n` — the
  * hook just exposes a React-friendly API over those mechanisms.
+ *
+ * Role-based visibility: only the `user` role sees the switcher. Every other
+ * role (admin, super_admin, curator, finance, distributor) is locked to
+ * English — this modal renders nothing for them. (The hook itself also
+ * refuses to switch languages for staff, see `useLanguage`.)
  */
 import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/hooks/useLanguage'
+import { useAuth } from '@/context/AuthContext'
+import { isEndUser } from '@/lib/roles'
 import { SUPPORTED_LANGUAGES, RTL_LANGUAGES, type SupportedLanguageCode } from '@/i18n'
 
 interface LanguageSwitcherProps {
@@ -23,6 +30,12 @@ interface LanguageSwitcherProps {
 export function LanguageSwitcher({ open, onClose }: LanguageSwitcherProps) {
   const { t } = useTranslation()
   const { language, setLanguage } = useLanguage()
+  const { user } = useAuth()
+
+  // Staff roles are locked to English — no switcher UI is shown. Returning
+  // null is safe here because the trigger button is also hidden by the
+  // Header / MobileNav callers, but we double-check at the modal itself.
+  if (!isEndUser(user)) return null
 
   function handleSelect(code: SupportedLanguageCode) {
     void setLanguage(code)

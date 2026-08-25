@@ -7,6 +7,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -104,6 +105,29 @@ export class UpdateProfileDto {
   @IsInt()
   @Min(1)
   numberOfFarmers?: number;
+
+  /**
+   * Organisation state(s) — fpo / ngo / volunteer.
+   * An organisation can have offices in multiple Indian states, so this is
+   * an array. Accepts either an array (web) or a single string (mobile) —
+   * both are normalised to string[].
+   */
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return null;
+    if (Array.isArray(value)) {
+      return value.filter((v) => typeof v === 'string' && v.trim().length > 0);
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? [trimmed] : [];
+    }
+    return value;
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(100, { each: true })
+  organizationState?: string[];
 
   /** Crop names to associate with the user (replaces existing list). */
   @IsOptional()

@@ -28,7 +28,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SearchableSelect } from '@/components/ui/searchable-select'
+import { SearchableSelect, MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
 import {
   Select,
   SelectContent,
@@ -73,6 +73,8 @@ import {
 import type { UserCategory } from "@/types";
 import { LogOut } from "lucide-react";
 import { SignOutDialog } from "@/components/SignOutDialog";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { SupportedLanguageCode } from "@/i18n";
 
 const TOTAL_STEPS = 4;
 const STEP_KEYS = [
@@ -106,13 +108,12 @@ interface WizardFormState {
   organizationName: string;
   organizationRole: string;
   numberOfFarmers: string;
-  organizationState: string;
-  organizationDistrict: string;
-  organizationDistrictCode: string;
+  /** Multi-select: the user may operate in more than one Indian state. */
+  organizationState: string[];
   organizationBlock: string;
   organizationVillage: string;
   season: string;
-  volunteerCropType: string;
+  volunteerCropType: string[];
   languagePreference: string;
   consentGiven: boolean;
 }
@@ -140,13 +141,11 @@ const INITIAL_FORM: WizardFormState = {
   organizationName: "",
   organizationRole: "",
   numberOfFarmers: "",
-  organizationState: "",
-  organizationDistrict: "",
-  organizationDistrictCode: "",
+  organizationState: [],
   organizationBlock: "",
   organizationVillage: "",
   season: "",
-  volunteerCropType: "",
+  volunteerCropType: [],
   languagePreference: "en",
   consentGiven: false,
 };
@@ -196,6 +195,8 @@ interface WizardFormStateProps {
   loadKvks: (districtCode: string) => Promise<void>;
   cropPickerOpen: boolean;
   setCropPickerOpen: (open: boolean) => void;
+  volunteerCropPickerOpen: boolean;
+  setVolunteerCropPickerOpen: (open: boolean) => void;
   setLegalModal: (type: "terms" | "privacy" | null) => void;
   districtFreeText: boolean;
   setDistrictFreeText: (v: boolean) => void;
@@ -205,6 +206,13 @@ interface WizardFormStateProps {
   setVillageFreeText: (v: boolean) => void;
   kvkFreeText: boolean;
   setKvkFreeText: (v: boolean) => void;
+  /**
+   * Switch the whole app's i18n language immediately (and persist to
+   * localStorage `appLanguage`). Called from Step 4's language <Select> so the
+   * entire UI re-renders in the chosen language as soon as the user picks
+   * one — not just on form submit.
+   */
+  setLanguage: (code: SupportedLanguageCode) => Promise<void>;
 }
 
 function Step1({ form, errors, setField }: WizardFormStateProps) {
@@ -465,6 +473,8 @@ function Step3({
   setField,
   cropPickerOpen,
   setCropPickerOpen,
+  volunteerCropPickerOpen,
+  setVolunteerCropPickerOpen,
 }: WizardFormStateProps) {
   return (
     <div className="space-y-4">
@@ -558,15 +568,16 @@ function Step3({
           )}
         </div>
         <div className="space-y-1.5">
-          <Label>Age <span className="text-rose-600">*</span></Label>
+          <Label>
+            Age <span className="text-rose-600">*</span>
+          </Label>
           <Input
             type="number"
             min={1}
             max={120}
             value={form.age}
             onChange={(e) => setField("age", e.target.value)}
-            placeholder="Your Age"
-            required
+            placeholder="e.g. 28"
           />
           {errors.age && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.age}</p>}
         </div>
@@ -844,64 +855,26 @@ function Step3({
               )}
             </div>
           )}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>
-                Operating state <span className="text-rose-600">*</span>
-              </Label>
-              <Select
-                value={form.organizationState}
-                onValueChange={(v) => {
-                  setField("organizationState", v)
-                  setField("organizationDistrict", "")
-                  setField("organizationDistrictCode", "")
-                  loadOrganizationDistricts(v)
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SUPPORTED_STATES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.organizationState && (
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
-                  {errors.organizationState}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label>
-                District <span className="text-rose-600">*</span>
-              </Label>
-              <SearchableSelect
-                items={organizationDistricts.map((d) => ({ value: d.name, label: d.name }))}
-                value={form.organizationDistrict}
-                onValueChange={(v) => {
-                  const d = organizationDistricts.find((x) => x.name === v)
-                  setField("organizationDistrict", v)
-                  setField("organizationDistrictCode", d?.code ?? "")
-                }}
-                placeholder={
-                  !form.organizationState ? "Choose state first" : "Search district…"
-                }
-                disabled={!form.organizationState || loadingOrganizationDistricts}
-                loading={loadingOrganizationDistricts}
-              />
-              {errors.organizationDistrict && (
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
-                  {errors.organizationDistrict}
-                </p>
-              )}
-            </div>
+          <div className="space-y-1.5">
+            <Label>
+              Operating state(s) <span className="text-rose-600">*</span>
+            </Label>
+            <MultiSearchableSelect
+              items={SUPPORTED_STATES.map((s) => ({ value: s.value, label: s.label }))}
+              values={form.organizationState}
+              onValuesChange={(v) => setField("organizationState", v)}
+              placeholder="Search states…"
+              helperText="Select all states where your organisation operates. You can pick more than one."
+            />
+            {errors.organizationState && (
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.organizationState}
+              </p>
+            )}
           </div>
           {form.category === "volunteer" && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-3">
+              {/* Season first */}
               <div className="space-y-1.5">
                 <Label>Season</Label>
                 <Select
@@ -920,16 +893,113 @@ function Step3({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label>Crop focus</Label>
-                <Input
-                  value={form.volunteerCropType}
-                  onChange={(e) =>
-                    setField("volunteerCropType", e.target.value)
-                  }
-                  placeholder="Optional"
-                />
+
+              {/* Crop focus label sits BELOW Season (stacked layout) */}
+              <div className="flex items-center justify-between">
+                <Label>
+                  Crop focus
+                </Label>
+                {form.volunteerCropType.length > 0 && (
+                  <span className="text-[11px] sm:text-[11px] sm:text-xs font-normal text-emerald-600">
+                    {form.volunteerCropType.length} selected
+                  </span>
+                )}
               </div>
+
+              {/* Always-visible grid of crop images (matches Primary crops UX) */}
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {CROPS.slice(0, 9).map((crop) => {
+                  const selected = form.volunteerCropType.includes(crop)
+                  return (
+                    <button
+                      key={crop}
+                      type="button"
+                      onClick={() =>
+                        setField(
+                          "volunteerCropType",
+                          selected
+                            ? form.volunteerCropType.filter((x) => x !== crop)
+                            : [...form.volunteerCropType, crop],
+                        )
+                      }
+                      className={cn(
+                        "relative flex flex-col items-center gap-1 rounded-lg border-2 p-1.5 transition-all",
+                        selected
+                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                          : "border-transparent hover:border-emerald-200",
+                      )}
+                      aria-pressed={selected}
+                    >
+                      <div className="relative h-14 w-14 overflow-hidden rounded-full">
+                        <CropImage
+                          name={crop}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                        {selected && (
+                          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/20">
+                            <CheckCircle2 className="h-5 w-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "line-clamp-2 text-center text-[10px] leading-tight",
+                          selected
+                            ? "font-semibold text-emerald-700 dark:text-emerald-300"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {crop}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Selected crops summary (chips) */}
+              {form.volunteerCropType.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {form.volunteerCropType.map((c) => (
+                    <span
+                      key={c}
+                      className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    >
+                      {c}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setField(
+                            "volunteerCropType",
+                            form.volunteerCropType.filter((x) => x !== c),
+                          )
+                        }
+                        className="ml-0.5 leading-none hover:text-rose-500"
+                        aria-label={`Remove ${c}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* See all crops → opens the search-able grid modal */}
+              <button
+                type="button"
+                onClick={() => setVolunteerCropPickerOpen(true)}
+                className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
+              >
+                See all {CROPS.length} crops
+              </button>
+
+              <CropPickerModal
+                open={volunteerCropPickerOpen}
+                onOpenChange={setVolunteerCropPickerOpen}
+                selected={form.volunteerCropType}
+                onSelectionChange={(crops) =>
+                  setField("volunteerCropType", crops)
+                }
+              />
             </div>
           )}
         </>
@@ -938,7 +1008,19 @@ function Step3({
   );
 }
 
-function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) {
+function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFormStateProps) {
+  // When the user picks a language, switch the whole app to that language
+  // immediately (i18n.changeLanguage + localStorage persistence + <html dir/lang>
+  // sync are all handled by `setLanguage`/the i18n config). This is the live
+  // preview — the user's choice is still sent to the backend on Submit.
+  const handleLanguageChange = (v: string) => {
+    setField("languagePreference", v);
+    // LANGUAGES is a superset of SupportedLanguageCode — every wizard entry
+    // is a supported code, so the cast is safe. `setLanguage` itself is
+    // idempotent for unknown codes (it just calls i18n.changeLanguage).
+    void setLanguage(v as SupportedLanguageCode);
+  };
+
   return (
     <div className="space-y-2 sm:space-y-3">
       {/* ── Language card ── */}
@@ -951,7 +1033,7 @@ function Step4({ form, errors, setField, setLegalModal }: WizardFormStateProps) 
         </div>
         <Select
           value={form.languagePreference}
-          onValueChange={(v) => setField("languagePreference", v)}
+          onValueChange={handleLanguageChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Choose language" />
@@ -1123,13 +1205,22 @@ export function CompleteProfileWizard({
   onBack,
 }: CompleteProfileWizardProps) {
   const { login } = useAuth();
+  const { language: activeLanguage, setLanguage } = useLanguage();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
+  const [volunteerCropPickerOpen, setVolunteerCropPickerOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
   const directionRef = useRef<1 | -1>(1);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<WizardFormState>(INITIAL_FORM);
+  // Seed the language preference from the currently active i18n language so a
+  // returning user sees their saved choice pre-selected instead of always 'en'.
+  // Falls back to the module-level INITIAL_FORM value ('en') when no language
+  // has been resolved yet.
+  const [form, setForm] = useState<WizardFormState>(() => ({
+    ...INITIAL_FORM,
+    languagePreference: activeLanguage || INITIAL_FORM.languagePreference,
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<
@@ -1266,8 +1357,6 @@ export function CompleteProfileWizard({
           e.numberOfFarmers = "Number of farmers is required";
         if (!form.organizationState)
           e.organizationState = "Organisation state is required";
-        if (!form.organizationDistrict.trim())
-          e.organizationDistrict = "District is required";
       }
     }
     if (s === 4) {
@@ -1281,6 +1370,7 @@ export function CompleteProfileWizard({
   }
 
   function next() {
+    console.log("Button is clicked");
     if (validateStep(step)) {
       directionRef.current = 1;
       setStep((s) => Math.min(4, s + 1) as 1 | 2 | 3 | 4);
@@ -1429,14 +1519,15 @@ export function CompleteProfileWizard({
           ? parseInt(form.numberOfFarmers.trim(), 10)
           : undefined;
         payload.organizationState = form.organizationState;
-        payload.organizationDistrict = form.organizationDistrict.trim();
         payload.organizationBlock = form.organizationBlock.trim() || undefined;
         payload.organizationVillage =
           form.organizationVillage.trim() || undefined;
       }
       if (form.category === "volunteer") {
         payload.season = form.season || undefined;
-        payload.volunteerCropType = form.volunteerCropType.trim() || undefined;
+        payload.volunteerCropType = form.volunteerCropType.length
+          ? form.volunteerCropType.join(", ")
+          : undefined;
       }
       const res = await authApi.register(payload);
       login(res.tokens, res.user);
@@ -1473,6 +1564,8 @@ export function CompleteProfileWizard({
     loadOrganizationDistricts,
     cropPickerOpen,
     setCropPickerOpen,
+    volunteerCropPickerOpen,
+    setVolunteerCropPickerOpen,
     setLegalModal,
     districtFreeText,
     setDistrictFreeText,
@@ -1482,6 +1575,7 @@ export function CompleteProfileWizard({
     setVillageFreeText,
     kvkFreeText,
     setKvkFreeText,
+    setLanguage,
   };
 
   return (

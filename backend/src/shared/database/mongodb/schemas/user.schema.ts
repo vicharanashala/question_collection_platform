@@ -112,8 +112,8 @@ export class User {
   @Prop({ name: 'numberOfFarmers', type: Number, default: null })
   numberOfFarmers: number | null;
 
-  @Prop({ name: 'organizationState', type: String, default: null })
-  organizationState: string | null;
+  @Prop({ name: 'organizationState', type: [String], default: null })
+  organizationState: string[] | null;
 
   @Prop({ name: 'organizationDistrict', type: String, default: null })
   organizationDistrict: string | null;

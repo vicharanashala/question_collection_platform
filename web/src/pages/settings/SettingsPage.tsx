@@ -175,7 +175,7 @@ export function SettingsPage() {
 
       {/* Edit dialog */}
       <Dialog open={!!editKey} onOpenChange={(o) => !o && setEditKey(null)}>
-        <DialogContent>
+        <DialogContent className='p-4'>
           <DialogHeader>
             <DialogTitle>
               Edit {editKey ? (CONFIG_META[editKey]?.label ?? editKey) : ''}
@@ -193,7 +193,7 @@ export function SettingsPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className='mt-4 gap-1'>
             <Button variant="outline" onClick={() => setEditKey(null)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Saving…' : 'Save Changes'}

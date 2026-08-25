@@ -3,16 +3,20 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Languages } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Languages, Menu } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { SignOutDialog } from '@/components/SignOutDialog'
+import { isEndUser } from '@/lib/roles'
 
-interface HeaderProps {}
+interface HeaderProps {
+  /** Open the mobile drawer. Wired up by `AppLayout`; only used on small screens. */
+  onOpenMobileNav?: () => void
+}
 
-export function Header({}: HeaderProps) {
+export function Header({ onOpenMobileNav }: HeaderProps) {
   const { pathname } = useLocation()
   const { user } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -54,6 +58,19 @@ export function Header({}: HeaderProps) {
   return (
     <header className="flex h-14 items-center justify-between border-b border-border-subtle bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-2">
+        {/* Hamburger — opens the mobile drawer. Hidden on `md` and above
+            where the desktop sidebar is always visible. */}
+        {onOpenMobileNav && (
+          <button
+            type="button"
+            onClick={onOpenMobileNav}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-accent hover:text-text transition-colors md:hidden"
+            aria-label={t('chrome.openMenu')}
+            title={t('chrome.openMenu')}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
         <BrandLogo className="h-8 w-8 shrink-0" />
         <span className="text-sm sm:text-base font-bold text-text leading-tight">AnnaDatha</span>
       </div>
@@ -73,16 +90,19 @@ export function Header({}: HeaderProps) {
           )}
         </button>
 
-        <button
-          onClick={() => setLanguageOpen(true)}
-          className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
-          aria-label={t('auth.selectLanguage')}
-          title={t('auth.selectLanguage')}
-        >
-          <Languages className="h-4 w-4" />
-        </button>
-
-
+        {/* Language switcher — only visible to end users. Staff roles
+            (admin, curator, finance, super_admin, distributor) are locked
+            to English. */}
+        {isEndUser(user) && (
+          <button
+            onClick={() => setLanguageOpen(true)}
+            className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
+            aria-label={t('auth.selectLanguage')}
+            title={t('auth.selectLanguage')}
+          >
+            <Languages className="h-4 w-4" />
+          </button>
+        )}
 
         {/* Profile dropdown */}
         <div className="relative" ref={menuRef}>
