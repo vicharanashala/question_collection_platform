@@ -17,8 +17,22 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<{ user: { role: UserRole } }>();
+    const request = context.switchToHttp().getRequest<{ user: { role: UserRole; id: string; mobileNumber: string } }>();
     const userRole = request.user?.role;
+
+    // Temporary debug — surfaces the JWT-decoded role vs the @Roles decorator
+    // requirement so we can diagnose the "Access denied" 403s distributor users
+    // are seeing. Leave this on until confirmed fixed; safe in prod (just logs).
+    // eslint-disable-next-line no-console
+    console.log('[RolesGuard DEBUG]', {
+      method: request.method,
+      url: request.url,
+      requiredRoles,
+      userRole,
+      userId: request.user?.id,
+      mobileNumber: request.user?.mobileNumber,
+      match: userRole ? requiredRoles.includes(userRole as UserRole) : false,
+    });
 
     if (!userRole) {
       throw new ForbiddenException('Access denied');
