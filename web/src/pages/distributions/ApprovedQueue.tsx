@@ -107,11 +107,13 @@ export function ApprovedQueue() {
       </Card>
 
       {assignFor && (
+        <div className='w-[80vw]'>
         <AssignStatesDialog
           question={assignFor}
           onClose={() => setAssignFor(null)}
           onDone={() => { setAssignFor(null); load() }}
         />
+        </div>
       )}
     </div>
   )
