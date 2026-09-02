@@ -1,17 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Between } from 'typeorm';
-import { Question } from '../../shared/database/entities';
 import { QuestionStatus } from '../../shared/classes/enums';
-import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
+import {
+  DailyVolumeRow,
+  IQuestionRepository,
+} from '../../shared/database/repositories/IQuestion.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
-export interface DailyVolume {
-  date: string;
-  submitted: number;
-  approved: number;
-  rejected: number;
-  held: number;
-}
+export interface DailyVolume extends DailyVolumeRow {}
 
 export interface QueueStatusCount {
   status: QuestionStatus;
@@ -40,29 +36,33 @@ export class CuratorService {
     const thirtyDaysAgo = new Date(startOfToday);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
 
-    // ── Queue counts (all non-terminal statuses) ─────────────────────────────
-    const queueCounts = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('q.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .where('q.status IN (:...statuses)', {
-        statuses: [
-          QuestionStatus.PENDING,
-          QuestionStatus.HELD,
-        ],
-      })
-      .groupBy('q.status')
-      .getRawMany<{ status: string; count: string }>();
+    // Prior 30-day window for growth / approval-rate comparison.
+    const sixtyDaysAgo = new Date(thirtyDaysAgo);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 1);
+    const priorStart = new Date(sixtyDaysAgo);
+    priorStart.setDate(priorStart.getDate() - 30);
 
-    const statusLabels: Record<string, string> = {
+    // ── Queue counts (PENDING + HELD, the non-terminal statuses) ─────────────
+    // Delegate the aggregation to the repository: the chainable MongoQueryBuilder
+    // does not implement groupBy / addSelect, so writing it here would return raw
+    // question documents and NaN counts (see MongoQueryBuilder source for details).
+    const queueRows = await this.questionRepo.countByStatuses([
+      QuestionStatus.PENDING,
+      QuestionStatus.HELD,
+    ]);
+
+    const statusLabels: Record<QuestionStatus, string> = {
       [QuestionStatus.PENDING]: 'Pending',
       [QuestionStatus.HELD]: 'On Hold',
+      [QuestionStatus.APPROVED]: 'Approved',
+      [QuestionStatus.REJECTED]: 'Rejected',
+      [QuestionStatus.MOVED_TO_FINAL]: 'Moved to Final',
     };
 
-    const queueBreakdown: QueueStatusCount[] = queueCounts.map((r) => ({
-      status: r.status as QuestionStatus,
+    const queueBreakdown: QueueStatusCount[] = queueRows.map((r) => ({
+      status: r.status,
       label: statusLabels[r.status] ?? r.status,
-      count: Number(r.count),
+      count: r.count,
     }));
 
     const totalQueue = queueBreakdown.reduce((sum, r) => sum + r.count, 0);
@@ -80,8 +80,8 @@ export class CuratorService {
       }),
     ]);
 
-    // ── 30-day approved / rejected / total (for approval rate) ──────────────
-    const [approved30, rejected30, total30] = await Promise.all([
+    // ── 30-day approved / rejected / total + prior 30-day window (for rate + growth)
+    const [approved30, rejected30, total30, priorTotal, priorApproved] = await Promise.all([
       this.questionRepo.count({
         where: {
           submittedAt: Between(thirtyDaysAgo, now),
@@ -97,109 +97,8 @@ export class CuratorService {
       this.questionRepo.count({
         where: { submittedAt: Between(thirtyDaysAgo, now) },
       }),
-    ]);
-
-    const approvalRate = total30 > 0 ? Math.round((approved30 / total30) * 100) : 0;
-
-    // ── Average review turnaround (approved + rejected only) ─────────────────
-    const avgTurnaroundRaw = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('AVG(EXTRACT(EPOCH FROM (q.reviewedAt - q.submittedAt)))', 'avg_seconds')
-      .where('q.reviewedAt IS NOT NULL')
-      .andWhere('q.status IN (:...statuses)', {
-        statuses: [QuestionStatus.APPROVED, QuestionStatus.REJECTED],
-      })
-      .andWhere('q.submittedAt >= :thirtyDaysAgo', { thirtyDaysAgo })
-      .getRawOne<{ avg_seconds: string | null }>();
-
-    const avgTurnaroundMinutes =
-      avgTurnaroundRaw?.avg_seconds != null
-        ? Math.round(Number(avgTurnaroundRaw.avg_seconds) / 60)
-        : null;
-
-    // ── Daily volume for last 30 days ────────────────────────────────────────
-    const dailyRaw: Array<{
-      date: string;
-      submitted: string;
-      approved: string;
-      rejected: string;
-      held: string;
-    }> = await this.questionRepo
-      .createQueryBuilder('q')
-      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
-      .addSelect('COUNT(*)', 'submitted')
-      .addSelect(
-        "COUNT(CASE WHEN q.status = 'approved' THEN 1 END)",
-        'approved',
-      )
-      .addSelect(
-        "COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)",
-        'rejected',
-      )
-      .addSelect(
-        "COUNT(CASE WHEN q.status = 'held' THEN 1 END)",
-        'held',
-      )
-      .where('q.submittedAt >= :thirtyDaysAgo', { thirtyDaysAgo })
-      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-      .orderBy('date', 'ASC')
-      .getRawMany();
-
-    const dailyVolume: DailyVolume[] = dailyRaw.map((r) => ({
-      date: r.date,
-      submitted: Number(r.submitted),
-      approved: Number(r.approved),
-      rejected: Number(r.rejected),
-      held: Number(r.held),
-    }));
-
-    // ── Top crops (last 30 days) ─────────────────────────────────────────────
-    const cropBreakdown: Array<{ cropType: string; count: number }> = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('q.cropType', 'cropType')
-      .addSelect('COUNT(*)', 'count')
-      .where('q.submittedAt >= :thirtyDaysAgo', { thirtyDaysAgo })
-      .groupBy('q.cropType')
-      .orderBy('count', 'DESC')
-      .limit(8)
-      .getRawMany()
-      .then((rows) => rows.map((r) => ({ cropType: r.cropType as string, count: Number(r.count) })));
-
-    // ── Top states (last 30 days) ────────────────────────────────────────────
-    const stateBreakdown: Array<{ state: string; count: number }> = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('q.state', 'state')
-      .addSelect('COUNT(*)', 'count')
-      .where('q.submittedAt >= :thirtyDaysAgo', { thirtyDaysAgo })
-      .groupBy('q.state')
-      .orderBy('count', 'DESC')
-      .limit(10)
-      .getRawMany()
-      .then((rows) => rows.map((r) => ({ state: r.state as string, count: Number(r.count) })));
-
-    // ── Domain breakdown (last 30 days) ─────────────────────────────────────
-    const domainBreakdown: Array<{ domain: string; count: number }> = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('UNNEST(q.domains)', 'domain')
-      .addSelect('COUNT(*)', 'count')
-      .where('q.submittedAt >= :thirtyDaysAgo', { thirtyDaysAgo })
-      .groupBy('domain')
-      .orderBy('count', 'DESC')
-      .limit(8)
-      .getRawMany()
-      .then((rows) => rows.map((r) => ({ domain: r.domain as string, count: Number(r.count) })));
-
-    // ── Growth vs prior 30-day period ────────────────────────────────────────
-    const sixtyDaysAgo = new Date(thirtyDaysAgo);
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 1);
-    const priorStart = new Date(sixtyDaysAgo);
-    priorStart.setDate(priorStart.getDate() - 30);
-
-    const [priorTotal, priorApproved] = await Promise.all([
       this.questionRepo.count({
-        where: {
-          submittedAt: Between(priorStart, sixtyDaysAgo),
-        },
+        where: { submittedAt: Between(priorStart, sixtyDaysAgo) },
       }),
       this.questionRepo.count({
         where: {
@@ -209,6 +108,36 @@ export class CuratorService {
       }),
     ]);
 
+    const approvalRate = total30 > 0 ? Math.round((approved30 / total30) * 100) : 0;
+
+    // ── Aggregations that the chainable MongoQueryBuilder cannot do ──────────
+    // These delegate to native Mongoose pipelines so the data actually flows.
+    const [avgReviewTurnaroundMinutes, dailyVolume, cropRows, stateRows, domainRows] =
+      await Promise.all([
+        this.questionRepo.avgReviewTurnaroundMinutesSince(thirtyDaysAgo, [
+          QuestionStatus.APPROVED,
+          QuestionStatus.REJECTED,
+        ]),
+        this.questionRepo.dailyVolumeSince(thirtyDaysAgo),
+        this.questionRepo.topFieldSince('cropType', thirtyDaysAgo, 8),
+        this.questionRepo.topFieldSince('state', thirtyDaysAgo, 10),
+        this.questionRepo.topDomainsSince(thirtyDaysAgo, 8),
+      ]);
+
+    const cropBreakdown = (cropRows ?? []).map((r) => ({
+      cropType: r.key,
+      count: r.count,
+    }));
+    const stateBreakdown = (stateRows ?? []).map((r) => ({
+      state: r.key,
+      count: r.count,
+    }));
+    const domainBreakdown = (domainRows ?? []).map((r) => ({
+      domain: r.domain,
+      count: r.count,
+    }));
+
+    // ── Growth vs prior 30-day period ────────────────────────────────────────
     const growthRate =
       priorTotal > 0
         ? Math.round(((total30 - priorTotal) / priorTotal) * 100)
@@ -232,7 +161,7 @@ export class CuratorService {
         approvalRate,
         priorApprovalRate,
         approvalRateChange: approvalRate - priorApprovalRate,
-        avgTurnaroundMinutes,
+        avgReviewTurnaroundMinutes,
       },
       growth: {
         last30Days: total30,

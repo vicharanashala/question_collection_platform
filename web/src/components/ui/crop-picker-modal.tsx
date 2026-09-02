@@ -79,13 +79,20 @@ export function CropPickerModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="flex max-h-[92dvh] sm:max-h-[85vh] max-w-2xl flex-col p-0 sm:p-0 max-md:bottom-0 max-md:top-auto max-md:translate-y-0 max-md:max-w-none max-md:rounded-b-none max-md:animate-in max-md:fade-in-0 max-md:slide-in-from-bottom-0">
-        <DialogHeader className="border-b border-border-subtle px-4 py-3">
+      <DialogContent
+        overlayClassName="z-[55]"
+        className={cn(
+          'z-[60] flex max-h-[92dvh] sm:max-h-[85vh] max-w-2xl flex-col p-0 sm:p-0',
+          'max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:translate-x-0 max-md:translate-y-0 max-md:w-full max-md:max-w-none max-md:rounded-b-none',
+          'sm:left-1/2 sm:top-1/2 sm:translate-x-[-50%] sm:translate-y-[-50%]',
+        )}
+      >
+        <DialogHeader className="shrink-0 border-b border-border-subtle px-4 py-3">
           <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">{title}</DialogTitle>
         </DialogHeader>
 
         {/* Search */}
-        <div className="px-4 pt-3">
+        <div className="shrink-0 px-4 pt-3">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -99,7 +106,7 @@ export function CropPickerModal({
         </div>
 
         {/* Scrollable grid */}
-        <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           {showOther ? (
             <div className="space-y-3 px-2 py-3">
               <Label htmlFor="other-crop-manual">Enter crop name</Label>
@@ -187,7 +194,7 @@ export function CropPickerModal({
 
         {/* Other crop CTA */}
         {!showOther && (
-          <div className="border-t border-border-subtle px-4 py-3">
+          <div className="shrink-0 border-t border-border-subtle px-4 py-3">
             <button
               type="button"
               onClick={() => setShowOther(true)}
@@ -200,7 +207,7 @@ export function CropPickerModal({
 
         {/* Footer with count + done — hidden in single mode */}
         {mode === 'multi' && selected.length > 0 && (
-          <div className="sticky bottom-0 border-t border-border-subtle bg-surface px-4 py-3">
+          <div className="shrink-0 border-t border-border-subtle bg-surface px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
                 {selected.length} selected{max > 0 ? ` / ${max} max` : ''}

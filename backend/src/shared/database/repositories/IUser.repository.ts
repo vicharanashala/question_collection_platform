@@ -1,13 +1,13 @@
-import { BaseRepository } from '../abstractions/base.repository';
-import { User, Wallet, AuditLog } from '../entities';
+import { BaseRepository } from "../abstractions/base.repository";
+import { User, Wallet, AuditLog } from "../entities";
 import {
   UserCategory,
   VerificationStatus,
   UserRole,
   AuditAction,
   ActorType,
-} from '../../classes/enums';
-import type { Types } from 'mongoose';
+} from "../../classes/enums";
+import type { Types } from "mongoose";
 
 /** ─── User entity filter shorthands ──────────────────────────────────────── */
 export interface UserFilter {
@@ -24,15 +24,22 @@ export interface UserFilter {
 }
 
 /** ─── Leaderboard projection ──────────────────────────────────────────────── */
+// export interface LeaderboardEntry {
+//   id: string;
+//   username: string | null;
+//   name: string;
+//   mobileNumber: string;
+//   profilePicUrl: string | null;
+//   crops: string[];
+//   approvedCount: number;
+//   rank?: number;
+// }
+
 export interface LeaderboardEntry {
   id: string;
-  username: string | null;
   name: string;
-  mobileNumber: string;
-  profilePicUrl: string | null;
-  crops: string[];
-  approvedCount: number;
-  rank?: number;
+  totalEarned: number;
+  totalQuestions: number;
 }
 
 /** ─── IUserRepository ─────────────────────────────────────────────────────── */
@@ -55,11 +62,23 @@ export interface IUserRepository extends BaseRepository<User> {
   updateOtpHash(mobileNumber: string, hash: string): Promise<void>;
   clearOtpHash(mobileNumber: string): Promise<void>;
   findWithWallet(userId: string): Promise<(User & { wallet?: Wallet }) | null>;
-  getLeaderboard(opts: {
-    limit?: number;
-    skip?: number;
+  // getLeaderboard(opts: {
+  //   limit?: number;
+  //   skip?: number;
+  //   state?: string;
+  //   category?: UserCategory;
+  // }): Promise<{ id: string; username: string | null; name: string; mobileNumber: string; profilePicUrl: string | null; crops: string[]; approvedCount: number }[]>;
+
+  getLeaderboard(opts?: {
+    limit: number;
+    offset: number;
     state?: string;
     category?: UserCategory;
-  }): Promise<{ id: string; username: string | null; name: string; mobileNumber: string; profilePicUrl: string | null; crops: string[]; approvedCount: number }[]>;
+  }): Promise<{ entries: LeaderboardEntry[]; total: number }>;
   getApprovedQuestionCount(userId: string): Promise<number>;
+  getLeaderboardRank(opts: {
+  userId: string;
+  state?: string;
+  category?: UserCategory;
+}): Promise<number | null>;
 }

@@ -1,10 +1,12 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, FlatList, StyleSheet,  } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, RTL_LANGUAGES, SupportedLanguageCode } from '../i18n';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../hooks/useAuth';
+import { UserRole } from '../types';
 
 interface LanguageSwitcherProps {
   visible: boolean;
@@ -15,7 +17,16 @@ export function LanguageSwitcher({ visible, onClose }: LanguageSwitcherProps) {
   const { i18n, t } = useTranslation();
   const { setLanguage } = useLanguage();
   const { theme } = useTheme();
+  const { user } = useAuth();
   const c = theme.colors;
+  const maySwitchLanguage = user?.role === UserRole.USER;
+
+  // Defense in depth — if a staff user somehow opens this modal (e.g. via a
+  // stale entrypoint), close it immediately. The hook already silently
+  // no-ops setLanguage for non-user roles, but closing keeps the UI clean.
+  useEffect(() => {
+    if (visible && !maySwitchLanguage) onClose();
+  }, [visible, maySwitchLanguage, onClose]);
 
   const handleSelect = useCallback(
     async (code: SupportedLanguageCode) => {

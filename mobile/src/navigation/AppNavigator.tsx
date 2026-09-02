@@ -295,6 +295,7 @@ function MainNavigator() {
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const { toggleTheme, isDark } = useTheme();
+  const { user } = useAuth();
 
   useFocusEffect(
     useCallback(() => {
@@ -341,13 +342,17 @@ function MainNavigator() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setLangModalVisible(true)}
-              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-              style={mainStyles.headerIcon}
-            >
-              <Ionicons name="language-outline" size={22} color={c.text} />
-            </TouchableOpacity>
+            {/* Language switcher — end users only. Staff roles (admin,
+                super_admin, curator, finance) are locked to English. */}
+            {isNormalUser(user?.role) && (
+              <TouchableOpacity
+                onPress={() => setLangModalVisible(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                style={mainStyles.headerIcon}
+              >
+                <Ionicons name="language-outline" size={22} color={c.text} />
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               onPress={() => toggleTheme()}

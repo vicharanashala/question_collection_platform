@@ -66,7 +66,7 @@ export interface PublicUser {
   organizationName:    string | null;
   organizationRole:    string | null;
   numberOfFarmers:     number | null;
-  organizationState:   string | null;
+  organizationState:   string[] | null;
   organizationDistrict: string | null;
   organizationBlock:   string | null;
   organizationVillage: string | null;
@@ -617,7 +617,7 @@ export class AuthService {
       organizationName?: string | null;
       organizationRole?: string | null;
       numberOfFarmers?: number | null;
-      organizationState?: string | null;
+      organizationState?: string[] | null;
       organizationDistrict?: string | null;
       organizationBlock?: string | null;
       organizationVillage?: string | null;

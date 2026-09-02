@@ -18,6 +18,7 @@ import { Question } from '../../shared/database/entities';
 import { AdminService } from '../admin/admin.service';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { SarvamService } from '../speech/sarvam.service';
 
 export interface GdbSearchResult {
   question_id: string;
@@ -88,6 +89,7 @@ export class GdbService {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => AdminService))
     private readonly adminService: AdminService,
+    private readonly sarvamService: SarvamService,
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
   ) {}
@@ -105,12 +107,49 @@ export class GdbService {
     questionText: string;
     crop: string;
     state: string;
+    languageCode?: string;
   }): Promise<DuplicateCheckResult> {
     const baseUrl = this.configService.get<string>('gdb.baseUrl')!;
     const apiKey = this.configService.get<string>('gdb.apiKey')!;
 
     const url = `${baseUrl}/v1/gdb/search`;
     this.logger.debug(`[GDB] search → ${url}`);
+
+    let queryText = payload.questionText;
+
+    // Normalize the incoming language code to Sarvam's "xx-IN" format.
+    // Callers may pass either the short form (e.g. 'hi', from
+    // User.languagePreference) or the qualified form (e.g. 'hi-IN', from
+    // Question.language). Sarvam only accepts the qualified form.
+    const sarvamLangCode = payload.languageCode
+      ? this.toSarvamLang(payload.languageCode)
+      : undefined;
+
+    if (sarvamLangCode && !this.isEnglish(sarvamLangCode)) {
+      try {
+        const translation = await this.sarvamService.translateText(
+          payload.questionText,
+          'en-IN',
+          sarvamLangCode,
+        );
+        queryText = translation.translatedText?.trim() || payload.questionText;
+        this.logger.debug(
+          `[GDB] translated questionText from ${sarvamLangCode} → en-IN: "${queryText.slice(0, 100)}"`,
+        );
+      } catch (err) {
+        // Don't block duplicate checking on a translation failure — fall back
+        // to the original text.
+        this.logger.warn(
+          `[GDB] translation failed (${payload.languageCode} → en-IN), using original text: ${err}`,
+        );
+      }
+    } else if (payload.languageCode) {
+      this.logger.debug(
+        `[GDB] source language '${payload.languageCode}' is English; skipping translation`,
+      );
+    }
+
+    console.log("Query Text --->", queryText);
 
     // ── Call GDB ──────────────────────────────────────────────────────────────
     let response: Response;
@@ -122,7 +161,7 @@ export class GdbService {
           ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
         },
         body: JSON.stringify({
-          rephrased_query: payload.questionText,
+          rephrased_query: queryText,
           crop: payload.crop,
           state: payload.state,
         }),
@@ -255,6 +294,34 @@ export class GdbService {
       matchedUserName: null,
       rawResponse: raw,
     };
+  }
+
+    private isEnglish(languageCode?: string | null): boolean {
+    if (!languageCode) return true;
+    return languageCode.toLowerCase().startsWith('en');
+  }
+
+  /**
+   * Maps a short (ISO 639) language code to Sarvam's qualified "xx-IN" form.
+   * Accepts already-qualified codes (e.g. 'hi-IN') and returns them unchanged.
+   *
+   * Mirrors the frontend helper `toSarvamLang` in
+   *   mobile/src/api/speech.ts
+   *   web/src/api/speech.ts
+   * so the backend never has to assume callers have normalized the code.
+   */
+  private toSarvamLang(code: string): string {
+    if (!code) return code;
+    if (code.includes('-')) return code;
+    const map: Record<string, string> = {
+      as: 'as-IN', bn: 'bn-IN', brx: 'brx-IN', doi: 'doi-IN',
+      gu: 'gu-IN', hi: 'hi-IN', kn: 'kn-IN', ks: 'ks-IN',
+      kok: 'kok-IN', mai: 'mai-IN', ml: 'ml-IN', mni: 'mni-IN',
+      mr: 'mr-IN', ne: 'ne-IN', or: 'or-IN', pa: 'pa-IN',
+      sa: 'sa-IN', sat: 'sat-IN', sd: 'sd-IN', ta: 'ta-IN',
+      te: 'te-IN', ur: 'ur-IN', en: 'en-IN',
+    };
+    return map[code] ?? `${code}-IN`;
   }
 
   /**

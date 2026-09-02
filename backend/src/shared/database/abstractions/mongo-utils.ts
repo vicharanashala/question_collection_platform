@@ -224,6 +224,12 @@ export function translateValue(val: unknown): unknown {
 
   // TypeORM FindOperator (MoreThanOrEqual, LessThan, etc.) — has Symbol(@instanceof) = FindOperator
   if (isTypeormFindOperator(val)) {
+    // `Between(from, to)` is a 2-arg range operator — it doesn't map to a single
+    // Mongo comparator. Return both bounds in one filter object so the field
+    // becomes { $gte: from, $lte: to } after toMongoFilter assigns it.
+    if (val._type === 'between' && Array.isArray(val._value) && val._value.length === 2) {
+      return { $gte: val._value[0], $lte: val._value[1] };
+    }
     const typeToMongo: Record<string, string> = {
       moreThanOrEqual: '$gte',
       lessThanOrEqual: '$lte',

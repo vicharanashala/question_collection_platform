@@ -906,7 +906,18 @@ const resources = {
         "statusNote": "You will be able to submit questions once your account is verified.",
         "contactAdmin": "Contact Admin",
         "accountVerificationHelp": "Account Verification Help",
-        "logout": "Log out and sign in with a different account"
+        "logout": "Log out and sign in with a different account",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "Registration complete! Awaiting admin verification.",
       "onDeviceAI": {
@@ -1240,8 +1251,41 @@ const resources = {
           "invalidIfsc": "IFSC must be 11 characters (e.g. SBIN0001234)",
           "missingHolderName": "Enter the account holder name"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "as": {
     "common": {
@@ -2063,7 +2107,18 @@ const resources = {
         "statusNote": "আপোনাৰ একাউণ্ট পৰীক্ষিত হোৱাৰ পিছত আপুনি প্ৰশ্ন দাখিল কৰিব পাৰিব।",
         "contactAdmin": "এডমিনৰ সৈতে যোগাযোগ",
         "accountVerificationHelp": "একাউণ্ট পৰীক্ষা সহায়",
-        "logout": "লগ আউট কৰক আৰু অন্য একাউণ্টৰ সৈতে লগ ইন কৰক"
+        "logout": "লগ আউট কৰক আৰু অন্য একাউণ্টৰ সৈতে লগ ইন কৰক",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "পঞ্জীয়ন সম্পূৰ্ণ! এডমিন পৰীক্ষাৰ অপেক্ষাত।",
       "onDeviceAI": {
@@ -2394,8 +2449,41 @@ const resources = {
           "invalidIfsc": "IFSC ১১ আখৰৰ হ'ব লাগিব (যেনে SBIN0001234)",
           "missingHolderName": "একাউণ্ট ধাৰকৰ নাম দিয়ক"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "bn": {
     "common": {
@@ -3217,7 +3305,18 @@ const resources = {
         "statusNote": "আপনার একাউন্ট যাচাই করা হলে আপনি প্রশ্ন জমা দিতে পারবেন।",
         "contactAdmin": "অ্যাডমিনের সাথে যোগাযোগ করুন",
         "accountVerificationHelp": "একাউন্ট যাচাইকরণ সহায়তা",
-        "logout": "লগআউট করুন এবং অন্য একাউন্ট দিয়ে সাইন ইন করুন"
+        "logout": "লগআউট করুন এবং অন্য একাউন্ট দিয়ে সাইন ইন করুন",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "নিবন্ধন সম্পন্ন হয়েছে! অ্যাডমিন যাচাইকরণের জন্য অপেক্ষারত।",
       "onDeviceAI": {
@@ -3548,8 +3647,41 @@ const resources = {
           "invalidIfsc": "IFSC অবশ্যই ১১ অক্ষরের হতে হবে (যেমন SBIN0001234)",
           "missingHolderName": "একাউন্ট ধারকের নাম লিখুন"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "brx": {
     "common": {
@@ -4371,7 +4503,18 @@ const resources = {
         "statusNote": "नोंथानि एकाउन्टआ थारसिमनाय जाब्ला नोंथाङा सोंथि दैथायहरनो हागोन।",
         "contactAdmin": "एडमिनजों सोमोन्दो खालाम",
         "accountVerificationHelp": "एकाउन्ट थारसिमनाय मदद",
-        "logout": "लगआउट खालाम आरो गुबुन एकाउन्टजों साइन इन खालाम"
+        "logout": "लगआउट खालाम आरो गुबुन एकाउन्टजों साइन इन खालाम",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "रेजिस्ट्रेसन आबुं जाबाय! एडमिननि थारसिमनायखौ नेगासिनो दं।",
       "onDeviceAI": {
@@ -4702,8 +4845,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 आखरनि जाबग्रा (जेरै SBIN0001234)",
           "missingHolderName": "एकाउन्ट होल्डरनि मुं सोमाव"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "doi": {
     "common": {
@@ -5525,7 +5701,18 @@ const resources = {
         "statusNote": "तुआह्दा खाता सत्यापित होने दे बाद तुस प्रश्न भेजी सकगे।",
         "contactAdmin": "एडमिन कन्ने संपर्क करो",
         "accountVerificationHelp": "खाता सत्यापन सहायता",
-        "logout": "लॉगआउट करो ते दूए खाते कन्ने साइन इन करो"
+        "logout": "लॉगआउट करो ते दूए खाते कन्ने साइन इन करो",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "पंजीकरण पूरा हुआ! एडमिन सत्यापन दा इंतज़ार ऐ।",
       "onDeviceAI": {
@@ -5856,8 +6043,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरां दा होना चाहिदा (जियां SBIN0001234)",
           "missingHolderName": "खाता धारक दा नां पाओ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "gu": {
     "common": {
@@ -6679,7 +6899,18 @@ const resources = {
         "statusNote": "એકવાર તમારું એકાઉન્ટ ચકાસાઈ જાય પછી તમે પ્રશ્નો સબમિટ કરી શકશો.",
         "contactAdmin": "એડમિનનો સંપર્ક કરો",
         "accountVerificationHelp": "એકાઉન્ટ ચકાસણી મદદ",
-        "logout": "લોગ આઉટ કરો અને અસલ એકાઉન્ટ વડે સાઇન ઇન કરો"
+        "logout": "લોગ આઉટ કરો અને અસલ એકાઉન્ટ વડે સાઇન ઇન કરો",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "રજીસ્ટ્રેશન પૂર્ણ થયું! એડમિન ચકાસણીની રાહ જોઈ રહ્યું છે.",
       "onDeviceAI": {
@@ -7010,8 +7241,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 અક્ષરોનો હોવો જોઈએ (દા.ત. SBIN0001234)",
           "missingHolderName": "ખાતાધારકનું નામ દાખલ કરો"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "hi": {
     "common": {
@@ -7856,7 +8120,18 @@ const resources = {
         "statusNote": "आपका खाता सत्यापित होने के बाद आप प्रश्न सबमिट कर सकेंगे।",
         "contactAdmin": "एडमिन से संपर्क करें",
         "accountVerificationHelp": "खाता सत्यापन सहायता",
-        "logout": "लॉग आउट करें और किसी दूसरे खाते से साइन इन करें"
+        "logout": "लॉग आउट करें और किसी दूसरे खाते से साइन इन करें",
+        "welcomeHeading": "आप लगभग वहाँ पहुँच गए हैं!",
+        "welcomeDescription": "आपका खाता बन गया है। एक एडमिन आपके विवरण की समीक्षा करेगा और 24–48 घंटों के भीतर आपका सत्यापन करेगा। आप अभी ऐप का अन्वेषण कर सकते हैं और एक प्रश्न सबमिट कर सकते हैं।",
+        "accountCreated": "खाता बनाया गया",
+        "detailsSaved": "आपका विवरण सुरक्षित कर लिया गया है।",
+        "pendingCardTitle": "सत्यापन लंबित",
+        "pendingCardHint": "एक एडमिन जल्द ही आपकी प्रोफ़ाइल की समीक्षा करेगा।",
+        "currentStatus": "वर्तमान स्थिति: <bold>{{status}}</bold>",
+        "continueToApp": "AnnaDatha पर जारी रखें",
+        "checkingStatus": "जाँच हो रही है…",
+        "toastVerified": "आपका सत्यापन हो गया है! AnnaDatha में आपका स्वागत है।",
+        "toastCheckFailed": "स्थिति जाँच नहीं हो सकी। कृपया पुनः प्रयास करें।",
       },
       "registrationSuccess": "पंजीकरण पूरा हो गया! एडमिन सत्यापन का इंतज़ार है।",
       "onDeviceAI": {
@@ -8190,8 +8465,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरों का होना चाहिए (जैसे SBIN0001234)",
           "missingHolderName": "खाताधारक का नाम दर्ज करें"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "समीक्षा डैशबोर्ड",
+        "subtitle": "क्यूरेटर अवलोकन · पिछले 30 दिन",
+        "range30d": "30 दिन",
+        "range7d": "7 दिन",
+        "range90d": "90 दिन",
+        "statQueue": "समीक्षा कतार",
+        "statQueueSub": "{{count}} कार्रवाई लंबित",
+        "statApproved": "स्वीकृत",
+        "statApprovedSub": "{{rate}}% स्वीकृति दर",
+        "statRejected": "अस्वीकृत",
+        "statRejectedSub": "{{count}} कुल सबमिट किए गए",
+        "slaTitle": "SLA उल्लंघन चेतावनी",
+        "slaMessage": "औसत समीक्षा टर्नअराउंड <bold>{{minutes}} मिनट</bold> है — 60 मिनट के लक्ष्य से अधिक।",
+        "slaQueueNote": "कतार में <bold>{{count}}</bold> प्रश्न हैं।",
+        "dailyVolumeTitle": "दैनिक सबमिशन वॉल्यूम",
+        "dailyVolumeSub": "पिछले 30 दिन — सबमिट किए गए, स्वीकृत, अस्वीकृत",
+        "legendSubmitted": "सबमिट किए गए",
+        "legendApproved": "स्वीकृत",
+        "legendRejected": "अस्वीकृत",
+        "queueByStatusTitle": "स्थिति के अनुसार कतार",
+        "queueByStatusSub": "वर्तमान वितरण",
+        "topStatesTitle": "वॉल्यूम के अनुसार शीर्ष राज्य",
+        "topStatesSub": "प्रति राज्य सबमिट किए गए प्रश्न",
+        "topCropsTitle": "शीर्ष फसलें",
+        "topCropsSub": "फसल प्रकार के अनुसार प्रश्न वितरण",
+        "quickActionsTitle": "त्वरित कार्रवाइयां",
+        "quickActionsSub": "प्लेटफ़ॉर्म पर नेविगेट करें",
+        "actionReviewQueue": "समीक्षा कतार",
+        "actionAllQuestions": "सभी प्रश्न",
+        "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
+        "loadError": "क्यूरेटर आँकड़े लोड करने में विफल",
+      },}
   },
   "kn": {
     "common": {
@@ -9013,7 +9321,18 @@ const resources = {
         "statusNote": "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಪರಿಶೀಲಿಸಿದ ನಂತರ ನೀವು ಪ್ರಶ್ನೆಗಳನ್ನು ಸಲ್ಲಿಸಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ.",
         "contactAdmin": "ಅಡ್ಮಿನ್ ಸಂಪರ್ಕಿಸಿ",
         "accountVerificationHelp": "ಖಾತೆ ಪರಿಶೀಲನೆ ಸಹಾಯ",
-        "logout": "ಲಾಗ್ ಔಟ್ ಮಾಡಿ ಮತ್ತು ಬೇರೆ ಖಾತೆಯೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ"
+        "logout": "ಲಾಗ್ ಔಟ್ ಮಾಡಿ ಮತ್ತು ಬೇರೆ ಖಾತೆಯೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಂಡಿದೆ! ಅಡ್ಮಿನ್ ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ.",
       "onDeviceAI": {
@@ -9344,8 +9663,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 ಅಕ್ಷರಗಳಾಗಿರಬೇಕು (ಉದಾ. SBIN0001234)",
           "missingHolderName": "ಖಾತೆದಾರರ ಹೆಸರನ್ನು ನಮೂದಿಸಿ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ks": {
     "common": {
@@ -10167,7 +10519,18 @@ const resources = {
         "statusNote": "اکاؤنٹ تصدیق گژھنہٕ پتہٕ ہیکِیو سوالات جمع کٔرِتھ۔",
         "contactAdmin": "ایڈمنس سۭتھ رابطہ کٔریو",
         "accountVerificationHelp": "اکاؤنٹ تصدیق مَنٛز مدد",
-        "logout": "لاگ آؤٹ کٔریو تہٕ بییس اکاؤنٹ سۭتھ سائن ان کٔریو"
+        "logout": "لاگ آؤٹ کٔریو تہٕ بییس اکاؤنٹ سۭتھ سائن ان کٔریو",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "رجسٹریشن مکمل! ایڈمن تصدیقُک انتظار۔",
       "onDeviceAI": {
@@ -10498,8 +10861,41 @@ const resources = {
           "invalidIfsc": "IFSC گژھہِ 11 اکشرن ہیوُن (مثال SBIN0001234)",
           "missingHolderName": "درج کٔریو اکاؤنٹ ہولڈرُک ناو"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "kok": {
     "common": {
@@ -11321,7 +11717,18 @@ const resources = {
         "statusNote": "तुमचें खातें पडताळल्या उपरांत तुम्ही प्रस्न धाडूंक शकतले.",
         "contactAdmin": "प्रशासका कडेन संपर्काक लागात",
         "accountVerificationHelp": "खातें पडताळणी आदार",
-        "logout": "लॉग आउट करात आनी दुसऱ्या खात्यान साइन इन करात"
+        "logout": "लॉग आउट करात आनी दुसऱ्या खात्यान साइन इन करात",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "नोंदणी पुराय जाली! प्रशासकाच्या पडताळणीची वाट पळयता.",
       "onDeviceAI": {
@@ -11652,8 +12059,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरांचो आसपाक जाय (देखीक SBIN0001234)",
           "missingHolderName": "खातेदाराचें नांव घालात"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "mai": {
     "common": {
@@ -12475,7 +12915,18 @@ const resources = {
         "statusNote": "अहाँक खाता सत्यापित भेला के बाद अहाँ प्रश्न जमा कऽ सकब।",
         "contactAdmin": "एडमिन सँ संपर्क करु",
         "accountVerificationHelp": "खाता सत्यापन मद्दति",
-        "logout": "लॉग आउट करु आ आन खाता सँ साइन इन करु"
+        "logout": "लॉग आउट करु आ आन खाता सँ साइन इन करु",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "पंजीकरण पूरा भेल! एडमिन सत्यापनक प्रतीक्षा अछि।",
       "onDeviceAI": {
@@ -12806,8 +13257,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरक होबाक चाही (जेना SBIN0001234)",
           "missingHolderName": "खाताधारकक नाम दर्ज करू"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ml": {
     "common": {
@@ -13629,7 +14113,18 @@ const resources = {
         "statusNote": "അക്കൗണ്ട് സാക്ഷ്യപ്പെടുത്തിയാൽ ഉടൻ ചോദ്യങ്ങൾ സമർപ്പിക്കാം.",
         "contactAdmin": "അഡ്മിനെ ബന്ധപ്പെടുക",
         "accountVerificationHelp": "അക്കൗണ്ട് പരിശോധനാ സഹായം",
-        "logout": "ലോഗ്ഔട്ട് ചെയ്ത് മറ്റൊരു അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്യുക"
+        "logout": "ലോഗ്ഔട്ട് ചെയ്ത് മറ്റൊരു അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്യുക",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "രജിസ്ട്രേഷൻ പൂർത്തിയായി! അഡ്മിൻ പരിശോധനയ്ക്കായി കാത്തിരിക്കുന്നു.",
       "onDeviceAI": {
@@ -13960,8 +14455,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 അക്ഷരങ്ങൾ ഉള്ളതായിരിക്കണം (ഉദാ. SBIN0001234)",
           "missingHolderName": "അക്കൗണ്ട് ഉടമയുടെ പേര് നൽകുക"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "mni": {
     "common": {
@@ -14783,7 +15311,18 @@ const resources = {
         "statusNote": "নহাগী একান্ত ভেরিফাই তৌরবা মতুংদা ওয়াহং থাবা য়াগনি।",
         "contactAdmin": "এডমিনগা পাউ ফাওনবা",
         "accountVerificationHelp": "একান্ত ভেরিফিকেশনগী মতেং",
-        "logout": "লগআউট তৌবীয়ু অমসুং অতোপ্পা একান্ত অমনা সাইন ইন তৌবীয়ু"
+        "logout": "লগআউট তৌবীয়ু অমসুং অতোপ্পা একান্ত অমনা সাইন ইন তৌবীয়ু",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "রেজিষ্ট্রেশন লোইখ্রে! এডমিন ভেরিফিকেশনগী ঙাইরি।",
       "onDeviceAI": {
@@ -15114,8 +15653,41 @@ const resources = {
           "invalidIfsc": "IFSC অসি 11 মায়েক ওইগদবনি (খুদম SBIN0001234)",
           "missingHolderName": "একান্ত মপুগী মিং ইবীয়ু"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "mr": {
     "common": {
@@ -15937,7 +16509,18 @@ const resources = {
         "statusNote": "तुमच्या खात्याची पडताळणी झाल्यानंतर तुम्ही प्रश्न सबमिट करू शकाल.",
         "contactAdmin": "अ‍ॅडमिनशी संपर्क साधा",
         "accountVerificationHelp": "खाते पडताळणी मदत",
-        "logout": "लॉग आउट करा आणि दुसऱ्या खात्याने साइन इन करा"
+        "logout": "लॉग आउट करा आणि दुसऱ्या खात्याने साइन इन करा",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "नोंदणी पूर्ण झाली! अ‍ॅडमिन पडताळणीची वाट पाहत आहे.",
       "onDeviceAI": {
@@ -16268,8 +16851,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षरांचा असावा (उदा. SBIN0001234)",
           "missingHolderName": "खातेदाराचे नाव प्रविष्ट करा"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ne": {
     "common": {
@@ -17091,7 +17707,18 @@ const resources = {
         "statusNote": "तपाईंको खाता प्रमाणित भएपछि तपाईं प्रश्नहरू पेस गर्न सक्नुहुनेछ।",
         "contactAdmin": "एडमिनलाई सम्पर्क गर्नुहोस्",
         "accountVerificationHelp": "खाता प्रमाणीकरण सहायता",
-        "logout": "लगआउट गरी अर्कै खाताबाट साइन इन गर्नुहोस्"
+        "logout": "लगआउट गरी अर्कै खाताबाट साइन इन गर्नुहोस्",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "दर्ता पूरा भयो! एडमिन प्रमाणीकरणको प्रतीक्षामा छ।",
       "onDeviceAI": {
@@ -17422,8 +18049,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 वर्णको हुनुपर्छ (जस्तै SBIN0001234)",
           "missingHolderName": "खातावालाको नाम राख्नुहोस्"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "or": {
     "common": {
@@ -18245,7 +18905,18 @@ const resources = {
         "statusNote": "ଆପଣଙ୍କ ଆକାଉଣ୍ଟ୍ ଯାଞ୍ଚ ହୋଇସାରିବା ପରେ ଆପଣ ପ୍ରଶ୍ନ ଦାଖଲ କରିପାରିବେ।",
         "contactAdmin": "ଆଡମିନ୍ ସହିତ ଯୋଗାଯୋଗ କରନ୍ତୁ",
         "accountVerificationHelp": "ଆକାଉଣ୍ଟ୍ ଯାଞ୍ଚ ସହାୟତା",
-        "logout": "ଲଗଆଉଟ୍ କରନ୍ତୁ ଏବଂ ଏକ ଅନ୍ୟ ଆକାଉଣ୍ଟ୍ ସହିତ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ"
+        "logout": "ଲଗଆଉଟ୍ କରନ୍ତୁ ଏବଂ ଏକ ଅନ୍ୟ ଆକାଉଣ୍ଟ୍ ସହିତ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ! ଆଡମିନ୍ ଯାଞ୍ଚ ପାଇଁ ଅପେକ୍ଷାରେ ଅଛି।",
       "onDeviceAI": {
@@ -18574,8 +19245,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 ଅକ୍ଷର ବିଶିଷ୍ଟ ହେବା ଆବଶ୍ୟକ (ଯଥା SBIN0001234)",
           "missingHolderName": "ଖାତାଧାରୀଙ୍କ ନାମ ଦିଅନ୍ତୁ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "pa": {
     "common": {
@@ -19397,7 +20101,18 @@ const resources = {
         "statusNote": "ਤੁਹਾਡੇ ਖਾਤੇ ਦੀ ਪੁਸ਼ਟੀ ਹੋਣ ਤੋਂ ਬਾਅਦ ਤੁਸੀਂ ਸਵਾਲ ਭੇਜ ਸਕੋਗੇ।",
         "contactAdmin": "ਐਡਮਿਨ ਨਾਲ ਸੰਪਰਕ ਕਰੋ",
         "accountVerificationHelp": "ਖਾਤਾ ਪ੍ਰਮਾਣੀਕਰਨ ਸਹਾਇਤਾ",
-        "logout": "ਲੌਗਆਊਟ ਕਰੋ ਅਤੇ ਕਿਸੇ ਵੱਖਰੇ ਖਾਤੇ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ"
+        "logout": "ਲੌਗਆਊਟ ਕਰੋ ਅਤੇ ਕਿਸੇ ਵੱਖਰੇ ਖਾਤੇ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਹੋਈ! ਐਡਮਿਨ ਪ੍ਰਮਾਣੀਕਰਨ ਦੀ ਉਡੀਕ ਹੈ।",
       "onDeviceAI": {
@@ -19728,8 +20443,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ (ਜਿਵੇਂ SBIN0001234)",
           "missingHolderName": "ਖਾਤਾਧਾਰਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "sa": {
     "common": {
@@ -20561,7 +21309,18 @@ const resources = {
         "statusNote": "यदा भवतः खातं सत्यापितं भविष्यति तदा भवान् प्रश्नान् समर्पयितुं शक्ष्यति।",
         "contactAdmin": "प्रशासकेन सह सम्पर्कं करोतु",
         "accountVerificationHelp": "खातसत्यापनसहायता",
-        "logout": "निर्गत्य अन्यखातेन प्रवेशं करोतु"
+        "logout": "निर्गत्य अन्यखातेन प्रवेशं करोतु",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "पञ्जीकरणं पूर्णम्! प्रशासकसत्यापनस्य प्रतीक्षा क्रियते।",
       "onDeviceAI": {
@@ -20892,8 +21651,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 अक्षराणां भवितुमर्हति (यथा SBIN0001234)",
           "missingHolderName": "खाताधारकस्य नाम लिखतु"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "sat": {
     "common": {
@@ -21715,7 +22507,18 @@ const resources = {
         "statusNote": "ᱟᱢᱟᱜ ᱮᱠᱟᱣᱩᱱᱴ ᱡᱟᱸᱪ ᱯᱩᱨᱟᱹᱣ ᱞᱮᱱᱨᱮ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ᱾",
         "contactAdmin": "ᱮᱰᱢᱤᱱ ᱥᱟᱶ ᱡᱳᱜᱟᱡᱳᱜᱽ ᱢᱮ",
         "accountVerificationHelp": "ᱮᱠᱟᱣᱩᱱᱴ ᱡᱟᱸᱪ ᱜᱚᱲᱚ",
-        "logout": "ᱞᱳᱜᱽ ᱟᱣᱩᱴ ᱠᱟᱛᱮ ᱮᱴᱟᱜ ᱮᱠᱟᱣᱩᱱᱴ ᱛᱮ ᱥᱟᱭᱤᱱ ᱤᱱ ᱢᱮ"
+        "logout": "ᱞᱳᱜᱽ ᱟᱣᱩᱴ ᱠᱟᱛᱮ ᱮᱴᱟᱜ ᱮᱠᱟᱣᱩᱱᱴ ᱛᱮ ᱥᱟᱭᱤᱱ ᱤᱱ ᱢᱮ",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱮᱱᱟ! ᱮᱰᱢᱤᱱ ᱡᱟᱸᱪ ᱛᱟᱹᱝᱜᱤ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ᱾",
       "onDeviceAI": {
@@ -22046,8 +22849,41 @@ const resources = {
           "invalidIfsc": "IFSC ᱫᱚ 11 ᱚᱠᱛᱚ ᱠᱟᱱᱟ ᱞᱟᱹᱜᱤᱫ (ᱡᱮᱞᱮᱠᱟ SBIN0001234)",
           "missingHolderName": "ᱮᱠᱟᱣᱩᱱᱴ ᱢᱟᱹᱞᱤᱠ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "sd": {
     "common": {
@@ -22869,7 +23705,18 @@ const resources = {
         "statusNote": "توهان جو اکائونٽ تصديق ٿيڻ کان پوءِ توهان سوال جمع ڪري سگهندا.",
         "contactAdmin": "ايڊمن سان رابطو ڪريو",
         "accountVerificationHelp": "اکائونٽ تصديق جي مدد",
-        "logout": "لاگ آئوٽ ڪريو ۽ ٻئي اکائونٽ سان سائين ان ڪريو"
+        "logout": "لاگ آئوٽ ڪريو ۽ ٻئي اکائونٽ سان سائين ان ڪريو",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "رجسٽريشن مڪمل ٿي وئي! ايڊمن جي تصديق جو انتظار آهي.",
       "onDeviceAI": {
@@ -23200,8 +24047,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 اکرن جو هجڻ گھرجي (مثال طور SBIN0001234)",
           "missingHolderName": "اکائونٽ هولڊر جو نالو داخل ڪريو"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ta": {
     "common": {
@@ -24023,7 +24903,18 @@ const resources = {
         "statusNote": "உங்கள் கணக்கு சரிபார்க்கப்பட்டதும் கேள்விகளைச் சமர்ப்பிக்க முடியும்.",
         "contactAdmin": "நிர்வாகியைத் தொடர்பு கொள்ளவும்",
         "accountVerificationHelp": "கணக்கு சரிபார்ப்பு உதவி",
-        "logout": "வெளியேறி வேறு கணக்கில் உள்நுழையவும்"
+        "logout": "வெளியேறி வேறு கணக்கில் உள்நுழையவும்",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "பதிவு முடிந்தது! நிர்வாகி சரிபார்ப்பிற்காகக் காத்திருக்கிறது.",
       "onDeviceAI": {
@@ -24354,8 +25245,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 எழுத்துக்களாக இருக்க வேண்டும் (எ.கா. SBIN0001234)",
           "missingHolderName": "கணக்கு வைத்திருப்பவர் பெயரை உள்ளிடவும்"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "te": {
     "common": {
@@ -25179,7 +26103,18 @@ const resources = {
         "statusNote": "మీ ఖాతా సరిచూడబడిన (Verified) తర్వాత మీరు ప్రశ్నలను సమర్పించగలరు.",
         "contactAdmin": "అడ్మిన్‌ను సంప్రదించండి",
         "accountVerificationHelp": "ఖాతా పరిశీలన సహాయం",
-        "logout": "లాగ్ అవుట్ చేసి మరొక ఖాతాతో సైన్ ఇన్ చేయండి"
+        "logout": "లాగ్ అవుట్ చేసి మరొక ఖాతాతో సైన్ ఇన్ చేయండి",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "రిజిస్ట్రేషన్ పూర్తయింది! అడ్మిన్ పరిశీలన కోసం వేచి ఉంది.",
       "onDeviceAI": {
@@ -25510,8 +26445,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 అక్షరాలుగా ఉండాలి (ఉదా. SBIN0001234)",
           "missingHolderName": "ఖాతాదారుని పేరును నమోదు చేయండి"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   },
   "ur": {
     "common": {
@@ -26333,7 +27301,18 @@ const resources = {
         "statusNote": "آپ کا اکاؤنٹ تصدیق ہونے کے بعد آپ سوالات جمع کر سکیں گے۔",
         "contactAdmin": "ایڈمن سے رابطہ کریں",
         "accountVerificationHelp": "اکاؤنٹ تصدیق میں مدد",
-        "logout": "لاگ آؤٹ کریں اور مختلف اکاؤنٹ سے سائن ان کریں"
+        "logout": "لاگ آؤٹ کریں اور مختلف اکاؤنٹ سے سائن ان کریں",
+        "welcomeHeading": "You're almost there!",
+        "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
+        "accountCreated": "Account created",
+        "detailsSaved": "Your details are saved.",
+        "pendingCardTitle": "Verification pending",
+        "pendingCardHint": "An admin will review your profile soon.",
+        "currentStatus": "Current status: <bold>{{status}}</bold>",
+        "continueToApp": "Continue to AnnaDatha",
+        "checkingStatus": "Checking…",
+        "toastVerified": "You are verified! Welcome to AnnaDatha.",
+        "toastCheckFailed": "Could not check status. Please try again.",
       },
       "registrationSuccess": "رجسٹریشن مکمل! ایڈمن کی تصدیق کا انتظار ہے۔",
       "onDeviceAI": {
@@ -26664,8 +27643,41 @@ const resources = {
           "invalidIfsc": "IFSC 11 حروف کا ہونا چاہیے (مثلاً SBIN0001234)",
           "missingHolderName": "اکاؤنٹ ہولڈر کا نام درج کریں"
         }
-      }
-    }
+      },
+    
+      "curatorDashboard": {
+        "title": "Review Dashboard",
+        "subtitle": "Curator overview · last 30 days",
+        "range30d": "30D",
+        "range7d": "7D",
+        "range90d": "90D",
+        "statQueue": "Review Queue",
+        "statQueueSub": "{{count}} awaiting action",
+        "statApproved": "Approved",
+        "statApprovedSub": "{{rate}}% approval rate",
+        "statRejected": "Rejected",
+        "statRejectedSub": "{{count}} total submitted",
+        "slaTitle": "SLA Breach Warning",
+        "slaMessage": "Average review turnaround is <bold>{{minutes}}m</bold> — above the 60-minute target.",
+        "slaQueueNote": "<bold>{{count}}</bold> questions in queue.",
+        "dailyVolumeTitle": "Daily Submission Volume",
+        "dailyVolumeSub": "Last 30 days — submitted, approved, rejected",
+        "legendSubmitted": "Submitted",
+        "legendApproved": "Approved",
+        "legendRejected": "Rejected",
+        "queueByStatusTitle": "Queue by Status",
+        "queueByStatusSub": "Current distribution",
+        "topStatesTitle": "Top States by Volume",
+        "topStatesSub": "Questions submitted per state",
+        "topCropsTitle": "Top Crops",
+        "topCropsSub": "Question distribution by crop type",
+        "quickActionsTitle": "Quick Actions",
+        "quickActionsSub": "Navigate the platform",
+        "actionReviewQueue": "Review Queue",
+        "actionAllQuestions": "All Questions",
+        "noVolumeData": "No volume data available",
+        "loadError": "Failed to load curator stats",
+      },}
   }
 }
 export default resources;

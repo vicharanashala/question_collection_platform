@@ -62,7 +62,7 @@ export function AssignStatesDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="min-w-[75vw] p-2">
         <DialogHeader>
           <DialogTitle>Assign states to question</DialogTitle>
           <DialogDescription>
@@ -135,7 +135,7 @@ export function AssignStatesDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className='mt-2'>
           <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
           <Button onClick={submit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
