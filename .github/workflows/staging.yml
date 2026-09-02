@@ -121,7 +121,7 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-${{ needs.build.outputs.sha }}
           project_id: ${{ env.PROJECT_ID }}
           env_vars: |
-            NODE_ENV=development
+            NODE_ENV=staging
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
