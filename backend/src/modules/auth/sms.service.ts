@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { SmsBsnlBrpsService } from './sms-bsnl-brps.service';
 
 /**
  * SMS Gateway abstraction supporting multiple providers.
@@ -16,7 +17,11 @@ import axios from 'axios';
 export class SmsService {
   private readonly logger = new Logger(SmsService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(forwardRef(() => SmsBsnlBrpsService))
+    private readonly brpsService: SmsBsnlBrpsService,
+  ) {}
 
   /**
    * Send a 6-digit OTP to the given mobile number.
@@ -36,6 +41,9 @@ export class SmsService {
         break;
       case 'gupshup':
         await this.sendViaGupshup(mobileNumber, otp);
+        break;
+      case 'bsnl':
+        await this.brpsService.sendOtp(mobileNumber, otp);
         break;
       case 'mock':
       default:

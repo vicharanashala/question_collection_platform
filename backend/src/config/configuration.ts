@@ -47,6 +47,16 @@ export const smsConfig = registerAs("sms", () => ({
   senderId:
     process.env.FAST2SMS_SENDER_ID || process.env.SMS_SENDER_ID || "AGRIAPP",
   route: process.env.FAST2SMS_ROUTE || "otp",
+  // BSNL BRPS
+  baseUrl: process.env.BRPS_BASE_URL || "https://bulksms.bsnl.in:5010",
+  serviceId: process.env.BRPS_SERVICE_ID || "",
+  username: process.env.BRPS_USERNAME || "",
+  password: process.env.BRPS_PASSWORD || "",
+  entityId: process.env.BRPS_ENTITY_ID || "",
+  header: process.env.BRPS_HEADER || "ANNAMAI",
+  templateId: process.env.BRPS_TEMPLATE_ID || "",
+  tokenId: process.env.BRPS_TOKEN_ID || "1",
+  ipWhitelist: process.env.BRPS_IP_WHITELIST || "",
   // Shared / other providers
   apiSecret: process.env.SMS_API_SECRET || "",
 }));
