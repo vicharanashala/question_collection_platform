@@ -134,7 +134,7 @@ jobs:
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             REDIS_DB=${{ vars.REDIS_DB }}
             REDIS_TLS=${{ vars.REDIS_TLS }}
-            SMS_PROVIDER=bsnl
+            SMS_PROVIDER=mock
             BRPS_BASE_URL=${{ vars.BRPS_BASE_URL }}
             BRPS_SERVICE_ID=${{ secrets.BRPS_SERVICE_ID }}
             BRPS_USERNAME=${{ secrets.BRPS_USERNAME }}
