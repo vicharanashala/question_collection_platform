@@ -263,6 +263,16 @@ export function AdminDashboardPage() {
     value: c.count,
   }))
 
+  const roleTotal = (stats?.roleDistribution ?? []).reduce(
+  (sum, role) => sum + role.count,
+  0
+);
+
+  const categoryTotal = (stats?.categoryDistribution ?? []).reduce(
+    (sum, category) => sum + category.count,
+    0
+  )
+
   // Domain breakdown
   // const domainBarData = (qAnalytics?.domainBreakdown ?? []).slice(0, 8).map((d_) => ({
   //   name: d_.domain,
@@ -617,7 +627,7 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <ChartCard
           title="Users by Role"
-          subtitle={`${(stats?.roleDistribution ?? []).reduce((s, r) => s + r.count, 0).toLocaleString()} total`}
+          subtitle={`${roleTotal.toLocaleString()} total`}
         >
           {roleDonut.length > 0 ? (
             <DonutChartComponent
@@ -625,7 +635,7 @@ export function AdminDashboardPage() {
               height={240}
               innerRadius={65}
               outerRadius={100}
-              centerValue={d?.totalUsers?.toLocaleString() ?? '—'}
+              centerValue={roleTotal.toLocaleString()}
               centerLabel="Total Users"
             />
           ) : (
@@ -640,6 +650,8 @@ export function AdminDashboardPage() {
               height={240}
               innerRadius={65}
               outerRadius={100}
+              centerValue={categoryTotal.toLocaleString()}
+              centerLabel="Total Users"
             />
           ) : (
             <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">No category data</div>
@@ -672,18 +684,14 @@ export function AdminDashboardPage() {
               <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             </Link>
             <Link
-              to="/reviews"
+              to="/distributions"
               className="flex items-center justify-between rounded-md border border-border-subtle p-3 text-xs sm:text-xs sm:text-sm font-medium hover:bg-surface-variant transition-colors group"
             >
               <span className="flex items-center gap-3">
                 <ShieldCheck className="h-4 w-4 text-primary" />
-                Review queue
+                Distributions
               </span>
-              {d?.pendingQuestions ? (
-                <Badge variant="destructive">{d.pendingQuestions}</Badge>
-              ) : (
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
-              )}
+              <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             </Link>
           </div>
         </ChartCard>

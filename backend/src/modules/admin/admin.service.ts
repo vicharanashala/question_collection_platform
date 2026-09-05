@@ -1075,149 +1075,257 @@ export class AdminService implements OnModuleInit {
    * Full stats payload matching web/src/types/AdminStats.
    * GET /admin/stats
    */
+  // async getStats(_query: AnalyticsQueryDto) {
+  //   const [
+  //     totalUsers,
+  //     verifiedUsers,
+  //     pendingUsers,
+  //     suspendedUsers,
+  //     bannedUsers,
+  //     totalQuestions,
+  //     approvedQuestions,
+  //     rejectedQuestions,
+  //     pendingQuestions,
+  //     usersThisWeek,
+  //     questionsThisWeek,
+  //     roleDist,
+  //     categoryDist,
+  //     historical,
+  //   ] = await Promise.all([
+  //     this.userRepo.count(),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.VERIFIED } }),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.PENDING } }),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.SUSPENDED } }),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.BANNED } }),
+  //     this.questionRepo.count(),
+  //     this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } }),
+  //     this.questionRepo.count({ where: { status: QuestionStatus.REJECTED } }),
+  //     this.questionRepo.count({
+  //       where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) },
+  //     }),
+  //     // Users registered in last 7 days
+  //     this.userRepo.count({
+  //       where: { createdAt: Between(
+  //         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  //         new Date(),
+  //       ) },
+  //     }),
+  //     // Questions submitted in last 7 days
+  //     this.questionRepo.count({
+  //       where: { submittedAt: Between(
+  //         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  //         new Date(),
+  //       ) },
+  //     }),
+  //     // Role distribution
+  //     this.userRepo
+  //       .createQueryBuilder('u')
+  //       .select('u.role', 'role')
+  //       .addSelect('COUNT(*)', 'count')
+  //       .groupBy('u.role')
+  //       .getRawMany<{ role: string; count: string }>(),
+  //     // Category distribution
+  //     this.userRepo
+  //       .createQueryBuilder('u')
+  //       .select('u.category', 'category')
+  //       .addSelect('COUNT(*)', 'count')
+  //       .groupBy('u.category')
+  //       .getRawMany<{ category: string; count: string }>(),
+  //     // 90-day daily history (users, questions, signups, approved, rejected)
+  //     this.questionRepo
+  //       .createQueryBuilder('q')
+  //       .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+  //       .addSelect('COUNT(DISTINCT q.userId)', 'users')
+  //       .addSelect('COUNT(*)', 'questions')
+  //       .addSelect(`COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`, 'approved')
+  //       .addSelect(`COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)`, 'rejected')
+  //       .where('q.submittedAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
+  //       .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+  //       .orderBy('date', 'ASC')
+  //       .getRawMany<{ date: string; users: string; questions: string; approved: string; rejected: string }>(),
+  //   ])
+
+  //   // Recent audit logs (last 20, joined with user for actor name)
+  //   const recentLogs: Array<AuditLog & { actorName?: string }> = await this.auditRepo
+  //     .createQueryBuilder('al')
+  //     .leftJoin('users', 'u', 'al.actor_id = u.id')
+  //     .select([
+  //       'al.id AS id',
+  //       'al.action AS action',
+  //       'al.entity_type AS "entityType"',
+  //       'al.metadata AS metadata',
+  //       'al.created_at AS "createdAt"',
+  //       'u.name AS "actorName"',
+  //     ])
+  //     .orderBy('al.created_at', 'DESC')
+  //     .take(20)
+  //     .getRawMany();
+
+  //   // Signups per day from user registrations
+  //   const signupRaw = await this.userRepo
+  //     .createQueryBuilder('u')
+  //     .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", 'date')
+  //     .addSelect('COUNT(*)', 'signups')
+  //     .where('u.createdAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
+  //     .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
+  //     .orderBy('date', 'ASC')
+  //     .getRawMany<{ date: string; signups: string }>()
+
+  //   const signupMap = new Map(signupRaw.map((r) => [r.date, Number(r.signups)]))
+
+  //   const historicalDays: Array<{
+  //     date: string
+  //     users: number
+  //     questions: number
+  //     signups: number
+  //     approved: number
+  //     rejected: number
+  //   }> = historical.map((h) => ({
+  //     date: h.date,
+  //     users: Number(h.users),
+  //     questions: Number(h.questions),
+  //     signups: signupMap.get(h.date) ?? 0,
+  //     approved: Number(h.approved),
+  //     rejected: Number(h.rejected),
+  //   }))
+
+  //   return {
+  //     dashboard: {
+  //       totalUsers,
+  //       verifiedUsers,
+  //       pendingUsers,
+  //       suspendedUsers,
+  //       bannedUsers,
+  //       totalQuestions,
+  //       approvedQuestions,
+  //       rejectedQuestions,
+  //       pendingQuestions,
+  //       questionsThisWeek,
+  //       usersThisWeek,
+  //     },
+  //     recentActivity: recentLogs.map((log) => ({
+  //       id: log.id,
+  //       action: log.action,
+  //       description: this.buildActivityDescription(log.action, log.entityType as string | null, log.metadata as Record<string, unknown> | null),
+  //       performedBy: (log as any).actorName ?? 'System',
+  //       performedAt: (log as any).createdAt ? new Date((log as any).createdAt).toISOString() : new Date().toISOString(),
+  //     })),
+  //     roleDistribution: roleDist.map((r) => ({ role: r.role as UserRole, count: Number(r.count) })),
+  //     categoryDistribution: categoryDist
+  //       .filter((c) => c.category != null)
+  //       .map((c) => ({ category: c.category as UserCategory, count: Number(c.count) })),
+  //     historical: historicalDays,
+  //     avgReviewTurnaroundMinutes: null, // populated separately via getQuestionMetrics for admin dashboard
+  //   }
+  // }
+
   async getStats(_query: AnalyticsQueryDto) {
-    const [
-      totalUsers,
-      verifiedUsers,
-      pendingUsers,
-      suspendedUsers,
-      bannedUsers,
-      totalQuestions,
-      approvedQuestions,
-      rejectedQuestions,
-      pendingQuestions,
-      usersThisWeek,
+  const now = new Date();
+
+  const sevenDaysAgo = new Date(
+    now.getTime() - 7 * 24 * 60 * 60 * 1000,
+  );
+
+  const ninetyDaysAgo = new Date(
+    now.getTime() - 90 * 24 * 60 * 60 * 1000,
+  );
+
+  const [
+    userStats,
+    questionStats,
+    usersThisWeek,
+    questionsThisWeek,
+    roleDistribution,
+    categoryDistribution,
+    historical,
+    signupRaw,
+    recentLogs,
+  ] = await Promise.all([
+    this.userRepo.getVerificationStats(),
+
+    this.questionRepo.getQuestionStats(),
+
+    this.userRepo.countCreatedBetween(
+      sevenDaysAgo,
+      now,
+    ),
+
+    this.questionRepo.countSubmittedBetween(
+      sevenDaysAgo,
+      now,
+    ),
+
+    this.userRepo.getRoleDistribution(),
+
+    this.userRepo.getCategoryDistribution(),
+
+    this.questionRepo.getDailyStatsSince(
+      ninetyDaysAgo,
+    ),
+
+    this.userRepo.getDailySignupsSince(
+      ninetyDaysAgo,
+    ),
+
+    this.auditRepo.getRecentWithActorName(20),
+  ]);
+
+  const signupMap = new Map(
+    signupRaw.map((r) => [
+      r.date,
+      r.signups,
+    ]),
+  );
+
+  const historicalDays = historical.map((h) => ({
+    date: h.date,
+    users: h.users,
+    questions: h.questions,
+    signups: signupMap.get(h.date) ?? 0,
+    approved: h.approved,
+    rejected: h.rejected,
+  }));
+
+  return {
+    dashboard: {
+      totalUsers: userStats.total,
+      verifiedUsers: userStats.verified,
+      pendingUsers: userStats.pending,
+      suspendedUsers: userStats.suspended,
+      bannedUsers: userStats.banned,
+
+      totalQuestions: questionStats.total,
+      approvedQuestions: questionStats.approved,
+      rejectedQuestions: questionStats.rejected,
+      pendingQuestions: questionStats.pending,
+
       questionsThisWeek,
-      roleDist,
-      categoryDist,
-      historical,
-    ] = await Promise.all([
-      this.userRepo.count(),
-      this.userRepo.count({ where: { verificationStatus: VerificationStatus.VERIFIED } }),
-      this.userRepo.count({ where: { verificationStatus: VerificationStatus.PENDING } }),
-      this.userRepo.count({ where: { verificationStatus: VerificationStatus.SUSPENDED } }),
-      this.userRepo.count({ where: { verificationStatus: VerificationStatus.BANNED } }),
-      this.questionRepo.count(),
-      this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } }),
-      this.questionRepo.count({ where: { status: QuestionStatus.REJECTED } }),
-      this.questionRepo.count({
-        where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) },
-      }),
-      // Users registered in last 7 days
-      this.userRepo.count({
-        where: { createdAt: Between(
-          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          new Date(),
-        ) },
-      }),
-      // Questions submitted in last 7 days
-      this.questionRepo.count({
-        where: { submittedAt: Between(
-          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          new Date(),
-        ) },
-      }),
-      // Role distribution
-      this.userRepo
-        .createQueryBuilder('u')
-        .select('u.role', 'role')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('u.role')
-        .getRawMany<{ role: string; count: string }>(),
-      // Category distribution
-      this.userRepo
-        .createQueryBuilder('u')
-        .select('u.category', 'category')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('u.category')
-        .getRawMany<{ category: string; count: string }>(),
-      // 90-day daily history (users, questions, signups, approved, rejected)
-      this.questionRepo
-        .createQueryBuilder('q')
-        .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
-        .addSelect('COUNT(DISTINCT q.userId)', 'users')
-        .addSelect('COUNT(*)', 'questions')
-        .addSelect(`COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`, 'approved')
-        .addSelect(`COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)`, 'rejected')
-        .where('q.submittedAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
-        .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-        .orderBy('date', 'ASC')
-        .getRawMany<{ date: string; users: string; questions: string; approved: string; rejected: string }>(),
-    ])
+      usersThisWeek,
+    },
 
-    // Recent audit logs (last 20, joined with user for actor name)
-    const recentLogs: Array<AuditLog & { actorName?: string }> = await this.auditRepo
-      .createQueryBuilder('al')
-      .leftJoin('users', 'u', 'al.actor_id = u.id')
-      .select([
-        'al.id AS id',
-        'al.action AS action',
-        'al.entity_type AS "entityType"',
-        'al.metadata AS metadata',
-        'al.created_at AS "createdAt"',
-        'u.name AS "actorName"',
-      ])
-      .orderBy('al.created_at', 'DESC')
-      .take(20)
-      .getRawMany();
+    recentActivity: recentLogs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      description: this.buildActivityDescription(
+        log.action,
+        log.entityType,
+        log.metadata,
+      ),
+      performedBy: log.actorName ?? 'System',
+      performedAt: log.createdAt
+        ? new Date(log.createdAt).toISOString()
+        : now.toISOString(),
+    })),
 
-    // Signups per day from user registrations
-    const signupRaw = await this.userRepo
-      .createQueryBuilder('u')
-      .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", 'date')
-      .addSelect('COUNT(*)', 'signups')
-      .where('u.createdAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
-      .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
-      .orderBy('date', 'ASC')
-      .getRawMany<{ date: string; signups: string }>()
+    roleDistribution,
 
-    const signupMap = new Map(signupRaw.map((r) => [r.date, Number(r.signups)]))
+    categoryDistribution,
 
-    const historicalDays: Array<{
-      date: string
-      users: number
-      questions: number
-      signups: number
-      approved: number
-      rejected: number
-    }> = historical.map((h) => ({
-      date: h.date,
-      users: Number(h.users),
-      questions: Number(h.questions),
-      signups: signupMap.get(h.date) ?? 0,
-      approved: Number(h.approved),
-      rejected: Number(h.rejected),
-    }))
+    historical: historicalDays,
 
-    return {
-      dashboard: {
-        totalUsers,
-        verifiedUsers,
-        pendingUsers,
-        suspendedUsers,
-        bannedUsers,
-        totalQuestions,
-        approvedQuestions,
-        rejectedQuestions,
-        pendingQuestions,
-        questionsThisWeek,
-        usersThisWeek,
-      },
-      recentActivity: recentLogs.map((log) => ({
-        id: log.id,
-        action: log.action,
-        description: this.buildActivityDescription(log.action, log.entityType as string | null, log.metadata as Record<string, unknown> | null),
-        performedBy: (log as any).actorName ?? 'System',
-        performedAt: (log as any).createdAt ? new Date((log as any).createdAt).toISOString() : new Date().toISOString(),
-      })),
-      roleDistribution: roleDist.map((r) => ({ role: r.role as UserRole, count: Number(r.count) })),
-      categoryDistribution: categoryDist
-        .filter((c) => c.category != null)
-        .map((c) => ({ category: c.category as UserCategory, count: Number(c.count) })),
-      historical: historicalDays,
-      avgReviewTurnaroundMinutes: null, // populated separately via getQuestionMetrics for admin dashboard
-    }
-  }
+    avgReviewTurnaroundMinutes: null,
+  };
+}
 
   async getFinancialSummary(query: AnalyticsQueryDto) {
     const since = new Date(Date.now() - (query.days ?? 30) * 24 * 60 * 60 * 1000);
@@ -2665,136 +2773,179 @@ export class AdminService implements OnModuleInit {
    * Question volume + breakdown by state, crop, domain.
    * GET /analytics/questions  →  getQuestionAnalytics
    */
+  // async getQuestionAnalytics(query: AnalyticsQueryDto) {
+  //   const { fromDate, toDate, state, cropType } = query;
+  //   const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  //   const to = toDate ? new Date(toDate) : new Date();
+
+  //   const baseWhere: Record<string, unknown> = { submittedAt: Between(from, to) };
+  //   if (state) baseWhere['state'] = state;
+  //   if (cropType) baseWhere['cropType'] = cropType;
+
+  //   const [total, approved, rejected, pending] = await Promise.all([
+  //     this.questionRepo.count({ where: { ...baseWhere } }),
+  //     this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
+  //     this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
+  //     this.questionRepo.count({ where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) } }),
+  //   ]);
+
+  //   // Daily volume: submitted, approved, rejected per day
+  //   const dailyRaw: Array<{ date: string; submitted: string; approved: string; rejected: string }> = await this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+  //     .addSelect('COUNT(*)', 'submitted')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)", 'rejected')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+  //     .orderBy('date', 'ASC')
+  //     .getRawMany();
+
+  //   const dailyVolume = dailyRaw.map((r) => ({
+  //     date: r.date,
+  //     submitted: Number(r.submitted),
+  //     approved: Number(r.approved),
+  //     rejected: Number(r.rejected),
+  //   }));
+
+  //   // State breakdown (top 20)
+  //   let stateQb = this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('q.state', 'state')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('q.state')
+  //     .orderBy('count', 'DESC')
+  //     .limit(20);
+  //   if (state) stateQb = stateQb.andWhere('q.state = :state', { state });
+  //   const stateBreakdown: Array<{ state: string; count: number; approved: number }> = (
+  //     await stateQb.getRawMany()
+  //   ).map((r) => ({ state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
+
+  //   // Crop-type breakdown (top 15)
+  //   let cropQb = this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('q.cropType', 'cropType')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('q.cropType')
+  //     .orderBy('count', 'DESC')
+  //     .limit(15);
+  //   if (cropType) cropQb = cropQb.andWhere('q.cropType = :cropType', { cropType });
+  //   const cropBreakdown: Array<{ cropType: string; count: number; approved: number }> = (
+  //     await cropQb.getRawMany()
+  //   ).map((r) => ({ cropType: r.cropType as string, count: Number(r.count), approved: Number(r.approved) }));
+
+  //   // Domain category breakdown
+  //   const domainBreakdownRaw = await this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('unnest(q.domains)', 'domain')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('unnest(q.domains)')
+  //     .orderBy('count', 'DESC')
+  //     .getRawMany();
+  //   const domainBreakdown = domainBreakdownRaw.map((r) => ({
+  //     domain: r.domain,
+  //     count: Number(r.count),
+  //     approved: Number(r.approved),
+  //   }));
+
+  //   // District breakdown (top 20 per state if filtered, else overall top 20)
+  //   let districtQb = this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('q.district', 'district')
+  //     .addSelect('q.state', 'state')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('q.district')
+  //     .addGroupBy('q.state')
+  //     .orderBy('count', 'DESC')
+  //     .limit(50);
+  //   if (state) districtQb = districtQb.andWhere('q.state = :state', { state });
+  //   const districtBreakdown: Array<{ district: string; state: string; count: number; approved: number }> = (
+  //     await districtQb.getRawMany()
+  //   )
+  //     .filter((r) => r.district != null)
+  //     .map((r) => ({ district: r.district as string, state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
+
+  //   // Approval rate
+  //   const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+  //   // Month-over-month growth
+  //   const periodDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)));
+  //   const priorFrom = new Date(from.getTime() - periodDays * 24 * 60 * 60 * 1000);
+  //   const priorTo = new Date(from.getTime() - 1);
+  //   const priorApproved = await this.questionRepo.count({
+  //     where: { status: QuestionStatus.APPROVED, submittedAt: Between(priorFrom, priorTo) },
+  //   });
+  //   const growthRate = priorApproved > 0
+  //     ? Math.round(((approved - priorApproved) / priorApproved) * 100)
+  //     : approved > 0 ? 100 : 0;
+
+  //   return {
+  //     summary: {
+  //       total,
+  //       approved,
+  //       rejected,
+  //       pending,
+  //       approvalRate,
+  //       growthRate,
+  //     },
+  //     dailyVolume,
+  //     stateBreakdown,
+  //     districtBreakdown,
+  //     cropBreakdown,
+  //     domainBreakdown,
+  //   };
+  // }
+
   async getQuestionAnalytics(query: AnalyticsQueryDto) {
-    const { fromDate, toDate, state, cropType } = query;
-    const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const to = toDate ? new Date(toDate) : new Date();
+  const { fromDate, toDate, state, cropType } = query;
 
-    const baseWhere: Record<string, unknown> = { submittedAt: Between(from, to) };
-    if (state) baseWhere['state'] = state;
-    if (cropType) baseWhere['cropType'] = cropType;
+  const from = fromDate
+    ? new Date(fromDate)
+    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    const [total, approved, rejected, pending] = await Promise.all([
-      this.questionRepo.count({ where: { ...baseWhere } }),
-      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
-      this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
-      this.questionRepo.count({ where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) } }),
-    ]);
+  const to = toDate
+    ? new Date(toDate)
+    : new Date();
 
-    // Daily volume: submitted, approved, rejected per day
-    const dailyRaw: Array<{ date: string; submitted: string; approved: string; rejected: string }> = await this.questionRepo
-      .createQueryBuilder('q')
-      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
-      .addSelect('COUNT(*)', 'submitted')
-      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-      .addSelect("COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)", 'rejected')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-      .orderBy('date', 'ASC')
-      .getRawMany();
+  const analytics = await this.questionRepo.getQuestionAnalytics({
+    from,
+    to,
+    state,
+    cropType,
+  });
 
-    const dailyVolume = dailyRaw.map((r) => ({
-      date: r.date,
-      submitted: Number(r.submitted),
-      approved: Number(r.approved),
-      rejected: Number(r.rejected),
-    }));
+  const {
+    total,
+    approved,
+    rejected,
+    pending,
+  } = analytics.summary;
 
-    // State breakdown (top 20)
-    let stateQb = this.questionRepo
-      .createQueryBuilder('q')
-      .select('q.state', 'state')
-      .addSelect('COUNT(*)', 'count')
-      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .groupBy('q.state')
-      .orderBy('count', 'DESC')
-      .limit(20);
-    if (state) stateQb = stateQb.andWhere('q.state = :state', { state });
-    const stateBreakdown: Array<{ state: string; count: number; approved: number }> = (
-      await stateQb.getRawMany()
-    ).map((r) => ({ state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
+  const approvalRate =
+    total > 0
+      ? Math.round((approved / total) * 100)
+      : 0;
 
-    // Crop-type breakdown (top 15)
-    let cropQb = this.questionRepo
-      .createQueryBuilder('q')
-      .select('q.cropType', 'cropType')
-      .addSelect('COUNT(*)', 'count')
-      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .groupBy('q.cropType')
-      .orderBy('count', 'DESC')
-      .limit(15);
-    if (cropType) cropQb = cropQb.andWhere('q.cropType = :cropType', { cropType });
-    const cropBreakdown: Array<{ cropType: string; count: number; approved: number }> = (
-      await cropQb.getRawMany()
-    ).map((r) => ({ cropType: r.cropType as string, count: Number(r.count), approved: Number(r.approved) }));
+  // Growth calculation can remain here
+  // or be moved into the repository if you want
+  // the repository to own all analytics DB logic.
 
-    // Domain category breakdown
-    const domainBreakdownRaw = await this.questionRepo
-      .createQueryBuilder('q')
-      .select('unnest(q.domains)', 'domain')
-      .addSelect('COUNT(*)', 'count')
-      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .groupBy('unnest(q.domains)')
-      .orderBy('count', 'DESC')
-      .getRawMany();
-    const domainBreakdown = domainBreakdownRaw.map((r) => ({
-      domain: r.domain,
-      count: Number(r.count),
-      approved: Number(r.approved),
-    }));
-
-    // District breakdown (top 20 per state if filtered, else overall top 20)
-    let districtQb = this.questionRepo
-      .createQueryBuilder('q')
-      .select('q.district', 'district')
-      .addSelect('q.state', 'state')
-      .addSelect('COUNT(*)', 'count')
-      .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-      .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-      .groupBy('q.district')
-      .addGroupBy('q.state')
-      .orderBy('count', 'DESC')
-      .limit(50);
-    if (state) districtQb = districtQb.andWhere('q.state = :state', { state });
-    const districtBreakdown: Array<{ district: string; state: string; count: number; approved: number }> = (
-      await districtQb.getRawMany()
-    )
-      .filter((r) => r.district != null)
-      .map((r) => ({ district: r.district as string, state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
-
-    // Approval rate
-    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
-
-    // Month-over-month growth
-    const periodDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)));
-    const priorFrom = new Date(from.getTime() - periodDays * 24 * 60 * 60 * 1000);
-    const priorTo = new Date(from.getTime() - 1);
-    const priorApproved = await this.questionRepo.count({
-      where: { status: QuestionStatus.APPROVED, submittedAt: Between(priorFrom, priorTo) },
-    });
-    const growthRate = priorApproved > 0
-      ? Math.round(((approved - priorApproved) / priorApproved) * 100)
-      : approved > 0 ? 100 : 0;
-
-    return {
-      summary: {
-        total,
-        approved,
-        rejected,
-        pending,
-        approvalRate,
-        growthRate,
-      },
-      dailyVolume,
-      stateBreakdown,
-      districtBreakdown,
-      cropBreakdown,
-      domainBreakdown,
-    };
-  }
+  return {
+    ...analytics,
+    summary: {
+      ...analytics.summary,
+      approvalRate,
+    },
+  };
+}
 
   /**
    * Reward and payout analytics.

@@ -21,4 +21,10 @@ export interface IAuditLogRepository extends BaseRepository<AuditLog> {
     actorTypes?: string[],
     granularity?: 'day' | 'week' | 'month',
   ): Promise<Array<{ date: string; action: string; count: number }>>;
+
+  getRecentWithActorName(
+  limit: number,
+): Promise<Array<AuditLog & {
+  actorName?: string;
+}>>;
 }

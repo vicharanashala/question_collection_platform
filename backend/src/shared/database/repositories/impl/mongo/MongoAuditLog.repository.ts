@@ -77,4 +77,72 @@ export class MongoAuditLogRepository
 
     return this._model.aggregate(pipeline).exec() as Promise<Array<{ date: string; action: string; count: number }>>;
   }
+
+
+  async getRecentWithActorName(
+  limit = 20,
+): Promise<Array<AuditLog & { actorName?: string }>> {
+  return this._model.aggregate([
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    {
+      $limit: limit,
+    },
+
+    {
+      $lookup: {
+        from: 'users',
+        let: {
+          actorId: '$actorId',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: [
+                  {
+                    $toString: '$_id',
+                  },
+                  '$$actorId',
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              name: 1,
+            },
+          },
+        ],
+        as: 'actor',
+      },
+    },
+
+    {
+      $unwind: {
+        path: '$actor',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $addFields: {
+        actorName: '$actor.name',
+      },
+    },
+
+    {
+      $project: {
+        actor: 0,
+      },
+    },
+  ]).exec() as Promise<Array<AuditLog & {
+    actorName?: string;
+  }>>;
+}
 }

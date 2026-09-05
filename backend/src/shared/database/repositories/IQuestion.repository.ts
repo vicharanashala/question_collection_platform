@@ -26,6 +26,54 @@ export interface DailyVolumeRow {
   held: number;
 }
 
+export interface QuestionAnalyticsFilters {
+  from: Date;
+  to: Date;
+  state?: string;
+  cropType?: string;
+}
+
+export interface QuestionAnalyticsResult {
+  summary: {
+    total: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+  };
+
+  dailyVolume: Array<{
+    date: string;
+    submitted: number;
+    approved: number;
+    rejected: number;
+  }>;
+
+  stateBreakdown: Array<{
+    state: string;
+    count: number;
+    approved: number;
+  }>;
+
+  districtBreakdown: Array<{
+    district: string;
+    state: string;
+    count: number;
+    approved: number;
+  }>;
+
+  cropBreakdown: Array<{
+    cropType: string;
+    count: number;
+    approved: number;
+  }>;
+
+  domainBreakdown: Array<{
+    domain: string;
+    count: number;
+    approved: number;
+  }>;
+}
+
 export interface IQuestionRepository extends BaseRepository<Question> {
   findByUserId(userId: string, status?: QuestionStatus, limit?: number): Promise<Question[]>;
   countByUserId(userId: string, status?: QuestionStatus): Promise<number>;
@@ -91,4 +139,29 @@ export interface IQuestionRepository extends BaseRepository<Question> {
     from: Date,
     statuses: QuestionStatus[],
   ): Promise<number | null>;
+
+
+  getQuestionAnalytics(
+  filters: QuestionAnalyticsFilters,
+): Promise<QuestionAnalyticsResult>;
+
+getQuestionStats(): Promise<{
+  total: number;
+  approved: number;
+  rejected: number;
+  pending: number;
+}>;
+
+countSubmittedBetween(
+  from: Date,
+  to: Date,
+): Promise<number>;
+
+getDailyStatsSince(from: Date): Promise<Array<{
+  date: string;
+  users: number;
+  questions: number;
+  approved: number;
+  rejected: number;
+}>>;
 }

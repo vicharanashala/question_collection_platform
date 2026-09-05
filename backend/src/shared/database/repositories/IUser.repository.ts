@@ -42,6 +42,8 @@ export interface LeaderboardEntry {
   totalQuestions: number;
 }
 
+
+
 /** ─── IUserRepository ─────────────────────────────────────────────────────── */
 export interface IUserRepository extends BaseRepository<User> {
   findByMobile(mobileNumber: string): Promise<User | null>;
@@ -81,4 +83,29 @@ export interface IUserRepository extends BaseRepository<User> {
   state?: string;
   category?: UserCategory;
 }): Promise<number | null>;
+
+getVerificationStats(): Promise<{
+  total: number;
+  verified: number;
+  pending: number;
+  suspended: number;
+  banned: number;
+}>;
+
+countCreatedBetween(from: Date, to: Date): Promise<number>;
+
+getRoleDistribution(): Promise<Array<{
+  role: UserRole;
+  count: number;
+}>>;
+
+getCategoryDistribution(): Promise<Array<{
+  category: UserCategory;
+  count: number;
+}>>;
+
+getDailySignupsSince(from: Date): Promise<Array<{
+  date: string;
+  signups: number;
+}>>;
 }

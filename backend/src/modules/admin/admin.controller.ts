@@ -236,7 +236,8 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable('admin_stats', 60)
   async getStats(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getStats(dto);
+    const data =  await this.adminService.getStats(dto);
+    return data;
   }
 
   @Get("analytics/rewards")

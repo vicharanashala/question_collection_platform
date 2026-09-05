@@ -747,4 +747,197 @@ export class MongoUserRepository
   return result[0]?.userRank ?? null;
 }
 
+async getVerificationStats() {
+  const [result] = await this._model.aggregate([
+    {
+      $group: {
+        _id: null,
+
+        total: {
+          $sum: 1,
+        },
+
+        verified: {
+          $sum: {
+            $cond: [
+              {
+                $eq: [
+                  '$verificationStatus',
+                  VerificationStatus.VERIFIED,
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+
+        pending: {
+          $sum: {
+            $cond: [
+              {
+                $eq: [
+                  '$verificationStatus',
+                  VerificationStatus.PENDING,
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+
+        suspended: {
+          $sum: {
+            $cond: [
+              {
+                $eq: [
+                  '$verificationStatus',
+                  VerificationStatus.SUSPENDED,
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+
+        banned: {
+          $sum: {
+            $cond: [
+              {
+                $eq: [
+                  '$verificationStatus',
+                  VerificationStatus.BANNED,
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]).exec();
+
+  return {
+    total: result?.total ?? 0,
+    verified: result?.verified ?? 0,
+    pending: result?.pending ?? 0,
+    suspended: result?.suspended ?? 0,
+    banned: result?.banned ?? 0,
+  };
+}
+
+async countCreatedBetween(
+  from: Date,
+  to: Date,
+): Promise<number> {
+  return this._model.countDocuments({
+    createdAt: {
+      $gte: from,
+      $lte: to,
+    },
+  });
+}
+
+async getRoleDistribution(): Promise<
+  Array<{ role: UserRole; count: number }>
+> {
+  const rows = await this._model.aggregate([
+    {
+      $group: {
+        _id: '$role',
+        count: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $sort: {
+        count: -1,
+      },
+    },
+  ]).exec();
+
+  return rows
+    .filter((row) => row._id != null)
+    .map((row) => ({
+      role: row._id as UserRole,
+      count: row.count,
+    }));
+}
+
+async getCategoryDistribution(): Promise<
+  Array<{ category: UserCategory; count: number }>
+> {
+  const rows = await this._model.aggregate([
+    {
+      $match: {
+        category: {
+          $ne: null,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: '$category',
+        count: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $sort: {
+        count: -1,
+      },
+    },
+  ]).exec();
+
+  return rows.map((row) => ({
+    category: row._id as UserCategory,
+    count: row.count,
+  }));
+}
+
+async getDailySignupsSince(
+  from: Date,
+): Promise<Array<{
+  date: string;
+  signups: number;
+}>> {
+  const rows = await this._model.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: from,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: '$createdAt',
+          },
+        },
+        signups: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $sort: {
+        _id: 1,
+      },
+    },
+  ]).exec();
+
+  return rows.map((row) => ({
+    date: row._id,
+    signups: row.signups,
+  }));
+}
+
 }
