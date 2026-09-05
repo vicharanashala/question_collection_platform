@@ -35,7 +35,8 @@ export class AnalyticsController {
   @Get('dashboard')
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getAnalyticsDashboard(dto);
+    const dashboardData =  await this.adminService.getAnalyticsDashboard(dto);
+    return dashboardData;
   }
 
   /**
