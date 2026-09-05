@@ -121,7 +121,7 @@ jobs:
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:staging-${{ needs.build.outputs.sha }}
           project_id: ${{ env.PROJECT_ID }}
           env_vars: |
-            NODE_ENV=development
+            NODE_ENV=staging
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -134,7 +134,15 @@ jobs:
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             REDIS_DB=${{ vars.REDIS_DB }}
             REDIS_TLS=${{ vars.REDIS_TLS }}
-            SMS_PROVIDER=mock
+            SMS_PROVIDER=bsnl
+            BRPS_BASE_URL=${{ vars.BRPS_BASE_URL }}
+            BRPS_SERVICE_ID=${{ secrets.BRPS_SERVICE_ID }}
+            BRPS_USERNAME=${{ secrets.BRPS_USERNAME }}
+            BRPS_PASSWORD=${{ secrets.BRPS_PASSWORD }}
+            BRPS_ENTITY_ID=${{ secrets.BRPS_ENTITY_ID }}
+            BRPS_HEADER=${{ vars.BRPS_HEADER }}
+            BRPS_TEMPLATE_ID=${{ secrets.BRPS_TEMPLATE_ID }}
+            BRPS_TOKEN_ID=${{ vars.BRPS_TOKEN_ID }}
             SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
             GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
             GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}

@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
+import { SmsBsnlBrpsService } from './sms-bsnl-brps.service';
+import { BrpsTokenService } from './brps-token.service';
 import { JwtStrategy } from '../../shared/middleware/guards/jwt.strategy';
 import { AdminModule } from '../admin/admin.module';
 import { CacheModule } from '../../shared/database/cache/cache.module';
@@ -28,7 +30,7 @@ import { DbModule } from '../../shared/database/db.module';
     CacheModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SmsService, JwtStrategy],
+  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}
