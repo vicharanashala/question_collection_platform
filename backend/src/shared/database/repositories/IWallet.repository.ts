@@ -13,4 +13,5 @@ export interface IWalletRepository extends BaseRepository<Wallet> {
   updateBalance(walletId: string, newBalance: number): Promise<void>;
   incrementBalance(walletId: string, amount: number, session?: ClientSession): Promise<number>;
   decrement(filter: Record<string, unknown>, field: string, amount: number, session?: ClientSession): Promise<void>;
+  getTotalBalance(): Promise<number>;
 }
