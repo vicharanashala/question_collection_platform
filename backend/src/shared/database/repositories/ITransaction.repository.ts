@@ -12,8 +12,18 @@ export interface TransactionFilter {
   referenceId?: string;
   createdAt?: Date;
 }
+export interface RewardTransactionSummary {
+  totalRewarded: number;
+  rewardCount: number;
+  avgReward: number;
+}
 
 export interface ITransactionRepository extends BaseRepository<Transaction> {
   findByWalletId(walletId: string, limit?: number): Promise<Transaction[]>;
   findByReferenceId(referenceId: string): Promise<Transaction | null>;
+  getRewardSummary(
+  from: Date,
+  to: Date,
+  state?: string,
+): Promise<RewardTransactionSummary>;
 }
