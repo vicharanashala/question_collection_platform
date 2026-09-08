@@ -218,7 +218,8 @@
     "separator": " · ",
     "sortBy": "ᱞᱮᱠᱟᱛᱮ ᱥᱟᱡᱟᱣ ᱢᱮ",
     "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
-    "rupee": "ᱴᱟᱠᱟ"
+    "rupee": "ᱴᱟᱠᱟ",
+    "steps": "ठाहेन"
   },
   "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
   "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -546,7 +547,10 @@
     "rejectedOtherMessage": "आले नोवा कुकli बानुक् इदि दाड़ेयान्आले। दाया केते नोवा दोहड़ा ओल केते कुरुमुटु मे।",
     "rejectedNotCounted": "नोवा बाङ एमाक्आ आर आमाक् दिन दिनाक् सीमा रे बाङ लेखाक्आ।",
     "rejectedYourQuestion": "आमाक् कुकli",
-    "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे"
+    "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे",
+    "addVoice": "साड़े सेलेद मे",
+    "tipDetailed": "बुटा ओल मे — गोहालि, जायगा आर आम नितोक् धाबिच् चेत् कुरुमुटु आकात् मेना, ओना ओल मे।",
+    "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना"
   },
   "readFullPolicy": "ᱯᱩᱨᱟᱹ Privacy Policy ᱯᱟᱲᱦᱟᱣ ᱢᱮ →",
   "resendOtp": "OTP ᱫᱚᱦᱲᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",

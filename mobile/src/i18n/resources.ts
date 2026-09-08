@@ -223,7 +223,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "Sort By",
         "unknown": "Unknown",
-        "rupee": "Rs."
+        "rupee": "Rs.",
+        "steps": "Steps"
       },
       "completeRegistration": "Complete Registration",
       "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -553,7 +554,10 @@ const resources = {
         "rejectedOtherMessage": "We could not accept this question. Please rewrite it and try again.",
         "rejectedNotCounted": "This was not submitted and does not count against your daily limit.",
         "rejectedYourQuestion": "Your question",
-        "rejectedEditQuestion": "Edit My Question"
+        "rejectedEditQuestion": "Edit My Question",
+        "addVoice": "Add voice",
+        "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
+        "dailyLimitIndicator": "Daily limit reached"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -1521,7 +1525,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ক্ৰম অনুসাৰে",
         "unknown": "অজ্ঞাত",
-        "rupee": "টকা"
+        "rupee": "টকা",
+        "steps": "খোজ"
       },
       "completeRegistration": "পঞ্জীয়ন সম্পূৰ্ণ কৰক",
       "consentClause1": "আপোনাৰ মোবাইল নম্বৰ আৰু পঞ্জীয়নৰ বিৱৰণ সুৰক্ষিতভাৱে সংৰক্ষিত কৰা হ'ব আৰু কেৱল প্লেটফৰ্ম অথেনটিকেচন আৰু কৃষি জ্ঞান সেৱাৰ বাবে ব্যৱহাৰ কৰা হ'ব।",
@@ -1849,7 +1854,10 @@ const resources = {
         "rejectedOtherMessage": "আমি এই প্ৰশ্নটো গ্ৰহণ কৰিব নোৱাৰিলোঁ। অনুগ্ৰহ কৰি ইয়াক পুনৰ লিখি চেষ্টা কৰক।",
         "rejectedNotCounted": "এইটো দাখিল কৰা হোৱা নাই আৰু আপোনাৰ দৈনিক সীমাত গণনা কৰা নহ'ব।",
         "rejectedYourQuestion": "আপোনাৰ প্ৰশ্ন",
-        "rejectedEditQuestion": "মোৰ প্ৰশ্ন সম্পাদনা কৰক"
+        "rejectedEditQuestion": "মোৰ প্ৰশ্ন সম্পাদনা কৰক",
+        "addVoice": "মাত যোগ কৰক",
+        "tipDetailed": "সবিশেষ লিখক — শস্য, ঠাই আৰু আপুনি ইতিমধ্যে কি চেষ্টা কৰিছে সেয়া উল্লেখ কৰক।",
+        "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে"
       },
       "readFullPolicy": "সম্পূৰ্ণ গোপনীয়তা নীতি পঢ়ক →",
       "resendOtp": "OTP পুনৰ পঠিয়াওক",
@@ -2817,7 +2825,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ক্রমানুসারে সাজান",
         "unknown": "অজানা",
-        "rupee": "টাকা"
+        "rupee": "টাকা",
+        "steps": "ধাপ"
       },
       "completeRegistration": "নিবন্ধন সম্পন্ন করুন",
       "consentClause1": "আপনার মোবাইল নম্বর এবং নিবন্ধনের বিবরণ নিরাপদে সংরক্ষণ করা হবে এবং শুধুমাত্র প্ল্যাটফর্ম প্রমাণীকরণ এবং কৃষি জ্ঞান পরিষেবার জন্য ব্যবহার করা হবে।",
@@ -3145,7 +3154,10 @@ const resources = {
         "rejectedOtherMessage": "আমরা এই প্রশ্নটি গ্রহণ করতে পারিনি। অনুগ্রহ করে এটি আবার লিখে চেষ্টা করুন।",
         "rejectedNotCounted": "এটি জমা দেওয়া হয়নি এবং আপনার দৈনিক সীমার মধ্যে গণনা করা হবে না।",
         "rejectedYourQuestion": "আপনার প্রশ্ন",
-        "rejectedEditQuestion": "আমার প্রশ্ন সম্পাদনা করুন"
+        "rejectedEditQuestion": "আমার প্রশ্ন সম্পাদনা করুন",
+        "addVoice": "কণ্ঠস্বর যোগ করুন",
+        "tipDetailed": "বিস্তারিত লিখুন — ফসল, স্থান এবং আপনি ইতিমধ্যে যা চেষ্টা করেছেন তা উল্লেখ করুন।",
+        "dailyLimitIndicator": "দৈনিক সীমা শেষ"
       },
       "readFullPolicy": "সম্পূর্ণ গোপনীয়তা নীতি পড়ুন →",
       "resendOtp": "পুনরায় OTP পাঠান",
@@ -4113,7 +4125,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "सायख'नाय थि खालाम",
         "unknown": "मिथियै",
-        "rupee": "रां"
+        "rupee": "रां",
+        "steps": "स्टेप"
       },
       "completeRegistration": "रेजिस्ट्रेसन आबुं खालाम",
       "consentClause1": "नोंथानि मबाइल नम्बर आरो रेजिस्ट्रेसननि खारथायखौ रैखाथायै दोनगोन आरो खालि प्लाटफार्म थारसिमनाय आरो कृषि ग्यान सेवानि थाखायल' बाहायगोन।",
@@ -4441,7 +4454,10 @@ const resources = {
         "rejectedOtherMessage": "जों बे सोंथिखौ लानो हायाखै। अननानै बेखौ फिन लिरनानै नाजा।",
         "rejectedNotCounted": "बेखौ दैथायहरनाय जायाखै आरो नोंथांनि सानफ्रोमबोनि सिमायाव हिसाब खालामनो नङा।",
         "rejectedYourQuestion": "नोंथांनि सोंथि",
-        "rejectedEditQuestion": "आंनि सोंथिखौ सुद्रायो"
+        "rejectedEditQuestion": "आंनि सोंथिखौ सुद्रायो",
+        "addVoice": "गोर दाजाब",
+        "tipDetailed": "गुबुन गुबुन लिर — गाबसु, जायगा आरो नोंथाङा दानि सिम मा नाजादों बेखौ लिर।",
+        "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय"
       },
       "readFullPolicy": "आबुं लाखिनाय खानथि फराय →",
       "resendOtp": "OTP फिन दैथायहर",
@@ -5409,7 +5425,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "क्रमबद्ध करो (Sort By)",
         "unknown": "अज्ञात",
-        "rupee": "रुपये"
+        "rupee": "रुपये",
+        "steps": "चरण"
       },
       "completeRegistration": "पंजीकरण पूरा करो",
       "consentClause1": "तुआह्दा मोबाइल नंबर ते पंजीकरण विवरण सुरक्षित रखे जानगे ते सिर्फ प्लेटफ़ॉर्म प्रमाणीकरण ते कृषि ज्ञान सेवाएं लेई बड़ते जानगे।",
@@ -5737,7 +5754,10 @@ const resources = {
         "rejectedOtherMessage": "अस एह् सवाल स्वीकार नेईं करी सके। किरपा करियै इसनूं दुबारा लिखियै कोशश करो।",
         "rejectedNotCounted": "एह् जमा नेईं होया ते तुआह्डी रोजाना सीमा च नेईं गिनेआ जाग।",
         "rejectedYourQuestion": "तुआह्डा सवाल",
-        "rejectedEditQuestion": "मेरा सवाल सोधो"
+        "rejectedEditQuestion": "मेरा सवाल सोधो",
+        "addVoice": "अवाज जोड़ो",
+        "tipDetailed": "विस्तार कन्नै लिखो — फसल, थाहर ते तुसें हुण तकर के अजमाया ऐ, दस्सो।",
+        "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई"
       },
       "readFullPolicy": "पूरी गोपनीयता नीत पढ़ो →",
       "resendOtp": "OTP परतियै भेज्जो",
@@ -6705,7 +6725,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "આના દ્વારા ક્રમબદ્ધ કરો",
         "unknown": "અજ્ઞાત",
-        "rupee": "રૂ."
+        "rupee": "રૂ.",
+        "steps": "પગલાં"
       },
       "completeRegistration": "રજીસ્ટ્રેશન પૂર્ણ કરો",
       "consentClause1": "તમારો મોબાઇલ નંબર અને નોંધણી વિગતો સુરક્ષિત રીતે સંગ્રહિત કરવામાં આવશે અને તેનો ઉપયોગ ફક્ત પ્લેટફોર્મ પ્રમાણીકરણ અને કૃષિ જ્ઞાન સેવાઓ માટે કરવામાં આવશે.",
@@ -7033,7 +7054,10 @@ const resources = {
         "rejectedOtherMessage": "અમે આ પ્રશ્ન સ્વીકારી શક્યા નથી. કૃપા કરીને તેને ફરીથી લખીને પ્રયાસ કરો.",
         "rejectedNotCounted": "આ સબમિટ થયો નથી અને તમારી દૈનિક મર્યાદામાં ગણાશે નહીં.",
         "rejectedYourQuestion": "તમારો પ્રશ્ન",
-        "rejectedEditQuestion": "મારો પ્રશ્ન સંપાદિત કરો"
+        "rejectedEditQuestion": "મારો પ્રશ્ન સંપાદિત કરો",
+        "addVoice": "અવાજ ઉમેરો",
+        "tipDetailed": "વિગતવાર લખો — પાક, સ્થળ અને તમે અત્યાર સુધી શું અજમાવ્યું છે તે જણાવો.",
+        "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ"
       },
       "readFullPolicy": "સંપૂર્ણ ગોપનીયતા નીતિ વાંચો →",
       "resendOtp": "ફરીથી OTP મોકલો",
@@ -8001,7 +8025,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "इसके अनुसार क्रमबद्ध करें",
         "unknown": "अज्ञात",
-        "rupee": "रु."
+        "rupee": "रु.",
+        "steps": "चरण"
       },
       "completeRegistration": "पंजीकरण पूरा करें",
       "consentClause1": "आपका मोबाइल नंबर और पंजीकरण विवरण सुरक्षित रूप से संग्रहीत किए जाएंगे और केवल प्लेटफॉर्म प्रमाणीकरण और कृषि ज्ञान सेवाओं के लिए उपयोग किए जाएंगे।",
@@ -8329,7 +8354,10 @@ const resources = {
         "rejectedOtherMessage": "हम यह प्रश्न स्वीकार नहीं कर सके। कृपया इसे दोबारा लिखकर पुनः प्रयास करें।",
         "rejectedNotCounted": "यह प्रश्न जमा नहीं हुआ है और आपकी दैनिक सीमा में नहीं गिना जाएगा।",
         "rejectedYourQuestion": "आपका प्रश्न",
-        "rejectedEditQuestion": "मेरा प्रश्न सुधारें"
+        "rejectedEditQuestion": "मेरा प्रश्न सुधारें",
+        "addVoice": "आवाज़ जोड़ें",
+        "tipDetailed": "विस्तार से बताएं — फसल, स्थान और आपने अब तक क्या आजमाया है, यह भी लिखें।",
+        "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई"
       },
       "readFullPolicy": "पूरी गोपनीयता नीति पढ़ें →",
       "resendOtp": "OTP पुनः भेजें",
@@ -9297,7 +9325,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ಹೀಗೆ ವಿಂಗಡಿಸಿ",
         "unknown": "ಅಜ್ಞಾತ",
-        "rupee": "ರೂ."
+        "rupee": "ರೂ.",
+        "steps": "ಹಂತಗಳು"
       },
       "completeRegistration": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ",
       "consentClause1": "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ನೋಂದಣಿ ವಿವರಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ವೇದಿಕೆಯ ದೃಢೀಕರಣ ಮತ್ತು ಕೃಷಿ ಜ್ಞಾನ ಸೇವೆಗಳಿಗೆ ಮಾತ್ರ ಬಳಸಲಾಗುತ್ತದೆ.",
@@ -9625,7 +9654,10 @@ const resources = {
         "rejectedOtherMessage": "ನಾವು ಈ ಪ್ರಶ್ನೆಯನ್ನು ಸ್ವೀಕರಿಸಲಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಅದನ್ನು ಮತ್ತೊಮ್ಮೆ ಬರೆದು ಪ್ರಯತ್ನಿಸಿ.",
         "rejectedNotCounted": "ಇದನ್ನು ಸಲ್ಲಿಸಲಾಗಿಲ್ಲ ಮತ್ತು ನಿಮ್ಮ ದೈನಂದಿನ ಮಿತಿಯಲ್ಲಿ ಎಣಿಸಲಾಗುವುದಿಲ್ಲ.",
         "rejectedYourQuestion": "ನಿಮ್ಮ ಪ್ರಶ್ನೆ",
-        "rejectedEditQuestion": "ನನ್ನ ಪ್ರಶ್ನೆಯನ್ನು ಸಂಪಾದಿಸಿ"
+        "rejectedEditQuestion": "ನನ್ನ ಪ್ರಶ್ನೆಯನ್ನು ಸಂಪಾದಿಸಿ",
+        "addVoice": "ಧ್ವನಿ ಸೇರಿಸಿ",
+        "tipDetailed": "ವಿವರವಾಗಿ ಬರೆಯಿರಿ — ಬೆಳೆ, ಸ್ಥಳ ಮತ್ತು ನೀವು ಈಗಾಗಲೇ ಏನು ಪ್ರಯತ್ನಿಸಿದ್ದೀರಿ ಎಂದು ತಿಳಿಸಿ.",
+        "dailyLimitIndicator": "ದೈನಂದಿನ ಮಿತಿ ಮುಗಿದಿದೆ"
       },
       "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
       "resendOtp": "OTP ಯನ್ನು ಮರುಕಳುಹಿಸಿ",
@@ -10593,7 +10625,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ترتیب دیو",
         "unknown": "نامعلوم",
-        "rupee": "روپے"
+        "rupee": "روپے",
+        "steps": "مرحلہٕ"
       },
       "completeRegistration": "رجسٹریشن مکمل کٔریو",
       "consentClause1": "تہند موبائل نمبر تہٕ رجسٹریشن تفصیلات یین محفوظ تھاونہٕ تہٕ یین صرف پلیٹ فارم تصدیق تہٕ زرعی خدمات باپتھ استعمال کرنہٕ۔",
@@ -10921,7 +10954,10 @@ const resources = {
         "rejectedOtherMessage": "أسہِ ہیٚک نہٕ یہٕ سوال قبول کرِتھ۔ مہربانی کرِتھ یہٕ دوبارٕ لیکھِتھ کوشش کرِو۔",
         "rejectedNotCounted": "یہٕ چھُ نہٕ جمع سپدمُت تہٕ توٚہنٛدِس ڈیلی حدس مَنٛز یِیہ نہٕ شمار کرنہٕ۔",
         "rejectedYourQuestion": "توٚہُنٛد سوال",
-        "rejectedEditQuestion": "میٟون سوال درست کرِو"
+        "rejectedEditQuestion": "میٟون سوال درست کرِو",
+        "addVoice": "آواز شٲمل کرِو",
+        "tipDetailed": "تفصیلہٕ سٟتؠ لیکھِو — فصل، جاے تہٕ یُس توٚہہِ وُنی تام آزماومُت چھُ۔",
+        "dailyLimitIndicator": "ڈیلی حد چھِ مکمل"
       },
       "readFullPolicy": "پورا پرائیویسی پالیسی پرِیو →",
       "resendOtp": "OTP دوبارہ سوزیو",
@@ -11889,7 +11925,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "अशे क्रमान लावा",
         "unknown": "अज्ञात",
-        "rupee": "रु."
+        "rupee": "रु.",
+        "steps": "पावलां"
       },
       "completeRegistration": "नोंदणी पुराय करात",
       "consentClause1": "तुमचो मोबाईल नंबर आनी नोंदणी तपशील सुरक्षित दवरतले आनी फकत प्लॅटफॉर्म प्रमाणीकरण आनी कृषी ज्ञान सेवांखातीर वापरतले.",
@@ -12217,7 +12254,10 @@ const resources = {
         "rejectedOtherMessage": "आमी हो प्रस्न मान्य करूंक शकले ना. उपकार करून तो परतून बरोवन यत्न करात.",
         "rejectedNotCounted": "हो धाडलो ना आनी तुमच्या दिसाच्या मर्यादेंत मेजपाक वचचो ना.",
         "rejectedYourQuestion": "तुमचो प्रस्न",
-        "rejectedEditQuestion": "म्हजो प्रस्न सुदारात"
+        "rejectedEditQuestion": "म्हजो प्रस्न सुदारात",
+        "addVoice": "आवाज जोडात",
+        "tipDetailed": "सविस्तर बरयात — पीक, सुवात आनी तुमी आतां मेरेन कितें करून पळयलां तें सांगात.",
+        "dailyLimitIndicator": "दिसाची मर्यादा सोंपली"
       },
       "readFullPolicy": "पुराय गुप्तताय धोरण वाचात →",
       "resendOtp": "परतून OTP धाडात",
@@ -13185,7 +13225,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "क्रमबद्ध करु",
         "unknown": "अज्ञात",
-        "rupee": "टका"
+        "rupee": "टका",
+        "steps": "चरण"
       },
       "completeRegistration": "पंजीकरण पूरा करु",
       "consentClause1": "अहाँक मोबाइल नंबर आ पंजीकरण विवरण सुरक्षित रूप सँ राखल जाएत आ केवल प्लेटफॉर्म प्रमाणीकरण आ कृषि ज्ञान सेवा लेल उपयोग कएल जाएत।",
@@ -13513,7 +13554,10 @@ const resources = {
         "rejectedOtherMessage": "हम ई प्रश्न स्वीकार नहि क' सकलहुँ। कृपया एकरा फेरसँ लिख क' प्रयास करू।",
         "rejectedNotCounted": "ई जमा नहि भेल अछि आ अहाँक दैनिक सीमामे नहि गानल जाएत।",
         "rejectedYourQuestion": "अहाँक प्रश्न",
-        "rejectedEditQuestion": "हमर प्रश्न संपादित करू"
+        "rejectedEditQuestion": "हमर प्रश्न संपादित करू",
+        "addVoice": "अवाज जोड़ू",
+        "tipDetailed": "विस्तारसँ लिखू — फसल, स्थान आ अहाँ आब धरि की आजमेने छी, से बताउ।",
+        "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल"
       },
       "readFullPolicy": "पूरा गोपनीयता नीति पढ़ू →",
       "resendOtp": "पुनः ओटीपी पठाऊ",
@@ -14481,7 +14525,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "തരംതിരിക്കുക",
         "unknown": "അജ്ഞാതം",
-        "rupee": "രൂപ"
+        "rupee": "രൂപ",
+        "steps": "ഘട്ടങ്ങൾ"
       },
       "completeRegistration": "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക",
       "consentClause1": "നിങ്ങളുടെ മൊബൈൽ നമ്പറും രജിസ്ട്രേഷൻ വിവരങ്ങളും സുരക്ഷിതമായി സൂക്ഷിക്കുകയും പ്ലാറ്റ്‌ഫോം ഓതന്റിക്കേഷനും കാർഷിക സേവനങ്ങൾക്കുമായി മാത്രം ഉപയോഗിക്കുകയും ചെയ്യും.",
@@ -14809,7 +14854,10 @@ const resources = {
         "rejectedOtherMessage": "ഈ ചോദ്യം സ്വീകരിക്കാൻ ഞങ്ങൾക്ക് കഴിഞ്ഞില്ല. ദയവായി അത് വീണ്ടും എഴുതി ശ്രമിക്കുക.",
         "rejectedNotCounted": "ഇത് സമർപ്പിച്ചിട്ടില്ല, നിങ്ങളുടെ ദൈനംദിന പരിധിയിൽ കണക്കാക്കില്ല.",
         "rejectedYourQuestion": "നിങ്ങളുടെ ചോദ്യം",
-        "rejectedEditQuestion": "എന്റെ ചോദ്യം തിരുത്തുക"
+        "rejectedEditQuestion": "എന്റെ ചോദ്യം തിരുത്തുക",
+        "addVoice": "ശബ്ദം ചേർക്കുക",
+        "tipDetailed": "വിശദമായി എഴുതുക — വിള, സ്ഥലം, നിങ്ങൾ ഇതുവരെ പരീക്ഷിച്ചത് എന്നിവ ചേർക്കുക.",
+        "dailyLimitIndicator": "ദൈനംദിന പരിധി തീർന്നു"
       },
       "readFullPolicy": "പൂർണ്ണ സ്വകാര്യതാ നയം വായിക്കുക →",
       "resendOtp": "വീണ്ടും OTP അയക്കുക",
@@ -15777,7 +15825,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "মথং-মনাও শেম্বা",
         "unknown": "খংদবা",
-        "rupee": "লুপা"
+        "rupee": "লুপা",
+        "steps": "ফিভম"
       },
       "completeRegistration": "রেজিষ্ট্রেশন মপুং ফাহনবা",
       "consentClause1": "নহাগী মোবাইল নম্বর অমসুং রেজিষ্ট্রেশন মরোলশিং অসিবু চে অমত্তা লৈতনা থমগনি অমসুং প্লেটফোর্ম অসিদা ভেরিফাই অমসুং লৌউ-শিংউগী সর্বিসগীদমক শীজিন্নগনি।",
@@ -16105,7 +16154,10 @@ const resources = {
         "rejectedOtherMessage": "ঐখোয়না ৱাহং অসি লৌবা ঙমদ্রে। চানবীদুনা মসি অমুক্তং ইদুনা হোৎনবীযু।",
         "rejectedNotCounted": "মসি থাখিদ্রে অমসুং নহাক্কী নুমিৎ খুদিংগী লিমিৎতা মশিং থিনবা ওইরোই।",
         "rejectedYourQuestion": "নহাক্কী ৱাহং",
-        "rejectedEditQuestion": "ঐগী ৱাহং শেমদোকউ"
+        "rejectedEditQuestion": "ঐগী ৱাহং শেমদোকউ",
+        "addVoice": "খোন্জেল হাপচিল্লু",
+        "tipDetailed": "অকুপ্না ইযু — মহৈ, মফম অমসুং নহাক্না হৌজিক ফাওবা করি হোৎনখিবগে হায়বদু হাপচিল্লু।",
+        "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে"
       },
       "readFullPolicy": "মপুং ফাবা প্রাইভেসি পোলিসি পারো →",
       "resendOtp": "OTP অমুক থাবীয়ু",
@@ -17073,7 +17125,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "क्रमानुसार लावा",
         "unknown": "अज्ञात",
-        "rupee": "रु."
+        "rupee": "रु.",
+        "steps": "पायऱ्या"
       },
       "completeRegistration": "नोंदणी पूर्ण करा",
       "consentClause1": "तुमचा मोबाईल नंबर आणि नोंदणी तपशील सुरक्षितपणे संग्रहित केले जातील आणि केवळ प्लॅटफॉर्म प्रमाणीकरण आणि कृषी ज्ञान सेवांसाठी वापरले जातील.",
@@ -17401,7 +17454,10 @@ const resources = {
         "rejectedOtherMessage": "आम्ही हा प्रश्न स्वीकारू शकलो नाही. कृपया तो पुन्हा लिहून प्रयत्न करा.",
         "rejectedNotCounted": "हा सादर झालेला नाही आणि आपल्या दैनंदिन मर्यादेत मोजला जाणार नाही.",
         "rejectedYourQuestion": "आपला प्रश्न",
-        "rejectedEditQuestion": "माझा प्रश्न संपादित करा"
+        "rejectedEditQuestion": "माझा प्रश्न संपादित करा",
+        "addVoice": "आवाज जोडा",
+        "tipDetailed": "सविस्तर लिहा — पीक, ठिकाण आणि तुम्ही आतापर्यंत काय करून पाहिले ते नमूद करा.",
+        "dailyLimitIndicator": "दैनंदिन मर्यादा संपली"
       },
       "readFullPolicy": "पूर्ण गोपनीयता धोरण वाचा →",
       "resendOtp": "OTP पुन्हा पाठवा",
@@ -18369,7 +18425,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "क्रमबद्ध गर्नुहोस्",
         "unknown": "अज्ञात",
-        "rupee": "रु."
+        "rupee": "रु.",
+        "steps": "चरणहरू"
       },
       "completeRegistration": "दर्ता प्रक्रिया पूरा गर्नुहोस्",
       "consentClause1": "तपाईंको मोबाइल नम्बर र दर्ता विवरण सुरक्षित रूपमा भण्डारण गरिनेछ र केवल प्लेटफर्म प्रमाणीकरण र कृषि ज्ञान सेवाका लागि प्रयोग गरिनेछ।",
@@ -18697,7 +18754,10 @@ const resources = {
         "rejectedOtherMessage": "हामीले यो प्रश्न स्वीकार गर्न सकेनौं। कृपया यसलाई फेरि लेखेर प्रयास गर्नुहोस्।",
         "rejectedNotCounted": "यो पेस भएको छैन र तपाईंको दैनिक सीमामा गनिने छैन।",
         "rejectedYourQuestion": "तपाईंको प्रश्न",
-        "rejectedEditQuestion": "मेरो प्रश्न सम्पादन गर्नुहोस्"
+        "rejectedEditQuestion": "मेरो प्रश्न सम्पादन गर्नुहोस्",
+        "addVoice": "आवाज थप्नुहोस्",
+        "tipDetailed": "विस्तृत रूपमा लेख्नुहोस् — बाली, स्थान र तपाईंले अहिलेसम्म के प्रयास गर्नुभयो उल्लेख गर्नुहोस्।",
+        "dailyLimitIndicator": "दैनिक सीमा सकियो"
       },
       "readFullPolicy": "पूरा गोपनीयता नीति पढ्नुहोस् →",
       "resendOtp": "OTP पुनः पठाउनुहोस्",
@@ -19663,7 +19723,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "କ୍ରମାନ୍ୱୟ (Sort By)",
         "unknown": "ଅଜଣା",
-        "rupee": "ଟଙ୍କା"
+        "rupee": "ଟଙ୍କା",
+        "steps": "ପର୍ଯ୍ୟାୟ"
       },
       "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
       "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -19991,7 +20052,10 @@ const resources = {
         "rejectedOtherMessage": "ଆମେ ଏହି ପ୍ରଶ୍ନ ଗ୍ରହଣ କରିପାରିଲୁ ନାହିଁ। ଦୟାକରି ଏହାକୁ ପୁନର୍ବାର ଲେଖି ଚେଷ୍ଟା କରନ୍ତୁ।",
         "rejectedNotCounted": "ଏହା ଦାଖଲ ହୋଇନାହିଁ ଏବଂ ଆପଣଙ୍କ ଦୈନିକ ସୀମାରେ ଗଣନା କରାଯିବ ନାହିଁ।",
         "rejectedYourQuestion": "ଆପଣଙ୍କ ପ୍ରଶ୍ନ",
-        "rejectedEditQuestion": "ମୋ ପ୍ରଶ୍ନ ସମ୍ପାଦନ କରନ୍ତୁ"
+        "rejectedEditQuestion": "ମୋ ପ୍ରଶ୍ନ ସମ୍ପାଦନ କରନ୍ତୁ",
+        "addVoice": "ସ୍ୱର ଯୋଡ଼ନ୍ତୁ",
+        "tipDetailed": "ବିସ୍ତୃତ ଭାବରେ ଲେଖନ୍ତୁ — ଫସଲ, ସ୍ଥାନ ଏବଂ ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କଣ ଚେଷ୍ଟା କରିଛନ୍ତି ଉଲ୍ଲେଖ କରନ୍ତୁ।",
+        "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ"
       },
       "readFullPolicy": "ସମ୍ପୂର୍ଣ୍ଣ ଗୋପନୀୟତା ନୀତି ପଢ଼ନ୍ତୁ →",
       "resendOtp": "OTP ପୁନର୍ବାର ପଠାନ୍ତୁ",
@@ -20959,7 +21023,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ਕ੍ਰਮਬੱਧ ਕਰੋ (Sort By)",
         "unknown": "ਅਣਜਾਣ",
-        "rupee": "ਰੁ."
+        "rupee": "ਰੁ.",
+        "steps": "ਪੜਾਅ"
       },
       "completeRegistration": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ",
       "consentClause1": "ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੇ ਜਾਣਗੇ ਅਤੇ ਕੇਵਲ ਪਲੇਟਫਾਰਮ ਪ੍ਰਮਾਣੀਕਰਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਗਿਆਨ ਸੇਵਾਵਾਂ ਲਈ ਵਰਤੇ ਜਾਣਗੇ।",
@@ -21287,7 +21352,10 @@ const resources = {
         "rejectedOtherMessage": "ਅਸੀਂ ਇਹ ਸਵਾਲ ਸਵੀਕਾਰ ਨਹੀਂ ਕਰ ਸਕੇ। ਕਿਰਪਾ ਕਰਕੇ ਇਸਨੂੰ ਦੁਬਾਰਾ ਲਿਖ ਕੇ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
         "rejectedNotCounted": "ਇਹ ਜਮ੍ਹਾਂ ਨਹੀਂ ਹੋਇਆ ਅਤੇ ਤੁਹਾਡੀ ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਵਿੱਚ ਨਹੀਂ ਗਿਣਿਆ ਜਾਵੇਗਾ।",
         "rejectedYourQuestion": "ਤੁਹਾਡਾ ਸਵਾਲ",
-        "rejectedEditQuestion": "ਮੇਰਾ ਸਵਾਲ ਸੋਧੋ"
+        "rejectedEditQuestion": "ਮੇਰਾ ਸਵਾਲ ਸੋਧੋ",
+        "addVoice": "ਆਵਾਜ਼ ਸ਼ਾਮਲ ਕਰੋ",
+        "tipDetailed": "ਵਿਸਥਾਰ ਨਾਲ ਲਿਖੋ — ਫ਼ਸਲ, ਥਾਂ ਅਤੇ ਤੁਸੀਂ ਹੁਣ ਤੱਕ ਕੀ ਅਜ਼ਮਾਇਆ ਹੈ, ਦੱਸੋ।",
+        "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ"
       },
       "readFullPolicy": "ਪੂਰੀ ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ ਪੜ੍ਹੋ →",
       "resendOtp": "OTP ਦੁਬਾਰਾ ਭੇਜੋ",
@@ -22265,7 +22333,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "वर्गीकरोतु",
         "unknown": "अज्ञातम्",
-        "rupee": "रूप्यकाणि"
+        "rupee": "रूप्यकाणि",
+        "steps": "सोपानानि"
       },
       "completeRegistration": "पञ्जीकरणं पूर्णं करोतु",
       "consentClause1": "भवतः चलदूरभाषसङ्ख्या पञ्जीकरणविवरणानि च सुरक्षितानि स्थापयिष्यन्ते तथा च केवलं मञ्चसत्यापनाय कृषिज्ञानसेवाभ्यः च उपयुक्ष्यन्ते।",
@@ -22593,7 +22662,10 @@ const resources = {
         "rejectedOtherMessage": "वयम् एतं प्रश्नं स्वीकर्तुं न शक्नुमः। कृपया पुनः लिखित्वा प्रयत्नं करोतु।",
         "rejectedNotCounted": "एतत् न प्रेषितम्, भवतः दैनिकसीमायां न गण्यते।",
         "rejectedYourQuestion": "भवतः प्रश्नः",
-        "rejectedEditQuestion": "मम प्रश्नं सम्पादयतु"
+        "rejectedEditQuestion": "मम प्रश्नं सम्पादयतु",
+        "addVoice": "ध्वनिं योजयतु",
+        "tipDetailed": "विस्तरेण लिखतु — सस्यं, स्थानं, यत् च भवता पूर्वं प्रयत्नितं तत् अपि उल्लिखतु।",
+        "dailyLimitIndicator": "दैनिकसीमा समाप्ता"
       },
       "readFullPolicy": "गोपनीयतानीतिं पूरीं पठतु →",
       "resendOtp": "पुनः ओटीपी प्रेषयतु",
@@ -23561,7 +23633,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ᱞᱮᱠᱟᱛᱮ ᱥᱟᱡᱟᱣ ᱢᱮ",
         "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
-        "rupee": "ᱴᱟᱠᱟ"
+        "rupee": "ᱴᱟᱠᱟ",
+        "steps": "ठाहेन"
       },
       "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
       "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -23889,7 +23962,10 @@ const resources = {
         "rejectedOtherMessage": "आले नोवा कुकli बानुक् इदि दाड़ेयान्आले। दाया केते नोवा दोहड़ा ओल केते कुरुमुटु मे।",
         "rejectedNotCounted": "नोवा बाङ एमाक्आ आर आमाक् दिन दिनाक् सीमा रे बाङ लेखाक्आ।",
         "rejectedYourQuestion": "आमाक् कुकli",
-        "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे"
+        "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे",
+        "addVoice": "साड़े सेलेद मे",
+        "tipDetailed": "बुटा ओल मे — गोहालि, जायगा आर आम नितोक् धाबिच् चेत् कुरुमुटु आकात् मेना, ओना ओल मे।",
+        "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना"
       },
       "readFullPolicy": "ᱯᱩᱨᱟᱹ Privacy Policy ᱯᱟᱲᱦᱟᱣ ᱢᱮ →",
       "resendOtp": "OTP ᱫᱚᱦᱲᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",
@@ -24857,7 +24933,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ترتيب ڏيو",
         "unknown": "نامعلوم",
-        "rupee": "روپيا"
+        "rupee": "روپيا",
+        "steps": "مرحلا"
       },
       "completeRegistration": "رجسٽريشن مڪمل ڪريو",
       "consentClause1": "توهان جو موبائل نمبر ۽ رجسٽريشن جون تفصيلون محفوظ طريقي سان رکيون وينديون ۽ صرف پليٽ فارم جي تصديق ۽ زرعي علم جي خدمتن لاءِ استعمال ٿينديون.",
@@ -25185,7 +25262,10 @@ const resources = {
         "rejectedOtherMessage": "اسان هي سوال قبول نه ڪري سگهياسين. مهرباني ڪري ان کي ٻيهر لکي ڪوشش ڪريو.",
         "rejectedNotCounted": "هي جمع نه ٿيو آهي ۽ توهان جي روزاني حد ۾ شمار نه ٿيندو.",
         "rejectedYourQuestion": "توهان جو سوال",
-        "rejectedEditQuestion": "منهنجو سوال درست ڪريو"
+        "rejectedEditQuestion": "منهنجو سوال درست ڪريو",
+        "addVoice": "آواز شامل ڪريو",
+        "tipDetailed": "تفصيل سان لکو — فصل، جاءِ ۽ توهان هاڻي تائين ڇا آزمايو آهي، ٻڌايو.",
+        "dailyLimitIndicator": "روزاني حد پوري ٿي وئي"
       },
       "readFullPolicy": "پوري رازداري پاليسي پڙهو →",
       "resendOtp": "ٻيهر OTP موڪليو",
@@ -26153,7 +26233,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "வரிசைப்படுத்து",
         "unknown": "தெரியாதது",
-        "rupee": "ரூ."
+        "rupee": "ரூ.",
+        "steps": "படிகள்"
       },
       "completeRegistration": "பதிவை முடிக்கவும்",
       "consentClause1": "உங்கள் மொபைல் எண் மற்றும் பதிவு விவரங்கள் பாதுகாப்பாக சேமிக்கப்பட்டு, தள அங்கீகாரம் மற்றும் விவசாய சேவை நோக்கங்களுக்காக மட்டுமே பயன்படுத்தப்படும்.",
@@ -26481,7 +26562,10 @@ const resources = {
         "rejectedOtherMessage": "இந்தக் கேள்வியை எங்களால் ஏற்க முடியவில்லை. தயவுசெய்து மீண்டும் எழுதி முயற்சிக்கவும்.",
         "rejectedNotCounted": "இது சமர்ப்பிக்கப்படவில்லை, உங்கள் தினசரி வரம்பில் கணக்கிடப்படாது.",
         "rejectedYourQuestion": "உங்கள் கேள்வி",
-        "rejectedEditQuestion": "எனது கேள்வியைத் திருத்து"
+        "rejectedEditQuestion": "எனது கேள்வியைத் திருத்து",
+        "addVoice": "குரலைச் சேர்க்கவும்",
+        "tipDetailed": "விரிவாக எழுதுங்கள் — பயிர், இடம் மற்றும் நீங்கள் ஏற்கனவே முயற்சித்தவற்றைக் குறிப்பிடுங்கள்.",
+        "dailyLimitIndicator": "தினசரி வரம்பு முடிந்தது"
       },
       "readFullPolicy": "முழுமையான தனியுரிமைக் கொள்கையைப் படிக்கவும் →",
       "resendOtp": "மீண்டும் OTP அனுப்பு",
@@ -27451,7 +27535,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "దీని ప్రకారం క్రమబద్ధీకరించు",
         "unknown": "తెలియదు",
-        "rupee": "రూ."
+        "rupee": "రూ.",
+        "steps": "దశలు"
       },
       "completeRegistration": "రిజిస్ట్రేషన్ పూర్తి చేయండి",
       "consentClause1": "మీ మొబైల్ సంఖ్య మరియు రిజిస్ట్రేషన్ వివరాలు సురక్షితంగా నిల్వ చేయబడతాయి మరియు వేదిక ప్రమాణీకరణ, వ్యవసాయ పరిజ్ఞాన సేవల కోసం మాత్రమే ఉపయోగించబడతాయి.",
@@ -27779,7 +27864,10 @@ const resources = {
         "rejectedOtherMessage": "మేము ఈ ప్రశ్నను స్వీకరించలేకపోయాము. దయచేసి దానిని మళ్లీ రాసి ప్రయత్నించండి.",
         "rejectedNotCounted": "ఇది సమర్పించబడలేదు మరియు మీ రోజువారీ పరిమితిలో లెక్కించబడదు.",
         "rejectedYourQuestion": "మీ ప్రశ్న",
-        "rejectedEditQuestion": "నా ప్రశ్నను సవరించండి"
+        "rejectedEditQuestion": "నా ప్రశ్నను సవరించండి",
+        "addVoice": "వాయిస్ జోడించండి",
+        "tipDetailed": "వివరంగా రాయండి — పంట, ప్రదేశం మరియు మీరు ఇప్పటివరకు ఏమి ప్రయత్నించారో తెలియజేయండి.",
+        "dailyLimitIndicator": "రోజువారీ పరిమితి పూర్తయింది"
       },
       "readFullPolicy": "పూర్తి గోప్యతా విధానాన్ని చదవండి →",
       "resendOtp": "OTP ని మళ్ళీ పంపు",
@@ -28747,7 +28835,8 @@ const resources = {
         "separator": " · ",
         "sortBy": "ترتیب دیں بلحاظ",
         "unknown": "نامعلوم",
-        "rupee": "روپے"
+        "rupee": "روپے",
+        "steps": "مراحل"
       },
       "completeRegistration": "رجسٹریشن مکمل کریں",
       "consentClause1": "آپ کا موبائل نمبر اور رجسٹریشن کی تفصیلات محفوظ طریقے سے ذخیرہ کی جائیں گی اور صرف پلیٹ فارم کی توثیق اور زرعی معلوماتی خدمات کے لیے استعمال کی جائیں گی۔",
@@ -29075,7 +29164,10 @@ const resources = {
         "rejectedOtherMessage": "ہم یہ سوال قبول نہیں کر سکے۔ براہ کرم اسے دوبارہ لکھ کر کوشش کریں۔",
         "rejectedNotCounted": "یہ جمع نہیں ہوا اور آپ کی روزانہ حد میں شمار نہیں ہوگا۔",
         "rejectedYourQuestion": "آپ کا سوال",
-        "rejectedEditQuestion": "میرا سوال درست کریں"
+        "rejectedEditQuestion": "میرا سوال درست کریں",
+        "addVoice": "آواز شامل کریں",
+        "tipDetailed": "تفصیل سے لکھیں — فصل، مقام اور آپ نے اب تک کیا آزمایا ہے، بتائیں۔",
+        "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی"
       },
       "readFullPolicy": "مکمل پرائیویسی پالیسی پڑھیں →",
       "resendOtp": "OTP دوبارہ بھیجیں",

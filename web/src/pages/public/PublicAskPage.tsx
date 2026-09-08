@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, MapPin, Lock, Info, Mic } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
 import { MicButton } from '@/components/MicButton'
@@ -21,36 +21,9 @@ import {
   cacheQuestionForDuplicateDetection,
   type AIValidationResult,
 } from '@/utils/onDeviceAI'
-
-// Copy shown for each content-check rejection category. The server's raw reason
-// is English-only and embeds a truncated model fragment, so it is never shown.
-const REJECTION_COPY: Record<QuestionRejectionCategory, { titleKey: string; titleFallback: string; bodyKey: string; bodyFallback: string }> = {
-  ABUSIVE: {
-    titleKey: 'question.rejectedAbusiveTitle',
-    titleFallback: 'Please rephrase your question',
-    bodyKey: 'question.rejectedAbusiveMessage',
-    bodyFallback: 'Your question contains language we cannot accept. Please remove any offensive words and ask your farming question politely.',
-  },
-  NOT_AGRICULTURE: {
-    titleKey: 'question.rejectedNotAgriTitle',
-    titleFallback: 'Not a farming question',
-    bodyKey: 'question.rejectedNotAgriMessage',
-    bodyFallback: 'We can only answer questions about farming — crops, livestock, soil, pests, weather and related topics. Please ask a farming question.',
-  },
-  OTHER: {
-    titleKey: 'question.rejectedOtherTitle',
-    titleFallback: 'Question could not be accepted',
-    bodyKey: 'question.rejectedOtherMessage',
-    bodyFallback: 'We could not accept this question. Please rewrite it and try again.',
-  },
-}
-
-interface DuplicateInfo {
-  matchedQuestion: string
-  matchedAnswer: string | null
-  similarityScore: number | null
-  matchedUserName: string | null
-}
+import { QuestionRejectedDialog } from '@/components/QuestionRejectedDialog'
+import { DuplicateFoundDialog, type DuplicateInfo } from '@/components/DuplicateFoundDialog'
+import { QuestionSubmittedDialog } from '@/components/QuestionSubmittedDialog'
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -71,6 +44,84 @@ interface PreviewMeta {
 // isn't in the list can still submit. Module-scope so its identity is stable
 // across renders (same rationale as MobileStage / OtpStage in PublicRegisterPage).
 
+
+interface AskHeaderProps {
+  step: 1 | 2
+  title: string
+  subtitle: string
+  onBack: () => void
+  remainingToday?: number
+  dailyLimit?: number
+  atLimit: boolean
+}
+
+/**
+ * Shared header for both steps of the ask flow: back action, daily-limit chip,
+ * page title and a two-step progress indicator.
+ */
+function AskHeader({ step, title, subtitle, onBack, remainingToday, dailyLimit, atLimit }: AskHeaderProps) {
+  const { t } = useTranslation()
+  const steps = [
+    { n: 1 as const, label: t('question.yourQuestion') },
+    { n: 2 as const, label: t('additionalDetails') },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <Button type="button" variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5">
+          <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
+        </Button>
+
+        {remainingToday != null && dailyLimit != null && (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
+              atLimit
+                ? 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+                : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${atLimit ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+            {atLimit
+              ? t('question.dailyLimitIndicator')
+              : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
+          </span>
+        )}
+      </div>
+
+      <div>
+        <h1 className="text-lg font-bold text-foreground sm:text-xl">{title}</h1>
+        <p className="mt-0.5 text-xs text-text-secondary sm:text-sm">{subtitle}</p>
+      </div>
+
+      {/* Progress — current step is marked by weight and an aria-current, not
+          colour alone, and completed steps carry a check icon. */}
+      <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
+        {steps.map(({ n, label }) => {
+          const done = n < step
+          const current = n === step
+          return (
+            <li key={n} className="flex flex-1 items-center gap-2" aria-current={current ? 'step' : undefined}>
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${
+                  done || current
+                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                    : 'border-border-subtle bg-surface text-text-tertiary'
+                }`}
+              >
+                {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : n}
+              </span>
+              <span className={`truncate text-xs sm:text-sm ${current ? 'font-semibold text-foreground' : 'text-text-tertiary'}`}>
+                {label}
+              </span>
+              {n === 1 && <span className={`h-px flex-1 ${done ? 'bg-emerald-500/50' : 'bg-border-subtle'}`} aria-hidden="true" />}
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
 
 export function PublicAskPage() {
   const navigate = useNavigate()
@@ -313,113 +364,45 @@ export function PublicAskPage() {
     }
   }
 
-  if (submitted) {
-    return (
-      <div className="mx-auto max-w-lg pt-8">
-        <Card className="border-emerald-100 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-500/8 to-transparent">
-          <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 mb-4">
-              <CheckCircle2 className="h-9 w-9 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('question.submitted')}</h2>
-            <p className="mt-2 text-xs sm:text-xs sm:text-sm text-text-secondary max-w-sm">{t('question.successBody')}</p>
-            <div className="mt-6 flex gap-3">
-              <Button variant="outline" onClick={() => { setSubmitted(false); resetAll() }}>{t('question.submitAnother')}</Button>
-              <Button onClick={() => navigate('/home/questions')}>{t('nav.submissions')}</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  if (rejection) {
-    const copy = REJECTION_COPY[rejection] ?? REJECTION_COPY.OTHER
-    return (
-      <div className="mx-auto max-w-lg space-y-4 pt-6">
-        <Card className="border-red-200 bg-red-50/30 dark:border-red-900/40 dark:bg-red-950/20">
-          <CardContent className="p-5">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xs sm:text-sm font-bold text-foreground">{t(copy.titleKey, copy.titleFallback)}</h3>
-                <p className="mt-1 text-[11px] sm:text-xs text-text-secondary">{t(copy.bodyKey, copy.bodyFallback)}</p>
-                <p className="mt-2 text-[11px] sm:text-xs text-text-tertiary">
-                  {t('question.rejectedNotCounted', 'This was not submitted and does not count against your daily limit.')}
-                </p>
-              </div>
-            </div>
-            {questionText.trim() && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-white p-4 dark:border-red-900/40 dark:bg-surface">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
-                  {t('question.rejectedYourQuestion', 'Your question')}
-                </p>
-                <p className="mt-1 text-xs sm:text-sm text-foreground whitespace-pre-wrap">{questionText.trim()}</p>
-              </div>
-            )}
-            <div className="mt-5 flex justify-end">
-              <Button onClick={() => { setRejection(null); setStep('ask') }}>
-                {t('question.rejectedEditQuestion', 'Edit My Question')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  if (duplicate) {
-    return (
-      <div className="mx-auto max-w-lg space-y-4 pt-6">
-        <Card className="border-amber-200 bg-amber-50/30">
-          <CardContent className="p-5">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xs sm:text-xs sm:text-sm font-bold text-foreground">{t('question.duplicateFoundTitle')}</h3>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary mt-1">{t('question.duplicateFoundMessage')}</p>
-              </div>
-            </div>
-            <div className="mt-4 rounded-lg border border-amber-200 bg-white p-4 dark:bg-surface">
-              <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{duplicate.matchedQuestion}</p>
-              {duplicate.matchedAnswer && (
-                <div className="mt-3 border-t border-amber-100 pt-3">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 dark:text-emerald-300">{t('question.duplicate.expertAnswer')}</p>
-                  <p className="mt-1 text-xs sm:text-xs sm:text-sm text-foreground whitespace-pre-wrap">{duplicate.matchedAnswer}</p>
-                </div>
-              )}
-              {duplicate.matchedUserName && <p className="mt-3 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('question.duplicate.answeredBy', { name: duplicate.matchedUserName })}</p>}
-            </div>
-            <div className="mt-5 flex justify-end">
-              <Button onClick={() => navigate('/home')}>{t('question.duplicate.backHome')}</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Outcome dialogs render alongside every step so the user's form stays
+  // visible behind them instead of being replaced by a full-page state.
+  const dialogs = (
+    <>
+      <QuestionRejectedDialog
+        category={rejection}
+        questionText={questionText}
+        onOpenChange={(open) => { if (!open) setRejection(null) }}
+      />
+      <DuplicateFoundDialog
+        duplicate={duplicate}
+        onOpenChange={(open) => { if (!open) setDuplicate(null) }}
+        onTryAnother={() => { setDuplicate(null); resetAll() }}
+        onBackHome={() => { setDuplicate(null); navigate('/home') }}
+      />
+      <QuestionSubmittedDialog
+        open={submitted}
+        onOpenChange={(open) => { if (!open) { setSubmitted(false); resetAll() } }}
+        onAskAnother={() => { setSubmitted(false); resetAll() }}
+        onViewSubmissions={() => { setSubmitted(false); navigate('/home/questions') }}
+        remainingToday={stats?.remainingToday}
+        dailyLimit={stats?.dailyLimit}
+      />
+    </>
+  )
 
   // ─── Step 2 — details form, seeded from the preview response ─────────────
   if (step === 'details' && previewMeta) {
     return (
       <div className="mx-auto max-w-4xl space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button type="button" variant="ghost" size="sm" onClick={() => setStep('ask')} className="gap-1.5">
-            <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
-          </Button>
-          {/* Step indicator */}
-          <div className="flex items-center gap-2 text-xs text-text-tertiary">
-            <span className="font-medium text-foreground">1</span>
-            <div className="h-px w-8 bg-border-subtle" />
-            <span className="font-semibold text-emerald-600">2</span>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-foreground">{t('question.submitQuestion')}</h2>
-          <p className="text-sm text-text-secondary mt-0.5">{t('question.askSubtitle')}</p>
-        </div>
+        <AskHeader
+          step={2}
+          title={t('question.submitQuestion')}
+          subtitle={t('question.askSubtitle')}
+          onBack={() => setStep('ask')}
+          remainingToday={previewMeta.remainingToday}
+          dailyLimit={previewMeta.dailyLimit}
+          atLimit={false}
+        />
 
         {/* Warning banner */}
         <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
@@ -486,10 +469,6 @@ export function PublicAskPage() {
                       </div>
                     </div>
                   )}
-
-                  <div className="rounded-xl bg-muted/60 px-4 py-2.5 text-xs text-text-secondary text-center">
-                    {t('question.dailyRemaining', { remaining: previewMeta.remainingToday, total: previewMeta.dailyLimit })}
-                  </div>
                 </div>
 
                 {/* Right column — editable fields */}
@@ -600,6 +579,7 @@ export function PublicAskPage() {
           mode="single"
           title={t('question.cropType')}
         />
+        {dialogs}
       </div>
     )
   }
@@ -607,35 +587,43 @@ export function PublicAskPage() {
   // ─── Step 1 — free-text question entry ─────────────────────────────────────
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
-          <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
-        </Button>
-        <div className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
-          {stats ? (
-            <span className={atLimit ? 'text-rose-600 font-semibold' : 'text-emerald-700 dark:text-emerald-300 font-medium'}>
-              {atLimit ? t('question.dailyLimitIndicator') : t('question.dailyLeftToday', { remaining: stats.remainingToday, total: stats.dailyLimit })}
-            </span>
-          ) : '…'}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('question.askQuestion')}</h2>
-        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">{t('question.expertWillRespond')}</p>
-      </div>
+      <AskHeader
+        step={1}
+        title={t('question.askQuestion')}
+        subtitle={t('question.expertWillRespond')}
+        onBack={() => navigate(-1)}
+        remainingToday={stats?.remainingToday}
+        dailyLimit={stats?.dailyLimit}
+        atLimit={atLimit}
+      />
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">
+            {atLimit && (
+              <div
+                role="status"
+                className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-xs text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300 sm:text-sm"
+              >
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                <span>{t('question.errors.dailyLimitReached')}</span>
+              </div>
+            )}
+
             {/* Question (primary field) + Voice input (secondary field) sit
                 side by side on desktop instead of one long stacked column, so
                 the wide viewport isn't mostly empty. Domain/Season/Crop are no
                 longer picked here — `questionApi.preview` suggests them on the
                 next step, same as mobile's QuestionScreen → QuestionPreviewScreen. */}
             <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
-              <div className="flex flex-col gap-1.5 lg:col-span-3">
-                <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
+              <div className="flex flex-col gap-2 lg:col-span-3">
+                <div>
+                  <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600" aria-hidden="true">*</span></Label>
+                  <p id="q-hint" className="mt-0.5 text-[11px] text-text-tertiary sm:text-xs">{t('question.tipDetailed')}</p>
+                </div>
                 <Textarea
                   id="q"
+                  aria-describedby="q-hint q-count"
+                  required
                   placeholder={t('question.questionExample')}
                   value={questionText}
                   onChange={(e) => {
@@ -644,11 +632,15 @@ export function PublicAskPage() {
                   }}
                   rows={8}
                   maxLength={MAX_QUESTION_CHARS}
-                  className="resize-none lg:flex-1"
+                  className="resize-none text-sm leading-relaxed lg:flex-1"
                 />
-                <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs">
-                  <span className="text-text-tertiary">{t('question.tipDetailed')}</span>
-                  <span className={questionText.length > MAX_QUESTION_CHARS - 50 ? 'text-amber-600 font-semibold' : 'text-text-tertiary'}>{questionText.length}/{MAX_QUESTION_CHARS}</span>
+                <div className="flex justify-end">
+                  <span
+                    id="q-count"
+                    className={`text-[11px] tabular-nums sm:text-xs ${questionText.length > MAX_QUESTION_CHARS - 50 ? 'font-semibold text-amber-600' : 'text-text-tertiary'}`}
+                  >
+                    {questionText.length}/{MAX_QUESTION_CHARS}
+                  </span>
                 </div>
                 {/* Inline AI validation banner — same semantics as the mobile
                     `AIValidationBanner`: warns on off-topic / duplicate, blocks
@@ -661,7 +653,11 @@ export function PublicAskPage() {
                 )}
               </div>
 
-              <div className="flex flex-col lg:col-span-2">
+              <div className="flex flex-col gap-2 lg:col-span-2">
+                <div>
+                  <span className="text-xs font-medium leading-none text-text sm:text-sm">{t('question.addVoice', 'Add voice')}</span>
+                  <p className="mt-0.5 text-[11px] text-text-tertiary sm:text-xs">{t('question.tapMicHint')}</p>
+                </div>
                 {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
                      Disabled when the daily limit is reached or the AI flagged
                      the text as spam, so the user can't circumvent validation
@@ -716,8 +712,8 @@ export function PublicAskPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => navigate(-1)}>{t('common.cancel', 'Cancel')}</Button>
+            <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => navigate(-1)} className="justify-center">{t('common.cancel', 'Cancel')}</Button>
               {/*
                 Mirror mobile `QuestionScreen`'s Continue button: when the AI
                 flags the text as spam or "too short" (verdict === 'fail'),
@@ -727,6 +723,7 @@ export function PublicAskPage() {
               <Button
                 type="submit"
                 disabled={previewLoading || submitting || atLimit || blockedByAi || !questionText.trim()}
+                className="justify-center gap-2"
               >
                 {previewLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -739,6 +736,7 @@ export function PublicAskPage() {
           </form>
         </CardContent>
       </Card>
+      {dialogs}
     </div>
   )
 }
