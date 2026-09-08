@@ -79,51 +79,59 @@ inferCropAndDomains(questionText: string): Promise<GemmaInferenceResult>
 
 ---
 
-## 2. GDB Service (Semantic Duplicate Detection)
+## 2. GDB Service (Content Check + Duplicate Detection)
 
-**Provider:** Remote GDB (Graph Database) service — HTTP API at `GDB_BASE_URL/v1/gdb/search`
+**Provider:** Remote GDB (Graph Database) service — HTTP API at `GDB_BASE_URL/v1/gdb/find-similar-questions`
 
-**File:** `backend/src/ai/gdb.service.ts`
+**File:** `backend/src/modules/ai/gdb.service.ts`
 
-**Purpose:** Detect semantically duplicate questions before submission by querying the GDB semantic search API.
+**Purpose:** Run three checks in a single call before a question is saved — abusive-language safety, agriculture relevance, and duplicate detection.
 
 **Method:**
 
 ```typescript
-checkDuplicate(payload: { questionText: string; crop: string; state: string }): Promise<DuplicateCheckResult>
+checkDuplicate(payload: { questionText: string; languageCode?: string }): Promise<DuplicateCheckResult>
 ```
 
 **`DuplicateCheckResult`:**
 
 | Field | Type | Description |
-|---|---|
-| `isDuplicate` | `boolean` | True if a similar question was found above the threshold |
+|---|---|---|
+| `isDuplicate` | `boolean` | True when GDB already has this question (`is_present`) |
 | `matchedQuestionId` | `string \| null` | DB UUID of the matched question (null if not found in our DB) |
 | `matchedQuestion` | `string \| null` | Text of the matched question from GDB |
 | `matchedAnswer` | `string \| null` | The stored answer text the farmer can read |
-| `similarityScore` | `number \| null` | GDB similarity score of the top match |
-| `rawResponse` | `GdbSearchResponse \| null` | Raw GDB response for auditing |
+| `similarityScore` | `number \| null` | Always `null` — this endpoint returns no score |
+| `matchedUserName` | `string \| null` | Our submitter's display name, else the GDB author |
+| `rejection` | `QuestionRejection \| null` | Set when the query was blocked as abusive or non-agricultural |
+| `rawResponse` | `SimilarQuestionResponse \| null` | Raw GDB response for auditing |
 
 **How it works:**
 
-1. On question submit, `POST /v1/gdb/search` is called with `{ rephrased_query, crop, state }`
-2. GDB returns `classification_audit.evaluations[]` with per-candidate `similarity_score` and `chosen_for_answer`
-3. **Primary filter:** `chosen_for_answer = true` **AND** `similarity_score >= threshold` (default 0.9)
-4. **Fallback:** if no `chosen_for_answer=true` exists, use the highest `similarity_score` candidate above threshold
-5. The matched question is looked up from our DB by `questionText` to get the UUID and stored answer
-6. If `isDuplicate = true`: question's `duplicateFlag = true` and `duplicateOfId` are set; user receives an in-app notification
+1. Non-English text is translated to English via Sarvam (the GDB knowledge base is English-only). A translation failure falls back to the original text.
+2. `POST /v1/gdb/find-similar-questions` is called with `{ question_text }`. No crop/state filter is applied by this endpoint.
+3. GDB runs a safety + agriculture-relevance pre-check. If it fails, the response has `rejected: true` and a free-text `rejection_reason`.
+4. Otherwise GDB runs exact + vector search with Gemma classification and returns `is_present` plus the matched question, answer, status and author.
+5. The matched question is looked up in our DB by `present_question_text` to resolve our UUID and the original submitter's display name.
+6. Network, non-JSON and non-2xx responses fail open (treated as not-duplicate) so a GDB outage never blocks a farmer.
 
-**Threshold:** Configurable via `admin_config.duplicate_similarity_threshold` (default `0.9`).
+**Rejected queries:** `rejection_reason` is English-only and embeds a truncated model fragment, so it is never shown to the user. `GdbService.classifyRejection` maps it to a `QuestionRejectionCategory` (`ABUSIVE` | `NOT_AGRICULTURE` | `OTHER`), and `QuestionService.assertNotRejected` throws:
+
+```
+HTTP 422 { error: 'QUESTION_REJECTED', category, reason, message }
+```
+
+The throw happens **before** any `Question` row is created, so a rejected query is not saved and does not consume a daily submission slot. Mobile (`QuestionRejectedModal`) and web (`PublicAskPage`) map `category` to a translated `question.rejected*` message.
 
 **GDB response structure:**
 ```
-classification_audit.evaluations[]:
-  - question_id: GDB's internal ID
-  - retrieved_question: the question text
-  - similarity_score: 0.0–1.0
-  - chosen_for_answer: boolean (GDB's LLM-selected best match)
-  - relevance_decision, reason, classification
+query, is_present, present_status, present_question_id,
+present_question_text, present_answer_text, present_sources[],
+present_author, exact_match_found, total_candidates_found,
+rejected, rejection_reason
 ```
+
+> `admin_config.duplicate_similarity_threshold` no longer applies to this path — the endpoint returns no similarity score and decides matches itself.
 
 ---
 

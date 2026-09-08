@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   ServiceUnavailableException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
@@ -18,7 +19,7 @@ import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
 import { StorageService } from '../storage/storage.service';
 import { GemmaService } from '../ai/gemma.service';
-import { GdbService } from '../ai/gdb.service';
+import { GdbService, QuestionRejection } from '../ai/gdb.service';
 import { EmbedService } from '../ai/embed.service';
 import { DuplicateDetectionService } from '../../shared/database/cache/duplicate-detection.service';
 import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
@@ -51,6 +52,23 @@ export class QuestionService {
   ) {}
 
   // ─── Exact Duplicate Check (Our DB) ────────────────────────────────────────
+
+  /**
+   * Blocks a submission that GDB flagged as abusive or non-agricultural.
+   *
+   * Throws before any Question row is created, so a rejected query never counts
+   * against the user's daily limit. The body carries a category the clients map
+   * to a translated message; the raw English reason is for logs only.
+   */
+  private assertNotRejected(rejection: QuestionRejection | null): void {
+    if (!rejection) return;
+    throw new UnprocessableEntityException({
+      error: 'QUESTION_REJECTED',
+      category: rejection.category,
+      reason: rejection.reason,
+      message: 'Question rejected by content check',
+    });
+  }
 
   /**
    * Checks whether an exact (case-insensitive, trimmed) copy of the questionText
@@ -241,10 +259,12 @@ export class QuestionService {
     //     is translated to English before the semantic GDB search.
     const duplicateResult = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
-      crop: cropType,
-      state: user.state,
       languageCode: dto.language ?? user.languagePreference,
     });
+
+    // Abusive / non-agricultural queries are blocked here — nothing is persisted
+    // and no daily slot is consumed.
+    this.assertNotRejected(duplicateResult.rejection);
 
     // Derive agro-climatic zone from user's profile state.
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state);
@@ -558,10 +578,12 @@ export class QuestionService {
     //    the user's languagePreference so non-English text gets translated.
     const gdbDup = await this.gdbService.checkDuplicate({
       questionText: dto.questionText,
-      crop: inferred.crop,
-      state,
       languageCode: user.languagePreference,
     });
+
+    // Abusive / non-agricultural queries are blocked here — nothing is persisted
+    // and no daily slot is consumed.
+    this.assertNotRejected(gdbDup.rejection);
 
     // 5. Derive season from current month (India-centric calendar)
     const season = deriveSeasonFromMonth(new Date().getMonth()); // 0-indexed

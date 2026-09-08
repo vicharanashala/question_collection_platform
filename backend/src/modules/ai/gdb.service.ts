@@ -1,84 +1,72 @@
 /**
- * GdbService — calls the Graph DB (GDB) semantic search endpoint to find
- * similar questions before a new question is submitted.
+ * GdbService — calls the Graph DB (GDB) similar-question endpoint before a new
+ * question is submitted.
  *
  * The GDB service runs at GDB_BASE_URL and exposes:
- *   POST /v1/gdb/search
+ *   POST /v1/gdb/find-similar-questions   body: { question_text }
  *
- * It returns candidate questions with similarity_score per evaluation.
- * If any candidate has chosen_for_answer === true and
- * similarity >= similarityThreshold (admin config "duplicate_similarity_threshold",
- * default 0.9), the submission is blocked and the matching question + answer
- * is returned so the mobile app can show it to the user.
+ * The endpoint does three things in one pass:
+ *   1. Safety pre-check — flags vulgar/abusive queries (`rejected: true`).
+ *   2. Agriculture relevance pre-check — flags off-topic queries (`rejected: true`).
+ *   3. Exact + vector duplicate search across all statuses (`is_present: true`),
+ *      returning the matched question, its answer and its author.
+ *
+ * A rejected query is blocked before anything is persisted. A duplicate is
+ * returned so the mobile app / web can show the existing question + answer.
+ *
+ * Note: this endpoint does not filter by crop/state and returns no similarity
+ * score, so `similarityScore` is always null.
  */
 
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Question } from '../../shared/database/entities';
-import { AdminService } from '../admin/admin.service';
+import { QuestionRejectionCategory } from '../../shared/classes/enums';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { SarvamService } from '../speech/sarvam.service';
 
-export interface GdbSearchResult {
-  question_id: string;
-  retrieved_question: string;
-  answer: string;
-  similarity_score: number;
-  relevance_decision: string;
-  relevance_reason: string;
-  classification: string;
-  reason: string;
-  chosen_for_answer: boolean;
+export interface SimilarQuestionResponse {
+  query: string;
+  is_present: boolean;
+  present_status: string | null;
+  present_question_id: string | null;
+  present_question_text: string | null;
+  present_answer_text: string | null;
+  present_sources: unknown[];
+  present_author: string | null;
+  exact_match_found: boolean;
+  total_candidates_found: number;
+  rejected: boolean;
+  rejection_reason: string | null;
 }
 
-export interface GdbSearchResponse {
-  rephrased_query: string;
-  crop: string;
-  state: string;
-  exact_match: {
-    question_id: string
-    similarity_score: number
-    retrieval_source: string
-    question: string
-    answer: string
-  } | null
-  selected_match: {
-    question_id: string;
-    retrieved_question: string;
-    answer: string;
-    similarity_score: number;
-    retrieval_source: string;
-  } | null;
-  classification_audit: {
-    status: string;
-    model: string;
-    relevance_filter_mode: string;
-    evaluations: GdbSearchResult[];
-    selected_question_id: string | null;
-    chosen_for_answer: boolean;
-  };
+/** Set when GDB blocked the query as abusive or non-agricultural. */
+export interface QuestionRejection {
+  category: QuestionRejectionCategory;
+  /** Raw English reason from GDB — kept for audit logs, not for display. */
+  reason: string;
 }
 
 export interface DuplicateCheckResult {
-  /** true when a matching question was found above the similarity threshold */
+  /** true when GDB already has this question in its knowledge base */
   isDuplicate: boolean;
-  /** DB id of the matched question (null when not a duplicate) */
+  /** DB id of the matched question (null when not found in our own DB) */
   matchedQuestionId: string | null;
   /** The text of the matched question */
   matchedQuestion: string | null;
-  /** The answer text for the matched question (from our DB) */
+  /** The answer text for the matched question */
   matchedAnswer: string | null;
-  /** Similarity score of the top match (null when not a duplicate) */
+  /** Always null — this endpoint does not return a similarity score */
   similarityScore: number | null;
   /**
    * Display name of the user who submitted the matched question.
-   * Populated when the duplicate was found in our own DB (exact or GDB-assisted).
-   * Falls back to the literal string `'user name not available'` when unknown.
+   * Resolved from our own DB when possible, otherwise the GDB author.
    */
   matchedUserName: string | null;
-  /** Raw GDB response for auditing — always populated even on non-duplicate */
-  rawResponse: GdbSearchResponse | null;
+  /** Non-null when the query was blocked as abusive or non-agricultural */
+  rejection: QuestionRejection | null;
+  /** Raw GDB response for auditing — always populated on a successful call */
+  rawResponse: SimilarQuestionResponse | null;
 }
 
 @Injectable()
@@ -87,8 +75,6 @@ export class GdbService {
 
   constructor(
     private readonly configService: ConfigService,
-    @Inject(forwardRef(() => AdminService))
-    private readonly adminService: AdminService,
     private readonly sarvamService: SarvamService,
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
@@ -97,59 +83,23 @@ export class GdbService {
   // ─── Public API ──────────────────────────────────────────────────────────────
 
   /**
-   * Search for semantically similar questions and check if this submission
-   * should be blocked as a near-duplicate.
+   * Runs the GDB safety, relevance and duplicate checks for a question.
    *
-   * Uses `chosen_for_answer = true` from the GDB classification_audit as the
-   * primary filter (LLM-selected best match) plus the similarity threshold.
+   * Returns `rejection` when the query is abusive or off-topic (the caller must
+   * block the submission), or `isDuplicate` when the question already exists.
+   * Network and parse failures fail open so a GDB outage never blocks a farmer.
    */
   async checkDuplicate(payload: {
     questionText: string;
-    crop: string;
-    state: string;
     languageCode?: string;
   }): Promise<DuplicateCheckResult> {
     const baseUrl = this.configService.get<string>('gdb.baseUrl')!;
     const apiKey = this.configService.get<string>('gdb.apiKey')!;
 
-    const url = `${baseUrl}/v1/gdb/search`;
-    this.logger.debug(`[GDB] search → ${url}`);
+    const url = `${baseUrl}/v1/gdb/find-similar-questions`;
+    this.logger.debug(`[GDB] find-similar-questions → ${url}`);
 
-    let queryText = payload.questionText;
-
-    // Normalize the incoming language code to Sarvam's "xx-IN" format.
-    // Callers may pass either the short form (e.g. 'hi', from
-    // User.languagePreference) or the qualified form (e.g. 'hi-IN', from
-    // Question.language). Sarvam only accepts the qualified form.
-    const sarvamLangCode = payload.languageCode
-      ? this.toSarvamLang(payload.languageCode)
-      : undefined;
-
-    if (sarvamLangCode && !this.isEnglish(sarvamLangCode)) {
-      try {
-        const translation = await this.sarvamService.translateText(
-          payload.questionText,
-          'en-IN',
-          sarvamLangCode,
-        );
-        queryText = translation.translatedText?.trim() || payload.questionText;
-        this.logger.debug(
-          `[GDB] translated questionText from ${sarvamLangCode} → en-IN: "${queryText.slice(0, 100)}"`,
-        );
-      } catch (err) {
-        // Don't block duplicate checking on a translation failure — fall back
-        // to the original text.
-        this.logger.warn(
-          `[GDB] translation failed (${payload.languageCode} → en-IN), using original text: ${err}`,
-        );
-      }
-    } else if (payload.languageCode) {
-      this.logger.debug(
-        `[GDB] source language '${payload.languageCode}' is English; skipping translation`,
-      );
-    }
-
-    console.log("Query Text --->", queryText);
+    const queryText = await this.toEnglish(payload.questionText, payload.languageCode);
 
     // ── Call GDB ──────────────────────────────────────────────────────────────
     let response: Response;
@@ -160,11 +110,7 @@ export class GdbService {
           'Content-Type': 'application/json',
           ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
         },
-        body: JSON.stringify({
-          rephrased_query: queryText,
-          crop: payload.crop,
-          state: payload.state,
-        }),
+        body: JSON.stringify({ question_text: queryText }),
       });
     } catch (err) {
       // Network failure — do not block the user; treat as non-duplicate
@@ -172,12 +118,12 @@ export class GdbService {
       return this.noDuplicate();
     }
 
-    let raw: GdbSearchResponse;
+    let raw: SimilarQuestionResponse;
     let responseText = '';
     try {
       responseText = await response.text();
       this.logger.debug(`[GDB] raw response (${response.status}): ${responseText.slice(0, 500)}`);
-      raw = JSON.parse(responseText) as GdbSearchResponse;
+      raw = JSON.parse(responseText) as SimilarQuestionResponse;
     } catch {
       this.logger.error(`[GDB] non-JSON response body: ${responseText?.slice(0, 200)}`);
       return this.noDuplicate();
@@ -188,103 +134,96 @@ export class GdbService {
       return this.noDuplicate(raw);
     }
 
-    // ── Resolve threshold from admin config (default 0.9) ─────────────────────
-    const threshold = await this.adminService
-      .getConfigValue('duplicate_similarity_threshold')
-      .catch(() => 0.9);
-
-    this.logger.debug(`[GDB] threshold=${threshold}, evaluations count=${raw.classification_audit?.evaluations?.length ?? 0}`);
-    raw.classification_audit?.evaluations?.forEach((e, i) => {
-      this.logger.debug(
-        `[GDB] eval[${i}] chosen_for_answer=${e.chosen_for_answer} similarity_score=${e.similarity_score} question_id=${e.question_id} retrieved_question=${String(e.retrieved_question ?? '').slice(0, 80)}`,
-      );
-    });
-
-    // ── Find the best match above threshold ─────────────────────────────────────
-    //    Priority:
-    //    1. exact_match (strict exact-duplicate from GDB, always >= 1.0)
-    //    2. chosen_for_answer=true in evaluations AND similarity >= threshold
-    //    3. Highest similarity_score candidate above threshold (fallback)
-    const evaluations = raw.classification_audit?.evaluations ?? [];
-
-    // exact_match is a guaranteed exact/near-exact text duplicate at similarity 1.0
-    if (raw.exact_match && raw.exact_match.similarity_score >= threshold) {
-
-      // Resolve matched entity from DB via the GDB question_id
-      const matchedQuestionEntity = await this.questionRepo.findOne({
-        where: { questionText: raw.exact_match.question },
-        select: ['id', 'questionText'],
-        relations: ['user'],
-      });
+    // ── Safety / relevance gate ───────────────────────────────────────────────
+    if (raw.rejected) {
+      const category = this.classifyRejection(raw.rejection_reason);
+      this.logger.debug(`[GDB] query rejected as ${category}: ${raw.rejection_reason}`);
       return {
-        isDuplicate: true,
-        matchedQuestionId: matchedQuestionEntity?.id ?? null,
-        matchedQuestion: raw.exact_match.question,
-        matchedAnswer: raw.exact_match.answer?.trim() || null,
-        similarityScore: raw.exact_match.similarity_score,
-        matchedUserName: this.resolveDisplayName(matchedQuestionEntity?.user ?? null),
-        rawResponse: raw,
+        ...this.noDuplicate(raw),
+        rejection: { category, reason: raw.rejection_reason ?? '' },
       };
     }
 
-    const chosenMatch = evaluations.find(
-      (e) => e.chosen_for_answer === true && e.similarity_score >= threshold,
-    );
-
-    const bestMatch =
-      chosenMatch ??
-      evaluations
-        .filter((e) => e.similarity_score >= threshold)
-        .sort((a, b) => b.similarity_score - a.similarity_score)[0] ??
-      null;
-
-    if (!bestMatch) {
+    if (!raw.is_present) {
       return this.noDuplicate(raw);
     }
 
-    const fallback = !evaluations.some((e) => e.chosen_for_answer === true);
-    if (fallback) {
-      this.logger.debug(
-        `[GDB] no chosen_for_answer=true; using fallback highest similarity_score=${bestMatch.similarity_score} question_id=${bestMatch.question_id}`,
-      );
-    }
+    // ── Duplicate found ───────────────────────────────────────────────────────
+    //    GDB's present_question_id is its own identifier, not our UUID, so the
+    //    matching row is resolved by question text to get our id + submitter.
+    const matchedQuestionEntity = raw.present_question_text
+      ? await this.questionRepo.findOne({
+          where: { questionText: raw.present_question_text },
+          select: ['id', 'questionText'],
+          relations: ['user'],
+        })
+      : null;
 
-    // ── Fetch the matched question from our DB using the retrieved question text ──
-    //    (GDB question_ids are short-format identifiers, not our UUIDs)
-    //    Load the user relation to resolve the submitter's display name for the mobile UI.
-    const matchedQuestionEntity = await this.questionRepo.findOne({
-      where: { questionText: bestMatch.retrieved_question },
-      select: ['id', 'questionText'],
-      relations: ['user'],
-    });
-
-    // ── Resolve the answer ───────────────────────────────────────────────────
-    //    Priority:
-    //    1. `selected_match.answer` from GDB (the canonical answer for the top match)
-    //    2. `bestMatch.answer` from the evaluation entry (chosen_for_answer=true path)
-    //    3. retrieved_question as last resort
-    const selectedMatchAnswer = raw.selected_match?.answer?.trim() || null;
-    const evalAnswer = bestMatch.answer?.trim() || null;
-    const matchedAnswer = selectedMatchAnswer ?? evalAnswer ?? bestMatch.retrieved_question;
     this.logger.debug(
-      `[GDB] answer resolved: selected_match=${selectedMatchAnswer ? 'yes (' + selectedMatchAnswer.slice(0, 50) + '...)' : 'no'} eval_answer=${evalAnswer ? 'yes' : 'no'} fallback=${matchedAnswer === bestMatch.retrieved_question}`,
+      `[GDB] duplicate found: status=${raw.present_status} exact=${raw.exact_match_found} candidates=${raw.total_candidates_found}`,
     );
 
     return {
       isDuplicate: true,
-      // GDB's question_id is not our UUID — use the DB id if found, otherwise null
       matchedQuestionId: matchedQuestionEntity?.id ?? null,
-      matchedQuestion: bestMatch.retrieved_question,
-      matchedAnswer,
-      similarityScore: bestMatch.similarity_score,
-      matchedUserName: this.resolveDisplayName(matchedQuestionEntity?.user ?? null),
+      matchedQuestion: raw.present_question_text,
+      matchedAnswer: raw.present_answer_text?.trim() || null,
+      similarityScore: null,
+      matchedUserName:
+        this.resolveDisplayName(matchedQuestionEntity?.user ?? null) ??
+        raw.present_author?.trim() ??
+        null,
+      rejection: null,
       rawResponse: raw,
     };
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
 
-  private noDuplicate(raw: GdbSearchResponse | null = null): DuplicateCheckResult {
+  /**
+   * Translates the question to English when needed, since the GDB knowledge base
+   * is English-only. A translation failure falls back to the original text
+   * rather than blocking the duplicate check.
+   */
+  private async toEnglish(questionText: string, languageCode?: string): Promise<string> {
+    const sarvamLangCode = languageCode ? this.toSarvamLang(languageCode) : undefined;
+
+    if (!sarvamLangCode || this.isEnglish(sarvamLangCode)) {
+      return questionText;
+    }
+
+    try {
+      const translation = await this.sarvamService.translateText(
+        questionText,
+        'en-IN',
+        sarvamLangCode,
+      );
+      const translated = translation.translatedText?.trim() || questionText;
+      this.logger.debug(`[GDB] translated ${sarvamLangCode} → en-IN: "${translated.slice(0, 100)}"`);
+      return translated;
+    } catch (err) {
+      this.logger.warn(`[GDB] translation failed (${languageCode} → en-IN), using original text: ${err}`);
+      return questionText;
+    }
+  }
+
+  /**
+   * Maps GDB's free-text rejection reason to a category the clients can render
+   * as a translated message. The raw text is English-only and embeds a truncated
+   * model fragment, so it is never shown to the user.
+   */
+  private classifyRejection(reason: string | null): QuestionRejectionCategory {
+    const text = (reason ?? '').toLowerCase();
+    if (/abusive|vulgar|inappropriate|offensive/.test(text)) {
+      return QuestionRejectionCategory.ABUSIVE;
+    }
+    if (/agricultur|farming/.test(text)) {
+      return QuestionRejectionCategory.NOT_AGRICULTURE;
+    }
+    return QuestionRejectionCategory.OTHER;
+  }
+
+  private noDuplicate(raw: SimilarQuestionResponse | null = null): DuplicateCheckResult {
     return {
       isDuplicate: false,
       matchedQuestionId: null,
@@ -292,11 +231,12 @@ export class GdbService {
       matchedAnswer: null,
       similarityScore: null,
       matchedUserName: null,
+      rejection: null,
       rawResponse: raw,
     };
   }
 
-    private isEnglish(languageCode?: string | null): boolean {
+  private isEnglish(languageCode?: string | null): boolean {
     if (!languageCode) return true;
     return languageCode.toLowerCase().startsWith('en');
   }
@@ -327,7 +267,7 @@ export class GdbService {
   /**
    * Resolves the best display name from a User entity, using the same priority
    * as QuestionService.findExactDuplicate:
-   *   1. username  2. name  3. masked mobile  4. 'user name not available'
+   *   1. username  2. name  3. masked mobile  4. null
    */
   private resolveDisplayName(user: { username?: string | null; name?: string | null; mobileNumber?: string | null } | null): string | null {
     if (!user) return null;

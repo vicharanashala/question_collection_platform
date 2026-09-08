@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { TooltipIcon } from '../../components/TooltipIcon';
 import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
+import { QuestionRejectedModal } from '../../components/QuestionRejectedModal';
+import type { QuestionRejectionCategory } from '../../api/client';
 import { useToast } from '../../components/Toast';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -135,6 +137,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
     submissionStatus: undefined as 'rejected' | 'found' | undefined,
   });
 
+  // Content-check rejection modal (abusive / non-agriculture)
+  const [rejectedModal, setRejectedModal] = useState({
+    visible: false,
+    category: 'OTHER' as QuestionRejectionCategory,
+  });
+
   // ── AI validation debounce ─────────────────────────────────────────────
   const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevTextRef = useRef('');
@@ -238,7 +246,12 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         dailyLimit: res.data.dailyLimit ?? dailyLimit,
       } as RootStackParamList['QuestionPreview']);
     } catch (err: unknown) {
-      const { getErrorMessage } = await import('../../api/client');
+      const { getErrorMessage, parseQuestionRejected } = await import('../../api/client');
+      const rejection = parseQuestionRejected(err);
+      if (rejection) {
+        setRejectedModal({ visible: true, category: rejection.category });
+        return;
+      }
       showToast(getErrorMessage(err, t('question.submitFailed')), 'error');
     } finally {
       setPreviewLoading(false);
@@ -477,6 +490,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
           </View>
         )}
       </KeyboardAvoidingView>
+
+      <QuestionRejectedModal
+        visible={rejectedModal.visible}
+        category={rejectedModal.category}
+        questionText={questionText}
+        onDismiss={() => setRejectedModal((p) => ({ ...p, visible: false }))}
+      />
 
       <DuplicateFoundModal
         visible={duplicateModal.visible}

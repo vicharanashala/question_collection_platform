@@ -537,7 +537,16 @@
     "audioAttached": "ऑडियो संलग्न कएल गेल",
     "mediaCount": "+{{count}} आओर",
     "searchPlaceholder": "नाम, मोबाइल, जिला खोजु…",
-    "tryAnotherQuestion": "आन प्रश्नक प्रयास करु"
+    "tryAnotherQuestion": "आन प्रश्नक प्रयास करु",
+    "rejectedAbusiveTitle": "कृपया अपन प्रश्न फेरसँ लिखू",
+    "rejectedAbusiveMessage": "अहाँक प्रश्नमे एहन भाषा अछि जकरा हम स्वीकार नहि क' सकैत छी। कृपया अशिष्ट शब्द हटा क' अपन खेतीसँ जुड़ल प्रश्न शालीनतासँ पूछू।",
+    "rejectedNotAgriTitle": "ई खेतीसँ जुड़ल प्रश्न नहि अछि",
+    "rejectedNotAgriMessage": "हम खाली खेतीसँ जुड़ल प्रश्नक उत्तर द' सकैत छी — फसल, पशुधन, माटि, कीट, मौसम आ ओहिसँ जुड़ल विषय। कृपया खेतीसँ जुड़ल प्रश्न पूछू।",
+    "rejectedOtherTitle": "प्रश्न स्वीकार नहि कएल जा सकल",
+    "rejectedOtherMessage": "हम ई प्रश्न स्वीकार नहि क' सकलहुँ। कृपया एकरा फेरसँ लिख क' प्रयास करू।",
+    "rejectedNotCounted": "ई जमा नहि भेल अछि आ अहाँक दैनिक सीमामे नहि गानल जाएत।",
+    "rejectedYourQuestion": "अहाँक प्रश्न",
+    "rejectedEditQuestion": "हमर प्रश्न संपादित करू"
   },
   "readFullPolicy": "पूरा गोपनीयता नीति पढ़ू →",
   "resendOtp": "पुनः ओटीपी पठाऊ",

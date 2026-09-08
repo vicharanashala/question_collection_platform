@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
-import { questionApi, getErrorMessage } from '@/api/client'
+import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,6 +21,29 @@ import {
   cacheQuestionForDuplicateDetection,
   type AIValidationResult,
 } from '@/utils/onDeviceAI'
+
+// Copy shown for each content-check rejection category. The server's raw reason
+// is English-only and embeds a truncated model fragment, so it is never shown.
+const REJECTION_COPY: Record<QuestionRejectionCategory, { titleKey: string; titleFallback: string; bodyKey: string; bodyFallback: string }> = {
+  ABUSIVE: {
+    titleKey: 'question.rejectedAbusiveTitle',
+    titleFallback: 'Please rephrase your question',
+    bodyKey: 'question.rejectedAbusiveMessage',
+    bodyFallback: 'Your question contains language we cannot accept. Please remove any offensive words and ask your farming question politely.',
+  },
+  NOT_AGRICULTURE: {
+    titleKey: 'question.rejectedNotAgriTitle',
+    titleFallback: 'Not a farming question',
+    bodyKey: 'question.rejectedNotAgriMessage',
+    bodyFallback: 'We can only answer questions about farming — crops, livestock, soil, pests, weather and related topics. Please ask a farming question.',
+  },
+  OTHER: {
+    titleKey: 'question.rejectedOtherTitle',
+    titleFallback: 'Question could not be accepted',
+    bodyKey: 'question.rejectedOtherMessage',
+    bodyFallback: 'We could not accept this question. Please rewrite it and try again.',
+  },
+}
 
 interface DuplicateInfo {
   matchedQuestion: string
@@ -72,6 +95,7 @@ export function PublicAskPage() {
   const [submitted, setSubmitted] = useState(false)
   const [stats, setStats] = useState<{ remainingToday: number; dailyLimit: number } | null>(null)
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null)
+  const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
 
   const atLimit = stats != null && stats.remainingToday <= 0
@@ -141,6 +165,7 @@ export function PublicAskPage() {
     setSeason('')
     setCropType('')
     setPreviewMeta(null)
+    setRejection(null)
   }
 
   // ─── Step 1 → Step 2: classify the question text server-side ─────────────
@@ -190,6 +215,11 @@ export function PublicAskPage() {
       setCropType(res.cropType ?? '')
       setStep('details')
     } catch (err) {
+      const rejected = parseQuestionRejected(err)
+      if (rejected) {
+        setRejection(rejected.category)
+        return
+      }
       toast.error(getErrorMessage(err, t('question.submitFailed')))
     } finally {
       setPreviewLoading(false)
@@ -272,6 +302,11 @@ export function PublicAskPage() {
         .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
         .catch(() => undefined)
     } catch (err) {
+      const rejected = parseQuestionRejected(err)
+      if (rejected) {
+        setRejection(rejected.category)
+        return
+      }
       toast.error(getErrorMessage(err, t('question.submitFailed')))
     } finally {
       setSubmitting(false)
@@ -291,6 +326,41 @@ export function PublicAskPage() {
             <div className="mt-6 flex gap-3">
               <Button variant="outline" onClick={() => { setSubmitted(false); resetAll() }}>{t('question.submitAnother')}</Button>
               <Button onClick={() => navigate('/home/questions')}>{t('nav.submissions')}</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (rejection) {
+    const copy = REJECTION_COPY[rejection] ?? REJECTION_COPY.OTHER
+    return (
+      <div className="mx-auto max-w-lg space-y-4 pt-6">
+        <Card className="border-red-200 bg-red-50/30 dark:border-red-900/40 dark:bg-red-950/20">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xs sm:text-sm font-bold text-foreground">{t(copy.titleKey, copy.titleFallback)}</h3>
+                <p className="mt-1 text-[11px] sm:text-xs text-text-secondary">{t(copy.bodyKey, copy.bodyFallback)}</p>
+                <p className="mt-2 text-[11px] sm:text-xs text-text-tertiary">
+                  {t('question.rejectedNotCounted', 'This was not submitted and does not count against your daily limit.')}
+                </p>
+              </div>
+            </div>
+            {questionText.trim() && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-white p-4 dark:border-red-900/40 dark:bg-surface">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+                  {t('question.rejectedYourQuestion', 'Your question')}
+                </p>
+                <p className="mt-1 text-xs sm:text-sm text-foreground whitespace-pre-wrap">{questionText.trim()}</p>
+              </div>
+            )}
+            <div className="mt-5 flex justify-end">
+              <Button onClick={() => { setRejection(null); setStep('ask') }}>
+                {t('question.rejectedEditQuestion', 'Edit My Question')}
+              </Button>
             </div>
           </CardContent>
         </Card>

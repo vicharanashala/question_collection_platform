@@ -215,3 +215,12 @@ export enum AuditAction {
   // Admin
   ADMIN_CONFIG_UPDATED = 'admin_config_updated',
 }
+/**
+ * Reason a question submission was blocked by the GDB safety / relevance
+ * pre-check. Clients map these to a translated message.
+ */
+export enum QuestionRejectionCategory {
+  ABUSIVE = 'ABUSIVE',
+  NOT_AGRICULTURE = 'NOT_AGRICULTURE',
+  OTHER = 'OTHER',
+}

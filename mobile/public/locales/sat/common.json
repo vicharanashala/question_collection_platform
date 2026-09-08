@@ -537,7 +537,16 @@
     "audioAttached": "ᱟᱲᱟᱝ ᱥᱮᱞᱮᱫ ᱮᱱᱟ",
     "mediaCount": "+{{count}} ᱟᱨᱦᱚᱸ",
     "searchPlaceholder": "ᱧᱩᱛᱩᱢ, ᱢᱳᱵᱟᱭᱤᱞ, ᱡᱤᱞᱟᱹ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ…",
-    "tryAnotherQuestion": "ᱮᱴᱟᱜ ᱠᱩᱠᱞᱤ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ"
+    "tryAnotherQuestion": "ᱮᱴᱟᱜ ᱠᱩᱠᱞᱤ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ",
+    "rejectedAbusiveTitle": "दाया केते आमाक् कुकli दोहड़ा ओल मे",
+    "rejectedAbusiveMessage": "आमाक् कुकliरे एना पारसी मेनाक्आ जाहा आले बानुक् इदि दाड़ेयाक्आ। दाया केते एताहोब आ़ड़ा को ओचोक् केते आमाक् चासाक् कुकli साहाव तेत् कुली मे।",
+    "rejectedNotAgriTitle": "नोवा चासाक् कुकli बानुक्आ",
+    "rejectedNotAgriMessage": "आले खालि चासाक् कुकli को रेयाक् तेला एम दाड़ेयाक्आले — गोहालि, जानवार, हासा, कीड़ा, होय-दाक् आर एन सांव जोड़ाव कथा को। दाया केते चासाक् कुकli कुली मे।",
+    "rejectedOtherTitle": "कुकli बानुक् इदि दाड़ेयान्आ",
+    "rejectedOtherMessage": "आले नोवा कुकli बानुक् इदि दाड़ेयान्आले। दाया केते नोवा दोहड़ा ओल केते कुरुमुटु मे।",
+    "rejectedNotCounted": "नोवा बाङ एमाक्आ आर आमाक् दिन दिनाक् सीमा रे बाङ लेखाक्आ।",
+    "rejectedYourQuestion": "आमाक् कुकli",
+    "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे"
   },
   "readFullPolicy": "ᱯᱩᱨᱟᱹ Privacy Policy ᱯᱟᱲᱦᱟᱣ ᱢᱮ →",
   "resendOtp": "OTP ᱫᱚᱦᱲᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",

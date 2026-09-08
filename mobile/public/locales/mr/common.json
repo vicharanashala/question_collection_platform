@@ -537,7 +537,16 @@
     "audioAttached": "ऑडिओ जोडला",
     "mediaCount": "+{{count}} अधिक",
     "searchPlaceholder": "नाव, मोबाईल, जिल्हा शोधा…",
-    "tryAnotherQuestion": "दूसरा प्रश्न विचारून पहा"
+    "tryAnotherQuestion": "दूसरा प्रश्न विचारून पहा",
+    "rejectedAbusiveTitle": "कृपया आपला प्रश्न पुन्हा लिहा",
+    "rejectedAbusiveMessage": "आपल्या प्रश्नात अशी भाषा आहे जी आम्ही स्वीकारू शकत नाही. कृपया अपमानास्पद शब्द काढून आपला शेतीविषयक प्रश्न सभ्यपणे विचारा.",
+    "rejectedNotAgriTitle": "हा शेतीविषयक प्रश्न नाही",
+    "rejectedNotAgriMessage": "आम्ही फक्त शेतीविषयक प्रश्नांची उत्तरे देऊ शकतो — पिके, पशुधन, माती, कीड, हवामान आणि संबंधित विषय. कृपया शेतीविषयक प्रश्न विचारा.",
+    "rejectedOtherTitle": "प्रश्न स्वीकारता आला नाही",
+    "rejectedOtherMessage": "आम्ही हा प्रश्न स्वीकारू शकलो नाही. कृपया तो पुन्हा लिहून प्रयत्न करा.",
+    "rejectedNotCounted": "हा सादर झालेला नाही आणि आपल्या दैनंदिन मर्यादेत मोजला जाणार नाही.",
+    "rejectedYourQuestion": "आपला प्रश्न",
+    "rejectedEditQuestion": "माझा प्रश्न संपादित करा"
   },
   "readFullPolicy": "पूर्ण गोपनीयता धोरण वाचा →",
   "resendOtp": "OTP पुन्हा पाठवा",
