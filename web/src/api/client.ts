@@ -1222,6 +1222,30 @@ export const distributor = {
 
 // ─── Error helper ──────────────────────────────────────────────────────────
 
+export type QuestionRejectionCategory = 'ABUSIVE' | 'NOT_AGRICULTURE' | 'OTHER'
+
+export interface QuestionRejectionInfo {
+  category: QuestionRejectionCategory
+  /** Raw English reason from the content check — for logs, not for display. */
+  reason: string | null
+}
+
+/**
+ * Parses the 422 body the backend returns when the content check blocks a
+ * question as abusive or non-agricultural. Returns null for any other error.
+ */
+export function parseQuestionRejected(e: unknown): QuestionRejectionInfo | null {
+  if (typeof e !== 'object' || e === null) return null
+  const err = e as { status?: number; data?: { error?: string; category?: string; reason?: string } }
+  if (err.status !== 422 || err.data?.error !== 'QUESTION_REJECTED') return null
+  const category: QuestionRejectionCategory =
+    err.data.category === 'ABUSIVE' || err.data.category === 'NOT_AGRICULTURE' ? err.data.category : 'OTHER'
+  return {
+    category,
+    reason: typeof err.data.reason === 'string' ? err.data.reason : null,
+  }
+}
+
 export function getErrorMessage(e: unknown, fallback: string): string {
   if (e instanceof Error) return e.message
   if (typeof e === 'object' && e !== null && 'data' in e) {

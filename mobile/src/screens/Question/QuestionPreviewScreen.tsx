@@ -6,6 +6,8 @@ import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Tou
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { DuplicateFoundModal } from '../../components/DuplicateFoundModal';
+import { QuestionRejectedModal } from '../../components/QuestionRejectedModal';
+import type { QuestionRejectionCategory } from '../../api/client';
 import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { useToast } from '../../components/Toast';
@@ -72,6 +74,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     similarityScore: number | null;
     matchedUserName: string | null;
   }>({ visible: false, matchedQuestion: '', matchedAnswer: null, similarityScore: null, matchedUserName: null });
+
+  // Content-check rejection modal (abusive / non-agriculture)
+  const [rejectedModal, setRejectedModal] = useState({
+    visible: false,
+    category: 'OTHER' as QuestionRejectionCategory,
+  });
 
   useEffect(() => {
     adminApi.getConfig().then((res) => {
@@ -173,7 +181,12 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
       showToast(t('question.submitSuccess'), 'success');
       navigation.goBack();
     } catch (err: unknown) {
-      const { getErrorMessage } = await import('../../api/client');
+      const { getErrorMessage, parseQuestionRejected } = await import('../../api/client');
+      const rejection = parseQuestionRejected(err);
+      if (rejection) {
+        setRejectedModal({ visible: true, category: rejection.category });
+        return;
+      }
       showToast(getErrorMessage(err, t('question.submitFailed')), 'error');
     } finally {
       setLoading(false);
@@ -406,6 +419,14 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Content-check modal — abusive or non-agricultural question, nothing was saved */}
+      <QuestionRejectedModal
+        visible={rejectedModal.visible}
+        category={rejectedModal.category}
+        questionText={questionText}
+        onDismiss={() => setRejectedModal((p) => ({ ...p, visible: false }))}
+      />
 
       {/* GDB duplicate-check modal — shown when backend found a similar question on submit */}
       <DuplicateFoundModal

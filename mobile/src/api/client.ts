@@ -203,6 +203,34 @@ export function parseAccountLocked(err: unknown): AccountLockedInfo | null {
   return null;
 }
 
+export type QuestionRejectionCategory = 'ABUSIVE' | 'NOT_AGRICULTURE' | 'OTHER';
+
+export interface QuestionRejectionInfo {
+  category: QuestionRejectionCategory;
+  /** Raw English reason from the content check — for logs, not for display. */
+  reason: string | null;
+}
+
+/**
+ * Parses the 422 body the backend returns when the content check blocks a
+ * question as abusive or non-agricultural. Returns null for any other error.
+ */
+export function parseQuestionRejected(err: unknown): QuestionRejectionInfo | null {
+  if (err && typeof err === 'object' && !Array.isArray(err)) {
+    const e = err as { response?: { status: number; data?: { error?: string; category?: string; reason?: string } } };
+    if (e.response?.status === 422 && e.response.data?.error === 'QUESTION_REJECTED') {
+      const body = e.response.data;
+      const category: QuestionRejectionCategory =
+        body.category === 'ABUSIVE' || body.category === 'NOT_AGRICULTURE' ? body.category : 'OTHER';
+      return {
+        category,
+        reason: typeof body.reason === 'string' ? body.reason : null,
+      };
+    }
+  }
+  return null;
+}
+
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
 
 export async function saveAuth(

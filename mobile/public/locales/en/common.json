@@ -218,7 +218,8 @@
     "separator": " · ",
     "sortBy": "Sort By",
     "unknown": "Unknown",
-    "rupee": "Rs."
+    "rupee": "Rs.",
+    "steps": "Steps"
   },
   "completeRegistration": "Complete Registration",
   "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -539,7 +540,19 @@
     "audioAttached": "Audio attached",
     "mediaCount": "+{{count}} more",
     "searchPlaceholder": "Search name, mobile, district…",
-    "tryAnotherQuestion": "Try Another Question"
+    "tryAnotherQuestion": "Try Another Question",
+    "rejectedAbusiveTitle": "Please rephrase your question",
+    "rejectedAbusiveMessage": "Your question contains language we cannot accept. Please remove any offensive words and ask your farming question politely.",
+    "rejectedNotAgriTitle": "Not a farming question",
+    "rejectedNotAgriMessage": "We can only answer questions about farming — crops, livestock, soil, pests, weather and related topics. Please ask a farming question.",
+    "rejectedOtherTitle": "Question could not be accepted",
+    "rejectedOtherMessage": "We could not accept this question. Please rewrite it and try again.",
+    "rejectedNotCounted": "This was not submitted and does not count against your daily limit.",
+    "rejectedYourQuestion": "Your question",
+    "rejectedEditQuestion": "Edit My Question",
+    "addVoice": "Add voice",
+    "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
+    "dailyLimitIndicator": "Daily limit reached"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
