@@ -48,4 +48,19 @@ export class MongoWalletRepository
       .session(session ?? null)
       .exec();
   }
+
+  async getTotalBalance(): Promise<number> {
+  const [result] = await this._model.aggregate([
+    {
+      $group: {
+        _id: null,
+        total: {
+          $sum: '$balance',
+        },
+      },
+    },
+  ]);
+
+  return Number(result?.total ?? 0);
+}
 }
