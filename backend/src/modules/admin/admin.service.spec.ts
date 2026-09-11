@@ -8,6 +8,14 @@ import {
 import { AdminService } from './admin.service';
 import { ConfigService } from '@nestjs/config';
 import { WalletsService } from '../wallets/wallets.service';
+import { NotificationsService } from '../notification/notifications.service';
+import { PinelabsService } from '../payment/pinelabs.service';
+import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
+import { GdbService } from '../ai/gdb.service';
+import { RedisService } from '../../shared/database/cache/redis.service';
+import { HotDataService } from '../../shared/database/cache/hot-data.service';
+import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
+import { MongoTransactionService } from '../../shared/database/mongodb/mongo-transaction.service';
 import {
   User,
   Question,
@@ -75,6 +83,8 @@ const mockConfigRepo = () => ({
   save: jest.fn(),
   update: jest.fn(),
 });
+
+const emptyMock = () => ({});
 
 // ─── QueryBuilder mock factory ────────────────────────────────────────────────
 
@@ -188,8 +198,19 @@ describe('AdminService', () => {
         { provide: REPOSITORY_TOKENS.WithdrawalRequest, useFactory: mockWithdrawalRepo },
         { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
         { provide: REPOSITORY_TOKENS.AdminConfig, useFactory: mockConfigRepo },
+        { provide: REPOSITORY_TOKENS.Notification, useFactory: emptyMock },
+        { provide: REPOSITORY_TOKENS.PaymentLog, useFactory: emptyMock },
+        { provide: REPOSITORY_TOKENS.UserPaymentDetail, useFactory: emptyMock },
         { provide: ConfigService, useFactory: () => ({ get: jest.fn() }) },
         { provide: WalletsService, useValue: mockWalletsService },
+        { provide: NotificationsService, useFactory: emptyMock },
+        { provide: PinelabsService, useFactory: emptyMock },
+        { provide: RazorpayPayoutService, useFactory: emptyMock },
+        { provide: RedisService, useFactory: emptyMock },
+        { provide: HotDataService, useFactory: emptyMock },
+        { provide: AnalyticsCacheService, useFactory: emptyMock },
+        { provide: GdbService, useFactory: emptyMock },
+        { provide: MongoTransactionService, useFactory: emptyMock },
       ],
     }).compile();
 
@@ -230,6 +251,200 @@ describe('AdminService', () => {
 
       expect(result.user).toHaveProperty('verificationStatus', VerificationStatus.VERIFIED);
       expect(result.user).toHaveProperty('mobileNumber', '9123456789');
+    });
+
+    it('should persist the complete farmer profile supplied by the super admin dialog', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.count.mockResolvedValue(0);
+      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'farmer-complete', ...u }));
+      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
+      configRepo.find.mockResolvedValue([]);
+
+      const result = await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+        name: 'Complete Farmer',
+        mobileNumber: '9000000010',
+        role: UserRole.USER,
+        category: UserCategory.FARMER,
+        username: 'complete_farmer',
+        age: 34,
+        gender: 'female',
+        state: 'Maharashtra',
+        district: 'Pune',
+        block: 'Haveli',
+        village: 'Hadapsar',
+        kvk: 'KVK Pune',
+        farmSize: '3.5',
+        cropType: 'Rice, Wheat',
+      });
+
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        username: 'complete_farmer',
+        age: 34,
+        gender: 'female',
+        block: 'Haveli',
+        village: 'Hadapsar',
+        kvk: 'KVK Pune',
+        farmSize: '3.5',
+        cropType: 'Rice, Wheat',
+        crops: ['Rice', 'Wheat'],
+        consentGiven: true,
+      }));
+      expect(result.user).toHaveProperty('verificationStatus', VerificationStatus.VERIFIED);
+    });
+
+    it('should create staff with state, district, and age while discarding user-only fields', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'finance-new', ...u }));
+      configRepo.find.mockResolvedValue([]);
+
+      const result = await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+        name: 'Finance Staff',
+        mobileNumber: '9000000011',
+        role: UserRole.FINANCE,
+        age: 29,
+        state: 'Maharashtra',
+        district: 'Pune',
+        block: 'Should not persist',
+        village: 'Should not persist',
+        username: 'should_not_persist',
+        gender: 'male',
+      });
+
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        role: UserRole.FINANCE,
+        age: 29,
+        state: 'Maharashtra',
+        district: 'Pune',
+        category: null,
+        username: null,
+        gender: null,
+        block: null,
+        village: null,
+        consentGiven: false,
+      }));
+      expect(result.user.role).toBe(UserRole.FINANCE);
+      expect(userRepo.count).not.toHaveBeenCalled();
+    });
+
+    it('should reject a duplicate username for an end-user account', async () => {
+      userRepo.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockTargetUser);
+      userRepo.count.mockResolvedValue(0);
+      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
+
+      await expect(service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+        name: 'Duplicate Username',
+        mobileNumber: '9000000012',
+        role: UserRole.USER,
+        category: UserCategory.STUDENT,
+        username: 'ramesh',
+        age: 20,
+        gender: 'male',
+        state: 'Maharashtra',
+        district: 'Pune',
+        courseName: 'BSc Agriculture',
+        collegeName: 'Agriculture College',
+      })).rejects.toThrow(/already taken/);
+    });
+
+    it('should persist student education fields and discard unrelated crop data', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.count.mockResolvedValue(0);
+      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'student-new', ...u }));
+      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
+      configRepo.find.mockResolvedValue([]);
+
+      await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+        name: 'Student User',
+        mobileNumber: '9000000013',
+        role: UserRole.USER,
+        category: UserCategory.STUDENT,
+        username: 'student_user',
+        age: 21,
+        gender: 'female',
+        state: 'Maharashtra',
+        district: 'Pune',
+        courseName: 'BSc Agriculture',
+        collegeName: 'Agriculture College',
+        universityName: 'State University',
+        cropType: 'Should not persist',
+      });
+
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        courseName: 'BSc Agriculture',
+        collegeName: 'Agriculture College',
+        universityName: 'State University',
+        cropType: null,
+        crops: [],
+        farmSize: null,
+      }));
+    });
+
+    it('should persist NGO organisation details and farmer count', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.count.mockResolvedValue(0);
+      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'ngo-new', ...u }));
+      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
+      configRepo.find.mockResolvedValue([]);
+
+      await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+        name: 'NGO User',
+        mobileNumber: '9000000014',
+        role: UserRole.USER,
+        category: UserCategory.NGO,
+        username: 'ngo_user',
+        age: 32,
+        gender: 'other',
+        state: 'Maharashtra',
+        district: 'Pune',
+        organisationType: 'Non-Profit',
+        organizationName: 'Farm Support Trust',
+        organizationRole: 'Field Officer',
+        organizationState: ['Maharashtra', 'Gujarat'],
+        numberOfFarmers: 250,
+      });
+
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        organisationType: 'Non-Profit',
+        organizationName: 'Farm Support Trust',
+        organizationRole: 'Field Officer',
+        organizationState: ['Maharashtra', 'Gujarat'],
+        numberOfFarmers: 250,
+      }));
+    });
+
+    it('should map volunteer crop focus and season to the shared crop fields', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      userRepo.count.mockResolvedValue(0);
+      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'volunteer-new', ...u }));
+      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
+      configRepo.find.mockResolvedValue([]);
+
+      await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+        name: 'Volunteer User',
+        mobileNumber: '9000000015',
+        role: UserRole.USER,
+        category: UserCategory.VOLUNTEER,
+        username: 'volunteer_user',
+        age: 27,
+        gender: 'male',
+        state: 'Maharashtra',
+        district: 'Pune',
+        organisationType: 'Non-Profit',
+        organizationName: 'Village Outreach Group',
+        organizationRole: 'Volunteer',
+        organizationState: ['Maharashtra'],
+        season: 'Kharif',
+        volunteerCropType: 'Rice, Cotton',
+      });
+
+      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        season: 'Kharif',
+        cropType: 'Rice, Cotton',
+        crops: ['Rice', 'Cotton'],
+        numberOfFarmers: null,
+      }));
     });
 
     it('should normalize mobile number by stripping +91/0 prefix', async () => {

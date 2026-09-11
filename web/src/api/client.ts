@@ -375,11 +375,30 @@ export const adminApi = {
     mobileNumber: string
     role: string
     category?: string
+    username?: string
     state: string
     district: string
-    block: string
-    village: string
+    block?: string
+    village?: string
+    kvk?: string
     languagePreference?: string
+    age?: number
+    gender?: string
+    farmSize?: string
+    cropType?: string
+    courseName?: string
+    collegeName?: string
+    universityName?: string
+    organisationType?: string
+    organizationName?: string
+    organizationRole?: string
+    numberOfFarmers?: number
+    organizationState?: string[]
+    organizationDistrict?: string
+    organizationBlock?: string
+    organizationVillage?: string
+    season?: string
+    volunteerCropType?: string
   }) =>
     request<{ message: string; user: User }>(
       '/admin/users',
@@ -400,15 +419,15 @@ export const adminApi = {
       orderId: string | null; createdAt: string; processedAt: string | null;
       rejectionReason: string | null; failureReason: string | null;
       user: { id: string; name: string; mobileNumber: string } | null;
-      transactions: Array<{
+      transactions: {
         id: string; type: string; amount: number; status: string;
         rejectionReason: string | null; description: string; source: string; createdAt: string;
-      }>;
-      paymentLogs: Array<{
+      }[];
+      paymentLogs: {
         id: string; orderId: string; pinelabsTransactionId: string | null;
         razorpayPayoutId: string | null; status: string; errorCode: string | null;
         errorMessage: string | null; rawResponse: Record<string, unknown> | null; attemptedAt: string;
-      }>;
+      }[];
     }>(`/admin/withdrawals/${id}`, {}, false),
 
   listWithdrawals: (params: Record<string, string | number | undefined> = {}) => {
@@ -513,7 +532,7 @@ export const adminApi = {
       failedWithdrawals: { count: number }
       totalWalletBalance: number
       today: { payoutCount: number; payoutAmount: number }
-      dailyPayoutTrend: Array<{ date: string; count: number; amount: number }>
+      dailyPayoutTrend: { date: string; count: number; amount: number }[]
     }>(`/admin/analytics/financial-summary${qs ? `?${qs}` : ''}`)
   },
 }

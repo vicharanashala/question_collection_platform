@@ -1,4 +1,16 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { UserCategory, UserRole } from '../../../shared/classes/enums';
 
 export class CreateUserDto {
@@ -22,6 +34,15 @@ export class CreateUserDto {
   @IsIn(['farmer', 'fpo', 'student', 'volunteer', 'ngo'])
   category?: UserCategory;
 
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches(/^[a-zA-Z0-9_]+$/, {
+    message: 'Username can only contain letters, numbers, and underscores',
+  })
+  username?: string;
+
   @IsString()
   @IsNotEmpty()
   state: string;
@@ -30,13 +51,13 @@ export class CreateUserDto {
   @IsNotEmpty()
   district: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  block: string;
+  block?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  village: string;
+  village?: string;
 
   @IsOptional()
   @IsString()
@@ -45,6 +66,25 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   languagePreference?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(16)
+  @Max(100)
+  age?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['male', 'female', 'other'])
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  farmSize?: string;
+
+  @IsOptional()
+  @IsString()
+  cropType?: string;
 
   // Student-specific profile fields
   @IsOptional()
@@ -66,9 +106,40 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  organisationName?: string;
+  organizationName?: string;
 
   @IsOptional()
   @IsString()
-  memberRole?: string;
+  organizationRole?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  numberOfFarmers?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(100, { each: true })
+  organizationState?: string[];
+
+  @IsOptional()
+  @IsString()
+  organizationDistrict?: string;
+
+  @IsOptional()
+  @IsString()
+  organizationBlock?: string;
+
+  @IsOptional()
+  @IsString()
+  organizationVillage?: string;
+
+  @IsOptional()
+  @IsString()
+  season?: string;
+
+  @IsOptional()
+  @IsString()
+  volunteerCropType?: string;
 }

@@ -272,18 +272,30 @@ export class AdminService implements OnModuleInit {
       mobileNumber: string;
       role: UserRole;
       category?: string;
+      username?: string;
       state: string;
       district: string;
-      block: string;
-      village: string;
+      block?: string;
+      village?: string;
       kvk?: string;
       languagePreference?: string;
+      age?: number;
+      gender?: string;
+      farmSize?: string;
+      cropType?: string;
       courseName?: string;
       collegeName?: string;
       universityName?: string;
       organisationType?: string;
-      organisationName?: string;
-      memberRole?: string;
+      organizationName?: string;
+      organizationRole?: string;
+      numberOfFarmers?: number;
+      organizationState?: string[];
+      organizationDistrict?: string;
+      organizationBlock?: string;
+      organizationVillage?: string;
+      season?: string;
+      volunteerCropType?: string;
     },
   ) {
     // Super admin cannot create another super admin
@@ -340,24 +352,87 @@ export class AdminService implements OnModuleInit {
       dto.role === UserRole.FINANCE ||
       dto.role === UserRole.DISTRIBUTOR;
 
+    let normalizedUsername: string | null = null;
+    let cropType: string | null = null;
+    let crops: string[] = [];
+
+    if (!isPrivilegedRole) {
+      if (!dto.category) {
+        throw new BadRequestException("Category is required for user accounts.");
+      }
+      if (dto.username?.trim()) {
+        normalizedUsername = dto.username.toLowerCase().trim().replace(/^@/, "");
+        const usernameTaken = await this.userRepo.findOne({
+          where: { username: normalizedUsername },
+        });
+        if (usernameTaken) {
+          throw new BadRequestException(
+            `Username "${normalizedUsername}" is already taken.`,
+          );
+        }
+      }
+
+      if (dto.category === UserCategory.FARMER) {
+        if (!dto.block?.trim()) throw new BadRequestException("Block is required for farmers.");
+        if (!dto.village?.trim()) throw new BadRequestException("Village is required for farmers.");
+      }
+
+      cropType =
+        dto.category === UserCategory.FARMER
+          ? dto.cropType ?? null
+          : dto.category === UserCategory.VOLUNTEER
+            ? dto.volunteerCropType ?? null
+            : null;
+      crops = cropType
+        ? cropType.split(",").map((crop) => crop.trim()).filter(Boolean)
+        : [];
+    }
+
+    const isFarmer = !isPrivilegedRole && dto.category === UserCategory.FARMER;
+    const isStudent = !isPrivilegedRole && dto.category === UserCategory.STUDENT;
+    const hasOrganisation =
+      !isPrivilegedRole &&
+      (dto.category === UserCategory.FPO ||
+        dto.category === UserCategory.NGO ||
+        dto.category === UserCategory.VOLUNTEER);
+    const tracksFarmerCount =
+      !isPrivilegedRole &&
+      (dto.category === UserCategory.FPO || dto.category === UserCategory.NGO);
+    const isVolunteer =
+      !isPrivilegedRole && dto.category === UserCategory.VOLUNTEER;
+
     const user = await this.userRepo.create({
       name: dto.name.trim(),
       mobileNumber: mobile,
       role: dto.role,
+      username: normalizedUsername,
       // Admins/curators don't have a category
       category: (isPrivilegedRole ? null : dto.category) as UserCategory | null,
       state: dto.state,
       district: dto.district,
-      block: dto.block ?? null,
-      village: dto.village ?? null,
-      kvk: dto.kvk ?? null,
+      block: isFarmer ? dto.block ?? null : null,
+      village: isFarmer ? dto.village ?? null : null,
+      kvk: isFarmer ? dto.kvk ?? null : null,
       languagePreference: dto.languagePreference ?? "en",
-      organisationType: dto.organisationType ?? null,
-      courseName: dto.courseName ?? null,
-      collegeName: dto.collegeName ?? null,
-      universityName: dto.universityName ?? null,
-      organizationName: dto.organisationName ?? null,
-      organizationRole: dto.memberRole ?? null,
+      age: dto.age ?? null,
+      gender: isPrivilegedRole ? null : dto.gender ?? null,
+      farmSize: isFarmer ? dto.farmSize ?? null : null,
+      season: isVolunteer ? dto.season ?? null : null,
+      cropType: isPrivilegedRole ? null : cropType,
+      organisationType: hasOrganisation ? dto.organisationType ?? null : null,
+      courseName: isStudent ? dto.courseName ?? null : null,
+      collegeName: isStudent ? dto.collegeName ?? null : null,
+      universityName: isStudent ? dto.universityName ?? null : null,
+      organizationName: hasOrganisation ? dto.organizationName ?? null : null,
+      organizationRole: hasOrganisation ? dto.organizationRole ?? null : null,
+      numberOfFarmers: tracksFarmerCount ? dto.numberOfFarmers ?? null : null,
+      organizationState: hasOrganisation ? dto.organizationState ?? null : null,
+      organizationDistrict: hasOrganisation ? dto.organizationDistrict ?? null : null,
+      organizationBlock: hasOrganisation ? dto.organizationBlock ?? null : null,
+      organizationVillage: hasOrganisation ? dto.organizationVillage ?? null : null,
+      consentGiven: !isPrivilegedRole,
+      consentTimestamp: !isPrivilegedRole ? new Date() : null,
+      crops,
       verificationStatus: VerificationStatus.VERIFIED,
       tokenVersion: 0,
       lastLoginAt: null,
