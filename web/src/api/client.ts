@@ -375,30 +375,6 @@ export const adminApi = {
     mobileNumber: string
     role: string
     category?: string
-    username?: string
-    state: string
-    district: string
-    block?: string
-    village?: string
-    kvk?: string
-    languagePreference?: string
-    age?: number
-    gender?: string
-    farmSize?: string
-    cropType?: string
-    courseName?: string
-    collegeName?: string
-    universityName?: string
-    organisationType?: string
-    organizationName?: string
-    organizationRole?: string
-    numberOfFarmers?: number
-    organizationState?: string[]
-    organizationDistrict?: string
-    organizationBlock?: string
-    organizationVillage?: string
-    season?: string
-    volunteerCropType?: string
   }) =>
     request<{ message: string; user: User }>(
       '/admin/users',

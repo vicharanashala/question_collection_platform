@@ -37,7 +37,7 @@ import {
   Season,
 } from '../../shared/classes/enums';
 
-// ─── Repository mocks ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Repository mocks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const mockUserRepo = () => ({
   findOne: jest.fn(),
@@ -86,7 +86,7 @@ const mockConfigRepo = () => ({
 
 const emptyMock = () => ({});
 
-// ─── QueryBuilder mock factory ────────────────────────────────────────────────
+// â”€â”€â”€ QueryBuilder mock factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function mockQueryBuilder(result: unknown) {
   return {
@@ -108,7 +108,7 @@ function mockQueryBuilder(result: unknown) {
   };
 }
 
-// ─── Shared test data ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Shared test data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const mockAdminUser = {
   id: 'admin-1',
@@ -170,7 +170,7 @@ const mockConfig = {
   description: 'Max questions per user per day',
 };
 
-// ─── Test module setup ────────────────────────────────────────────────────────
+// â”€â”€â”€ Test module setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -224,245 +224,77 @@ describe('AdminService', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  // ─── createUser ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€ createUser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('createUser', () => {
-    it('should create a user with verified status', async () => {
+    it('should create an end-user with only basic fields and the selected category', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(5);
       userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'new-user-1', ...u }));
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
-
-      const result = await service.createUser(
-        mockAdminUser.id,
-        UserRole.ADMIN,
-        {
-          name: 'New Farmer',
-          mobileNumber: '9123456789',
-          role: UserRole.USER,
-          category: UserCategory.FARMER,
-          state: 'Maharashtra',
-          district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
-        },
-      );
-
-      expect(result.user).toHaveProperty('verificationStatus', VerificationStatus.VERIFIED);
-      expect(result.user).toHaveProperty('mobileNumber', '9123456789');
-    });
-
-    it('should persist the complete farmer profile supplied by the super admin dialog', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(0);
-      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'farmer-complete', ...u }));
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
 
       const result = await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'Complete Farmer',
-        mobileNumber: '9000000010',
+        name: 'New Farmer',
+        mobileNumber: '9123456789',
         role: UserRole.USER,
         category: UserCategory.FARMER,
-        username: 'complete_farmer',
-        age: 34,
-        gender: 'female',
-        state: 'Maharashtra',
-        district: 'Pune',
-        block: 'Haveli',
-        village: 'Hadapsar',
-        kvk: 'KVK Pune',
-        farmSize: '3.5',
-        cropType: 'Rice, Wheat',
       });
 
-      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        username: 'complete_farmer',
-        age: 34,
-        gender: 'female',
-        block: 'Haveli',
-        village: 'Hadapsar',
-        kvk: 'KVK Pune',
-        farmSize: '3.5',
-        cropType: 'Rice, Wheat',
-        crops: ['Rice', 'Wheat'],
-        consentGiven: true,
-      }));
+      expect(userRepo.create).toHaveBeenCalledWith({
+        name: 'New Farmer',
+        mobileNumber: '9123456789',
+        role: UserRole.USER,
+        category: UserCategory.FARMER,
+        languagePreference: 'en',
+        consentGiven: false,
+        verificationStatus: VerificationStatus.VERIFIED,
+        tokenVersion: 0,
+        lastLoginAt: null,
+      });
       expect(result.user).toHaveProperty('verificationStatus', VerificationStatus.VERIFIED);
+      expect(userRepo.count).not.toHaveBeenCalled();
     });
 
-    it('should create staff with state, district, and age while discarding user-only fields', async () => {
+    it('should create staff without a category', async () => {
       userRepo.findOne.mockResolvedValue(null);
       userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'finance-new', ...u }));
-      configRepo.find.mockResolvedValue([]);
 
       const result = await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
         name: 'Finance Staff',
         mobileNumber: '9000000011',
         role: UserRole.FINANCE,
-        age: 29,
-        state: 'Maharashtra',
-        district: 'Pune',
-        block: 'Should not persist',
-        village: 'Should not persist',
-        username: 'should_not_persist',
-        gender: 'male',
       });
 
       expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'Finance Staff',
+        mobileNumber: '9000000011',
         role: UserRole.FINANCE,
-        age: 29,
-        state: 'Maharashtra',
-        district: 'Pune',
         category: null,
-        username: null,
-        gender: null,
-        block: null,
-        village: null,
         consentGiven: false,
       }));
       expect(result.user.role).toBe(UserRole.FINANCE);
       expect(userRepo.count).not.toHaveBeenCalled();
     });
 
-    it('should reject a duplicate username for an end-user account', async () => {
-      userRepo.findOne
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockTargetUser);
-      userRepo.count.mockResolvedValue(0);
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-
-      await expect(service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'Duplicate Username',
-        mobileNumber: '9000000012',
-        role: UserRole.USER,
-        category: UserCategory.STUDENT,
-        username: 'ramesh',
-        age: 20,
-        gender: 'male',
-        state: 'Maharashtra',
-        district: 'Pune',
-        courseName: 'BSc Agriculture',
-        collegeName: 'Agriculture College',
-      })).rejects.toThrow(/already taken/);
-    });
-
-    it('should persist student education fields and discard unrelated crop data', async () => {
+    it('should require category when creating an end-user', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(0);
-      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'student-new', ...u }));
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
 
-      await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'Student User',
-        mobileNumber: '9000000013',
-        role: UserRole.USER,
-        category: UserCategory.STUDENT,
-        username: 'student_user',
-        age: 21,
-        gender: 'female',
-        state: 'Maharashtra',
-        district: 'Pune',
-        courseName: 'BSc Agriculture',
-        collegeName: 'Agriculture College',
-        universityName: 'State University',
-        cropType: 'Should not persist',
-      });
-
-      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        courseName: 'BSc Agriculture',
-        collegeName: 'Agriculture College',
-        universityName: 'State University',
-        cropType: null,
-        crops: [],
-        farmSize: null,
-      }));
-    });
-
-    it('should persist NGO organisation details and farmer count', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(0);
-      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'ngo-new', ...u }));
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
-
-      await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'NGO User',
-        mobileNumber: '9000000014',
-        role: UserRole.USER,
-        category: UserCategory.NGO,
-        username: 'ngo_user',
-        age: 32,
-        gender: 'other',
-        state: 'Maharashtra',
-        district: 'Pune',
-        organisationType: 'Non-Profit',
-        organizationName: 'Farm Support Trust',
-        organizationRole: 'Field Officer',
-        organizationState: ['Maharashtra', 'Gujarat'],
-        numberOfFarmers: 250,
-      });
-
-      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        organisationType: 'Non-Profit',
-        organizationName: 'Farm Support Trust',
-        organizationRole: 'Field Officer',
-        organizationState: ['Maharashtra', 'Gujarat'],
-        numberOfFarmers: 250,
-      }));
-    });
-
-    it('should map volunteer crop focus and season to the shared crop fields', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(0);
-      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'volunteer-new', ...u }));
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
-
-      await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'Volunteer User',
-        mobileNumber: '9000000015',
-        role: UserRole.USER,
-        category: UserCategory.VOLUNTEER,
-        username: 'volunteer_user',
-        age: 27,
-        gender: 'male',
-        state: 'Maharashtra',
-        district: 'Pune',
-        organisationType: 'Non-Profit',
-        organizationName: 'Village Outreach Group',
-        organizationRole: 'Volunteer',
-        organizationState: ['Maharashtra'],
-        season: 'Kharif',
-        volunteerCropType: 'Rice, Cotton',
-      });
-
-      expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
-        season: 'Kharif',
-        cropType: 'Rice, Cotton',
-        crops: ['Rice', 'Cotton'],
-        numberOfFarmers: null,
-      }));
+      await expect(
+        service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
+          name: 'User Without Category',
+          mobileNumber: '9000000012',
+          role: UserRole.USER,
+        }),
+      ).rejects.toThrow(/Category is required/);
     });
 
     it('should normalize mobile number by stripping +91/0 prefix', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(0);
       userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'new-1', ...u }));
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
 
       const result = await service.createUser(mockAdminUser.id, UserRole.ADMIN, {
         name: 'Test',
         mobileNumber: '+91 9876543210',
         role: UserRole.USER,
         category: UserCategory.FARMER,
-        state: 'Maharashtra',
-        district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
       });
 
       expect(result.user.mobileNumber).toBe('9876543210');
@@ -477,54 +309,8 @@ describe('AdminService', () => {
           mobileNumber: '9876543210',
           role: UserRole.USER,
           category: UserCategory.FARMER,
-          state: 'Maharashtra',
-          district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
         }),
       ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should throw BadRequestException when state user limit is reached', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(100); // at the limit
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-
-      await expect(
-        service.createUser(mockAdminUser.id, UserRole.ADMIN, {
-          name: 'Over Limit',
-          mobileNumber: '9000000001',
-          role: UserRole.USER,
-          category: UserCategory.FARMER,
-          state: 'Maharashtra',
-          district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
-        }),
-      ).rejects.toThrow(/maximum/);
-    });
-
-    it('should skip max_users_per_state check for ADMIN role', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'admin-new', ...u }));
-      // count returns high number that would fail if checked
-      userRepo.count.mockResolvedValue(1000);
-      configRepo.findOne.mockResolvedValue({ key: 'max_users_per_state', value: 100 });
-      configRepo.find.mockResolvedValue([]);
-
-      const result = await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'New Admin',
-        mobileNumber: '9000000002',
-        role: UserRole.ADMIN,
-        state: 'Maharashtra',
-        district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
-      });
-
-      expect(result.user.role).toBe(UserRole.ADMIN);
-      // count should not have been called with state filter for admin
-      expect(userRepo.count).not.toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when trying to create a SUPER_ADMIN', async () => {
@@ -533,10 +319,6 @@ describe('AdminService', () => {
           name: 'Super',
           mobileNumber: '9000000003',
           role: UserRole.SUPER_ADMIN,
-          state: 'Maharashtra',
-          district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
         }),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -547,36 +329,12 @@ describe('AdminService', () => {
           name: 'Another Super',
           mobileNumber: '9000000004',
           role: UserRole.SUPER_ADMIN,
-          state: 'Maharashtra',
-          district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
         }),
       ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('should set category to null for privileged roles (ADMIN/CURATOR)', async () => {
-      userRepo.findOne.mockResolvedValue(null);
-      userRepo.count.mockResolvedValue(0);
-      userRepo.save.mockImplementation((u) => Promise.resolve({ id: 'curator-1', ...u }));
-      configRepo.find.mockResolvedValue([]);
-
-      const result = await service.createUser(mockSuperAdminUser.id, UserRole.SUPER_ADMIN, {
-        name: 'New Curator',
-        mobileNumber: '9000000005',
-        role: UserRole.CURATOR,
-        state: 'Maharashtra',
-        district: 'Pune',
-      block: 'Haveli',
-      village: 'Hadapsar',
-      });
-
-      expect(result.user.category).toBeNull();
     });
   });
 
   // ─── listUsers ──────────────────────────────────────────────────────────────
-
   describe('listUsers', () => {
     it('should return paginated user list', async () => {
       const qb = mockQueryBuilder([mockTargetUser]);
@@ -609,7 +367,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── getUserDetail ──────────────────────────────────────────────────────────
+  // â”€â”€â”€ getUserDetail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('getUserDetail', () => {
     it('should return user with relations and recent questions', async () => {
@@ -629,7 +387,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── verifyUser ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€ verifyUser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('verifyUser', () => {
     it('should verify a pending user and log audit', async () => {
@@ -666,7 +424,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── suspendOrBanUser ───────────────────────────────────────────────────────
+  // â”€â”€â”€ suspendOrBanUser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('suspendOrBanUser', () => {
     it('should ban a user when action is ban', async () => {
@@ -736,7 +494,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── unsuspendOrUnbanUser ───────────────────────────────────────────────────
+  // â”€â”€â”€ unsuspendOrUnbanUser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('unsuspendOrUnbanUser', () => {
     it('should unban a banned user', async () => {
@@ -775,7 +533,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── getConfigValue ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ getConfigValue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('getConfigValue', () => {
     it('should return cached value when available', async () => {
@@ -794,7 +552,7 @@ describe('AdminService', () => {
       configRepo.findOne.mockResolvedValue(null);
       configRepo.find.mockResolvedValue([]);
 
-      // Trigger cache miss by making expiry old — access private via any
+      // Trigger cache miss by making expiry old â€” access private via any
       await (service as unknown as { configCacheExpiry: number }).configCacheExpiry; // no-op, just ensure init ran
       const val = await service.getConfigValue('min_withdrawal_amount');
 
@@ -802,7 +560,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── updateConfig ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ updateConfig â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('updateConfig', () => {
     it('should update config value and invalidate cache', async () => {
@@ -828,7 +586,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── createConfig ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ createConfig â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('createConfig', () => {
     it('should create a new config entry', async () => {
@@ -858,7 +616,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── reviewQuestion ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ reviewQuestion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('reviewQuestion', () => {
     const reviewDto = { action: 'approve' as const };
@@ -934,7 +692,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── listReviewQueue ────────────────────────────────────────────────────────
+  // â”€â”€â”€ listReviewQueue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('listReviewQueue', () => {
     it('should return paginated review queue items with user info', async () => {
@@ -966,7 +724,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── getQuestionForReview ───────────────────────────────────────────────────
+  // â”€â”€â”€ getQuestionForReview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('getQuestionForReview', () => {
     it('should return question with sanitized user info', async () => {
@@ -988,7 +746,7 @@ describe('AdminService', () => {
     });
   });
 
-  // ─── getDashboardStats ──────────────────────────────────────────────────────
+  // â”€â”€â”€ getDashboardStats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('getDashboardStats', () => {
     it('should return summary, breakdowns, and daily volume', async () => {

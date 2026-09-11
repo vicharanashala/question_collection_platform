@@ -271,31 +271,7 @@ export class AdminService implements OnModuleInit {
       name: string;
       mobileNumber: string;
       role: UserRole;
-      category?: string;
-      username?: string;
-      state: string;
-      district: string;
-      block?: string;
-      village?: string;
-      kvk?: string;
-      languagePreference?: string;
-      age?: number;
-      gender?: string;
-      farmSize?: string;
-      cropType?: string;
-      courseName?: string;
-      collegeName?: string;
-      universityName?: string;
-      organisationType?: string;
-      organizationName?: string;
-      organizationRole?: string;
-      numberOfFarmers?: number;
-      organizationState?: string[];
-      organizationDistrict?: string;
-      organizationBlock?: string;
-      organizationVillage?: string;
-      season?: string;
-      volunteerCropType?: string;
+      category?: UserCategory;
     },
   ) {
     // Super admin cannot create another super admin
@@ -328,111 +304,18 @@ export class AdminService implements OnModuleInit {
       );
     }
 
-    // Enforce max_users_per_state (only for non-privileged roles)
-    if (
-      dto.role !== UserRole.ADMIN &&
-      dto.role !== UserRole.CURATOR &&
-      dto.role !== UserRole.FINANCE &&
-      dto.role !== UserRole.DISTRIBUTOR
-    ) {
-      const maxPerState = await this.getConfigValue("max_users_per_state");
-      const stateCount = await this.userRepo.count({
-        where: { state: dto.state },
-      });
-      if (stateCount >= maxPerState) {
-        throw new BadRequestException(
-          `State '${dto.state}' has reached its maximum of ${maxPerState} users.`,
-        );
-      }
+    const isEndUser = dto.role === UserRole.USER;
+    if (isEndUser && !dto.category) {
+      throw new BadRequestException("Category is required for user accounts.");
     }
-
-    const isPrivilegedRole =
-      dto.role === UserRole.ADMIN ||
-      dto.role === UserRole.CURATOR ||
-      dto.role === UserRole.FINANCE ||
-      dto.role === UserRole.DISTRIBUTOR;
-
-    let normalizedUsername: string | null = null;
-    let cropType: string | null = null;
-    let crops: string[] = [];
-
-    if (!isPrivilegedRole) {
-      if (!dto.category) {
-        throw new BadRequestException("Category is required for user accounts.");
-      }
-      if (dto.username?.trim()) {
-        normalizedUsername = dto.username.toLowerCase().trim().replace(/^@/, "");
-        const usernameTaken = await this.userRepo.findOne({
-          where: { username: normalizedUsername },
-        });
-        if (usernameTaken) {
-          throw new BadRequestException(
-            `Username "${normalizedUsername}" is already taken.`,
-          );
-        }
-      }
-
-      if (dto.category === UserCategory.FARMER) {
-        if (!dto.block?.trim()) throw new BadRequestException("Block is required for farmers.");
-        if (!dto.village?.trim()) throw new BadRequestException("Village is required for farmers.");
-      }
-
-      cropType =
-        dto.category === UserCategory.FARMER
-          ? dto.cropType ?? null
-          : dto.category === UserCategory.VOLUNTEER
-            ? dto.volunteerCropType ?? null
-            : null;
-      crops = cropType
-        ? cropType.split(",").map((crop) => crop.trim()).filter(Boolean)
-        : [];
-    }
-
-    const isFarmer = !isPrivilegedRole && dto.category === UserCategory.FARMER;
-    const isStudent = !isPrivilegedRole && dto.category === UserCategory.STUDENT;
-    const hasOrganisation =
-      !isPrivilegedRole &&
-      (dto.category === UserCategory.FPO ||
-        dto.category === UserCategory.NGO ||
-        dto.category === UserCategory.VOLUNTEER);
-    const tracksFarmerCount =
-      !isPrivilegedRole &&
-      (dto.category === UserCategory.FPO || dto.category === UserCategory.NGO);
-    const isVolunteer =
-      !isPrivilegedRole && dto.category === UserCategory.VOLUNTEER;
 
     const user = await this.userRepo.create({
       name: dto.name.trim(),
       mobileNumber: mobile,
       role: dto.role,
-      username: normalizedUsername,
-      // Admins/curators don't have a category
-      category: (isPrivilegedRole ? null : dto.category) as UserCategory | null,
-      state: dto.state,
-      district: dto.district,
-      block: isFarmer ? dto.block ?? null : null,
-      village: isFarmer ? dto.village ?? null : null,
-      kvk: isFarmer ? dto.kvk ?? null : null,
-      languagePreference: dto.languagePreference ?? "en",
-      age: dto.age ?? null,
-      gender: isPrivilegedRole ? null : dto.gender ?? null,
-      farmSize: isFarmer ? dto.farmSize ?? null : null,
-      season: isVolunteer ? dto.season ?? null : null,
-      cropType: isPrivilegedRole ? null : cropType,
-      organisationType: hasOrganisation ? dto.organisationType ?? null : null,
-      courseName: isStudent ? dto.courseName ?? null : null,
-      collegeName: isStudent ? dto.collegeName ?? null : null,
-      universityName: isStudent ? dto.universityName ?? null : null,
-      organizationName: hasOrganisation ? dto.organizationName ?? null : null,
-      organizationRole: hasOrganisation ? dto.organizationRole ?? null : null,
-      numberOfFarmers: tracksFarmerCount ? dto.numberOfFarmers ?? null : null,
-      organizationState: hasOrganisation ? dto.organizationState ?? null : null,
-      organizationDistrict: hasOrganisation ? dto.organizationDistrict ?? null : null,
-      organizationBlock: hasOrganisation ? dto.organizationBlock ?? null : null,
-      organizationVillage: hasOrganisation ? dto.organizationVillage ?? null : null,
-      consentGiven: !isPrivilegedRole,
-      consentTimestamp: !isPrivilegedRole ? new Date() : null,
-      crops,
+      category: isEndUser ? dto.category! : null,
+      languagePreference: "en",
+      consentGiven: false,
       verificationStatus: VerificationStatus.VERIFIED,
       tokenVersion: 0,
       lastLoginAt: null,
@@ -452,8 +335,6 @@ export class AdminService implements OnModuleInit {
         mobileNumber: user.mobileNumber,
         role: user.role,
         category: user.category,
-        state: user.state,
-        district: user.district,
       },
     });
 
