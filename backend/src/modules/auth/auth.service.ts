@@ -642,7 +642,15 @@ export class AuthService {
       if (dto[f] !== undefined) (user as any)[f] = dto[f];
     }
 
-    if (dto.crops !== undefined) user.crops = dto.crops ?? [];
+    if (dto.crops !== undefined) {
+      user.crops = dto.crops ?? [];
+    } else if (dto.cropType !== undefined) {
+      // Keep the searchable crop array aligned when the profile editor changes
+      // the display string (the registration flow initializes both fields).
+      user.crops = dto.cropType
+        ? dto.cropType.split(',').map((crop) => crop.trim()).filter(Boolean)
+        : [];
+    }
 
     await this.userRepo.save(user);
     return this.toPublicUser(user);

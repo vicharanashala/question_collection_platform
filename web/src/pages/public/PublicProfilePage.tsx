@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, walletApi } from '@/api/client'
+import { EditPublicProfileDialog } from '@/components/profile/EditPublicProfileDialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
@@ -22,7 +23,7 @@ import {
   AtSign, Tag, Users, MapPin, Building2, MapPinned, Home, School,
   ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
-  CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
+  CalendarDays, Sprout, Ruler, Loader2, HelpCircle, Pencil,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { REWARD_TIERS, categoryLabel } from '@/constants/public'
@@ -196,7 +197,7 @@ const rupee = '\u20B9'
 
 export function PublicProfilePage() {
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
   const navigate = useNavigate()
 
   const [walletBalance, setWalletBalance] = useState<number>(0)
@@ -204,6 +205,7 @@ export function PublicProfilePage() {
   const [totalQuestions, setTotalQuestions] = useState<number>(0)
   const [loadingStats, setLoadingStats] = useState(true)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true)
@@ -424,7 +426,7 @@ export function PublicProfilePage() {
 
       {/* ── 4. Account section ── */}
       <section className="space-y-4">
-        <SectionHeader icon={Users} title={t('profile.account')} />
+        <SectionHeader icon={Users} title={t('profile.account')} trailing={<Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setEditOpen(true)}><Pencil className="h-3.5 w-3.5" />Edit profile</Button>} />
 
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
 
@@ -467,7 +469,7 @@ export function PublicProfilePage() {
           )}
 
           {/* Organization — FPO / NGO */}
-          {(cat === 'fpo' || cat === 'ngo') &&
+          {(cat === 'fpo' || cat === 'ngo' || cat === 'volunteer') &&
             (user.organizationName || user.organisationType || user.organizationRole || user.numberOfFarmers != null) && (
               <AccountCard icon={Briefcase} title={t('profile.organisationDetails')} className="lg:flex-1 lg:basis-[320px]">
                 <>
@@ -480,7 +482,7 @@ export function PublicProfilePage() {
             )}
 
           {/* Organization Location — FPO / NGO */}
-          {(cat === 'fpo' || cat === 'ngo') &&
+          {(cat === 'fpo' || cat === 'ngo' || cat === 'volunteer') &&
             ((user.organizationState && user.organizationState.length > 0) ||
               user.organizationDistrict || user.organizationBlock || user.organizationVillage) && (
               <AccountCard icon={MapPin} title={t('profile.organisationLocation')} className="lg:flex-1 lg:basis-[320px]">
@@ -499,11 +501,11 @@ export function PublicProfilePage() {
               </AccountCard>
             )}
 
-          {/* Farming — farmers only */}
-          {cat === 'farmer' && (user.farmSize || user.cropType || user.season) && (
-            <AccountCard icon={Sprout} title={t('profile.farming')} className="lg:flex-1 lg:basis-[320px]">
+          {/* Farming / agriculture focus — farmers and volunteers */}
+          {(cat === 'farmer' || cat === 'volunteer') && (user.farmSize || user.cropType || user.season) && (
+            <AccountCard icon={Sprout} title={cat === 'volunteer' ? 'Agriculture Focus' : t('profile.farming')} className="lg:flex-1 lg:basis-[320px]">
               <>
-                {user.farmSize && <AccountRow icon={Ruler} label={t('profile.farmSize')} value={`${user.farmSize} ${t('profile.acres')}`} />}
+                {cat === 'farmer' && user.farmSize && <AccountRow icon={Ruler} label={t('profile.farmSize')} value={`${user.farmSize} ${t('profile.acres')}`} />}
                 {user.cropType && <AccountRow icon={Sprout} label={t('profile.crop')} value={user.cropType} isLast={!user.season} />}
                 {user.season && <AccountRow icon={Calendar} label={t('profile.season')} value={user.season} isLast />}
               </>
@@ -523,6 +525,8 @@ export function PublicProfilePage() {
           </div>
         )}
       </section>
+
+      <EditPublicProfileDialog open={editOpen} onOpenChange={setEditOpen} user={user} onSaved={updateUser} />
 
       {/* ── 5. Actions section ── */}
       <section>
