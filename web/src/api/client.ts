@@ -379,6 +379,7 @@ export const adminApi = {
 
   createUser: (body: {
     name: string
+    isUserCreatedBySuperAdmin?: boolean,
     mobileNumber: string
     role: string
     category?: string

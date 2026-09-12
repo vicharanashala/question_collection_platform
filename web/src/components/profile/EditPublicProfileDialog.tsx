@@ -408,24 +408,45 @@ export function EditPublicProfileDialog({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-h-[85vh] !w-[85vw] !max-w-[85vw] overflow-hidden p-0">
-        <form onSubmit={save} className="flex max-h-[90vh] flex-col">
-          <div className="border-b border-border-subtle px-5 py-4">
-            <DialogTitle>{ "Complete your profile"}</DialogTitle>
-                    <Button
+<Dialog
+  open={open}
+  onOpenChange={(nextOpen) => {
+    // Prevent closing the modal when profile completion is required.
+    if (required && !nextOpen) return;
+
+    onOpenChange(nextOpen);
+  }}
+>
+  <DialogContent
+    hideCloseButton
+    className="!max-h-[85vh] !w-[85vw] !max-w-[85vw] overflow-hidden p-0"
+              onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+  >
+    <form onSubmit={save} className="flex max-h-[90vh] flex-col">
+      <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
+        <div>
+          <DialogTitle>Complete Profile</DialogTitle>
+
+          <p className="mt-1 text-xs text-text-secondary">
+            Complete you profile
+            {category === "fpo"
+              ? "FPO membership"
+              : category ?? "account"}.
+          </p>
+        </div>
+
+        <Button
+          type="button"
           onClick={handleLogout}
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+          className="gap-1.5"
         >
           <LogOut className="h-3.5 w-3.5" />
           Logout
         </Button>
-            <p className="mt-1 text-xs text-text-secondary">
-              Update the information relevant to your{" "}
-              {category === "fpo" ? "FPO membership" : (category ?? "account")}.
-            </p>
           </div>
           <div className=" flex flex-col gap-6 overflow-y-auto px-5 py-5">
             <section className="space-y-3">

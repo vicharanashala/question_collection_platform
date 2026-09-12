@@ -142,6 +142,13 @@ export class User {
   @Prop({ type: [String], default: [] })
   crops: string[];
 
+  @Prop({
+  name: 'isUserCreatedBySuperAdmin',
+  type: Boolean,
+  default: false,
+})
+isUserCreatedBySuperAdmin: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }

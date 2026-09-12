@@ -272,6 +272,7 @@ export class AdminService implements OnModuleInit {
       mobileNumber: string;
       role: UserRole;
       category?: UserCategory;
+      isUserCreatedBySuperAdmin: boolean
     },
   ) {
     // Super admin cannot create another super admin
@@ -308,21 +309,26 @@ export class AdminService implements OnModuleInit {
     if (isEndUser && !dto.category) {
       throw new BadRequestException("Category is required for user accounts.");
     }
+const isCreatedBySuperAdmin =
+  dto.isUserCreatedBySuperAdmin ?? true;
 
-    const user = await this.userRepo.create({
-      name: dto.name.trim(),
-      mobileNumber: mobile,
-      role: dto.role,
-      category: isEndUser ? dto.category! : null,
-      languagePreference: "en",
-      consentGiven: false,
-      verificationStatus: VerificationStatus.VERIFIED,
-      tokenVersion: 0,
-      lastLoginAt: null,
-      isUserCreatedBySuperAdmin: true
-    });
 
-    await this.userRepo.save(user);
+const user = await this.userRepo.create({
+  name: dto.name.trim(),
+  mobileNumber: mobile,
+  role: dto.role,
+  category: isEndUser ? dto.category! : null,
+  languagePreference: "en",
+  consentGiven: false,
+  verificationStatus: VerificationStatus.VERIFIED,
+  tokenVersion: 0,
+  lastLoginAt: null,
+  isUserCreatedBySuperAdmin: isCreatedBySuperAdmin,
+});
+
+
+await this.userRepo.save(user);
+
 
     await this.logAudit({
       actorType:
@@ -338,7 +344,6 @@ export class AdminService implements OnModuleInit {
         category: user.category,
       },
     });
-
     return { user: this.toPublicUser(user) };
   }
 
@@ -3963,6 +3968,7 @@ export class AdminService implements OnModuleInit {
       role: user.role,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
+      isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin
     };
   }
 

@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { UserCategory, UserRole } from '../../../shared/classes/enums';
 
 export class CreateUserDto {
@@ -34,4 +34,7 @@ export class CreateUserDto {
     UserCategory.NGO,
   ])
   category?: UserCategory;
+
+  @IsBoolean()
+  isUserCreatedBySuperAdmin: boolean
 }
