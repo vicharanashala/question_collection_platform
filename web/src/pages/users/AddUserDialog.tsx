@@ -102,7 +102,7 @@ export function AddUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !creating && onOpenChange(next)}>
-      <DialogContent className="flex h-[85vh] max-h-[85vh] !w-[85vw] !max-w-[85vw] grid-rows-none flex-col gap-0 overflow-hidden p-0 sm:rounded-xl">
+      <DialogContent className="flex h-[85vh] max-h-[85vh] !w-[85vw] !max-w-[85vw] grid-rows-none flex-col gap-0 overflow-hidden p-2 sm:rounded-xl">
         <DialogHeader className="shrink-0 border-b border-border-subtle px-5 py-4 pr-12 sm:px-7 sm:py-5">
           <DialogTitle>Add New User</DialogTitle>
           <DialogDescription>
@@ -123,7 +123,7 @@ export function AddUserDialog({
                 </div>
               </div>
 
-              <div className="overflow-hidden">
+              <div className="overflow-hidden p-1">
                 <div>
                   <Label htmlFor="add-user-name">Full Name *</Label>
                   <Input id="add-user-name" className="mt-1" value={form.name} onChange={(event) => setField('name', event.target.value)} placeholder="Ramesh Kumar" maxLength={80} />

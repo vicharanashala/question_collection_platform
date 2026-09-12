@@ -598,6 +598,7 @@ const ALL_ROLE_OPTIONS = [
   { value: 'curator', label: 'Curator' },
   { value: 'finance', label: 'Finance' },
   { value: 'admin', label: 'Admin' },
+  {valus: 'distributor', label: 'Distributor'},
 ]
 
 const ADMIN_ROLE_OPTIONS = [
