@@ -445,7 +445,7 @@ export function PublicLeaderboardPage(): ReactNode {
               Stats
           ───────────────────────────────────────── */}
 
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap gap-2.5 min-w-0">
             <StatCard
               icon={Banknote}
               iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
