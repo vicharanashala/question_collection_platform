@@ -114,7 +114,7 @@ function LogDetail({ entry, onClose }: LogDetailProps) {
   if (!entry) return null
   return (
     <Dialog open={!!entry} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg p-2.5">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ScrollText className="h-4 w-4" />
@@ -598,6 +598,7 @@ const ALL_ROLE_OPTIONS = [
   { value: 'curator', label: 'Curator' },
   { value: 'finance', label: 'Finance' },
   { value: 'admin', label: 'Admin' },
+  {valus: 'distributor', label: 'Distributor'},
 ]
 
 const ADMIN_ROLE_OPTIONS = [

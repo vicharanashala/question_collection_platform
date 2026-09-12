@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { REWARD_TIERS, categoryLabel } from '@/constants/public'
-
+import { EditPublicProfileDialog } from '@/components/profile/EditPublicProfileDialog'
 interface Stats {
   dailyCount: number
   remainingToday: number
@@ -141,20 +141,22 @@ function currentTierIndex(approved: number): number {
 export function PublicHomePage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const { t } = useTranslation()
   const [stats, setStats] = useState<Stats | null>(null)
   const [balance, setBalance] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [dailyLimit, setDailyLimit] = useState<number>(20)
   const [editWindowSec, setEditWindowSec] = useState<number>(0)
+  
 
   const locationState = location.state as { mobileNumber?: string } | null
   const postOtpMobile = locationState?.mobileNumber
     ? locationState.mobileNumber.replace(/\D/g, '').slice(-10)
     : null
   const showProfileModal = !!postOtpMobile && !user
-
+  const showEditableModal = user?.isUserCreatedBySuperAdmin
+  const [editWindow, setEditWindow] = useState(showEditableModal)
   useEffect(() => {
     let alive = true
     setLoading(true)
@@ -516,12 +518,12 @@ export function PublicHomePage() {
         <div className="h-px flex-1 bg-border-subtle" />
       </div>
 
-      {showProfileModal && (
+      {showProfileModal ? (
         <CompleteProfileModal
           open={showProfileModal}
           mobileNumber={postOtpMobile ?? ''}
         />
-      )}
+      ): editWindow && user ? (<EditPublicProfileDialog open= {editWindow} onOpenChange={setEditWindow} user={user} onSaved={updateUser}/>): null}
     </div>
   )
 }

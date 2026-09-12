@@ -62,7 +62,7 @@ export class AuthController {
   async register(@Body() dto: RegisterDto) {
     // Normalize: strip country code and leading zeros so the lookup matches
     // what was stored during the OTP request/verify flow.
-    const mobileNumber = this.authService.normalizePhone(dto.mobileNumber);
+    const mobileNumber = this.authService.normalizePhone(dto?.mobileNumber);
     const user = await this.authService.findUserByMobile(mobileNumber);
     if (!user) {
       throw new UnauthorizedException(

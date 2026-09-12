@@ -278,14 +278,14 @@ export default function ReportDetailPage() {
 
           {/* Close confirmation modal */}
           <Dialog open={showCloseModal} onOpenChange={setShowCloseModal}>
-            <DialogContent className="max-w-sm">
+            <DialogContent className="max-w-sm p-2">
               <DialogHeader>
                 <DialogTitle>Close this report?</DialogTitle>
                 <DialogDescription>
                   Marking this report as closed will notify the user that their issue has been resolved. This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
-              <DialogFooter className="gap-2">
+              <DialogFooter className="gap-2 mt-1">
                 <Button
                   variant="outline"
                   onClick={() => setShowCloseModal(false)}

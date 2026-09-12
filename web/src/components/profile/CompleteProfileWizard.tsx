@@ -1488,6 +1488,7 @@ export function CompleteProfileWizard({
         gender: form.gender || undefined,
         languagePreference: form.languagePreference,
         consentGiven: true,
+        isUserCreatedBySuperAdmin: false
       };
       if (form.category === "farmer") {
         payload.farmSize = form.farmSize.trim();

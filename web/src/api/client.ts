@@ -241,7 +241,14 @@ export const authApi = {
     // Never cache me() — it is the authoritative source of current user state including locks
     request<{ user: AuthUser }>('/auth/me', {}, false),
 
-  updateMe: (body: { name?: string; languagePreference?: string }) =>
+  updateMe: (body: {
+    name?: string; username?: string; age?: number | null; gender?: string | null; state?: string | null; district?: string | null
+    block?: string | null; village?: string | null; kvk?: string | null; farmSize?: string | null; cropType?: string | null
+    courseName?: string | null; collegeName?: string | null; universityName?: string | null; organisationType?: string | null
+    organizationName?: string | null; organizationRole?: string | null; numberOfFarmers?: number | null; organizationState?: string[] | null
+    organizationDistrict?: string | null; organizationBlock?: string | null; organizationVillage?: string | null; season?: string | null
+    languagePreference?: string | null; consentGiven?: boolean; crops?: string[] | null
+  }) =>
     request<{ user: AuthUser }>('/auth/me', {
       method: 'PATCH',
       body: JSON.stringify(body),
@@ -372,14 +379,10 @@ export const adminApi = {
 
   createUser: (body: {
     name: string
+    isUserCreatedBySuperAdmin?: boolean,
     mobileNumber: string
     role: string
     category?: string
-    state: string
-    district: string
-    block: string
-    village: string
-    languagePreference?: string
   }) =>
     request<{ message: string; user: User }>(
       '/admin/users',
@@ -400,15 +403,15 @@ export const adminApi = {
       orderId: string | null; createdAt: string; processedAt: string | null;
       rejectionReason: string | null; failureReason: string | null;
       user: { id: string; name: string; mobileNumber: string } | null;
-      transactions: Array<{
+      transactions: {
         id: string; type: string; amount: number; status: string;
         rejectionReason: string | null; description: string; source: string; createdAt: string;
-      }>;
-      paymentLogs: Array<{
+      }[];
+      paymentLogs: {
         id: string; orderId: string; pinelabsTransactionId: string | null;
         razorpayPayoutId: string | null; status: string; errorCode: string | null;
         errorMessage: string | null; rawResponse: Record<string, unknown> | null; attemptedAt: string;
-      }>;
+      }[];
     }>(`/admin/withdrawals/${id}`, {}, false),
 
   listWithdrawals: (params: Record<string, string | number | undefined> = {}) => {
@@ -513,7 +516,7 @@ export const adminApi = {
       failedWithdrawals: { count: number }
       totalWalletBalance: number
       today: { payoutCount: number; payoutAmount: number }
-      dailyPayoutTrend: Array<{ date: string; count: number; amount: number }>
+      dailyPayoutTrend: { date: string; count: number; amount: number }[]
     }>(`/admin/analytics/financial-summary${qs ? `?${qs}` : ''}`)
   },
 }
