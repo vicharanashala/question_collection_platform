@@ -71,6 +71,7 @@ export interface PublicUser {
   organizationBlock:   string | null;
   organizationVillage: string | null;
   consentGiven: boolean;
+  isUserCreatedBySuperAdmin: boolean
 }
 
 @Injectable()
@@ -378,7 +379,7 @@ export class AuthService {
 
     // Username: normalize and check uniqueness before saving (unique constraint in DB)
     // Strip leading @ if the user typed it (e.g. "@rakesh42" → "rakesh42")
-    const normalizedUsername = dto.username.toLowerCase().trim().replace(/^@/, '');
+    const normalizedUsername = dto?.username.toLowerCase().trim().replace(/^@/, '');
     const usernameTaken = await this.userRepo.findOne({
       where: { username: normalizedUsername },
     });
@@ -434,6 +435,7 @@ export class AuthService {
       organizationVillage: dto.organizationVillage ?? null,
       crops,
       lastLoginAt: new Date(),
+      isUserCreatedBySuperAdmin: dto.isUserCreatedBySuperAdmin
     };
 
     await this.userRepo.update(userId, updated);
@@ -601,6 +603,7 @@ export class AuthService {
     userId: string,
     dto: {
       name?: string;
+      username?: string;
       age?: number | null;
       gender?: string | null;
       state?: string | null;
@@ -623,11 +626,21 @@ export class AuthService {
       organizationVillage?: string | null;
       season?: string | null;
       languagePreference?: string | null;
+      consentGiven?: boolean;
       crops?: string[] | null;
     },
   ): Promise<PublicUser> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('User not found');
+
+    if (dto.username !== undefined) {
+      const username = dto.username.trim().toLowerCase();
+      const existing = await this.userRepo.findOne({ where: { username }, select: ['id'] });
+      if (existing && existing.id !== user.id) throw new BadRequestException('That username is already taken.');
+      if (user.username && user.username !== username) await this.redisService.del(usernameKey(user.username));
+      user.username = username;
+      await this.syncUsernameToRedis(username, user.id);
+    }
 
     // Only assign fields that were explicitly provided (not undefined)
     const fields: (keyof typeof dto)[] = [
@@ -636,7 +649,7 @@ export class AuthService {
       'courseName', 'collegeName', 'universityName',
       'organisationType', 'organizationName', 'organizationRole', 'numberOfFarmers',
       'organizationState', 'organizationDistrict', 'organizationBlock', 'organizationVillage',
-      'season', 'languagePreference',
+      'season', 'languagePreference', 'consentGiven',
     ];
     for (const f of fields) {
       if (dto[f] !== undefined) (user as any)[f] = dto[f];
@@ -769,6 +782,7 @@ export class AuthService {
       organizationBlock:    user.organizationBlock,
       organizationVillage:  user.organizationVillage,
       consentGiven:         user.consentGiven,
+      isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
     };
   }
 

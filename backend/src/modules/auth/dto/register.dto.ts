@@ -60,28 +60,28 @@ export class RegisterDto {
   @IsString()
   @MinLength(2)
   @MaxLength(255)
-  name: string;
+  name!: string;
 
   @IsNotEmpty({ message: 'Username is required' })
   @IsString()
   @MinLength(3, { message: 'Username must be at least 3 characters' })
   @MaxLength(30, { message: 'Username must be at most 30 characters' })
   @Matches(/^[a-zA-Z0-9_]+$/, { message: 'Username can only contain letters, numbers, and underscores' })
-  username: string;
+  username!: string;
 
   @IsNotEmpty()
   @IsString()
   @MinLength(10)
   @MaxLength(15)
-  mobileNumber: string;
+  mobileNumber!: string;
 
   @IsNotEmpty()
   @IsString()
-  state: string;
+  state?: string;
 
   @IsNotEmpty()
   @IsString()
-  district: string;
+  district?: string;
 
   /** Only required for farmer category. */
   @IsOptional()
@@ -112,7 +112,7 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsEnum(UserCategory)
-  category: UserCategory;
+  category?: UserCategory;
 
   // ── Farmer-specific ─────────────────────────────────────────────────────────
 
@@ -217,9 +217,12 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsString()
-  languagePreference: string;
+  languagePreference?: string;
 
   /** Must be explicitly `true` — validated again in the auth service. */
   @IsBoolean()
-  consentGiven: boolean;
+  consentGiven?: boolean;
+
+  @IsBoolean()
+  isUserCreatedBySuperAdmin?: boolean;
 }

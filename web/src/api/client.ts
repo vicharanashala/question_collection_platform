@@ -242,12 +242,12 @@ export const authApi = {
     request<{ user: AuthUser }>('/auth/me', {}, false),
 
   updateMe: (body: {
-    name?: string; age?: number | null; gender?: string | null; state?: string | null; district?: string | null
+    name?: string; username?: string; age?: number | null; gender?: string | null; state?: string | null; district?: string | null
     block?: string | null; village?: string | null; kvk?: string | null; farmSize?: string | null; cropType?: string | null
     courseName?: string | null; collegeName?: string | null; universityName?: string | null; organisationType?: string | null
     organizationName?: string | null; organizationRole?: string | null; numberOfFarmers?: number | null; organizationState?: string[] | null
     organizationDistrict?: string | null; organizationBlock?: string | null; organizationVillage?: string | null; season?: string | null
-    languagePreference?: string | null; crops?: string[] | null
+    languagePreference?: string | null; consentGiven?: boolean; crops?: string[] | null
   }) =>
     request<{ user: AuthUser }>('/auth/me', {
       method: 'PATCH',

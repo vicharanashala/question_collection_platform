@@ -27,5 +27,6 @@ export function isProfileIncomplete(
   if (!user.consentGiven) return true
   if (!user.name || !user.name.trim()) return true
   if (!user.category) return true
+  if (!user.username || !user.username.trim()) return true
   return false
 }

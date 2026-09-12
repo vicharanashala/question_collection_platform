@@ -203,4 +203,7 @@ export class User {
 
   @OneToMany(() => Report, (r) => r.user)
   reports: Report[];
+
+  @Column({name: "is_created_by_super_admin", type: 'boolean', default: false})
+  isUserCreatedBySuperAdmin: boolean
 }

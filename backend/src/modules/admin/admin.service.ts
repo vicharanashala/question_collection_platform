@@ -319,6 +319,7 @@ export class AdminService implements OnModuleInit {
       verificationStatus: VerificationStatus.VERIFIED,
       tokenVersion: 0,
       lastLoginAt: null,
+      isUserCreatedBySuperAdmin: true
     });
 
     await this.userRepo.save(user);

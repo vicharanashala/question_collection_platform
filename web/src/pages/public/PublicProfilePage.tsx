@@ -426,7 +426,7 @@ export function PublicProfilePage() {
 
       {/* ── 4. Account section ── */}
       <section className="space-y-4">
-        <SectionHeader icon={Users} title={t('profile.account')} trailing={<Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setEditOpen(true)}><Pencil className="h-3.5 w-3.5" />Edit profile</Button>} />
+        <SectionHeader icon={Users} title={t('profile.account')} />
 
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
 
