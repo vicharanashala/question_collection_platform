@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Home, MessageSquarePlus, Wallet, User, ListChecks } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+
 interface Tab {
   to: string
   label: string
