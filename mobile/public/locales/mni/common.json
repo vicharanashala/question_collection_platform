@@ -472,7 +472,10 @@
     "suspended": "লেপহনখ্রে",
     "banned": "বোন তৌখ্রে",
     "village": "খুঙ্গং",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} লোইশিনখিবা হংজবা",
+    "toNext": "{{count}} মথংগী",
+    "toTier": "{{tier}} ফাওবা {{count}}"
   },
   "profileLanguage": "এপকী লোন",
   "profileLanguageDesc": "অসি এপকী ইন্তর্ফেস অমসুং ওয়াহং থাবগীদমক দিফোল্ত লোন ওইগনি",

@@ -472,7 +472,10 @@
     "suspended": "निलम्बित",
     "banned": "प्रतिबन्धित",
     "village": "गाउँ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्नहरू",
+    "toNext": "{{count}} अर्को सम्म",
+    "toTier": "{{tier}} सम्म {{count}}"
   },
   "profileLanguage": "एपको भाषा",
   "profileLanguageDesc": "यो एप इन्टरफेस र प्रश्न पेस गर्नका लागि पूर्वनिर्धारित (Default) भाषा हुनेछ",

@@ -472,7 +472,10 @@
     "suspended": "ᱛᱷᱩᱠᱟᱹᱢ ᱟᱠᱟᱱᱟ",
     "banned": "ᱵᱚᱱᱫᱚ ᱟᱠᱟᱱᱟ",
     "village": "ᱟᱛᱳ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ᱢᱟᱱᱟᱛ ᱠᱩᱠᱞᱤ",
+    "toNext": "{{count}} ᱛᱟᱭᱚᱢ ᱠᱷᱚᱱ",
+    "toTier": "{{tier}} ᱠᱷᱚᱱ {{count}}"
   },
   "profileLanguage": "ᱮᱯ ᱯᱟᱹᱨᱥᱤ",
   "profileLanguageDesc": "ᱱᱚᱶᱟ ᱫᱚ ᱮᱯ ᱵᱮᱣᱦᱟᱨ ᱟᱨ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱬᱩᱛ ᱯᱟᱹᱨᱥᱤ ᱛᱟᱦᱮᱸᱱᱟ",

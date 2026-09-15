@@ -477,7 +477,10 @@ const resources = {
         "suspended": "Suspended",
         "banned": "Banned",
         "village": "Village",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} approved questions",
+        "toNext": "{{count}} to next",
+        "toTier": "{{count}} to {{tier}}"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -1820,7 +1823,10 @@ const resources = {
         "suspended": "স্থগিত",
         "banned": "নিষিদ্ধ",
         "village": "গাওঁ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}}টা অনুমোদিত প্ৰশ্ন",
+        "toNext": "{{count}} পৰৱৰ্তীলৈ",
+        "toTier": "{{tier}}লৈ {{count}}"
       },
       "profileLanguage": "এপ ভাষা",
       "profileLanguageDesc": "এপ ইণ্টাৰফেচ আৰু প্ৰশ্ন দাখিলৰ বাবে এয়া ডিফল্ট ভাষা হ'ব",
@@ -3161,7 +3167,10 @@ const resources = {
         "suspended": "স্থগিত",
         "banned": "নিষিদ্ধ",
         "village": "গ্রাম",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}}টি অনুমোদিত প্রশ্ন",
+        "toNext": "{{count}} পরবর্তী পর্যন্ত",
+        "toTier": "{{tier}} পর্যন্ত {{count}}"
       },
       "profileLanguage": "অ্যাপের ভাষা",
       "profileLanguageDesc": "এটি অ্যাপ ইন্টারফেস এবং প্রশ্ন জমা দেওয়ার জন্য ডিফল্ট ভাষা হবে",
@@ -4502,7 +4511,10 @@ const resources = {
         "suspended": "सामयिकइ होबथानाय",
         "banned": "हबथानाय",
         "village": "गामि",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मानोन जाबाय सोदोब",
+        "toNext": "{{count}} उननिफ्राय",
+        "toTier": "{{tier}} फ्राय {{count}}"
       },
       "profileLanguage": "एपनि राव",
       "profileLanguageDesc": "बे एपनि गाहाय राव जागोन आरो सोंथि दैथायनायाव बाहायगोन",
@@ -5843,7 +5855,10 @@ const resources = {
         "suspended": "सस्पेंड",
         "banned": "बैन",
         "village": "गरां",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मंजूर सवाल",
+        "toNext": "{{count}} अगले तगर",
+        "toTier": "{{tier}} तगर {{count}}"
       },
       "profileLanguage": "ऐप दी भाषा",
       "profileLanguageDesc": "एह् ऐप इंटरफ़ेस ते प्रश्न सबमिशन लेई डिफॉल्ट भाषा होगी",
@@ -7184,7 +7199,10 @@ const resources = {
         "suspended": "મોકૂફ રાખેલ",
         "banned": "પ્રતિબંધિત",
         "village": "ગામ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} મંજૂર થયેલા પ્રશ્નો",
+        "toNext": "{{count}} આગલા સુધી",
+        "toTier": "{{tier}} સુધી {{count}}"
       },
       "profileLanguage": "એપ ભાષા",
       "profileLanguageDesc": "આ એપ ઇન્ટરફેસ અને પ્રશ્ન સબમિશન માટે ડિફોલ્ટ ભાષા હશે",
@@ -8525,7 +8543,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "प्रतिबंधित",
         "village": "गाँव",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+        "toNext": "{{count}} अगले तक",
+        "toTier": "{{tier}} तक {{count}}"
       },
       "profileLanguage": "ऐप की भाषा",
       "profileLanguageDesc": "यह ऐप इंटरफ़ेस और प्रश्न सबमिशन के लिए डिफ़ॉल्ट भाषा होगी",
@@ -9866,7 +9887,10 @@ const resources = {
         "suspended": "ಅಮಾನತುಗೊಳಿಸಲಾಗಿದೆ",
         "banned": "ನಿಷೇಧಿಸಲಾಗಿದೆ",
         "village": "ಗ್ರಾಮ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳು",
+        "toNext": "{{count}} ಮುಂದಿನದಕ್ಕೆ",
+        "toTier": "{{tier}}ಗೆ {{count}}"
       },
       "profileLanguage": "ಆಪ್ ಭಾಷೆ",
       "profileLanguageDesc": "ಇದು ಆಪ್ ಇಂಟರ್ಫೇಸ್ ಮತ್ತು ಪ್ರಶ್ನೆ ಸಲ್ಲಿಕೆಗಳಿಗೆ ಡೀಫಾಲ್ಟ್ ಭಾಷೆಯಾಗಿರುತ್ತದೆ",
@@ -11207,7 +11231,10 @@ const resources = {
         "suspended": "معطل",
         "banned": "مستقل بند",
         "village": "گام",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} منظور شودہ سوال",
+        "toNext": "{{count}} بۆدہ کِنٛ",
+        "toTier": "{{tier}} تام {{count}}"
       },
       "profileLanguage": "ایپٕچ زبانہٕ",
       "profileLanguageDesc": "یہِ آسِ ایپ انٹرفیس تہٕ سوالات جمع کرنے باپتھ ڈیفالٹ زبانہٕ",
@@ -12548,7 +12575,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "बंद केलां",
         "village": "गांव",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मान्य केल्ले प्रस्न",
+        "toNext": "{{count}} फुडल्या मेरेन",
+        "toTier": "{{tier}} मेरेन {{count}}"
       },
       "profileLanguage": "ॲप भास",
       "profileLanguageDesc": "ह्या ॲपाच्या इंटरफेसाखातीर आनी प्रस्न धाडपाखातीर ही मुलभूत भास आसतली",
@@ -13889,7 +13919,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "प्रतिबंधित",
         "village": "गाम",
-        "kvk": "केवीके"
+        "kvk": "केवीके",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+        "toNext": "{{count}} अगिला धरि",
+        "toTier": "{{tier}} धरि {{count}}"
       },
       "profileLanguage": "ऐप भाषा",
       "profileLanguageDesc": "ई ऐप इंटरफेस आ प्रश्न सब जमा करबा लेल डिफ़ॉल्ट भाषा हेत",
@@ -15230,7 +15263,10 @@ const resources = {
         "suspended": "സസ്പെൻഡ് ചെയ്തു",
         "banned": "നിരോധിച്ചു",
         "village": "ഗ്രാമം",
-        "kvk": "കെ.വി.കെ"
+        "kvk": "കെ.വി.കെ",
+        "approvedQuestionsCount": "{{count}} അംഗീകരിച്ച ചോദ്യങ്ങൾ",
+        "toNext": "{{count}} അടുത്തതിലേക്ക്",
+        "toTier": "{{tier}} വരെ {{count}}"
       },
       "profileLanguage": "ആപ്പിന്റെ ഭാഷ",
       "profileLanguageDesc": "ആപ്പ് ഉപയോഗത്തിനും ചോദ്യങ്ങൾ നൽകുന്നതിനും ഇത് പ്രധാന ഭാഷയായി ഉപയോഗിക്കും",
@@ -16571,7 +16607,10 @@ const resources = {
         "suspended": "লেপহনখ্রে",
         "banned": "বোন তৌখ্রে",
         "village": "খুঙ্গং",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} লোইশিনখিবা হংজবা",
+        "toNext": "{{count}} মথংগী",
+        "toTier": "{{tier}} ফাওবা {{count}}"
       },
       "profileLanguage": "এপকী লোন",
       "profileLanguageDesc": "অসি এপকী ইন্তর্ফেস অমসুং ওয়াহং থাবগীদমক দিফোল্ত লোন ওইগনি",
@@ -17912,7 +17951,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "प्रतिबंधित",
         "village": "गाव",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मंजूर प्रश्न",
+        "toNext": "{{count}} पुढील पर्यंत",
+        "toTier": "{{tier}} पर्यंत {{count}}"
       },
       "profileLanguage": "अ‍ॅप भाषा",
       "profileLanguageDesc": "ही अ‍ॅप इंटरफेस आणि प्रश्न सबमिशनसाठी डीफॉल्ट भाषा असेल",
@@ -19253,7 +19295,10 @@ const resources = {
         "suspended": "निलम्बित",
         "banned": "प्रतिबन्धित",
         "village": "गाउँ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्नहरू",
+        "toNext": "{{count}} अर्को सम्म",
+        "toTier": "{{tier}} सम्म {{count}}"
       },
       "profileLanguage": "एपको भाषा",
       "profileLanguageDesc": "यो एप इन्टरफेस र प्रश्न पेस गर्नका लागि पूर्वनिर्धारित (Default) भाषा हुनेछ",
@@ -20592,7 +20637,10 @@ const resources = {
         "suspended": "ନିଲମ୍ବିତ",
         "banned": "ବ୍ୟାନ୍ ହୋଇଛି",
         "village": "ଗାଁ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ଅନୁମୋଦିତ ପ୍ରଶ୍ନ",
+        "toNext": "{{count}} ପରବର୍ତ୍ତୀ ପର୍ଯ୍ୟନ୍ତ",
+        "toTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ {{count}}"
       },
       "profileLanguage": "ଆପ୍ ଭାଷା",
       "profileLanguageDesc": "ଏହା ଆପ୍ ଇଣ୍ଟରଫେସ୍ ଏବଂ ପ୍ରଶ୍ନ ଦାଖଲ ପାଇଁ ଡିଫଲ୍ଟ ଭାଷା ହେବ",
@@ -21455,6 +21503,9 @@ const resources = {
         "held": "ହୋଲ୍ଡରେ ଅଛି",
         "published": "ପ୍ରକାଶିତ",
         "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
+      },
+      "cat": {
+        "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
       }
     }
   },
@@ -21933,7 +21984,10 @@ const resources = {
         "suspended": "ਮੁਅੱਤਲ",
         "banned": "ਬੈਨ ਕੀਤਾ",
         "village": "ਪਿੰਡ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ਮਨਜ਼ੂਰ ਸਵਾਲ",
+        "toNext": "{{count}} ਅਗਲੇ ਤੱਕ",
+        "toTier": "{{tier}} ਤੱਕ {{count}}"
       },
       "profileLanguage": "ਐਪ ਭਾਸ਼ਾ",
       "profileLanguageDesc": "ਇਹ ਐਪ ਇੰਟਰਫੇਸ ਅਤੇ ਸਵਾਲ ਸਬਮਿਸ਼ਨ ਲਈ ਡਿਫਾਲਟ ਭਾਸ਼ਾ ਹੋਵੇਗੀ",
@@ -23284,7 +23338,10 @@ const resources = {
         "suspended": "निलम्बितम्",
         "banned": "प्रतिबन्धितम्",
         "village": "ग्रामः",
-        "kvk": "केवीके"
+        "kvk": "केवीके",
+        "approvedQuestionsCount": "{{count}} स्वीकृताः प्रश्नाः",
+        "toNext": "{{count}} अग्रिमं यावत्",
+        "toTier": "{{tier}} यावत् {{count}}"
       },
       "profileLanguage": "अनुप्रयोगभाषा",
       "profileLanguageDesc": "एषा अनुप्रयोगान्तरफलकाय प्रश्नसमर्पणाय च मूलभाषा भविष्यति",
@@ -24625,7 +24682,10 @@ const resources = {
         "suspended": "ᱛᱷᱩᱠᱟᱹᱢ ᱟᱠᱟᱱᱟ",
         "banned": "ᱵᱚᱱᱫᱚ ᱟᱠᱟᱱᱟ",
         "village": "ᱟᱛᱳ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ᱢᱟᱱᱟᱛ ᱠᱩᱠᱞᱤ",
+        "toNext": "{{count}} ᱛᱟᱭᱚᱢ ᱠᱷᱚᱱ",
+        "toTier": "{{tier}} ᱠᱷᱚᱱ {{count}}"
       },
       "profileLanguage": "ᱮᱯ ᱯᱟᱹᱨᱥᱤ",
       "profileLanguageDesc": "ᱱᱚᱶᱟ ᱫᱚ ᱮᱯ ᱵᱮᱣᱦᱟᱨ ᱟᱨ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱬᱩᱛ ᱯᱟᱹᱨᱥᱤ ᱛᱟᱦᱮᱸᱱᱟ",
@@ -25966,7 +26026,10 @@ const resources = {
         "suspended": "معطل ٿيل",
         "banned": "پابندي مڙهيل",
         "village": "ڳوٺ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} منظور ٿيل سوال",
+        "toNext": "{{count}} ايندڙ تائين",
+        "toTier": "{{tier}} تائين {{count}}"
       },
       "profileLanguage": "ائپ جي ٻولي",
       "profileLanguageDesc": "هي ائپ جي انٽرفيس ۽ سوالن کي جمع ڪرڻ لاءِ ڊيفالٽ ٻولي هوندي",
@@ -27307,7 +27370,10 @@ const resources = {
         "suspended": "இடைநிறுத்தப்பட்டது",
         "banned": "தடை செய்யப்பட்டது",
         "village": "கிராமம்",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} அங்கீகரிக்கப்பட்ட கேள்விகள்",
+        "toNext": "{{count}} அடுத்ததற்கு",
+        "toTier": "{{tier}} வரை {{count}}"
       },
       "profileLanguage": "செயலி மொழி",
       "profileLanguageDesc": "இது செயலி இடைமுகம் மற்றும் கேள்வி சமர்ப்பிப்புகளுக்கான இயல்புநிலை மொழியாக இருக்கும்",
@@ -28650,7 +28716,10 @@ const resources = {
         "suspended": "సస్పెండ్ చేయబడింది",
         "banned": "బ్యాన్ చేయబడింది",
         "village": "గ్రామం",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ఆమోదించబడిన ప్రశ్నలు",
+        "toNext": "{{count}} తదుపరికి",
+        "toTier": "{{tier}} వరకు {{count}}"
       },
       "profileLanguage": "యాప్ భాష",
       "profileLanguageDesc": "యాప్ ఇంటర్‌ఫేస్ మరియు ప్రశ్నల సమర్పణ కోసం ఇది డిఫాల్ట్ భాషగా ఉంటుంది",
@@ -29991,7 +30060,10 @@ const resources = {
         "suspended": "معطل",
         "banned": "بین شدہ",
         "village": "گاؤں",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} منظور شدہ سوالات",
+        "toNext": "{{count}} اگلے تک",
+        "toTier": "{{tier}} تک {{count}}"
       },
       "profileLanguage": "ایپ کی زبان",
       "profileLanguageDesc": "یہ ایپ کے انٹرفیس اور سوالات جمع کرانے کے لیے ڈیفالٹ زبان ہو گی",

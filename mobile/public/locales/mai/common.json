@@ -472,7 +472,10 @@
     "suspended": "निलंबित",
     "banned": "प्रतिबंधित",
     "village": "गाम",
-    "kvk": "केवीके"
+    "kvk": "केवीके",
+    "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+    "toNext": "{{count}} अगिला धरि",
+    "toTier": "{{tier}} धरि {{count}}"
   },
   "profileLanguage": "ऐप भाषा",
   "profileLanguageDesc": "ई ऐप इंटरफेस आ प्रश्न सब जमा करबा लेल डिफ़ॉल्ट भाषा हेत",

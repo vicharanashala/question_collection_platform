@@ -472,7 +472,10 @@
     "suspended": "স্থগিত",
     "banned": "নিষিদ্ধ",
     "village": "গাওঁ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}}টা অনুমোদিত প্ৰশ্ন",
+    "toNext": "{{count}} পৰৱৰ্তীলৈ",
+    "toTier": "{{tier}}লৈ {{count}}"
   },
   "profileLanguage": "এপ ভাষা",
   "profileLanguageDesc": "এপ ইণ্টাৰফেচ আৰু প্ৰশ্ন দাখিলৰ বাবে এয়া ডিফল্ট ভাষা হ'ব",

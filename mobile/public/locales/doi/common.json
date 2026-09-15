@@ -472,7 +472,10 @@
     "suspended": "सस्पेंड",
     "banned": "बैन",
     "village": "गरां",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} मंजूर सवाल",
+    "toNext": "{{count}} अगले तगर",
+    "toTier": "{{tier}} तगर {{count}}"
   },
   "profileLanguage": "ऐप दी भाषा",
   "profileLanguageDesc": "एह् ऐप इंटरफ़ेस ते प्रश्न सबमिशन लेई डिफॉल्ट भाषा होगी",

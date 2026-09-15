@@ -472,7 +472,10 @@
     "suspended": "معطل",
     "banned": "بین شدہ",
     "village": "گاؤں",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} منظور شدہ سوالات",
+    "toNext": "{{count}} اگلے تک",
+    "toTier": "{{tier}} تک {{count}}"
   },
   "profileLanguage": "ایپ کی زبان",
   "profileLanguageDesc": "یہ ایپ کے انٹرفیس اور سوالات جمع کرانے کے لیے ڈیفالٹ زبان ہو گی",

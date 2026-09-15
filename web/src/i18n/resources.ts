@@ -569,7 +569,10 @@ const resources = {
         "tierGold": "Gold",
         "approvedQuestions": "{{count}} approved questions",
         "toNextTier": "{{count}} to {{tier}}",
-        "moreToNextTier": "{{count}} more to {{tier}}"
+        "moreToNextTier": "{{count}} more to {{tier}}",
+        "approvedQuestionsCount": "{{count}} approved questions",
+        "toNext": "{{count}} to next",
+        "toTier": "{{count}} to {{tier}}"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -1844,7 +1847,10 @@ const resources = {
         "tierGold": "সোণ",
         "approvedQuestions": "{{count}}টা অনুমোদিত প্ৰশ্ন",
         "toNextTier": "{{tier}}লৈ {{count}}",
-        "moreToNextTier": "{{tier}}লৈ আৰু {{count}}"
+        "moreToNextTier": "{{tier}}লৈ আৰু {{count}}",
+        "approvedQuestionsCount": "{{count}}টা অনুমোদিত প্ৰশ্ন",
+        "toNext": "{{count}} পৰৱৰ্তীলৈ",
+        "toTier": "{{tier}}লৈ {{count}}"
       },
       "profileLanguage": "এপ ভাষা",
       "profileLanguageDesc": "এপ ইণ্টাৰফেচ আৰু প্ৰশ্ন দাখিলৰ বাবে এয়া ডিফল্ট ভাষা হ'ব",
@@ -3093,7 +3099,10 @@ const resources = {
         "tierGold": "সোনা",
         "approvedQuestions": "{{count}}টি অনুমোদিত প্রশ্ন",
         "toNextTier": "{{tier}} পর্যন্ত {{count}}",
-        "moreToNextTier": "{{tier}} পর্যন্ত আরও {{count}}"
+        "moreToNextTier": "{{tier}} পর্যন্ত আরও {{count}}",
+        "approvedQuestionsCount": "{{count}}টি অনুমোদিত প্রশ্ন",
+        "toNext": "{{count}} পরবর্তী পর্যন্ত",
+        "toTier": "{{tier}} পর্যন্ত {{count}}"
       },
       "profileLanguage": "অ্যাপের ভাষা",
       "profileLanguageDesc": "এটি অ্যাপ ইন্টারফেস এবং প্রশ্ন জমা দেওয়ার জন্য ডিফল্ট ভাষা হবে",
@@ -4342,7 +4351,10 @@ const resources = {
         "tierGold": "गल्ड",
         "approvedQuestions": "थारसिम जाबाय {{count}} सवाल",
         "toNextTier": "{{tier}} सम्ब्रा {{count}}",
-        "moreToNextTier": "{{tier}} सम्ब्रा गोबां {{count}}"
+        "moreToNextTier": "{{tier}} सम्ब्रा गोबां {{count}}",
+        "approvedQuestionsCount": "{{count}} मानोन जाबाय सोदोब",
+        "toNext": "{{count}} उननिफ्राय",
+        "toTier": "{{tier}} फ्राय {{count}}"
       },
       "profileLanguage": "एपनि राव",
       "profileLanguageDesc": "बे एपनि गाहाय राव जागोन आरो सोंथि दैथायनायाव बाहायगोन",
@@ -5591,7 +5603,10 @@ const resources = {
         "tierGold": "सोना",
         "approvedQuestions": "{{count}} मंज़ूरशुदा सवाल",
         "toNextTier": "{{tier}} तगर {{count}}",
-        "moreToNextTier": "{{tier}} तगर होर {{count}}"
+        "moreToNextTier": "{{tier}} तगर होर {{count}}",
+        "approvedQuestionsCount": "{{count}} मंजूर सवाल",
+        "toNext": "{{count}} अगले तगर",
+        "toTier": "{{tier}} तगर {{count}}"
       },
       "profileLanguage": "ऐप दी भाषा",
       "profileLanguageDesc": "एह् ऐप इंटरफ़ेस ते प्रश्न सबमिशन लेई डिफॉल्ट भाषा होगी",
@@ -6840,7 +6855,10 @@ const resources = {
         "tierGold": "સોનું",
         "approvedQuestions": "{{count}} મંજૂર થયેલા પ્રશ્નો",
         "toNextTier": "{{tier}} સુધી {{count}}",
-        "moreToNextTier": "{{tier}} સુધી વધુ {{count}}"
+        "moreToNextTier": "{{tier}} સુધી વધુ {{count}}",
+        "approvedQuestionsCount": "{{count}} મંજૂર થયેલા પ્રશ્નો",
+        "toNext": "{{count}} આગલા સુધી",
+        "toTier": "{{tier}} સુધી {{count}}"
       },
       "profileLanguage": "એપ ભાષા",
       "profileLanguageDesc": "આ એપ ઇન્ટરફેસ અને પ્રશ્ન સબમિશન માટે ડિફોલ્ટ ભાષા હશે",
@@ -8089,7 +8107,10 @@ const resources = {
         "tierGold": "सोना",
         "approvedQuestions": "{{count}} स्वीकृत प्रश्न",
         "toNextTier": "{{tier}} तक {{count}}",
-        "moreToNextTier": "{{tier}} तक और {{count}}"
+        "moreToNextTier": "{{tier}} तक और {{count}}",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+        "toNext": "{{count}} अगले तक",
+        "toTier": "{{tier}} तक {{count}}"
       },
       "profileLanguage": "ऐप की भाषा",
       "profileLanguageDesc": "यह ऐप इंटरफ़ेस और प्रश्न सबमिशन के लिए डिफ़ॉल्ट भाषा होगी",
@@ -9357,7 +9378,10 @@ const resources = {
         "tierGold": "ಚಿನ್ನ",
         "approvedQuestions": "{{count}} ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳು",
         "toNextTier": "{{tier}} ವರೆಗೆ {{count}}",
-        "moreToNextTier": "{{tier}} ವರೆಗೆ ಇನ್ನೂ {{count}}"
+        "moreToNextTier": "{{tier}} ವರೆಗೆ ಇನ್ನೂ {{count}}",
+        "approvedQuestionsCount": "{{count}} ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳು",
+        "toNext": "{{count}} ಮುಂದಿನದಕ್ಕೆ",
+        "toTier": "{{tier}}ಗೆ {{count}}"
       },
       "profileLanguage": "ಆಪ್ ಭಾಷೆ",
       "profileLanguageDesc": "ಇದು ಆಪ್ ಇಂಟರ್ಫೇಸ್ ಮತ್ತು ಪ್ರಶ್ನೆ ಸಲ್ಲಿಕೆಗಳಿಗೆ ಡೀಫಾಲ್ಟ್ ಭಾಷೆಯಾಗಿರುತ್ತದೆ",
@@ -10606,7 +10630,10 @@ const resources = {
         "tierGold": "سونہٕ",
         "approvedQuestions": "{{count}} منظور شٕدہ سوال",
         "toNextTier": "{{tier}} تام {{count}}",
-        "moreToNextTier": "{{tier}} تام ہور {{count}}"
+        "moreToNextTier": "{{tier}} تام ہور {{count}}",
+        "approvedQuestionsCount": "{{count}} منظور شودہ سوال",
+        "toNext": "{{count}} بۆدہ کِنٛ",
+        "toTier": "{{tier}} تام {{count}}"
       },
       "profileLanguage": "ایپٕچ زبانہٕ",
       "profileLanguageDesc": "یہِ آسِ ایپ انٹرفیس تہٕ سوالات جمع کرنے باپتھ ڈیفالٹ زبانہٕ",
@@ -11855,7 +11882,10 @@ const resources = {
         "tierGold": "सोनें",
         "approvedQuestions": "{{count}} मान्य जाल्ल्यो प्रस्नां",
         "toNextTier": "{{tier}} मेरेन {{count}}",
-        "moreToNextTier": "{{tier}} मेरेन आणीक {{count}}"
+        "moreToNextTier": "{{tier}} मेरेन आणीक {{count}}",
+        "approvedQuestionsCount": "{{count}} मान्य केल्ले प्रस्न",
+        "toNext": "{{count}} फुडल्या मेरेन",
+        "toTier": "{{tier}} मेरेन {{count}}"
       },
       "profileLanguage": "ॲप भास",
       "profileLanguageDesc": "ह्या ॲपाच्या इंटरफेसाखातीर आनी प्रस्न धाडपाखातीर ही मुलभूत भास आसतली",
@@ -13104,7 +13134,10 @@ const resources = {
         "tierGold": "सोना",
         "approvedQuestions": "{{count}} स्वीकृत प्रश्न",
         "toNextTier": "{{tier}} धरि {{count}}",
-        "moreToNextTier": "{{tier}} धरि आर {{count}}"
+        "moreToNextTier": "{{tier}} धरि आर {{count}}",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+        "toNext": "{{count}} अगिला धरि",
+        "toTier": "{{tier}} धरि {{count}}"
       },
       "profileLanguage": "ऐप भाषा",
       "profileLanguageDesc": "ई ऐप इंटरफेस आ प्रश्न सब जमा करबा लेल डिफ़ॉल्ट भाषा हेत",
@@ -14353,7 +14386,10 @@ const resources = {
         "tierGold": "സ്വർണ്ണം",
         "approvedQuestions": "{{count}} അംഗീകരിച്ച ചോദ്യങ്ങൾ",
         "toNextTier": "{{tier}} വരെ {{count}}",
-        "moreToNextTier": "{{tier}} വരെ ഇനിയും {{count}}"
+        "moreToNextTier": "{{tier}} വരെ ഇനിയും {{count}}",
+        "approvedQuestionsCount": "{{count}} അംഗീകരിച്ച ചോദ്യങ്ങൾ",
+        "toNext": "{{count}} അടുത്തതിലേക്ക്",
+        "toTier": "{{tier}} വരെ {{count}}"
       },
       "profileLanguage": "ആപ്പിന്റെ ഭാഷ",
       "profileLanguageDesc": "ആപ്പ് ഉപയോഗത്തിനും ചോദ്യങ്ങൾ നൽകുന്നതിനും ഇത് പ്രധാന ഭാഷയായി ഉപയോഗിക്കും",
@@ -15602,7 +15638,10 @@ const resources = {
         "tierGold": "গোল্ড",
         "approvedQuestions": "তসদিক তৌখ্রবা ৱাহাংদোক {{count}}",
         "toNextTier": "{{tier}} ফাওবা {{count}}",
-        "moreToNextTier": "{{tier}} ফাওবা হেন্না {{count}}"
+        "moreToNextTier": "{{tier}} ফাওবা হেন্না {{count}}",
+        "approvedQuestionsCount": "{{count}} লোইশিনখিবা হংজবা",
+        "toNext": "{{count}} মথংগী",
+        "toTier": "{{tier}} ফাওবা {{count}}"
       },
       "profileLanguage": "এপকী লোন",
       "profileLanguageDesc": "অসি এপকী ইন্তর্ফেস অমসুং ওয়াহং থাবগীদমক দিফোল্ত লোন ওইগনি",
@@ -16851,7 +16890,10 @@ const resources = {
         "tierGold": "सोने",
         "approvedQuestions": "{{count}} मंजूर प्रश्न",
         "toNextTier": "{{tier}} पर्यंत {{count}}",
-        "moreToNextTier": "{{tier}} पर्यंत आणखी {{count}}"
+        "moreToNextTier": "{{tier}} पर्यंत आणखी {{count}}",
+        "approvedQuestionsCount": "{{count}} मंजूर प्रश्न",
+        "toNext": "{{count}} पुढील पर्यंत",
+        "toTier": "{{tier}} पर्यंत {{count}}"
       },
       "profileLanguage": "अ‍ॅप भाषा",
       "profileLanguageDesc": "ही अ‍ॅप इंटरफेस आणि प्रश्न सबमिशनसाठी डीफॉल्ट भाषा असेल",
@@ -18100,7 +18142,10 @@ const resources = {
         "tierGold": "सुन",
         "approvedQuestions": "{{count}} स्वीकृत प्रश्नहरू",
         "toNextTier": "{{tier}} सम्म {{count}}",
-        "moreToNextTier": "{{tier}} सम्म थप {{count}}"
+        "moreToNextTier": "{{tier}} सम्म थप {{count}}",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्नहरू",
+        "toNext": "{{count}} अर्को सम्म",
+        "toTier": "{{tier}} सम्म {{count}}"
       },
       "profileLanguage": "एपको भाषा",
       "profileLanguageDesc": "यो एप इन्टरफेस र प्रश्न पेस गर्नका लागि पूर्वनिर्धारित (Default) भाषा हुनेछ",
@@ -19349,7 +19394,10 @@ const resources = {
         "tierGold": "ସୁନା",
         "approvedQuestions": "{{count}} ଅନୁମୋଦିତ ପ୍ରଶ୍ନ",
         "toNextTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ {{count}}",
-        "moreToNextTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ ଆଉ {{count}}"
+        "moreToNextTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ ଆଉ {{count}}",
+        "approvedQuestionsCount": "{{count}} ଅନୁମୋଦିତ ପ୍ରଶ୍ନ",
+        "toNext": "{{count}} ପରବର୍ତ୍ତୀ ପର୍ଯ୍ୟନ୍ତ",
+        "toTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ {{count}}"
       },
       "profileLanguage": "ଆପ୍ ଭାଷା",
       "profileLanguageDesc": "ଏହା ଆପ୍ ଇଣ୍ଟରଫେସ୍ ଏବଂ ପ୍ରଶ୍ନ ଦାଖଲ ପାଇଁ ଡିଫଲ୍ଟ ଭାଷା ହେବ",
@@ -19934,7 +19982,8 @@ const resources = {
         "student": "ଛାତ୍ର / ଛାତ୍ରୀ",
         "volunteerDesc": "କ୍ଷେତ୍ର ସ୍ୱେଚ୍ଛାସେବୀ କିମ୍ବା ସମ୍ପ୍ରସାରଣ କର୍ମୀ",
         "fpo": "FPO ସଦସ୍ୟ",
-        "ngo": "NGO ଅଂଶୀଦାର"
+        "ngo": "NGO ଅଂଶୀଦାର",
+        "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
       },
       "submissions": {
         "title": "ଦାଖଲଗୁଡ଼ିକ (Submissions)",
@@ -20596,7 +20645,10 @@ const resources = {
         "tierGold": "ਸੋਨਾ",
         "approvedQuestions": "{{count}} ਮਨਜ਼ੂਰ ਸਵਾਲ",
         "toNextTier": "{{tier}} ਤੱਕ {{count}}",
-        "moreToNextTier": "{{tier}} ਤੱਕ ਹੋਰ {{count}}"
+        "moreToNextTier": "{{tier}} ਤੱਕ ਹੋਰ {{count}}",
+        "approvedQuestionsCount": "{{count}} ਮਨਜ਼ੂਰ ਸਵਾਲ",
+        "toNext": "{{count}} ਅਗਲੇ ਤੱਕ",
+        "toTier": "{{tier}} ਤੱਕ {{count}}"
       },
       "profileLanguage": "ਐਪ ਭਾਸ਼ਾ",
       "profileLanguageDesc": "ਇਹ ਐਪ ਇੰਟਰਫੇਸ ਅਤੇ ਸਵਾਲ ਸਬਮਿਸ਼ਨ ਲਈ ਡਿਫਾਲਟ ਭਾਸ਼ਾ ਹੋਵੇਗੀ",
@@ -21855,7 +21907,10 @@ const resources = {
         "tierGold": "स्वर्णम्",
         "approvedQuestions": "स्वीकृताः {{count}} प्रश्नाः",
         "toNextTier": "{{tier}} यावत् {{count}}",
-        "moreToNextTier": "{{tier}} यावत् पुनः {{count}}"
+        "moreToNextTier": "{{tier}} यावत् पुनः {{count}}",
+        "approvedQuestionsCount": "{{count}} स्वीकृताः प्रश्नाः",
+        "toNext": "{{count}} अग्रिमं यावत्",
+        "toTier": "{{tier}} यावत् {{count}}"
       },
       "profileLanguage": "अनुप्रयोगभाषा",
       "profileLanguageDesc": "एषा अनुप्रयोगान्तरफलकाय प्रश्नसमर्पणाय च मूलभाषा भविष्यति",
@@ -23104,7 +23159,10 @@ const resources = {
         "tierGold": "ᱥᱳᱱᱟ",
         "approvedQuestions": "ᱠᱚᱠᱚᱠᱟᱱᱟ ᱥᱚᱶᱩᱫ {{count}}",
         "toNextTier": "{{tier}} ᱛᱟᱭᱚᱢ {{count}}",
-        "moreToNextTier": "{{tier}} ᱛᱟᱭᱚᱢ ᱟᱨ {{count}}"
+        "moreToNextTier": "{{tier}} ᱛᱟᱭᱚᱢ ᱟᱨ {{count}}",
+        "approvedQuestionsCount": "{{count}} ᱢᱟᱱᱟᱛ ᱠᱩᱠᱞᱤ",
+        "toNext": "{{count}} ᱛᱟᱭᱚᱢ ᱠᱷᱚᱱ",
+        "toTier": "{{tier}} ᱠᱷᱚᱱ {{count}}"
       },
       "profileLanguage": "ᱮᱯ ᱯᱟᱹᱨᱥᱤ",
       "profileLanguageDesc": "ᱱᱚᱶᱟ ᱫᱚ ᱮᱯ ᱵᱮᱣᱦᱟᱨ ᱟᱨ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱬᱩᱛ ᱯᱟᱹᱨᱥᱤ ᱛᱟᱦᱮᱸᱱᱟ",
@@ -24353,7 +24411,10 @@ const resources = {
         "tierGold": "سونو",
         "approvedQuestions": "{{count}} منظور ٿيل سوال",
         "toNextTier": "{{tier}} تائين {{count}}",
-        "moreToNextTier": "{{tier}} تائين وڌيڪ {{count}}"
+        "moreToNextTier": "{{tier}} تائين وڌيڪ {{count}}",
+        "approvedQuestionsCount": "{{count}} منظور ٿيل سوال",
+        "toNext": "{{count}} ايندڙ تائين",
+        "toTier": "{{tier}} تائين {{count}}"
       },
       "profileLanguage": "ائپ جي ٻولي",
       "profileLanguageDesc": "هي ائپ جي انٽرفيس ۽ سوالن کي جمع ڪرڻ لاءِ ڊيفالٽ ٻولي هوندي",
@@ -25602,7 +25663,10 @@ const resources = {
         "tierGold": "தங்கம்",
         "approvedQuestions": "{{count}} அங்கீகரிக்கப்பட்ட கேள்விகள்",
         "toNextTier": "{{tier}} வரை {{count}}",
-        "moreToNextTier": "{{tier}} வரை மேலும் {{count}}"
+        "moreToNextTier": "{{tier}} வரை மேலும் {{count}}",
+        "approvedQuestionsCount": "{{count}} அங்கீகரிக்கப்பட்ட கேள்விகள்",
+        "toNext": "{{count}} அடுத்ததற்கு",
+        "toTier": "{{tier}} வரை {{count}}"
       },
       "profileLanguage": "செயலி மொழி",
       "profileLanguageDesc": "இது செயலி இடைமுகம் மற்றும் கேள்வி சமர்ப்பிப்புகளுக்கான இயல்புநிலை மொழியாக இருக்கும்",
@@ -26853,7 +26917,10 @@ const resources = {
         "tierGold": "బంగారం",
         "approvedQuestions": "{{count}} ఆమోదించిన ప్రశ్నలు",
         "toNextTier": "{{tier}} వరకు {{count}}",
-        "moreToNextTier": "{{tier}} వరకు ఇంకా {{count}}"
+        "moreToNextTier": "{{tier}} వరకు ఇంకా {{count}}",
+        "approvedQuestionsCount": "{{count}} ఆమోదించబడిన ప్రశ్నలు",
+        "toNext": "{{count}} తదుపరికి",
+        "toTier": "{{tier}} వరకు {{count}}"
       },
       "profileLanguage": "యాప్ భాష",
       "profileLanguageDesc": "యాప్ ఇంటర్‌ఫేస్ మరియు ప్రశ్నల సమర్పణ కోసం ఇది డిఫాల్ట్ భాషగా ఉంటుంది",
@@ -28102,7 +28169,10 @@ const resources = {
         "tierGold": "سونا",
         "approvedQuestions": "{{count}} منظور شدہ سوالات",
         "toNextTier": "{{tier}} تک {{count}}",
-        "moreToNextTier": "{{tier}} تک مزید {{count}}"
+        "moreToNextTier": "{{tier}} تک مزید {{count}}",
+        "approvedQuestionsCount": "{{count}} منظور شدہ سوالات",
+        "toNext": "{{count}} اگلے تک",
+        "toTier": "{{tier}} تک {{count}}"
       },
       "profileLanguage": "ایپ کی زبان",
       "profileLanguageDesc": "یہ ایپ کے انٹرفیس اور سوالات جمع کرانے کے لیے ڈیفالٹ زبان ہو گی",

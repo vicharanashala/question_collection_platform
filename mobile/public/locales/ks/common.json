@@ -472,7 +472,10 @@
     "suspended": "معطل",
     "banned": "مستقل بند",
     "village": "گام",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} منظور شودہ سوال",
+    "toNext": "{{count}} بۆدہ کِنٛ",
+    "toTier": "{{tier}} تام {{count}}"
   },
   "profileLanguage": "ایپٕچ زبانہٕ",
   "profileLanguageDesc": "یہِ آسِ ایپ انٹرفیس تہٕ سوالات جمع کرنے باپتھ ڈیفالٹ زبانہٕ",

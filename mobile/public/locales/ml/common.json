@@ -472,7 +472,10 @@
     "suspended": "സസ്പെൻഡ് ചെയ്തു",
     "banned": "നിരോധിച്ചു",
     "village": "ഗ്രാമം",
-    "kvk": "കെ.വി.കെ"
+    "kvk": "കെ.വി.കെ",
+    "approvedQuestionsCount": "{{count}} അംഗീകരിച്ച ചോദ്യങ്ങൾ",
+    "toNext": "{{count}} അടുത്തതിലേക്ക്",
+    "toTier": "{{tier}} വരെ {{count}}"
   },
   "profileLanguage": "ആപ്പിന്റെ ഭാഷ",
   "profileLanguageDesc": "ആപ്പ് ഉപയോഗത്തിനും ചോദ്യങ്ങൾ നൽകുന്നതിനും ഇത് പ്രധാന ഭാഷയായി ഉപയോഗിക്കും",

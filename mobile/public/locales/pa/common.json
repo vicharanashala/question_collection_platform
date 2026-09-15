@@ -472,7 +472,10 @@
     "suspended": "ਮੁਅੱਤਲ",
     "banned": "ਬੈਨ ਕੀਤਾ",
     "village": "ਪਿੰਡ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ਮਨਜ਼ੂਰ ਸਵਾਲ",
+    "toNext": "{{count}} ਅਗਲੇ ਤੱਕ",
+    "toTier": "{{tier}} ਤੱਕ {{count}}"
   },
   "profileLanguage": "ਐਪ ਭਾਸ਼ਾ",
   "profileLanguageDesc": "ਇਹ ਐਪ ਇੰਟਰਫੇਸ ਅਤੇ ਸਵਾਲ ਸਬਮਿਸ਼ਨ ਲਈ ਡਿਫਾਲਟ ਭਾਸ਼ਾ ਹੋਵੇਗੀ",

@@ -196,16 +196,7 @@ export function PublicHomePage() {
   const isVerified = user?.verificationStatus === 'verified'
   const initials = (user?.name?.charAt(0) || '?').toUpperCase()
 
-  const CATEGORY_KEYS: Record<string, string> = {
-    farmer: 'home.farmer',
-    fpo: 'home.fpo',
-    student: 'home.student',
-    volunteer: 'home.volunteer',
-    ngo: 'home.ngo',
-  }
-  const categoryText = user?.category
-    ? (CATEGORY_KEYS[user.category] ? t(CATEGORY_KEYS[user.category]) : categoryLabel(user.category))
-    : null
+  const categoryText = user?.category ? categoryLabel(t, user.category) : null
 
   const tierIdx = currentTierIndex(stats?.totalApproved ?? 0)
   const currentTier = TIER_DISPLAY[tierIdx]

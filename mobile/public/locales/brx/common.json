@@ -472,7 +472,10 @@
     "suspended": "सामयिकइ होबथानाय",
     "banned": "हबथानाय",
     "village": "गामि",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} मानोन जाबाय सोदोब",
+    "toNext": "{{count}} उननिफ्राय",
+    "toTier": "{{tier}} फ्राय {{count}}"
   },
   "profileLanguage": "एपनि राव",
   "profileLanguageDesc": "बे एपनि गाहाय राव जागोन आरो सोंथि दैथायनायाव बाहायगोन",

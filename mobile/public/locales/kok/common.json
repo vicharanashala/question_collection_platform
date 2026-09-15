@@ -472,7 +472,10 @@
     "suspended": "निलंबित",
     "banned": "बंद केलां",
     "village": "गांव",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} मान्य केल्ले प्रस्न",
+    "toNext": "{{count}} फुडल्या मेरेन",
+    "toTier": "{{tier}} मेरेन {{count}}"
   },
   "profileLanguage": "ॲप भास",
   "profileLanguageDesc": "ह्या ॲपाच्या इंटरफेसाखातीर आनी प्रस्न धाडपाखातीर ही मुलभूत भास आसतली",

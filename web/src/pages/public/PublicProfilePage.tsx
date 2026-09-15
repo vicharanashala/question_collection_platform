@@ -291,7 +291,7 @@ export function PublicProfilePage() {
               {cat && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-sm sm:text-xs">
                   <Leaf className="h-3.5 w-3.5" />
-                  {categoryLabel(cat)}
+                  {categoryLabel(t, cat)}
                 </span>
               )}
               {statusCfg && (
@@ -323,7 +323,7 @@ export function PublicProfilePage() {
                   />
                 </div>
                 <span className="text-[10px] font-medium text-amber-300 sm:text-xs">
-                  {remaining} to {t(`home.${TIER_DISPLAY[nextTierIdx].key}`)}
+                  {t('profile.toTier', { count: remaining, tier: t(`home.${TIER_DISPLAY[nextTierIdx].key}`) })}
                 </span>
               </div>
             )}
@@ -337,7 +337,7 @@ export function PublicProfilePage() {
             <p className={cn('text-[10px] font-black uppercase tracking-widest sm:text-xs', tierCfg.textClass)}>
               {t(`home.${tierCfg.key}`)}
             </p>
-            <p className="text-[10px] text-emerald-400/60">Current tier</p>
+            <p className="text-[10px] text-emerald-400/60">{t('home.currentTier')}</p>
           </div>
         </div>
       </div>
@@ -355,7 +355,7 @@ export function PublicProfilePage() {
                 {t(`home.${tierCfg.key}`)} {t('profile.member')}
               </p>
               <p className="text-[11px] font-medium text-text-secondary sm:text-xs">
-                {approved} approved questions
+                {t('profile.approvedQuestionsCount', { count: approved })}
               </p>
             </div>
             {nextTierIdx && (
@@ -363,7 +363,7 @@ export function PublicProfilePage() {
                 <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                   <path d="M4 1L7 4L4 7M1 4H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {remaining} to next
+                {t('profile.toNext', { count: remaining })}
               </div>
             )}
           </div>
@@ -433,7 +433,7 @@ export function PublicProfilePage() {
             {(user.username != null || cat || user.gender || user.age != null) ? (
               <>
                 {user.username != null && <AccountRow icon={AtSign} label={t('profile.username')} value={`@${user.username}`} />}
-                {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(cat)} />}
+                {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(t, cat)} />}
                 {user.gender && <AccountRow icon={Users} label={t('profile.gender')} value={<span className="capitalize">{user.gender}</span>} />}
                 {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} isLast />}
               </>
@@ -560,7 +560,7 @@ export function PublicProfilePage() {
       {/* Footer */}
       <div className="flex items-center justify-center gap-2 pt-2">
         <div className="h-px flex-1 bg-border-subtle" />
-        <p className="px-3 text-center text-[11px] text-text-tertiary">AnnaDatha — To Strengthen Indian Farmers</p>
+        <p className="px-3 text-center text-[11px] text-text-tertiary">{t('app.footer')}</p>
         <div className="h-px flex-1 bg-border-subtle" />
       </div>
 

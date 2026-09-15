@@ -472,7 +472,10 @@
     "suspended": "معطل ٿيل",
     "banned": "پابندي مڙهيل",
     "village": "ڳوٺ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} منظور ٿيل سوال",
+    "toNext": "{{count}} ايندڙ تائين",
+    "toTier": "{{tier}} تائين {{count}}"
   },
   "profileLanguage": "ائپ جي ٻولي",
   "profileLanguageDesc": "هي ائپ جي انٽرفيس ۽ سوالن کي جمع ڪرڻ لاءِ ڊيفالٽ ٻولي هوندي",

@@ -482,7 +482,10 @@
     "suspended": "निलम्बितम्",
     "banned": "प्रतिबन्धितम्",
     "village": "ग्रामः",
-    "kvk": "केवीके"
+    "kvk": "केवीके",
+    "approvedQuestionsCount": "{{count}} स्वीकृताः प्रश्नाः",
+    "toNext": "{{count}} अग्रिमं यावत्",
+    "toTier": "{{tier}} यावत् {{count}}"
   },
   "profileLanguage": "अनुप्रयोगभाषा",
   "profileLanguageDesc": "एषा अनुप्रयोगान्तरफलकाय प्रश्नसमर्पणाय च मूलभाषा भविष्यति",

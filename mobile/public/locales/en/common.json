@@ -472,7 +472,10 @@
     "suspended": "Suspended",
     "banned": "Banned",
     "village": "Village",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} approved questions",
+    "toNext": "{{count}} to next",
+    "toTier": "{{count}} to {{tier}}"
   },
   "profileLanguage": "App Language",
   "profileLanguageDesc": "This will be the default language for the app interface and question submissions",

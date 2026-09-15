@@ -472,7 +472,10 @@
     "suspended": "இடைநிறுத்தப்பட்டது",
     "banned": "தடை செய்யப்பட்டது",
     "village": "கிராமம்",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} அங்கீகரிக்கப்பட்ட கேள்விகள்",
+    "toNext": "{{count}} அடுத்ததற்கு",
+    "toTier": "{{tier}} வரை {{count}}"
   },
   "profileLanguage": "செயலி மொழி",
   "profileLanguageDesc": "இது செயலி இடைமுகம் மற்றும் கேள்வி சமர்ப்பிப்புகளுக்கான இயல்புநிலை மொழியாக இருக்கும்",

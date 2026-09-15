@@ -472,7 +472,10 @@
     "suspended": "ಅಮಾನತುಗೊಳಿಸಲಾಗಿದೆ",
     "banned": "ನಿಷೇಧಿಸಲಾಗಿದೆ",
     "village": "ಗ್ರಾಮ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳು",
+    "toNext": "{{count}} ಮುಂದಿನದಕ್ಕೆ",
+    "toTier": "{{tier}}ಗೆ {{count}}"
   },
   "profileLanguage": "ಆಪ್ ಭಾಷೆ",
   "profileLanguageDesc": "ಇದು ಆಪ್ ಇಂಟರ್ಫೇಸ್ ಮತ್ತು ಪ್ರಶ್ನೆ ಸಲ್ಲಿಕೆಗಳಿಗೆ ಡೀಫಾಲ್ಟ್ ಭಾಷೆಯಾಗಿರುತ್ತದೆ",

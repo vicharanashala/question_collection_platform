@@ -470,7 +470,10 @@
     "suspended": "ନିଲମ୍ବିତ",
     "banned": "ବ୍ୟାନ୍ ହୋଇଛି",
     "village": "ଗାଁ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ଅନୁମୋଦିତ ପ୍ରଶ୍ନ",
+    "toNext": "{{count}} ପରବର୍ତ୍ତୀ ପର୍ଯ୍ୟନ୍ତ",
+    "toTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ {{count}}"
   },
   "profileLanguage": "ଆପ୍ ଭାଷା",
   "profileLanguageDesc": "ଏହା ଆପ୍ ଇଣ୍ଟରଫେସ୍ ଏବଂ ପ୍ରଶ୍ନ ଦାଖଲ ପାଇଁ ଡିଫଲ୍ଟ ଭାଷା ହେବ",
@@ -1333,5 +1336,8 @@
     "held": "ହୋଲ୍ଡରେ ଅଛି",
     "published": "ପ୍ରକାଶିତ",
     "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
+  },
+  "cat": {
+    "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
   }
 }

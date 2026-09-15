@@ -474,7 +474,10 @@
     "suspended": "సస్పెండ్ చేయబడింది",
     "banned": "బ్యాన్ చేయబడింది",
     "village": "గ్రామం",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ఆమోదించబడిన ప్రశ్నలు",
+    "toNext": "{{count}} తదుపరికి",
+    "toTier": "{{tier}} వరకు {{count}}"
   },
   "profileLanguage": "యాప్ భాష",
   "profileLanguageDesc": "యాప్ ఇంటర్‌ఫేస్ మరియు ప్రశ్నల సమర్పణ కోసం ఇది డిఫాల్ట్ భాషగా ఉంటుంది",
