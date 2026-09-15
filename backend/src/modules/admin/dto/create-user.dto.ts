@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsMobilePhone, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { UserCategory, UserRole } from '../../../shared/classes/enums';
 
 export class CreateUserDto {
@@ -7,8 +7,8 @@ export class CreateUserDto {
   @MinLength(1)
   name: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsMobilePhone('en-IN')
   mobileNumber: string;
 
   @IsString()

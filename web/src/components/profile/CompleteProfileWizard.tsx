@@ -83,7 +83,7 @@ const STEP_KEYS = [
   "About you",
   "Language & Consent",
 ];
-const OTHER_VALUE = "__other__";
+export const OTHER_VALUE = "__other__";
 
 interface WizardFormState {
   category: UserCategory | "";

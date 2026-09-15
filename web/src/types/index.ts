@@ -162,6 +162,7 @@ export interface AuthUser {
   organizationVillage?:  string | null;
   consentGiven?:         boolean;
   isUserCreatedBySuperAdmin?: boolean;
+  organisationTypeOther?: string
 }
 
 export type TimeRange = '7d' | '30d' | '90d'
