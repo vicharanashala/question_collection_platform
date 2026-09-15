@@ -1162,7 +1162,8 @@
       "article_other": "लेखहरू"
     },
     "videoComingSoon": "भिडियो गाइड चाँडै आउँदैछ",
-    "videoGuideTitle": "भिडियो गाइड"
+    "videoGuideTitle": "भिडियो गाइड",
+    "loadError": "FAQ लोड गर्न असफल भयो"
   },
   "faqAdmin": {
     "title": "FAQ व्यवस्थापन",

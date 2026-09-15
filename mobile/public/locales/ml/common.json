@@ -1162,7 +1162,8 @@
       "article_other": "ലേഖനങ്ങൾ"
     },
     "videoComingSoon": "വീഡിയോ ഗൈഡ് ഉടൻ വരുന്നു",
-    "videoGuideTitle": "വീഡിയോ ഗൈഡ്"
+    "videoGuideTitle": "വീഡിയോ ഗൈഡ്",
+    "loadError": "FAQ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
   },
   "faqAdmin": {
     "title": "FAQ കൈകാര്യം ചെയ്യൽ",

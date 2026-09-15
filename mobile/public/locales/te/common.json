@@ -1164,7 +1164,8 @@
       "article_other": "వ్యాసాలు"
     },
     "videoComingSoon": "వీడియో గైడ్ త్వరలో వస్తుంది",
-    "videoGuideTitle": "వీడియో గైడ్"
+    "videoGuideTitle": "వీడియో గైడ్",
+    "loadError": "FAQలను లోడ్ చేయడంలో విఫలమైంది"
   },
   "faqAdmin": {
     "title": "FAQ నిర్వహణ",

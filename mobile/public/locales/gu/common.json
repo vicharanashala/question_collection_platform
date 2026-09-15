@@ -1162,7 +1162,8 @@
       "article_other": "લેખો"
     },
     "videoComingSoon": "વીડિયો માર્ગદર્શિકા ટૂંક સમયમાં આવી રહી છે",
-    "videoGuideTitle": "વીડિયો માર્ગદર્શિકા"
+    "videoGuideTitle": "વીડિયો માર્ગદર્શિકા",
+    "loadError": "FAQ લોડ કરવામાં નિષ્ફળ"
   },
   "faqAdmin": {
     "title": "FAQ વ્યવસ્થાપન",

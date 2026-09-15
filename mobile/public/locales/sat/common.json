@@ -1162,7 +1162,8 @@
       "article_other": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ ᱠᱚ"
     },
     "videoComingSoon": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ ᱡᱚᱛᱚ ᱦᱮᱡᱩᱜ ᱠᱟᱱᱟ",
-    "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ"
+    "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ",
+    "loadError": "FAQ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
   },
   "faqAdmin": {
     "title": "FAQ ᱥᱟᱯᱲᱟᱣ",

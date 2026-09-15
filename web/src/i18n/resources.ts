@@ -1073,7 +1073,8 @@ const resources = {
           "article_other": "articles"
         },
         "videoComingSoon": "Video guide coming soon",
-        "videoGuideTitle": "Video Guide"
+        "videoGuideTitle": "Video Guide",
+        "loadError": "Failed to load FAQs"
       },
       "faqAdmin": {
         "title": "FAQ Management",
@@ -2334,7 +2335,8 @@ const resources = {
           "article_other": "প্ৰবন্ধ"
         },
         "videoComingSoon": "ভিডিঅ' গাইড শীঘ্ৰেই আহিব",
-        "videoGuideTitle": "ভিডিঅ' গাইড"
+        "videoGuideTitle": "ভিডিঅ' গাইড",
+        "loadError": "FAQ ল'ড কৰাত বিফল হ'ল"
       },
       "faqAdmin": {
         "title": "FAQ ব্যৱস্থাপনা",
@@ -3595,7 +3597,8 @@ const resources = {
           "article_other": "নিবন্ধসমূহ"
         },
         "videoComingSoon": "ভিডিও গাইড শীঘ্রই আসছে",
-        "videoGuideTitle": "ভিডিও গাইড"
+        "videoGuideTitle": "ভিডিও গাইড",
+        "loadError": "FAQ লোড করতে ব্যর্থ হয়েছে"
       },
       "faqAdmin": {
         "title": "FAQ ব্যবস্থাপনা",
@@ -4856,7 +4859,8 @@ const resources = {
           "article_other": "आर्टिकेलफोर"
         },
         "videoComingSoon": "भिडिअ गाइड गोदान फैया",
-        "videoGuideTitle": "भिडिअ गाइड"
+        "videoGuideTitle": "भिडिअ गाइड",
+        "loadError": "FAQ लोड खालामनो हायाखै"
       },
       "faqAdmin": {
         "title": "FAQ सामलायनाय",
@@ -6117,7 +6121,8 @@ const resources = {
           "article_other": "लेख"
         },
         "videoComingSoon": "वीडियो गाइड जल्दी आवण आळा ऐ",
-        "videoGuideTitle": "वीडियो गाइड"
+        "videoGuideTitle": "वीडियो गाइड",
+        "loadError": "FAQ लोड करने च असफल"
       },
       "faqAdmin": {
         "title": "FAQ प्रबंधन",
@@ -7378,7 +7383,8 @@ const resources = {
           "article_other": "લેખો"
         },
         "videoComingSoon": "વીડિયો માર્ગદર્શિકા ટૂંક સમયમાં આવી રહી છે",
-        "videoGuideTitle": "વીડિયો માર્ગદર્શિકા"
+        "videoGuideTitle": "વીડિયો માર્ગદર્શિકા",
+        "loadError": "FAQ લોડ કરવામાં નિષ્ફળ"
       },
       "faqAdmin": {
         "title": "FAQ વ્યવસ્થાપન",
@@ -8658,7 +8664,8 @@ const resources = {
           "article_other": "लेख"
         },
         "videoComingSoon": "वीडियो गाइड जल्द आ रहा है",
-        "videoGuideTitle": "वीडियो गाइड"
+        "videoGuideTitle": "वीडियो गाइड",
+        "loadError": "FAQ लोड करने में विफल"
       },
       "faqAdmin": {
         "title": "FAQ प्रबंधन",
@@ -9919,7 +9926,8 @@ const resources = {
           "article_other": "ಲೇಖನಗಳು"
         },
         "videoComingSoon": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
-        "videoGuideTitle": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ"
+        "videoGuideTitle": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ",
+        "loadError": "FAQ ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ"
       },
       "faqAdmin": {
         "title": "FAQ ನಿರ್ವಹಣೆ",
@@ -11180,7 +11188,8 @@ const resources = {
           "article_other": "مضامین"
         },
         "videoComingSoon": "ویڈیو گائیڈ جلدی ییہ",
-        "videoGuideTitle": "ویڈیو گائیڈ"
+        "videoGuideTitle": "ویڈیو گائیڈ",
+        "loadError": "FAQ لوڈ کرنس منٛز ناکامی"
       },
       "faqAdmin": {
         "title": "FAQ انتظام",
@@ -12441,7 +12450,8 @@ const resources = {
           "article_other": "लेख"
         },
         "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येतां",
-        "videoGuideTitle": "व्हिडिओ मार्गदर्शक"
+        "videoGuideTitle": "व्हिडिओ मार्गदर्शक",
+        "loadError": "FAQ लोड करपाक अपेस जालें"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -13702,7 +13712,8 @@ const resources = {
           "article_other": "लेख सब"
         },
         "videoComingSoon": "वीडियो गाइड जल्दिये आबि रहल अछि",
-        "videoGuideTitle": "वीडियो गाइड"
+        "videoGuideTitle": "वीडियो गाइड",
+        "loadError": "FAQ लोड करबामे विफल"
       },
       "faqAdmin": {
         "title": "एफएक्यू प्रबंधन",
@@ -14963,7 +14974,8 @@ const resources = {
           "article_other": "ലേഖനങ്ങൾ"
         },
         "videoComingSoon": "വീഡിയോ ഗൈഡ് ഉടൻ വരുന്നു",
-        "videoGuideTitle": "വീഡിയോ ഗൈഡ്"
+        "videoGuideTitle": "വീഡിയോ ഗൈഡ്",
+        "loadError": "FAQ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
       },
       "faqAdmin": {
         "title": "FAQ കൈകാര്യം ചെയ്യൽ",
@@ -16224,7 +16236,8 @@ const resources = {
           "article_other": "আর্টিকেলশিং"
         },
         "videoComingSoon": "ভিদিও গাইদ থুনামক লাক্কনি",
-        "videoGuideTitle": "ভিদিও গাইদ"
+        "videoGuideTitle": "ভিদিও গাইদ",
+        "loadError": "FAQ লোড তৌবদা মায় পাক্লে"
       },
       "faqAdmin": {
         "title": "FAQ মেটনেজমেন্ট",
@@ -17485,7 +17498,8 @@ const resources = {
           "article_other": "लेख"
         },
         "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येत आहे",
-        "videoGuideTitle": "व्हिडिओ मार्गदर्शक"
+        "videoGuideTitle": "व्हिडिओ मार्गदर्शक",
+        "loadError": "FAQ लोड करण्यात अयशस्वी"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -18746,7 +18760,8 @@ const resources = {
           "article_other": "लेखहरू"
         },
         "videoComingSoon": "भिडियो गाइड चाँडै आउँदैछ",
-        "videoGuideTitle": "भिडियो गाइड"
+        "videoGuideTitle": "भिडियो गाइड",
+        "loadError": "FAQ लोड गर्न असफल भयो"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -20007,7 +20022,8 @@ const resources = {
           "article_other": "ଟି ପ୍ରବନ୍ଧ"
         },
         "videoComingSoon": "ଭିଡିଓ ଗାଇଡ୍ ଶୀଘ୍ର ଆସୁଛି",
-        "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍"
+        "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍",
+        "loadError": "FAQ ଲୋଡ୍ କରିବାରେ ବିଫଳ"
       },
       "faqAdmin": {
         "title": "FAQ ପରିଚାଳନା",
@@ -21267,7 +21283,8 @@ const resources = {
           "article_other": "ਲੇਖ"
         },
         "videoComingSoon": "ਵੀਡੀਓ ਗਾਈਡ ਜਲਦੀ ਆ ਰਹੀ ਹੈ",
-        "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ"
+        "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ",
+        "loadError": "FAQ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
       },
       "faqAdmin": {
         "title": "FAQ ਪ੍ਰਬੰਧਨ",
@@ -22538,7 +22555,8 @@ const resources = {
           "article_other": "लेखाः"
         },
         "videoComingSoon": "चलच्चित्रमार्गदर्शिका शीघ्रं आगमिष्यति",
-        "videoGuideTitle": "चलच्चित्रमार्गदर्शिका"
+        "videoGuideTitle": "चलच्चित्रमार्गदर्शिका",
+        "loadError": "FAQ आयोजने विफलम्"
       },
       "faqAdmin": {
         "title": "सामान्यानां प्रश्नानां प्रबन्धनम्",
@@ -23799,7 +23817,8 @@ const resources = {
           "article_other": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ ᱠᱚ"
         },
         "videoComingSoon": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ ᱡᱚᱛᱚ ᱦᱮᱡᱩᱜ ᱠᱟᱱᱟ",
-        "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ"
+        "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ",
+        "loadError": "FAQ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
       },
       "faqAdmin": {
         "title": "FAQ ᱥᱟᱯᱲᱟᱣ",
@@ -25060,7 +25079,8 @@ const resources = {
           "article_other": "مضمون"
         },
         "videoComingSoon": "وڊيو گائيڊ جلد اچي رهي آهي",
-        "videoGuideTitle": "وڊيو گائيڊ"
+        "videoGuideTitle": "وڊيو گائيڊ",
+        "loadError": "FAQ لوڊ ڪرڻ ۾ ناڪامي"
       },
       "faqAdmin": {
         "title": "FAQ انتظاميه",
@@ -26321,7 +26341,8 @@ const resources = {
           "article_other": "கட்டுரைகள்"
         },
         "videoComingSoon": "வீடியோ வழிகாட்டி விரைவில் வரும்",
-        "videoGuideTitle": "வீடியோ வழிகாட்டி"
+        "videoGuideTitle": "வீடியோ வழிகாட்டி",
+        "loadError": "FAQ ஏற்றுவதில் தோல்வி"
       },
       "faqAdmin": {
         "title": "FAQ மேலாண்மை",
@@ -27584,7 +27605,8 @@ const resources = {
           "article_other": "వ్యాసాలు"
         },
         "videoComingSoon": "వీడియో గైడ్ త్వరలో వస్తుంది",
-        "videoGuideTitle": "వీడియో గైడ్"
+        "videoGuideTitle": "వీడియో గైడ్",
+        "loadError": "FAQలను లోడ్ చేయడంలో విఫలమైంది"
       },
       "faqAdmin": {
         "title": "FAQ నిర్వహణ",
@@ -28845,7 +28867,8 @@ const resources = {
           "article_other": "مضامین"
         },
         "videoComingSoon": "ویڈیو گائیڈ جلد آرہا ہے",
-        "videoGuideTitle": "ویڈیو گائیڈ"
+        "videoGuideTitle": "ویڈیو گائیڈ",
+        "loadError": "FAQ لوڈ کرنے میں ناکامی"
       },
       "faqAdmin": {
         "title": "FAQ کا انتظام",

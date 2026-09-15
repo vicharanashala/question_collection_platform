@@ -1162,7 +1162,8 @@
       "article_other": "مضامین"
     },
     "videoComingSoon": "ویڈیو گائیڈ جلدی ییہ",
-    "videoGuideTitle": "ویڈیو گائیڈ"
+    "videoGuideTitle": "ویڈیو گائیڈ",
+    "loadError": "FAQ لوڈ کرنس منٛز ناکامی"
   },
   "faqAdmin": {
     "title": "FAQ انتظام",

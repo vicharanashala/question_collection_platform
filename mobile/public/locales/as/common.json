@@ -1162,7 +1162,8 @@
       "article_other": "প্ৰবন্ধ"
     },
     "videoComingSoon": "ভিডিঅ' গাইড শীঘ্ৰেই আহিব",
-    "videoGuideTitle": "ভিডিঅ' গাইড"
+    "videoGuideTitle": "ভিডিঅ' গাইড",
+    "loadError": "FAQ ল'ড কৰাত বিফল হ'ল"
   },
   "faqAdmin": {
     "title": "FAQ ব্যৱস্থাপনা",

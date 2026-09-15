@@ -1162,7 +1162,8 @@
       "article_other": "आर्टिकेलफोर"
     },
     "videoComingSoon": "भिडिअ गाइड गोदान फैया",
-    "videoGuideTitle": "भिडिअ गाइड"
+    "videoGuideTitle": "भिडिअ गाइड",
+    "loadError": "FAQ लोड खालामनो हायाखै"
   },
   "faqAdmin": {
     "title": "FAQ सामलायनाय",

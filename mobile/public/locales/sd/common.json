@@ -1162,7 +1162,8 @@
       "article_other": "مضمون"
     },
     "videoComingSoon": "وڊيو گائيڊ جلد اچي رهي آهي",
-    "videoGuideTitle": "وڊيو گائيڊ"
+    "videoGuideTitle": "وڊيو گائيڊ",
+    "loadError": "FAQ لوڊ ڪرڻ ۾ ناڪامي"
   },
   "faqAdmin": {
     "title": "FAQ انتظاميه",

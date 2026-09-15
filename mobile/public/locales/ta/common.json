@@ -1162,7 +1162,8 @@
       "article_other": "கட்டுரைகள்"
     },
     "videoComingSoon": "வீடியோ வழிகாட்டி விரைவில் வரும்",
-    "videoGuideTitle": "வீடியோ வழிகாட்டி"
+    "videoGuideTitle": "வீடியோ வழிகாட்டி",
+    "loadError": "FAQ ஏற்றுவதில் தோல்வி"
   },
   "faqAdmin": {
     "title": "FAQ மேலாண்மை",

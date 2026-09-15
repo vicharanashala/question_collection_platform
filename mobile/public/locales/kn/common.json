@@ -1162,7 +1162,8 @@
       "article_other": "ಲೇಖನಗಳು"
     },
     "videoComingSoon": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
-    "videoGuideTitle": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ"
+    "videoGuideTitle": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ",
+    "loadError": "FAQ ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ"
   },
   "faqAdmin": {
     "title": "FAQ ನಿರ್ವಹಣೆ",

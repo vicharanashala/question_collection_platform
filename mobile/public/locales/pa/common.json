@@ -1162,7 +1162,8 @@
       "article_other": "ਲੇਖ"
     },
     "videoComingSoon": "ਵੀਡੀਓ ਗਾਈਡ ਜਲਦੀ ਆ ਰਹੀ ਹੈ",
-    "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ"
+    "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ",
+    "loadError": "FAQ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
   },
   "faqAdmin": {
     "title": "FAQ ਪ੍ਰਬੰਧਨ",

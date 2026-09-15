@@ -1162,7 +1162,8 @@
       "article_other": "আর্টিকেলশিং"
     },
     "videoComingSoon": "ভিদিও গাইদ থুনামক লাক্কনি",
-    "videoGuideTitle": "ভিদিও গাইদ"
+    "videoGuideTitle": "ভিদিও গাইদ",
+    "loadError": "FAQ লোড তৌবদা মায় পাক্লে"
   },
   "faqAdmin": {
     "title": "FAQ মেটনেজমেন্ট",

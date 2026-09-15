@@ -1162,7 +1162,8 @@
       "article_other": "مضامین"
     },
     "videoComingSoon": "ویڈیو گائیڈ جلد آرہا ہے",
-    "videoGuideTitle": "ویڈیو گائیڈ"
+    "videoGuideTitle": "ویڈیو گائیڈ",
+    "loadError": "FAQ لوڈ کرنے میں ناکامی"
   },
   "faqAdmin": {
     "title": "FAQ کا انتظام",

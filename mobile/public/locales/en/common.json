@@ -1164,7 +1164,8 @@
       "article_other": "articles"
     },
     "videoComingSoon": "Video guide coming soon",
-    "videoGuideTitle": "Video Guide"
+    "videoGuideTitle": "Video Guide",
+    "loadError": "Failed to load FAQs"
   },
   "faqAdmin": {
     "title": "FAQ Management",

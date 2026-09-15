@@ -1160,7 +1160,8 @@
       "article_other": "ଟି ପ୍ରବନ୍ଧ"
     },
     "videoComingSoon": "ଭିଡିଓ ଗାଇଡ୍ ଶୀଘ୍ର ଆସୁଛି",
-    "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍"
+    "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍",
+    "loadError": "FAQ ଲୋଡ୍ କରିବାରେ ବିଫଳ"
   },
   "faqAdmin": {
     "title": "FAQ ପରିଚାଳନା",

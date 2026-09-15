@@ -1162,7 +1162,8 @@
       "article_other": "लेख"
     },
     "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येत आहे",
-    "videoGuideTitle": "व्हिडिओ मार्गदर्शक"
+    "videoGuideTitle": "व्हिडिओ मार्गदर्शक",
+    "loadError": "FAQ लोड करण्यात अयशस्वी"
   },
   "faqAdmin": {
     "title": "FAQ व्यवस्थापन",

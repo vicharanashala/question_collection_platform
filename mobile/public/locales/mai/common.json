@@ -1162,7 +1162,8 @@
       "article_other": "लेख सब"
     },
     "videoComingSoon": "वीडियो गाइड जल्दिये आबि रहल अछि",
-    "videoGuideTitle": "वीडियो गाइड"
+    "videoGuideTitle": "वीडियो गाइड",
+    "loadError": "FAQ लोड करबामे विफल"
   },
   "faqAdmin": {
     "title": "एफएक्यू प्रबंधन",
