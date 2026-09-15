@@ -1350,5 +1350,9 @@
     "held": "హోల్డ్‌లో ఉంది",
     "published": "ప్రచురించబడింది",
     "yourSubmissions": "మీరు సమర్పించిన ప్రశ్నలు మరియు వాటి స్థితి."
-  }
+  },
+  "leaderboard.loadError": "లీడర్‌బోర్డ్‌ను లోడ్ చేయడంలో విఫలమైంది",
+  "leaderboard.loadMore": "మరిన్ని లోడ్ చేయండి",
+  "leaderboard.loadingMore": "లోడ్ అవుతోంది...",
+  "leaderboard.reachedEnd": "మీరు లీడర్‌బోర్డ్ చివరకు చేరుకున్నారు."
 }

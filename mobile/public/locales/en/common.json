@@ -1350,5 +1350,9 @@
     "held": "On hold",
     "published": "Published",
     "yourSubmissions": "Your submitted questions and their status."
-  }
+  },
+  "leaderboard.loadError": "Failed to load leaderboard",
+  "leaderboard.loadMore": "Load more",
+  "leaderboard.loadingMore": "Loading...",
+  "leaderboard.reachedEnd": "You've reached the end of the leaderboard."
 }

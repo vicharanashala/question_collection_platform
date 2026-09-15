@@ -1348,5 +1348,9 @@
     "held": "হ'ল্ডত আছে",
     "published": "প্ৰকাশিত",
     "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
-  }
+  },
+  "leaderboard.loadError": "লিডাৰব'ৰ্ড ল'ড কৰাত বিফল হ'ল",
+  "leaderboard.loadMore": "অধিক ল'ড কৰক",
+  "leaderboard.loadingMore": "ল'ড হৈ আছে...",
+  "leaderboard.reachedEnd": "আপুনি লিডাৰব'ৰ্ডৰ শেষত উপনীত হৈছে।"
 }

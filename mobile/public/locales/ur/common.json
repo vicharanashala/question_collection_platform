@@ -1348,5 +1348,9 @@
     "held": "ہولڈ پر",
     "published": "شائع شدہ",
     "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
-  }
+  },
+  "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنے میں ناکامی",
+  "leaderboard.loadMore": "مزید لوڈ کریں",
+  "leaderboard.loadingMore": "لوڈ ہو رہا ہے...",
+  "leaderboard.reachedEnd": "آپ لیڈر بورڈ کے اختتام تک پہنچ گئے ہیں۔"
 }

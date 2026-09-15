@@ -1348,5 +1348,9 @@
     "held": "ಹೋಲ್ಡ್‌ನಲ್ಲಿ",
     "published": "ಪ್ರಕಟಿಸಲಾಗಿದೆ",
     "yourSubmissions": "ನಿಮ್ಮ ಸಲ್ಲಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಅವುಗಳ ಸ್ಥಿತಿ."
-  }
+  },
+  "leaderboard.loadError": "ಲೀಡರ್‌ಬೋರ್ಡ್ ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+  "leaderboard.loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+  "leaderboard.loadingMore": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+  "leaderboard.reachedEnd": "ನೀವು ಲೀಡರ್‌ಬೋರ್ಡ್‌ನ ಕೊನೆಗೆ ತಲುಪಿದ್ದೀರಿ."
 }

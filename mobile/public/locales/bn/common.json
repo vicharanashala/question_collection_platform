@@ -1348,5 +1348,9 @@
     "held": "হোল্ডে আছে",
     "published": "প্রকাশিত",
     "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
-  }
+  },
+  "leaderboard.loadError": "লিডারবোর্ড লোড করতে ব্যর্থ হয়েছে",
+  "leaderboard.loadMore": "আরও লোড করুন",
+  "leaderboard.loadingMore": "লোড হচ্ছে...",
+  "leaderboard.reachedEnd": "আপনি লিডারবোর্ডের শেষে পৌঁছে গেছেন।"
 }

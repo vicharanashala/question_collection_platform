@@ -1358,5 +1358,9 @@
     "held": "स्थगितम्",
     "published": "प्रकाशितम्",
     "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
-  }
+  },
+  "leaderboard.loadError": "क्रमसूची आयोजने विफलम्",
+  "leaderboard.loadMore": "अधिकं लोडयतु",
+  "leaderboard.loadingMore": "आयोजितम्...",
+  "leaderboard.reachedEnd": "भवान् क्रमसूच्याः अन्तं प्राप्तवान्।"
 }

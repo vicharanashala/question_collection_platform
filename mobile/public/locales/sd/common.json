@@ -1348,5 +1348,9 @@
     "held": "هولڊ تي",
     "published": "شايع ٿيل",
     "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
-  }
+  },
+  "leaderboard.loadError": "ليڊر بورڊ لوڊ ڪرڻ ۾ ناڪامي",
+  "leaderboard.loadMore": "وڌيڪ لوڊ ڪريو",
+  "leaderboard.loadingMore": "لوڊ ٿي رهيو آهي...",
+  "leaderboard.reachedEnd": "توهان ليڊر بورڊ جي آخر تائين پهچي ويا آهيو."
 }

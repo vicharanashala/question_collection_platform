@@ -1348,5 +1348,9 @@
     "held": "હોલ્ડ પર",
     "published": "પ્રકાશિત",
     "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
-  }
+  },
+  "leaderboard.loadError": "લીડરબોર્ડ લોડ કરવામાં નિષ્ફળ",
+  "leaderboard.loadMore": "વધુ લોડ કરો",
+  "leaderboard.loadingMore": "લોડ થઈ રહ્યું છે...",
+  "leaderboard.reachedEnd": "તમે લીડરબોર્ડના અંત સુધી પહોંચી ગયા છો."
 }

@@ -1349,5 +1349,9 @@
   },
   "cat": {
     "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
-  }
+  },
+  "leaderboard.loadError": "ଲିଡରବୋର୍ଡ ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+  "leaderboard.loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+  "leaderboard.loadingMore": "ଲୋଡ୍ ହେଉଛି...",
+  "leaderboard.reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।"
 }

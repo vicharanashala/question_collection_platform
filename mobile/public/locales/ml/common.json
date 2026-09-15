@@ -1348,5 +1348,9 @@
     "held": "ഹോൾഡിലാണ്",
     "published": "പ്രസിദ്ധീകരിച്ചു",
     "yourSubmissions": "നിങ്ങൾ സമർപ്പിച്ച ചോദ്യങ്ങളും അവയുടെ നിലയും."
-  }
+  },
+  "leaderboard.loadError": "ലീഡർബോർഡ് ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+  "leaderboard.loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+  "leaderboard.loadingMore": "ലോഡ് ചെയ്യുന്നു...",
+  "leaderboard.reachedEnd": "നിങ്ങൾ ലീഡർബോർഡിന്റെ അവസാനത്തിലെത്തി."
 }

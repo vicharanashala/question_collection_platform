@@ -1355,7 +1355,11 @@ const resources = {
         "held": "On hold",
         "published": "Published",
         "yourSubmissions": "Your submitted questions and their status."
-      }
+      },
+      "leaderboard.loadError": "Failed to load leaderboard",
+      "leaderboard.loadMore": "Load more",
+      "leaderboard.loadingMore": "Loading...",
+      "leaderboard.reachedEnd": "You've reached the end of the leaderboard."
     }
   },
   "as": {
@@ -2709,7 +2713,11 @@ const resources = {
         "held": "হ'ল্ডত আছে",
         "published": "প্ৰকাশিত",
         "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
-      }
+      },
+      "leaderboard.loadError": "লিডাৰব'ৰ্ড ল'ড কৰাত বিফল হ'ল",
+      "leaderboard.loadMore": "অধিক ল'ড কৰক",
+      "leaderboard.loadingMore": "ল'ড হৈ আছে...",
+      "leaderboard.reachedEnd": "আপুনি লিডাৰব'ৰ্ডৰ শেষত উপনীত হৈছে।"
     }
   },
   "bn": {
@@ -4063,7 +4071,11 @@ const resources = {
         "held": "হোল্ডে আছে",
         "published": "প্রকাশিত",
         "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
-      }
+      },
+      "leaderboard.loadError": "লিডারবোর্ড লোড করতে ব্যর্থ হয়েছে",
+      "leaderboard.loadMore": "আরও লোড করুন",
+      "leaderboard.loadingMore": "লোড হচ্ছে...",
+      "leaderboard.reachedEnd": "আপনি লিডারবোর্ডের শেষে পৌঁছে গেছেন।"
     }
   },
   "brx": {
@@ -5417,7 +5429,11 @@ const resources = {
         "held": "होल्ड आव दं",
         "published": "उदांखांबाय",
         "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबर्ड लोड खालामनो हायाखै",
+      "leaderboard.loadMore": "गोबां लोड खालाम",
+      "leaderboard.loadingMore": "लोड जायोगोन...",
+      "leaderboard.reachedEnd": "नोंथाङा लीडरबर्डनि जोबथानो सायखौ।"
     }
   },
   "doi": {
@@ -6771,7 +6787,11 @@ const resources = {
         "held": "होल्ड पर ऐ",
         "published": "प्रकाशत होई गेआ",
         "yourSubmissions": "तुहाड़े भेजे गे सवाल ते उंआं दी स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करने च असफल",
+      "leaderboard.loadMore": "होर लोड करो",
+      "leaderboard.loadingMore": "लोड होआ करदा...",
+      "leaderboard.reachedEnd": "तुसीं लीडरबोर्ड दे अंत तगर पुज्जी गे हो।"
     }
   },
   "gu": {
@@ -8125,7 +8145,11 @@ const resources = {
         "held": "હોલ્ડ પર",
         "published": "પ્રકાશિત",
         "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
-      }
+      },
+      "leaderboard.loadError": "લીડરબોર્ડ લોડ કરવામાં નિષ્ફળ",
+      "leaderboard.loadMore": "વધુ લોડ કરો",
+      "leaderboard.loadingMore": "લોડ થઈ રહ્યું છે...",
+      "leaderboard.reachedEnd": "તમે લીડરબોર્ડના અંત સુધી પહોંચી ગયા છો."
     }
   },
   "hi": {
@@ -9479,7 +9503,11 @@ const resources = {
         "held": "होल्ड पर",
         "published": "प्रकाशित",
         "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करने में विफल",
+      "leaderboard.loadMore": "और लोड करें",
+      "leaderboard.loadingMore": "लोड हो रहा है...",
+      "leaderboard.reachedEnd": "आप लीडरबोर्ड के अंत तक पहुँच गए हैं।"
     }
   },
   "kn": {
@@ -10833,7 +10861,11 @@ const resources = {
         "held": "ಹೋಲ್ಡ್‌ನಲ್ಲಿ",
         "published": "ಪ್ರಕಟಿಸಲಾಗಿದೆ",
         "yourSubmissions": "ನಿಮ್ಮ ಸಲ್ಲಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಅವುಗಳ ಸ್ಥಿತಿ."
-      }
+      },
+      "leaderboard.loadError": "ಲೀಡರ್‌ಬೋರ್ಡ್ ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+      "leaderboard.loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+      "leaderboard.loadingMore": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+      "leaderboard.reachedEnd": "ನೀವು ಲೀಡರ್‌ಬೋರ್ಡ್‌ನ ಕೊನೆಗೆ ತಲುಪಿದ್ದೀರಿ."
     }
   },
   "ks": {
@@ -12187,7 +12219,11 @@ const resources = {
         "held": "ہولڈ پؠٹھ",
         "published": "شائع",
         "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
-      }
+      },
+      "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنس منٛز ناکامی",
+      "leaderboard.loadMore": "مزید لوڈ کریو",
+      "leaderboard.loadingMore": "لوڈ کران...",
+      "leaderboard.reachedEnd": "توہیں لیڈر بورڈ ہنٛدِس اندام منٛز پہژیو۔"
     }
   },
   "kok": {
@@ -13541,7 +13577,11 @@ const resources = {
         "held": "होल्डार आसा",
         "published": "प्रकाशीत",
         "yourSubmissions": "तुमी सादर केल्ले प्रस्न आनी तांची स्थिती."
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करपाक अपेस जालें",
+      "leaderboard.loadMore": "चड लोड करात",
+      "leaderboard.loadingMore": "लोड जाता...",
+      "leaderboard.reachedEnd": "तुमी लीडरबोर्डाच्या शेवटाक पावला."
     }
   },
   "mai": {
@@ -14895,7 +14935,11 @@ const resources = {
         "held": "होल्ड पर अछि",
         "published": "प्रकाशित",
         "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करबामे विफल",
+      "leaderboard.loadMore": "आरो लोड करू",
+      "leaderboard.loadingMore": "लोड भऽ रहल अछि...",
+      "leaderboard.reachedEnd": "अहाँ लीडरबोर्डक अंत धरि पहुँचि गेल छी।"
     }
   },
   "ml": {
@@ -16249,7 +16293,11 @@ const resources = {
         "held": "ഹോൾഡിലാണ്",
         "published": "പ്രസിദ്ധീകരിച്ചു",
         "yourSubmissions": "നിങ്ങൾ സമർപ്പിച്ച ചോദ്യങ്ങളും അവയുടെ നിലയും."
-      }
+      },
+      "leaderboard.loadError": "ലീഡർബോർഡ് ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+      "leaderboard.loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+      "leaderboard.loadingMore": "ലോഡ് ചെയ്യുന്നു...",
+      "leaderboard.reachedEnd": "നിങ്ങൾ ലീഡർബോർഡിന്റെ അവസാനത്തിലെത്തി."
     }
   },
   "mni": {
@@ -17603,7 +17651,11 @@ const resources = {
         "held": "হোল্দ তৌরি",
         "published": "থাদোকখ্রে",
         "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
-      }
+      },
+      "leaderboard.loadError": "লীডরবোর্দ লোড তৌবদা মায় পাক্লে",
+      "leaderboard.loadMore": "হেনগৎ লোড তৌ",
+      "leaderboard.loadingMore": "লোড তৌরি...",
+      "leaderboard.reachedEnd": "নহাক্না লীডরবোর্দগী অরোয়বদা য়ৌরে।"
     }
   },
   "mr": {
@@ -18957,7 +19009,11 @@ const resources = {
         "held": "होल्डवर आहे",
         "published": "प्रकाशित",
         "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करण्यात अयशस्वी",
+      "leaderboard.loadMore": "अधिक लोड करा",
+      "leaderboard.loadingMore": "लोड होत आहे...",
+      "leaderboard.reachedEnd": "तुम्ही लीडरबोर्डच्या शेवटी पोहोचला आहात."
     }
   },
   "ne": {
@@ -20311,7 +20367,11 @@ const resources = {
         "held": "होल्डमा छ",
         "published": "प्रकाशित",
         "yourSubmissions": "तपाईंले पेश गरेका प्रश्नहरू र तिनीहरूको स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लिडरबोर्ड लोड गर्न असफल भयो",
+      "leaderboard.loadMore": "थप लोड गर्नुहोस्",
+      "leaderboard.loadingMore": "लोड हुँदैछ...",
+      "leaderboard.reachedEnd": "तपाईं लिडरबोर्डको अन्त्यमा पुग्नुभयो।"
     }
   },
   "or": {
@@ -21666,7 +21726,11 @@ const resources = {
       },
       "cat": {
         "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
-      }
+      },
+      "leaderboard.loadError": "ଲିଡରବୋର୍ଡ ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+      "leaderboard.loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+      "leaderboard.loadingMore": "ଲୋଡ୍ ହେଉଛି...",
+      "leaderboard.reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।"
     }
   },
   "pa": {
@@ -23020,7 +23084,11 @@ const resources = {
         "held": "ਹੋਲਡ 'ਤੇ",
         "published": "ਪ੍ਰਕਾਸ਼ਿਤ",
         "yourSubmissions": "ਤੁਹਾਡੇ ਭੇਜੇ ਗਏ ਸਵਾਲ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਸਥਿਤੀ।"
-      }
+      },
+      "leaderboard.loadError": "ਲੀਡਰਬੋਰਡ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+      "leaderboard.loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+      "leaderboard.loadingMore": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+      "leaderboard.reachedEnd": "ਤੁਸੀਂ ਲੀਡਰਬੋਰਡ ਦੇ ਅੰਤ ਤੱਕ ਪਹੁੰਚ ਗਏ ਹੋ।"
     }
   },
   "sa": {
@@ -24384,7 +24452,11 @@ const resources = {
         "held": "स्थगितम्",
         "published": "प्रकाशितम्",
         "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
-      }
+      },
+      "leaderboard.loadError": "क्रमसूची आयोजने विफलम्",
+      "leaderboard.loadMore": "अधिकं लोडयतु",
+      "leaderboard.loadingMore": "आयोजितम्...",
+      "leaderboard.reachedEnd": "भवान् क्रमसूच्याः अन्तं प्राप्तवान्।"
     }
   },
   "sat": {
@@ -25738,7 +25810,11 @@ const resources = {
         "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
         "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
         "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
-      }
+      },
+      "leaderboard.loadError": "ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+      "leaderboard.loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+      "leaderboard.loadingMore": "ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+      "leaderboard.reachedEnd": "ᱟᱢ ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱨᱮᱱᱟᱜ ᱢᱩᱪᱟᱹᱫ ᱨᱮ ᱥᱮᱴᱮᱨ ᱟᱠᱟᱱᱟᱢ ᱾"
     }
   },
   "sd": {
@@ -27092,7 +27168,11 @@ const resources = {
         "held": "هولڊ تي",
         "published": "شايع ٿيل",
         "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
-      }
+      },
+      "leaderboard.loadError": "ليڊر بورڊ لوڊ ڪرڻ ۾ ناڪامي",
+      "leaderboard.loadMore": "وڌيڪ لوڊ ڪريو",
+      "leaderboard.loadingMore": "لوڊ ٿي رهيو آهي...",
+      "leaderboard.reachedEnd": "توهان ليڊر بورڊ جي آخر تائين پهچي ويا آهيو."
     }
   },
   "ta": {
@@ -28446,7 +28526,11 @@ const resources = {
         "held": "இடைநிறுத்தப்பட்டது",
         "published": "வெளியிடப்பட்டது",
         "yourSubmissions": "நீங்கள் சமர்ப்பித்த கேள்விகள் மற்றும் அவற்றின் நிலை."
-      }
+      },
+      "leaderboard.loadError": "தலைமைப் பலகையை ஏற்றுவதில் தோல்வி",
+      "leaderboard.loadMore": "மேலும் ஏற்று",
+      "leaderboard.loadingMore": "ஏற்றுகிறது...",
+      "leaderboard.reachedEnd": "நீங்கள் தலைமை பலகையின் முடிவை அடைந்துவிட்டீர்கள்."
     }
   },
   "te": {
@@ -29802,7 +29886,11 @@ const resources = {
         "held": "హోల్డ్‌లో ఉంది",
         "published": "ప్రచురించబడింది",
         "yourSubmissions": "మీరు సమర్పించిన ప్రశ్నలు మరియు వాటి స్థితి."
-      }
+      },
+      "leaderboard.loadError": "లీడర్‌బోర్డ్‌ను లోడ్ చేయడంలో విఫలమైంది",
+      "leaderboard.loadMore": "మరిన్ని లోడ్ చేయండి",
+      "leaderboard.loadingMore": "లోడ్ అవుతోంది...",
+      "leaderboard.reachedEnd": "మీరు లీడర్‌బోర్డ్ చివరకు చేరుకున్నారు."
     }
   },
   "ur": {
@@ -31156,7 +31244,11 @@ const resources = {
         "held": "ہولڈ پر",
         "published": "شائع شدہ",
         "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
-      }
+      },
+      "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنے میں ناکامی",
+      "leaderboard.loadMore": "مزید لوڈ کریں",
+      "leaderboard.loadingMore": "لوڈ ہو رہا ہے...",
+      "leaderboard.reachedEnd": "آپ لیڈر بورڈ کے اختتام تک پہنچ گئے ہیں۔"
     }
   }
 };

@@ -1348,5 +1348,9 @@
     "held": "होल्डवर आहे",
     "published": "प्रकाशित",
     "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करण्यात अयशस्वी",
+  "leaderboard.loadMore": "अधिक लोड करा",
+  "leaderboard.loadingMore": "लोड होत आहे...",
+  "leaderboard.reachedEnd": "तुम्ही लीडरबोर्डच्या शेवटी पोहोचला आहात."
 }

@@ -1348,5 +1348,9 @@
     "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
     "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
     "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
-  }
+  },
+  "leaderboard.loadError": "ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+  "leaderboard.loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+  "leaderboard.loadingMore": "ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+  "leaderboard.reachedEnd": "ᱟᱢ ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱨᱮᱱᱟᱜ ᱢᱩᱪᱟᱹᱫ ᱨᱮ ᱥᱮᱴᱮᱨ ᱟᱠᱟᱱᱟᱢ ᱾"
 }

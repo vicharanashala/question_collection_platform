@@ -1348,5 +1348,9 @@
     "held": "होल्ड पर",
     "published": "प्रकाशित",
     "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करने में विफल",
+  "leaderboard.loadMore": "और लोड करें",
+  "leaderboard.loadingMore": "लोड हो रहा है...",
+  "leaderboard.reachedEnd": "आप लीडरबोर्ड के अंत तक पहुँच गए हैं।"
 }

@@ -1348,5 +1348,9 @@
     "held": "இடைநிறுத்தப்பட்டது",
     "published": "வெளியிடப்பட்டது",
     "yourSubmissions": "நீங்கள் சமர்ப்பித்த கேள்விகள் மற்றும் அவற்றின் நிலை."
-  }
+  },
+  "leaderboard.loadError": "தலைமைப் பலகையை ஏற்றுவதில் தோல்வி",
+  "leaderboard.loadMore": "மேலும் ஏற்று",
+  "leaderboard.loadingMore": "ஏற்றுகிறது...",
+  "leaderboard.reachedEnd": "நீங்கள் தலைமை பலகையின் முடிவை அடைந்துவிட்டீர்கள்."
 }

@@ -1348,5 +1348,9 @@
     "held": "होल्ड पर अछि",
     "published": "प्रकाशित",
     "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करबामे विफल",
+  "leaderboard.loadMore": "आरो लोड करू",
+  "leaderboard.loadingMore": "लोड भऽ रहल अछि...",
+  "leaderboard.reachedEnd": "अहाँ लीडरबोर्डक अंत धरि पहुँचि गेल छी।"
 }

@@ -1348,5 +1348,9 @@
     "held": "ہولڈ پؠٹھ",
     "published": "شائع",
     "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
-  }
+  },
+  "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنس منٛز ناکامی",
+  "leaderboard.loadMore": "مزید لوڈ کریو",
+  "leaderboard.loadingMore": "لوڈ کران...",
+  "leaderboard.reachedEnd": "توہیں لیڈر بورڈ ہنٛدِس اندام منٛز پہژیو۔"
 }
