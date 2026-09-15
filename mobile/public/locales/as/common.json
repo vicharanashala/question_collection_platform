@@ -666,7 +666,16 @@
     "credit": "ক্ৰেডিট",
     "debit": "ডেবিট",
     "txNotFound": "লেনদেন পোৱা নগ'ল",
-    "notFoundSub": "লেনদেনটো আঁতৰোৱা হ'ব পাৰে বা এতিয়া উপলব্ধ নহয়।"
+    "notFoundSub": "লেনদেনটো আঁতৰোৱা হ'ব পাৰে বা এতিয়া উপলব্ধ নহয়।",
+    "sourceReward": "পুৰস্কাৰ",
+    "sourceWithdrawal": "উঠোৱা",
+    "sourceRefund": "ঘূৰাই দিয়া",
+    "sourceAdjustment": "সমন্বয়",
+    "statusCompleted": "সম্পূৰ্ণ",
+    "statusReversed": "ওলোটা কৰা হৈছে",
+    "statusFailed": "বিফল",
+    "statusPending": "অপেক্ষাত",
+    "currency": "ভাৰতীয় টকা"
   },
   "yourRole": "আপোনাৰ ভূমিকা",
   "home.greeting.morning": "শুভ প্ৰভাত",

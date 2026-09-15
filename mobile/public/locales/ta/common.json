@@ -666,7 +666,16 @@
     "credit": "வரவு (Credit)",
     "debit": "பற்று (Debit)",
     "txNotFound": "பரிவர்த்தனை காணப்படவில்லை",
-    "notFoundSub": "பரிவர்த்தனை நீக்கப்பட்டிருக்கலாம் அல்லது இப்போது கிடைக்காமல் இருக்கலாம்."
+    "notFoundSub": "பரிவர்த்தனை நீக்கப்பட்டிருக்கலாம் அல்லது இப்போது கிடைக்காமல் இருக்கலாம்.",
+    "sourceReward": "வெகுமதி",
+    "sourceWithdrawal": "திரும்பப்பெறுதல்",
+    "sourceRefund": "பணத்திரும்பம்",
+    "sourceAdjustment": "சரிசெய்தல்",
+    "statusCompleted": "முடிந்தது",
+    "statusReversed": "மாற்றப்பட்டது",
+    "statusFailed": "தோல்வியடைந்தது",
+    "statusPending": "நிலுவையில்",
+    "currency": "இந்திய ரூபாய்"
   },
   "yourRole": "உங்கள் பங்கு/பதவி",
   "home.greeting.morning": "காலை வணக்கம்",

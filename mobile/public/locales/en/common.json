@@ -668,7 +668,16 @@
     "credit": "Credit",
     "debit": "Debit",
     "txNotFound": "Transaction not found",
-    "notFoundSub": "The transaction may have been removed or is no longer available."
+    "notFoundSub": "The transaction may have been removed or is no longer available.",
+    "sourceReward": "Reward",
+    "sourceWithdrawal": "Withdrawal",
+    "sourceRefund": "Refund",
+    "sourceAdjustment": "Adjustment",
+    "statusCompleted": "Completed",
+    "statusReversed": "Reversed",
+    "statusFailed": "Failed",
+    "statusPending": "Pending",
+    "currency": "Indian Rupees"
   },
   "yourRole": "Your Role",
   "home.greeting.morning": "Good morning",

@@ -664,7 +664,16 @@
     "credit": "ଜମା (Credit)",
     "debit": "ଉଠାଣ (Debit)",
     "txNotFound": "ଲେଣଦେଣ ମିଳିଲା ନାହିଁ",
-    "notFoundSub": "ଏହି ଲେଣଦେଣଟି ହଟାଯାଇଥାଇପାରେ କିମ୍ବା ଆଉ ଉପଲବ୍ଧ ନାହିଁ।"
+    "notFoundSub": "ଏହି ଲେଣଦେଣଟି ହଟାଯାଇଥାଇପାରେ କିମ୍ବା ଆଉ ଉପଲବ୍ଧ ନାହିଁ।",
+    "sourceReward": "ପୁରସ୍କାର",
+    "sourceWithdrawal": "ଉଠାଣ",
+    "sourceRefund": "ରିଫଣ୍ଡ",
+    "sourceAdjustment": "ସାମଞ୍ଜସ୍ୟ",
+    "statusCompleted": "ସମ୍ପୂର୍ଣ୍ଣ",
+    "statusReversed": "ପ୍ରତ୍ୟାହାର ହୋଇଛି",
+    "statusFailed": "ବିଫଳ",
+    "statusPending": "ବିଚାରାଧୀନ",
+    "currency": "ଭାରତୀୟ ଟଙ୍କା"
   },
   "yourRole": "ଆପଣଙ୍କ ଭୂମିକା",
   "home.greeting.morning": "ଶୁଭ ସକାଳ",

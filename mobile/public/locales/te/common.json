@@ -668,7 +668,16 @@
     "credit": "జమ (Credit)",
     "debit": "ఖర్చు (Debit)",
     "txNotFound": "లావాదేవీ కనుగొనబడలేదు",
-    "notFoundSub": "లావాదేవీ తొలగించబడి ఉండవచ్చు లేదా ఇకపై అందుబాటులో లేకపోవచ్చు."
+    "notFoundSub": "లావాదేవీ తొలగించబడి ఉండవచ్చు లేదా ఇకపై అందుబాటులో లేకపోవచ్చు.",
+    "sourceReward": "రివార్డ్",
+    "sourceWithdrawal": "విత్‌డ్రా",
+    "sourceRefund": "రీఫండ్",
+    "sourceAdjustment": "సర్దుబాటు",
+    "statusCompleted": "పూర్తయింది",
+    "statusReversed": "రివర్స్ చేయబడింది",
+    "statusFailed": "విఫలమైంది",
+    "statusPending": "పెండింగ్‌లో ఉంది",
+    "currency": "భారతీయ రూపాయలు"
   },
   "yourRole": "మీ పాత్ర",
   "home.greeting.morning": "శుభోదయం",

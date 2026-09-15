@@ -666,7 +666,16 @@
     "credit": "جمع (کریڈٹ)",
     "debit": "منہا (ڈیبٹ)",
     "txNotFound": "لین دین مِلِیو نہٕ",
-    "notFoundSub": "یہِ لین دین ہیکِہ مٹاونہٕ آمتُس یا چھُ نہٕ دستیاب۔"
+    "notFoundSub": "یہِ لین دین ہیکِہ مٹاونہٕ آمتُس یا چھُ نہٕ دستیاب۔",
+    "sourceReward": "انعام",
+    "sourceWithdrawal": "واپسی",
+    "sourceRefund": "واپسی رقم",
+    "sourceAdjustment": "ترمیم",
+    "statusCompleted": "مکمل",
+    "statusReversed": "واپس کورمُت",
+    "statusFailed": "ناکام",
+    "statusPending": "زیرِ التوا",
+    "currency": "ہِندوستانی روپیہ"
   },
   "yourRole": "تہنٛد کردار",
   "home.greeting.morning": "صبح بخیر",

@@ -666,7 +666,16 @@
     "credit": "ᱡᱚᱢᱟ (Credit)",
     "debit": "ᱠᱷᱚᱨᱚᱪ (Debit)",
     "txNotFound": "ᱞᱮᱱ-ᱫᱮᱱ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
-    "notFoundSub": "ᱱᱚᱶᱟ ᱞᱮᱱ-ᱫᱮᱱ ᱫᱚ ᱚᱪᱚᱜ ᱟᱠᱟᱱᱟ ᱥᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ᱾"
+    "notFoundSub": "ᱱᱚᱶᱟ ᱞᱮᱱ-ᱫᱮᱱ ᱫᱚ ᱚᱪᱚᱜ ᱟᱠᱟᱱᱟ ᱥᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ᱾",
+    "sourceReward": "ᱯᱩᱨᱚᱥᱠᱟᱨ",
+    "sourceWithdrawal": "ᱩᱰᱩᱠ",
+    "sourceRefund": "ᱨᱤᱯᱷᱚᱱᱰ",
+    "sourceAdjustment": "ᱥᱟᱢᱟᱭᱚᱡᱚᱱ",
+    "statusCompleted": "ᱯᱩᱨᱟᱹᱣ",
+    "statusReversed": "ᱩᱞᱴᱟ",
+    "statusFailed": "ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+    "statusPending": "ᱛᱟᱹᱝᱜᱤ ᱨᱮ",
+    "currency": "ᱦᱤᱸᱰᱤ ᱨᱩᱯᱭᱟ"
   },
   "yourRole": "ᱟᱢᱟᱜ ᱛᱷᱟᱹᱱᱤᱛ/ ᱠᱟᱹᱢᱤ",
   "home.greeting.morning": "ᱥᱮᱛᱟᱜ ᱡᱚᱦᱟᱨ",

@@ -666,7 +666,16 @@
     "credit": "क्रेडिट (जम्मा)",
     "debit": "डेबिट (खर्च/निकासी)",
     "txNotFound": "कारोबार भेटिएन",
-    "notFoundSub": "यो कारोबार हटाइएको हुन सक्छ वा अब उपलब्ध छैन।"
+    "notFoundSub": "यो कारोबार हटाइएको हुन सक्छ वा अब उपलब्ध छैन।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "झिकाइ",
+    "sourceRefund": "फिर्ता",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "सम्पन्न",
+    "statusReversed": "उल्टाइयो",
+    "statusFailed": "असफल",
+    "statusPending": "समीक्षाधीन",
+    "currency": "भारतीय रुपैयाँ"
   },
   "yourRole": "तपाईंको भूमिका",
   "home.greeting.morning": "शुभ प्रभात",

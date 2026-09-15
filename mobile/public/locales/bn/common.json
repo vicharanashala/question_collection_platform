@@ -666,7 +666,16 @@
     "credit": "ক্রেডিট",
     "debit": "ডেবিট",
     "txNotFound": "লেনদেন পাওয়া যায়নি",
-    "notFoundSub": "লেনদেনটি সরিয়ে ফেলা হতে পারে বা আর উপলব্ধ নেই।"
+    "notFoundSub": "লেনদেনটি সরিয়ে ফেলা হতে পারে বা আর উপলব্ধ নেই।",
+    "sourceReward": "পুরস্কার",
+    "sourceWithdrawal": "উত্তোলন",
+    "sourceRefund": "ফেরত",
+    "sourceAdjustment": "সমন্বয়",
+    "statusCompleted": "সম্পন্ন",
+    "statusReversed": "প্রত্যাহার করা হয়েছে",
+    "statusFailed": "ব্যর্থ",
+    "statusPending": "অমীমাংসিত",
+    "currency": "ভারতীয় রুপি"
   },
   "yourRole": "আপনার ভূমিকা",
   "home.greeting.morning": "সুপ্রভাত",

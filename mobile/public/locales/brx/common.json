@@ -666,7 +666,16 @@
     "credit": "जमा (Credit)",
     "debit": "दंखांनाय (Debit)",
     "txNotFound": "लेनदेन मोनासै",
-    "notFoundSub": "लेनदेनखौ बोखारनाय जाबाय एबा मोना साबाय।"
+    "notFoundSub": "लेनदेनखौ बोखारनाय जाबाय एबा मोना साबाय।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "फोजोबनाय",
+    "sourceRefund": "फिन होगोन",
+    "sourceAdjustment": "थिख्रुइनाय",
+    "statusCompleted": "सोदोबनाय",
+    "statusReversed": "फिन गोसो खालामनाय जादों",
+    "statusFailed": "हायाखै",
+    "statusPending": "नायफिननो थाखाय थानाय",
+    "currency": "भारतीय रुपी"
   },
   "yourRole": "नोंथानि बिबान",
   "home.greeting.morning": "सुप्रभात",

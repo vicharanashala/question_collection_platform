@@ -666,7 +666,16 @@
     "credit": "जमा (Credit)",
     "debit": "निकासी (Debit)",
     "txNotFound": "लेन-देन नीं मिल्या",
-    "notFoundSub": "एह् लेन-देन हटाए दा होई सकदा ऐ या हुण उपलब्ध नीं ऐ।"
+    "notFoundSub": "एह् लेन-देन हटाए दा होई सकदा ऐ या हुण उपलब्ध नीं ऐ।",
+    "sourceReward": "इनाम",
+    "sourceWithdrawal": "निकासी",
+    "sourceRefund": "वापसी",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण",
+    "statusReversed": "उलटाया गया",
+    "statusFailed": "असफल",
+    "statusPending": "बकाया",
+    "currency": "भारतीय रुपे"
   },
   "yourRole": "तुआह्दी भूमिका",
   "home.greeting.morning": "शुभ प्रभात",

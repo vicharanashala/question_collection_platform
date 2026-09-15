@@ -666,7 +666,16 @@
     "credit": "جمع (Credit)",
     "debit": "خرچ (Debit)",
     "txNotFound": "ٽرانزيڪشن نه ملي",
-    "notFoundSub": "ٽرانزيڪشن ختم ڪئي وئي هجي يا هاڻي دستياب نه هجي."
+    "notFoundSub": "ٽرانزيڪشن ختم ڪئي وئي هجي يا هاڻي دستياب نه هجي.",
+    "sourceReward": "انعام",
+    "sourceWithdrawal": "نيڪالي",
+    "sourceRefund": "رقم واپسي",
+    "sourceAdjustment": "ترميم",
+    "statusCompleted": "مڪمل",
+    "statusReversed": "واپس ڪيل",
+    "statusFailed": "ناڪام",
+    "statusPending": "انتظار ۾",
+    "currency": "ڀارتي رپيا"
   },
   "yourRole": "توهان جو عهدو/ڪردار",
   "home.greeting.morning": "صبح جو سلام",

@@ -666,7 +666,16 @@
     "credit": "जमा (Credit)",
     "debit": "नावे (Debit)",
     "txNotFound": "व्यवहार आढळला नाही",
-    "notFoundSub": "व्यवहार हटवला गेला असावा किंवा आता उपलब्ध नसावा."
+    "notFoundSub": "व्यवहार हटवला गेला असावा किंवा आता उपलब्ध नसावा.",
+    "sourceReward": "बक्षीस",
+    "sourceWithdrawal": "पैसे काढणे",
+    "sourceRefund": "परतावा",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण झाले",
+    "statusReversed": "उलट केले",
+    "statusFailed": "अयशस्वी",
+    "statusPending": "प्रलंबित",
+    "currency": "भारतीय रुपये"
   },
   "yourRole": "तुमची भूमिका",
   "home.greeting.morning": "शुभ प्रभात",

@@ -666,7 +666,16 @@
     "credit": "जमा (Credit)",
     "debit": "खर्च (Debit)",
     "txNotFound": "व्यवहार मेळ्ळो ना",
-    "notFoundSub": "हो व्यवहार काडून उडयला वा आतां उपलब्ध ना."
+    "notFoundSub": "हो व्यवहार काडून उडयला वा आतां उपलब्ध ना.",
+    "sourceReward": "बक्षीस",
+    "sourceWithdrawal": "काडून घेवप",
+    "sourceRefund": "परतफेड",
+    "sourceAdjustment": "जुळावणी",
+    "statusCompleted": "पुराय जालें",
+    "statusReversed": "उलटावन घेतलां",
+    "statusFailed": "अपयशी",
+    "statusPending": "प्रलंबित",
+    "currency": "भारतीय रुपया"
   },
   "yourRole": "तुमची भूमिका",
   "home.greeting.morning": "देव बरे सकाळ",

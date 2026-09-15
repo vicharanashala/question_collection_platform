@@ -666,7 +666,16 @@
     "credit": "ক্রেদিট",
     "debit": "ডেবিট",
     "txNotFound": "লেন-থৌ ফংদ্রে",
-    "notFoundSub": "লেন-থৌ অসি মুতথোকখ্রে নত্রগা লৈতরে।"
+    "notFoundSub": "লেন-থৌ অসি মুতথোকখ্রে নত্রগা লৈতরে।",
+    "sourceReward": "পুরস্কার",
+    "sourceWithdrawal": "লৌথোকপা",
+    "sourceRefund": "রিফান্ড",
+    "sourceAdjustment": "সেমগৎ",
+    "statusCompleted": "লোইশিনখ্রে",
+    "statusReversed": "হনখিবা য়াখ্রে",
+    "statusFailed": "মায় পাকখ্রে",
+    "statusPending": "পেন্ডিং",
+    "currency": "ভারতীয় রূপী"
   },
   "yourRole": "নহাগী থৌদাং",
   "home.greeting.morning": "অয়ুক্কী খুরুমজরি",

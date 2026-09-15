@@ -666,7 +666,16 @@
     "credit": "کریڈٹ",
     "debit": "ڈیبٹ",
     "txNotFound": "لین دین نہیں ملا",
-    "notFoundSub": "ہو سکتا ہے لین دین ہٹا دیا گیا ہو یا اب دستیاب نہ ہو۔"
+    "notFoundSub": "ہو سکتا ہے لین دین ہٹا دیا گیا ہو یا اب دستیاب نہ ہو۔",
+    "sourceReward": "انعام",
+    "sourceWithdrawal": "نکاسی",
+    "sourceRefund": "رقم کی واپسی",
+    "sourceAdjustment": "ایڈجسٹمنٹ",
+    "statusCompleted": "مکمل",
+    "statusReversed": "واپس کر دیا گیا",
+    "statusFailed": "ناکام",
+    "statusPending": "زیرِ التوا",
+    "currency": "بھارتی روپے"
   },
   "yourRole": "آپ کا کردار",
   "home.greeting.morning": "صبح بخیر",

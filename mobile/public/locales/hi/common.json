@@ -666,7 +666,16 @@
     "credit": "क्रेडिट (जमा)",
     "debit": "डेबिट (निकासी)",
     "txNotFound": "लेन-देन नहीं मिला",
-    "notFoundSub": "लेन-देन हटा दिया गया हो सकता है या अब उपलब्ध नहीं है।"
+    "notFoundSub": "लेन-देन हटा दिया गया हो सकता है या अब उपलब्ध नहीं है।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "निकासी",
+    "sourceRefund": "धनवापसी",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण",
+    "statusReversed": "वापस लिया गया",
+    "statusFailed": "विफल",
+    "statusPending": "लंबित",
+    "currency": "भारतीय रुपये"
   },
   "yourRole": "आपकी भूमिका",
   "home.greeting.morning": "शुभ प्रभात",

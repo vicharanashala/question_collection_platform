@@ -666,7 +666,16 @@
     "credit": "വരവ് (Credit)",
     "debit": "ചെലവ് (Debit)",
     "txNotFound": "ഇടപാട് കണ്ടെത്തിയില്ല",
-    "notFoundSub": "ഇടപാട് നീക്കം ചെയ്തിട്ടുണ്ടാകാം അല്ലെങ്കിൽ അത് ലഭ്യമല്ല."
+    "notFoundSub": "ഇടപാട് നീക്കം ചെയ്തിട്ടുണ്ടാകാം അല്ലെങ്കിൽ അത് ലഭ്യമല്ല.",
+    "sourceReward": "റിവാർഡ്",
+    "sourceWithdrawal": "പിൻവലിക്കൽ",
+    "sourceRefund": "റീഫണ്ട്",
+    "sourceAdjustment": "ക്രമീകരണം",
+    "statusCompleted": "പൂർത്തിയായി",
+    "statusReversed": "തിരിച്ചടച്ചു",
+    "statusFailed": "പരാജയപ്പെട്ടു",
+    "statusPending": "പരിശോധനയിൽ",
+    "currency": "ഇന്ത്യൻ രൂപ"
   },
   "yourRole": "നിങ്ങളുടെ റോൾ/സ്ഥാനം",
   "home.greeting.morning": "സുപ്രഭാതം",

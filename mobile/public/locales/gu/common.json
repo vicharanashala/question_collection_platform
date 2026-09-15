@@ -666,7 +666,16 @@
     "credit": "જમા (Credit)",
     "debit": "ઉધાર (Debit)",
     "txNotFound": "લેવડ-દેવડ મળી નથી",
-    "notFoundSub": "લેવડ-દેવડ દૂર કરવામાં આવી હોઈ શકે છે અથવા હવે ઉપલબ્ધ નથી."
+    "notFoundSub": "લેવડ-દેવડ દૂર કરવામાં આવી હોઈ શકે છે અથવા હવે ઉપલબ્ધ નથી.",
+    "sourceReward": "ઇનામ",
+    "sourceWithdrawal": "ઉપાડ",
+    "sourceRefund": "રિફંડ",
+    "sourceAdjustment": "ગોઠવણ",
+    "statusCompleted": "પૂર્ણ",
+    "statusReversed": "ઉલટાવ્યું",
+    "statusFailed": "નિષ્ફળ",
+    "statusPending": "બાકી",
+    "currency": "ભારતીય રૂપિયા"
   },
   "yourRole": "તમારી ભૂમિકા",
   "home.greeting.morning": "શુભ સવાર",

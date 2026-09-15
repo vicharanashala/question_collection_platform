@@ -666,7 +666,16 @@
     "credit": "जमा (क्रेडिट)",
     "debit": "निकासी (डेबिट)",
     "txNotFound": "लेन-देन नहि भेटल",
-    "notFoundSub": "लेन-देन हटा देल गेल भ सकैत अछि या अब उपलब्ध नहि अछि।"
+    "notFoundSub": "लेन-देन हटा देल गेल भ सकैत अछि या अब उपलब्ध नहि अछि।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "निकासी",
+    "sourceRefund": "रिफंड",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण",
+    "statusReversed": "वापस कएल गेल",
+    "statusFailed": "असफल",
+    "statusPending": "लंबित",
+    "currency": "भारतीय रुपैया"
   },
   "yourRole": "अहाँक भूमिका",
   "home.greeting.morning": "शुभ प्रभात",

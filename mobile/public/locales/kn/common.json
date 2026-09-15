@@ -666,7 +666,16 @@
     "credit": "ಕ್ರೆಡಿಟ್ (ಜಮೆ)",
     "debit": "ಡೆಬಿಟ್ (ಖರ್ಚು)",
     "txNotFound": "ವಹಿವಾಟು ಕಂಡುಬಂದಿಲ್ಲ",
-    "notFoundSub": "ವಹಿವಾಟನ್ನು ತೆಗೆದುಹಾಕಿರಬಹುದು ಅಥವಾ ಇನ್ನು ಮುಂದೆ ಲಭ್ಯವಿಲ್ಲದಿರಬಹುದು."
+    "notFoundSub": "ವಹಿವಾಟನ್ನು ತೆಗೆದುಹಾಕಿರಬಹುದು ಅಥವಾ ಇನ್ನು ಮುಂದೆ ಲಭ್ಯವಿಲ್ಲದಿರಬಹುದು.",
+    "sourceReward": "ಬಹುಮಾನ",
+    "sourceWithdrawal": "ಹಿಂಪಡೆಯುವಿಕೆ",
+    "sourceRefund": "ಮರುಪಾವತಿ",
+    "sourceAdjustment": "ಹೊಂದಾಣಿಕೆ",
+    "statusCompleted": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+    "statusReversed": "ಹಿಂತಿರುಗಿಸಲಾಗಿದೆ",
+    "statusFailed": "ವಿಫಲವಾಗಿದೆ",
+    "statusPending": "ಬಾಕಿ ಇದೆ",
+    "currency": "ಭಾರತೀಯ ರೂಪಾಯಿ"
   },
   "yourRole": "ನಿಮ್ಮ ಪಾತ್ರ",
   "home.greeting.morning": "ಶುಭೋದಯ",

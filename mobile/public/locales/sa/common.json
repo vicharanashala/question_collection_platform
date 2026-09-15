@@ -676,7 +676,16 @@
     "credit": "जमा (क्रेडिट्)",
     "debit": "निकासी (डेबिट्)",
     "txNotFound": "लेनदेनं न प्राप्तम्",
-    "notFoundSub": "एतत् लेनदेनं निष्कासितं स्यात् अथवा न उपलब्धं स्यात्।"
+    "notFoundSub": "एतत् लेनदेनं निष्कासितं स्यात् अथवा न उपलब्धं स्यात्।",
+    "sourceReward": "पुरस्कारः",
+    "sourceWithdrawal": "अपाकर्षणम्",
+    "sourceRefund": "प्रतिदानम्",
+    "sourceAdjustment": "समायोजनम्",
+    "statusCompleted": "सम्पूर्णम्",
+    "statusReversed": "प्रत्यावर्तितम्",
+    "statusFailed": "विफलम्",
+    "statusPending": "लम्बितम्",
+    "currency": "भारतीयरूप्यकम्"
   },
   "yourRole": "भवतः भूमिका",
   "home.greeting.morning": "सुप्रभातम्",

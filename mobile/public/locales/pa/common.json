@@ -666,7 +666,16 @@
     "credit": "ਜਮ੍ਹਾ (Credit)",
     "debit": "ਨਿਕਾਸੀ (Debit)",
     "txNotFound": "ਲੈਣ-ਦੇਣ ਨਹੀਂ ਮਿਲਿਆ",
-    "notFoundSub": "ਲੈਣ-ਦੇਣ ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।"
+    "notFoundSub": "ਲੈਣ-ਦੇਣ ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।",
+    "sourceReward": "ਇਨਾਮ",
+    "sourceWithdrawal": "ਕਢਵਾਈ",
+    "sourceRefund": "ਵਾਪਸੀ",
+    "sourceAdjustment": "ਸਮਾਯੋਜਨ",
+    "statusCompleted": "ਮੁਕੰਮਲ",
+    "statusReversed": "ਵਾਪਸ ਕੀਤਾ ਗਿਆ",
+    "statusFailed": "ਅਸਫਲ",
+    "statusPending": "ਬਕਾਇਆ",
+    "currency": "ਭਾਰਤੀ ਰੁਪਏ"
   },
   "yourRole": "ਤੁਹਾਡੀ ਭੂਮਿਕਾ",
   "home.greeting.morning": "ਸ਼ੁਭ ਸਵੇਰ",
