@@ -388,7 +388,11 @@
       "held": "روکِتھ",
       "approved": "منظور گٔمِت",
       "rejected": "نا منظور"
-    }
+    },
+    "loading": "اطلاع نامہٕ لوڈ گژھان…",
+    "loadMore": "مزید لوڈ کریو",
+    "loadError": "اطلاع نامہٕ لوڈ کرنس منٛز ناکامی",
+    "markAllReadError": "اطلاع نامہٕ پرنہ ہیٚنٛز نشان لگاونس منٛز ناکامی"
   },
   "organisationName": "تنظیمُک ناو",
   "organisationNamePlaceholder": "تنظیمُک ناو درج کٔریو",
@@ -1348,5 +1352,9 @@
     "held": "ہولڈ پؠٹھ",
     "published": "شائع",
     "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
-  }
+  },
+  "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنس منٛز ناکامی",
+  "leaderboard.loadMore": "مزید لوڈ کریو",
+  "leaderboard.loadingMore": "لوڈ کران...",
+  "leaderboard.reachedEnd": "توہیں لیڈر بورڈ ہنٛدِس اندام منٛز پہژیو۔"
 }

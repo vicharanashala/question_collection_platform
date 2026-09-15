@@ -388,7 +388,11 @@
       "held": "होल्ड पर",
       "approved": "स्वीकृत",
       "rejected": "अस्वीकृत"
-    }
+    },
+    "loading": "सूचनाएं लोड हो रही हैं…",
+    "loadMore": "और लोड करें",
+    "loadError": "सूचनाएं लोड करने में विफल",
+    "markAllReadError": "सूचनाओं को पढ़ा हुआ चिह्नित करने में विफल"
   },
   "organisationName": "संगठन का नाम",
   "organisationNamePlaceholder": "संगठन का नाम दर्ज करें",
@@ -1348,5 +1352,9 @@
     "held": "होल्ड पर",
     "published": "प्रकाशित",
     "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करने में विफल",
+  "leaderboard.loadMore": "और लोड करें",
+  "leaderboard.loadingMore": "लोड हो रहा है...",
+  "leaderboard.reachedEnd": "आप लीडरबोर्ड के अंत तक पहुँच गए हैं।"
 }

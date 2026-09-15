@@ -388,7 +388,11 @@
       "held": "दवरला",
       "approved": "मान्य जालो",
       "rejected": "मान्य जालो ना"
-    }
+    },
+    "loading": "सुचोवण्यो लोड जाता…",
+    "loadMore": "चड लोड करात",
+    "loadError": "सुचोवण्यो लोड करपाक अपेस जालें",
+    "markAllReadError": "सुचोवण्यो वाचिल्ल्यो म्हूण खूण करपाक अपेस जालें"
   },
   "organisationName": "संस्थेचें नांव",
   "organisationNamePlaceholder": "संस्थेचें नांव घालात",
@@ -1348,5 +1352,9 @@
     "held": "होल्डार आसा",
     "published": "प्रकाशीत",
     "yourSubmissions": "तुमी सादर केल्ले प्रस्न आनी तांची स्थिती."
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करपाक अपेस जालें",
+  "leaderboard.loadMore": "चड लोड करात",
+  "leaderboard.loadingMore": "लोड जाता...",
+  "leaderboard.reachedEnd": "तुमी लीडरबोर्डाच्या शेवटाक पावला."
 }

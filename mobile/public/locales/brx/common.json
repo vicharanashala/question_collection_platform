@@ -388,7 +388,11 @@
       "held": "हमथानाय",
       "approved": "गनायथि मोनाय",
       "rejected": "गनायथि मोनासै"
-    }
+    },
+    "loading": "सोदोबखौ लोड खालामनाय जायोगोन…",
+    "loadMore": "गोबां लोड खालाम",
+    "loadError": "सोदोबखौ लोड खालामनो हायाखै",
+    "markAllReadError": "सोदोबखौ फोरमानथिफ्राय दिन्थिबहोनो हायाखै"
   },
   "organisationName": "आफादनि मुं",
   "organisationNamePlaceholder": "आफादनि मुं सोमावना हो",
@@ -1348,5 +1352,9 @@
     "held": "होल्ड आव दं",
     "published": "उदांखांबाय",
     "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
-  }
+  },
+  "leaderboard.loadError": "लीडरबर्ड लोड खालामनो हायाखै",
+  "leaderboard.loadMore": "गोबां लोड खालाम",
+  "leaderboard.loadingMore": "लोड जायोगोन...",
+  "leaderboard.reachedEnd": "नोंथाङा लीडरबर्डनि जोबथानो सायखौ।"
 }

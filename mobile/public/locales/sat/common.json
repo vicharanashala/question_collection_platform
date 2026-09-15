@@ -388,7 +388,11 @@
       "held": "ᱟᱴᱠᱟᱣ ᱟᱠᱟᱱᱟ",
       "approved": "ᱟᱸᱜᱳᱪ ᱮᱱᱟ",
       "rejected": "ᱵᱟᱝ ᱟᱸᱜᱳᱪ ᱮᱱᱟ"
-    }
+    },
+    "loading": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+    "loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+    "loadError": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+    "markAllReadError": "ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱯᱟᱲᱦᱟᱣ ᱠᱟᱱᱟ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱷᱟᱹᱭᱤᱛ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
   },
   "organisationName": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ",
   "organisationNamePlaceholder": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ",
@@ -1348,5 +1352,9 @@
     "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
     "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
     "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
-  }
+  },
+  "leaderboard.loadError": "ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+  "leaderboard.loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+  "leaderboard.loadingMore": "ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+  "leaderboard.reachedEnd": "ᱟᱢ ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱨᱮᱱᱟᱜ ᱢᱩᱪᱟᱹᱫ ᱨᱮ ᱥᱮᱴᱮᱨ ᱟᱠᱟᱱᱟᱢ ᱾"
 }

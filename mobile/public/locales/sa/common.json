@@ -398,7 +398,11 @@
       "held": "स्थगितम्",
       "approved": "स्वीकृतम्",
       "rejected": "न स्वीकृतम्"
-    }
+    },
+    "loading": "सूचनाः आयोज्यन्ते…",
+    "loadMore": "अधिकं लोडयतु",
+    "loadError": "सूचनानां आयोजने विफलम्",
+    "markAllReadError": "सूचनाः पठिताः इति चिह्नितुं विफलम्"
   },
   "organisationName": "संस्थायाः नाम",
   "organisationNamePlaceholder": "संस्थायाः नाम लिखतु",
@@ -1358,5 +1362,9 @@
     "held": "स्थगितम्",
     "published": "प्रकाशितम्",
     "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
-  }
+  },
+  "leaderboard.loadError": "क्रमसूची आयोजने विफलम्",
+  "leaderboard.loadMore": "अधिकं लोडयतु",
+  "leaderboard.loadingMore": "आयोजितम्...",
+  "leaderboard.reachedEnd": "भवान् क्रमसूच्याः अन्तं प्राप्तवान्।"
 }

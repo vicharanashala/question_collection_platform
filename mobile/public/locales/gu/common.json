@@ -388,7 +388,11 @@
       "held": "હોલ્ડ પર",
       "approved": "મંજૂર થયેલ",
       "rejected": "મંજૂર થયેલ નથી"
-    }
+    },
+    "loading": "સૂચનાઓ લોડ થઈ રહી છે…",
+    "loadMore": "વધુ લોડ કરો",
+    "loadError": "સૂચનાઓ લોડ કરવામાં નિષ્ફળ",
+    "markAllReadError": "સૂચનાઓને વાંચેલી તરીકે ચિહ્નિત કરવામાં નિષ્ફળ"
   },
   "organisationName": "સંસ્થાનું નામ",
   "organisationNamePlaceholder": "સંસ્થાનું નામ દાખલ કરો",
@@ -1348,5 +1352,9 @@
     "held": "હોલ્ડ પર",
     "published": "પ્રકાશિત",
     "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
-  }
+  },
+  "leaderboard.loadError": "લીડરબોર્ડ લોડ કરવામાં નિષ્ફળ",
+  "leaderboard.loadMore": "વધુ લોડ કરો",
+  "leaderboard.loadingMore": "લોડ થઈ રહ્યું છે...",
+  "leaderboard.reachedEnd": "તમે લીડરબોર્ડના અંત સુધી પહોંચી ગયા છો."
 }

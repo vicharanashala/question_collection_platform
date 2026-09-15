@@ -388,7 +388,11 @@
       "held": "रोकि राखल गेल",
       "approved": "स्वीकृत",
       "rejected": "अस्वीकृत"
-    }
+    },
+    "loading": "सूचना लोड भऽ रहल अछि…",
+    "loadMore": "आरो लोड करू",
+    "loadError": "सूचना लोड करबामे विफल",
+    "markAllReadError": "सूचनाकेँ पढ़ल गेल चिह्नित करबामे विफल"
   },
   "organisationName": "संगठनक नाम",
   "organisationNamePlaceholder": "संगठनक नाम दर्ज करु",
@@ -1348,5 +1352,9 @@
     "held": "होल्ड पर अछि",
     "published": "प्रकाशित",
     "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करबामे विफल",
+  "leaderboard.loadMore": "आरो लोड करू",
+  "leaderboard.loadingMore": "लोड भऽ रहल अछि...",
+  "leaderboard.reachedEnd": "अहाँ लीडरबोर्डक अंत धरि पहुँचि गेल छी।"
 }

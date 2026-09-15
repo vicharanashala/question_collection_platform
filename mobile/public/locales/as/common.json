@@ -388,7 +388,11 @@
       "held": "ৰখা হৈছে",
       "approved": "অনুমোদিত",
       "rejected": "অনুমোদিত নহয়"
-    }
+    },
+    "loading": "জাননী ল'ড হৈ আছে…",
+    "loadMore": "অধিক ল'ড কৰক",
+    "loadError": "জাননী ল'ড কৰাত বিফল হ'ল",
+    "markAllReadError": "জাননীসমূহ পঢ়া বুলি চিহ্নিত কৰাত বিফল হ'ল"
   },
   "organisationName": "সংস্থাৰ নাম",
   "organisationNamePlaceholder": "সংস্থাৰ নাম দিয়ক",
@@ -1348,5 +1352,9 @@
     "held": "হ'ল্ডত আছে",
     "published": "প্ৰকাশিত",
     "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
-  }
+  },
+  "leaderboard.loadError": "লিডাৰব'ৰ্ড ল'ড কৰাত বিফল হ'ল",
+  "leaderboard.loadMore": "অধিক ল'ড কৰক",
+  "leaderboard.loadingMore": "ল'ড হৈ আছে...",
+  "leaderboard.reachedEnd": "আপুনি লিডাৰব'ৰ্ডৰ শেষত উপনীত হৈছে।"
 }

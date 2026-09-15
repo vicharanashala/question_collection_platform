@@ -393,7 +393,11 @@ const resources = {
           "held": "On Hold",
           "approved": "Approved",
           "rejected": "Not Approved"
-        }
+        },
+        "loading": "Loading notifications…",
+        "loadMore": "Load more",
+        "loadError": "Failed to load notifications",
+        "markAllReadError": "Failed to mark notifications as read"
       },
       "organisationName": "Organisation Name",
       "organisationNamePlaceholder": "Enter organisation name",
@@ -1355,7 +1359,11 @@ const resources = {
         "held": "On hold",
         "published": "Published",
         "yourSubmissions": "Your submitted questions and their status."
-      }
+      },
+      "leaderboard.loadError": "Failed to load leaderboard",
+      "leaderboard.loadMore": "Load more",
+      "leaderboard.loadingMore": "Loading...",
+      "leaderboard.reachedEnd": "You've reached the end of the leaderboard."
     }
   },
   "as": {
@@ -1749,7 +1757,11 @@ const resources = {
           "held": "ৰখা হৈছে",
           "approved": "অনুমোদিত",
           "rejected": "অনুমোদিত নহয়"
-        }
+        },
+        "loading": "জাননী ল'ড হৈ আছে…",
+        "loadMore": "অধিক ল'ড কৰক",
+        "loadError": "জাননী ল'ড কৰাত বিফল হ'ল",
+        "markAllReadError": "জাননীসমূহ পঢ়া বুলি চিহ্নিত কৰাত বিফল হ'ল"
       },
       "organisationName": "সংস্থাৰ নাম",
       "organisationNamePlaceholder": "সংস্থাৰ নাম দিয়ক",
@@ -2709,7 +2721,11 @@ const resources = {
         "held": "হ'ল্ডত আছে",
         "published": "প্ৰকাশিত",
         "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
-      }
+      },
+      "leaderboard.loadError": "লিডাৰব'ৰ্ড ল'ড কৰাত বিফল হ'ল",
+      "leaderboard.loadMore": "অধিক ল'ড কৰক",
+      "leaderboard.loadingMore": "ল'ড হৈ আছে...",
+      "leaderboard.reachedEnd": "আপুনি লিডাৰব'ৰ্ডৰ শেষত উপনীত হৈছে।"
     }
   },
   "bn": {
@@ -3103,7 +3119,11 @@ const resources = {
           "held": "স্থগিত রাখা হয়েছে",
           "approved": "অনুমোদিত",
           "rejected": "অনুমোদিত নয়"
-        }
+        },
+        "loading": "বিজ্ঞপ্তি লোড হচ্ছে…",
+        "loadMore": "আরও লোড করুন",
+        "loadError": "বিজ্ঞপ্তি লোড করতে ব্যর্থ হয়েছে",
+        "markAllReadError": "বিজ্ঞপ্তিগুলি পঠিত হিসাবে চিহ্নিত করতে ব্যর্থ হয়েছে"
       },
       "organisationName": "সংস্থার নাম",
       "organisationNamePlaceholder": "সংস্থার নাম লিখুন",
@@ -4063,7 +4083,11 @@ const resources = {
         "held": "হোল্ডে আছে",
         "published": "প্রকাশিত",
         "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
-      }
+      },
+      "leaderboard.loadError": "লিডারবোর্ড লোড করতে ব্যর্থ হয়েছে",
+      "leaderboard.loadMore": "আরও লোড করুন",
+      "leaderboard.loadingMore": "লোড হচ্ছে...",
+      "leaderboard.reachedEnd": "আপনি লিডারবোর্ডের শেষে পৌঁছে গেছেন।"
     }
   },
   "brx": {
@@ -4457,7 +4481,11 @@ const resources = {
           "held": "हमथानाय",
           "approved": "गनायथि मोनाय",
           "rejected": "गनायथि मोनासै"
-        }
+        },
+        "loading": "सोदोबखौ लोड खालामनाय जायोगोन…",
+        "loadMore": "गोबां लोड खालाम",
+        "loadError": "सोदोबखौ लोड खालामनो हायाखै",
+        "markAllReadError": "सोदोबखौ फोरमानथिफ्राय दिन्थिबहोनो हायाखै"
       },
       "organisationName": "आफादनि मुं",
       "organisationNamePlaceholder": "आफादनि मुं सोमावना हो",
@@ -5417,7 +5445,11 @@ const resources = {
         "held": "होल्ड आव दं",
         "published": "उदांखांबाय",
         "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबर्ड लोड खालामनो हायाखै",
+      "leaderboard.loadMore": "गोबां लोड खालाम",
+      "leaderboard.loadingMore": "लोड जायोगोन...",
+      "leaderboard.reachedEnd": "नोंथाङा लीडरबर्डनि जोबथानो सायखौ।"
     }
   },
   "doi": {
@@ -5811,7 +5843,11 @@ const resources = {
           "held": "रोके दा",
           "approved": "मंजूर",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनां लोड होआ करदियां न…",
+        "loadMore": "होर लोड करो",
+        "loadError": "सूचनां लोड करने च असफल",
+        "markAllReadError": "सूचनां गी पढ़ी दे रूप च चिह्नत करने च असफल"
       },
       "organisationName": "संगठन दा नांइ",
       "organisationNamePlaceholder": "संगठन दा नांइ पाओ",
@@ -6771,7 +6807,11 @@ const resources = {
         "held": "होल्ड पर ऐ",
         "published": "प्रकाशत होई गेआ",
         "yourSubmissions": "तुहाड़े भेजे गे सवाल ते उंआं दी स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करने च असफल",
+      "leaderboard.loadMore": "होर लोड करो",
+      "leaderboard.loadingMore": "लोड होआ करदा...",
+      "leaderboard.reachedEnd": "तुसीं लीडरबोर्ड दे अंत तगर पुज्जी गे हो।"
     }
   },
   "gu": {
@@ -7165,7 +7205,11 @@ const resources = {
           "held": "હોલ્ડ પર",
           "approved": "મંજૂર થયેલ",
           "rejected": "મંજૂર થયેલ નથી"
-        }
+        },
+        "loading": "સૂચનાઓ લોડ થઈ રહી છે…",
+        "loadMore": "વધુ લોડ કરો",
+        "loadError": "સૂચનાઓ લોડ કરવામાં નિષ્ફળ",
+        "markAllReadError": "સૂચનાઓને વાંચેલી તરીકે ચિહ્નિત કરવામાં નિષ્ફળ"
       },
       "organisationName": "સંસ્થાનું નામ",
       "organisationNamePlaceholder": "સંસ્થાનું નામ દાખલ કરો",
@@ -8125,7 +8169,11 @@ const resources = {
         "held": "હોલ્ડ પર",
         "published": "પ્રકાશિત",
         "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
-      }
+      },
+      "leaderboard.loadError": "લીડરબોર્ડ લોડ કરવામાં નિષ્ફળ",
+      "leaderboard.loadMore": "વધુ લોડ કરો",
+      "leaderboard.loadingMore": "લોડ થઈ રહ્યું છે...",
+      "leaderboard.reachedEnd": "તમે લીડરબોર્ડના અંત સુધી પહોંચી ગયા છો."
     }
   },
   "hi": {
@@ -8519,7 +8567,11 @@ const resources = {
           "held": "होल्ड पर",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनाएं लोड हो रही हैं…",
+        "loadMore": "और लोड करें",
+        "loadError": "सूचनाएं लोड करने में विफल",
+        "markAllReadError": "सूचनाओं को पढ़ा हुआ चिह्नित करने में विफल"
       },
       "organisationName": "संगठन का नाम",
       "organisationNamePlaceholder": "संगठन का नाम दर्ज करें",
@@ -9479,7 +9531,11 @@ const resources = {
         "held": "होल्ड पर",
         "published": "प्रकाशित",
         "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करने में विफल",
+      "leaderboard.loadMore": "और लोड करें",
+      "leaderboard.loadingMore": "लोड हो रहा है...",
+      "leaderboard.reachedEnd": "आप लीडरबोर्ड के अंत तक पहुँच गए हैं।"
     }
   },
   "kn": {
@@ -9873,7 +9929,11 @@ const resources = {
           "held": "ತಡೆಹಿಡಿಯಲಾಗಿದೆ",
           "approved": "ಅನುಮೋದಿಸಲಾಗಿದೆ",
           "rejected": "ಅನುಮೋದಿಸಲಾಗಿಲ್ಲ"
-        }
+        },
+        "loading": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+        "loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+        "loadError": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+        "markAllReadError": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಓದಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ವಿಫಲವಾಗಿದೆ"
       },
       "organisationName": "ಸಂಸ್ಥೆಯ ಹೆಸರು",
       "organisationNamePlaceholder": "ಸಂಸ್ಥೆಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
@@ -10833,7 +10893,11 @@ const resources = {
         "held": "ಹೋಲ್ಡ್‌ನಲ್ಲಿ",
         "published": "ಪ್ರಕಟಿಸಲಾಗಿದೆ",
         "yourSubmissions": "ನಿಮ್ಮ ಸಲ್ಲಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಅವುಗಳ ಸ್ಥಿತಿ."
-      }
+      },
+      "leaderboard.loadError": "ಲೀಡರ್‌ಬೋರ್ಡ್ ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+      "leaderboard.loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+      "leaderboard.loadingMore": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+      "leaderboard.reachedEnd": "ನೀವು ಲೀಡರ್‌ಬೋರ್ಡ್‌ನ ಕೊನೆಗೆ ತಲುಪಿದ್ದೀರಿ."
     }
   },
   "ks": {
@@ -11227,7 +11291,11 @@ const resources = {
           "held": "روکِتھ",
           "approved": "منظور گٔمِت",
           "rejected": "نا منظور"
-        }
+        },
+        "loading": "اطلاع نامہٕ لوڈ گژھان…",
+        "loadMore": "مزید لوڈ کریو",
+        "loadError": "اطلاع نامہٕ لوڈ کرنس منٛز ناکامی",
+        "markAllReadError": "اطلاع نامہٕ پرنہ ہیٚنٛز نشان لگاونس منٛز ناکامی"
       },
       "organisationName": "تنظیمُک ناو",
       "organisationNamePlaceholder": "تنظیمُک ناو درج کٔریو",
@@ -12187,7 +12255,11 @@ const resources = {
         "held": "ہولڈ پؠٹھ",
         "published": "شائع",
         "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
-      }
+      },
+      "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنس منٛز ناکامی",
+      "leaderboard.loadMore": "مزید لوڈ کریو",
+      "leaderboard.loadingMore": "لوڈ کران...",
+      "leaderboard.reachedEnd": "توہیں لیڈر بورڈ ہنٛدِس اندام منٛز پہژیو۔"
     }
   },
   "kok": {
@@ -12581,7 +12653,11 @@ const resources = {
           "held": "दवरला",
           "approved": "मान्य जालो",
           "rejected": "मान्य जालो ना"
-        }
+        },
+        "loading": "सुचोवण्यो लोड जाता…",
+        "loadMore": "चड लोड करात",
+        "loadError": "सुचोवण्यो लोड करपाक अपेस जालें",
+        "markAllReadError": "सुचोवण्यो वाचिल्ल्यो म्हूण खूण करपाक अपेस जालें"
       },
       "organisationName": "संस्थेचें नांव",
       "organisationNamePlaceholder": "संस्थेचें नांव घालात",
@@ -13541,7 +13617,11 @@ const resources = {
         "held": "होल्डार आसा",
         "published": "प्रकाशीत",
         "yourSubmissions": "तुमी सादर केल्ले प्रस्न आनी तांची स्थिती."
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करपाक अपेस जालें",
+      "leaderboard.loadMore": "चड लोड करात",
+      "leaderboard.loadingMore": "लोड जाता...",
+      "leaderboard.reachedEnd": "तुमी लीडरबोर्डाच्या शेवटाक पावला."
     }
   },
   "mai": {
@@ -13935,7 +14015,11 @@ const resources = {
           "held": "रोकि राखल गेल",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचना लोड भऽ रहल अछि…",
+        "loadMore": "आरो लोड करू",
+        "loadError": "सूचना लोड करबामे विफल",
+        "markAllReadError": "सूचनाकेँ पढ़ल गेल चिह्नित करबामे विफल"
       },
       "organisationName": "संगठनक नाम",
       "organisationNamePlaceholder": "संगठनक नाम दर्ज करु",
@@ -14895,7 +14979,11 @@ const resources = {
         "held": "होल्ड पर अछि",
         "published": "प्रकाशित",
         "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करबामे विफल",
+      "leaderboard.loadMore": "आरो लोड करू",
+      "leaderboard.loadingMore": "लोड भऽ रहल अछि...",
+      "leaderboard.reachedEnd": "अहाँ लीडरबोर्डक अंत धरि पहुँचि गेल छी।"
     }
   },
   "ml": {
@@ -15289,7 +15377,11 @@ const resources = {
           "held": "ഹോൾഡിൽ",
           "approved": "അംഗീകരിച്ചു",
           "rejected": "അംഗീകരിച്ചില്ല"
-        }
+        },
+        "loading": "അറിയിപ്പുകൾ ലോഡ് ചെയ്യുന്നു…",
+        "loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+        "loadError": "അറിയിപ്പുകൾ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+        "markAllReadError": "അറിയിപ്പുകൾ വായിച്ചതായി അടയാളപ്പെടുത്തുന്നതിൽ പരാജയപ്പെട്ടു"
       },
       "organisationName": "ഓർഗനൈസേഷന്റെ പേര്",
       "organisationNamePlaceholder": "ഓർഗനൈസേഷന്റെ പേര് നൽകുക",
@@ -16249,7 +16341,11 @@ const resources = {
         "held": "ഹോൾഡിലാണ്",
         "published": "പ്രസിദ്ധീകരിച്ചു",
         "yourSubmissions": "നിങ്ങൾ സമർപ്പിച്ച ചോദ്യങ്ങളും അവയുടെ നിലയും."
-      }
+      },
+      "leaderboard.loadError": "ലീഡർബോർഡ് ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+      "leaderboard.loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+      "leaderboard.loadingMore": "ലോഡ് ചെയ്യുന്നു...",
+      "leaderboard.reachedEnd": "നിങ്ങൾ ലീഡർബോർഡിന്റെ അവസാനത്തിലെത്തി."
     }
   },
   "mni": {
@@ -16643,7 +16739,11 @@ const resources = {
           "held": "থমজিনখ্রে",
           "approved": "অয়াবা পীরবা",
           "rejected": "অয়াবা পীদে"
-        }
+        },
+        "loading": "পাউদম লোড তৌরি…",
+        "loadMore": "হেনগৎ লোড তৌ",
+        "loadError": "পাউদম লোড তৌবদা মায় পাক্লে",
+        "markAllReadError": "পাউদমশিং পাব্রেখ্রবা ওইনা মার্ক তৌবদা মায় পাক্লে"
       },
       "organisationName": "ওর্গানাইজেসনগী মিং",
       "organisationNamePlaceholder": "ওর্গানাইজেসনগী মিং চংহনবীয়ু",
@@ -17603,7 +17703,11 @@ const resources = {
         "held": "হোল্দ তৌরি",
         "published": "থাদোকখ্রে",
         "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
-      }
+      },
+      "leaderboard.loadError": "লীডরবোর্দ লোড তৌবদা মায় পাক্লে",
+      "leaderboard.loadMore": "হেনগৎ লোড তৌ",
+      "leaderboard.loadingMore": "লোড তৌরি...",
+      "leaderboard.reachedEnd": "নহাক্না লীডরবোর্দগী অরোয়বদা য়ৌরে।"
     }
   },
   "mr": {
@@ -17997,7 +18101,11 @@ const resources = {
           "held": "होल्डवर",
           "approved": "मंजूर",
           "rejected": "मंजूर नाही"
-        }
+        },
+        "loading": "सूचना लोड होत आहेत…",
+        "loadMore": "अधिक लोड करा",
+        "loadError": "सूचना लोड करण्यात अयशस्वी",
+        "markAllReadError": "सूचना वाचल्या म्हणून चिन्हांकित करण्यात अयशस्वी"
       },
       "organisationName": "संस्थेचे नाव",
       "organisationNamePlaceholder": "संस्थेचे नाव प्रविष्ट करा",
@@ -18957,7 +19065,11 @@ const resources = {
         "held": "होल्डवर आहे",
         "published": "प्रकाशित",
         "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
-      }
+      },
+      "leaderboard.loadError": "लीडरबोर्ड लोड करण्यात अयशस्वी",
+      "leaderboard.loadMore": "अधिक लोड करा",
+      "leaderboard.loadingMore": "लोड होत आहे...",
+      "leaderboard.reachedEnd": "तुम्ही लीडरबोर्डच्या शेवटी पोहोचला आहात."
     }
   },
   "ne": {
@@ -19351,7 +19463,11 @@ const resources = {
           "held": "रोक्का राखिएको",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनाहरू लोड हुँदैछन्…",
+        "loadMore": "थप लोड गर्नुहोस्",
+        "loadError": "सूचनाहरू लोड गर्न असफल भयो",
+        "markAllReadError": "सूचनाहरूलाई पढिएको रूपमा चिन्ह लगाउन असफल भयो"
       },
       "organisationName": "संस्थाको नाम",
       "organisationNamePlaceholder": "संस्थाको नाम राख्नुहोस्",
@@ -20311,7 +20427,11 @@ const resources = {
         "held": "होल्डमा छ",
         "published": "प्रकाशित",
         "yourSubmissions": "तपाईंले पेश गरेका प्रश्नहरू र तिनीहरूको स्थिति।"
-      }
+      },
+      "leaderboard.loadError": "लिडरबोर्ड लोड गर्न असफल भयो",
+      "leaderboard.loadMore": "थप लोड गर्नुहोस्",
+      "leaderboard.loadingMore": "लोड हुँदैछ...",
+      "leaderboard.reachedEnd": "तपाईं लिडरबोर्डको अन्त्यमा पुग्नुभयो।"
     }
   },
   "or": {
@@ -20703,7 +20823,11 @@ const resources = {
           "held": "ରଖାଯାଇଛି (On Hold)",
           "approved": "ଅନୁମୋଦିତ",
           "rejected": "ଅନୁମୋଦିତ ହୋଇନାହିଁ"
-        }
+        },
+        "loading": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ ହେଉଛି…",
+        "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+        "loadError": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+        "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ"
       },
       "organisationName": "ସଂସ୍ଥାର ନାମ",
       "organisationNamePlaceholder": "ସଂସ୍ଥାର ନାମ ଦିଅନ୍ତୁ",
@@ -21666,7 +21790,11 @@ const resources = {
       },
       "cat": {
         "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
-      }
+      },
+      "leaderboard.loadError": "ଲିଡରବୋର୍ଡ ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+      "leaderboard.loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+      "leaderboard.loadingMore": "ଲୋଡ୍ ହେଉଛି...",
+      "leaderboard.reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।"
     }
   },
   "pa": {
@@ -22060,7 +22188,11 @@ const resources = {
           "held": "ਰੋਕ 'ਤੇ",
           "approved": "ਮੰਜ਼ੂਰ",
           "rejected": "ਮੰਜ਼ੂਰ ਨਹੀਂ ਹੋਇਆ"
-        }
+        },
+        "loading": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ…",
+        "loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+        "loadError": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+        "markAllReadError": "ਸੂਚਨਾਵਾਂ ਨੂੰ ਪੜ੍ਹਿਆ ਹੋਇਆ ਵਜੋਂ ਚਿੰਨ੍ਹਿਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
       },
       "organisationName": "ਸੰਸਥਾ ਦਾ ਨਾਮ",
       "organisationNamePlaceholder": "ਸੰਸਥਾ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
@@ -23020,7 +23152,11 @@ const resources = {
         "held": "ਹੋਲਡ 'ਤੇ",
         "published": "ਪ੍ਰਕਾਸ਼ਿਤ",
         "yourSubmissions": "ਤੁਹਾਡੇ ਭੇਜੇ ਗਏ ਸਵਾਲ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਸਥਿਤੀ।"
-      }
+      },
+      "leaderboard.loadError": "ਲੀਡਰਬੋਰਡ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+      "leaderboard.loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+      "leaderboard.loadingMore": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+      "leaderboard.reachedEnd": "ਤੁਸੀਂ ਲੀਡਰਬੋਰਡ ਦੇ ਅੰਤ ਤੱਕ ਪਹੁੰਚ ਗਏ ਹੋ।"
     }
   },
   "sa": {
@@ -23424,7 +23560,11 @@ const resources = {
           "held": "स्थगितम्",
           "approved": "स्वीकृतम्",
           "rejected": "न स्वीकृतम्"
-        }
+        },
+        "loading": "सूचनाः आयोज्यन्ते…",
+        "loadMore": "अधिकं लोडयतु",
+        "loadError": "सूचनानां आयोजने विफलम्",
+        "markAllReadError": "सूचनाः पठिताः इति चिह्नितुं विफलम्"
       },
       "organisationName": "संस्थायाः नाम",
       "organisationNamePlaceholder": "संस्थायाः नाम लिखतु",
@@ -24384,7 +24524,11 @@ const resources = {
         "held": "स्थगितम्",
         "published": "प्रकाशितम्",
         "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
-      }
+      },
+      "leaderboard.loadError": "क्रमसूची आयोजने विफलम्",
+      "leaderboard.loadMore": "अधिकं लोडयतु",
+      "leaderboard.loadingMore": "आयोजितम्...",
+      "leaderboard.reachedEnd": "भवान् क्रमसूच्याः अन्तं प्राप्तवान्।"
     }
   },
   "sat": {
@@ -24778,7 +24922,11 @@ const resources = {
           "held": "ᱟᱴᱠᱟᱣ ᱟᱠᱟᱱᱟ",
           "approved": "ᱟᱸᱜᱳᱪ ᱮᱱᱟ",
           "rejected": "ᱵᱟᱝ ᱟᱸᱜᱳᱪ ᱮᱱᱟ"
-        }
+        },
+        "loading": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+        "loadError": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+        "markAllReadError": "ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱯᱟᱲᱦᱟᱣ ᱠᱟᱱᱟ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱷᱟᱹᱭᱤᱛ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
       },
       "organisationName": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ",
       "organisationNamePlaceholder": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ",
@@ -25738,7 +25886,11 @@ const resources = {
         "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
         "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
         "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
-      }
+      },
+      "leaderboard.loadError": "ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+      "leaderboard.loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+      "leaderboard.loadingMore": "ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+      "leaderboard.reachedEnd": "ᱟᱢ ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱨᱮᱱᱟᱜ ᱢᱩᱪᱟᱹᱫ ᱨᱮ ᱥᱮᱴᱮᱨ ᱟᱠᱟᱱᱟᱢ ᱾"
     }
   },
   "sd": {
@@ -26132,7 +26284,11 @@ const resources = {
           "held": "روڪيل",
           "approved": "منظور ٿيل",
           "rejected": "منظور نه ٿيو"
-        }
+        },
+        "loading": "اطلاعون لوڊ ٿي رهيون آهن…",
+        "loadMore": "وڌيڪ لوڊ ڪريو",
+        "loadError": "اطلاعون لوڊ ڪرڻ ۾ ناڪامي",
+        "markAllReadError": "اطلاعن کي پڙهيل طور نشان لڳائڻ ۾ ناڪامي"
       },
       "organisationName": "تنظيم جو نالو",
       "organisationNamePlaceholder": "تنظيم جو نالو داخل ڪريو",
@@ -27092,7 +27248,11 @@ const resources = {
         "held": "هولڊ تي",
         "published": "شايع ٿيل",
         "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
-      }
+      },
+      "leaderboard.loadError": "ليڊر بورڊ لوڊ ڪرڻ ۾ ناڪامي",
+      "leaderboard.loadMore": "وڌيڪ لوڊ ڪريو",
+      "leaderboard.loadingMore": "لوڊ ٿي رهيو آهي...",
+      "leaderboard.reachedEnd": "توهان ليڊر بورڊ جي آخر تائين پهچي ويا آهيو."
     }
   },
   "ta": {
@@ -27486,7 +27646,11 @@ const resources = {
           "held": "நிறுத்தி வைக்கப்பட்டுள்ளது",
           "approved": "ஒப்புதலளிக்கப்பட்டது",
           "rejected": "ஒப்புதலளிக்கப்படவில்லை"
-        }
+        },
+        "loading": "அறிவிப்புகள் ஏற்றப்படுகின்றன…",
+        "loadMore": "மேலும் ஏற்று",
+        "loadError": "அறிவிப்புகளை ஏற்றுவதில் தோல்வி",
+        "markAllReadError": "அறிவிப்புகளை படித்ததாகக் குறிக்க முடியவில்லை"
       },
       "organisationName": "நிறுவனத்தின் பெயர்",
       "organisationNamePlaceholder": "நிறுவனத்தின் பெயரை உள்ளிடவும்",
@@ -28446,7 +28610,11 @@ const resources = {
         "held": "இடைநிறுத்தப்பட்டது",
         "published": "வெளியிடப்பட்டது",
         "yourSubmissions": "நீங்கள் சமர்ப்பித்த கேள்விகள் மற்றும் அவற்றின் நிலை."
-      }
+      },
+      "leaderboard.loadError": "தலைமைப் பலகையை ஏற்றுவதில் தோல்வி",
+      "leaderboard.loadMore": "மேலும் ஏற்று",
+      "leaderboard.loadingMore": "ஏற்றுகிறது...",
+      "leaderboard.reachedEnd": "நீங்கள் தலைமை பலகையின் முடிவை அடைந்துவிட்டீர்கள்."
     }
   },
   "te": {
@@ -28842,7 +29010,11 @@ const resources = {
           "held": "పాజ్ / నిలిపివేయబడింది",
           "approved": "ఆమోదించబడింది",
           "rejected": "ఆమోదించబడలేదు"
-        }
+        },
+        "loading": "నోటిఫికేషన్‌లు లోడ్ అవుతున్నాయి…",
+        "loadMore": "మరిన్ని లోడ్ చేయండి",
+        "loadError": "నోటిఫికేషన్‌లను లోడ్ చేయడంలో విఫలమైంది",
+        "markAllReadError": "నోటిఫికేషన్‌లను చదివినట్లు గుర్తించడంలో విఫలమైంది"
       },
       "organisationName": "సంస్థ పేరు",
       "organisationNamePlaceholder": "సంస్థ పేరును నమోదు చేయండి",
@@ -29802,7 +29974,11 @@ const resources = {
         "held": "హోల్డ్‌లో ఉంది",
         "published": "ప్రచురించబడింది",
         "yourSubmissions": "మీరు సమర్పించిన ప్రశ్నలు మరియు వాటి స్థితి."
-      }
+      },
+      "leaderboard.loadError": "లీడర్‌బోర్డ్‌ను లోడ్ చేయడంలో విఫలమైంది",
+      "leaderboard.loadMore": "మరిన్ని లోడ్ చేయండి",
+      "leaderboard.loadingMore": "లోడ్ అవుతోంది...",
+      "leaderboard.reachedEnd": "మీరు లీడర్‌బోర్డ్ చివరకు చేరుకున్నారు."
     }
   },
   "ur": {
@@ -30196,7 +30372,11 @@ const resources = {
           "held": "روکا گیا",
           "approved": "منظور شدہ",
           "rejected": "منظور نہیں ہوا"
-        }
+        },
+        "loading": "اطلاعات لوڈ ہو رہی ہیں…",
+        "loadMore": "مزید لوڈ کریں",
+        "loadError": "اطلاعات لوڈ کرنے میں ناکامی",
+        "markAllReadError": "اطلاعات کو پڑھا ہوا نشان زد کرنے میں ناکامی"
       },
       "organisationName": "تنظیم کا نام",
       "organisationNamePlaceholder": "تنظیم کا نام درج کریں",
@@ -31156,7 +31336,11 @@ const resources = {
         "held": "ہولڈ پر",
         "published": "شائع شدہ",
         "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
-      }
+      },
+      "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنے میں ناکامی",
+      "leaderboard.loadMore": "مزید لوڈ کریں",
+      "leaderboard.loadingMore": "لوڈ ہو رہا ہے...",
+      "leaderboard.reachedEnd": "آپ لیڈر بورڈ کے اختتام تک پہنچ گئے ہیں۔"
     }
   }
 };

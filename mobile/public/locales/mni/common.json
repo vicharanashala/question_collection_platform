@@ -388,7 +388,11 @@
       "held": "থমজিনখ্রে",
       "approved": "অয়াবা পীরবা",
       "rejected": "অয়াবা পীদে"
-    }
+    },
+    "loading": "পাউদম লোড তৌরি…",
+    "loadMore": "হেনগৎ লোড তৌ",
+    "loadError": "পাউদম লোড তৌবদা মায় পাক্লে",
+    "markAllReadError": "পাউদমশিং পাব্রেখ্রবা ওইনা মার্ক তৌবদা মায় পাক্লে"
   },
   "organisationName": "ওর্গানাইজেসনগী মিং",
   "organisationNamePlaceholder": "ওর্গানাইজেসনগী মিং চংহনবীয়ু",
@@ -1348,5 +1352,9 @@
     "held": "হোল্দ তৌরি",
     "published": "থাদোকখ্রে",
     "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
-  }
+  },
+  "leaderboard.loadError": "লীডরবোর্দ লোড তৌবদা মায় পাক্লে",
+  "leaderboard.loadMore": "হেনগৎ লোড তৌ",
+  "leaderboard.loadingMore": "লোড তৌরি...",
+  "leaderboard.reachedEnd": "নহাক্না লীডরবোর্দগী অরোয়বদা য়ৌরে।"
 }

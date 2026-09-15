@@ -388,7 +388,11 @@
       "held": "होल्डवर",
       "approved": "मंजूर",
       "rejected": "मंजूर नाही"
-    }
+    },
+    "loading": "सूचना लोड होत आहेत…",
+    "loadMore": "अधिक लोड करा",
+    "loadError": "सूचना लोड करण्यात अयशस्वी",
+    "markAllReadError": "सूचना वाचल्या म्हणून चिन्हांकित करण्यात अयशस्वी"
   },
   "organisationName": "संस्थेचे नाव",
   "organisationNamePlaceholder": "संस्थेचे नाव प्रविष्ट करा",
@@ -1348,5 +1352,9 @@
     "held": "होल्डवर आहे",
     "published": "प्रकाशित",
     "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करण्यात अयशस्वी",
+  "leaderboard.loadMore": "अधिक लोड करा",
+  "leaderboard.loadingMore": "लोड होत आहे...",
+  "leaderboard.reachedEnd": "तुम्ही लीडरबोर्डच्या शेवटी पोहोचला आहात."
 }

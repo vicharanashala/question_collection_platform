@@ -388,7 +388,11 @@
       "held": "रोके दा",
       "approved": "मंजूर",
       "rejected": "अस्वीकृत"
-    }
+    },
+    "loading": "सूचनां लोड होआ करदियां न…",
+    "loadMore": "होर लोड करो",
+    "loadError": "सूचनां लोड करने च असफल",
+    "markAllReadError": "सूचनां गी पढ़ी दे रूप च चिह्नत करने च असफल"
   },
   "organisationName": "संगठन दा नांइ",
   "organisationNamePlaceholder": "संगठन दा नांइ पाओ",
@@ -1348,5 +1352,9 @@
     "held": "होल्ड पर ऐ",
     "published": "प्रकाशत होई गेआ",
     "yourSubmissions": "तुहाड़े भेजे गे सवाल ते उंआं दी स्थिति।"
-  }
+  },
+  "leaderboard.loadError": "लीडरबोर्ड लोड करने च असफल",
+  "leaderboard.loadMore": "होर लोड करो",
+  "leaderboard.loadingMore": "लोड होआ करदा...",
+  "leaderboard.reachedEnd": "तुसीं लीडरबोर्ड दे अंत तगर पुज्जी गे हो।"
 }

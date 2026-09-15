@@ -388,7 +388,11 @@
       "held": "On Hold",
       "approved": "Approved",
       "rejected": "Not Approved"
-    }
+    },
+    "loading": "Loading notifications…",
+    "loadMore": "Load more",
+    "loadError": "Failed to load notifications",
+    "markAllReadError": "Failed to mark notifications as read"
   },
   "organisationName": "Organisation Name",
   "organisationNamePlaceholder": "Enter organisation name",
@@ -1350,5 +1354,9 @@
     "held": "On hold",
     "published": "Published",
     "yourSubmissions": "Your submitted questions and their status."
-  }
+  },
+  "leaderboard.loadError": "Failed to load leaderboard",
+  "leaderboard.loadMore": "Load more",
+  "leaderboard.loadingMore": "Loading...",
+  "leaderboard.reachedEnd": "You've reached the end of the leaderboard."
 }

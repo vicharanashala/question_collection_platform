@@ -455,7 +455,11 @@ const resources = {
           "held": "On Hold",
           "approved": "Approved",
           "rejected": "Not Approved"
-        }
+        },
+        "loading": "Loading notifications…",
+        "loadMore": "Load more",
+        "loadError": "Failed to load notifications",
+        "markAllReadError": "Failed to mark notifications as read"
       },
       "organisationName": "Organisation Name",
       "organisationNamePlaceholder": "Enter organisation name",
@@ -1273,7 +1277,11 @@ const resources = {
           "subtitle": "Start submitting questions to appear on the leaderboard"
         },
         "loading": "Loading…",
-        "participants": "users competing"
+        "participants": "users competing",
+        "loadError": "Failed to load leaderboard",
+        "loadMore": "Load more",
+        "loadingMore": "Loading...",
+        "reachedEnd": "You've reached the end of the leaderboard."
       },
       "paymentMethods": {
         "verifyBanner": "Payment methods are verified with a ₹1 micro-transaction before use.",
@@ -1743,7 +1751,11 @@ const resources = {
           "held": "ৰখা হৈছে",
           "approved": "অনুমোদিত",
           "rejected": "অনুমোদিত নহয়"
-        }
+        },
+        "loading": "জাননী ল'ড হৈ আছে…",
+        "loadMore": "অধিক ল'ড কৰক",
+        "loadError": "জাননী ল'ড কৰাত বিফল হ'ল",
+        "markAllReadError": "জাননীসমূহ পঢ়া বুলি চিহ্নিত কৰাত বিফল হ'ল"
       },
       "organisationName": "সংস্থাৰ নাম",
       "organisationNamePlaceholder": "সংস্থাৰ নাম দিয়ক",
@@ -2535,7 +2547,11 @@ const resources = {
           "subtitle": "লিডাৰব'ৰ্ডত দেখাবলৈ প্ৰশ্ন দাখিল কৰা আৰম্ভ কৰক"
         },
         "loading": "লোড হৈ আছে…",
-        "participants": "প্ৰতিযোগী"
+        "participants": "প্ৰতিযোগী",
+        "loadError": "লিডাৰব'ৰ্ড ল'ড কৰাত বিফল হ'ল",
+        "loadMore": "অধিক ল'ড কৰক",
+        "loadingMore": "ল'ড হৈ আছে...",
+        "reachedEnd": "আপুনি লিডাৰব'ৰ্ডৰ শেষত উপনীত হৈছে।"
       },
       "paymentMethods": {
         "verifyBanner": "ব্যৱহাৰৰ আগতে পেমেন্ট পদ্ধতিসমূহ ₹1 মাইক্ৰ'-ট্ৰাঞ্জেকশ্যনৰ জৰিয়তে সত্যাপন কৰা হয়।",
@@ -3005,7 +3021,11 @@ const resources = {
           "held": "স্থগিত রাখা হয়েছে",
           "approved": "অনুমোদিত",
           "rejected": "অনুমোদিত নয়"
-        }
+        },
+        "loading": "বিজ্ঞপ্তি লোড হচ্ছে…",
+        "loadMore": "আরও লোড করুন",
+        "loadError": "বিজ্ঞপ্তি লোড করতে ব্যর্থ হয়েছে",
+        "markAllReadError": "বিজ্ঞপ্তিগুলি পঠিত হিসাবে চিহ্নিত করতে ব্যর্থ হয়েছে"
       },
       "organisationName": "সংস্থার নাম",
       "organisationNamePlaceholder": "সংস্থার নাম লিখুন",
@@ -3797,7 +3817,11 @@ const resources = {
           "subtitle": "লিডারবোর্ডে উপস্থিত হতে প্রশ্ন জমা দেওয়া শুরু করুন"
         },
         "loading": "লোড হচ্ছে…",
-        "participants": "প্রতিদ্বন্দ্বিতা করছেন এমন ব্যবহারকারীগণ"
+        "participants": "প্রতিদ্বন্দ্বিতা করছেন এমন ব্যবহারকারীগণ",
+        "loadError": "লিডারবোর্ড লোড করতে ব্যর্থ হয়েছে",
+        "loadMore": "আরও লোড করুন",
+        "loadingMore": "লোড হচ্ছে...",
+        "reachedEnd": "আপনি লিডারবোর্ডের শেষে পৌঁছে গেছেন।"
       },
       "paymentMethods": {
         "verifyBanner": "ব্যবহারের আগে পেমেন্ট পদ্ধতিগুলি ₹1 মাইক্রো-ট্রানজেকশন দিয়ে যাচাই করা হয়।",
@@ -4267,7 +4291,11 @@ const resources = {
           "held": "हमथानाय",
           "approved": "गनायथि मोनाय",
           "rejected": "गनायथि मोनासै"
-        }
+        },
+        "loading": "सोदोबखौ लोड खालामनाय जायोगोन…",
+        "loadMore": "गोबां लोड खालाम",
+        "loadError": "सोदोबखौ लोड खालामनो हायाखै",
+        "markAllReadError": "सोदोबखौ फोरमानथिफ्राय दिन्थिबहोनो हायाखै"
       },
       "organisationName": "आफादनि मुं",
       "organisationNamePlaceholder": "आफादनि मुं सोमावना हो",
@@ -5059,7 +5087,11 @@ const resources = {
           "subtitle": "लीडरबोर्डआव नुजानो थाखाय सोंथि दैथायहरनाय जागाय"
         },
         "loading": "लोड जागासिनो दं…",
-        "participants": "सा बाहागोगिरिफोर"
+        "participants": "सा बाहागोगिरिफोर",
+        "loadError": "लीडरबर्ड लोड खालामनो हायाखै",
+        "loadMore": "गोबां लोड खालाम",
+        "loadingMore": "लोड जायोगोन...",
+        "reachedEnd": "नोंथाङा लीडरबर्डनि जोबथानो सायखौ।"
       },
       "paymentMethods": {
         "verifyBanner": "बाहायनायनि सिगां रां होनायनि राह्राफोरखौ ₹1 माइक्रो-ट्रान्जेक्सन जों थारसिमनाय जायो।",
@@ -5529,7 +5561,11 @@ const resources = {
           "held": "रोके दा",
           "approved": "मंजूर",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनां लोड होआ करदियां न…",
+        "loadMore": "होर लोड करो",
+        "loadError": "सूचनां लोड करने च असफल",
+        "markAllReadError": "सूचनां गी पढ़ी दे रूप च चिह्नत करने च असफल"
       },
       "organisationName": "संगठन दा नांइ",
       "organisationNamePlaceholder": "संगठन दा नांइ पाओ",
@@ -6321,7 +6357,11 @@ const resources = {
           "subtitle": "लीडरबोर्ड पर आने लेई प्रश्न भेजना शुरू करो"
         },
         "loading": "लोड होई राह्या ऐ…",
-        "participants": "उपयोगकर्ता मुक़ाबला करी राह्ये न"
+        "participants": "उपयोगकर्ता मुक़ाबला करी राह्ये न",
+        "loadError": "लीडरबोर्ड लोड करने च असफल",
+        "loadMore": "होर लोड करो",
+        "loadingMore": "लोड होआ करदा...",
+        "reachedEnd": "तुसीं लीडरबोर्ड दे अंत तगर पुज्जी गे हो।"
       },
       "paymentMethods": {
         "verifyBanner": "इस्तेमाल थमां पैह्ले भुगतान दे तरीके ₹1 माइक्रो-ट्रांजेक्शन कन्नै सत्यापित कीते जंदे न।",
@@ -6791,7 +6831,11 @@ const resources = {
           "held": "હોલ્ડ પર",
           "approved": "મંજૂર થયેલ",
           "rejected": "મંજૂર થયેલ નથી"
-        }
+        },
+        "loading": "સૂચનાઓ લોડ થઈ રહી છે…",
+        "loadMore": "વધુ લોડ કરો",
+        "loadError": "સૂચનાઓ લોડ કરવામાં નિષ્ફળ",
+        "markAllReadError": "સૂચનાઓને વાંચેલી તરીકે ચિહ્નિત કરવામાં નિષ્ફળ"
       },
       "organisationName": "સંસ્થાનું નામ",
       "organisationNamePlaceholder": "સંસ્થાનું નામ દાખલ કરો",
@@ -7583,7 +7627,11 @@ const resources = {
           "subtitle": "લીડરબોર્ડ પર દેખાવા માટે પ્રશ્નો સબમિટ કરવાનું શરૂ કરો"
         },
         "loading": "લોડ થઈ રહ્યું છે…",
-        "participants": "વપરાશકર્તાઓ સ્પર્ધા કરી રહ્યા છે"
+        "participants": "વપરાશકર્તાઓ સ્પર્ધા કરી રહ્યા છે",
+        "loadError": "લીડરબોર્ડ લોડ કરવામાં નિષ્ફળ",
+        "loadMore": "વધુ લોડ કરો",
+        "loadingMore": "લોડ થઈ રહ્યું છે...",
+        "reachedEnd": "તમે લીડરબોર્ડના અંત સુધી પહોંચી ગયા છો."
       },
       "paymentMethods": {
         "verifyBanner": "ઉપયોગ કરતાં પહેલાં ચુકવણી પદ્ધતિઓ ₹1 માઇક્રો-ટ્રાન્ઝેક્શનથી ચકાસવામાં આવે છે.",
@@ -8053,7 +8101,11 @@ const resources = {
           "held": "होल्ड पर",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनाएं लोड हो रही हैं…",
+        "loadMore": "और लोड करें",
+        "loadError": "सूचनाएं लोड करने में विफल",
+        "markAllReadError": "सूचनाओं को पढ़ा हुआ चिह्नित करने में विफल"
       },
       "organisationName": "संगठन का नाम",
       "organisationNamePlaceholder": "संगठन का नाम दर्ज करें",
@@ -8864,7 +8916,11 @@ const resources = {
           "subtitle": "लीडरबोर्ड पर दिखाई देने के लिए प्रश्न सबमिट करना शुरू करें"
         },
         "loading": "लोड हो रहा है…",
-        "participants": "उपयोगकर्ता प्रतिस्पर्धा कर रहे हैं"
+        "participants": "उपयोगकर्ता प्रतिस्पर्धा कर रहे हैं",
+        "loadError": "लीडरबोर्ड लोड करने में विफल",
+        "loadMore": "और लोड करें",
+        "loadingMore": "लोड हो रहा है...",
+        "reachedEnd": "आप लीडरबोर्ड के अंत तक पहुँच गए हैं।"
       },
       "paymentMethods": {
         "verifyBanner": "उपयोग से पहले भुगतान के तरीकों को ₹1 के माइक्रो-ट्रांज़ैक्शन से सत्यापित किया जाता है।",
@@ -9334,7 +9390,11 @@ const resources = {
           "held": "ತಡೆಹಿಡಿಯಲಾಗಿದೆ",
           "approved": "ಅನುಮೋದಿಸಲಾಗಿದೆ",
           "rejected": "ಅನುಮೋದಿಸಲಾಗಿಲ್ಲ"
-        }
+        },
+        "loading": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+        "loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+        "loadError": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+        "markAllReadError": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಓದಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ವಿಫಲವಾಗಿದೆ"
       },
       "organisationName": "ಸಂಸ್ಥೆಯ ಹೆಸರು",
       "organisationNamePlaceholder": "ಸಂಸ್ಥೆಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
@@ -10126,7 +10186,11 @@ const resources = {
           "subtitle": "ಲೀಡರ್‌ಬೋರ್ಡ್‌ನಲ್ಲಿ ಕಾಣಿಸಿಕೊಳ್ಳಲು ಪ್ರಶ್ನೆಗಳನ್ನು ಸಲ್ಲಿಸಲು ಪ್ರಾರಂಭಿಸಿ"
         },
         "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
-        "participants": "ಸ್ಪರ್ಧಿಸುತ್ತಿರುವ ಬಳಕೆದಾರರು"
+        "participants": "ಸ್ಪರ್ಧಿಸುತ್ತಿರುವ ಬಳಕೆದಾರರು",
+        "loadError": "ಲೀಡರ್‌ಬೋರ್ಡ್ ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+        "loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+        "loadingMore": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+        "reachedEnd": "ನೀವು ಲೀಡರ್‌ಬೋರ್ಡ್‌ನ ಕೊನೆಗೆ ತಲುಪಿದ್ದೀರಿ."
       },
       "paymentMethods": {
         "verifyBanner": "ಬಳಸುವ ಮೊದಲು ಪಾವತಿ ವಿಧಾನಗಳನ್ನು ₹1 ಮೈಕ್ರೋ-ವಹಿವಾಟಿನ ಮೂಲಕ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ.",
@@ -10596,7 +10660,11 @@ const resources = {
           "held": "روکِتھ",
           "approved": "منظور گٔمِت",
           "rejected": "نا منظور"
-        }
+        },
+        "loading": "اطلاع نامہٕ لوڈ گژھان…",
+        "loadMore": "مزید لوڈ کریو",
+        "loadError": "اطلاع نامہٕ لوڈ کرنس منٛز ناکامی",
+        "markAllReadError": "اطلاع نامہٕ پرنہ ہیٚنٛز نشان لگاونس منٛز ناکامی"
       },
       "organisationName": "تنظیمُک ناو",
       "organisationNamePlaceholder": "تنظیمُک ناو درج کٔریو",
@@ -11388,7 +11456,11 @@ const resources = {
           "subtitle": "لیڈر بورڈس پیٹھ یینِ خٲطرہ سوالات جمع کرُن شروع کٔریو"
         },
         "loading": "لوڈ گژھان…",
-        "participants": "صارفین مقابلے مَنٛز"
+        "participants": "صارفین مقابلے مَنٛز",
+        "loadError": "لیڈر بورڈ لوڈ کرنس منٛز ناکامی",
+        "loadMore": "مزید لوڈ کریو",
+        "loadingMore": "لوڈ کران...",
+        "reachedEnd": "توہیں لیڈر بورڈ ہنٛدِس اندام منٛز پہژیو۔"
       },
       "paymentMethods": {
         "verifyBanner": "استعمال کرنہ سٕتی پہلہٕ ادائیگی ہنٛد طریقہٕ چھِ ₹1 مائیکرو-ٹرانزیکشن سٕتی تصدیق کرنہ آمُت۔",
@@ -11858,7 +11930,11 @@ const resources = {
           "held": "दवरला",
           "approved": "मान्य जालो",
           "rejected": "मान्य जालो ना"
-        }
+        },
+        "loading": "सुचोवण्यो लोड जाता…",
+        "loadMore": "चड लोड करात",
+        "loadError": "सुचोवण्यो लोड करपाक अपेस जालें",
+        "markAllReadError": "सुचोवण्यो वाचिल्ल्यो म्हूण खूण करपाक अपेस जालें"
       },
       "organisationName": "संस्थेचें नांव",
       "organisationNamePlaceholder": "संस्थेचें नांव घालात",
@@ -12650,7 +12726,11 @@ const resources = {
           "subtitle": "वळेरींत येवपाखातीर प्रस्न धाडपाक सुरू करात"
         },
         "loading": "लोड जाता…",
-        "participants": "वापरपी सर्तीत आसात"
+        "participants": "वापरपी सर्तीत आसात",
+        "loadError": "लीडरबोर्ड लोड करपाक अपेस जालें",
+        "loadMore": "चड लोड करात",
+        "loadingMore": "लोड जाता...",
+        "reachedEnd": "तुमी लीडरबोर्डाच्या शेवटाक पावला."
       },
       "paymentMethods": {
         "verifyBanner": "वापर करच्या पयली फारीकपाच्यो पद्धती ₹1 मायक्रो-ट्रान्झॅक्शनान पडताळल्यात.",
@@ -13120,7 +13200,11 @@ const resources = {
           "held": "रोकि राखल गेल",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचना लोड भऽ रहल अछि…",
+        "loadMore": "आरो लोड करू",
+        "loadError": "सूचना लोड करबामे विफल",
+        "markAllReadError": "सूचनाकेँ पढ़ल गेल चिह्नित करबामे विफल"
       },
       "organisationName": "संगठनक नाम",
       "organisationNamePlaceholder": "संगठनक नाम दर्ज करु",
@@ -13912,7 +13996,11 @@ const resources = {
           "subtitle": "लीडरबोर्ड पर आबै लेल प्रश्न जमा करब शुरू करु"
         },
         "loading": "लोड भ रहल अछि…",
-        "participants": "उपयोगकर्ता भाग लऽ रहल छथि"
+        "participants": "उपयोगकर्ता भाग लऽ रहल छथि",
+        "loadError": "लीडरबोर्ड लोड करबामे विफल",
+        "loadMore": "आरो लोड करू",
+        "loadingMore": "लोड भऽ रहल अछि...",
+        "reachedEnd": "अहाँ लीडरबोर्डक अंत धरि पहुँचि गेल छी।"
       },
       "paymentMethods": {
         "verifyBanner": "उपयोग सँ पहिने भुगतान विधिकेँ ₹1 माइक्रो-ट्रांजेक्शनसँ सत्यापित कएल जाइत अछि।",
@@ -14382,7 +14470,11 @@ const resources = {
           "held": "ഹോൾഡിൽ",
           "approved": "അംഗീകരിച്ചു",
           "rejected": "അംഗീകരിച്ചില്ല"
-        }
+        },
+        "loading": "അറിയിപ്പുകൾ ലോഡ് ചെയ്യുന്നു…",
+        "loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+        "loadError": "അറിയിപ്പുകൾ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+        "markAllReadError": "അറിയിപ്പുകൾ വായിച്ചതായി അടയാളപ്പെടുത്തുന്നതിൽ പരാജയപ്പെട്ടു"
       },
       "organisationName": "ഓർഗനൈസേഷന്റെ പേര്",
       "organisationNamePlaceholder": "ഓർഗനൈസേഷന്റെ പേര് നൽകുക",
@@ -15174,7 +15266,11 @@ const resources = {
           "subtitle": "ലീഡർബോർഡിൽ ഇടം നേടാൻ ചോദ്യങ്ങൾ സമർപ്പിച്ചു തുടങ്ങൂ"
         },
         "loading": "ലോഡ് ചെയ്യുന്നു…",
-        "participants": "ഉപയോക്താക്കൾ മത്സരിക്കുന്നു"
+        "participants": "ഉപയോക്താക്കൾ മത്സരിക്കുന്നു",
+        "loadError": "ലീഡർബോർഡ് ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+        "loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+        "loadingMore": "ലോഡ് ചെയ്യുന്നു...",
+        "reachedEnd": "നിങ്ങൾ ലീഡർബോർഡിന്റെ അവസാനത്തിലെത്തി."
       },
       "paymentMethods": {
         "verifyBanner": "ഉപയോഗിക്കുന്നതിന് മുമ്പ് പേയ്‌മെന്റ് രീതികൾ ₹1 മൈക്രോ-ട്രാൻസാക്ഷൻ വഴി സാക്ഷ്യപ്പെടുത്തുന്നു.",
@@ -15644,7 +15740,11 @@ const resources = {
           "held": "থমজিনখ্রে",
           "approved": "অয়াবা পীরবা",
           "rejected": "অয়াবা পীদে"
-        }
+        },
+        "loading": "পাউদম লোড তৌরি…",
+        "loadMore": "হেনগৎ লোড তৌ",
+        "loadError": "পাউদম লোড তৌবদা মায় পাক্লে",
+        "markAllReadError": "পাউদমশিং পাব্রেখ্রবা ওইনা মার্ক তৌবদা মায় পাক্লে"
       },
       "organisationName": "ওর্গানাইজেসনগী মিং",
       "organisationNamePlaceholder": "ওর্গানাইজেসনগী মিং চংহনবীয়ু",
@@ -16436,7 +16536,11 @@ const resources = {
           "subtitle": "লিদরবোর্ডতা য়াওনবা ওয়াহং থাবা হৌবীয়ু"
         },
         "loading": "লোদ্ তৌরি…",
-        "participants": "শীজিন্নরিবশিং শরুক য়াওরি"
+        "participants": "শীজিন্নরিবশিং শরুক য়াওরি",
+        "loadError": "লীডরবোর্দ লোড তৌবদা মায় পাক্লে",
+        "loadMore": "হেনগৎ লোড তৌ",
+        "loadingMore": "লোড তৌরি...",
+        "reachedEnd": "নহাক্না লীডরবোর্দগী অরোয়বদা য়ৌরে।"
       },
       "paymentMethods": {
         "verifyBanner": "শীজিন্নবা মমাংদা পেমেন্ত পাম্বৈশিং অসিবু ₹1 মাইক্রো-ট্রান্জেক্শনগী মতাংদা তসদিক তৌই।",
@@ -16906,7 +17010,11 @@ const resources = {
           "held": "होल्डवर",
           "approved": "मंजूर",
           "rejected": "मंजूर नाही"
-        }
+        },
+        "loading": "सूचना लोड होत आहेत…",
+        "loadMore": "अधिक लोड करा",
+        "loadError": "सूचना लोड करण्यात अयशस्वी",
+        "markAllReadError": "सूचना वाचल्या म्हणून चिन्हांकित करण्यात अयशस्वी"
       },
       "organisationName": "संस्थेचे नाव",
       "organisationNamePlaceholder": "संस्थेचे नाव प्रविष्ट करा",
@@ -17698,7 +17806,11 @@ const resources = {
           "subtitle": "लीडरबोर्डवर दिसण्यासाठी प्रश्न सबमिट करणे सुरू करा"
         },
         "loading": "लोड होत आहे…",
-        "participants": "वापरकर्ते स्पर्धा करत आहेत"
+        "participants": "वापरकर्ते स्पर्धा करत आहेत",
+        "loadError": "लीडरबोर्ड लोड करण्यात अयशस्वी",
+        "loadMore": "अधिक लोड करा",
+        "loadingMore": "लोड होत आहे...",
+        "reachedEnd": "तुम्ही लीडरबोर्डच्या शेवटी पोहोचला आहात."
       },
       "paymentMethods": {
         "verifyBanner": "वापरण्यापूर्वी पेमेंट पद्धती ₹1 च्या मायक्रो-ट्रान्झॅक्शनने सत्यापित केल्या जातात.",
@@ -18168,7 +18280,11 @@ const resources = {
           "held": "रोक्का राखिएको",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनाहरू लोड हुँदैछन्…",
+        "loadMore": "थप लोड गर्नुहोस्",
+        "loadError": "सूचनाहरू लोड गर्न असफल भयो",
+        "markAllReadError": "सूचनाहरूलाई पढिएको रूपमा चिन्ह लगाउन असफल भयो"
       },
       "organisationName": "संस्थाको नाम",
       "organisationNamePlaceholder": "संस्थाको नाम राख्नुहोस्",
@@ -18960,7 +19076,11 @@ const resources = {
           "subtitle": "लिडरबोर्डमा पर्नका लागि प्रश्नहरू पेस गर्न सुरु गर्नुहोस्"
         },
         "loading": "लोड हुँदैछ…",
-        "participants": "प्रतिस्पर्धी प्रयोगकर्ताहरू"
+        "participants": "प्रतिस्पर्धी प्रयोगकर्ताहरू",
+        "loadError": "लिडरबोर्ड लोड गर्न असफल भयो",
+        "loadMore": "थप लोड गर्नुहोस्",
+        "loadingMore": "लोड हुँदैछ...",
+        "reachedEnd": "तपाईं लिडरबोर्डको अन्त्यमा पुग्नुभयो।"
       },
       "paymentMethods": {
         "verifyBanner": "प्रयोग गर्नुअघि भुक्तानी विधिहरूलाई ₹1 माइक्रो-कारोबारद्वारा प्रमाणित गरिन्छ।",
@@ -19430,7 +19550,11 @@ const resources = {
           "held": "ରଖାଯାଇଛି (On Hold)",
           "approved": "ଅନୁମୋଦିତ",
           "rejected": "ଅନୁମୋଦିତ ହୋଇନାହିଁ"
-        }
+        },
+        "loading": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ ହେଉଛି…",
+        "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+        "loadError": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+        "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ"
       },
       "organisationName": "ସଂସ୍ଥାର ନାମ",
       "organisationNamePlaceholder": "ସଂସ୍ଥାର ନାମ ଦିଅନ୍ତୁ",
@@ -20221,7 +20345,11 @@ const resources = {
           "subtitle": "ଲିଡରବୋର୍ଡରେ ଦେଖାଯିବା ପାଇଁ ପ୍ରଶ୍ନ ଦାଖଲ କରିବା ଆରମ୍ଭ କରନ୍ତୁ"
         },
         "loading": "ଲୋଡ୍ ହେଉଛି…",
-        "participants": "ଜଣ ବ୍ୟବହାରକାରୀ ପ୍ରତିଯୋଗିତା କରୁଛନ୍ତି"
+        "participants": "ଜଣ ବ୍ୟବହାରକାରୀ ପ୍ରତିଯୋଗିତା କରୁଛନ୍ତି",
+        "loadError": "ଲିଡରବୋର୍ଡ ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+        "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+        "loadingMore": "ଲୋଡ୍ ହେଉଛି...",
+        "reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।"
       },
       "paymentMethods": {
         "verifyBanner": "ବ୍ୟବହାର ପୂର୍ବରୁ ପେମେଣ୍ଟ୍ ପଦ୍ଧତିଗୁଡ଼ିକ ₹1 ମାଇକ୍ରୋ-ଟ୍ରାନଜେକ୍ସନ୍ ସହିତ ଯାଞ୍ଚ କରାଯାଏ।",
@@ -20691,7 +20819,11 @@ const resources = {
           "held": "ਰੋਕ 'ਤੇ",
           "approved": "ਮੰਜ਼ੂਰ",
           "rejected": "ਮੰਜ਼ੂਰ ਨਹੀਂ ਹੋਇਆ"
-        }
+        },
+        "loading": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ…",
+        "loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+        "loadError": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+        "markAllReadError": "ਸੂਚਨਾਵਾਂ ਨੂੰ ਪੜ੍ਹਿਆ ਹੋਇਆ ਵਜੋਂ ਚਿੰਨ੍ਹਿਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
       },
       "organisationName": "ਸੰਸਥਾ ਦਾ ਨਾਮ",
       "organisationNamePlaceholder": "ਸੰਸਥਾ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
@@ -21483,7 +21615,11 @@ const resources = {
           "subtitle": "ਲੀਡਰਬੋਰਡ 'ਤੇ ਆਉਣ ਲਈ ਸਵਾਲ ਭੇਜਣਾ ਸ਼ੁਰੂ ਕਰੋ"
         },
         "loading": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…",
-        "participants": "ਮੁਕਾਬਲਾ ਕਰ ਰਹੇ ਉਪਭੋਗਤਾ"
+        "participants": "ਮੁਕਾਬਲਾ ਕਰ ਰਹੇ ਉਪਭੋਗਤਾ",
+        "loadError": "ਲੀਡਰਬੋਰਡ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+        "loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+        "loadingMore": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+        "reachedEnd": "ਤੁਸੀਂ ਲੀਡਰਬੋਰਡ ਦੇ ਅੰਤ ਤੱਕ ਪਹੁੰਚ ਗਏ ਹੋ।"
       },
       "paymentMethods": {
         "verifyBanner": "ਵਰਤੋਂ ਤੋਂ ਪਹਿਲਾਂ ਭੁਗਤਾਨ ਦੇ ਤਰੀਕਿਆਂ ਦੀ ₹1 ਮਾਈਕ੍ਰੋ-ਟ੍ਰਾਂਜੈਕਸ਼ਨ ਨਾਲ ਪੁਸ਼ਟੀ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।",
@@ -21963,7 +22099,11 @@ const resources = {
           "held": "स्थगितम्",
           "approved": "स्वीकृतम्",
           "rejected": "न स्वीकृतम्"
-        }
+        },
+        "loading": "सूचनाः आयोज्यन्ते…",
+        "loadMore": "अधिकं लोडयतु",
+        "loadError": "सूचनानां आयोजने विफलम्",
+        "markAllReadError": "सूचनाः पठिताः इति चिह्नितुं विफलम्"
       },
       "organisationName": "संस्थायाः नाम",
       "organisationNamePlaceholder": "संस्थायाः नाम लिखतु",
@@ -22755,7 +22895,11 @@ const resources = {
           "subtitle": "अग्रणीसूचीयां दृश्यमानतायै प्रश्नानां समर्पणं प्रारभताम्"
         },
         "loading": "आरुह्यते…",
-        "participants": "उपयोक्तारः स्पर्धां कुर्वन्ति"
+        "participants": "उपयोक्तारः स्पर्धां कुर्वन्ति",
+        "loadError": "क्रमसूची आयोजने विफलम्",
+        "loadMore": "अधिकं लोडयतु",
+        "loadingMore": "आयोजितम्...",
+        "reachedEnd": "भवान् क्रमसूच्याः अन्तं प्राप्तवान्।"
       },
       "paymentMethods": {
         "verifyBanner": "उपयोगात् पूर्वं भुगतानविधयः ₹1 सूक्ष्म-व्यवहारेण सत्याप्यन्ते।",
@@ -23225,7 +23369,11 @@ const resources = {
           "held": "ᱟᱴᱠᱟᱣ ᱟᱠᱟᱱᱟ",
           "approved": "ᱟᱸᱜᱳᱪ ᱮᱱᱟ",
           "rejected": "ᱵᱟᱝ ᱟᱸᱜᱳᱪ ᱮᱱᱟ"
-        }
+        },
+        "loading": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+        "loadError": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+        "markAllReadError": "ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱯᱟᱲᱦᱟᱣ ᱠᱟᱱᱟ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱷᱟᱹᱭᱤᱛ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
       },
       "organisationName": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ",
       "organisationNamePlaceholder": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ",
@@ -24017,7 +24165,11 @@ const resources = {
           "subtitle": "ᱞᱤᱰᱚᱨᱵᱳᱨᱰ ᱨᱮ ᱦᱤᱡᱩᱜ ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱮᱛᱚᱦᱚᱵ ᱢᱮ"
         },
         "loading": "ᱞᱳᱰᱚᱜ ᱠᱟᱱᱟ…",
-        "participants": "ᱵᱮᱣᱦᱟᱨᱤᱭᱟᱹ ᱠᱚ ᱦᱮᱯᱨᱟᱣ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱳᱣᱟ"
+        "participants": "ᱵᱮᱣᱦᱟᱨᱤᱭᱟᱹ ᱠᱚ ᱦᱮᱯᱨᱟᱣ ᱨᱮ ᱢᱮᱱᱟᱜ ᱠᱳᱣᱟ",
+        "loadError": "ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+        "loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+        "loadingMore": "ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+        "reachedEnd": "ᱟᱢ ᱞᱤᱰᱚᱨᱵᱚᱨᱰ ᱨᱮᱱᱟᱜ ᱢᱩᱪᱟᱹᱫ ᱨᱮ ᱥᱮᱴᱮᱨ ᱟᱠᱟᱱᱟᱢ ᱾"
       },
       "paymentMethods": {
         "verifyBanner": "ᱵᱮᱵᱦᱟᱨ ᱟᱭᱢᱟ ᱞᱟᱦᱟ ᱴᱟᱠᱟ ᱮᱢ/ᱤᱫᱤ ᱦᱚᱨᱠᱚ ᱫᱚ ₹1 ᱢᱟᱭᱠᱨᱳ-ᱴᱨᱟᱱᱡᱮᱠᱥᱚᱱ ᱛᱮ ᱡᱟᱸᱪ ᱠᱟᱱᱟ ᱾",
@@ -24487,7 +24639,11 @@ const resources = {
           "held": "روڪيل",
           "approved": "منظور ٿيل",
           "rejected": "منظور نه ٿيو"
-        }
+        },
+        "loading": "اطلاعون لوڊ ٿي رهيون آهن…",
+        "loadMore": "وڌيڪ لوڊ ڪريو",
+        "loadError": "اطلاعون لوڊ ڪرڻ ۾ ناڪامي",
+        "markAllReadError": "اطلاعن کي پڙهيل طور نشان لڳائڻ ۾ ناڪامي"
       },
       "organisationName": "تنظيم جو نالو",
       "organisationNamePlaceholder": "تنظيم جو نالو داخل ڪريو",
@@ -25279,7 +25435,11 @@ const resources = {
           "subtitle": "ليڊر بورڊ تي ظاهر ٿيڻ لاءِ سوال جمع ڪرڻ شروع ڪريو"
         },
         "loading": "لوڊ ٿي رهيو آهي…",
-        "participants": "واپرايندڙ مقابلي ۾ آهن"
+        "participants": "واپرايندڙ مقابلي ۾ آهن",
+        "loadError": "ليڊر بورڊ لوڊ ڪرڻ ۾ ناڪامي",
+        "loadMore": "وڌيڪ لوڊ ڪريو",
+        "loadingMore": "لوڊ ٿي رهيو آهي...",
+        "reachedEnd": "توهان ليڊر بورڊ جي آخر تائين پهچي ويا آهيو."
       },
       "paymentMethods": {
         "verifyBanner": "استعمال کرڻ کان اڳ ادائيگي جا طريقا ₹1 مائڪرو-ٽرانزيڪشن سان تصديق ڪيا ويندا آهن.",
@@ -25749,7 +25909,11 @@ const resources = {
           "held": "நிறுத்தி வைக்கப்பட்டுள்ளது",
           "approved": "ஒப்புதலளிக்கப்பட்டது",
           "rejected": "ஒப்புதலளிக்கப்படவில்லை"
-        }
+        },
+        "loading": "அறிவிப்புகள் ஏற்றப்படுகின்றன…",
+        "loadMore": "மேலும் ஏற்று",
+        "loadError": "அறிவிப்புகளை ஏற்றுவதில் தோல்வி",
+        "markAllReadError": "அறிவிப்புகளை படித்ததாகக் குறிக்க முடியவில்லை"
       },
       "organisationName": "நிறுவனத்தின் பெயர்",
       "organisationNamePlaceholder": "நிறுவனத்தின் பெயரை உள்ளிடவும்",
@@ -26541,7 +26705,11 @@ const resources = {
           "subtitle": "பட்டியலில் இடம் பெற கேள்விகளைச் சமர்ப்பிக்கத் தொடங்குங்கள்"
         },
         "loading": "ஏற்றுகிறது…",
-        "participants": "பயனர்கள் போட்டியிடுகின்றனர்"
+        "participants": "பயனர்கள் போட்டியிடுகின்றனர்",
+        "loadError": "தலைமைப் பலகையை ஏற்றுவதில் தோல்வி",
+        "loadMore": "மேலும் ஏற்று",
+        "loadingMore": "ஏற்றுகிறது...",
+        "reachedEnd": "நீங்கள் தலைமை பலகையின் முடிவை அடைந்துவிட்டீர்கள்."
       },
       "paymentMethods": {
         "verifyBanner": "பயன்படுத்துவதற்கு முன் பணம் செலுத்தும் முறைகள் ₹1 மைக்ரோ-பரிவர்த்தனை மூலம் சரிபார்க்கப்படுகின்றன.",
@@ -27013,7 +27181,11 @@ const resources = {
           "held": "పాజ్ / నిలిపివేయబడింది",
           "approved": "ఆమోదించబడింది",
           "rejected": "ఆమోదించబడలేదు"
-        }
+        },
+        "loading": "నోటిఫికేషన్‌లు లోడ్ అవుతున్నాయి…",
+        "loadMore": "మరిన్ని లోడ్ చేయండి",
+        "loadError": "నోటిఫికేషన్‌లను లోడ్ చేయడంలో విఫలమైంది",
+        "markAllReadError": "నోటిఫికేషన్‌లను చదివినట్లు గుర్తించడంలో విఫలమైంది"
       },
       "organisationName": "సంస్థ పేరు",
       "organisationNamePlaceholder": "సంస్థ పేరును నమోదు చేయండి",
@@ -27805,7 +27977,11 @@ const resources = {
           "subtitle": "లీడర్‌బోర్డ్‌లో కనిపించడానికి ప్రశ్నలను సమర్పించడం ప్రారంభించండి"
         },
         "loading": "లోడ్ అవుతోంది…",
-        "participants": "వినియోగదారులు పోటీపడుతున్నారు"
+        "participants": "వినియోగదారులు పోటీపడుతున్నారు",
+        "loadError": "లీడర్‌బోర్డ్‌ను లోడ్ చేయడంలో విఫలమైంది",
+        "loadMore": "మరిన్ని లోడ్ చేయండి",
+        "loadingMore": "లోడ్ అవుతోంది...",
+        "reachedEnd": "మీరు లీడర్‌బోర్డ్ చివరకు చేరుకున్నారు."
       },
       "paymentMethods": {
         "verifyBanner": "ఉపయోగించే ముందు చెల్లింపు పద్ధతులు ₹1 మైక్రో-లావాదేవీతో ధృవీకరించబడతాయి.",
@@ -28275,7 +28451,11 @@ const resources = {
           "held": "روکا گیا",
           "approved": "منظور شدہ",
           "rejected": "منظور نہیں ہوا"
-        }
+        },
+        "loading": "اطلاعات لوڈ ہو رہی ہیں…",
+        "loadMore": "مزید لوڈ کریں",
+        "loadError": "اطلاعات لوڈ کرنے میں ناکامی",
+        "markAllReadError": "اطلاعات کو پڑھا ہوا نشان زد کرنے میں ناکامی"
       },
       "organisationName": "تنظیم کا نام",
       "organisationNamePlaceholder": "تنظیم کا نام درج کریں",
@@ -29067,7 +29247,11 @@ const resources = {
           "subtitle": "لیڈر بورڈ پر نظر آنے کے لیے سوالات جمع کرانا شروع کریں"
         },
         "loading": "لوڈ ہو رہا ہے…",
-        "participants": "صارفین مقابلہ کر رہے ہیں"
+        "participants": "صارفین مقابلہ کر رہے ہیں",
+        "loadError": "لیڈر بورڈ لوڈ کرنے میں ناکامی",
+        "loadMore": "مزید لوڈ کریں",
+        "loadingMore": "لوڈ ہو رہا ہے...",
+        "reachedEnd": "آپ لیڈر بورڈ کے اختتام تک پہنچ گئے ہیں۔"
       },
       "paymentMethods": {
         "verifyBanner": "استعمال سے پہلے ادائیگی کے طریقوں کی ₹1 مائیکرو ٹرانزیکشن سے تصدیق کی جاتی ہے۔",
