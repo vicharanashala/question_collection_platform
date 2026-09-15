@@ -234,7 +234,9 @@
     "unknown": "अज्ञात",
     "rupee": "रु.",
     "steps": "पायऱ्या",
-    "continue": "सुरू ठेवा"
+    "continue": "सुरू ठेवा",
+    "noQuestionsFound": "कोणताही प्रश्न सापडला नाही",
+    "askYourFirstQuestion": "तुमचा पहिला प्रश्न विचारा"
   },
   "completeRegistration": "नोंदणी पूर्ण करा",
   "consentClause1": "तुमचा मोबाईल नंबर आणि नोंदणी तपशील सुरक्षितपणे संग्रहित केले जातील आणि केवळ प्लॅटफॉर्म प्रमाणीकरण आणि कृषी ज्ञान सेवांसाठी वापरले जातील.",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "होल्डवर आहे",
+    "published": "प्रकाशित",
+    "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
   }
 }

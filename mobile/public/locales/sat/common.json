@@ -234,7 +234,9 @@
     "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
     "rupee": "ᱴᱟᱠᱟ",
     "steps": "ठाहेन",
-    "continue": "ᱞᱟᱦᱟ ᱢᱮ"
+    "continue": "ᱞᱟᱦᱟ ᱢᱮ",
+    "noQuestionsFound": "ᱦᱚᱨᱟ ᱠᱩᱠᱞᱤ ᱵᱟᱝ ᱧᱟᱢ ᱮᱱᱟ",
+    "askYourFirstQuestion": "ᱟᱢᱟᱜ ᱯᱩᱭᱞᱩ ᱠᱩᱠᱞᱤ ᱠᱩᱠᱞᱤ ᱢᱮ"
   },
   "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
   "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
+    "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
+    "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
   }
 }

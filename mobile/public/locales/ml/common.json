@@ -234,7 +234,9 @@
     "unknown": "അജ്ഞാതം",
     "rupee": "രൂപ",
     "steps": "ഘട്ടങ്ങൾ",
-    "continue": "തുടരുക"
+    "continue": "തുടരുക",
+    "noQuestionsFound": "ചോദ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല",
+    "askYourFirstQuestion": "നിങ്ങളുടെ ആദ്യ ചോദ്യം ചോദിക്കുക"
   },
   "completeRegistration": "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക",
   "consentClause1": "നിങ്ങളുടെ മൊബൈൽ നമ്പറും രജിസ്ട്രേഷൻ വിവരങ്ങളും സുരക്ഷിതമായി സൂക്ഷിക്കുകയും പ്ലാറ്റ്‌ഫോം ഓതന്റിക്കേഷനും കാർഷിക സേവനങ്ങൾക്കുമായി മാത്രം ഉപയോഗിക്കുകയും ചെയ്യും.",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ഹോൾഡിലാണ്",
+    "published": "പ്രസിദ്ധീകരിച്ചു",
+    "yourSubmissions": "നിങ്ങൾ സമർപ്പിച്ച ചോദ്യങ്ങളും അവയുടെ നിലയും."
   }
 }

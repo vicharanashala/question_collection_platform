@@ -234,7 +234,9 @@
     "unknown": "نامعلوم",
     "rupee": "روپے",
     "steps": "مراحل",
-    "continue": "جاری رکھیں"
+    "continue": "جاری رکھیں",
+    "noQuestionsFound": "کوئی سوال نہیں ملا",
+    "askYourFirstQuestion": "اپنا پہلا سوال پوچھیں"
   },
   "completeRegistration": "رجسٹریشن مکمل کریں",
   "consentClause1": "آپ کا موبائل نمبر اور رجسٹریشن کی تفصیلات محفوظ طریقے سے ذخیرہ کی جائیں گی اور صرف پلیٹ فارم کی توثیق اور زرعی معلوماتی خدمات کے لیے استعمال کی جائیں گی۔",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ہولڈ پر",
+    "published": "شائع شدہ",
+    "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
   }
 }

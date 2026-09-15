@@ -234,7 +234,9 @@
     "unknown": "খংদবা",
     "rupee": "লুপা",
     "steps": "ফিভম",
-    "continue": "চঙদোককো"
+    "continue": "চঙদোককো",
+    "noQuestionsFound": "ৱাহঙ ফংদ্রে",
+    "askYourFirstQuestion": "নহাক্কী অহানবা হংজবা হংবীয়ু"
   },
   "completeRegistration": "রেজিষ্ট্রেশন মপুং ফাহনবা",
   "consentClause1": "নহাগী মোবাইল নম্বর অমসুং রেজিষ্ট্রেশন মরোলশিং অসিবু চে অমত্তা লৈতনা থমগনি অমসুং প্লেটফোর্ম অসিদা ভেরিফাই অমসুং লৌউ-শিংউগী সর্বিসগীদমক শীজিন্নগনি।",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "হোল্দ তৌরি",
+    "published": "থাদোকখ্রে",
+    "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
   }
 }

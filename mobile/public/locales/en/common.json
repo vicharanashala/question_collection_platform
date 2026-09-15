@@ -234,7 +234,9 @@
     "unknown": "Unknown",
     "rupee": "Rs.",
     "steps": "Steps",
-    "continue": "Continue"
+    "continue": "Continue",
+    "noQuestionsFound": "No questions found",
+    "askYourFirstQuestion": "Ask your first question"
   },
   "completeRegistration": "Complete Registration",
   "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -1321,5 +1323,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "On hold",
+    "published": "Published",
+    "yourSubmissions": "Your submitted questions and their status."
   }
 }

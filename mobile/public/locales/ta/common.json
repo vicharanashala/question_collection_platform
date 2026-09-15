@@ -234,7 +234,9 @@
     "unknown": "தெரியாதது",
     "rupee": "ரூ.",
     "steps": "படிகள்",
-    "continue": "தொடரவும்"
+    "continue": "தொடரவும்",
+    "noQuestionsFound": "எந்த கேள்வியும் இல்லை",
+    "askYourFirstQuestion": "உங்கள் முதல் கேள்வியைக் கேளுங்கள்"
   },
   "completeRegistration": "பதிவை முடிக்கவும்",
   "consentClause1": "உங்கள் மொபைல் எண் மற்றும் பதிவு விவரங்கள் பாதுகாப்பாக சேமிக்கப்பட்டு, தள அங்கீகாரம் மற்றும் விவசாய சேவை நோக்கங்களுக்காக மட்டுமே பயன்படுத்தப்படும்.",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "இடைநிறுத்தப்பட்டது",
+    "published": "வெளியிடப்பட்டது",
+    "yourSubmissions": "நீங்கள் சமர்ப்பித்த கேள்விகள் மற்றும் அவற்றின் நிலை."
   }
 }

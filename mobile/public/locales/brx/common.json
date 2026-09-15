@@ -234,7 +234,9 @@
     "unknown": "मिथियै",
     "rupee": "रां",
     "steps": "स्टेप",
-    "continue": "जारी खालाम"
+    "continue": "जारी खालाम",
+    "noQuestionsFound": "जायखि प्रश्न मोनाखै",
+    "askYourFirstQuestion": "नोंथाङ गथ्थ अनजिमा सोंगोन"
   },
   "completeRegistration": "रेजिस्ट्रेसन आबुं खालाम",
   "consentClause1": "नोंथानि मबाइल नम्बर आरो रेजिस्ट्रेसननि खारथायखौ रैखाथायै दोनगोन आरो खालि प्लाटफार्म थारसिमनाय आरो कृषि ग्यान सेवानि थाखायल' बाहायगोन।",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "होल्ड आव दं",
+    "published": "उदांखांबाय",
+    "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
   }
 }

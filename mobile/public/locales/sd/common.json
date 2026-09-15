@@ -234,7 +234,9 @@
     "unknown": "نامعلوم",
     "rupee": "روپيا",
     "steps": "مرحلا",
-    "continue": "جاري رکو"
+    "continue": "جاري رکو",
+    "noQuestionsFound": "ڪو به سوال نه مليو",
+    "askYourFirstQuestion": "پنهنجو پهريون سوال پڇو"
   },
   "completeRegistration": "رجسٽريشن مڪمل ڪريو",
   "consentClause1": "توهان جو موبائل نمبر ۽ رجسٽريشن جون تفصيلون محفوظ طريقي سان رکيون وينديون ۽ صرف پليٽ فارم جي تصديق ۽ زرعي علم جي خدمتن لاءِ استعمال ٿينديون.",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "هولڊ تي",
+    "published": "شايع ٿيل",
+    "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
   }
 }

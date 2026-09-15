@@ -244,7 +244,9 @@
     "unknown": "अज्ञातम्",
     "rupee": "रूप्यकाणि",
     "steps": "सोपानानि",
-    "continue": "अग्रे गच्छतु"
+    "continue": "अग्रे गच्छतु",
+    "noQuestionsFound": "कोऽपि प्रश्नः न लब्धः",
+    "askYourFirstQuestion": "भवतः प्रथमं प्रश्नं पृच्छतु"
   },
   "completeRegistration": "पञ्जीकरणं पूर्णं करोतु",
   "consentClause1": "भवतः चलदूरभाषसङ्ख्या पञ्जीकरणविवरणानि च सुरक्षितानि स्थापयिष्यन्ते तथा च केवलं मञ्चसत्यापनाय कृषिज्ञानसेवाभ्यः च उपयुक्ष्यन्ते।",
@@ -1329,5 +1331,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "स्थगितम्",
+    "published": "प्रकाशितम्",
+    "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
   }
 }

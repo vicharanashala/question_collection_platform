@@ -234,7 +234,9 @@
     "unknown": "ಅಜ್ಞಾತ",
     "rupee": "ರೂ.",
     "steps": "ಹಂತಗಳು",
-    "continue": "ಮುಂದುವರಿಸಿ"
+    "continue": "ಮುಂದುವರಿಸಿ",
+    "noQuestionsFound": "ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    "askYourFirstQuestion": "ನಿಮ್ಮ ಮೊದಲ ಪ್ರಶ್ನೆಯನ್ನು ಕೇಳಿ"
   },
   "completeRegistration": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ",
   "consentClause1": "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ನೋಂದಣಿ ವಿವರಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ವೇದಿಕೆಯ ದೃಢೀಕರಣ ಮತ್ತು ಕೃಷಿ ಜ್ಞಾನ ಸೇವೆಗಳಿಗೆ ಮಾತ್ರ ಬಳಸಲಾಗುತ್ತದೆ.",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ಹೋಲ್ಡ್‌ನಲ್ಲಿ",
+    "published": "ಪ್ರಕಟಿಸಲಾಗಿದೆ",
+    "yourSubmissions": "ನಿಮ್ಮ ಸಲ್ಲಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಅವುಗಳ ಸ್ಥಿತಿ."
   }
 }

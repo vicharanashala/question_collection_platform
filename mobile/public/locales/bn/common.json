@@ -234,7 +234,9 @@
     "unknown": "অজানা",
     "rupee": "টাকা",
     "steps": "ধাপ",
-    "continue": "চালিয়ে যান"
+    "continue": "চালিয়ে যান",
+    "noQuestionsFound": "কোনো প্রশ্ন পাওয়া যায়নি",
+    "askYourFirstQuestion": "আপনার প্রথম প্রশ্ন জিজ্ঞাসা করুন"
   },
   "completeRegistration": "নিবন্ধন সম্পন্ন করুন",
   "consentClause1": "আপনার মোবাইল নম্বর এবং নিবন্ধনের বিবরণ নিরাপদে সংরক্ষণ করা হবে এবং শুধুমাত্র প্ল্যাটফর্ম প্রমাণীকরণ এবং কৃষি জ্ঞান পরিষেবার জন্য ব্যবহার করা হবে।",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "হোল্ডে আছে",
+    "published": "প্রকাশিত",
+    "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
   }
 }

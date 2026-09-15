@@ -234,7 +234,9 @@
     "unknown": "অজ্ঞাত",
     "rupee": "টকা",
     "steps": "খোজ",
-    "continue": "অব্যাহত ৰাখক"
+    "continue": "অব্যাহত ৰাখক",
+    "noQuestionsFound": "কোনো প্ৰশ্ন পোৱা নগ'ল",
+    "askYourFirstQuestion": "আপোনাৰ প্ৰথম প্ৰশ্ন সোধক"
   },
   "completeRegistration": "পঞ্জীয়ন সম্পূৰ্ণ কৰক",
   "consentClause1": "আপোনাৰ মোবাইল নম্বৰ আৰু পঞ্জীয়নৰ বিৱৰণ সুৰক্ষিতভাৱে সংৰক্ষিত কৰা হ'ব আৰু কেৱল প্লেটফৰ্ম অথেনটিকেচন আৰু কৃষি জ্ঞান সেৱাৰ বাবে ব্যৱহাৰ কৰা হ'ব।",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "হ'ল্ডত আছে",
+    "published": "প্ৰকাশিত",
+    "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
   }
 }

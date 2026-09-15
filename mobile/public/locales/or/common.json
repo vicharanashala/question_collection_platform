@@ -232,7 +232,9 @@
     "unknown": "ଅଜଣା",
     "rupee": "ଟଙ୍କା",
     "steps": "ପର୍ଯ୍ୟାୟ",
-    "continue": "ଜାରି ରଖନ୍ତୁ"
+    "continue": "ଜାରି ରଖନ୍ତୁ",
+    "noQuestionsFound": "କୌଣସି ପ୍ରଶ୍ନ ମିଳିଲା ନାହିଁ",
+    "askYourFirstQuestion": "ଆପଣଙ୍କର ପ୍ରଥମ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ"
   },
   "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
   "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -1317,5 +1319,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ହୋଲ୍ଡରେ ଅଛି",
+    "published": "ପ୍ରକାଶିତ",
+    "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
   }
 }

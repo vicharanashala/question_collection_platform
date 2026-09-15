@@ -234,7 +234,9 @@
     "unknown": "ਅਣਜਾਣ",
     "rupee": "ਰੁ.",
     "steps": "ਪੜਾਅ",
-    "continue": "ਜਾਰੀ ਰੱਖੋ"
+    "continue": "ਜਾਰੀ ਰੱਖੋ",
+    "noQuestionsFound": "ਕੋਈ ਸਵਾਲ ਨਹੀਂ ਮਿਲਿਆ",
+    "askYourFirstQuestion": "ਆਪਣਾ ਪਹਿਲਾ ਸਵਾਲ ਪੁੱਛੋ"
   },
   "completeRegistration": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ",
   "consentClause1": "ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੇ ਜਾਣਗੇ ਅਤੇ ਕੇਵਲ ਪਲੇਟਫਾਰਮ ਪ੍ਰਮਾਣੀਕਰਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਗਿਆਨ ਸੇਵਾਵਾਂ ਲਈ ਵਰਤੇ ਜਾਣਗੇ।",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ਹੋਲਡ 'ਤੇ",
+    "published": "ਪ੍ਰਕਾਸ਼ਿਤ",
+    "yourSubmissions": "ਤੁਹਾਡੇ ਭੇਜੇ ਗਏ ਸਵਾਲ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਸਥਿਤੀ।"
   }
 }

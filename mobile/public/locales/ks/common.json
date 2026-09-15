@@ -234,7 +234,9 @@
     "unknown": "نامعلوم",
     "rupee": "روپے",
     "steps": "مرحلہٕ",
-    "continue": "جاری رکھیو"
+    "continue": "جاری رکھیو",
+    "noQuestionsFound": "کانہہ سوال نہٕ آمُت",
+    "askYourFirstQuestion": "پننٕ پؠٹھ سوال پوچھِیو"
   },
   "completeRegistration": "رجسٹریشن مکمل کٔریو",
   "consentClause1": "تہند موبائل نمبر تہٕ رجسٹریشن تفصیلات یین محفوظ تھاونہٕ تہٕ یین صرف پلیٹ فارم تصدیق تہٕ زرعی خدمات باپتھ استعمال کرنہٕ۔",
@@ -1319,5 +1321,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ہولڈ پؠٹھ",
+    "published": "شائع",
+    "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
   }
 }

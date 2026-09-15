@@ -239,7 +239,9 @@ const resources = {
         "unknown": "Unknown",
         "rupee": "Rs.",
         "steps": "Steps",
-        "continue": "Continue"
+        "continue": "Continue",
+        "noQuestionsFound": "No questions found",
+        "askYourFirstQuestion": "Ask your first question"
       },
       "completeRegistration": "Complete Registration",
       "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -1326,6 +1328,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "On hold",
+        "published": "Published",
+        "yourSubmissions": "Your submitted questions and their status."
       }
     }
   },
@@ -1566,7 +1573,9 @@ const resources = {
         "unknown": "অজ্ঞাত",
         "rupee": "টকা",
         "steps": "খোজ",
-        "continue": "অব্যাহত ৰাখক"
+        "continue": "অব্যাহত ৰাখক",
+        "noQuestionsFound": "কোনো প্ৰশ্ন পোৱা নগ'ল",
+        "askYourFirstQuestion": "আপোনাৰ প্ৰথম প্ৰশ্ন সোধক"
       },
       "completeRegistration": "পঞ্জীয়ন সম্পূৰ্ণ কৰক",
       "consentClause1": "আপোনাৰ মোবাইল নম্বৰ আৰু পঞ্জীয়নৰ বিৱৰণ সুৰক্ষিতভাৱে সংৰক্ষিত কৰা হ'ব আৰু কেৱল প্লেটফৰ্ম অথেনটিকেচন আৰু কৃষি জ্ঞান সেৱাৰ বাবে ব্যৱহাৰ কৰা হ'ব।",
@@ -2651,6 +2660,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "হ'ল্ডত আছে",
+        "published": "প্ৰকাশিত",
+        "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
       }
     }
   },
@@ -2891,7 +2905,9 @@ const resources = {
         "unknown": "অজানা",
         "rupee": "টাকা",
         "steps": "ধাপ",
-        "continue": "চালিয়ে যান"
+        "continue": "চালিয়ে যান",
+        "noQuestionsFound": "কোনো প্রশ্ন পাওয়া যায়নি",
+        "askYourFirstQuestion": "আপনার প্রথম প্রশ্ন জিজ্ঞাসা করুন"
       },
       "completeRegistration": "নিবন্ধন সম্পন্ন করুন",
       "consentClause1": "আপনার মোবাইল নম্বর এবং নিবন্ধনের বিবরণ নিরাপদে সংরক্ষণ করা হবে এবং শুধুমাত্র প্ল্যাটফর্ম প্রমাণীকরণ এবং কৃষি জ্ঞান পরিষেবার জন্য ব্যবহার করা হবে।",
@@ -3976,6 +3992,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "হোল্ডে আছে",
+        "published": "প্রকাশিত",
+        "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
       }
     }
   },
@@ -4216,7 +4237,9 @@ const resources = {
         "unknown": "मिथियै",
         "rupee": "रां",
         "steps": "स्टेप",
-        "continue": "जारी खालाम"
+        "continue": "जारी खालाम",
+        "noQuestionsFound": "जायखि प्रश्न मोनाखै",
+        "askYourFirstQuestion": "नोंथाङ गथ्थ अनजिमा सोंगोन"
       },
       "completeRegistration": "रेजिस्ट्रेसन आबुं खालाम",
       "consentClause1": "नोंथानि मबाइल नम्बर आरो रेजिस्ट्रेसननि खारथायखौ रैखाथायै दोनगोन आरो खालि प्लाटफार्म थारसिमनाय आरो कृषि ग्यान सेवानि थाखायल' बाहायगोन।",
@@ -5301,6 +5324,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्ड आव दं",
+        "published": "उदांखांबाय",
+        "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
       }
     }
   },
@@ -5541,7 +5569,9 @@ const resources = {
         "unknown": "अज्ञात",
         "rupee": "रुपये",
         "steps": "चरण",
-        "continue": "जारी रखो"
+        "continue": "जारी रखो",
+        "noQuestionsFound": "कोई सवाल नीं मिल्या",
+        "askYourFirstQuestion": "अपना पैहला सवाल पुछो"
       },
       "completeRegistration": "पंजीकरण पूरा करो",
       "consentClause1": "तुआह्दा मोबाइल नंबर ते पंजीकरण विवरण सुरक्षित रखे जानगे ते सिर्फ प्लेटफ़ॉर्म प्रमाणीकरण ते कृषि ज्ञान सेवाएं लेई बड़ते जानगे।",
@@ -6626,6 +6656,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्ड पर ऐ",
+        "published": "प्रकाशत होई गेआ",
+        "yourSubmissions": "तुहाड़े भेजे गे सवाल ते उंआं दी स्थिति।"
       }
     }
   },
@@ -6866,7 +6901,9 @@ const resources = {
         "unknown": "અજ્ઞાત",
         "rupee": "રૂ.",
         "steps": "પગલાં",
-        "continue": "ચાલુ રાખો"
+        "continue": "ચાલુ રાખો",
+        "noQuestionsFound": "કોઈ પ્રશ્ન મળ્યો નથી",
+        "askYourFirstQuestion": "તમારો પ્રથમ પ્રશ્ન પૂછો"
       },
       "completeRegistration": "રજીસ્ટ્રેશન પૂર્ણ કરો",
       "consentClause1": "તમારો મોબાઇલ નંબર અને નોંધણી વિગતો સુરક્ષિત રીતે સંગ્રહિત કરવામાં આવશે અને તેનો ઉપયોગ ફક્ત પ્લેટફોર્મ પ્રમાણીકરણ અને કૃષિ જ્ઞાન સેવાઓ માટે કરવામાં આવશે.",
@@ -7951,6 +7988,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "હોલ્ડ પર",
+        "published": "પ્રકાશિત",
+        "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
       }
     }
   },
@@ -8191,7 +8233,9 @@ const resources = {
         "unknown": "अज्ञात",
         "rupee": "रु.",
         "steps": "चरण",
-        "continue": "जारी रखें"
+        "continue": "जारी रखें",
+        "noQuestionsFound": "कोई प्रश्न नहीं मिला",
+        "askYourFirstQuestion": "अपना पहला प्रश्न पूछें"
       },
       "completeRegistration": "पंजीकरण पूरा करें",
       "consentClause1": "आपका मोबाइल नंबर और पंजीकरण विवरण सुरक्षित रूप से संग्रहीत किए जाएंगे और केवल प्लेटफॉर्म प्रमाणीकरण और कृषि ज्ञान सेवाओं के लिए उपयोग किए जाएंगे।",
@@ -9276,6 +9320,11 @@ const resources = {
         "actionAllQuestions": "सभी प्रश्न",
         "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
         "loadError": "क्यूरेटर आँकड़े लोड करने में विफल"
+      },
+      "submissions": {
+        "held": "होल्ड पर",
+        "published": "प्रकाशित",
+        "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
       }
     }
   },
@@ -9516,7 +9565,9 @@ const resources = {
         "unknown": "ಅಜ್ಞಾತ",
         "rupee": "ರೂ.",
         "steps": "ಹಂತಗಳು",
-        "continue": "ಮುಂದುವರಿಸಿ"
+        "continue": "ಮುಂದುವರಿಸಿ",
+        "noQuestionsFound": "ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+        "askYourFirstQuestion": "ನಿಮ್ಮ ಮೊದಲ ಪ್ರಶ್ನೆಯನ್ನು ಕೇಳಿ"
       },
       "completeRegistration": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ",
       "consentClause1": "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ನೋಂದಣಿ ವಿವರಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ವೇದಿಕೆಯ ದೃಢೀಕರಣ ಮತ್ತು ಕೃಷಿ ಜ್ಞಾನ ಸೇವೆಗಳಿಗೆ ಮಾತ್ರ ಬಳಸಲಾಗುತ್ತದೆ.",
@@ -10601,6 +10652,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ಹೋಲ್ಡ್‌ನಲ್ಲಿ",
+        "published": "ಪ್ರಕಟಿಸಲಾಗಿದೆ",
+        "yourSubmissions": "ನಿಮ್ಮ ಸಲ್ಲಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಅವುಗಳ ಸ್ಥಿತಿ."
       }
     }
   },
@@ -10841,7 +10897,9 @@ const resources = {
         "unknown": "نامعلوم",
         "rupee": "روپے",
         "steps": "مرحلہٕ",
-        "continue": "جاری رکھیو"
+        "continue": "جاری رکھیو",
+        "noQuestionsFound": "کانہہ سوال نہٕ آمُت",
+        "askYourFirstQuestion": "پننٕ پؠٹھ سوال پوچھِیو"
       },
       "completeRegistration": "رجسٹریشن مکمل کٔریو",
       "consentClause1": "تہند موبائل نمبر تہٕ رجسٹریشن تفصیلات یین محفوظ تھاونہٕ تہٕ یین صرف پلیٹ فارم تصدیق تہٕ زرعی خدمات باپتھ استعمال کرنہٕ۔",
@@ -11926,6 +11984,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ہولڈ پؠٹھ",
+        "published": "شائع",
+        "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
       }
     }
   },
@@ -12166,7 +12229,9 @@ const resources = {
         "unknown": "अज्ञात",
         "rupee": "रु.",
         "steps": "पावलां",
-        "continue": "फुडें व्हरात"
+        "continue": "फुडें व्हरात",
+        "noQuestionsFound": "कसलोच प्रस्न मेळ्ळो ना",
+        "askYourFirstQuestion": "तुमचो पयलो प्रस्न विचारात"
       },
       "completeRegistration": "नोंदणी पुराय करात",
       "consentClause1": "तुमचो मोबाईल नंबर आनी नोंदणी तपशील सुरक्षित दवरतले आनी फकत प्लॅटफॉर्म प्रमाणीकरण आनी कृषी ज्ञान सेवांखातीर वापरतले.",
@@ -13251,6 +13316,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्डार आसा",
+        "published": "प्रकाशीत",
+        "yourSubmissions": "तुमी सादर केल्ले प्रस्न आनी तांची स्थिती."
       }
     }
   },
@@ -13491,7 +13561,9 @@ const resources = {
         "unknown": "अज्ञात",
         "rupee": "टका",
         "steps": "चरण",
-        "continue": "जारी राखू"
+        "continue": "जारी राखू",
+        "noQuestionsFound": "कोनो प्रश्न नहि भेटल",
+        "askYourFirstQuestion": "अपन पहिल प्रश्न पूछू"
       },
       "completeRegistration": "पंजीकरण पूरा करु",
       "consentClause1": "अहाँक मोबाइल नंबर आ पंजीकरण विवरण सुरक्षित रूप सँ राखल जाएत आ केवल प्लेटफॉर्म प्रमाणीकरण आ कृषि ज्ञान सेवा लेल उपयोग कएल जाएत।",
@@ -14576,6 +14648,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्ड पर अछि",
+        "published": "प्रकाशित",
+        "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
       }
     }
   },
@@ -14816,7 +14893,9 @@ const resources = {
         "unknown": "അജ്ഞാതം",
         "rupee": "രൂപ",
         "steps": "ഘട്ടങ്ങൾ",
-        "continue": "തുടരുക"
+        "continue": "തുടരുക",
+        "noQuestionsFound": "ചോദ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല",
+        "askYourFirstQuestion": "നിങ്ങളുടെ ആദ്യ ചോദ്യം ചോദിക്കുക"
       },
       "completeRegistration": "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക",
       "consentClause1": "നിങ്ങളുടെ മൊബൈൽ നമ്പറും രജിസ്ട്രേഷൻ വിവരങ്ങളും സുരക്ഷിതമായി സൂക്ഷിക്കുകയും പ്ലാറ്റ്‌ഫോം ഓതന്റിക്കേഷനും കാർഷിക സേവനങ്ങൾക്കുമായി മാത്രം ഉപയോഗിക്കുകയും ചെയ്യും.",
@@ -15901,6 +15980,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ഹോൾഡിലാണ്",
+        "published": "പ്രസിദ്ധീകരിച്ചു",
+        "yourSubmissions": "നിങ്ങൾ സമർപ്പിച്ച ചോദ്യങ്ങളും അവയുടെ നിലയും."
       }
     }
   },
@@ -16141,7 +16225,9 @@ const resources = {
         "unknown": "খংদবা",
         "rupee": "লুপা",
         "steps": "ফিভম",
-        "continue": "চঙদোককো"
+        "continue": "চঙদোককো",
+        "noQuestionsFound": "ৱাহঙ ফংদ্রে",
+        "askYourFirstQuestion": "নহাক্কী অহানবা হংজবা হংবীয়ু"
       },
       "completeRegistration": "রেজিষ্ট্রেশন মপুং ফাহনবা",
       "consentClause1": "নহাগী মোবাইল নম্বর অমসুং রেজিষ্ট্রেশন মরোলশিং অসিবু চে অমত্তা লৈতনা থমগনি অমসুং প্লেটফোর্ম অসিদা ভেরিফাই অমসুং লৌউ-শিংউগী সর্বিসগীদমক শীজিন্নগনি।",
@@ -17226,6 +17312,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "হোল্দ তৌরি",
+        "published": "থাদোকখ্রে",
+        "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
       }
     }
   },
@@ -17466,7 +17557,9 @@ const resources = {
         "unknown": "अज्ञात",
         "rupee": "रु.",
         "steps": "पायऱ्या",
-        "continue": "सुरू ठेवा"
+        "continue": "सुरू ठेवा",
+        "noQuestionsFound": "कोणताही प्रश्न सापडला नाही",
+        "askYourFirstQuestion": "तुमचा पहिला प्रश्न विचारा"
       },
       "completeRegistration": "नोंदणी पूर्ण करा",
       "consentClause1": "तुमचा मोबाईल नंबर आणि नोंदणी तपशील सुरक्षितपणे संग्रहित केले जातील आणि केवळ प्लॅटफॉर्म प्रमाणीकरण आणि कृषी ज्ञान सेवांसाठी वापरले जातील.",
@@ -18551,6 +18644,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्डवर आहे",
+        "published": "प्रकाशित",
+        "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
       }
     }
   },
@@ -18791,7 +18889,9 @@ const resources = {
         "unknown": "अज्ञात",
         "rupee": "रु.",
         "steps": "चरणहरू",
-        "continue": "जारी राख्नुहोस्"
+        "continue": "जारी राख्नुहोस्",
+        "noQuestionsFound": "कुनै प्रश्न भेटिएन",
+        "askYourFirstQuestion": "तपाईंको पहिलो प्रश्न सोध्नुहोस्"
       },
       "completeRegistration": "दर्ता प्रक्रिया पूरा गर्नुहोस्",
       "consentClause1": "तपाईंको मोबाइल नम्बर र दर्ता विवरण सुरक्षित रूपमा भण्डारण गरिनेछ र केवल प्लेटफर्म प्रमाणीकरण र कृषि ज्ञान सेवाका लागि प्रयोग गरिनेछ।",
@@ -19876,6 +19976,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्डमा छ",
+        "published": "प्रकाशित",
+        "yourSubmissions": "तपाईंले पेश गरेका प्रश्नहरू र तिनीहरूको स्थिति।"
       }
     }
   },
@@ -20114,7 +20219,9 @@ const resources = {
         "unknown": "ଅଜଣା",
         "rupee": "ଟଙ୍କା",
         "steps": "ପର୍ଯ୍ୟାୟ",
-        "continue": "ଜାରି ରଖନ୍ତୁ"
+        "continue": "ଜାରି ରଖନ୍ତୁ",
+        "noQuestionsFound": "କୌଣସି ପ୍ରଶ୍ନ ମିଳିଲା ନାହିଁ",
+        "askYourFirstQuestion": "ଆପଣଙ୍କର ପ୍ରଥମ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ"
       },
       "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
       "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -21199,6 +21306,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ହୋଲ୍ଡରେ ଅଛି",
+        "published": "ପ୍ରକାଶିତ",
+        "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
       }
     }
   },
@@ -21439,7 +21551,9 @@ const resources = {
         "unknown": "ਅਣਜਾਣ",
         "rupee": "ਰੁ.",
         "steps": "ਪੜਾਅ",
-        "continue": "ਜਾਰੀ ਰੱਖੋ"
+        "continue": "ਜਾਰੀ ਰੱਖੋ",
+        "noQuestionsFound": "ਕੋਈ ਸਵਾਲ ਨਹੀਂ ਮਿਲਿਆ",
+        "askYourFirstQuestion": "ਆਪਣਾ ਪਹਿਲਾ ਸਵਾਲ ਪੁੱਛੋ"
       },
       "completeRegistration": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ",
       "consentClause1": "ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੇ ਜਾਣਗੇ ਅਤੇ ਕੇਵਲ ਪਲੇਟਫਾਰਮ ਪ੍ਰਮਾਣੀਕਰਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਗਿਆਨ ਸੇਵਾਵਾਂ ਲਈ ਵਰਤੇ ਜਾਣਗੇ।",
@@ -22524,6 +22638,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ਹੋਲਡ 'ਤੇ",
+        "published": "ਪ੍ਰਕਾਸ਼ਿਤ",
+        "yourSubmissions": "ਤੁਹਾਡੇ ਭੇਜੇ ਗਏ ਸਵਾਲ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਸਥਿਤੀ।"
       }
     }
   },
@@ -22774,7 +22893,9 @@ const resources = {
         "unknown": "अज्ञातम्",
         "rupee": "रूप्यकाणि",
         "steps": "सोपानानि",
-        "continue": "अग्रे गच्छतु"
+        "continue": "अग्रे गच्छतु",
+        "noQuestionsFound": "कोऽपि प्रश्नः न लब्धः",
+        "askYourFirstQuestion": "भवतः प्रथमं प्रश्नं पृच्छतु"
       },
       "completeRegistration": "पञ्जीकरणं पूर्णं करोतु",
       "consentClause1": "भवतः चलदूरभाषसङ्ख्या पञ्जीकरणविवरणानि च सुरक्षितानि स्थापयिष्यन्ते तथा च केवलं मञ्चसत्यापनाय कृषिज्ञानसेवाभ्यः च उपयुक्ष्यन्ते।",
@@ -23859,6 +23980,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "स्थगितम्",
+        "published": "प्रकाशितम्",
+        "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
       }
     }
   },
@@ -24099,7 +24225,9 @@ const resources = {
         "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
         "rupee": "ᱴᱟᱠᱟ",
         "steps": "ठाहेन",
-        "continue": "ᱞᱟᱦᱟ ᱢᱮ"
+        "continue": "ᱞᱟᱦᱟ ᱢᱮ",
+        "noQuestionsFound": "ᱦᱚᱨᱟ ᱠᱩᱠᱞᱤ ᱵᱟᱝ ᱧᱟᱢ ᱮᱱᱟ",
+        "askYourFirstQuestion": "ᱟᱢᱟᱜ ᱯᱩᱭᱞᱩ ᱠᱩᱠᱞᱤ ᱠᱩᱠᱞᱤ ᱢᱮ"
       },
       "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
       "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -25184,6 +25312,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
+        "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
+        "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
       }
     }
   },
@@ -25424,7 +25557,9 @@ const resources = {
         "unknown": "نامعلوم",
         "rupee": "روپيا",
         "steps": "مرحلا",
-        "continue": "جاري رکو"
+        "continue": "جاري رکو",
+        "noQuestionsFound": "ڪو به سوال نه مليو",
+        "askYourFirstQuestion": "پنهنجو پهريون سوال پڇو"
       },
       "completeRegistration": "رجسٽريشن مڪمل ڪريو",
       "consentClause1": "توهان جو موبائل نمبر ۽ رجسٽريشن جون تفصيلون محفوظ طريقي سان رکيون وينديون ۽ صرف پليٽ فارم جي تصديق ۽ زرعي علم جي خدمتن لاءِ استعمال ٿينديون.",
@@ -26509,6 +26644,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "هولڊ تي",
+        "published": "شايع ٿيل",
+        "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
       }
     }
   },
@@ -26749,7 +26889,9 @@ const resources = {
         "unknown": "தெரியாதது",
         "rupee": "ரூ.",
         "steps": "படிகள்",
-        "continue": "தொடரவும்"
+        "continue": "தொடரவும்",
+        "noQuestionsFound": "எந்த கேள்வியும் இல்லை",
+        "askYourFirstQuestion": "உங்கள் முதல் கேள்வியைக் கேளுங்கள்"
       },
       "completeRegistration": "பதிவை முடிக்கவும்",
       "consentClause1": "உங்கள் மொபைல் எண் மற்றும் பதிவு விவரங்கள் பாதுகாப்பாக சேமிக்கப்பட்டு, தள அங்கீகாரம் மற்றும் விவசாய சேவை நோக்கங்களுக்காக மட்டுமே பயன்படுத்தப்படும்.",
@@ -27834,6 +27976,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "இடைநிறுத்தப்பட்டது",
+        "published": "வெளியிடப்பட்டது",
+        "yourSubmissions": "நீங்கள் சமர்ப்பித்த கேள்விகள் மற்றும் அவற்றின் நிலை."
       }
     }
   },
@@ -28076,7 +28223,9 @@ const resources = {
         "unknown": "తెలియదు",
         "rupee": "రూ.",
         "steps": "దశలు",
-        "continue": "కొనసాగించండి"
+        "continue": "కొనసాగించండి",
+        "noQuestionsFound": "ఏ ప్రశ్నలు కనుగొనబడలేదు",
+        "askYourFirstQuestion": "మీ మొదటి ప్రశ్న అడగండి"
       },
       "completeRegistration": "రిజిస్ట్రేషన్ పూర్తి చేయండి",
       "consentClause1": "మీ మొబైల్ సంఖ్య మరియు రిజిస్ట్రేషన్ వివరాలు సురక్షితంగా నిల్వ చేయబడతాయి మరియు వేదిక ప్రమాణీకరణ, వ్యవసాయ పరిజ్ఞాన సేవల కోసం మాత్రమే ఉపయోగించబడతాయి.",
@@ -29161,6 +29310,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "హోల్డ్‌లో ఉంది",
+        "published": "ప్రచురించబడింది",
+        "yourSubmissions": "మీరు సమర్పించిన ప్రశ్నలు మరియు వాటి స్థితి."
       }
     }
   },
@@ -29401,7 +29555,9 @@ const resources = {
         "unknown": "نامعلوم",
         "rupee": "روپے",
         "steps": "مراحل",
-        "continue": "جاری رکھیں"
+        "continue": "جاری رکھیں",
+        "noQuestionsFound": "کوئی سوال نہیں ملا",
+        "askYourFirstQuestion": "اپنا پہلا سوال پوچھیں"
       },
       "completeRegistration": "رجسٹریشن مکمل کریں",
       "consentClause1": "آپ کا موبائل نمبر اور رجسٹریشن کی تفصیلات محفوظ طریقے سے ذخیرہ کی جائیں گی اور صرف پلیٹ فارم کی توثیق اور زرعی معلوماتی خدمات کے لیے استعمال کی جائیں گی۔",
@@ -30486,6 +30642,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ہولڈ پر",
+        "published": "شائع شدہ",
+        "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
       }
     }
   }
