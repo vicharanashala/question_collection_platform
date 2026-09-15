@@ -45,7 +45,20 @@ const resources = {
         "tapToPlay": "Tap to play",
         "delete": "Delete",
         "stop": "Stop",
-        "playing": "Playing…"
+        "playing": "Playing…",
+        "noAudioCaptured": "No audio captured. Please try again.",
+        "noWordsHeard": "We could not hear any words. Try again in a quieter place.",
+        "voiceCaptured": "Voice captured. Review and continue.",
+        "couldNotStop": "Could not stop recording.",
+        "notSupportedBrowser": "Microphone recording is not supported in this browser.",
+        "recordingFailed": "Recording failed. Please try again.",
+        "permissionDeniedRetry": "Microphone permission denied. Allow microphone access and retry.",
+        "couldNotStart": "Could not start recording. Please try again.",
+        "tapToStopRecording": "Tap to stop recording",
+        "doneSpeakAgain": "Done — speak again any time",
+        "notSupportedShort": "Mic not supported on this browser",
+        "stopRecordingAria": "Stop recording",
+        "startRecordingAria": "Start voice recording"
       },
       "speech": {
         "stt": {
@@ -225,7 +238,8 @@ const resources = {
         "sortBy": "Sort By",
         "unknown": "Unknown",
         "rupee": "Rs.",
-        "steps": "Steps"
+        "steps": "Steps",
+        "continue": "Continue"
       },
       "completeRegistration": "Complete Registration",
       "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -566,7 +580,9 @@ const resources = {
         "rejectedEditQuestion": "Edit My Question",
         "addVoice": "Add voice",
         "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
-        "dailyLimitIndicator": "Daily limit reached"
+        "dailyLimitIndicator": "Daily limit reached",
+        "expertWillRespond": "An expert will get back to you with an answer.",
+        "questionExample": "e.g. My tomato leaves are turning yellow — what should I do?"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -1356,7 +1372,20 @@ const resources = {
         "tapToPlay": "প্লে কৰিবলৈ টেপ কৰক",
         "delete": "ডিলিট কৰক",
         "stop": "ৰখাওক",
-        "playing": "প্লে হৈ আছে…"
+        "playing": "প্লে হৈ আছে…",
+        "noAudioCaptured": "কোনো অডিঅ' পোৱা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "noWordsHeard": "কোনো শব্দ শুনা নগ'ল। শান্ত ঠাইত পুনৰ চেষ্টা কৰক।",
+        "voiceCaptured": "কণ্ঠস্বৰ পোৱা গ'ল। পৰ্যালোচনা কৰি অব্যাহত ৰাখক।",
+        "couldNotStop": "ৰেকৰ্ডিং বন্ধ কৰিব পৰা নগ'ল।",
+        "notSupportedBrowser": "এই ব্ৰাউজাৰত মাইক্ৰ'ফোন ৰেকৰ্ডিং সমৰ্থিত নহয়।",
+        "recordingFailed": "ৰেকৰ্ডিং বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "permissionDeniedRetry": "মাইক্ৰ'ফোনৰ অনুমতি নাকচ কৰা হৈছে। মাইক্ৰ'ফোন এক্সেছ দি পুনৰ চেষ্টা কৰক।",
+        "couldNotStart": "ৰেকৰ্ডিং আৰম্ভ কৰিব পৰা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "tapToStopRecording": "বন্ধ কৰিবলৈ টেপ কৰক",
+        "doneSpeakAgain": "সম্পূৰ্ণ — যিকোনো সময়ত পুনৰ কওক",
+        "notSupportedShort": "এই ব্ৰাউজাৰত মাইক সমৰ্থিত নহয়",
+        "stopRecordingAria": "ৰেকৰ্ডিং বন্ধ কৰক",
+        "startRecordingAria": "কণ্ঠস্বৰ ৰেকৰ্ডিং আৰম্ভ কৰক"
       },
       "speech": {
         "stt": {
@@ -1536,7 +1565,8 @@ const resources = {
         "sortBy": "ক্ৰম অনুসাৰে",
         "unknown": "অজ্ঞাত",
         "rupee": "টকা",
-        "steps": "খোজ"
+        "steps": "খোজ",
+        "continue": "অব্যাহত ৰাখক"
       },
       "completeRegistration": "পঞ্জীয়ন সম্পূৰ্ণ কৰক",
       "consentClause1": "আপোনাৰ মোবাইল নম্বৰ আৰু পঞ্জীয়নৰ বিৱৰণ সুৰক্ষিতভাৱে সংৰক্ষিত কৰা হ'ব আৰু কেৱল প্লেটফৰ্ম অথেনটিকেচন আৰু কৃষি জ্ঞান সেৱাৰ বাবে ব্যৱহাৰ কৰা হ'ব।",
@@ -1875,7 +1905,9 @@ const resources = {
         "rejectedEditQuestion": "মোৰ প্ৰশ্ন সম্পাদনা কৰক",
         "addVoice": "মাত যোগ কৰক",
         "tipDetailed": "সবিশেষ লিখক — শস্য, ঠাই আৰু আপুনি ইতিমধ্যে কি চেষ্টা কৰিছে সেয়া উল্লেখ কৰক।",
-        "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে"
+        "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে",
+        "expertWillRespond": "এজন বিশেষজ্ঞই আপোনাক উত্তৰ দিব।",
+        "questionExample": "উদাহৰণ: মোৰ বিলাহীৰ পাত হালধীয়া হৈ আছে — মই কি কৰিব লাগে?"
       },
       "readFullPolicy": "সম্পূৰ্ণ গোপনীয়তা নীতি পঢ়ক →",
       "resendOtp": "OTP পুনৰ পঠিয়াওক",
@@ -2665,7 +2697,20 @@ const resources = {
         "tapToPlay": "প্লে করতে ট্যাপ করুন",
         "delete": "মুছে ফেলুন",
         "stop": "থামান",
-        "playing": "চলছে…"
+        "playing": "চলছে…",
+        "noAudioCaptured": "কোনো অডিও ধারণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "noWordsHeard": "কোনো শব্দ শোনা যায়নি। একটি শান্ত জায়গায় আবার চেষ্টা করুন।",
+        "voiceCaptured": "কণ্ঠস্বর ধারণ করা হয়েছে। পর্যালোচনা করে চালিয়ে যান।",
+        "couldNotStop": "রেকর্ডিং বন্ধ করা যায়নি।",
+        "notSupportedBrowser": "এই ব্রাউজারে মাইক্রোফোন রেকর্ডিং সমর্থিত নয়।",
+        "recordingFailed": "রেকর্ডিং ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "permissionDeniedRetry": "মাইক্রোফোনের অনুমতি প্রত্যাখ্যাত হয়েছে। মাইক্রোফোন অ্যাক্সেস দিন এবং আবার চেষ্টা করুন।",
+        "couldNotStart": "রেকর্ডিং শুরু করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "tapToStopRecording": "থামাতে ট্যাপ করুন",
+        "doneSpeakAgain": "সম্পন্ন — যেকোনো সময় আবার বলুন",
+        "notSupportedShort": "এই ব্রাউজারে মাইক সমর্থিত নয়",
+        "stopRecordingAria": "রেকর্ডিং বন্ধ করুন",
+        "startRecordingAria": "ভয়েস রেকর্ডিং শুরু করুন"
       },
       "speech": {
         "stt": {
@@ -2845,7 +2890,8 @@ const resources = {
         "sortBy": "ক্রমানুসারে সাজান",
         "unknown": "অজানা",
         "rupee": "টাকা",
-        "steps": "ধাপ"
+        "steps": "ধাপ",
+        "continue": "চালিয়ে যান"
       },
       "completeRegistration": "নিবন্ধন সম্পন্ন করুন",
       "consentClause1": "আপনার মোবাইল নম্বর এবং নিবন্ধনের বিবরণ নিরাপদে সংরক্ষণ করা হবে এবং শুধুমাত্র প্ল্যাটফর্ম প্রমাণীকরণ এবং কৃষি জ্ঞান পরিষেবার জন্য ব্যবহার করা হবে।",
@@ -3184,7 +3230,9 @@ const resources = {
         "rejectedEditQuestion": "আমার প্রশ্ন সম্পাদনা করুন",
         "addVoice": "কণ্ঠস্বর যোগ করুন",
         "tipDetailed": "বিস্তারিত লিখুন — ফসল, স্থান এবং আপনি ইতিমধ্যে যা চেষ্টা করেছেন তা উল্লেখ করুন।",
-        "dailyLimitIndicator": "দৈনিক সীমা শেষ"
+        "dailyLimitIndicator": "দৈনিক সীমা শেষ",
+        "expertWillRespond": "একজন বিশেষজ্ঞ আপনাকে উত্তর দেবেন।",
+        "questionExample": "যেমন: আমার টমেটো গাছের পাতা হলুদ হয়ে যাচ্ছে — আমার কী করা উচিত?"
       },
       "readFullPolicy": "সম্পূর্ণ গোপনীয়তা নীতি পড়ুন →",
       "resendOtp": "পুনরায় OTP পাঠান",
@@ -3974,7 +4022,20 @@ const resources = {
         "tapToPlay": "दामनो थाखाय थु",
         "delete": "हुइग्रोनाय / बोखारनाय",
         "stop": "होबथानाय",
-        "playing": "दामगासिनो दं…"
+        "playing": "दामगासिनो दं…",
+        "noAudioCaptured": "कोंनो audio मोन्नाय नङा। अननानै आरोबाव नाजा।",
+        "noWordsHeard": "जायखि रा नुथिखा। रोगा जायगाव फिन नाजा।",
+        "voiceCaptured": "रा मोनजाबाय। सोदोब आरो सोलायख्लाम।",
+        "couldNotStop": "रेकर्डिं हबथानो हायाखै।",
+        "notSupportedBrowser": "बे browser आव माइक्र'फ'न रेकर्डिं गनायथि जायाखै।",
+        "recordingFailed": "रेकर्डिं जायासै। अननानै आरोबाव नाजा।",
+        "permissionDeniedRetry": "माइक्र'फ'ननि गनायथि हारि खालामबाय। माइक्र'फ'न access होन्नाय होबाय आरो फिन नाजा।",
+        "couldNotStart": "रेकर्डिं जागायनो हायाखै। अननानै आरोबाव नाजा।",
+        "tapToStopRecording": "हबथानो थाखाय थुना हो",
+        "doneSpeakAgain": "जोबनाय — जायखि सम'र फिन रायो",
+        "notSupportedShort": "बे browser आव mic गनायथि जायाखै",
+        "stopRecordingAria": "रेकर्डिं हबथा",
+        "startRecordingAria": "रा रेकर्डिं जागायख्लाम"
       },
       "speech": {
         "stt": {
@@ -4154,7 +4215,8 @@ const resources = {
         "sortBy": "सायख'नाय थि खालाम",
         "unknown": "मिथियै",
         "rupee": "रां",
-        "steps": "स्टेप"
+        "steps": "स्टेप",
+        "continue": "जारी खालाम"
       },
       "completeRegistration": "रेजिस्ट्रेसन आबुं खालाम",
       "consentClause1": "नोंथानि मबाइल नम्बर आरो रेजिस्ट्रेसननि खारथायखौ रैखाथायै दोनगोन आरो खालि प्लाटफार्म थारसिमनाय आरो कृषि ग्यान सेवानि थाखायल' बाहायगोन।",
@@ -4493,7 +4555,9 @@ const resources = {
         "rejectedEditQuestion": "आंनि सोंथिखौ सुद्रायो",
         "addVoice": "गोर दाजाब",
         "tipDetailed": "गुबुन गुबुन लिर — गाबसु, जायगा आरो नोंथाङा दानि सिम मा नाजादों बेखौ लिर।",
-        "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय"
+        "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय",
+        "expertWillRespond": "गोदान अनजिमा नोंथाङा जाबाब होगोन।",
+        "questionExample": "जेरै: आंनि tomato बिफांआ सिबिनि सोरजियो — आं मा खालामनांगौ?"
       },
       "readFullPolicy": "आबुं लाखिनाय खानथि फराय →",
       "resendOtp": "OTP फिन दैथायहर",
@@ -5283,7 +5347,20 @@ const resources = {
         "tapToPlay": "चलाने लेई दबाओ",
         "delete": "मिटाओ",
         "stop": "रोको",
-        "playing": "चलदा राह्या ऐ…"
+        "playing": "चलदा राह्या ऐ…",
+        "noAudioCaptured": "कोई अवाज़ रिकार्ड नीं होई। कृपा करियै परतियै कोशिश करो।",
+        "noWordsHeard": "कोई शब्द सुणे नीं दित्ता। शांत जगह पर परतियै कोशिश करो।",
+        "voiceCaptured": "अवाज़ रिकार्ड होई गेई। समीक्षा करो ते जारी रखो।",
+        "couldNotStop": "रिकार्डिंग रोकी नीं जाई सकी।",
+        "notSupportedBrowser": "इस ब्राउज़र च माइक्रोफ़ोन रिकार्डिंग समर्थत नीं ऐ।",
+        "recordingFailed": "रिकार्डिंग फेल होई गेई। कृपा करियै परतियै कोशिश करो।",
+        "permissionDeniedRetry": "माइक्रोफ़ोन दी इजाज़त नीं दित्ती गेई। माइक्रोफ़ोन एक्सेस दिओ ते परतियै कोशिश करो।",
+        "couldNotStart": "रिकार्डिंग शुरू नीं होई सकी। कृपा करियै परतियै कोशिश करो।",
+        "tapToStopRecording": "रोकने लेई दबाओ",
+        "doneSpeakAgain": "पूरा होई गेआ — कदें बी फ्ेर बोल्लो",
+        "notSupportedShort": "इस ब्राउज़र पर माइक समर्थत नीं ऐ",
+        "stopRecordingAria": "रिकार्डिंग रोको",
+        "startRecordingAria": "अवाज़ रिकार्डिंग शुरू करो"
       },
       "speech": {
         "stt": {
@@ -5463,7 +5540,8 @@ const resources = {
         "sortBy": "क्रमबद्ध करो (Sort By)",
         "unknown": "अज्ञात",
         "rupee": "रुपये",
-        "steps": "चरण"
+        "steps": "चरण",
+        "continue": "जारी रखो"
       },
       "completeRegistration": "पंजीकरण पूरा करो",
       "consentClause1": "तुआह्दा मोबाइल नंबर ते पंजीकरण विवरण सुरक्षित रखे जानगे ते सिर्फ प्लेटफ़ॉर्म प्रमाणीकरण ते कृषि ज्ञान सेवाएं लेई बड़ते जानगे।",
@@ -5802,7 +5880,9 @@ const resources = {
         "rejectedEditQuestion": "मेरा सवाल सोधो",
         "addVoice": "अवाज जोड़ो",
         "tipDetailed": "विस्तार कन्नै लिखो — फसल, थाहर ते तुसें हुण तकर के अजमाया ऐ, दस्सो।",
-        "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई"
+        "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई",
+        "expertWillRespond": "इक माहिर तुहाड़े सवाल दा जवाब देंगा।",
+        "questionExample": "जि'यां: मेरे टमाटर दे पत्ते पीले होई गे न — मैं की करां?"
       },
       "readFullPolicy": "पूरी गोपनीयता नीत पढ़ो →",
       "resendOtp": "OTP परतियै भेज्जो",
@@ -6592,7 +6672,20 @@ const resources = {
         "tapToPlay": "પ્લે કરવા માટે ટેપ કરો",
         "delete": "સમાપ્ત કરો / ડિલીટ કરો",
         "stop": "રોકો",
-        "playing": "પ્લે થઈ રહ્યું છે…"
+        "playing": "પ્લે થઈ રહ્યું છે…",
+        "noAudioCaptured": "કોઈ ઓડિયો કેપ્ચર થયો નથી. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "noWordsHeard": "કોઈ શબ્દ સંભળાયો નથી. શાંત જગ્યાએ ફરી પ્રયાસ કરો.",
+        "voiceCaptured": "અવાજ કેપ્ચર થયો. સમીક્ષા કરો અને ચાલુ રાખો.",
+        "couldNotStop": "રેકોર્ડિંગ રોકી શકાયું નહીં.",
+        "notSupportedBrowser": "આ બ્રાઉઝરમાં માઇક્રોફોન રેકોર્ડિંગ સપોર્ટેડ નથી.",
+        "recordingFailed": "રેકોર્ડિંગ નિષ્ફળ ગયું. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "permissionDeniedRetry": "માઇક્રોફોનની મંજૂરી નકારવામાં આવી. માઇક્રોફોન એક્સેસ આપો અને ફરી પ્રયાસ કરો.",
+        "couldNotStart": "રેકોર્ડિંગ શરૂ કરી શકાયું નહીં. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "tapToStopRecording": "રોકવા માટે ટેપ કરો",
+        "doneSpeakAgain": "પૂર્ણ — ગમે ત્યારે ફરી બોલો",
+        "notSupportedShort": "આ બ્રાઉઝર પર માઇક સપોર્ટેડ નથી",
+        "stopRecordingAria": "રેકોર્ડિંગ રોકો",
+        "startRecordingAria": "વોઇસ રેકોર્ડિંગ શરૂ કરો"
       },
       "speech": {
         "stt": {
@@ -6772,7 +6865,8 @@ const resources = {
         "sortBy": "આના દ્વારા ક્રમબદ્ધ કરો",
         "unknown": "અજ્ઞાત",
         "rupee": "રૂ.",
-        "steps": "પગલાં"
+        "steps": "પગલાં",
+        "continue": "ચાલુ રાખો"
       },
       "completeRegistration": "રજીસ્ટ્રેશન પૂર્ણ કરો",
       "consentClause1": "તમારો મોબાઇલ નંબર અને નોંધણી વિગતો સુરક્ષિત રીતે સંગ્રહિત કરવામાં આવશે અને તેનો ઉપયોગ ફક્ત પ્લેટફોર્મ પ્રમાણીકરણ અને કૃષિ જ્ઞાન સેવાઓ માટે કરવામાં આવશે.",
@@ -7111,7 +7205,9 @@ const resources = {
         "rejectedEditQuestion": "મારો પ્રશ્ન સંપાદિત કરો",
         "addVoice": "અવાજ ઉમેરો",
         "tipDetailed": "વિગતવાર લખો — પાક, સ્થળ અને તમે અત્યાર સુધી શું અજમાવ્યું છે તે જણાવો.",
-        "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ"
+        "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ",
+        "expertWillRespond": "એક નિષ્ણાત તમને જવાબ આપશે.",
+        "questionExample": "દા.ત. મારા ટામેટાના પાન પીળા થઈ રહ્યા છે — મારે શું કરવું જોઈએ?"
       },
       "readFullPolicy": "સંપૂર્ણ ગોપનીયતા નીતિ વાંચો →",
       "resendOtp": "ફરીથી OTP મોકલો",
@@ -7901,7 +7997,20 @@ const resources = {
         "tapToPlay": "चलाने के लिए टैप करें",
         "delete": "हटाएं",
         "stop": "रोकें",
-        "playing": "चल रहा है…"
+        "playing": "चल रहा है…",
+        "noAudioCaptured": "कोई ऑडियो रिकॉर्ड नहीं हुआ। कृपया पुनः प्रयास करें।",
+        "noWordsHeard": "कोई शब्द सुनाई नहीं दिया। कृपया शांत जगह पर पुनः प्रयास करें।",
+        "voiceCaptured": "आवाज़ रिकॉर्ड हो गई। समीक्षा करें और जारी रखें।",
+        "couldNotStop": "रिकॉर्डिंग रोकी नहीं जा सकी।",
+        "notSupportedBrowser": "इस ब्राउज़र में माइक्रोफ़ोन रिकॉर्डिंग समर्थित नहीं है।",
+        "recordingFailed": "रिकॉर्डिंग विफल रही। कृपया पुनः प्रयास करें।",
+        "permissionDeniedRetry": "माइक्रोफ़ोन अनुमति अस्वीकृत। माइक्रोफ़ोन एक्सेस दें और पुनः प्रयास करें।",
+        "couldNotStart": "रिकॉर्डिंग शुरू नहीं हो सकी। कृपया पुनः प्रयास करें।",
+        "tapToStopRecording": "रोकने के लिए टैप करें",
+        "doneSpeakAgain": "पूर्ण — कभी भी फिर से बोलें",
+        "notSupportedShort": "इस ब्राउज़र पर माइक समर्थित नहीं है",
+        "stopRecordingAria": "रिकॉर्डिंग रोकें",
+        "startRecordingAria": "आवाज़ रिकॉर्डिंग शुरू करें"
       },
       "speech": {
         "stt": {
@@ -8081,7 +8190,8 @@ const resources = {
         "sortBy": "इसके अनुसार क्रमबद्ध करें",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "चरण"
+        "steps": "चरण",
+        "continue": "जारी रखें"
       },
       "completeRegistration": "पंजीकरण पूरा करें",
       "consentClause1": "आपका मोबाइल नंबर और पंजीकरण विवरण सुरक्षित रूप से संग्रहीत किए जाएंगे और केवल प्लेटफॉर्म प्रमाणीकरण और कृषि ज्ञान सेवाओं के लिए उपयोग किए जाएंगे।",
@@ -8420,7 +8530,9 @@ const resources = {
         "rejectedEditQuestion": "मेरा प्रश्न सुधारें",
         "addVoice": "आवाज़ जोड़ें",
         "tipDetailed": "विस्तार से बताएं — फसल, स्थान और आपने अब तक क्या आजमाया है, यह भी लिखें।",
-        "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई"
+        "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई",
+        "expertWillRespond": "एक विशेषज्ञ आपके प्रश्न का उत्तर देगा।",
+        "questionExample": "जैसे: मेरे टमाटर के पत्ते पीले पड़ रहे हैं — मुझे क्या करना चाहिए?"
       },
       "readFullPolicy": "पूरी गोपनीयता नीति पढ़ें →",
       "resendOtp": "OTP पुनः भेजें",
@@ -9210,7 +9322,20 @@ const resources = {
         "tapToPlay": "ಪ್ಲೇ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
         "delete": "ಅಳಿಸಿ",
         "stop": "ನಿಲ್ಲಿಸಿ",
-        "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
+        "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…",
+        "noAudioCaptured": "ಯಾವುದೇ ಆಡಿಯೋ ಸೆರೆಹಿಡಿಯಲಾಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "noWordsHeard": "ಯಾವುದೇ ಪದಗಳು ಕೇಳಿಸಲಿಲ್ಲ. ಶಾಂತ ಸ್ಥಳದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "voiceCaptured": "ಧ್ವನಿ ಸೆರೆಹಿಡಿಯಲಾಗಿದೆ. ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮುಂದುವರಿಸಿ.",
+        "couldNotStop": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+        "notSupportedBrowser": "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಮೈಕ್ರೋಫೋನ್ ರೆಕಾರ್ಡಿಂಗ್ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ.",
+        "recordingFailed": "ರೆಕಾರ್ಡಿಂಗ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "permissionDeniedRetry": "ಮೈಕ್ರೋಫೋನ್ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಮೈಕ್ರೋಫೋನ್ ಪ್ರವೇಶ ಅನುಮತಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "couldNotStart": "ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "tapToStopRecording": "ನಿಲ್ಲಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+        "doneSpeakAgain": "ಮುಗಿದಿದೆ — ಯಾವಾಗ ಬೇಕಾದರೂ ಮತ್ತೆ ಮಾತನಾಡಿ",
+        "notSupportedShort": "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಮೈಕ್ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ",
+        "stopRecordingAria": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
+        "startRecordingAria": "ಧ್ವನಿ ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಿ"
       },
       "speech": {
         "stt": {
@@ -9390,7 +9515,8 @@ const resources = {
         "sortBy": "ಹೀಗೆ ವಿಂಗಡಿಸಿ",
         "unknown": "ಅಜ್ಞಾತ",
         "rupee": "ರೂ.",
-        "steps": "ಹಂತಗಳು"
+        "steps": "ಹಂತಗಳು",
+        "continue": "ಮುಂದುವರಿಸಿ"
       },
       "completeRegistration": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ",
       "consentClause1": "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ನೋಂದಣಿ ವಿವರಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ವೇದಿಕೆಯ ದೃಢೀಕರಣ ಮತ್ತು ಕೃಷಿ ಜ್ಞಾನ ಸೇವೆಗಳಿಗೆ ಮಾತ್ರ ಬಳಸಲಾಗುತ್ತದೆ.",
@@ -9729,7 +9855,9 @@ const resources = {
         "rejectedEditQuestion": "ನನ್ನ ಪ್ರಶ್ನೆಯನ್ನು ಸಂಪಾದಿಸಿ",
         "addVoice": "ಧ್ವನಿ ಸೇರಿಸಿ",
         "tipDetailed": "ವಿವರವಾಗಿ ಬರೆಯಿರಿ — ಬೆಳೆ, ಸ್ಥಳ ಮತ್ತು ನೀವು ಈಗಾಗಲೇ ಏನು ಪ್ರಯತ್ನಿಸಿದ್ದೀರಿ ಎಂದು ತಿಳಿಸಿ.",
-        "dailyLimitIndicator": "ದೈನಂದಿನ ಮಿತಿ ಮುಗಿದಿದೆ"
+        "dailyLimitIndicator": "ದೈನಂದಿನ ಮಿತಿ ಮುಗಿದಿದೆ",
+        "expertWillRespond": "ಒಬ್ಬ ತಜ್ಞ ನಿಮಗೆ ಉತ್ತರ ನೀಡುತ್ತಾರೆ.",
+        "questionExample": "ಉದಾ: ನನ್ನ ಟೊಮ್ಯಾಟೊ ಎಲೆಗಳು ಹಳದಿಯಾಗುತ್ತಿವೆ — ನಾನು ಏನು ಮಾಡಬೇಕು?"
       },
       "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
       "resendOtp": "OTP ಯನ್ನು ಮರುಕಳುಹಿಸಿ",
@@ -10519,7 +10647,20 @@ const resources = {
         "tapToPlay": "باجناوَنہٕ باپتھ دباویو",
         "delete": "مٹایو",
         "stop": "بند کٔریو",
-        "playing": "چالان…"
+        "playing": "چالان…",
+        "noAudioCaptured": "کانہہ آڈیو ریکارڈ نہٕ آو۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+        "noWordsHeard": "کانہہ لفظ نہٕ آسنہٕ آمُت۔ سکون ہِنٛدِس جاے پؠٹھ دوبارہ کوشش کٔریو۔",
+        "voiceCaptured": "آواز ریکارڈ گئی۔ جائزہ لِیو تہٕ جاری رکھیو۔",
+        "couldNotStop": "ریکارڈنگ بند کرنہٕ مَنٛز آو رکاوٹ۔",
+        "notSupportedBrowser": "یہ براؤزر مَنٛز مائیکروفون ریکارڈنگ سپورٹ چھِ نہٕ۔",
+        "recordingFailed": "ریکارڈنگ ناکام گئی۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+        "permissionDeniedRetry": "مائیکروفونک اجازت رد گئی۔ مائیکروفونس رسائی دِیو تہٕ دوبارہ کوشش کٔریو۔",
+        "couldNotStart": "ریکارڈنگ شروع نہٕ گئی۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+        "tapToStopRecording": "بند کرنہٕ باپتھ دباویو",
+        "doneSpeakAgain": "مکمل — کینٛہہ ٕوقت دوبارہ واتش کریو",
+        "notSupportedShort": "یہ براؤزر پؠٹھ مائیک سپورٹ چھِ نہٕ",
+        "stopRecordingAria": "ریکارڈنگ بند کریو",
+        "startRecordingAria": "آواز ریکارڈنگ شروع کریو"
       },
       "speech": {
         "stt": {
@@ -10699,7 +10840,8 @@ const resources = {
         "sortBy": "ترتیب دیو",
         "unknown": "نامعلوم",
         "rupee": "روپے",
-        "steps": "مرحلہٕ"
+        "steps": "مرحلہٕ",
+        "continue": "جاری رکھیو"
       },
       "completeRegistration": "رجسٹریشن مکمل کٔریو",
       "consentClause1": "تہند موبائل نمبر تہٕ رجسٹریشن تفصیلات یین محفوظ تھاونہٕ تہٕ یین صرف پلیٹ فارم تصدیق تہٕ زرعی خدمات باپتھ استعمال کرنہٕ۔",
@@ -11038,7 +11180,9 @@ const resources = {
         "rejectedEditQuestion": "میٟون سوال درست کرِو",
         "addVoice": "آواز شٲمل کرِو",
         "tipDetailed": "تفصیلہٕ سٟتؠ لیکھِو — فصل، جاے تہٕ یُس توٚہہِ وُنی تام آزماومُت چھُ۔",
-        "dailyLimitIndicator": "ڈیلی حد چھِ مکمل"
+        "dailyLimitIndicator": "ڈیلی حد چھِ مکمل",
+        "expertWillRespond": "اکھ ماہر توہہِ جواب دِیہِ۔",
+        "questionExample": "مثلن: میۆن ٹماٹرہ سٕنٛز پَتہٕ زَرد گَژھان — بہٕ کیازِ کریم؟"
       },
       "readFullPolicy": "پورا پرائیویسی پالیسی پرِیو →",
       "resendOtp": "OTP دوبارہ سوزیو",
@@ -11828,7 +11972,20 @@ const resources = {
         "tapToPlay": "प्ले करपाक टॅप करात",
         "delete": "काडून उडोयात",
         "stop": "थांबायात",
-        "playing": "प्ले जाता…"
+        "playing": "प्ले जाता…",
+        "noAudioCaptured": "कसलोच आवाज मेळूंक ना. उपकार करून परतून यत्न करात.",
+        "noWordsHeard": "कसलेच उतर आयकुंक नात. शांत सुवातेर परतून यत्न करात.",
+        "voiceCaptured": "आवाज मेळ्ळो. फुडें वचून तपासात.",
+        "couldNotStop": "रेकॉर्डिंग थांबोवपाक जालें ना.",
+        "notSupportedBrowser": "ह्या ब्राउझरांत मायक्रोफोन रेकॉर्डिंग सपोर्ट ना.",
+        "recordingFailed": "रेकॉर्डिंग अपयशी. उपकार करून परतून यत्न करात.",
+        "permissionDeniedRetry": "मायक्रोफोन परवानगी नाकारली. मायक्रोफोन प्रवेश दियात आनी परतून यत्न करात.",
+        "couldNotStart": "रेकॉर्डिंग सुरू जावंक ना. उपकार करून परतून यत्न करात.",
+        "tapToStopRecording": "थांबोवपाक टॅप करात",
+        "doneSpeakAgain": "जालें — केन्नाय वेळार परतून उलयात",
+        "notSupportedShort": "ह्या ब्राउझरार mic सपोर्ट ना",
+        "stopRecordingAria": "रेकॉर्डिंग थांबयात",
+        "startRecordingAria": "आवाज रेकॉर्डिंग सुरू करात"
       },
       "speech": {
         "stt": {
@@ -12008,7 +12165,8 @@ const resources = {
         "sortBy": "अशे क्रमान लावा",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "पावलां"
+        "steps": "पावलां",
+        "continue": "फुडें व्हरात"
       },
       "completeRegistration": "नोंदणी पुराय करात",
       "consentClause1": "तुमचो मोबाईल नंबर आनी नोंदणी तपशील सुरक्षित दवरतले आनी फकत प्लॅटफॉर्म प्रमाणीकरण आनी कृषी ज्ञान सेवांखातीर वापरतले.",
@@ -12347,7 +12505,9 @@ const resources = {
         "rejectedEditQuestion": "म्हजो प्रस्न सुदारात",
         "addVoice": "आवाज जोडात",
         "tipDetailed": "सविस्तर बरयात — पीक, सुवात आनी तुमी आतां मेरेन कितें करून पळयलां तें सांगात.",
-        "dailyLimitIndicator": "दिसाची मर्यादा सोंपली"
+        "dailyLimitIndicator": "दिसाची मर्यादा सोंपली",
+        "expertWillRespond": "एक तज्ञ तुमकां जाप दितलो.",
+        "questionExample": "देखीक: म्हज्या टोमॅटोचीं पानां पिंवळी जाताती — हांव कितें करूं?"
       },
       "readFullPolicy": "पुराय गुप्तताय धोरण वाचात →",
       "resendOtp": "परतून OTP धाडात",
@@ -13137,7 +13297,20 @@ const resources = {
         "tapToPlay": "बजाबै लेल दबाऊ",
         "delete": "हटाऊ",
         "stop": "रोकू",
-        "playing": "बजि रहल अछि…"
+        "playing": "बजि रहल अछि…",
+        "noAudioCaptured": "कोनो अडियो रिकॉर्ड नहि भेल। कृपया पुनः प्रयास करू।",
+        "noWordsHeard": "कोनो शब्द नहि सुनल गेल। शांत जगहमे पुनः प्रयास करू।",
+        "voiceCaptured": "अवाज रिकॉर्ड भेल। समीक्षा करू आ जारी राखू।",
+        "couldNotStop": "रिकॉर्डिंग रोकल नहि जा सकल।",
+        "notSupportedBrowser": "एहि ब्राउजरमे माइक्रोफोन रिकॉर्डिंग समर्थित नहि अछि।",
+        "recordingFailed": "रिकॉर्डिंग असफल भेल। कृपया पुनः प्रयास करू।",
+        "permissionDeniedRetry": "माइक्रोफोनक अनुमति अस्वीकृत भेल। माइक्रोफोन पहुंच देल आ पुनः प्रयास करू।",
+        "couldNotStart": "रिकॉर्डिंग शुरू नहि भ' सकल। कृपया पुनः प्रयास करू।",
+        "tapToStopRecording": "रोकबा लेल दबाऊ",
+        "doneSpeakAgain": "पूर्ण — कहियो फेर बाजू",
+        "notSupportedShort": "एहि ब्राउजर पर माइक समर्थित नहि अछि",
+        "stopRecordingAria": "रिकॉर्डिंग रोकू",
+        "startRecordingAria": "अवाज रिकॉर्डिंग शुरू करू"
       },
       "speech": {
         "stt": {
@@ -13317,7 +13490,8 @@ const resources = {
         "sortBy": "क्रमबद्ध करु",
         "unknown": "अज्ञात",
         "rupee": "टका",
-        "steps": "चरण"
+        "steps": "चरण",
+        "continue": "जारी राखू"
       },
       "completeRegistration": "पंजीकरण पूरा करु",
       "consentClause1": "अहाँक मोबाइल नंबर आ पंजीकरण विवरण सुरक्षित रूप सँ राखल जाएत आ केवल प्लेटफॉर्म प्रमाणीकरण आ कृषि ज्ञान सेवा लेल उपयोग कएल जाएत।",
@@ -13656,7 +13830,9 @@ const resources = {
         "rejectedEditQuestion": "हमर प्रश्न संपादित करू",
         "addVoice": "अवाज जोड़ू",
         "tipDetailed": "विस्तारसँ लिखू — फसल, स्थान आ अहाँ आब धरि की आजमेने छी, से बताउ।",
-        "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल"
+        "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल",
+        "expertWillRespond": "एकटा विशेषज्ञ अहाँकेँ उत्तर देताह।",
+        "questionExample": "जेना: हमर टमाटरक पात पिअर होइ रहल अछि — हम की करू?"
       },
       "readFullPolicy": "पूरा गोपनीयता नीति पढ़ू →",
       "resendOtp": "पुनः ओटीपी पठाऊ",
@@ -14446,7 +14622,20 @@ const resources = {
         "tapToPlay": "കേൾക്കാൻ ടാപ്പ് ചെയ്യുക",
         "delete": "ഡിലീറ്റ് ചെയ്യുക",
         "stop": "നിർത്തുക",
-        "playing": "പ്ലേ ചെയ്യുന്നു…"
+        "playing": "പ്ലേ ചെയ്യുന്നു…",
+        "noAudioCaptured": "ഒരു ഓഡിയോയും ലഭിച്ചില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+        "noWordsHeard": "ഒരു വാക്കും കേട്ടില്ല. ശാന്തമായ സ്ഥലത്ത് വീണ്ടും ശ്രമിക്കുക.",
+        "voiceCaptured": "ശബ്ദം ലഭിച്ചു. അവലോകനം ചെയ്ത് തുടരുക.",
+        "couldNotStop": "റെക്കോർഡിംഗ് നിർത്താൻ കഴിഞ്ഞില്ല.",
+        "notSupportedBrowser": "ഈ ബ്രൗസറിൽ മൈക്രോഫോൺ റെക്കോർഡിംഗ് പിന്തുണയ്ക്കുന്നില്ല.",
+        "recordingFailed": "റെക്കോർഡിംഗ് പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+        "permissionDeniedRetry": "മൈക്രോഫോൺ അനുമതി നിരസിച്ചു. മൈക്രോഫോൺ ആക്‌സസ് അനുവദിച്ച് വീണ്ടും ശ്രമിക്കുക.",
+        "couldNotStart": "റെക്കോർഡിംഗ് ആരംഭിക്കാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+        "tapToStopRecording": "നിർത്താൻ ടാപ്പ് ചെയ്യുക",
+        "doneSpeakAgain": "പൂർത്തിയായി — ഇനി എപ്പോൾ വേണമെങ്കിലും വീണ്ടും സംസാരിക്കാം",
+        "notSupportedShort": "ഈ ബ്രൗസറിൽ മൈക്ക് പിന്തുണയ്ക്കുന്നില്ല",
+        "stopRecordingAria": "റെക്കോർഡിംഗ് നിർത്തുക",
+        "startRecordingAria": "വോയ്‌സ് റെക്കോർഡിംഗ് ആരംഭിക്കുക"
       },
       "speech": {
         "stt": {
@@ -14626,7 +14815,8 @@ const resources = {
         "sortBy": "തരംതിരിക്കുക",
         "unknown": "അജ്ഞാതം",
         "rupee": "രൂപ",
-        "steps": "ഘട്ടങ്ങൾ"
+        "steps": "ഘട്ടങ്ങൾ",
+        "continue": "തുടരുക"
       },
       "completeRegistration": "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക",
       "consentClause1": "നിങ്ങളുടെ മൊബൈൽ നമ്പറും രജിസ്ട്രേഷൻ വിവരങ്ങളും സുരക്ഷിതമായി സൂക്ഷിക്കുകയും പ്ലാറ്റ്‌ഫോം ഓതന്റിക്കേഷനും കാർഷിക സേവനങ്ങൾക്കുമായി മാത്രം ഉപയോഗിക്കുകയും ചെയ്യും.",
@@ -14965,7 +15155,9 @@ const resources = {
         "rejectedEditQuestion": "എന്റെ ചോദ്യം തിരുത്തുക",
         "addVoice": "ശബ്ദം ചേർക്കുക",
         "tipDetailed": "വിശദമായി എഴുതുക — വിള, സ്ഥലം, നിങ്ങൾ ഇതുവരെ പരീക്ഷിച്ചത് എന്നിവ ചേർക്കുക.",
-        "dailyLimitIndicator": "ദൈനംദിന പരിധി തീർന്നു"
+        "dailyLimitIndicator": "ദൈനംദിന പരിധി തീർന്നു",
+        "expertWillRespond": "ഒരു വിദഗ്ധൻ നിങ്ങൾക്ക് ഉത്തരം നൽകും.",
+        "questionExample": "ഉദാ: എന്റെ തക്കാളിയുടെ ഇലകൾ മഞ്ഞളിക്കുന്നു — ഞാൻ എന്ത് ചെയ്യണം?"
       },
       "readFullPolicy": "പൂർണ്ണ സ്വകാര്യതാ നയം വായിക്കുക →",
       "resendOtp": "വീണ്ടും OTP അയക്കുക",
@@ -15755,7 +15947,20 @@ const resources = {
         "tapToPlay": "শানবা নমবীয়ু",
         "delete": "মুতথোকপা",
         "stop": "লেপপা",
-        "playing": "শারি…"
+        "playing": "শারি…",
+        "noAudioCaptured": "অডিও ফংদ্রে। অমুক হন্না হোৎনবীয়ু।",
+        "noWordsHeard": "ৱাহেই তাদ্রে। ঙাইথিবা মফমদা হন্না হোৎনবীয়ু।",
+        "voiceCaptured": "খোন্জেল ফংলে। য়েংশিনবীয়ু অমসুং চঙদোককো।",
+        "couldNotStop": "রেকোদিং লেপ্পা ঙমদ্রে।",
+        "notSupportedBrowser": "ব্রাউজারসিদা মাইক্রোফোন রেকোদিং সাপোর্ট তৌদে।",
+        "recordingFailed": "রেকোদিং ঙমদ্রে। অমুক হন্না হোৎনবীয়ু।",
+        "permissionDeniedRetry": "মাইক্রোফোনগী অয়াবা য়াদ্রে। মাইক্রোফোন লৌবা য়াহল্লু অমসুং হন্না হোৎনবীয়ু।",
+        "couldNotStart": "রেকোদিং হৌবা ঙমদ্রে। অমুক হন্না হোৎনবীয়ু।",
+        "tapToStopRecording": "লেপনবা নমবীয়ু",
+        "doneSpeakAgain": "লৌখৎলে — মথং হৌবা মতমদা হন্না ঙাংবীয়ু",
+        "notSupportedShort": "ব্রাউজারসিদা মাইক সাপোর্ট তৌদে",
+        "stopRecordingAria": "রেকোদিং লেপ্পীয়ু",
+        "startRecordingAria": "খোন্জেল রেকোদিং হৌবীয়ু"
       },
       "speech": {
         "stt": {
@@ -15935,7 +16140,8 @@ const resources = {
         "sortBy": "মথং-মনাও শেম্বা",
         "unknown": "খংদবা",
         "rupee": "লুপা",
-        "steps": "ফিভম"
+        "steps": "ফিভম",
+        "continue": "চঙদোককো"
       },
       "completeRegistration": "রেজিষ্ট্রেশন মপুং ফাহনবা",
       "consentClause1": "নহাগী মোবাইল নম্বর অমসুং রেজিষ্ট্রেশন মরোলশিং অসিবু চে অমত্তা লৈতনা থমগনি অমসুং প্লেটফোর্ম অসিদা ভেরিফাই অমসুং লৌউ-শিংউগী সর্বিসগীদমক শীজিন্নগনি।",
@@ -16274,7 +16480,9 @@ const resources = {
         "rejectedEditQuestion": "ঐগী ৱাহং শেমদোকউ",
         "addVoice": "খোন্জেল হাপচিল্লু",
         "tipDetailed": "অকুপ্না ইযু — মহৈ, মফম অমসুং নহাক্না হৌজিক ফাওবা করি হোৎনখিবগে হায়বদু হাপচিল্লু।",
-        "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে"
+        "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে",
+        "expertWillRespond": "শিংনরবা মীওই অমনা নহাক্কী পাঙথোকপা পীগনি।",
+        "questionExample": "খুদামদা: ঐগী টমেটোগী মানবীশিং য়েল্লবা ওইরকই — ঐনা করিগুম্বা তৌগদগে?"
       },
       "readFullPolicy": "মপুং ফাবা প্রাইভেসি পোলিসি পারো →",
       "resendOtp": "OTP অমুক থাবীয়ু",
@@ -17064,7 +17272,20 @@ const resources = {
         "tapToPlay": "ऐकण्यासाठी टॅप करा",
         "delete": "हटवा",
         "stop": "थांबवा",
-        "playing": "चालू आहे…"
+        "playing": "चालू आहे…",
+        "noAudioCaptured": "कोणताही ऑडिओ रेकॉर्ड झाला नाही. कृपया पुन्हा प्रयत्न करा.",
+        "noWordsHeard": "कोणतेही शब्द ऐकू आले नाहीत. शांत ठिकाणी पुन्हा प्रयत्न करा.",
+        "voiceCaptured": "आवाज रेकॉर्ड झाला. पुनरावलोकन करा आणि सुरू ठेवा.",
+        "couldNotStop": "रेकॉर्डिंग थांबवता आली नाही.",
+        "notSupportedBrowser": "या ब्राउझरमध्ये मायक्रोफोन रेकॉर्डिंग समर्थित नाही.",
+        "recordingFailed": "रेकॉर्डिंग अयशस्वी झाले. कृपया पुन्हा प्रयत्न करा.",
+        "permissionDeniedRetry": "मायक्रोफोन परवानगी नाकारली. मायक्रोफोन प्रवेश द्या आणि पुन्हा प्रयत्न करा.",
+        "couldNotStart": "रेकॉर्डिंग सुरू करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+        "tapToStopRecording": "थांबवण्यासाठी टॅप करा",
+        "doneSpeakAgain": "पूर्ण — केव्हाही पुन्हा बोला",
+        "notSupportedShort": "या ब्राउझरवर माइक समर्थित नाही",
+        "stopRecordingAria": "रेकॉर्डिंग थांबवा",
+        "startRecordingAria": "व्हॉइस रेकॉर्डिंग सुरू करा"
       },
       "speech": {
         "stt": {
@@ -17244,7 +17465,8 @@ const resources = {
         "sortBy": "क्रमानुसार लावा",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "पायऱ्या"
+        "steps": "पायऱ्या",
+        "continue": "सुरू ठेवा"
       },
       "completeRegistration": "नोंदणी पूर्ण करा",
       "consentClause1": "तुमचा मोबाईल नंबर आणि नोंदणी तपशील सुरक्षितपणे संग्रहित केले जातील आणि केवळ प्लॅटफॉर्म प्रमाणीकरण आणि कृषी ज्ञान सेवांसाठी वापरले जातील.",
@@ -17583,7 +17805,9 @@ const resources = {
         "rejectedEditQuestion": "माझा प्रश्न संपादित करा",
         "addVoice": "आवाज जोडा",
         "tipDetailed": "सविस्तर लिहा — पीक, ठिकाण आणि तुम्ही आतापर्यंत काय करून पाहिले ते नमूद करा.",
-        "dailyLimitIndicator": "दैनंदिन मर्यादा संपली"
+        "dailyLimitIndicator": "दैनंदिन मर्यादा संपली",
+        "expertWillRespond": "एक तज्ञ तुम्हाला उत्तर देईल.",
+        "questionExample": "उदा: माझ्या टोमॅटोची पाने पिवळी पडत आहेत — मी काय करावे?"
       },
       "readFullPolicy": "पूर्ण गोपनीयता धोरण वाचा →",
       "resendOtp": "OTP पुन्हा पाठवा",
@@ -18373,7 +18597,20 @@ const resources = {
         "tapToPlay": "बजाउन ट्याप गर्नुहोस्",
         "delete": "हटाउनुहोस्",
         "stop": "रोक्नुहोस्",
-        "playing": "बज्दैछ..."
+        "playing": "बज्दैछ...",
+        "noAudioCaptured": "कुनै अडियो रेकर्ड भएन। कृपया पुनः प्रयास गर्नुहोस्।",
+        "noWordsHeard": "कुनै शब्द सुनिएन। शान्त ठाउँमा पुनः प्रयास गर्नुहोस्।",
+        "voiceCaptured": "आवाज रेकर्ड भयो। समीक्षा गरेर जारी राख्नुहोस्।",
+        "couldNotStop": "रेकर्डिङ रोक्न सकिएन।",
+        "notSupportedBrowser": "यो ब्राउजरमा माइक्रोफोन रेकर्डिङ समर्थित छैन।",
+        "recordingFailed": "रेकर्डिङ असफल भयो। कृपया पुनः प्रयास गर्नुहोस्।",
+        "permissionDeniedRetry": "माइक्रोफोन अनुमति अस्वीकृत भयो। माइक्रोफोन पहुँच दिनुहोस् र पुनः प्रयास गर्नुहोस्।",
+        "couldNotStart": "रेकर्डिङ सुरु गर्न सकिएन। कृपया पुनः प्रयास गर्नुहोस्।",
+        "tapToStopRecording": "रोक्न ट्याप गर्नुहोस्",
+        "doneSpeakAgain": "सम्पन्न — जुनसुकै बेला फेरि बोल्नुहोस्",
+        "notSupportedShort": "यो ब्राउजरमा माइक समर्थित छैन",
+        "stopRecordingAria": "रेकर्डिङ रोक्नुहोस्",
+        "startRecordingAria": "आवाज रेकर्डिङ सुरु गर्नुहोस्"
       },
       "speech": {
         "stt": {
@@ -18553,7 +18790,8 @@ const resources = {
         "sortBy": "क्रमबद्ध गर्नुहोस्",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "चरणहरू"
+        "steps": "चरणहरू",
+        "continue": "जारी राख्नुहोस्"
       },
       "completeRegistration": "दर्ता प्रक्रिया पूरा गर्नुहोस्",
       "consentClause1": "तपाईंको मोबाइल नम्बर र दर्ता विवरण सुरक्षित रूपमा भण्डारण गरिनेछ र केवल प्लेटफर्म प्रमाणीकरण र कृषि ज्ञान सेवाका लागि प्रयोग गरिनेछ।",
@@ -18892,7 +19130,9 @@ const resources = {
         "rejectedEditQuestion": "मेरो प्रश्न सम्पादन गर्नुहोस्",
         "addVoice": "आवाज थप्नुहोस्",
         "tipDetailed": "विस्तृत रूपमा लेख्नुहोस् — बाली, स्थान र तपाईंले अहिलेसम्म के प्रयास गर्नुभयो उल्लेख गर्नुहोस्।",
-        "dailyLimitIndicator": "दैनिक सीमा सकियो"
+        "dailyLimitIndicator": "दैनिक सीमा सकियो",
+        "expertWillRespond": "एक विशेषज्ञले तपाईंलाई जवाफ दिनेछन्।",
+        "questionExample": "जस्तै: मेरो टमाटरका पातहरू पहेंलो हुँदैछन् — मैले के गर्नुपर्छ?"
       },
       "readFullPolicy": "पूरा गोपनीयता नीति पढ्नुहोस् →",
       "resendOtp": "OTP पुनः पठाउनुहोस्",
@@ -19682,7 +19922,20 @@ const resources = {
         "tapToPlay": "ପ୍ଲେ କରିବା ପାଇଁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
         "delete": "ଲିଭାନ୍ତୁ",
         "stop": "ଅଟକାନ୍ତୁ",
-        "playing": "ଚାଲୁଅଛି…"
+        "playing": "ଚାଲୁଅଛି…",
+        "noAudioCaptured": "କୌଣସି ଅଡିଓ ପାଇଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "noWordsHeard": "କୌଣସି ଶବ୍ଦ ଶୁଣାଗଲା ନାହିଁ। ଶାନ୍ତ ସ୍ଥାନରେ ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "voiceCaptured": "ସ୍ୱର ପାଇଲା। ସମୀକ୍ଷା କରି ଜାରି ରଖନ୍ତୁ।",
+        "couldNotStop": "ରେକର୍ଡିଂ ବନ୍ଦ କରାଯାଇପାରିଲା ନାହିଁ।",
+        "notSupportedBrowser": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ରୋଫୋନ୍ ରେକର୍ଡିଂ ସମର୍ଥିତ ନୁହେଁ।",
+        "recordingFailed": "ରେକର୍ଡିଂ ବିଫଳ ହେଲା। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "permissionDeniedRetry": "ମାଇକ୍ରୋଫୋନ୍ ଅନୁମତି ପ୍ରତ୍ୟାଖ୍ୟାନ ହେଲା। ମାଇକ୍ରୋଫୋନ୍ ପ୍ରବେଶାଧିକାର ଦିଅନ୍ତୁ ଏବଂ ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "couldNotStart": "ରେକର୍ଡିଂ ଆରମ୍ଭ କରାଯାଇପାରିଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "tapToStopRecording": "ବନ୍ଦ କରିବା ପାଇଁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+        "doneSpeakAgain": "ସମ୍ପୂର୍ଣ୍ଣ — ଯେକୌଣସି ସମୟରେ ପୁନର୍ବାର କୁହନ୍ତୁ",
+        "notSupportedShort": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ ସମର୍ଥିତ ନୁହେଁ",
+        "stopRecordingAria": "ରେକର୍ଡିଂ ବନ୍ଦ କରନ୍ତୁ",
+        "startRecordingAria": "ସ୍ୱର ରେକର୍ଡିଂ ଆରମ୍ଭ କରନ୍ତୁ"
       },
       "speech": {
         "stt": {
@@ -19860,7 +20113,8 @@ const resources = {
         "sortBy": "କ୍ରମାନ୍ୱୟ (Sort By)",
         "unknown": "ଅଜଣା",
         "rupee": "ଟଙ୍କା",
-        "steps": "ପର୍ଯ୍ୟାୟ"
+        "steps": "ପର୍ଯ୍ୟାୟ",
+        "continue": "ଜାରି ରଖନ୍ତୁ"
       },
       "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
       "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -20199,7 +20453,9 @@ const resources = {
         "rejectedEditQuestion": "ମୋ ପ୍ରଶ୍ନ ସମ୍ପାଦନ କରନ୍ତୁ",
         "addVoice": "ସ୍ୱର ଯୋଡ଼ନ୍ତୁ",
         "tipDetailed": "ବିସ୍ତୃତ ଭାବରେ ଲେଖନ୍ତୁ — ଫସଲ, ସ୍ଥାନ ଏବଂ ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କଣ ଚେଷ୍ଟା କରିଛନ୍ତି ଉଲ୍ଲେଖ କରନ୍ତୁ।",
-        "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ"
+        "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ",
+        "expertWillRespond": "ଜଣେ ବିଶେଷଜ୍ଞ ଆପଣଙ୍କୁ ଉତ୍ତର ଦେବେ।",
+        "questionExample": "ଉଦାହରଣ: ମୋ ଟମାଟୋ ପତ୍ର ହଳଦିଆ ହେଉଛି — ମୁଁ କଣ କରିବି?"
       },
       "readFullPolicy": "ସମ୍ପୂର୍ଣ୍ଣ ଗୋପନୀୟତା ନୀତି ପଢ଼ନ୍ତୁ →",
       "resendOtp": "OTP ପୁନର୍ବାର ପଠାନ୍ତୁ",
@@ -20989,7 +21245,20 @@ const resources = {
         "tapToPlay": "ਚਲਾਉਣ ਲਈ ਟੈਪ ਕਰੋ",
         "delete": "ਹਟਾਓ",
         "stop": "ਰੋਕੋ",
-        "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
+        "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…",
+        "noAudioCaptured": "ਕੋਈ ਆਡੀਓ ਰਿਕਾਰਡ ਨਹੀਂ ਹੋਇਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "noWordsHeard": "ਕੋਈ ਸ਼ਬਦ ਸੁਣਾਈ ਨਹੀਂ ਦਿੱਤਾ। ਸ਼ਾਂਤ ਥਾਂ 'ਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "voiceCaptured": "ਆਵਾਜ਼ ਰਿਕਾਰਡ ਹੋ ਗਈ। ਸਮੀਖਿਆ ਕਰੋ ਅਤੇ ਜਾਰੀ ਰੱਖੋ।",
+        "couldNotStop": "ਰਿਕਾਰਡਿੰਗ ਰੋਕੀ ਨਹੀਂ ਜਾ ਸਕੀ।",
+        "notSupportedBrowser": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਮਾਈਕ੍ਰੋਫੋਨ ਰਿਕਾਰਡਿੰਗ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।",
+        "recordingFailed": "ਰਿਕਾਰਡਿੰਗ ਅਸਫਲ ਰਹੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "permissionDeniedRetry": "ਮਾਈਕ੍ਰੋਫੋਨ ਦੀ ਇਜਾਜ਼ਤ ਅਸਵੀਕਾਰ ਕੀਤੀ ਗਈ। ਮਾਈਕ੍ਰੋਫੋਨ ਪਹੁੰਚ ਦਿਓ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "couldNotStart": "ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "tapToStopRecording": "ਰੋਕਣ ਲਈ ਟੈਪ ਕਰੋ",
+        "doneSpeakAgain": "ਪੂਰਾ ਹੋਇਆ — ਕਦੇ ਵੀ ਦੁਬਾਰਾ ਬੋਲੋ",
+        "notSupportedShort": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ 'ਤੇ ਮਾਈਕ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ",
+        "stopRecordingAria": "ਰਿਕਾਰਡਿੰਗ ਰੋਕੋ",
+        "startRecordingAria": "ਆਵਾਜ਼ ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਕਰੋ"
       },
       "speech": {
         "stt": {
@@ -21169,7 +21438,8 @@ const resources = {
         "sortBy": "ਕ੍ਰਮਬੱਧ ਕਰੋ (Sort By)",
         "unknown": "ਅਣਜਾਣ",
         "rupee": "ਰੁ.",
-        "steps": "ਪੜਾਅ"
+        "steps": "ਪੜਾਅ",
+        "continue": "ਜਾਰੀ ਰੱਖੋ"
       },
       "completeRegistration": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ",
       "consentClause1": "ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੇ ਜਾਣਗੇ ਅਤੇ ਕੇਵਲ ਪਲੇਟਫਾਰਮ ਪ੍ਰਮਾਣੀਕਰਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਗਿਆਨ ਸੇਵਾਵਾਂ ਲਈ ਵਰਤੇ ਜਾਣਗੇ।",
@@ -21508,7 +21778,9 @@ const resources = {
         "rejectedEditQuestion": "ਮੇਰਾ ਸਵਾਲ ਸੋਧੋ",
         "addVoice": "ਆਵਾਜ਼ ਸ਼ਾਮਲ ਕਰੋ",
         "tipDetailed": "ਵਿਸਥਾਰ ਨਾਲ ਲਿਖੋ — ਫ਼ਸਲ, ਥਾਂ ਅਤੇ ਤੁਸੀਂ ਹੁਣ ਤੱਕ ਕੀ ਅਜ਼ਮਾਇਆ ਹੈ, ਦੱਸੋ।",
-        "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ"
+        "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ",
+        "expertWillRespond": "ਇੱਕ ਮਾਹਰ ਤੁਹਾਨੂੰ ਜਵਾਬ ਦੇਵੇਗਾ।",
+        "questionExample": "ਜਿਵੇਂ: ਮੇਰੇ ਟਮਾਟਰ ਦੇ ਪੱਤੇ ਪੀਲੇ ਹੋ ਰਹੇ ਹਨ — ਮੈਨੂੰ ਕੀ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ?"
       },
       "readFullPolicy": "ਪੂਰੀ ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ ਪੜ੍ਹੋ →",
       "resendOtp": "OTP ਦੁਬਾਰਾ ਭੇਜੋ",
@@ -22298,7 +22570,20 @@ const resources = {
         "tapToPlay": "श्रोतुं स्पृशतु",
         "delete": "मार्जयतु",
         "stop": "स्थगयतु",
-        "playing": "वाद्यते…"
+        "playing": "वाद्यते…",
+        "noAudioCaptured": "कोऽपि ध्वनिः न गृहीतः। कृपया पुनः यतताम्।",
+        "noWordsHeard": "कोऽपि शब्दः न श्रुतः। शान्तस्थाने पुनः यतताम्।",
+        "voiceCaptured": "ध्वनिः गृहीतः। पुनरीक्ष्य अग्रे गच्छतु।",
+        "couldNotStop": "ध्वन्यांकनं स्थगयितुं न शक्तम्।",
+        "notSupportedBrowser": "अस्मिन् ब्राउज़रे ध्वनिग्राहक-ध्वन्यांकनं न समर्थितम्।",
+        "recordingFailed": "ध्वन्यांकनं विफलम्। कृपया पुनः यतताम्।",
+        "permissionDeniedRetry": "ध्वनिग्राहकाधिकारः निराकृतः। ध्वनिग्राहकप्रवेशम् अनुमन्यताम् पुनः यतताम् च।",
+        "couldNotStart": "ध्वन्यांकनं आरब्धुं न शक्तम्। कृपया पुनः यतताम्।",
+        "tapToStopRecording": "स्थगयितुं स्पृशतु",
+        "doneSpeakAgain": "सम्पूर्णम् — यदा कदापि पुनः वदतु",
+        "notSupportedShort": "अस्मिन् ब्राउज़रे ध्वनिग्राहकः न समर्थितः",
+        "stopRecordingAria": "ध्वन्यांकनं स्थगयतु",
+        "startRecordingAria": "ध्वन्यांकनं आरभताम्"
       },
       "speech": {
         "stt": {
@@ -22488,7 +22773,8 @@ const resources = {
         "sortBy": "वर्गीकरोतु",
         "unknown": "अज्ञातम्",
         "rupee": "रूप्यकाणि",
-        "steps": "सोपानानि"
+        "steps": "सोपानानि",
+        "continue": "अग्रे गच्छतु"
       },
       "completeRegistration": "पञ्जीकरणं पूर्णं करोतु",
       "consentClause1": "भवतः चलदूरभाषसङ्ख्या पञ्जीकरणविवरणानि च सुरक्षितानि स्थापयिष्यन्ते तथा च केवलं मञ्चसत्यापनाय कृषिज्ञानसेवाभ्यः च उपयुक्ष्यन्ते।",
@@ -22827,7 +23113,9 @@ const resources = {
         "rejectedEditQuestion": "मम प्रश्नं सम्पादयतु",
         "addVoice": "ध्वनिं योजयतु",
         "tipDetailed": "विस्तरेण लिखतु — सस्यं, स्थानं, यत् च भवता पूर्वं प्रयत्नितं तत् अपि उल्लिखतु।",
-        "dailyLimitIndicator": "दैनिकसीमा समाप्ता"
+        "dailyLimitIndicator": "दैनिकसीमा समाप्ता",
+        "expertWillRespond": "विशेषज्ञः भवते उत्तरं दास्यति।",
+        "questionExample": "यथा: मम टमाटरस्य पत्राणि पीतानि भवन्ति — किं करणीयम्?"
       },
       "readFullPolicy": "गोपनीयतानीतिं पूरीं पठतु →",
       "resendOtp": "पुनः ओटीपी प्रेषयतु",
@@ -23617,7 +23905,20 @@ const resources = {
         "tapToPlay": "ᱟᱸᱡᱚᱢ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱱ ᱢᱮ",
         "delete": "ᱜᱮᱫ/ ᱢᱩᱪᱟᱹᱫᱽ",
         "stop": "ᱛᱷᱩᱠᱟᱹᱢ",
-        "playing": "ᱪᱟᱞᱟᱜ ᱠᱟᱱᱟ…"
+        "playing": "ᱪᱟᱞᱟᱜ ᱠᱟᱱᱟ…",
+        "noAudioCaptured": "ᱦᱚᱨᱟ ᱟᱣᱭᱚ ᱵᱟᱝ ᱢᱮᱱᱟᱜᱼᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "noWordsHeard": "ᱟᱠᱟᱱ ᱠᱟᱴᱷᱟ ᱵᱟᱝ ᱟᱭᱩᱢᱟᱱᱟ᱾ ᱥᱟᱱᱛᱤ ᱡᱟᱭᱜᱟ ᱨᱮ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "voiceCaptured": "ᱠᱩᱠᱞᱤ ᱢᱮᱱᱟᱜᱼᱟ᱾ ᱧᱮᱞ ᱛᱮ ᱞᱟᱦᱟ ᱢᱮ᱾",
+        "couldNotStop": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱛᱷᱩᱠᱟᱹ ᱵᱟᱝ ᱦᱩᱭ ᱮᱱᱟ᱾",
+        "notSupportedBrowser": "ᱱᱚᱣᱟ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱨᱮᱠᱳᱨᱰᱤᱝ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ᱾",
+        "recordingFailed": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "permissionDeniedRetry": "ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱮᱞᱟᱣ ᱵᱟᱹᱰᱨᱟᱹ ᱮᱱᱟ᱾ ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱛᱮᱭᱟᱨ ᱮᱢ ᱢᱮ ᱟᱨ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "couldNotStart": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱮᱛᱚᱦᱚᱵ ᱵᱟᱝ ᱦᱩᱭ ᱮᱱᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "tapToStopRecording": "ᱛᱷᱩᱠᱟᱹᱢ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱱ ᱢᱮ",
+        "doneSpeakAgain": "ᱛᱮᱭᱟᱨ — ᱚᱠᱛᱚ ᱞᱮᱠᱷᱟᱱᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱚᱲ ᱢᱮ",
+        "notSupportedShort": "ᱱᱚᱣᱟ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱢᱟᱭᱠ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ",
+        "stopRecordingAria": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱛᱷᱩᱠᱟᱹᱢ ᱢᱮ",
+        "startRecordingAria": "ᱠᱩᱠᱞᱤ ᱨᱮᱠᱳᱨᱰᱤᱝ ᱮᱛᱚᱦᱚᱵ ᱢᱮ"
       },
       "speech": {
         "stt": {
@@ -23797,7 +24098,8 @@ const resources = {
         "sortBy": "ᱞᱮᱠᱟᱛᱮ ᱥᱟᱡᱟᱣ ᱢᱮ",
         "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
         "rupee": "ᱴᱟᱠᱟ",
-        "steps": "ठाहेन"
+        "steps": "ठाहेन",
+        "continue": "ᱞᱟᱦᱟ ᱢᱮ"
       },
       "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
       "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -24136,7 +24438,9 @@ const resources = {
         "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे",
         "addVoice": "साड़े सेलेद मे",
         "tipDetailed": "बुटा ओल मे — गोहालि, जायगा आर आम नितोक् धाबिच् चेत् कुरुमुटु आकात् मेना, ओना ओल मे।",
-        "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना"
+        "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना",
+        "expertWillRespond": "ᱢᱤᱫ ᱮᱠᱥᱯᱳᱴᱴ ᱟᱢ ᱡᱟᱣᱟᱵᱽ ᱮᱢᱟᱢᱟ᱾",
+        "questionExample": "ᱡᱮᱢᱚᱱ: ᱤᱧᱟᱜ ᱴᱚᱢᱮᱴᱚ ᱚᱲᱟᱜ ᱦᱟᱹᱴᱤᱧ ᱦᱩᱭ ᱠᱟᱱᱟ — ᱤᱧ ᱪᱮᱫ ᱠᱟᱛᱷᱚᱢ?"
       },
       "readFullPolicy": "ᱯᱩᱨᱟᱹ Privacy Policy ᱯᱟᱲᱦᱟᱣ ᱢᱮ →",
       "resendOtp": "OTP ᱫᱚᱦᱲᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",
@@ -24926,7 +25230,20 @@ const resources = {
         "tapToPlay": "هلائڻ لاءِ ٽئپ ڪريو",
         "delete": "ختم ڪريو",
         "stop": "روڪيو",
-        "playing": "هلي رهيو آهي..."
+        "playing": "هلي رهيو آهي...",
+        "noAudioCaptured": "ڪا به آواز رڪارڊ نه ٿي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+        "noWordsHeard": "ڪو به لفظ نه ٻڌو ويو. پرسڪون جاءِ تي ٻيهر ڪوشش ڪريو.",
+        "voiceCaptured": "آواز رڪارڊ ٿي وئي. جائزو وٺي جاري رکو.",
+        "couldNotStop": "رڪارڊنگ بند نه ٿي سگهي.",
+        "notSupportedBrowser": "هن برائوزر ۾ مائيڪروفون رڪارڊنگ سپورٽ نه ٿيل آهي.",
+        "recordingFailed": "رڪارڊنگ ناڪام ٿي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+        "permissionDeniedRetry": "مائيڪروفون جي اجازت رد ڪئي وئي. مائيڪروفون تائين رسائي ڏيو ۽ ٻيهر ڪوشش ڪريو.",
+        "couldNotStart": "رڪارڊنگ شروع نه ٿي سگهي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+        "tapToStopRecording": "روڪڻ لاءِ ٽئپ ڪريو",
+        "doneSpeakAgain": "مڪمل — ڪڏهن به وري ڳالهايو",
+        "notSupportedShort": "هن برائوزر تي مائڪ سپورٽ نه ٿيل آهي",
+        "stopRecordingAria": "رڪارڊنگ روڪيو",
+        "startRecordingAria": "آواز رڪارڊنگ شروع ڪريو"
       },
       "speech": {
         "stt": {
@@ -25106,7 +25423,8 @@ const resources = {
         "sortBy": "ترتيب ڏيو",
         "unknown": "نامعلوم",
         "rupee": "روپيا",
-        "steps": "مرحلا"
+        "steps": "مرحلا",
+        "continue": "جاري رکو"
       },
       "completeRegistration": "رجسٽريشن مڪمل ڪريو",
       "consentClause1": "توهان جو موبائل نمبر ۽ رجسٽريشن جون تفصيلون محفوظ طريقي سان رکيون وينديون ۽ صرف پليٽ فارم جي تصديق ۽ زرعي علم جي خدمتن لاءِ استعمال ٿينديون.",
@@ -25445,7 +25763,9 @@ const resources = {
         "rejectedEditQuestion": "منهنجو سوال درست ڪريو",
         "addVoice": "آواز شامل ڪريو",
         "tipDetailed": "تفصيل سان لکو — فصل، جاءِ ۽ توهان هاڻي تائين ڇا آزمايو آهي، ٻڌايو.",
-        "dailyLimitIndicator": "روزاني حد پوري ٿي وئي"
+        "dailyLimitIndicator": "روزاني حد پوري ٿي وئي",
+        "expertWillRespond": "هڪ ماهر توهان کي جواب ڏيندو.",
+        "questionExample": "مثال طور: منهنجي ٽماٽي جا پن پيلا ٿي رهيا آهن — مون کي ڇا ڪرڻ گهرجي؟"
       },
       "readFullPolicy": "پوري رازداري پاليسي پڙهو →",
       "resendOtp": "ٻيهر OTP موڪليو",
@@ -26235,7 +26555,20 @@ const resources = {
         "tapToPlay": "இயக்க தட்டவும்",
         "delete": "நீக்கு",
         "stop": "நிறுத்து",
-        "playing": "இயங்குகிறது…"
+        "playing": "இயங்குகிறது…",
+        "noAudioCaptured": "எந்த ஆடியோவும் பதிவு செய்யப்படவில்லை. மீண்டும் முயற்சிக்கவும்.",
+        "noWordsHeard": "எந்த வார்த்தையும் கேட்கவில்லை. அமைதியான இடத்தில் மீண்டும் முயற்சிக்கவும்.",
+        "voiceCaptured": "குரல் பதிவு செய்யப்பட்டது. மதிப்பாய்வு செய்து தொடரவும்.",
+        "couldNotStop": "பதிவை நிறுத்த முடியவில்லை.",
+        "notSupportedBrowser": "இந்த உலாவியில் மைக்ரோஃபோன் பதிவு ஆதரிக்கப்படவில்லை.",
+        "recordingFailed": "பதிவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
+        "permissionDeniedRetry": "மைக்ரோஃபோன் அனுமதி மறுக்கப்பட்டது. மைக்ரோஃபோன் அணுகலை அனுமதித்து மீண்டும் முயற்சிக்கவும்.",
+        "couldNotStart": "பதிவைத் தொடங்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+        "tapToStopRecording": "நிறுத்த தட்டவும்",
+        "doneSpeakAgain": "முடிந்தது — எப்போது வேண்டுமானாலும் மீண்டும் பேசுங்கள்",
+        "notSupportedShort": "இந்த உலாவியில் மைக் ஆதரிக்கப்படவில்லை",
+        "stopRecordingAria": "பதிவை நிறுத்து",
+        "startRecordingAria": "குரல் பதிவைத் தொடங்கு"
       },
       "speech": {
         "stt": {
@@ -26415,7 +26748,8 @@ const resources = {
         "sortBy": "வரிசைப்படுத்து",
         "unknown": "தெரியாதது",
         "rupee": "ரூ.",
-        "steps": "படிகள்"
+        "steps": "படிகள்",
+        "continue": "தொடரவும்"
       },
       "completeRegistration": "பதிவை முடிக்கவும்",
       "consentClause1": "உங்கள் மொபைல் எண் மற்றும் பதிவு விவரங்கள் பாதுகாப்பாக சேமிக்கப்பட்டு, தள அங்கீகாரம் மற்றும் விவசாய சேவை நோக்கங்களுக்காக மட்டுமே பயன்படுத்தப்படும்.",
@@ -26754,7 +27088,9 @@ const resources = {
         "rejectedEditQuestion": "எனது கேள்வியைத் திருத்து",
         "addVoice": "குரலைச் சேர்க்கவும்",
         "tipDetailed": "விரிவாக எழுதுங்கள் — பயிர், இடம் மற்றும் நீங்கள் ஏற்கனவே முயற்சித்தவற்றைக் குறிப்பிடுங்கள்.",
-        "dailyLimitIndicator": "தினசரி வரம்பு முடிந்தது"
+        "dailyLimitIndicator": "தினசரி வரம்பு முடிந்தது",
+        "expertWillRespond": "ஒரு நிபுணர் உங்களுக்குப் பதில் தருவார்.",
+        "questionExample": "எ.கா: என் தக்காளி இலைகள் மஞ்சளாகி வருகின்றன — நான் என்ன செய்ய வேண்டும்?"
       },
       "readFullPolicy": "முழுமையான தனியுரிமைக் கொள்கையைப் படிக்கவும் →",
       "resendOtp": "மீண்டும் OTP அனுப்பு",
@@ -27544,7 +27880,20 @@ const resources = {
         "tapToPlay": "ప్లే చేయడానికి నొక్కండి",
         "delete": "తొలగించు",
         "stop": "ఆపు",
-        "playing": "ప్లే అవుతోంది…"
+        "playing": "ప్లే అవుతోంది…",
+        "noAudioCaptured": "ఏ ఆడియో క్యాప్చర్ కాలేదు. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "noWordsHeard": "ఏ మాటలు వినిపించలేదు. నిశ్శబ్ద ప్రదేశంలో మళ్ళీ ప్రయత్నించండి.",
+        "voiceCaptured": "వాయిస్ క్యాప్చర్ అయింది. సమీక్షించి కొనసాగించండి.",
+        "couldNotStop": "రికార్డింగ్ ఆపలేకపోయింది.",
+        "notSupportedBrowser": "ఈ బ్రౌజర్‌లో మైక్రోఫోన్ రికార్డింగ్ మద్దతు లేదు.",
+        "recordingFailed": "రికార్డింగ్ విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "permissionDeniedRetry": "మైక్రోఫోన్ అనుమతి తిరస్కరించబడింది. మైక్రోఫోన్ యాక్సెస్ ఇచ్చి మళ్ళీ ప్రయత్నించండి.",
+        "couldNotStart": "రికార్డింగ్ ప్రారంభించలేకపోయింది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "tapToStopRecording": "ఆపడానికి నొక్కండి",
+        "doneSpeakAgain": "పూర్తయింది — ఎప్పుడైనా మళ్ళీ మాట్లాడండి",
+        "notSupportedShort": "ఈ బ్రౌజర్‌లో మైక్ మద్దతు లేదు",
+        "stopRecordingAria": "రికార్డింగ్ ఆపండి",
+        "startRecordingAria": "వాయిస్ రికార్డింగ్ ప్రారంభించండి"
       },
       "speech": {
         "stt": {
@@ -27726,7 +28075,8 @@ const resources = {
         "sortBy": "దీని ప్రకారం క్రమబద్ధీకరించు",
         "unknown": "తెలియదు",
         "rupee": "రూ.",
-        "steps": "దశలు"
+        "steps": "దశలు",
+        "continue": "కొనసాగించండి"
       },
       "completeRegistration": "రిజిస్ట్రేషన్ పూర్తి చేయండి",
       "consentClause1": "మీ మొబైల్ సంఖ్య మరియు రిజిస్ట్రేషన్ వివరాలు సురక్షితంగా నిల్వ చేయబడతాయి మరియు వేదిక ప్రమాణీకరణ, వ్యవసాయ పరిజ్ఞాన సేవల కోసం మాత్రమే ఉపయోగించబడతాయి.",
@@ -28065,7 +28415,9 @@ const resources = {
         "rejectedEditQuestion": "నా ప్రశ్నను సవరించండి",
         "addVoice": "వాయిస్ జోడించండి",
         "tipDetailed": "వివరంగా రాయండి — పంట, ప్రదేశం మరియు మీరు ఇప్పటివరకు ఏమి ప్రయత్నించారో తెలియజేయండి.",
-        "dailyLimitIndicator": "రోజువారీ పరిమితి పూర్తయింది"
+        "dailyLimitIndicator": "రోజువారీ పరిమితి పూర్తయింది",
+        "expertWillRespond": "ఒక నిపుణుడు మీకు సమాధానం ఇస్తారు.",
+        "questionExample": "ఉదా: నా టమాటా ఆకులు పసుపు రంగులోకి మారుతున్నాయి — నేను ఏమి చేయాలి?"
       },
       "readFullPolicy": "పూర్తి గోప్యతా విధానాన్ని చదవండి →",
       "resendOtp": "OTP ని మళ్ళీ పంపు",
@@ -28855,7 +29207,20 @@ const resources = {
         "tapToPlay": "چلانے کے لیے تھپتھپائیں",
         "delete": "حذف کریں",
         "stop": "روکیں",
-        "playing": "چل رہا ہے…"
+        "playing": "چل رہا ہے…",
+        "noAudioCaptured": "کوئی آڈیو ریکارڈ نہیں ہوئی۔ براہ کرم دوبارہ کوشش کریں۔",
+        "noWordsHeard": "کوئی الفاظ سنائی نہیں دیے۔ خاموش جگہ پر دوبارہ کوشش کریں۔",
+        "voiceCaptured": "آواز ریکارڈ ہو گئی۔ جائزہ لے کر جاری رکھیں۔",
+        "couldNotStop": "ریکارڈنگ روکی نہیں جا سکی۔",
+        "notSupportedBrowser": "اس براؤزر میں مائیکروفون ریکارڈنگ سپورٹڈ نہیں ہے۔",
+        "recordingFailed": "ریکارڈنگ ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔",
+        "permissionDeniedRetry": "مائیکروفون کی اجازت مسترد کر دی گئی۔ مائیکروفون تک رسائی دیں اور دوبارہ کوشش کریں۔",
+        "couldNotStart": "ریکارڈنگ شروع نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔",
+        "tapToStopRecording": "روکنے کے لیے تھپتھپائیں",
+        "doneSpeakAgain": "مکمل — کبھی بھی دوبارہ بولیں",
+        "notSupportedShort": "اس براؤزر پر مائیک سپورٹڈ نہیں ہے",
+        "stopRecordingAria": "ریکارڈنگ روکیں",
+        "startRecordingAria": "آواز کی ریکارڈنگ شروع کریں"
       },
       "speech": {
         "stt": {
@@ -29035,7 +29400,8 @@ const resources = {
         "sortBy": "ترتیب دیں بلحاظ",
         "unknown": "نامعلوم",
         "rupee": "روپے",
-        "steps": "مراحل"
+        "steps": "مراحل",
+        "continue": "جاری رکھیں"
       },
       "completeRegistration": "رجسٹریشن مکمل کریں",
       "consentClause1": "آپ کا موبائل نمبر اور رجسٹریشن کی تفصیلات محفوظ طریقے سے ذخیرہ کی جائیں گی اور صرف پلیٹ فارم کی توثیق اور زرعی معلوماتی خدمات کے لیے استعمال کی جائیں گی۔",
@@ -29374,7 +29740,9 @@ const resources = {
         "rejectedEditQuestion": "میرا سوال درست کریں",
         "addVoice": "آواز شامل کریں",
         "tipDetailed": "تفصیل سے لکھیں — فصل، مقام اور آپ نے اب تک کیا آزمایا ہے، بتائیں۔",
-        "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی"
+        "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی",
+        "expertWillRespond": "ایک ماہر آپ کو جواب دے گا۔",
+        "questionExample": "مثال کے طور پر: میرے ٹماٹر کے پتے پیلے ہو رہے ہیں — مجھے کیا کرنا چاہیے؟"
       },
       "readFullPolicy": "مکمل پرائیویسی پالیسی پڑھیں →",
       "resendOtp": "OTP دوبارہ بھیجیں",

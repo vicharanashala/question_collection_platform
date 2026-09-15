@@ -40,7 +40,20 @@
     "tapToPlay": "Tap to play",
     "delete": "Delete",
     "stop": "Stop",
-    "playing": "Playing…"
+    "playing": "Playing…",
+    "noAudioCaptured": "No audio captured. Please try again.",
+    "noWordsHeard": "We could not hear any words. Try again in a quieter place.",
+    "voiceCaptured": "Voice captured. Review and continue.",
+    "couldNotStop": "Could not stop recording.",
+    "notSupportedBrowser": "Microphone recording is not supported in this browser.",
+    "recordingFailed": "Recording failed. Please try again.",
+    "permissionDeniedRetry": "Microphone permission denied. Allow microphone access and retry.",
+    "couldNotStart": "Could not start recording. Please try again.",
+    "tapToStopRecording": "Tap to stop recording",
+    "doneSpeakAgain": "Done — speak again any time",
+    "notSupportedShort": "Mic not supported on this browser",
+    "stopRecordingAria": "Stop recording",
+    "startRecordingAria": "Start voice recording"
   },
   "speech": {
     "stt": {
@@ -220,7 +233,8 @@
     "sortBy": "Sort By",
     "unknown": "Unknown",
     "rupee": "Rs.",
-    "steps": "Steps"
+    "steps": "Steps",
+    "continue": "Continue"
   },
   "completeRegistration": "Complete Registration",
   "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -561,7 +575,9 @@
     "rejectedEditQuestion": "Edit My Question",
     "addVoice": "Add voice",
     "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
-    "dailyLimitIndicator": "Daily limit reached"
+    "dailyLimitIndicator": "Daily limit reached",
+    "expertWillRespond": "An expert will get back to you with an answer.",
+    "questionExample": "e.g. My tomato leaves are turning yellow — what should I do?"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
