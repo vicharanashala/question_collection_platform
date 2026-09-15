@@ -388,7 +388,11 @@
       "held": "روکِتھ",
       "approved": "منظور گٔمِت",
       "rejected": "نا منظور"
-    }
+    },
+    "loading": "اطلاع نامہٕ لوڈ گژھان…",
+    "loadMore": "مزید لوڈ کریو",
+    "loadError": "اطلاع نامہٕ لوڈ کرنس منٛز ناکامی",
+    "markAllReadError": "اطلاع نامہٕ پرنہ ہیٚنٛز نشان لگاونس منٛز ناکامی"
   },
   "organisationName": "تنظیمُک ناو",
   "organisationNamePlaceholder": "تنظیمُک ناو درج کٔریو",

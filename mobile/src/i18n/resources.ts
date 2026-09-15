@@ -393,7 +393,11 @@ const resources = {
           "held": "On Hold",
           "approved": "Approved",
           "rejected": "Not Approved"
-        }
+        },
+        "loading": "Loading notifications…",
+        "loadMore": "Load more",
+        "loadError": "Failed to load notifications",
+        "markAllReadError": "Failed to mark notifications as read"
       },
       "organisationName": "Organisation Name",
       "organisationNamePlaceholder": "Enter organisation name",
@@ -1753,7 +1757,11 @@ const resources = {
           "held": "ৰখা হৈছে",
           "approved": "অনুমোদিত",
           "rejected": "অনুমোদিত নহয়"
-        }
+        },
+        "loading": "জাননী ল'ড হৈ আছে…",
+        "loadMore": "অধিক ল'ড কৰক",
+        "loadError": "জাননী ল'ড কৰাত বিফল হ'ল",
+        "markAllReadError": "জাননীসমূহ পঢ়া বুলি চিহ্নিত কৰাত বিফল হ'ল"
       },
       "organisationName": "সংস্থাৰ নাম",
       "organisationNamePlaceholder": "সংস্থাৰ নাম দিয়ক",
@@ -3111,7 +3119,11 @@ const resources = {
           "held": "স্থগিত রাখা হয়েছে",
           "approved": "অনুমোদিত",
           "rejected": "অনুমোদিত নয়"
-        }
+        },
+        "loading": "বিজ্ঞপ্তি লোড হচ্ছে…",
+        "loadMore": "আরও লোড করুন",
+        "loadError": "বিজ্ঞপ্তি লোড করতে ব্যর্থ হয়েছে",
+        "markAllReadError": "বিজ্ঞপ্তিগুলি পঠিত হিসাবে চিহ্নিত করতে ব্যর্থ হয়েছে"
       },
       "organisationName": "সংস্থার নাম",
       "organisationNamePlaceholder": "সংস্থার নাম লিখুন",
@@ -4469,7 +4481,11 @@ const resources = {
           "held": "हमथानाय",
           "approved": "गनायथि मोनाय",
           "rejected": "गनायथि मोनासै"
-        }
+        },
+        "loading": "सोदोबखौ लोड खालामनाय जायोगोन…",
+        "loadMore": "गोबां लोड खालाम",
+        "loadError": "सोदोबखौ लोड खालामनो हायाखै",
+        "markAllReadError": "सोदोबखौ फोरमानथिफ्राय दिन्थिबहोनो हायाखै"
       },
       "organisationName": "आफादनि मुं",
       "organisationNamePlaceholder": "आफादनि मुं सोमावना हो",
@@ -5827,7 +5843,11 @@ const resources = {
           "held": "रोके दा",
           "approved": "मंजूर",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनां लोड होआ करदियां न…",
+        "loadMore": "होर लोड करो",
+        "loadError": "सूचनां लोड करने च असफल",
+        "markAllReadError": "सूचनां गी पढ़ी दे रूप च चिह्नत करने च असफल"
       },
       "organisationName": "संगठन दा नांइ",
       "organisationNamePlaceholder": "संगठन दा नांइ पाओ",
@@ -7185,7 +7205,11 @@ const resources = {
           "held": "હોલ્ડ પર",
           "approved": "મંજૂર થયેલ",
           "rejected": "મંજૂર થયેલ નથી"
-        }
+        },
+        "loading": "સૂચનાઓ લોડ થઈ રહી છે…",
+        "loadMore": "વધુ લોડ કરો",
+        "loadError": "સૂચનાઓ લોડ કરવામાં નિષ્ફળ",
+        "markAllReadError": "સૂચનાઓને વાંચેલી તરીકે ચિહ્નિત કરવામાં નિષ્ફળ"
       },
       "organisationName": "સંસ્થાનું નામ",
       "organisationNamePlaceholder": "સંસ્થાનું નામ દાખલ કરો",
@@ -8543,7 +8567,11 @@ const resources = {
           "held": "होल्ड पर",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनाएं लोड हो रही हैं…",
+        "loadMore": "और लोड करें",
+        "loadError": "सूचनाएं लोड करने में विफल",
+        "markAllReadError": "सूचनाओं को पढ़ा हुआ चिह्नित करने में विफल"
       },
       "organisationName": "संगठन का नाम",
       "organisationNamePlaceholder": "संगठन का नाम दर्ज करें",
@@ -9901,7 +9929,11 @@ const resources = {
           "held": "ತಡೆಹಿಡಿಯಲಾಗಿದೆ",
           "approved": "ಅನುಮೋದಿಸಲಾಗಿದೆ",
           "rejected": "ಅನುಮೋದಿಸಲಾಗಿಲ್ಲ"
-        }
+        },
+        "loading": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+        "loadMore": "ಇನ್ನಷ್ಟು ಲೋಡ್ ಮಾಡಿ",
+        "loadError": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+        "markAllReadError": "ಅಧಿಸೂಚನೆಗಳನ್ನು ಓದಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ವಿಫಲವಾಗಿದೆ"
       },
       "organisationName": "ಸಂಸ್ಥೆಯ ಹೆಸರು",
       "organisationNamePlaceholder": "ಸಂಸ್ಥೆಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
@@ -11259,7 +11291,11 @@ const resources = {
           "held": "روکِتھ",
           "approved": "منظور گٔمِت",
           "rejected": "نا منظور"
-        }
+        },
+        "loading": "اطلاع نامہٕ لوڈ گژھان…",
+        "loadMore": "مزید لوڈ کریو",
+        "loadError": "اطلاع نامہٕ لوڈ کرنس منٛز ناکامی",
+        "markAllReadError": "اطلاع نامہٕ پرنہ ہیٚنٛز نشان لگاونس منٛز ناکامی"
       },
       "organisationName": "تنظیمُک ناو",
       "organisationNamePlaceholder": "تنظیمُک ناو درج کٔریو",
@@ -12617,7 +12653,11 @@ const resources = {
           "held": "दवरला",
           "approved": "मान्य जालो",
           "rejected": "मान्य जालो ना"
-        }
+        },
+        "loading": "सुचोवण्यो लोड जाता…",
+        "loadMore": "चड लोड करात",
+        "loadError": "सुचोवण्यो लोड करपाक अपेस जालें",
+        "markAllReadError": "सुचोवण्यो वाचिल्ल्यो म्हूण खूण करपाक अपेस जालें"
       },
       "organisationName": "संस्थेचें नांव",
       "organisationNamePlaceholder": "संस्थेचें नांव घालात",
@@ -13975,7 +14015,11 @@ const resources = {
           "held": "रोकि राखल गेल",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचना लोड भऽ रहल अछि…",
+        "loadMore": "आरो लोड करू",
+        "loadError": "सूचना लोड करबामे विफल",
+        "markAllReadError": "सूचनाकेँ पढ़ल गेल चिह्नित करबामे विफल"
       },
       "organisationName": "संगठनक नाम",
       "organisationNamePlaceholder": "संगठनक नाम दर्ज करु",
@@ -15333,7 +15377,11 @@ const resources = {
           "held": "ഹോൾഡിൽ",
           "approved": "അംഗീകരിച്ചു",
           "rejected": "അംഗീകരിച്ചില്ല"
-        }
+        },
+        "loading": "അറിയിപ്പുകൾ ലോഡ് ചെയ്യുന്നു…",
+        "loadMore": "കൂടുതൽ ലോഡ് ചെയ്യുക",
+        "loadError": "അറിയിപ്പുകൾ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു",
+        "markAllReadError": "അറിയിപ്പുകൾ വായിച്ചതായി അടയാളപ്പെടുത്തുന്നതിൽ പരാജയപ്പെട്ടു"
       },
       "organisationName": "ഓർഗനൈസേഷന്റെ പേര്",
       "organisationNamePlaceholder": "ഓർഗനൈസേഷന്റെ പേര് നൽകുക",
@@ -16691,7 +16739,11 @@ const resources = {
           "held": "থমজিনখ্রে",
           "approved": "অয়াবা পীরবা",
           "rejected": "অয়াবা পীদে"
-        }
+        },
+        "loading": "পাউদম লোড তৌরি…",
+        "loadMore": "হেনগৎ লোড তৌ",
+        "loadError": "পাউদম লোড তৌবদা মায় পাক্লে",
+        "markAllReadError": "পাউদমশিং পাব্রেখ্রবা ওইনা মার্ক তৌবদা মায় পাক্লে"
       },
       "organisationName": "ওর্গানাইজেসনগী মিং",
       "organisationNamePlaceholder": "ওর্গানাইজেসনগী মিং চংহনবীয়ু",
@@ -18049,7 +18101,11 @@ const resources = {
           "held": "होल्डवर",
           "approved": "मंजूर",
           "rejected": "मंजूर नाही"
-        }
+        },
+        "loading": "सूचना लोड होत आहेत…",
+        "loadMore": "अधिक लोड करा",
+        "loadError": "सूचना लोड करण्यात अयशस्वी",
+        "markAllReadError": "सूचना वाचल्या म्हणून चिन्हांकित करण्यात अयशस्वी"
       },
       "organisationName": "संस्थेचे नाव",
       "organisationNamePlaceholder": "संस्थेचे नाव प्रविष्ट करा",
@@ -19407,7 +19463,11 @@ const resources = {
           "held": "रोक्का राखिएको",
           "approved": "स्वीकृत",
           "rejected": "अस्वीकृत"
-        }
+        },
+        "loading": "सूचनाहरू लोड हुँदैछन्…",
+        "loadMore": "थप लोड गर्नुहोस्",
+        "loadError": "सूचनाहरू लोड गर्न असफल भयो",
+        "markAllReadError": "सूचनाहरूलाई पढिएको रूपमा चिन्ह लगाउन असफल भयो"
       },
       "organisationName": "संस्थाको नाम",
       "organisationNamePlaceholder": "संस्थाको नाम राख्नुहोस्",
@@ -20763,7 +20823,11 @@ const resources = {
           "held": "ରଖାଯାଇଛି (On Hold)",
           "approved": "ଅନୁମୋଦିତ",
           "rejected": "ଅନୁମୋଦିତ ହୋଇନାହିଁ"
-        }
+        },
+        "loading": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ ହେଉଛି…",
+        "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+        "loadError": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+        "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ"
       },
       "organisationName": "ସଂସ୍ଥାର ନାମ",
       "organisationNamePlaceholder": "ସଂସ୍ଥାର ନାମ ଦିଅନ୍ତୁ",
@@ -22124,7 +22188,11 @@ const resources = {
           "held": "ਰੋਕ 'ਤੇ",
           "approved": "ਮੰਜ਼ੂਰ",
           "rejected": "ਮੰਜ਼ੂਰ ਨਹੀਂ ਹੋਇਆ"
-        }
+        },
+        "loading": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ…",
+        "loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+        "loadError": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+        "markAllReadError": "ਸੂਚਨਾਵਾਂ ਨੂੰ ਪੜ੍ਹਿਆ ਹੋਇਆ ਵਜੋਂ ਚਿੰਨ੍ਹਿਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
       },
       "organisationName": "ਸੰਸਥਾ ਦਾ ਨਾਮ",
       "organisationNamePlaceholder": "ਸੰਸਥਾ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",
@@ -23492,7 +23560,11 @@ const resources = {
           "held": "स्थगितम्",
           "approved": "स्वीकृतम्",
           "rejected": "न स्वीकृतम्"
-        }
+        },
+        "loading": "सूचनाः आयोज्यन्ते…",
+        "loadMore": "अधिकं लोडयतु",
+        "loadError": "सूचनानां आयोजने विफलम्",
+        "markAllReadError": "सूचनाः पठिताः इति चिह्नितुं विफलम्"
       },
       "organisationName": "संस्थायाः नाम",
       "organisationNamePlaceholder": "संस्थायाः नाम लिखतु",
@@ -24850,7 +24922,11 @@ const resources = {
           "held": "ᱟᱴᱠᱟᱣ ᱟᱠᱟᱱᱟ",
           "approved": "ᱟᱸᱜᱳᱪ ᱮᱱᱟ",
           "rejected": "ᱵᱟᱝ ᱟᱸᱜᱳᱪ ᱮᱱᱟ"
-        }
+        },
+        "loading": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+        "loadError": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+        "markAllReadError": "ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱯᱟᱲᱦᱟᱣ ᱠᱟᱱᱟ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱷᱟᱹᱭᱤᱛ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
       },
       "organisationName": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ",
       "organisationNamePlaceholder": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ",
@@ -26208,7 +26284,11 @@ const resources = {
           "held": "روڪيل",
           "approved": "منظور ٿيل",
           "rejected": "منظور نه ٿيو"
-        }
+        },
+        "loading": "اطلاعون لوڊ ٿي رهيون آهن…",
+        "loadMore": "وڌيڪ لوڊ ڪريو",
+        "loadError": "اطلاعون لوڊ ڪرڻ ۾ ناڪامي",
+        "markAllReadError": "اطلاعن کي پڙهيل طور نشان لڳائڻ ۾ ناڪامي"
       },
       "organisationName": "تنظيم جو نالو",
       "organisationNamePlaceholder": "تنظيم جو نالو داخل ڪريو",
@@ -27566,7 +27646,11 @@ const resources = {
           "held": "நிறுத்தி வைக்கப்பட்டுள்ளது",
           "approved": "ஒப்புதலளிக்கப்பட்டது",
           "rejected": "ஒப்புதலளிக்கப்படவில்லை"
-        }
+        },
+        "loading": "அறிவிப்புகள் ஏற்றப்படுகின்றன…",
+        "loadMore": "மேலும் ஏற்று",
+        "loadError": "அறிவிப்புகளை ஏற்றுவதில் தோல்வி",
+        "markAllReadError": "அறிவிப்புகளை படித்ததாகக் குறிக்க முடியவில்லை"
       },
       "organisationName": "நிறுவனத்தின் பெயர்",
       "organisationNamePlaceholder": "நிறுவனத்தின் பெயரை உள்ளிடவும்",
@@ -28926,7 +29010,11 @@ const resources = {
           "held": "పాజ్ / నిలిపివేయబడింది",
           "approved": "ఆమోదించబడింది",
           "rejected": "ఆమోదించబడలేదు"
-        }
+        },
+        "loading": "నోటిఫికేషన్‌లు లోడ్ అవుతున్నాయి…",
+        "loadMore": "మరిన్ని లోడ్ చేయండి",
+        "loadError": "నోటిఫికేషన్‌లను లోడ్ చేయడంలో విఫలమైంది",
+        "markAllReadError": "నోటిఫికేషన్‌లను చదివినట్లు గుర్తించడంలో విఫలమైంది"
       },
       "organisationName": "సంస్థ పేరు",
       "organisationNamePlaceholder": "సంస్థ పేరును నమోదు చేయండి",
@@ -30284,7 +30372,11 @@ const resources = {
           "held": "روکا گیا",
           "approved": "منظور شدہ",
           "rejected": "منظور نہیں ہوا"
-        }
+        },
+        "loading": "اطلاعات لوڈ ہو رہی ہیں…",
+        "loadMore": "مزید لوڈ کریں",
+        "loadError": "اطلاعات لوڈ کرنے میں ناکامی",
+        "markAllReadError": "اطلاعات کو پڑھا ہوا نشان زد کرنے میں ناکامی"
       },
       "organisationName": "تنظیم کا نام",
       "organisationNamePlaceholder": "تنظیم کا نام درج کریں",

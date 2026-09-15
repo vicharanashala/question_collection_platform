@@ -388,7 +388,11 @@
       "held": "ᱟᱴᱠᱟᱣ ᱟᱠᱟᱱᱟ",
       "approved": "ᱟᱸᱜᱳᱪ ᱮᱱᱟ",
       "rejected": "ᱵᱟᱝ ᱟᱸᱜᱳᱪ ᱮᱱᱟ"
-    }
+    },
+    "loading": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+    "loadMore": "ᱴᱷᱮᱲ ᱞᱳᱰ ᱢᱮ",
+    "loadError": "ᱠᱷᱚᱵᱚᱨ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+    "markAllReadError": "ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱯᱟᱲᱦᱟᱣ ᱠᱟᱱᱟ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱷᱟᱹᱭᱤᱛ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
   },
   "organisationName": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ",
   "organisationNamePlaceholder": "ᱥᱚᱝᱜᱚᱴᱷᱚᱱ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ",

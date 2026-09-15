@@ -398,7 +398,11 @@
       "held": "स्थगितम्",
       "approved": "स्वीकृतम्",
       "rejected": "न स्वीकृतम्"
-    }
+    },
+    "loading": "सूचनाः आयोज्यन्ते…",
+    "loadMore": "अधिकं लोडयतु",
+    "loadError": "सूचनानां आयोजने विफलम्",
+    "markAllReadError": "सूचनाः पठिताः इति चिह्नितुं विफलम्"
   },
   "organisationName": "संस्थायाः नाम",
   "organisationNamePlaceholder": "संस्थायाः नाम लिखतु",

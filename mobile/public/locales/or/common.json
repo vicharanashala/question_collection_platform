@@ -386,7 +386,11 @@
       "held": "ରଖାଯାଇଛି (On Hold)",
       "approved": "ଅନୁମୋଦିତ",
       "rejected": "ଅନୁମୋଦିତ ହୋଇନାହିଁ"
-    }
+    },
+    "loading": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ ହେଉଛି…",
+    "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+    "loadError": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+    "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ"
   },
   "organisationName": "ସଂସ୍ଥାର ନାମ",
   "organisationNamePlaceholder": "ସଂସ୍ଥାର ନାମ ଦିଅନ୍ତୁ",

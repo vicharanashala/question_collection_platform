@@ -388,7 +388,11 @@
       "held": "থমজিনখ্রে",
       "approved": "অয়াবা পীরবা",
       "rejected": "অয়াবা পীদে"
-    }
+    },
+    "loading": "পাউদম লোড তৌরি…",
+    "loadMore": "হেনগৎ লোড তৌ",
+    "loadError": "পাউদম লোড তৌবদা মায় পাক্লে",
+    "markAllReadError": "পাউদমশিং পাব্রেখ্রবা ওইনা মার্ক তৌবদা মায় পাক্লে"
   },
   "organisationName": "ওর্গানাইজেসনগী মিং",
   "organisationNamePlaceholder": "ওর্গানাইজেসনগী মিং চংহনবীয়ু",

@@ -388,7 +388,11 @@
       "held": "रोकि राखल गेल",
       "approved": "स्वीकृत",
       "rejected": "अस्वीकृत"
-    }
+    },
+    "loading": "सूचना लोड भऽ रहल अछि…",
+    "loadMore": "आरो लोड करू",
+    "loadError": "सूचना लोड करबामे विफल",
+    "markAllReadError": "सूचनाकेँ पढ़ल गेल चिह्नित करबामे विफल"
   },
   "organisationName": "संगठनक नाम",
   "organisationNamePlaceholder": "संगठनक नाम दर्ज करु",

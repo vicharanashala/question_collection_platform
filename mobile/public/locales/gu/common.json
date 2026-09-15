@@ -388,7 +388,11 @@
       "held": "હોલ્ડ પર",
       "approved": "મંજૂર થયેલ",
       "rejected": "મંજૂર થયેલ નથી"
-    }
+    },
+    "loading": "સૂચનાઓ લોડ થઈ રહી છે…",
+    "loadMore": "વધુ લોડ કરો",
+    "loadError": "સૂચનાઓ લોડ કરવામાં નિષ્ફળ",
+    "markAllReadError": "સૂચનાઓને વાંચેલી તરીકે ચિહ્નિત કરવામાં નિષ્ફળ"
   },
   "organisationName": "સંસ્થાનું નામ",
   "organisationNamePlaceholder": "સંસ્થાનું નામ દાખલ કરો",

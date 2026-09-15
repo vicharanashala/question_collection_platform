@@ -388,7 +388,11 @@
       "held": "روکا گیا",
       "approved": "منظور شدہ",
       "rejected": "منظور نہیں ہوا"
-    }
+    },
+    "loading": "اطلاعات لوڈ ہو رہی ہیں…",
+    "loadMore": "مزید لوڈ کریں",
+    "loadError": "اطلاعات لوڈ کرنے میں ناکامی",
+    "markAllReadError": "اطلاعات کو پڑھا ہوا نشان زد کرنے میں ناکامی"
   },
   "organisationName": "تنظیم کا نام",
   "organisationNamePlaceholder": "تنظیم کا نام درج کریں",

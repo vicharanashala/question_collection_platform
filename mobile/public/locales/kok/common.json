@@ -388,7 +388,11 @@
       "held": "दवरला",
       "approved": "मान्य जालो",
       "rejected": "मान्य जालो ना"
-    }
+    },
+    "loading": "सुचोवण्यो लोड जाता…",
+    "loadMore": "चड लोड करात",
+    "loadError": "सुचोवण्यो लोड करपाक अपेस जालें",
+    "markAllReadError": "सुचोवण्यो वाचिल्ल्यो म्हूण खूण करपाक अपेस जालें"
   },
   "organisationName": "संस्थेचें नांव",
   "organisationNamePlaceholder": "संस्थेचें नांव घालात",

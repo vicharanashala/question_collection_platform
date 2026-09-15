@@ -388,7 +388,11 @@
       "held": "روڪيل",
       "approved": "منظور ٿيل",
       "rejected": "منظور نه ٿيو"
-    }
+    },
+    "loading": "اطلاعون لوڊ ٿي رهيون آهن…",
+    "loadMore": "وڌيڪ لوڊ ڪريو",
+    "loadError": "اطلاعون لوڊ ڪرڻ ۾ ناڪامي",
+    "markAllReadError": "اطلاعن کي پڙهيل طور نشان لڳائڻ ۾ ناڪامي"
   },
   "organisationName": "تنظيم جو نالو",
   "organisationNamePlaceholder": "تنظيم جو نالو داخل ڪريو",

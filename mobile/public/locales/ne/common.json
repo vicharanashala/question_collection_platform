@@ -388,7 +388,11 @@
       "held": "रोक्का राखिएको",
       "approved": "स्वीकृत",
       "rejected": "अस्वीकृत"
-    }
+    },
+    "loading": "सूचनाहरू लोड हुँदैछन्…",
+    "loadMore": "थप लोड गर्नुहोस्",
+    "loadError": "सूचनाहरू लोड गर्न असफल भयो",
+    "markAllReadError": "सूचनाहरूलाई पढिएको रूपमा चिन्ह लगाउन असफल भयो"
   },
   "organisationName": "संस्थाको नाम",
   "organisationNamePlaceholder": "संस्थाको नाम राख्नुहोस्",

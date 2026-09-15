@@ -388,7 +388,11 @@
       "held": "ৰখা হৈছে",
       "approved": "অনুমোদিত",
       "rejected": "অনুমোদিত নহয়"
-    }
+    },
+    "loading": "জাননী ল'ড হৈ আছে…",
+    "loadMore": "অধিক ল'ড কৰক",
+    "loadError": "জাননী ল'ড কৰাত বিফল হ'ল",
+    "markAllReadError": "জাননীসমূহ পঢ়া বুলি চিহ্নিত কৰাত বিফল হ'ল"
   },
   "organisationName": "সংস্থাৰ নাম",
   "organisationNamePlaceholder": "সংস্থাৰ নাম দিয়ক",

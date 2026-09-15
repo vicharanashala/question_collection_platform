@@ -388,7 +388,11 @@
       "held": "ਰੋਕ 'ਤੇ",
       "approved": "ਮੰਜ਼ੂਰ",
       "rejected": "ਮੰਜ਼ੂਰ ਨਹੀਂ ਹੋਇਆ"
-    }
+    },
+    "loading": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ…",
+    "loadMore": "ਹੋਰ ਲੋਡ ਕਰੋ",
+    "loadError": "ਸੂਚਨਾਵਾਂ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+    "markAllReadError": "ਸੂਚਨਾਵਾਂ ਨੂੰ ਪੜ੍ਹਿਆ ਹੋਇਆ ਵਜੋਂ ਚਿੰਨ੍ਹਿਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
   },
   "organisationName": "ਸੰਸਥਾ ਦਾ ਨਾਮ",
   "organisationNamePlaceholder": "ਸੰਸਥਾ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ",

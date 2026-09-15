@@ -388,7 +388,11 @@
       "held": "होल्डवर",
       "approved": "मंजूर",
       "rejected": "मंजूर नाही"
-    }
+    },
+    "loading": "सूचना लोड होत आहेत…",
+    "loadMore": "अधिक लोड करा",
+    "loadError": "सूचना लोड करण्यात अयशस्वी",
+    "markAllReadError": "सूचना वाचल्या म्हणून चिन्हांकित करण्यात अयशस्वी"
   },
   "organisationName": "संस्थेचे नाव",
   "organisationNamePlaceholder": "संस्थेचे नाव प्रविष्ट करा",
