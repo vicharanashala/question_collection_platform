@@ -349,7 +349,10 @@ const resources = {
         "reachGoldSub": "Earn up to Rs.10 per question after 250 approvals",
         "submissionTips": "Submission Tips",
         "currentTier": "Current tier",
-        "dailyCountDone": "{{count}} done"
+        "dailyCountDone": "{{count}} done",
+        "dailyLimitTitle": "Daily limit",
+        "editWindowTitle": "Edit window",
+        "aiCheckTitle": "AI relevance check"
       },
       "iAcceptContinue": "I Accept & Continue",
       "invalidOtp": "Enter the complete 6-digit code",
@@ -917,8 +920,7 @@ const resources = {
         "statusNote": "You will be able to submit questions once your account is verified.",
         "contactAdmin": "Contact Admin",
         "accountVerificationHelp": "Account Verification Help",
-        "logout": "Log out and sign in with a different account"
-,
+        "logout": "Log out and sign in with a different account",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -929,7 +931,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "Registration complete! Awaiting admin verification.",
       "onDeviceAI": {
@@ -1264,7 +1266,6 @@ const resources = {
           "missingHolderName": "Enter the account holder name"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -1296,8 +1297,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "as": {
     "common": {
@@ -1362,7 +1364,8 @@ const resources = {
       "and": "আৰু",
       "app": {
         "name": "অন্নদাতা",
-        "tagline": "আপোনাৰ জিলা, আপোনাৰ ভাষাত"
+        "tagline": "আপোনাৰ জিলা, আপোনাৰ ভাষাত",
+        "footer": "অন্নদাতা - ভাৰতীয় কৃষকসকলক শক্তিশালী কৰিবলৈ"
       },
       "loginPhone": {
         "signIn": "চাইন ইন",
@@ -1603,7 +1606,10 @@ const resources = {
         "reachGoldSub": "২৫০ টা অনুমোদনৰ পিছত প্ৰতি প্ৰশ্নত ১০ টকালৈকে উপাৰ্জন কৰক",
         "submissionTips": "দাখিলৰ পৰামৰ্শসমূহ",
         "currentTier": "বৰ্তমান স্তৰ",
-        "dailyCountDone": "{{count}} সম্পন্ন"
+        "dailyCountDone": "{{count}} সম্পন্ন",
+        "dailyLimitTitle": "দৈনিক সীমা",
+        "editWindowTitle": "সম্পাদনা উইণ্ড'",
+        "aiCheckTitle": "AI প্ৰাসংগিকতা পৰীক্ষা"
       },
       "iAcceptContinue": "মই গ্ৰহণ কৰিছো আৰু আগবাঢ়িছো",
       "invalidOtp": "সম্পূৰ্ণ ৬-ডিজিটৰ কোড দিয়ক",
@@ -2132,8 +2138,7 @@ const resources = {
         "statusNote": "আপোনাৰ একাউণ্ট পৰীক্ষিত হোৱাৰ পিছত আপুনি প্ৰশ্ন দাখিল কৰিব পাৰিব।",
         "contactAdmin": "এডমিনৰ সৈতে যোগাযোগ",
         "accountVerificationHelp": "একাউণ্ট পৰীক্ষা সহায়",
-        "logout": "লগ আউট কৰক আৰু অন্য একাউণ্টৰ সৈতে লগ ইন কৰক"
-,
+        "logout": "লগ আউট কৰক আৰু অন্য একাউণ্টৰ সৈতে লগ ইন কৰক",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -2144,7 +2149,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "পঞ্জীয়ন সম্পূৰ্ণ! এডমিন পৰীক্ষাৰ অপেক্ষাত।",
       "onDeviceAI": {
@@ -2476,7 +2481,6 @@ const resources = {
           "missingHolderName": "একাউণ্ট ধাৰকৰ নাম দিয়ক"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -2508,8 +2512,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "bn": {
     "common": {
@@ -2574,7 +2579,8 @@ const resources = {
       "and": "এবং",
       "app": {
         "name": "আন্নাদাতা (AnnaDatha)",
-        "tagline": "আপনার জেলা, আপনার ভাষায়"
+        "tagline": "আপনার জেলা, আপনার ভাষায়",
+        "footer": "আন্নাদাতা (AnnaDatha) - ভারতীয় কৃষকদের শক্তিশালী করতে"
       },
       "loginPhone": {
         "signIn": "সাইন ইন",
@@ -2815,7 +2821,10 @@ const resources = {
         "reachGoldSub": "২৫০ টি অনুমোদনের পরে প্রতি প্রশ্নে ১০ টাকা পর্যন্ত আয় করুন",
         "submissionTips": "জমা দেওয়ার টিপস",
         "currentTier": "বর্তমান স্তর",
-        "dailyCountDone": "{{count}} সম্পন্ন"
+        "dailyCountDone": "{{count}} সম্পন্ন",
+        "dailyLimitTitle": "দৈনিক সীমা",
+        "editWindowTitle": "সম্পাদনার সময়সীমা",
+        "aiCheckTitle": "AI প্রাসঙ্গিকতা পরীক্ষা"
       },
       "iAcceptContinue": "আমি সম্মত ও এগিয়ে যান",
       "invalidOtp": "সম্পূর্ণ ৬-ডিজিটের কোডটি লিখুন",
@@ -3344,8 +3353,7 @@ const resources = {
         "statusNote": "আপনার একাউন্ট যাচাই করা হলে আপনি প্রশ্ন জমা দিতে পারবেন।",
         "contactAdmin": "অ্যাডমিনের সাথে যোগাযোগ করুন",
         "accountVerificationHelp": "একাউন্ট যাচাইকরণ সহায়তা",
-        "logout": "লগআউট করুন এবং অন্য একাউন্ট দিয়ে সাইন ইন করুন"
-,
+        "logout": "লগআউট করুন এবং অন্য একাউন্ট দিয়ে সাইন ইন করুন",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -3356,7 +3364,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "নিবন্ধন সম্পন্ন হয়েছে! অ্যাডমিন যাচাইকরণের জন্য অপেক্ষারত।",
       "onDeviceAI": {
@@ -3688,7 +3696,6 @@ const resources = {
           "missingHolderName": "একাউন্ট ধারকের নাম লিখুন"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -3720,8 +3727,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "brx": {
     "common": {
@@ -3786,7 +3794,8 @@ const resources = {
       "and": "आरो",
       "app": {
         "name": "अन्नदाता (AnnaDatha)",
-        "tagline": "नोंथानि जिलानि, नोंथानि रावआव"
+        "tagline": "नोंथानि जिलानि, नोंथानि रावआव",
+        "footer": "अन्नदाता (AnnaDatha) - भारतारि रैयतखौ जोरगोरा खालामनोखौ थाखाय"
       },
       "loginPhone": {
         "signIn": "साइन इन (Sign In)",
@@ -4027,7 +4036,10 @@ const resources = {
         "reachGoldSub": "250 गनायथि मोनायनि उनाव सोंथिफ्रामआव Rs.10 सिम आर्जि",
         "submissionTips": "दैथायनायनि एबसे सुबुं थुनला",
         "currentTier": "दानि स्तर",
-        "dailyCountDone": "{{count}} जोबबाय"
+        "dailyCountDone": "{{count}} जोबबाय",
+        "dailyLimitTitle": "साननि सिमा",
+        "editWindowTitle": "सोलायनाय समाव",
+        "aiCheckTitle": "AI नायफिननाय"
       },
       "iAcceptContinue": "आं गनायो आरो आगौवायो",
       "invalidOtp": "आबुं ६-डिजिटनि कोड सोमावना हो",
@@ -4556,8 +4568,7 @@ const resources = {
         "statusNote": "नोंथानि एकाउन्टआ थारसिमनाय जाब्ला नोंथाङा सोंथि दैथायहरनो हागोन।",
         "contactAdmin": "एडमिनजों सोमोन्दो खालाम",
         "accountVerificationHelp": "एकाउन्ट थारसिमनाय मदद",
-        "logout": "लगआउट खालाम आरो गुबुन एकाउन्टजों साइन इन खालाम"
-,
+        "logout": "लगआउट खालाम आरो गुबुन एकाउन्टजों साइन इन खालाम",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -4568,7 +4579,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "रेजिस्ट्रेसन आबुं जाबाय! एडमिननि थारसिमनायखौ नेगासिनो दं।",
       "onDeviceAI": {
@@ -4900,7 +4911,6 @@ const resources = {
           "missingHolderName": "एकाउन्ट होल्डरनि मुं सोमाव"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -4932,8 +4942,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "doi": {
     "common": {
@@ -4998,7 +5009,8 @@ const resources = {
       "and": "ते",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "तुआह्दा ज़िला, तुआह्दी भाषा च"
+        "tagline": "तुआह्दा ज़िला, तुआह्दी भाषा च",
+        "footer": "AnnaDatha - भारतीय किसानें गी मजबूत बनाने आस्तै"
       },
       "loginPhone": {
         "signIn": "साइन इन करो",
@@ -5239,7 +5251,10 @@ const resources = {
         "reachGoldSub": "250 मंजूरी दे बाद प्रति प्रश्न Rs.10 तक कमाओ",
         "submissionTips": "प्रश्न भेजने लेई सुझाव",
         "currentTier": "मौजूदा स्तर",
-        "dailyCountDone": "{{count}} पूरे"
+        "dailyCountDone": "{{count}} पूरे",
+        "dailyLimitTitle": "रोज़ाना दी सीमा",
+        "editWindowTitle": "बदलाव दा समां",
+        "aiCheckTitle": "AI प्रासंगिकता जांच"
       },
       "iAcceptContinue": "मैं स्वीकार करदा/करदी हां ते अग्गें बधदा/बधदी हां",
       "invalidOtp": "पूरा 6-अंकें दा कोड पाओ",
@@ -5768,8 +5783,7 @@ const resources = {
         "statusNote": "तुआह्दा खाता सत्यापित होने दे बाद तुस प्रश्न भेजी सकगे।",
         "contactAdmin": "एडमिन कन्ने संपर्क करो",
         "accountVerificationHelp": "खाता सत्यापन सहायता",
-        "logout": "लॉगआउट करो ते दूए खाते कन्ने साइन इन करो"
-,
+        "logout": "लॉगआउट करो ते दूए खाते कन्ने साइन इन करो",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -5780,7 +5794,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "पंजीकरण पूरा हुआ! एडमिन सत्यापन दा इंतज़ार ऐ।",
       "onDeviceAI": {
@@ -6112,7 +6126,6 @@ const resources = {
           "missingHolderName": "खाता धारक दा नां पाओ"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -6144,8 +6157,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "gu": {
     "common": {
@@ -6210,7 +6224,8 @@ const resources = {
       "and": "અને",
       "app": {
         "name": "અન્નદાતા",
-        "tagline": "તમારો જિલ્લો, તમારી ભાષામાં"
+        "tagline": "તમારો જિલ્લો, તમારી ભાષામાં",
+        "footer": "અન્નદાતા - ભારતીય ખેડૂતોને સશક્ત બનાવવા માટે"
       },
       "loginPhone": {
         "signIn": "સાઇન ઇન કરો",
@@ -6451,7 +6466,10 @@ const resources = {
         "reachGoldSub": "250 મંજૂરીઓ પછી પ્રતિ પ્રશ્ન રૂ. 10 સુધી કમાઓ",
         "submissionTips": "સબમિશન ટિપ્સ",
         "currentTier": "વર્તમાન સ્તર",
-        "dailyCountDone": "{{count}} પૂર્ણ"
+        "dailyCountDone": "{{count}} પૂર્ણ",
+        "dailyLimitTitle": "દૈનિક મર્યાદા",
+        "editWindowTitle": "સંપાદન સમય",
+        "aiCheckTitle": "AI સંબંધિતતા ચકાસણી"
       },
       "iAcceptContinue": "હું સ્વીકારું છું અને આગળ વધું છું",
       "invalidOtp": "સંપૂર્ણ 6-અંકનો કોડ દાખલ કરો",
@@ -6980,8 +6998,7 @@ const resources = {
         "statusNote": "એકવાર તમારું એકાઉન્ટ ચકાસાઈ જાય પછી તમે પ્રશ્નો સબમિટ કરી શકશો.",
         "contactAdmin": "એડમિનનો સંપર્ક કરો",
         "accountVerificationHelp": "એકાઉન્ટ ચકાસણી મદદ",
-        "logout": "લોગ આઉટ કરો અને અસલ એકાઉન્ટ વડે સાઇન ઇન કરો"
-,
+        "logout": "લોગ આઉટ કરો અને અસલ એકાઉન્ટ વડે સાઇન ઇન કરો",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -6992,7 +7009,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "રજીસ્ટ્રેશન પૂર્ણ થયું! એડમિન ચકાસણીની રાહ જોઈ રહ્યું છે.",
       "onDeviceAI": {
@@ -7324,7 +7341,6 @@ const resources = {
           "missingHolderName": "ખાતાધારકનું નામ દાખલ કરો"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -7356,8 +7372,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "hi": {
     "common": {
@@ -7422,7 +7439,8 @@ const resources = {
       "and": "और",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "आपका ज़िला, आपकी भाषा में"
+        "tagline": "आपका ज़िला, आपकी भाषा में",
+        "footer": "अन्नदाता - भारतीय किसानों को सशक्त बनाने के लिए"
       },
       "loginPhone": {
         "signIn": "साइन इन करें",
@@ -7663,7 +7681,10 @@ const resources = {
         "reachGoldSub": "250 स्वीकृतियों के बाद प्रति प्रश्न रु. 10 तक कमाएं",
         "submissionTips": "सबमिशन के सुझाव",
         "currentTier": "वर्तमान स्तर",
-        "dailyCountDone": "{{count}} पूर्ण"
+        "dailyCountDone": "{{count}} पूर्ण",
+        "dailyLimitTitle": "दैनिक सीमा",
+        "editWindowTitle": "संपादन विंडो",
+        "aiCheckTitle": "AI प्रासंगिकता जांच"
       },
       "iAcceptContinue": "मैं स्वीकार करता हूँ और जारी रखें",
       "invalidOtp": "पूरा 6-अंकीय कोड दर्ज करें",
@@ -8213,8 +8234,7 @@ const resources = {
         "statusNote": "आपका खाता सत्यापित होने के बाद आप प्रश्न सबमिट कर सकेंगे।",
         "contactAdmin": "एडमिन से संपर्क करें",
         "accountVerificationHelp": "खाता सत्यापन सहायता",
-        "logout": "लॉग आउट करें और किसी दूसरे खाते से साइन इन करें"
-,
+        "logout": "लॉग आउट करें और किसी दूसरे खाते से साइन इन करें",
         "welcomeHeading": "आप लगभग वहाँ पहुँच गए हैं!",
         "welcomeDescription": "आपका खाता बन गया है। एक एडमिन आपके विवरण की समीक्षा करेगा और 24–48 घंटों के भीतर आपका सत्यापन करेगा। आप अभी ऐप का अन्वेषण कर सकते हैं और एक प्रश्न सबमिट कर सकते हैं।",
         "accountCreated": "खाता बनाया गया",
@@ -8225,7 +8245,7 @@ const resources = {
         "continueToApp": "AnnaDatha पर जारी रखें",
         "checkingStatus": "जाँच हो रही है…",
         "toastVerified": "आपका सत्यापन हो गया है! AnnaDatha में आपका स्वागत है।",
-        "toastCheckFailed": "स्थिति जाँच नहीं हो सकी। कृपया पुनः प्रयास करें।",
+        "toastCheckFailed": "स्थिति जाँच नहीं हो सकी। कृपया पुनः प्रयास करें।"
       },
       "registrationSuccess": "पंजीकरण पूरा हो गया! एडमिन सत्यापन का इंतज़ार है।",
       "onDeviceAI": {
@@ -8560,7 +8580,6 @@ const resources = {
           "missingHolderName": "खाताधारक का नाम दर्ज करें"
         }
       },
-    
       "curatorDashboard": {
         "title": "समीक्षा डैशबोर्ड",
         "subtitle": "क्यूरेटर अवलोकन · पिछले 30 दिन",
@@ -8592,8 +8611,9 @@ const resources = {
         "actionReviewQueue": "समीक्षा कतार",
         "actionAllQuestions": "सभी प्रश्न",
         "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
-        "loadError": "क्यूरेटर आँकड़े लोड करने में विफल",
-      },}
+        "loadError": "क्यूरेटर आँकड़े लोड करने में विफल"
+      }
+    }
   },
   "kn": {
     "common": {
@@ -8658,7 +8678,8 @@ const resources = {
       "and": "ಮತ್ತು",
       "app": {
         "name": "ಅನ್ನದಾಥ",
-        "tagline": "ನಿಮ್ಮ ಜಿಲ್ಲೆ, ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ"
+        "tagline": "ನಿಮ್ಮ ಜಿಲ್ಲೆ, ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ",
+        "footer": "ಅನ್ನದಾಥ - ಭಾರತೀಯ ರೈತರನ್ನು ಬಲಪಡಿಸಲು"
       },
       "loginPhone": {
         "signIn": "ಸೈನ್ ಇನ್",
@@ -8899,7 +8920,10 @@ const resources = {
         "reachGoldSub": "250 ಅನುಮೋದನೆಗಳ ನಂತರ ಪ್ರತಿ ಪ್ರಶ್ನೆಗೆ ರೂ.10 ರವರೆಗೆ ಗಳಿಸಿ",
         "submissionTips": "ಸಲ್ಲಿಕೆ ಸಲಹೆಗಳು",
         "currentTier": "ಪ್ರಸ್ತುತ ಹಂತ",
-        "dailyCountDone": "{{count}} ಪೂರ್ಣ"
+        "dailyCountDone": "{{count}} ಪೂರ್ಣ",
+        "dailyLimitTitle": "ದೈನಂದಿನ ಮಿತಿ",
+        "editWindowTitle": "ಸಂಪಾದನೆ ಸಮಯ",
+        "aiCheckTitle": "AI ಪ್ರಸ್ತುತತೆಯ ಪರಿಶೀಲನೆ"
       },
       "iAcceptContinue": "ನಾನು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ ಮತ್ತು ಮುಂದುವರಿಯುತ್ತೇನೆ",
       "invalidOtp": "ಸಂಪೂರ್ಣ 6-ಅಂಕಿಯ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ",
@@ -9428,8 +9452,7 @@ const resources = {
         "statusNote": "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ಪರಿಶೀಲಿಸಿದ ನಂತರ ನೀವು ಪ್ರಶ್ನೆಗಳನ್ನು ಸಲ್ಲಿಸಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ.",
         "contactAdmin": "ಅಡ್ಮಿನ್ ಸಂಪರ್ಕಿಸಿ",
         "accountVerificationHelp": "ಖಾತೆ ಪರಿಶೀಲನೆ ಸಹಾಯ",
-        "logout": "ಲಾಗ್ ಔಟ್ ಮಾಡಿ ಮತ್ತು ಬೇರೆ ಖಾತೆಯೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ"
-,
+        "logout": "ಲಾಗ್ ಔಟ್ ಮಾಡಿ ಮತ್ತು ಬೇರೆ ಖಾತೆಯೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -9440,7 +9463,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಂಡಿದೆ! ಅಡ್ಮಿನ್ ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ.",
       "onDeviceAI": {
@@ -9772,7 +9795,6 @@ const resources = {
           "missingHolderName": "ಖಾತೆದಾರರ ಹೆಸರನ್ನು ನಮೂದಿಸಿ"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -9804,8 +9826,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "ks": {
     "common": {
@@ -9870,7 +9893,8 @@ const resources = {
       "and": "تہٕ",
       "app": {
         "name": "انّ داتا",
-        "tagline": "تہند ضلعہٕ، تہنزِ زبانہِ مَنٛز"
+        "tagline": "تہند ضلعہٕ، تہنزِ زبانہِ مَنٛز",
+        "footer": "انّ داتا - ہِندوستٲنؠ کاشتکاٮ۪رَن مضبوط بناونہٕ خٲطرٕ"
       },
       "loginPhone": {
         "signIn": "سائن ان کٔریو",
@@ -10111,7 +10135,10 @@ const resources = {
         "reachGoldSub": "250 منظوری پتہٕ کماو پرتھ سوالس پیٹھ Rs.10 تام",
         "submissionTips": "جمع کرنے ہنٛد مشورے",
         "currentTier": "حالی سطح",
-        "dailyCountDone": "{{count}} مکمل"
+        "dailyCountDone": "{{count}} مکمل",
+        "dailyLimitTitle": "دینچ حد",
+        "editWindowTitle": "تبدیلی ہنٛد وقت",
+        "aiCheckTitle": "AI ربط چیک"
       },
       "iAcceptContinue": "بؤ چھُس قبول کران تہٕ جاری تھاوان",
       "invalidOtp": "پورا 6 ہندسَن ہنٛد کوڈ درج کٔریو",
@@ -10640,8 +10667,7 @@ const resources = {
         "statusNote": "اکاؤنٹ تصدیق گژھنہٕ پتہٕ ہیکِیو سوالات جمع کٔرِتھ۔",
         "contactAdmin": "ایڈمنس سۭتھ رابطہ کٔریو",
         "accountVerificationHelp": "اکاؤنٹ تصدیق مَنٛز مدد",
-        "logout": "لاگ آؤٹ کٔریو تہٕ بییس اکاؤنٹ سۭتھ سائن ان کٔریو"
-,
+        "logout": "لاگ آؤٹ کٔریو تہٕ بییس اکاؤنٹ سۭتھ سائن ان کٔریو",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -10652,7 +10678,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "رجسٹریشن مکمل! ایڈمن تصدیقُک انتظار۔",
       "onDeviceAI": {
@@ -10984,7 +11010,6 @@ const resources = {
           "missingHolderName": "درج کٔریو اکاؤنٹ ہولڈرُک ناو"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -11016,8 +11041,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "kok": {
     "common": {
@@ -11082,7 +11108,8 @@ const resources = {
       "and": "आनी",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "तुमचो जिल्लो, तुमच्या भाशेंत"
+        "tagline": "तुमचो जिल्लो, तुमच्या भाशेंत",
+        "footer": "अन्नदाता - भारतीय शेतकऱ्यांक बळकट करपाक"
       },
       "loginPhone": {
         "signIn": "साइन इन करात",
@@ -11323,7 +11350,10 @@ const resources = {
         "reachGoldSub": "२५० मान्यतायां उपरांत दर प्रस्नाफाटल्यान रु.१० पर्यंत जोडाात",
         "submissionTips": "प्रस्न धाडपाचे सुचोवणे",
         "currentTier": "सद्याचो स्तर",
-        "dailyCountDone": "{{count}} पूर्ण"
+        "dailyCountDone": "{{count}} पूर्ण",
+        "dailyLimitTitle": "दिसपटी मर्यादा",
+        "editWindowTitle": "बदल करपाचो वेळ",
+        "aiCheckTitle": "AI तपासणी"
       },
       "iAcceptContinue": "म्हाका मान्य आसा आनी मुखार वचात",
       "invalidOtp": "पुराय ६-आकड्यांचो कोड घालात",
@@ -11852,8 +11882,7 @@ const resources = {
         "statusNote": "तुमचें खातें पडताळल्या उपरांत तुम्ही प्रस्न धाडूंक शकतले.",
         "contactAdmin": "प्रशासका कडेन संपर्काक लागात",
         "accountVerificationHelp": "खातें पडताळणी आदार",
-        "logout": "लॉग आउट करात आनी दुसऱ्या खात्यान साइन इन करात"
-,
+        "logout": "लॉग आउट करात आनी दुसऱ्या खात्यान साइन इन करात",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -11864,7 +11893,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "नोंदणी पुराय जाली! प्रशासकाच्या पडताळणीची वाट पळयता.",
       "onDeviceAI": {
@@ -12196,7 +12225,6 @@ const resources = {
           "missingHolderName": "खातेदाराचें नांव घालात"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -12228,8 +12256,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "mai": {
     "common": {
@@ -12294,7 +12323,8 @@ const resources = {
       "and": "आओर",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "अहाँक जिला, अहाँक भाषामे"
+        "tagline": "अहाँक जिला, अहाँक भाषामे",
+        "footer": "अन्नदाता - भारतीय किसान सभक सशक्त करबाक लेल"
       },
       "loginPhone": {
         "signIn": "साइन इन करु",
@@ -12535,7 +12565,10 @@ const resources = {
         "reachGoldSub": "२५० स्वीकृतिक बाद प्रति प्रश्न १० टका धरि कमाऊ",
         "submissionTips": "प्रश्न जमा करबाक सुझाव",
         "currentTier": "वर्तमान स्तर",
-        "dailyCountDone": "{{count}} पूर्ण"
+        "dailyCountDone": "{{count}} पूर्ण",
+        "dailyLimitTitle": "दैनिक सीमा",
+        "editWindowTitle": "संशोधन समय",
+        "aiCheckTitle": "AI प्रासंगिकता जाँच"
       },
       "iAcceptContinue": "हम स्वीकार करैत छी आ जारी राखैत छी",
       "invalidOtp": "पूरा ६-अंकक कोड दर्ज करु",
@@ -13064,8 +13097,7 @@ const resources = {
         "statusNote": "अहाँक खाता सत्यापित भेला के बाद अहाँ प्रश्न जमा कऽ सकब।",
         "contactAdmin": "एडमिन सँ संपर्क करु",
         "accountVerificationHelp": "खाता सत्यापन मद्दति",
-        "logout": "लॉग आउट करु आ आन खाता सँ साइन इन करु"
-,
+        "logout": "लॉग आउट करु आ आन खाता सँ साइन इन करु",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -13076,7 +13108,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "पंजीकरण पूरा भेल! एडमिन सत्यापनक प्रतीक्षा अछि।",
       "onDeviceAI": {
@@ -13408,7 +13440,6 @@ const resources = {
           "missingHolderName": "खाताधारकक नाम दर्ज करू"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -13440,8 +13471,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "ml": {
     "common": {
@@ -13506,7 +13538,8 @@ const resources = {
       "and": "കൂടാതെ",
       "app": {
         "name": "അന്നദാതാ",
-        "tagline": "നിങ്ങളുടെ ജില്ല, നിങ്ങളുടെ ഭാഷയിൽ"
+        "tagline": "നിങ്ങളുടെ ജില്ല, നിങ്ങളുടെ ഭാഷയിൽ",
+        "footer": "അന്നദാതാ - ഇന്ത്യൻ കർഷകരെ ശക്തിപ്പെടുത്താൻ"
       },
       "loginPhone": {
         "signIn": "സൈൻ ഇൻ",
@@ -13747,7 +13780,10 @@ const resources = {
         "reachGoldSub": "250 അംഗീകാരങ്ങൾക്ക് ശേഷം ഒരു ചോദ്യത്തിന് 10 രൂപ വരെ നേടുക",
         "submissionTips": "ചോദ്യം സമർപ്പിക്കാനുള്ള നിർദ്ദേശങ്ങൾ",
         "currentTier": "നിലവിലെ നില",
-        "dailyCountDone": "{{count}} പൂർത്തി"
+        "dailyCountDone": "{{count}} പൂർത്തി",
+        "dailyLimitTitle": "ദിവസേനയുള്ള പരിധി",
+        "editWindowTitle": "തിരുത്താനുള്ള സമയം",
+        "aiCheckTitle": "AI അനുയോജ്യതാ പരിശോധന"
       },
       "iAcceptContinue": "ഞാൻ അംഗീകരിച്ച് മുന്നോട്ട് പോകുന്നു",
       "invalidOtp": "മുഴുവൻ 6 അക്ക കോഡും നൽകുക",
@@ -14276,8 +14312,7 @@ const resources = {
         "statusNote": "അക്കൗണ്ട് സാക്ഷ്യപ്പെടുത്തിയാൽ ഉടൻ ചോദ്യങ്ങൾ സമർപ്പിക്കാം.",
         "contactAdmin": "അഡ്മിനെ ബന്ധപ്പെടുക",
         "accountVerificationHelp": "അക്കൗണ്ട് പരിശോധനാ സഹായം",
-        "logout": "ലോഗ്ഔട്ട് ചെയ്ത് മറ്റൊരു അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്യുക"
-,
+        "logout": "ലോഗ്ഔട്ട് ചെയ്ത് മറ്റൊരു അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്യുക",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -14288,7 +14323,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "രജിസ്ട്രേഷൻ പൂർത്തിയായി! അഡ്മിൻ പരിശോധനയ്ക്കായി കാത്തിരിക്കുന്നു.",
       "onDeviceAI": {
@@ -14620,7 +14655,6 @@ const resources = {
           "missingHolderName": "അക്കൗണ്ട് ഉടമയുടെ പേര് നൽകുക"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -14652,8 +14686,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "mni": {
     "common": {
@@ -14718,7 +14753,8 @@ const resources = {
       "and": "অমসুং",
       "app": {
         "name": "অন্নদাতা (AnnaDatha)",
-        "tagline": "নহাগী ডিস্ট্রিক্ট, নহাগী লোনদা"
+        "tagline": "নহাগী ডিস্ট্রিক্ট, নহাগী লোনদা",
+        "footer": "অন্নদাতা (AnnaDatha) - ভারতগী লৌমীশিংবু কনবীবা"
       },
       "loginPhone": {
         "signIn": "সাইন ইন তৌবু",
@@ -14957,10 +14993,12 @@ const resources = {
         "rewardSubtitle": "অয়াবা পীরবা ২৫১–৫০০ ওয়াহংগীদমক লুপা ১০",
         "reachGold": "গোল্ড তিয়রদা য়ৌবীয়ু",
         "reachGoldSub": "২৫০ গী মতুংদা ওয়াহং অমমমদা লুপা ১০ ফাওবা ফংবীয়ু",
-        "submissionTips": "ওয়াহং থাবগী তিঅপশিং"
-,
+        "submissionTips": "ওয়াহং থাবগী তিঅপশিং",
         "currentTier": "হৌজিক্কী স্তর",
-        "dailyCountDone": "{{count}} লোইরে"
+        "dailyCountDone": "{{count}} লোইরে",
+        "dailyLimitTitle": "নুমিত অমগী সীমা",
+        "editWindowTitle": "সেমদোকপগী মতম",
+        "aiCheckTitle": "AI চেক"
       },
       "iAcceptContinue": "ঐ য়ানবনি অমসুং মখা চতথবনি",
       "invalidOtp": "মপুং ফাবা ৬-দিজিৎকী কোড অদু চংহনবীয়ু",
@@ -15489,8 +15527,7 @@ const resources = {
         "statusNote": "নহাগী একান্ত ভেরিফাই তৌরবা মতুংদা ওয়াহং থাবা য়াগনি।",
         "contactAdmin": "এডমিনগা পাউ ফাওনবা",
         "accountVerificationHelp": "একান্ত ভেরিফিকেশনগী মতেং",
-        "logout": "লগআউট তৌবীয়ু অমসুং অতোপ্পা একান্ত অমনা সাইন ইন তৌবীয়ু"
-,
+        "logout": "লগআউট তৌবীয়ু অমসুং অতোপ্পা একান্ত অমনা সাইন ইন তৌবীয়ু",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -15501,7 +15538,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "রেজিষ্ট্রেশন লোইখ্রে! এডমিন ভেরিফিকেশনগী ঙাইরি।",
       "onDeviceAI": {
@@ -15833,7 +15870,6 @@ const resources = {
           "missingHolderName": "একান্ত মপুগী মিং ইবীয়ু"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -15865,8 +15901,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "mr": {
     "common": {
@@ -15931,7 +15968,8 @@ const resources = {
       "and": "आणि",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "तुमचा जिल्हा, तुमच्या भाषेत"
+        "tagline": "तुमचा जिल्हा, तुमच्या भाषेत",
+        "footer": "अन्नदाता - भारतीय शेतकऱ्यांना सशक्त करण्यासाठी"
       },
       "loginPhone": {
         "signIn": "साइन इन करा",
@@ -16170,10 +16208,12 @@ const resources = {
         "rewardSubtitle": "२५१–५०० मंजूर प्रश्नांसाठी रु. १०",
         "reachGold": "गोल्ड टियर गाठा",
         "reachGoldSub": "२५० मंजुरींनंतर प्रति प्रश्न रु. १० पर्यंत कमवा",
-        "submissionTips": "सबमिशनसाठी टिप्स"
-,
+        "submissionTips": "सबमिशनसाठी टिप्स",
         "currentTier": "सध्याचा स्तर",
-        "dailyCountDone": "{{count}} पूर्ण"
+        "dailyCountDone": "{{count}} पूर्ण",
+        "dailyLimitTitle": "दैनिक मर्यादा",
+        "editWindowTitle": "संपादन वेळ",
+        "aiCheckTitle": "AI सुसंगतता तपासणी"
       },
       "iAcceptContinue": "मी स्वीकारतो आणि पुढे जा",
       "invalidOtp": "पूर्ण ६-अंकी कोड प्रविष्ट करा",
@@ -16702,8 +16742,7 @@ const resources = {
         "statusNote": "तुमच्या खात्याची पडताळणी झाल्यानंतर तुम्ही प्रश्न सबमिट करू शकाल.",
         "contactAdmin": "अ‍ॅडमिनशी संपर्क साधा",
         "accountVerificationHelp": "खाते पडताळणी मदत",
-        "logout": "लॉग आउट करा आणि दुसऱ्या खात्याने साइन इन करा"
-,
+        "logout": "लॉग आउट करा आणि दुसऱ्या खात्याने साइन इन करा",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -16714,7 +16753,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "नोंदणी पूर्ण झाली! अ‍ॅडमिन पडताळणीची वाट पाहत आहे.",
       "onDeviceAI": {
@@ -17046,7 +17085,6 @@ const resources = {
           "missingHolderName": "खातेदाराचे नाव प्रविष्ट करा"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -17078,8 +17116,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "ne": {
     "common": {
@@ -17144,7 +17183,8 @@ const resources = {
       "and": "र",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "तपाईंको जिल्ला, तपाईंको भाषामा"
+        "tagline": "तपाईंको जिल्ला, तपाईंको भाषामा",
+        "footer": "AnnaDatha - भारतीय किसानहरूलाई सशक्त बनाउन"
       },
       "loginPhone": {
         "signIn": "साइन इन गर्नुहोस्",
@@ -17383,10 +17423,12 @@ const resources = {
         "rewardSubtitle": "२५१–५०० स्वीकृत प्रश्नहरूको लागि रु. १० प्रति प्रश्न",
         "reachGold": "Gold स्तरमा पुग्नुहोस्",
         "reachGoldSub": "२५० स्वीकृति पछि प्रति प्रश्न रु. १० सम्म कमाउनुहोस्",
-        "submissionTips": "प्रश्न पेस गर्ने सुझावहरू"
-,
+        "submissionTips": "प्रश्न पेस गर्ने सुझावहरू",
         "currentTier": "हालको तह",
-        "dailyCountDone": "{{count}} पूरा"
+        "dailyCountDone": "{{count}} पूरा",
+        "dailyLimitTitle": "दैनिक सीमा",
+        "editWindowTitle": "सम्पादन समय",
+        "aiCheckTitle": "AI सान्दर्भिकता जाँच"
       },
       "iAcceptContinue": "म स्वीकार गर्छु र अगाडि बढ्छु",
       "invalidOtp": "पूरा ६-अङ्कको कोड राख्नुहोस्",
@@ -17915,8 +17957,7 @@ const resources = {
         "statusNote": "तपाईंको खाता प्रमाणित भएपछि तपाईं प्रश्नहरू पेस गर्न सक्नुहुनेछ।",
         "contactAdmin": "एडमिनलाई सम्पर्क गर्नुहोस्",
         "accountVerificationHelp": "खाता प्रमाणीकरण सहायता",
-        "logout": "लगआउट गरी अर्कै खाताबाट साइन इन गर्नुहोस्"
-,
+        "logout": "लगआउट गरी अर्कै खाताबाट साइन इन गर्नुहोस्",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -17927,7 +17968,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "दर्ता पूरा भयो! एडमिन प्रमाणीकरणको प्रतीक्षामा छ।",
       "onDeviceAI": {
@@ -18259,7 +18300,6 @@ const resources = {
           "missingHolderName": "खातावालाको नाम राख्नुहोस्"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -18291,8 +18331,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "or": {
     "common": {
@@ -18357,7 +18398,8 @@ const resources = {
       "and": "ଏବଂ",
       "app": {
         "name": "ଅନ୍ନଦାତା",
-        "tagline": "ଆପଣଙ୍କ ଜିଲ୍ଲା, ଆପଣଙ୍କ ଭାଷାରେ"
+        "tagline": "ଆପଣଙ୍କ ଜିଲ୍ଲା, ଆପଣଙ୍କ ଭାଷାରେ",
+        "footer": "ଅନ୍ନଦାତା - ଭାରତୀୟ କୃଷକମାନଙ୍କୁ ସଶକ୍ତ କରିବା ପାଇଁ"
       },
       "loginPhone": {
         "signIn": "ସାଇନ୍ ଇନ୍",
@@ -18596,10 +18638,12 @@ const resources = {
         "rewardSubtitle": "୨୫୧–୫୦୦ ଅନୁମୋଦିତ ପ୍ରଶ୍ନ ପାଇଁ ଟ. ୧୦",
         "reachGold": "ଗୋଲ୍ଡ ସ୍ତରରେ ପହଞ୍ଚନ୍ତୁ",
         "reachGoldSub": "୨୫୦ ଅନୁମୋଦନ ପରେ ପ୍ରତି ପ୍ରଶ୍ନ ପିଛା ଟ. ୧୦ ପର୍ଯ୍ୟନ୍ତ ରୋଜଗାର କରନ୍ତୁ",
-        "submissionTips": "ପ୍ରଶ୍ନ ଦାଖଲ ସମ୍ବନ୍ଧୀୟ ପରାମର୍ଶ"
-,
+        "submissionTips": "ପ୍ରଶ୍ନ ଦାଖଲ ସମ୍ବନ୍ଧୀୟ ପରାମର୍ଶ",
         "currentTier": "ବର୍ତ୍ତମାନ ସ୍ତର",
-        "dailyCountDone": "{{count}} ପୂର୍ଣ୍ଣ"
+        "dailyCountDone": "{{count}} ପୂର୍ଣ୍ଣ",
+        "dailyLimitTitle": "ଦୈନିକ ସୀମା",
+        "editWindowTitle": "ସମ୍ପାଦନା ସମୟ",
+        "aiCheckTitle": "AI ସୁସଙ୍ଗତତା ଯାଞ୍ଚ"
       },
       "iAcceptContinue": "ମୁଁ ଗ୍ରହଣ କରୁଛି ଏବଂ ଆଗକୁ ବଢ଼ୁଛି",
       "invalidOtp": "ସମ୍ପୂର୍ଣ୍ଣ ୬-ଅଙ୍କ ବିଶିଷ୍ଟ କୋଡ୍ ଦିଅନ୍ତୁ",
@@ -19128,8 +19172,7 @@ const resources = {
         "statusNote": "ଆପଣଙ୍କ ଆକାଉଣ୍ଟ୍ ଯାଞ୍ଚ ହୋଇସାରିବା ପରେ ଆପଣ ପ୍ରଶ୍ନ ଦାଖଲ କରିପାରିବେ।",
         "contactAdmin": "ଆଡମିନ୍ ସହିତ ଯୋଗାଯୋଗ କରନ୍ତୁ",
         "accountVerificationHelp": "ଆକାଉଣ୍ଟ୍ ଯାଞ୍ଚ ସହାୟତା",
-        "logout": "ଲଗଆଉଟ୍ କରନ୍ତୁ ଏବଂ ଏକ ଅନ୍ୟ ଆକାଉଣ୍ଟ୍ ସହିତ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ"
-,
+        "logout": "ଲଗଆଉଟ୍ କରନ୍ତୁ ଏବଂ ଏକ ଅନ୍ୟ ଆକାଉଣ୍ଟ୍ ସହିତ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -19140,7 +19183,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ! ଆଡମିନ୍ ଯାଞ୍ଚ ପାଇଁ ଅପେକ୍ଷାରେ ଅଛି।",
       "onDeviceAI": {
@@ -19470,7 +19513,6 @@ const resources = {
           "missingHolderName": "ଖାତାଧାରୀଙ୍କ ନାମ ଦିଅନ୍ତୁ"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -19502,8 +19544,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "pa": {
     "common": {
@@ -19568,7 +19611,8 @@ const resources = {
       "and": "ਅਤੇ",
       "app": {
         "name": "ਅੰਨਦਾਤਾ (AnnaDatha)",
-        "tagline": "ਤੁਹਾਡਾ ਜ਼ਿਲ੍ਹਾ, ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ"
+        "tagline": "ਤੁਹਾਡਾ ਜ਼ਿਲ੍ਹਾ, ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ",
+        "footer": "ਅੰਨਦਾਤਾ (AnnaDatha) - ਭਾਰਤੀ ਕਿਸਾਨਾਂ ਨੂੰ ਮਜ਼ਬੂਤ ਬਣਾਉਣ ਲਈ"
       },
       "loginPhone": {
         "signIn": "ਸਾਈਨ ਇਨ (Sign In)",
@@ -19807,10 +19851,12 @@ const resources = {
         "rewardSubtitle": "251–500 ਮਨਜ਼ੂਰਸ਼ੁਦਾ ਸਵਾਲਾਂ ਲਈ ਰੁ.10",
         "reachGold": "ਗੋਲਡ ਤਹਿ ਤੱਕ ਪਹੁੰਚੋ",
         "reachGoldSub": "250 ਮੰਜ਼ੂਰੀਆਂ ਤੋਂ ਬਾਅਦ ਪ੍ਰਤੀ ਸਵਾਲ ਰੁ.10 ਤੱਕ ਕਮਾਓ",
-        "submissionTips": "ਸਬਮਿਸ਼ਨ ਸੁਝਾਅ"
-,
+        "submissionTips": "ਸਬਮਿਸ਼ਨ ਸੁਝਾਅ",
         "currentTier": "ਮੌਜੂਦਾ ਪੱਧਰ",
-        "dailyCountDone": "{{count}} ਪੂਰੇ"
+        "dailyCountDone": "{{count}} ਪੂਰੇ",
+        "dailyLimitTitle": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ",
+        "editWindowTitle": "ਸੋਧਣ ਦਾ ਸਮਾਂ",
+        "aiCheckTitle": "AI ਅਨੁਕੂਲਤਾ ਜਾਂਚ"
       },
       "iAcceptContinue": "ਮੈਂ ਸਵੀਕਾਰ ਕਰਦਾ/ਕਰਦੀ ਹਾਂ ਅਤੇ ਜਾਰੀ ਰੱਖੋ",
       "invalidOtp": "ਪੂਰਾ 6-ਅੰਕਾਂ ਦਾ ਕੋਡ ਦਰਜ ਕਰੋ",
@@ -20339,8 +20385,7 @@ const resources = {
         "statusNote": "ਤੁਹਾਡੇ ਖਾਤੇ ਦੀ ਪੁਸ਼ਟੀ ਹੋਣ ਤੋਂ ਬਾਅਦ ਤੁਸੀਂ ਸਵਾਲ ਭੇਜ ਸਕੋਗੇ।",
         "contactAdmin": "ਐਡਮਿਨ ਨਾਲ ਸੰਪਰਕ ਕਰੋ",
         "accountVerificationHelp": "ਖਾਤਾ ਪ੍ਰਮਾਣੀਕਰਨ ਸਹਾਇਤਾ",
-        "logout": "ਲੌਗਆਊਟ ਕਰੋ ਅਤੇ ਕਿਸੇ ਵੱਖਰੇ ਖਾਤੇ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ"
-,
+        "logout": "ਲੌਗਆਊਟ ਕਰੋ ਅਤੇ ਕਿਸੇ ਵੱਖਰੇ ਖਾਤੇ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -20351,7 +20396,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਹੋਈ! ਐਡਮਿਨ ਪ੍ਰਮਾਣੀਕਰਨ ਦੀ ਉਡੀਕ ਹੈ।",
       "onDeviceAI": {
@@ -20683,7 +20728,6 @@ const resources = {
           "missingHolderName": "ਖਾਤਾਧਾਰਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -20715,8 +20759,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "sa": {
     "common": {
@@ -20781,7 +20826,8 @@ const resources = {
       "and": "तथा",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "भवतः मण्डलं, भवतः भाषायाम्"
+        "tagline": "भवतः मण्डलं, भवतः भाषायाम्",
+        "footer": "अन्नदाता - भारतीयकृषकाणां सशक्तीकरणाय"
       },
       "loginPhone": {
         "signIn": "प्रवेशं करोतु",
@@ -21030,10 +21076,12 @@ const resources = {
         "rewardSubtitle": "२५१–५०० स्वीकृतप्रश्नानां कृते रूप्यकाणि १०",
         "reachGold": "स्वर्णस्तरं प्राप्नोतु",
         "reachGoldSub": "२५० स्वीकृत्यनन्तरं प्रतिप्रश्नं १० रूप्यकाणि यावत् अर्जयतु",
-        "submissionTips": "समर्पणपरामर्शाः"
-,
+        "submissionTips": "समर्पणपरामर्शाः",
         "currentTier": "वर्तमानस्तरः",
-        "dailyCountDone": "{{count}} कृतम्"
+        "dailyCountDone": "{{count}} कृतम्",
+        "dailyLimitTitle": "दैनिकसीमा",
+        "editWindowTitle": "सम्पादनसमयः",
+        "aiCheckTitle": "AI सम्बद्धता जाँचः"
       },
       "iAcceptContinue": "अहं स्वीकरोमि अग्रे गच्छामि च",
       "invalidOtp": "पूर्णं ६-अङ्कीयसङ्केतं लिखतु",
@@ -21562,8 +21610,7 @@ const resources = {
         "statusNote": "यदा भवतः खातं सत्यापितं भविष्यति तदा भवान् प्रश्नान् समर्पयितुं शक्ष्यति।",
         "contactAdmin": "प्रशासकेन सह सम्पर्कं करोतु",
         "accountVerificationHelp": "खातसत्यापनसहायता",
-        "logout": "निर्गत्य अन्यखातेन प्रवेशं करोतु"
-,
+        "logout": "निर्गत्य अन्यखातेन प्रवेशं करोतु",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -21574,7 +21621,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "पञ्जीकरणं पूर्णम्! प्रशासकसत्यापनस्य प्रतीक्षा क्रियते।",
       "onDeviceAI": {
@@ -21906,7 +21953,6 @@ const resources = {
           "missingHolderName": "खाताधारकस्य नाम लिखतु"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -21938,8 +21984,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "sat": {
     "common": {
@@ -22004,7 +22051,8 @@ const resources = {
       "and": "ᱟᱨ",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "ᱟᱢᱟᱜ ᱡᱤᱞᱟᱹ, ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱛᱮ"
+        "tagline": "ᱟᱢᱟᱜ ᱡᱤᱞᱟᱹ, ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱛᱮ",
+        "footer": "AnnaDatha - ᱵᱷᱟᱨᱚᱛ ᱨᱮᱭᱚᱛ ᱠᱚ ᱡᱚᱨ ᱛᱮᱭᱟᱨ ᱞᱟᱹᱜᱤᱫ"
       },
       "loginPhone": {
         "signIn": "ᱥᱟᱭᱤᱱ ᱤᱱ (Sign In)",
@@ -22243,10 +22291,12 @@ const resources = {
         "rewardSubtitle": "᱒᱕᱑–᱕᱐᱐ ᱟᱸᱜᱳᱪ ᱟᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱞᱟᱹᱜᱤᱫ ᱑᱐ ᱴᱟᱠᱟ",
         "reachGold": "Gold ᱛᱷᱚᱠ ᱨᱮ ᱥᱮᱴᱮᱨᱚᱜ ᱢᱮ",
         "reachGoldSub": "᱒᱕᱐ ᱟᱸᱜᱳᱪ ᱛᱟᱭᱚᱢ ᱠᱩᱠᱞᱤ ᱯᱤᱪᱷᱤ ᱑᱐ ᱴᱟᱠᱟ ᱫᱷᱟᱹᱵᱤᱡ ᱟᱨᱡᱟᱣ ᱢᱮ",
-        "submissionTips": "ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱨᱮᱱᱟᱜ ᱵᱩᱫᱷᱤ ᱠᱚ"
-,
+        "submissionTips": "ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱨᱮᱱᱟᱜ ᱵᱩᱫᱷᱤ ᱠᱚ",
         "currentTier": "ᱱᱤᱛᱚᱜ ᱛᱷᱚᱨ",
-        "dailyCountDone": "{{count}} ᱦᱩᱭ ᱮᱱᱟ"
+        "dailyCountDone": "{{count}} ᱦᱩᱭ ᱮᱱᱟ",
+        "dailyLimitTitle": "ᱫᱤᱱᱟᱹᱢ ᱥᱤᱢᱟᱹ",
+        "editWindowTitle": "ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ",
+        "aiCheckTitle": "AI ᱡᱟᱸᱪᱟᱭ"
       },
       "iAcceptContinue": "ᱤᱧ ᱨᱮᱵᱮᱱ ᱟᱹᱧ ᱟᱨ ᱞᱟᱦᱟᱜ ᱟᱹᱧ",
       "invalidOtp": "ᱯᱩᱨᱟᱹ ᱖-ᱰᱤᱡᱤᱴ ᱠᱳᱰ ᱚᱞ ᱢᱮ",
@@ -22775,8 +22825,7 @@ const resources = {
         "statusNote": "ᱟᱢᱟᱜ ᱮᱠᱟᱣᱩᱱᱴ ᱡᱟᱸᱪ ᱯᱩᱨᱟᱹᱣ ᱞᱮᱱᱨᱮ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ᱾",
         "contactAdmin": "ᱮᱰᱢᱤᱱ ᱥᱟᱶ ᱡᱳᱜᱟᱡᱳᱜᱽ ᱢᱮ",
         "accountVerificationHelp": "ᱮᱠᱟᱣᱩᱱᱴ ᱡᱟᱸᱪ ᱜᱚᱲᱚ",
-        "logout": "ᱞᱳᱜᱽ ᱟᱣᱩᱴ ᱠᱟᱛᱮ ᱮᱴᱟᱜ ᱮᱠᱟᱣᱩᱱᱴ ᱛᱮ ᱥᱟᱭᱤᱱ ᱤᱱ ᱢᱮ"
-,
+        "logout": "ᱞᱳᱜᱽ ᱟᱣᱩᱴ ᱠᱟᱛᱮ ᱮᱴᱟᱜ ᱮᱠᱟᱣᱩᱱᱴ ᱛᱮ ᱥᱟᱭᱤᱱ ᱤᱱ ᱢᱮ",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -22787,7 +22836,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱮᱱᱟ! ᱮᱰᱢᱤᱱ ᱡᱟᱸᱪ ᱛᱟᱹᱝᱜᱤ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ᱾",
       "onDeviceAI": {
@@ -23119,7 +23168,6 @@ const resources = {
           "missingHolderName": "ᱮᱠᱟᱣᱩᱱᱴ ᱢᱟᱹᱞᱤᱠ ᱧᱩᱛᱩᱢ ᱚᱞ ᱢᱮ"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -23151,8 +23199,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "sd": {
     "common": {
@@ -23217,7 +23266,8 @@ const resources = {
       "and": "۽",
       "app": {
         "name": "انّ داتا (AnnaDatha)",
-        "tagline": "توهان جو ضلعو، توهان جي ٻوليءَ ۾"
+        "tagline": "توهان جو ضلعو، توهان جي ٻوليءَ ۾",
+        "footer": "انّ داتا (AnnaDatha) - هندستاني هارين کي مضبوط بڻائڻ لاءِ"
       },
       "loginPhone": {
         "signIn": "سائين ان ڪريو",
@@ -23456,10 +23506,12 @@ const resources = {
         "rewardSubtitle": "251–500 منظور ٿيل سوالن تي Rs.10",
         "reachGold": "گولڊ ٽائر تائين پهچو",
         "reachGoldSub": "250 منظورين کان پوءِ في سوال Rs.10 تائين ڪمايو",
-        "submissionTips": "سوال جمع ڪرڻ جون هدايتون"
-,
+        "submissionTips": "سوال جمع ڪرڻ جون هدايتون",
         "currentTier": "مؤجوده سطح",
-        "dailyCountDone": "{{count}} مڪمل"
+        "dailyCountDone": "{{count}} مڪمل",
+        "dailyLimitTitle": "روزاني حد",
+        "editWindowTitle": "ايڊٽ ونڊو",
+        "aiCheckTitle": "AI لاڳاپي چڪاس"
       },
       "iAcceptContinue": "مان قبول ڪريان ٿو/ٿي ۽ جاري رکان ٿو/ٿي",
       "invalidOtp": "مكمل 6 انگن جو ڪوڊ داخل ڪريو",
@@ -23988,8 +24040,7 @@ const resources = {
         "statusNote": "توهان جو اکائونٽ تصديق ٿيڻ کان پوءِ توهان سوال جمع ڪري سگهندا.",
         "contactAdmin": "ايڊمن سان رابطو ڪريو",
         "accountVerificationHelp": "اکائونٽ تصديق جي مدد",
-        "logout": "لاگ آئوٽ ڪريو ۽ ٻئي اکائونٽ سان سائين ان ڪريو"
-,
+        "logout": "لاگ آئوٽ ڪريو ۽ ٻئي اکائونٽ سان سائين ان ڪريو",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -24000,7 +24051,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "رجسٽريشن مڪمل ٿي وئي! ايڊمن جي تصديق جو انتظار آهي.",
       "onDeviceAI": {
@@ -24332,7 +24383,6 @@ const resources = {
           "missingHolderName": "اکائونٽ هولڊر جو نالو داخل ڪريو"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -24364,8 +24414,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "ta": {
     "common": {
@@ -24430,7 +24481,8 @@ const resources = {
       "and": "மற்றும்",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "உங்கள் மாவட்டம், உங்கள் மொழியில்"
+        "tagline": "உங்கள் மாவட்டம், உங்கள் மொழியில்",
+        "footer": "AnnaDatha - இந்திய விவசாயிகளை வலுப்படுத்த"
       },
       "loginPhone": {
         "signIn": "உள்நுழை",
@@ -24669,10 +24721,12 @@ const resources = {
         "rewardSubtitle": "251–500 ஒப்புதலளிக்கப்பட்ட கேள்விகளுக்கு ரூ.10",
         "reachGold": "Gold நிலையை அடையுங்கள்",
         "reachGoldSub": "250 ஒப்புதல்களுக்குப் பிறகு ஒரு கேள்விக்கு ரூ.10 வரை சம்பாதிக்கவும்",
-        "submissionTips": "சமர்ப்பிக்கும் குறிப்புகள்"
-,
+        "submissionTips": "சமர்ப்பிக்கும் குறிப்புகள்",
         "currentTier": "தற்போதைய நிலை",
-        "dailyCountDone": "{{count}} முடிந்தன"
+        "dailyCountDone": "{{count}} முடிந்தன",
+        "dailyLimitTitle": "தினசரி வரம்பு",
+        "editWindowTitle": "திருத்தும் அவகாசம்",
+        "aiCheckTitle": "AI பொருத்தப் பரிசோதனை"
       },
       "iAcceptContinue": "நான் ஏற்கிறேன் & தொடர்கிறேன்",
       "invalidOtp": "முழுமையான 6-இலக்கக் குறியீட்டை உள்ளிடவும்",
@@ -25201,8 +25255,7 @@ const resources = {
         "statusNote": "உங்கள் கணக்கு சரிபார்க்கப்பட்டதும் கேள்விகளைச் சமர்ப்பிக்க முடியும்.",
         "contactAdmin": "நிர்வாகியைத் தொடர்பு கொள்ளவும்",
         "accountVerificationHelp": "கணக்கு சரிபார்ப்பு உதவி",
-        "logout": "வெளியேறி வேறு கணக்கில் உள்நுழையவும்"
-,
+        "logout": "வெளியேறி வேறு கணக்கில் உள்நுழையவும்",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -25213,7 +25266,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "பதிவு முடிந்தது! நிர்வாகி சரிபார்ப்பிற்காகக் காத்திருக்கிறது.",
       "onDeviceAI": {
@@ -25545,7 +25598,6 @@ const resources = {
           "missingHolderName": "கணக்கு வைத்திருப்பவர் பெயரை உள்ளிடவும்"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -25577,8 +25629,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "te": {
     "common": {
@@ -25643,7 +25696,8 @@ const resources = {
       "and": "మరియు",
       "app": {
         "name": "అన్నదాత",
-        "tagline": "మీ జిల్లా, మీ భాషలో"
+        "tagline": "మీ జిల్లా, మీ భాషలో",
+        "footer": "అన్నదాత - భారతీయ రైతులను బలోపేతం చేయడానికి"
       },
       "loginPhone": {
         "signIn": "సైన్ ఇన్",
@@ -25884,10 +25938,12 @@ const resources = {
         "rewardSubtitle": "251–500 ఆమోదించబడిన ప్రశ్నలకు రూ.10",
         "reachGold": "గోల్డ్ శ్రేణికి చేరుకోండి",
         "reachGoldSub": "250 ఆమోదాల తర్వాత ప్రశ్నకు రూ.10 వరకు సంపాదించండి",
-        "submissionTips": "సమర్పణ సూచనలు"
-,
+        "submissionTips": "సమర్పణ సూచనలు",
         "currentTier": "ప్రస్తుత స్థాయి",
-        "dailyCountDone": "{{count}} పూర్తయింది"
+        "dailyCountDone": "{{count}} పూర్తయింది",
+        "dailyLimitTitle": "రోజువారీ పరిమితి",
+        "editWindowTitle": "సవరణ వ్యవధి",
+        "aiCheckTitle": "AI సంబంధిత తనిఖీ"
       },
       "iAcceptContinue": "నేను అంగీకరిస్తున్నాను & ముందుకు సాగుతున్నాను",
       "invalidOtp": "పూర్తి 6-అంకెల కోడ్‌ను నమోదు చేయండి",
@@ -26416,8 +26472,7 @@ const resources = {
         "statusNote": "మీ ఖాతా సరిచూడబడిన (Verified) తర్వాత మీరు ప్రశ్నలను సమర్పించగలరు.",
         "contactAdmin": "అడ్మిన్‌ను సంప్రదించండి",
         "accountVerificationHelp": "ఖాతా పరిశీలన సహాయం",
-        "logout": "లాగ్ అవుట్ చేసి మరొక ఖాతాతో సైన్ ఇన్ చేయండి"
-,
+        "logout": "లాగ్ అవుట్ చేసి మరొక ఖాతాతో సైన్ ఇన్ చేయండి",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -26428,7 +26483,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "రిజిస్ట్రేషన్ పూర్తయింది! అడ్మిన్ పరిశీలన కోసం వేచి ఉంది.",
       "onDeviceAI": {
@@ -26760,7 +26815,6 @@ const resources = {
           "missingHolderName": "ఖాతాదారుని పేరును నమోదు చేయండి"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -26792,8 +26846,9 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   },
   "ur": {
     "common": {
@@ -26858,7 +26913,8 @@ const resources = {
       "and": "اور",
       "app": {
         "name": "اناداتا",
-        "tagline": "آپ کا ضلع، آپ کی زبان میں"
+        "tagline": "آپ کا ضلع، آپ کی زبان میں",
+        "footer": "اناداتا - بھارتی کسانوں کو مضبوط بنانے کے لیے"
       },
       "loginPhone": {
         "signIn": "سائن ان کریں",
@@ -27097,10 +27153,12 @@ const resources = {
         "rewardSubtitle": "251–500 منظور شدہ سوالات کے لیے 10 روپے",
         "reachGold": "گولڈ درجہ حاصل کریں",
         "reachGoldSub": "250 منظوریوں کے بعد فی سوال 10 روپے تک کمائیں",
-        "submissionTips": "جمع کرانے کے نکات"
-,
+        "submissionTips": "جمع کرانے کے نکات",
         "currentTier": "موجودہ سطح",
-        "dailyCountDone": "{{count}} مکمل"
+        "dailyCountDone": "{{count}} مکمل",
+        "dailyLimitTitle": "روزانہ حد",
+        "editWindowTitle": "ترمیمی ونڈو",
+        "aiCheckTitle": "AI متعلقہ چیک"
       },
       "iAcceptContinue": "میں قبول کرتا/کرتی ہوں اور جاری رکھتا/رکھتی ہوں",
       "invalidOtp": "مکمل 6 ہندسوں کا کوڈ درج کریں",
@@ -27629,8 +27687,7 @@ const resources = {
         "statusNote": "آپ کا اکاؤنٹ تصدیق ہونے کے بعد آپ سوالات جمع کر سکیں گے۔",
         "contactAdmin": "ایڈمن سے رابطہ کریں",
         "accountVerificationHelp": "اکاؤنٹ تصدیق میں مدد",
-        "logout": "لاگ آؤٹ کریں اور مختلف اکاؤنٹ سے سائن ان کریں"
-,
+        "logout": "لاگ آؤٹ کریں اور مختلف اکاؤنٹ سے سائن ان کریں",
         "welcomeHeading": "You're almost there!",
         "welcomeDescription": "Your account has been created. An admin will review your details and verify you within 24–48 hours. You can already explore the app and submit a question.",
         "accountCreated": "Account created",
@@ -27641,7 +27698,7 @@ const resources = {
         "continueToApp": "Continue to AnnaDatha",
         "checkingStatus": "Checking…",
         "toastVerified": "You are verified! Welcome to AnnaDatha.",
-        "toastCheckFailed": "Could not check status. Please try again.",
+        "toastCheckFailed": "Could not check status. Please try again."
       },
       "registrationSuccess": "رجسٹریشن مکمل! ایڈمن کی تصدیق کا انتظار ہے۔",
       "onDeviceAI": {
@@ -27973,7 +28030,6 @@ const resources = {
           "missingHolderName": "اکاؤنٹ ہولڈر کا نام درج کریں"
         }
       },
-    
       "curatorDashboard": {
         "title": "Review Dashboard",
         "subtitle": "Curator overview · last 30 days",
@@ -28005,8 +28061,10 @@ const resources = {
         "actionReviewQueue": "Review Queue",
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
-        "loadError": "Failed to load curator stats",
-      },}
+        "loadError": "Failed to load curator stats"
+      }
+    }
   }
-}
+};
+
 export default resources;

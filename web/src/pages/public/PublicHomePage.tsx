@@ -485,13 +485,13 @@ export function PublicHomePage() {
           <TipCard
             icon={<Calendar className="h-4 w-4 text-white" />}
             iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-            title={`Daily limit: ${dailyLimit} Qs`}
+            title={t('home.dailyLimitTitle')}
             description={t('home.dailyLimitTip', { count: dailyLimit })}
           />
           <TipCard
             icon={<PenLine className="h-4 w-4 text-white" />}
             iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
-            title="Edit window"
+            title={t('home.editWindowTitle')}
             description={
               editWindowSec === 0
                 ? t('home.editWindowClosed')
@@ -501,7 +501,7 @@ export function PublicHomePage() {
           <TipCard
             icon={<Lightbulb className="h-4 w-4 text-white" />}
             iconBg="bg-gradient-to-br from-violet-500 to-purple-600"
-            title="AI relevance check"
+            title={t('home.aiCheckTitle')}
             description={t('home.aiCheckTip')}
           />
         </div>

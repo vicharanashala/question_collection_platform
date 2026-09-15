@@ -60,7 +60,8 @@
   "and": "and",
   "app": {
     "name": "AnnaDatha",
-    "tagline": "Your district, in your language"
+    "tagline": "Your district, in your language",
+    "footer": "AnnaDatha - To Strengthen Indian Farmers"
   },
   "loginPhone": {
     "signIn": "Sign In",
@@ -290,7 +291,10 @@
     "editWindowClosed": "Questions cannot be edited after submission",
     "quickActionsTip": "Jump straight to Submit a Question or view your Wallet balance and recent activity.",
     "rewardsTip": "Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates.",
-    "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight."
+    "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight.",
+    "dailyLimitTitle": "Daily limit",
+    "editWindowTitle": "Edit window",
+    "aiCheckTitle": "AI relevance check"
   },
   "iAcceptContinue": "I Accept & Continue",
   "invalidOtp": "Enter the complete 6-digit code",
