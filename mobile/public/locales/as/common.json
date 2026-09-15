@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "প্ৰবন্ধ",
       "article_other": "প্ৰবন্ধ"
-    }
+    },
+    "videoComingSoon": "ভিডিঅ' গাইড শীঘ্ৰেই আহিব",
+    "videoGuideTitle": "ভিডিঅ' গাইড"
   },
   "faqAdmin": {
     "title": "FAQ ব্যৱস্থাপনা",

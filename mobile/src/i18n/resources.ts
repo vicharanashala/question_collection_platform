@@ -1160,7 +1160,9 @@ const resources = {
         "group": {
           "article_one": "article",
           "article_other": "articles"
-        }
+        },
+        "videoComingSoon": "Video guide coming soon",
+        "videoGuideTitle": "Video Guide"
       },
       "faqAdmin": {
         "title": "FAQ Management",
@@ -2504,7 +2506,9 @@ const resources = {
         "group": {
           "article_one": "প্ৰবন্ধ",
           "article_other": "প্ৰবন্ধ"
-        }
+        },
+        "videoComingSoon": "ভিডিঅ' গাইড শীঘ্ৰেই আহিব",
+        "videoGuideTitle": "ভিডিঅ' গাইড"
       },
       "faqAdmin": {
         "title": "FAQ ব্যৱস্থাপনা",
@@ -3848,7 +3852,9 @@ const resources = {
         "group": {
           "article_one": "নিবন্ধ",
           "article_other": "নিবন্ধসমূহ"
-        }
+        },
+        "videoComingSoon": "ভিডিও গাইড শীঘ্রই আসছে",
+        "videoGuideTitle": "ভিডিও গাইড"
       },
       "faqAdmin": {
         "title": "FAQ ব্যবস্থাপনা",
@@ -5192,7 +5198,9 @@ const resources = {
         "group": {
           "article_one": "आर्टिकेल",
           "article_other": "आर्टिकेलफोर"
-        }
+        },
+        "videoComingSoon": "भिडिअ गाइड गोदान फैया",
+        "videoGuideTitle": "भिडिअ गाइड"
       },
       "faqAdmin": {
         "title": "FAQ सामलायनाय",
@@ -6536,7 +6544,9 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "वीडियो गाइड जल्दी आवण आळा ऐ",
+        "videoGuideTitle": "वीडियो गाइड"
       },
       "faqAdmin": {
         "title": "FAQ प्रबंधन",
@@ -7880,7 +7890,9 @@ const resources = {
         "group": {
           "article_one": "લેખ",
           "article_other": "લેખો"
-        }
+        },
+        "videoComingSoon": "વીડિયો માર્ગદર્શિકા ટૂંક સમયમાં આવી રહી છે",
+        "videoGuideTitle": "વીડિયો માર્ગદર્શિકા"
       },
       "faqAdmin": {
         "title": "FAQ વ્યવસ્થાપન",
@@ -9224,7 +9236,9 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "वीडियो गाइड जल्द आ रहा है",
+        "videoGuideTitle": "वीडियो गाइड"
       },
       "faqAdmin": {
         "title": "FAQ प्रबंधन",
@@ -10568,7 +10582,9 @@ const resources = {
         "group": {
           "article_one": "ಲೇಖನ",
           "article_other": "ಲೇಖನಗಳು"
-        }
+        },
+        "videoComingSoon": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
+        "videoGuideTitle": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ"
       },
       "faqAdmin": {
         "title": "FAQ ನಿರ್ವಹಣೆ",
@@ -11912,7 +11928,9 @@ const resources = {
         "group": {
           "article_one": "مضمون",
           "article_other": "مضامین"
-        }
+        },
+        "videoComingSoon": "ویڈیو گائیڈ جلدی ییہ",
+        "videoGuideTitle": "ویڈیو گائیڈ"
       },
       "faqAdmin": {
         "title": "FAQ انتظام",
@@ -13256,7 +13274,9 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येतां",
+        "videoGuideTitle": "व्हिडिओ मार्गदर्शक"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -14600,7 +14620,9 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख सब"
-        }
+        },
+        "videoComingSoon": "वीडियो गाइड जल्दिये आबि रहल अछि",
+        "videoGuideTitle": "वीडियो गाइड"
       },
       "faqAdmin": {
         "title": "एफएक्यू प्रबंधन",
@@ -15944,7 +15966,9 @@ const resources = {
         "group": {
           "article_one": "ലേഖനം",
           "article_other": "ലേഖനങ്ങൾ"
-        }
+        },
+        "videoComingSoon": "വീഡിയോ ഗൈഡ് ഉടൻ വരുന്നു",
+        "videoGuideTitle": "വീഡിയോ ഗൈഡ്"
       },
       "faqAdmin": {
         "title": "FAQ കൈകാര്യം ചെയ്യൽ",
@@ -17288,7 +17312,9 @@ const resources = {
         "group": {
           "article_one": "আর্টিকেল",
           "article_other": "আর্টিকেলশিং"
-        }
+        },
+        "videoComingSoon": "ভিদিও গাইদ থুনামক লাক্কনি",
+        "videoGuideTitle": "ভিদিও গাইদ"
       },
       "faqAdmin": {
         "title": "FAQ মেটনেজমেন্ট",
@@ -18632,7 +18658,9 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येत आहे",
+        "videoGuideTitle": "व्हिडिओ मार्गदर्शक"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -19976,7 +20004,9 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेखहरू"
-        }
+        },
+        "videoComingSoon": "भिडियो गाइड चाँडै आउँदैछ",
+        "videoGuideTitle": "भिडियो गाइड"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -21318,7 +21348,9 @@ const resources = {
         "group": {
           "article_one": "ଟି ପ୍ରବନ୍ଧ",
           "article_other": "ଟି ପ୍ରବନ୍ଧ"
-        }
+        },
+        "videoComingSoon": "ଭିଡିଓ ଗାଇଡ୍ ଶୀଘ୍ର ଆସୁଛି",
+        "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍"
       },
       "faqAdmin": {
         "title": "FAQ ପରିଚାଳନା",
@@ -22665,7 +22697,9 @@ const resources = {
         "group": {
           "article_one": "ਲੇਖ",
           "article_other": "ਲੇਖ"
-        }
+        },
+        "videoComingSoon": "ਵੀਡੀਓ ਗਾਈਡ ਜਲਦੀ ਆ ਰਹੀ ਹੈ",
+        "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ"
       },
       "faqAdmin": {
         "title": "FAQ ਪ੍ਰਬੰਧਨ",
@@ -24019,7 +24053,9 @@ const resources = {
         "group": {
           "article_one": "लेखः",
           "article_other": "लेखाः"
-        }
+        },
+        "videoComingSoon": "चलच्चित्रमार्गदर्शिका शीघ्रं आगमिष्यति",
+        "videoGuideTitle": "चलच्चित्रमार्गदर्शिका"
       },
       "faqAdmin": {
         "title": "सामान्यानां प्रश्नानां प्रबन्धनम्",
@@ -25363,7 +25399,9 @@ const resources = {
         "group": {
           "article_one": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ",
           "article_other": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ ᱠᱚ"
-        }
+        },
+        "videoComingSoon": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ ᱡᱚᱛᱚ ᱦᱮᱡᱩᱜ ᱠᱟᱱᱟ",
+        "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ"
       },
       "faqAdmin": {
         "title": "FAQ ᱥᱟᱯᱲᱟᱣ",
@@ -26707,7 +26745,9 @@ const resources = {
         "group": {
           "article_one": "مضمون",
           "article_other": "مضمون"
-        }
+        },
+        "videoComingSoon": "وڊيو گائيڊ جلد اچي رهي آهي",
+        "videoGuideTitle": "وڊيو گائيڊ"
       },
       "faqAdmin": {
         "title": "FAQ انتظاميه",
@@ -28051,7 +28091,9 @@ const resources = {
         "group": {
           "article_one": "கட்டுரை",
           "article_other": "கட்டுரைகள்"
-        }
+        },
+        "videoComingSoon": "வீடியோ வழிகாட்டி விரைவில் வரும்",
+        "videoGuideTitle": "வீடியோ வழிகாட்டி"
       },
       "faqAdmin": {
         "title": "FAQ மேலாண்மை",
@@ -29397,7 +29439,9 @@ const resources = {
         "group": {
           "article_one": "వ్యాసం",
           "article_other": "వ్యాసాలు"
-        }
+        },
+        "videoComingSoon": "వీడియో గైడ్ త్వరలో వస్తుంది",
+        "videoGuideTitle": "వీడియో గైడ్"
       },
       "faqAdmin": {
         "title": "FAQ నిర్వహణ",
@@ -30741,7 +30785,9 @@ const resources = {
         "group": {
           "article_one": "مضمون",
           "article_other": "مضامین"
-        }
+        },
+        "videoComingSoon": "ویڈیو گائیڈ جلد آرہا ہے",
+        "videoGuideTitle": "ویڈیو گائیڈ"
       },
       "faqAdmin": {
         "title": "FAQ کا انتظام",

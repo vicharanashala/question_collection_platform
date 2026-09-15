@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "مضمون",
       "article_other": "مضمون"
-    }
+    },
+    "videoComingSoon": "وڊيو گائيڊ جلد اچي رهي آهي",
+    "videoGuideTitle": "وڊيو گائيڊ"
   },
   "faqAdmin": {
     "title": "FAQ انتظاميه",

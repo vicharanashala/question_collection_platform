@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेख सब"
-    }
+    },
+    "videoComingSoon": "वीडियो गाइड जल्दिये आबि रहल अछि",
+    "videoGuideTitle": "वीडियो गाइड"
   },
   "faqAdmin": {
     "title": "एफएक्यू प्रबंधन",

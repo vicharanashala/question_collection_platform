@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "ലേഖനം",
       "article_other": "ലേഖനങ്ങൾ"
-    }
+    },
+    "videoComingSoon": "വീഡിയോ ഗൈഡ് ഉടൻ വരുന്നു",
+    "videoGuideTitle": "വീഡിയോ ഗൈഡ്"
   },
   "faqAdmin": {
     "title": "FAQ കൈകാര്യം ചെയ്യൽ",

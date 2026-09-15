@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "مضمون",
       "article_other": "مضامین"
-    }
+    },
+    "videoComingSoon": "ویڈیو گائیڈ جلدی ییہ",
+    "videoGuideTitle": "ویڈیو گائیڈ"
   },
   "faqAdmin": {
     "title": "FAQ انتظام",

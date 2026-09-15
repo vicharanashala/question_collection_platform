@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेख"
-    }
+    },
+    "videoComingSoon": "वीडियो गाइड जल्दी आवण आळा ऐ",
+    "videoGuideTitle": "वीडियो गाइड"
   },
   "faqAdmin": {
     "title": "FAQ प्रबंधन",

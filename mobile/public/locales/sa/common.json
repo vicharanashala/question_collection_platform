@@ -1163,7 +1163,9 @@
     "group": {
       "article_one": "लेखः",
       "article_other": "लेखाः"
-    }
+    },
+    "videoComingSoon": "चलच्चित्रमार्गदर्शिका शीघ्रं आगमिष्यति",
+    "videoGuideTitle": "चलच्चित्रमार्गदर्शिका"
   },
   "faqAdmin": {
     "title": "सामान्यानां प्रश्नानां प्रबन्धनम्",

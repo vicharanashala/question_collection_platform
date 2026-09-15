@@ -1151,7 +1151,9 @@
     "group": {
       "article_one": "ଟି ପ୍ରବନ୍ଧ",
       "article_other": "ଟି ପ୍ରବନ୍ଧ"
-    }
+    },
+    "videoComingSoon": "ଭିଡିଓ ଗାଇଡ୍ ଶୀଘ୍ର ଆସୁଛି",
+    "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍"
   },
   "faqAdmin": {
     "title": "FAQ ପରିଚାଳନା",

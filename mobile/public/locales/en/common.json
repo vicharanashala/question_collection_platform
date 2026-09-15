@@ -1155,7 +1155,9 @@
     "group": {
       "article_one": "article",
       "article_other": "articles"
-    }
+    },
+    "videoComingSoon": "Video guide coming soon",
+    "videoGuideTitle": "Video Guide"
   },
   "faqAdmin": {
     "title": "FAQ Management",

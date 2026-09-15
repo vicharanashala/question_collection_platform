@@ -1155,7 +1155,9 @@
     "group": {
       "article_one": "వ్యాసం",
       "article_other": "వ్యాసాలు"
-    }
+    },
+    "videoComingSoon": "వీడియో గైడ్ త్వరలో వస్తుంది",
+    "videoGuideTitle": "వీడియో గైడ్"
   },
   "faqAdmin": {
     "title": "FAQ నిర్వహణ",

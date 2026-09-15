@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "கட்டுரை",
       "article_other": "கட்டுரைகள்"
-    }
+    },
+    "videoComingSoon": "வீடியோ வழிகாட்டி விரைவில் வரும்",
+    "videoGuideTitle": "வீடியோ வழிகாட்டி"
   },
   "faqAdmin": {
     "title": "FAQ மேலாண்மை",

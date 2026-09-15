@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "ਲੇਖ",
       "article_other": "ਲੇਖ"
-    }
+    },
+    "videoComingSoon": "ਵੀਡੀਓ ਗਾਈਡ ਜਲਦੀ ਆ ਰਹੀ ਹੈ",
+    "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ"
   },
   "faqAdmin": {
     "title": "FAQ ਪ੍ਰਬੰਧਨ",

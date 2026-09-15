@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "আর্টিকেল",
       "article_other": "আর্টিকেলশিং"
-    }
+    },
+    "videoComingSoon": "ভিদিও গাইদ থুনামক লাক্কনি",
+    "videoGuideTitle": "ভিদিও গাইদ"
   },
   "faqAdmin": {
     "title": "FAQ মেটনেজমেন্ট",

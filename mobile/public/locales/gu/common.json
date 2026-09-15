@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "લેખ",
       "article_other": "લેખો"
-    }
+    },
+    "videoComingSoon": "વીડિયો માર્ગદર્શિકા ટૂંક સમયમાં આવી રહી છે",
+    "videoGuideTitle": "વીડિયો માર્ગદર્શિકા"
   },
   "faqAdmin": {
     "title": "FAQ વ્યવસ્થાપન",

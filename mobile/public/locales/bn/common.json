@@ -1153,7 +1153,9 @@
     "group": {
       "article_one": "নিবন্ধ",
       "article_other": "নিবন্ধসমূহ"
-    }
+    },
+    "videoComingSoon": "ভিডিও গাইড শীঘ্রই আসছে",
+    "videoGuideTitle": "ভিডিও গাইড"
   },
   "faqAdmin": {
     "title": "FAQ ব্যবস্থাপনা",
