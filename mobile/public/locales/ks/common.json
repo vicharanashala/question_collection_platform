@@ -294,7 +294,12 @@
     "guidelinesTip": "ویڈیو تھویو 60s تہٕ 10MB کھوتہٕ کم۔ توہیہِ چھُ ملان 30 سیکنڈُک ایڈٹ ونڈو۔ دینی حد چھُ راتکِہ 12 بجے ری سیٹ گژھان۔",
     "dailyLimitTitle": "دینچ حد",
     "editWindowTitle": "تبدیلی ہنٛد وقت",
-    "aiCheckTitle": "AI ربط چیک"
+    "aiCheckTitle": "AI ربط چیک",
+    "verifiedUser": "تصدیق شُدہ صارف",
+    "startAsking": "پوچھُن شروع کریو",
+    "viewWallet": "والیٹ ہیویو",
+    "youAreHere": "تۏہہِ یہٕ چھِو",
+    "currentTier": "حالی سطح"
   },
   "iAcceptContinue": "بؤ چھُس قبول کران تہٕ جاری تھاوان",
   "invalidOtp": "پورا 6 ہندسَن ہنٛد کوڈ درج کٔریو",

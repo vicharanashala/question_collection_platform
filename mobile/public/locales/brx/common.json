@@ -294,7 +294,12 @@
     "guidelinesTip": "भिडिअखौ 60s आरो 10MB नि सिङाव दोन। दैथायहरनायनि उनाव 30 सेकेन्द सोलायनाय समाव मोनाव। साननि सिमाया हरनि १२ बाजायाव फिन रोखोम जाफिनो।",
     "dailyLimitTitle": "साननि सिमा",
     "editWindowTitle": "सोलायनाय समाव",
-    "aiCheckTitle": "AI नायफिननाय"
+    "aiCheckTitle": "AI नायफिननाय",
+    "verifiedUser": "थारसिनाय बाहायगिरि",
+    "startAsking": "सोंगोनाय एरजाबहो",
+    "viewWallet": "वालेट नुथाय",
+    "youAreHere": "नोंथाङ बे दं",
+    "currentTier": "दानि स्तर"
   },
   "iAcceptContinue": "आं गनायो आरो आगौवायो",
   "invalidOtp": "आबुं ६-डिजिटनि कोड सोमावना हो",

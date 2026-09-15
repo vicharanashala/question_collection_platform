@@ -308,7 +308,7 @@ export function PublicHomePage() {
             <p className={cn('text-[10px] font-black uppercase tracking-widest sm:text-xs', currentTier.text)}>
               {t(`home.${currentTier.key}`)}
             </p>
-            <p className="text-[10px] text-emerald-400/60">Current tier</p>
+            <p className="text-[10px] text-emerald-400/60">{t('home.currentTier')}</p>
           </div>
         </div>
 
@@ -363,7 +363,7 @@ export function PublicHomePage() {
             iconBg="bg-gradient-to-br from-emerald-500 to-emerald-700"
             title={t('home.askQuestion')}
             description={t('home.askQuestionSub')}
-            cta="Start asking"
+            cta={t('home.startAsking')}
             onClick={() => navigate('/home/ask')}
           />
           <ActionCard
@@ -371,7 +371,7 @@ export function PublicHomePage() {
             iconBg="bg-gradient-to-br from-blue-500 to-blue-700"
             title={t('home.myWallet')}
             description={t('home.myWalletSub')}
-            cta="View wallet"
+            cta={t('home.viewWallet')}
             onClick={() => navigate('/home/wallet')}
           />
         </div>
@@ -426,7 +426,7 @@ export function PublicHomePage() {
                     </div>
                     {isCurrent && (
                       <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:text-xs">
-                        You are here
+                        {t('home.youAreHere')}
                       </span>
                     )}
                   </div>

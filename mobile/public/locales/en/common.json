@@ -294,7 +294,12 @@
     "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight.",
     "dailyLimitTitle": "Daily limit",
     "editWindowTitle": "Edit window",
-    "aiCheckTitle": "AI relevance check"
+    "aiCheckTitle": "AI relevance check",
+    "verifiedUser": "Verified user",
+    "startAsking": "Start asking",
+    "viewWallet": "View wallet",
+    "youAreHere": "You are here",
+    "currentTier": "Current tier"
   },
   "iAcceptContinue": "I Accept & Continue",
   "invalidOtp": "Enter the complete 6-digit code",

@@ -294,7 +294,12 @@
     "guidelinesTip": "وڊيو کي 60 سيڪنڊن ۽ 10MB کان گھٽ رکو. جمع ڪرڻ کان پوءِ توھان کي 30 سيڪنڊن جي ترميمي ونڊو ملي ٿي. روزاني حد اڌ رات جو ري سيٽ ٿئي ٿي.",
     "dailyLimitTitle": "روزاني حد",
     "editWindowTitle": "ايڊٽ ونڊو",
-    "aiCheckTitle": "AI لاڳاپي چڪاس"
+    "aiCheckTitle": "AI لاڳاپي چڪاس",
+    "verifiedUser": "تصديق ٿيل واپرائيندڙ",
+    "startAsking": "پڇڻ شروع ڪريو",
+    "viewWallet": "والیٽ ڏسو",
+    "youAreHere": "توهان هتي آهيو",
+    "currentTier": "مؤجوده سطح"
   },
   "iAcceptContinue": "مان قبول ڪريان ٿو/ٿي ۽ جاري رکان ٿو/ٿي",
   "invalidOtp": "مكمل 6 انگن جو ڪوڊ داخل ڪريو",

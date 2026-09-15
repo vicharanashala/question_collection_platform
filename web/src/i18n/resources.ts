@@ -352,7 +352,10 @@ const resources = {
         "dailyCountDone": "{{count}} done",
         "dailyLimitTitle": "Daily limit",
         "editWindowTitle": "Edit window",
-        "aiCheckTitle": "AI relevance check"
+        "aiCheckTitle": "AI relevance check",
+        "startAsking": "Start asking",
+        "viewWallet": "View wallet",
+        "youAreHere": "You are here"
       },
       "iAcceptContinue": "I Accept & Continue",
       "invalidOtp": "Enter the complete 6-digit code",
@@ -1609,7 +1612,11 @@ const resources = {
         "dailyCountDone": "{{count}} সম্পন্ন",
         "dailyLimitTitle": "দৈনিক সীমা",
         "editWindowTitle": "সম্পাদনা উইণ্ড'",
-        "aiCheckTitle": "AI প্ৰাসংগিকতা পৰীক্ষা"
+        "aiCheckTitle": "AI প্ৰাসংগিকতা পৰীক্ষা",
+        "verifiedUser": "পৰীক্ষিত ব্যৱহাৰকাৰী",
+        "startAsking": "সোধা আৰম্ভ কৰক",
+        "viewWallet": "ৱালেট চাওক",
+        "youAreHere": "আপুনি ইয়াতে আছে"
       },
       "iAcceptContinue": "মই গ্ৰহণ কৰিছো আৰু আগবাঢ়িছো",
       "invalidOtp": "সম্পূৰ্ণ ৬-ডিজিটৰ কোড দিয়ক",
@@ -2824,7 +2831,11 @@ const resources = {
         "dailyCountDone": "{{count}} সম্পন্ন",
         "dailyLimitTitle": "দৈনিক সীমা",
         "editWindowTitle": "সম্পাদনার সময়সীমা",
-        "aiCheckTitle": "AI প্রাসঙ্গিকতা পরীক্ষা"
+        "aiCheckTitle": "AI প্রাসঙ্গিকতা পরীক্ষা",
+        "verifiedUser": "যাচাইকৃত ব্যবহারকারী",
+        "startAsking": "জিজ্ঞাসা শুরু করুন",
+        "viewWallet": "ওয়ালেট দেখুন",
+        "youAreHere": "আপনি এখানে আছেন"
       },
       "iAcceptContinue": "আমি সম্মত ও এগিয়ে যান",
       "invalidOtp": "সম্পূর্ণ ৬-ডিজিটের কোডটি লিখুন",
@@ -4039,7 +4050,11 @@ const resources = {
         "dailyCountDone": "{{count}} जोबबाय",
         "dailyLimitTitle": "साननि सिमा",
         "editWindowTitle": "सोलायनाय समाव",
-        "aiCheckTitle": "AI नायफिननाय"
+        "aiCheckTitle": "AI नायफिननाय",
+        "verifiedUser": "थारसिनाय बाहायगिरि",
+        "startAsking": "सोंगोनाय एरजाबहो",
+        "viewWallet": "वालेट नुथाय",
+        "youAreHere": "नोंथाङ बे दं"
       },
       "iAcceptContinue": "आं गनायो आरो आगौवायो",
       "invalidOtp": "आबुं ६-डिजिटनि कोड सोमावना हो",
@@ -5254,7 +5269,11 @@ const resources = {
         "dailyCountDone": "{{count}} पूरे",
         "dailyLimitTitle": "रोज़ाना दी सीमा",
         "editWindowTitle": "बदलाव दा समां",
-        "aiCheckTitle": "AI प्रासंगिकता जांच"
+        "aiCheckTitle": "AI प्रासंगिकता जांच",
+        "verifiedUser": "पुष्टि कीती उपयोगकर्ता",
+        "startAsking": "पुछणा शुरू करो",
+        "viewWallet": "वॉलेट दिक्खो",
+        "youAreHere": "तुसीं इत्थें ओ"
       },
       "iAcceptContinue": "मैं स्वीकार करदा/करदी हां ते अग्गें बधदा/बधदी हां",
       "invalidOtp": "पूरा 6-अंकें दा कोड पाओ",
@@ -6469,7 +6488,11 @@ const resources = {
         "dailyCountDone": "{{count}} પૂર્ણ",
         "dailyLimitTitle": "દૈનિક મર્યાદા",
         "editWindowTitle": "સંપાદન સમય",
-        "aiCheckTitle": "AI સંબંધિતતા ચકાસણી"
+        "aiCheckTitle": "AI સંબંધિતતા ચકાસણી",
+        "verifiedUser": "ચકાસાયેલ વપરાશકર્તા",
+        "startAsking": "પૂછવાનું શરૂ કરો",
+        "viewWallet": "વોલેટ જુઓ",
+        "youAreHere": "તમે અહીં છો"
       },
       "iAcceptContinue": "હું સ્વીકારું છું અને આગળ વધું છું",
       "invalidOtp": "સંપૂર્ણ 6-અંકનો કોડ દાખલ કરો",
@@ -7684,7 +7707,11 @@ const resources = {
         "dailyCountDone": "{{count}} पूर्ण",
         "dailyLimitTitle": "दैनिक सीमा",
         "editWindowTitle": "संपादन विंडो",
-        "aiCheckTitle": "AI प्रासंगिकता जांच"
+        "aiCheckTitle": "AI प्रासंगिकता जांच",
+        "verifiedUser": "सत्यापित उपयोगकर्ता",
+        "startAsking": "पूछना शुरू करें",
+        "viewWallet": "वॉलेट देखें",
+        "youAreHere": "आप यहाँ हैं"
       },
       "iAcceptContinue": "मैं स्वीकार करता हूँ और जारी रखें",
       "invalidOtp": "पूरा 6-अंकीय कोड दर्ज करें",
@@ -8923,7 +8950,11 @@ const resources = {
         "dailyCountDone": "{{count}} ಪೂರ್ಣ",
         "dailyLimitTitle": "ದೈನಂದಿನ ಮಿತಿ",
         "editWindowTitle": "ಸಂಪಾದನೆ ಸಮಯ",
-        "aiCheckTitle": "AI ಪ್ರಸ್ತುತತೆಯ ಪರಿಶೀಲನೆ"
+        "aiCheckTitle": "AI ಪ್ರಸ್ತುತತೆಯ ಪರಿಶೀಲನೆ",
+        "verifiedUser": "ಪರಿಶೀಲಿಸಲಾದ ಬಳಕೆದಾರ",
+        "startAsking": "ಕೇಳಲು ಪ್ರಾರಂಭಿಸಿ",
+        "viewWallet": "ವಾಲೆಟ್ ವೀಕ್ಷಿಸಿ",
+        "youAreHere": "ನೀವು ಇಲ್ಲಿದ್ದೀರಿ"
       },
       "iAcceptContinue": "ನಾನು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ ಮತ್ತು ಮುಂದುವರಿಯುತ್ತೇನೆ",
       "invalidOtp": "ಸಂಪೂರ್ಣ 6-ಅಂಕಿಯ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ",
@@ -10138,7 +10169,11 @@ const resources = {
         "dailyCountDone": "{{count}} مکمل",
         "dailyLimitTitle": "دینچ حد",
         "editWindowTitle": "تبدیلی ہنٛد وقت",
-        "aiCheckTitle": "AI ربط چیک"
+        "aiCheckTitle": "AI ربط چیک",
+        "verifiedUser": "تصدیق شُدہ صارف",
+        "startAsking": "پوچھُن شروع کریو",
+        "viewWallet": "والیٹ ہیویو",
+        "youAreHere": "تۏہہِ یہٕ چھِو"
       },
       "iAcceptContinue": "بؤ چھُس قبول کران تہٕ جاری تھاوان",
       "invalidOtp": "پورا 6 ہندسَن ہنٛد کوڈ درج کٔریو",
@@ -11353,7 +11388,11 @@ const resources = {
         "dailyCountDone": "{{count}} पूर्ण",
         "dailyLimitTitle": "दिसपटी मर्यादा",
         "editWindowTitle": "बदल करपाचो वेळ",
-        "aiCheckTitle": "AI तपासणी"
+        "aiCheckTitle": "AI तपासणी",
+        "verifiedUser": "पडताळील्लो वापरपी",
+        "startAsking": "विचारपाक सुरवात करात",
+        "viewWallet": "वालेट पळयात",
+        "youAreHere": "तुमी हांगा आसात"
       },
       "iAcceptContinue": "म्हाका मान्य आसा आनी मुखार वचात",
       "invalidOtp": "पुराय ६-आकड्यांचो कोड घालात",
@@ -12568,7 +12607,11 @@ const resources = {
         "dailyCountDone": "{{count}} पूर्ण",
         "dailyLimitTitle": "दैनिक सीमा",
         "editWindowTitle": "संशोधन समय",
-        "aiCheckTitle": "AI प्रासंगिकता जाँच"
+        "aiCheckTitle": "AI प्रासंगिकता जाँच",
+        "verifiedUser": "सत्यापित उपयोगकर्ता",
+        "startAsking": "पुछब शुरू करू",
+        "viewWallet": "वालेट देखू",
+        "youAreHere": "अहाँ एतय छी"
       },
       "iAcceptContinue": "हम स्वीकार करैत छी आ जारी राखैत छी",
       "invalidOtp": "पूरा ६-अंकक कोड दर्ज करु",
@@ -13783,7 +13826,11 @@ const resources = {
         "dailyCountDone": "{{count}} പൂർത്തി",
         "dailyLimitTitle": "ദിവസേനയുള്ള പരിധി",
         "editWindowTitle": "തിരുത്താനുള്ള സമയം",
-        "aiCheckTitle": "AI അനുയോജ്യതാ പരിശോധന"
+        "aiCheckTitle": "AI അനുയോജ്യതാ പരിശോധന",
+        "verifiedUser": "സാക്ഷ്യപ്പെടുത്തിയ ഉപയോക്താവ്",
+        "startAsking": "ചോദിക്കാൻ തുടങ്ങുക",
+        "viewWallet": "വാലറ്റ് കാണുക",
+        "youAreHere": "നിങ്ങൾ ഇവിടെയാണ്"
       },
       "iAcceptContinue": "ഞാൻ അംഗീകരിച്ച് മുന്നോട്ട് പോകുന്നു",
       "invalidOtp": "മുഴുവൻ 6 അക്ക കോഡും നൽകുക",
@@ -14998,7 +15045,11 @@ const resources = {
         "dailyCountDone": "{{count}} লোইরে",
         "dailyLimitTitle": "নুমিত অমগী সীমা",
         "editWindowTitle": "সেমদোকপগী মতম",
-        "aiCheckTitle": "AI চেক"
+        "aiCheckTitle": "AI চেক",
+        "verifiedUser": "ভেরিফাই তৌবা মীওই",
+        "startAsking": "হংনবা হৌবিয়ু",
+        "viewWallet": "ৱালেট য়েংগু",
+        "youAreHere": "নঙ মফমসিদা লৈ"
       },
       "iAcceptContinue": "ঐ য়ানবনি অমসুং মখা চতথবনি",
       "invalidOtp": "মপুং ফাবা ৬-দিজিৎকী কোড অদু চংহনবীয়ু",
@@ -16213,7 +16264,11 @@ const resources = {
         "dailyCountDone": "{{count}} पूर्ण",
         "dailyLimitTitle": "दैनिक मर्यादा",
         "editWindowTitle": "संपादन वेळ",
-        "aiCheckTitle": "AI सुसंगतता तपासणी"
+        "aiCheckTitle": "AI सुसंगतता तपासणी",
+        "verifiedUser": "पडताळणी केलेला वापरकर्ता",
+        "startAsking": "विचारायला सुरुवात करा",
+        "viewWallet": "वॉलेट पहा",
+        "youAreHere": "तुम्ही इथे आहात"
       },
       "iAcceptContinue": "मी स्वीकारतो आणि पुढे जा",
       "invalidOtp": "पूर्ण ६-अंकी कोड प्रविष्ट करा",
@@ -17428,7 +17483,11 @@ const resources = {
         "dailyCountDone": "{{count}} पूरा",
         "dailyLimitTitle": "दैनिक सीमा",
         "editWindowTitle": "सम्पादन समय",
-        "aiCheckTitle": "AI सान्दर्भिकता जाँच"
+        "aiCheckTitle": "AI सान्दर्भिकता जाँच",
+        "verifiedUser": "प्रमाणित प्रयोगकर्ता",
+        "startAsking": "सोध्न सुरु गर्नुहोस्",
+        "viewWallet": "वालेट हेर्नुहोस्",
+        "youAreHere": "तपाईं यहाँ हुनुहुन्छ"
       },
       "iAcceptContinue": "म स्वीकार गर्छु र अगाडि बढ्छु",
       "invalidOtp": "पूरा ६-अङ्कको कोड राख्नुहोस्",
@@ -18643,7 +18702,11 @@ const resources = {
         "dailyCountDone": "{{count}} ପୂର୍ଣ୍ଣ",
         "dailyLimitTitle": "ଦୈନିକ ସୀମା",
         "editWindowTitle": "ସମ୍ପାଦନା ସମୟ",
-        "aiCheckTitle": "AI ସୁସଙ୍ଗତତା ଯାଞ୍ଚ"
+        "aiCheckTitle": "AI ସୁସଙ୍ଗତତା ଯାଞ୍ଚ",
+        "verifiedUser": "ଯାଞ୍ଚିତ ବ୍ୟବହାରକାରୀ",
+        "startAsking": "ପଚାରିବା ଆରମ୍ଭ କରନ୍ତୁ",
+        "viewWallet": "ୱାଲେଟ୍ ଦେଖନ୍ତୁ",
+        "youAreHere": "ଆପଣ ଏଠାରେ ଅଛନ୍ତି"
       },
       "iAcceptContinue": "ମୁଁ ଗ୍ରହଣ କରୁଛି ଏବଂ ଆଗକୁ ବଢ଼ୁଛି",
       "invalidOtp": "ସମ୍ପୂର୍ଣ୍ଣ ୬-ଅଙ୍କ ବିଶିଷ୍ଟ କୋଡ୍ ଦିଅନ୍ତୁ",
@@ -19856,7 +19919,11 @@ const resources = {
         "dailyCountDone": "{{count}} ਪੂਰੇ",
         "dailyLimitTitle": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ",
         "editWindowTitle": "ਸੋਧਣ ਦਾ ਸਮਾਂ",
-        "aiCheckTitle": "AI ਅਨੁਕੂਲਤਾ ਜਾਂਚ"
+        "aiCheckTitle": "AI ਅਨੁਕੂਲਤਾ ਜਾਂਚ",
+        "verifiedUser": "ਪੁਸ਼ਟੀ ਕੀਤਾ ਉਪਭੋਗਤਾ",
+        "startAsking": "ਪੁੱਛਣਾ ਸ਼ੁਰੂ ਕਰੋ",
+        "viewWallet": "ਵਾਲਿਟ ਵੇਖੋ",
+        "youAreHere": "ਤੁਸੀਂ ਇੱਥੇ ਹੋ"
       },
       "iAcceptContinue": "ਮੈਂ ਸਵੀਕਾਰ ਕਰਦਾ/ਕਰਦੀ ਹਾਂ ਅਤੇ ਜਾਰੀ ਰੱਖੋ",
       "invalidOtp": "ਪੂਰਾ 6-ਅੰਕਾਂ ਦਾ ਕੋਡ ਦਰਜ ਕਰੋ",
@@ -21081,7 +21148,11 @@ const resources = {
         "dailyCountDone": "{{count}} कृतम्",
         "dailyLimitTitle": "दैनिकसीमा",
         "editWindowTitle": "सम्पादनसमयः",
-        "aiCheckTitle": "AI सम्बद्धता जाँचः"
+        "aiCheckTitle": "AI सम्बद्धता जाँचः",
+        "verifiedUser": "सत्यापितः उपयोक्ता",
+        "startAsking": "पृच्छनं आरभस्व",
+        "viewWallet": "वालेट् पश्यतु",
+        "youAreHere": "भवान् अत्र अस्ति"
       },
       "iAcceptContinue": "अहं स्वीकरोमि अग्रे गच्छामि च",
       "invalidOtp": "पूर्णं ६-अङ्कीयसङ्केतं लिखतु",
@@ -22296,7 +22367,11 @@ const resources = {
         "dailyCountDone": "{{count}} ᱦᱩᱭ ᱮᱱᱟ",
         "dailyLimitTitle": "ᱫᱤᱱᱟᱹᱢ ᱥᱤᱢᱟᱹ",
         "editWindowTitle": "ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ",
-        "aiCheckTitle": "AI ᱡᱟᱸᱪᱟᱭ"
+        "aiCheckTitle": "AI ᱡᱟᱸᱪᱟᱭ",
+        "verifiedUser": "ᱡᱟᱸᱪ ᱠᱟᱱ ᱵᱮᱣᱦᱟᱨᱤᱭᱟᱹ",
+        "startAsking": "ᱠᱩᱠᱞᱤ ᱮᱛᱦᱚᱵ ᱢᱮ",
+        "viewWallet": "ᱣᱟᱞᱮᱴ ᱧᱮᱞ ᱢᱮ",
+        "youAreHere": "ᱟᱢ ᱱᱚᱸᱰᱮ ᱢᱮᱱᱟᱢᱟ"
       },
       "iAcceptContinue": "ᱤᱧ ᱨᱮᱵᱮᱱ ᱟᱹᱧ ᱟᱨ ᱞᱟᱦᱟᱜ ᱟᱹᱧ",
       "invalidOtp": "ᱯᱩᱨᱟᱹ ᱖-ᱰᱤᱡᱤᱴ ᱠᱳᱰ ᱚᱞ ᱢᱮ",
@@ -23511,7 +23586,11 @@ const resources = {
         "dailyCountDone": "{{count}} مڪمل",
         "dailyLimitTitle": "روزاني حد",
         "editWindowTitle": "ايڊٽ ونڊو",
-        "aiCheckTitle": "AI لاڳاپي چڪاس"
+        "aiCheckTitle": "AI لاڳاپي چڪاس",
+        "verifiedUser": "تصديق ٿيل واپرائيندڙ",
+        "startAsking": "پڇڻ شروع ڪريو",
+        "viewWallet": "والیٽ ڏسو",
+        "youAreHere": "توهان هتي آهيو"
       },
       "iAcceptContinue": "مان قبول ڪريان ٿو/ٿي ۽ جاري رکان ٿو/ٿي",
       "invalidOtp": "مكمل 6 انگن جو ڪوڊ داخل ڪريو",
@@ -24726,7 +24805,11 @@ const resources = {
         "dailyCountDone": "{{count}} முடிந்தன",
         "dailyLimitTitle": "தினசரி வரம்பு",
         "editWindowTitle": "திருத்தும் அவகாசம்",
-        "aiCheckTitle": "AI பொருத்தப் பரிசோதனை"
+        "aiCheckTitle": "AI பொருத்தப் பரிசோதனை",
+        "verifiedUser": "சரிபார்க்கப்பட்ட பயனர்",
+        "startAsking": "கேட்க தொடங்குங்கள்",
+        "viewWallet": "வாலட்டைப் பார்க்கவும்",
+        "youAreHere": "நீங்கள் இங்கே இருக்கிறீர்கள்"
       },
       "iAcceptContinue": "நான் ஏற்கிறேன் & தொடர்கிறேன்",
       "invalidOtp": "முழுமையான 6-இலக்கக் குறியீட்டை உள்ளிடவும்",
@@ -25943,7 +26026,11 @@ const resources = {
         "dailyCountDone": "{{count}} పూర్తయింది",
         "dailyLimitTitle": "రోజువారీ పరిమితి",
         "editWindowTitle": "సవరణ వ్యవధి",
-        "aiCheckTitle": "AI సంబంధిత తనిఖీ"
+        "aiCheckTitle": "AI సంబంధిత తనిఖీ",
+        "verifiedUser": "ధృవీకరించబడిన వినియోగదారు",
+        "startAsking": "అడగడం ప్రారంభించండి",
+        "viewWallet": "వాలెట్ చూడండి",
+        "youAreHere": "మీరు ఇక్కడ ఉన్నారు"
       },
       "iAcceptContinue": "నేను అంగీకరిస్తున్నాను & ముందుకు సాగుతున్నాను",
       "invalidOtp": "పూర్తి 6-అంకెల కోడ్‌ను నమోదు చేయండి",
@@ -27158,7 +27245,11 @@ const resources = {
         "dailyCountDone": "{{count}} مکمل",
         "dailyLimitTitle": "روزانہ حد",
         "editWindowTitle": "ترمیمی ونڈو",
-        "aiCheckTitle": "AI متعلقہ چیک"
+        "aiCheckTitle": "AI متعلقہ چیک",
+        "verifiedUser": "تصدیق شدہ صارف",
+        "startAsking": "پوچھنا شروع کریں",
+        "viewWallet": "والیٹ دیکھیں",
+        "youAreHere": "آپ یہاں ہیں"
       },
       "iAcceptContinue": "میں قبول کرتا/کرتی ہوں اور جاری رکھتا/رکھتی ہوں",
       "invalidOtp": "مکمل 6 ہندسوں کا کوڈ درج کریں",
