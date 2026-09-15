@@ -1081,7 +1081,14 @@
     "replies": "जवाफहरू",
     "adminName": "एडमिन",
     "replyCount_one": "{{count}} जवाफ",
-    "replyCount_other": "{{count}} जवाफहरू"
+    "replyCount_other": "{{count}} जवाफहरू",
+    "awaitingReply": "जवाफको पर्खाइमा",
+    "newReportSubtitle": "तपाईंले सामना गरेको समस्या वर्णन गर्नुहोस्। हाम्रो टोली चाँडै तपाईंलाई सम्पर्क गर्नेछ।",
+    "loadingReports": "तपाईंको रिपोर्ट लोड हुँदैछ…",
+    "loadingReport": "रिपोर्ट लोड हुँदैछ…",
+    "reportNotFound": "रिपोर्ट फेला परेन",
+    "reportNotFoundHint": "यो हटाइएको हुन सक्छ वा तपाईंसँग अब पहुँच छैन।",
+    "backToReports": "रिपोर्टहरूमा फर्कनुहोस्"
   },
   "profile.account": "खाता",
   "profile.personalInfo": "व्यक्तिगत विवरण",

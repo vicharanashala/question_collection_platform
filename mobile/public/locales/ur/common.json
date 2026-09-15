@@ -1081,7 +1081,14 @@
     "replies": "جوابات",
     "adminName": "ایڈمن",
     "replyCount_one": "{{count}} جواب",
-    "replyCount_other": "{{count}} جوابات"
+    "replyCount_other": "{{count}} جوابات",
+    "awaitingReply": "جواب کا انتظار",
+    "newReportSubtitle": "آپ کو پیش آنے والے مسئلے کو بیان کریں۔ ہماری ٹیم جلد آپ سے رابطہ کرے گی۔",
+    "loadingReports": "آپ کی رپورٹس لوڈ ہو رہی ہیں…",
+    "loadingReport": "رپورٹ لوڈ ہو رہی ہے…",
+    "reportNotFound": "رپورٹ نہیں ملی",
+    "reportNotFoundHint": "یہ ہٹا دیا گیا ہو سکتا ہے یا اب آپ کو رسائی حاصل نہیں ہے۔",
+    "backToReports": "رپورٹس پر واپس جائیں"
   },
   "profile.account": "اکاؤنٹ",
   "profile.personalInfo": "ذاتی معلومات",

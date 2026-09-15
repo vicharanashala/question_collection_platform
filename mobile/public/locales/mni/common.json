@@ -1081,7 +1081,14 @@
     "replies": "পাউখুমশিং",
     "adminName": "এডমিন",
     "replyCount_one": "পাউখুম {{count}}",
-    "replyCount_other": "পাউখুম {{count}}"
+    "replyCount_other": "পাউখুম {{count}}",
+    "awaitingReply": "পাখোনবা লৈরি",
+    "newReportSubtitle": "নহাক্না মায়োক্খিবা হংজবা মশিং লেপ্পিয়ু। ঐখোয়গী টিমনা থুনামক নহাক্কী মনুংদা লাক্কনি।",
+    "loadingReports": "নহাক্কী রিপোর্ট লোড তৌরি…",
+    "loadingReport": "রিপোর্ট লোড তৌরি…",
+    "reportNotFound": "রিপোর্ট ফংদ্রে",
+    "reportNotFoundHint": "মসি লৌথোকখ্রবা য়াখ্রে নত্রগা নহাক্না হৌজিক্তি এক্সেস লৈত্রে।",
+    "backToReports": "রিপোর্টশিংদা হন্না চৎলু"
   },
   "profile.account": "একান্ত",
   "profile.personalInfo": "ইশাগী মরোল",

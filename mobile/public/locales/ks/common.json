@@ -1081,7 +1081,14 @@
     "replies": "جوابات",
     "adminName": "ایڈمن",
     "replyCount_one": "{{count}} جواب",
-    "replyCount_other": "{{count}} جوابات"
+    "replyCount_other": "{{count}} جوابات",
+    "awaitingReply": "جوابس ہیوٚتھ انتظار",
+    "newReportSubtitle": "تُہنٛدِس پیش آمُتس مسئلَس بیان کریو۔ اَسہِ ٹیٖم جلدی تُہنٛدِس نال رابطہ کریہِ۔",
+    "loadingReports": "تُہنٛد رپورٹ لوڈ گژھان…",
+    "loadingReport": "رپورٹ لوڈ گژھان…",
+    "reportNotFound": "رپورٹ نہٕ ملی",
+    "reportNotFoundHint": "یہ ہیوٚمُت ہیکہِ یا تُہنٛدِس اکھ نہٕ رٲزہِ رسائی۔",
+    "backToReports": "رپورٹن پؠٹھ واپس گژھیو"
   },
   "profile.account": "اکاؤنٹ",
   "profile.personalInfo": "شخصی معلومات",

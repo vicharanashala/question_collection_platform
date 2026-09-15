@@ -1081,7 +1081,14 @@
     "replies": "जापो",
     "adminName": "प्रशासक",
     "replyCount_one": "{{count}} जाप",
-    "replyCount_other": "{{count}} जापो"
+    "replyCount_other": "{{count}} जापो",
+    "awaitingReply": "जबाबाची वाट पळयतां",
+    "newReportSubtitle": "तुमकां आयिल्ली अडचण सांगात. आमची टीम लवकरच तुमकां संपर्क करतली.",
+    "loadingReports": "तुमची रिपोर्ट लोड जातां…",
+    "loadingReport": "रिपोर्ट लोड जातां…",
+    "reportNotFound": "रिपोर्ट मेळ्ळी ना",
+    "reportNotFoundHint": "हें काडून उडयलां आसूं येता वा तुमकां आतां प्रवेश ना.",
+    "backToReports": "रिपोर्टींत परतून वचात"
   },
   "profile.account": "खातें",
   "profile.personalInfo": "वैयक्तीक म्हायती",

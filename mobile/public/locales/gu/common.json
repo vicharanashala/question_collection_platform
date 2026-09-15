@@ -1081,7 +1081,14 @@
     "replies": "જવાબો",
     "adminName": "એડમિન",
     "replyCount_one": "{{count}} જવાબ",
-    "replyCount_other": "{{count}} જવાબો"
+    "replyCount_other": "{{count}} જવાબો",
+    "awaitingReply": "જવાબની રાહ જોવાઈ રહી છે",
+    "newReportSubtitle": "તમે અનુભવેલી સમસ્યાનું વર્ણન કરો. અમારી ટીમ ટૂંક સમયમાં તમારો સંપર્ક કરશે.",
+    "loadingReports": "તમારા રિપોર્ટ લોડ થઈ રહ્યા છે…",
+    "loadingReport": "રિપોર્ટ લોડ થઈ રહ્યો છે…",
+    "reportNotFound": "રિપોર્ટ મળ્યો નથી",
+    "reportNotFoundHint": "તે દૂર કરવામાં આવ્યો હોઈ શકે અથવા તમારી પાસે હવે ઍક્સેસ નથી.",
+    "backToReports": "રિપોર્ટ પર પાછા જાઓ"
   },
   "profile.account": "એકાઉન્ટ",
   "profile.personalInfo": "અંગત માહિતી",

@@ -1081,7 +1081,14 @@
     "replies": "മറുപടികൾ",
     "adminName": "അഡ്മിൻ",
     "replyCount_one": "{{count}} മറുപടി",
-    "replyCount_other": "{{count}} മറുപടികൾ"
+    "replyCount_other": "{{count}} മറുപടികൾ",
+    "awaitingReply": "മറുപടിക്കായി കാത്തിരിക്കുന്നു",
+    "newReportSubtitle": "നിങ്ങൾ നേരിട്ട പ്രശ്നം വിവരിക്കുക. ഞങ്ങളുടെ ടീം ഉടൻ നിങ്ങളെ ബന്ധപ്പെടും.",
+    "loadingReports": "നിങ്ങളുടെ റിപ്പോർട്ടുകൾ ലോഡ് ചെയ്യുന്നു…",
+    "loadingReport": "റിപ്പോർട്ട് ലോഡ് ചെയ്യുന്നു…",
+    "reportNotFound": "റിപ്പോർട്ട് കണ്ടെത്തിയില്ല",
+    "reportNotFoundHint": "ഇത് നീക്കം ചെയ്തിരിക്കാം അല്ലെങ്കിൽ നിങ്ങൾക്ക് ഇനി ആക്‌സസ് ഇല്ല.",
+    "backToReports": "റിപ്പോർട്ടുകളിലേക്ക് മടങ്ങുക"
   },
   "profile.account": "അക്കൗണ്ട്",
   "profile.personalInfo": "വ്യക്തിഗത വിവരങ്ങൾ",

@@ -1050,7 +1050,14 @@ const resources = {
         "replies": "Replies",
         "adminName": "Admin",
         "replyCount_one": "{{count}} reply",
-        "replyCount_other": "{{count}} replies"
+        "replyCount_other": "{{count}} replies",
+        "awaitingReply": "Awaiting reply",
+        "newReportSubtitle": "Describe the issue you faced. Our team will get back to you soon.",
+        "loadingReports": "Loading your reports…",
+        "loadingReport": "Loading report…",
+        "reportNotFound": "Report not found",
+        "reportNotFoundHint": "It may have been removed or you no longer have access.",
+        "backToReports": "Back to reports"
       },
       "faq": {
         "title": "Help & FAQ",
@@ -2304,7 +2311,14 @@ const resources = {
         "replies": "উত্তৰসমূহ",
         "adminName": "এডমিন",
         "replyCount_one": "{{count}} টা উত্তৰ",
-        "replyCount_other": "{{count}} টা উত্তৰ"
+        "replyCount_other": "{{count}} টা উত্তৰ",
+        "awaitingReply": "উত্তৰৰ অপেক্ষাত",
+        "newReportSubtitle": "আপুনি সন্মুখীন হোৱা সমস্যাটো বৰ্ণনা কৰক। আমাৰ দল সোনকালে আপোনাৰ সৈতে যোগাযোগ কৰিব।",
+        "loadingReports": "আপোনাৰ ৰিপৰ্ট ল'ড হৈ আছে…",
+        "loadingReport": "ৰিপৰ্ট ল'ড হৈ আছে…",
+        "reportNotFound": "ৰিপৰ্ট পোৱা নগ'ল",
+        "reportNotFoundHint": "ই আঁতৰোৱা হ'ব পাৰে অথবা আপুনি আৰু প্ৰৱেশাধিকাৰ নাই।",
+        "backToReports": "ৰিপৰ্টলৈ ঘূৰি যাওক"
       },
       "faq": {
         "title": "সহায় আৰু FAQ",
@@ -3558,7 +3572,14 @@ const resources = {
         "replies": "উত্তরসমূহ",
         "adminName": "অ্যাডমিন",
         "replyCount_one": "{{count}} টি উত্তর",
-        "replyCount_other": "{{count}} টি উত্তর"
+        "replyCount_other": "{{count}} টি উত্তর",
+        "awaitingReply": "উত্তরের অপেক্ষায়",
+        "newReportSubtitle": "আপনি যে সমস্যায় পড়েছেন তা বর্ণনা করুন। আমাদের টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।",
+        "loadingReports": "আপনার রিপোর্ট লোড হচ্ছে…",
+        "loadingReport": "রিপোর্ট লোড হচ্ছে…",
+        "reportNotFound": "রিপোর্ট পাওয়া যায়নি",
+        "reportNotFoundHint": "এটি সরিয়ে ফেলা হতে পারে অথবা আপনার আর অ্যাক্সেস নেই।",
+        "backToReports": "রিপোর্টে ফিরে যান"
       },
       "faq": {
         "title": "সাহায্য ও জিজ্ঞাসা",
@@ -4812,7 +4833,14 @@ const resources = {
         "replies": "फिननायफोर",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} टा फिननाय",
-        "replyCount_other": "{{count}} टा फिननाय"
+        "replyCount_other": "{{count}} टा फिननाय",
+        "awaitingReply": "फिनफिनाय गोसो सोंलाय दं",
+        "newReportSubtitle": "नोंथाङा मोनसे बिथोन जायखि बे बुंनाय। आं मोनसे दल जोबथाबनो थांगोन।",
+        "loadingReports": "नोंथाङा रिपर्टखौ लोड खालामनाय जासैदों…",
+        "loadingReport": "रिपर्टखौ लोड खालामनाय जासैदों…",
+        "reportNotFound": "रिपर्ट मोनाखै",
+        "reportNotFoundHint": "बेखौ फोजोब खालामनाय जाबाय एबा नोंथाङा गोदान अनजिमा गैया।",
+        "backToReports": "रिपर्ट फिसा जागोन"
       },
       "faq": {
         "title": "मदद आरो FAQ",
@@ -6066,7 +6094,14 @@ const resources = {
         "replies": "जवाब",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} जवाब",
-        "replyCount_other": "{{count}} जवाब"
+        "replyCount_other": "{{count}} जवाब",
+        "awaitingReply": "जवाब दी उडीक",
+        "newReportSubtitle": "तुसें आई समस्या दस्सो। साड्डी टीम छेती तुहाड़े कन्ने संपर्क करग।",
+        "loadingReports": "तुहाड़ी रिपोर्ट लोड होआ करदी ऐ…",
+        "loadingReport": "रिपोर्ट लोड होआ करदी ऐ…",
+        "reportNotFound": "रिपोर्ट नेईं मिली",
+        "reportNotFoundHint": "होई सकदा ऐ के इसेगी हटाई गेदा होए जां तुहाड़े कोल हुण पुज नेईं।",
+        "backToReports": "रिपोर्टें पर वापस जाओ"
       },
       "faq": {
         "title": "सहायता ते अक्सर पुछे जाने वाले प्रश्न (FAQ)",
@@ -7320,7 +7355,14 @@ const resources = {
         "replies": "જવાબો",
         "adminName": "એડમિન",
         "replyCount_one": "{{count}} જવાબ",
-        "replyCount_other": "{{count}} જવાબો"
+        "replyCount_other": "{{count}} જવાબો",
+        "awaitingReply": "જવાબની રાહ જોવાઈ રહી છે",
+        "newReportSubtitle": "તમે અનુભવેલી સમસ્યાનું વર્ણન કરો. અમારી ટીમ ટૂંક સમયમાં તમારો સંપર્ક કરશે.",
+        "loadingReports": "તમારા રિપોર્ટ લોડ થઈ રહ્યા છે…",
+        "loadingReport": "રિપોર્ટ લોડ થઈ રહ્યો છે…",
+        "reportNotFound": "રિપોર્ટ મળ્યો નથી",
+        "reportNotFoundHint": "તે દૂર કરવામાં આવ્યો હોઈ શકે અથવા તમારી પાસે હવે ઍક્સેસ નથી.",
+        "backToReports": "રિપોર્ટ પર પાછા જાઓ"
       },
       "faq": {
         "title": "મદદ અને FAQ",
@@ -8593,7 +8635,14 @@ const resources = {
         "replies": "जवाब",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} जवाब",
-        "replyCount_other": "{{count}} जवाब"
+        "replyCount_other": "{{count}} जवाब",
+        "awaitingReply": "उत्तर की प्रतीक्षा",
+        "newReportSubtitle": "आपको आई समस्या का वर्णन करें। हमारी टीम जल्द ही आपसे संपर्क करेगी।",
+        "loadingReports": "आपकी रिपोर्ट लोड हो रही है…",
+        "loadingReport": "रिपोर्ट लोड हो रही है…",
+        "reportNotFound": "रिपोर्ट नहीं मिली",
+        "reportNotFoundHint": "हो सकता है इसे हटा दिया गया हो या अब आपके पास पहुंच न हो।",
+        "backToReports": "रिपोर्ट पर वापस जाएं"
       },
       "faq": {
         "title": "सहायता और FAQ",
@@ -9847,7 +9896,14 @@ const resources = {
         "replies": "ಉತ್ತರಗಳು",
         "adminName": "ಅಡ್ಮಿನ್",
         "replyCount_one": "{{count}} ಉತ್ತರ",
-        "replyCount_other": "{{count}} ಉತ್ತರಗಳು"
+        "replyCount_other": "{{count}} ಉತ್ತರಗಳು",
+        "awaitingReply": "ಪ್ರತಿಕ್ರಿಯೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ",
+        "newReportSubtitle": "ನೀವು ಎದುರಿಸಿದ ಸಮಸ್ಯೆಯನ್ನು ವಿವರಿಸಿ. ನಮ್ಮ ತಂಡ ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸುತ್ತದೆ.",
+        "loadingReports": "ನಿಮ್ಮ ವರದಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+        "loadingReport": "ವರದಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+        "reportNotFound": "ವರದಿ ಕಂಡುಬಂದಿಲ್ಲ",
+        "reportNotFoundHint": "ಇದನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿರಬಹುದು ಅಥವಾ ನಿಮಗೆ ಇನ್ನು ಮುಂದೆ ಪ್ರವೇಶವಿಲ್ಲ.",
+        "backToReports": "ವರದಿಗಳಿಗೆ ಹಿಂತಿರುಗಿ"
       },
       "faq": {
         "title": "ಸಹಾಯ ಮತ್ತು FAQ",
@@ -11101,7 +11157,14 @@ const resources = {
         "replies": "جوابات",
         "adminName": "ایڈمن",
         "replyCount_one": "{{count}} جواب",
-        "replyCount_other": "{{count}} جوابات"
+        "replyCount_other": "{{count}} جوابات",
+        "awaitingReply": "جوابس ہیوٚتھ انتظار",
+        "newReportSubtitle": "تُہنٛدِس پیش آمُتس مسئلَس بیان کریو۔ اَسہِ ٹیٖم جلدی تُہنٛدِس نال رابطہ کریہِ۔",
+        "loadingReports": "تُہنٛد رپورٹ لوڈ گژھان…",
+        "loadingReport": "رپورٹ لوڈ گژھان…",
+        "reportNotFound": "رپورٹ نہٕ ملی",
+        "reportNotFoundHint": "یہ ہیوٚمُت ہیکہِ یا تُہنٛدِس اکھ نہٕ رٲزہِ رسائی۔",
+        "backToReports": "رپورٹن پؠٹھ واپس گژھیو"
       },
       "faq": {
         "title": "مدد تہٕ FAQs",
@@ -12355,7 +12418,14 @@ const resources = {
         "replies": "जापो",
         "adminName": "प्रशासक",
         "replyCount_one": "{{count}} जाप",
-        "replyCount_other": "{{count}} जापो"
+        "replyCount_other": "{{count}} जापो",
+        "awaitingReply": "जबाबाची वाट पळयतां",
+        "newReportSubtitle": "तुमकां आयिल्ली अडचण सांगात. आमची टीम लवकरच तुमकां संपर्क करतली.",
+        "loadingReports": "तुमची रिपोर्ट लोड जातां…",
+        "loadingReport": "रिपोर्ट लोड जातां…",
+        "reportNotFound": "रिपोर्ट मेळ्ळी ना",
+        "reportNotFoundHint": "हें काडून उडयलां आसूं येता वा तुमकां आतां प्रवेश ना.",
+        "backToReports": "रिपोर्टींत परतून वचात"
       },
       "faq": {
         "title": "मदत आनी FAQ",
@@ -13609,7 +13679,14 @@ const resources = {
         "replies": "जवाब सब",
         "adminName": "प्रशासक (एडमिन)",
         "replyCount_one": "{{count}} जवाब",
-        "replyCount_other": "{{count}} जवाब सब"
+        "replyCount_other": "{{count}} जवाब सब",
+        "awaitingReply": "उत्तरक प्रतीक्षा",
+        "newReportSubtitle": "अहाँक भेटल समस्याक वर्णन करू। हमर टीम जल्दिये अहाँसँ संपर्क करत।",
+        "loadingReports": "अहाँक रिपोर्ट लोड भ रहल अछि…",
+        "loadingReport": "रिपोर्ट लोड भ रहल अछि…",
+        "reportNotFound": "रिपोर्ट नहि भेटल",
+        "reportNotFoundHint": "ई हटाओल गेल हएत अथवा अहाँक लग एखन पहुँच नहि अछि।",
+        "backToReports": "रिपोर्ट पर वापस जाउ"
       },
       "faq": {
         "title": "मद्दति आ एफएक्यू",
@@ -14863,7 +14940,14 @@ const resources = {
         "replies": "മറുപടികൾ",
         "adminName": "അഡ്മിൻ",
         "replyCount_one": "{{count}} മറുപടി",
-        "replyCount_other": "{{count}} മറുപടികൾ"
+        "replyCount_other": "{{count}} മറുപടികൾ",
+        "awaitingReply": "മറുപടിക്കായി കാത്തിരിക്കുന്നു",
+        "newReportSubtitle": "നിങ്ങൾ നേരിട്ട പ്രശ്നം വിവരിക്കുക. ഞങ്ങളുടെ ടീം ഉടൻ നിങ്ങളെ ബന്ധപ്പെടും.",
+        "loadingReports": "നിങ്ങളുടെ റിപ്പോർട്ടുകൾ ലോഡ് ചെയ്യുന്നു…",
+        "loadingReport": "റിപ്പോർട്ട് ലോഡ് ചെയ്യുന്നു…",
+        "reportNotFound": "റിപ്പോർട്ട് കണ്ടെത്തിയില്ല",
+        "reportNotFoundHint": "ഇത് നീക്കം ചെയ്തിരിക്കാം അല്ലെങ്കിൽ നിങ്ങൾക്ക് ഇനി ആക്‌സസ് ഇല്ല.",
+        "backToReports": "റിപ്പോർട്ടുകളിലേക്ക് മടങ്ങുക"
       },
       "faq": {
         "title": "സഹായവും സംശയങ്ങളും (FAQ)",
@@ -16117,7 +16201,14 @@ const resources = {
         "replies": "পাউখুমশিং",
         "adminName": "এডমিন",
         "replyCount_one": "পাউখুম {{count}}",
-        "replyCount_other": "পাউখুম {{count}}"
+        "replyCount_other": "পাউখুম {{count}}",
+        "awaitingReply": "পাখোনবা লৈরি",
+        "newReportSubtitle": "নহাক্না মায়োক্খিবা হংজবা মশিং লেপ্পিয়ু। ঐখোয়গী টিমনা থুনামক নহাক্কী মনুংদা লাক্কনি।",
+        "loadingReports": "নহাক্কী রিপোর্ট লোড তৌরি…",
+        "loadingReport": "রিপোর্ট লোড তৌরি…",
+        "reportNotFound": "রিপোর্ট ফংদ্রে",
+        "reportNotFoundHint": "মসি লৌথোকখ্রবা য়াখ্রে নত্রগা নহাক্না হৌজিক্তি এক্সেস লৈত্রে।",
+        "backToReports": "রিপোর্টশিংদা হন্না চৎলু"
       },
       "faq": {
         "title": "হেল্প অমসুং FAQ",
@@ -17371,7 +17462,14 @@ const resources = {
         "replies": "उत्तरे",
         "adminName": "अ‍ॅडमिन",
         "replyCount_one": "{{count}} उत्तर",
-        "replyCount_other": "{{count}} उत्तरे"
+        "replyCount_other": "{{count}} उत्तरे",
+        "awaitingReply": "उत्तराची प्रतीक्षा",
+        "newReportSubtitle": "तुम्हाला आलेल्या समस्येचे वर्णन करा. आमची टीम लवकरच तुमच्याशी संपर्क साधेल.",
+        "loadingReports": "तुमचे अहवाल लोड होत आहेत…",
+        "loadingReport": "अहवाल लोड होत आहे…",
+        "reportNotFound": "अहवाल सापडला नाही",
+        "reportNotFoundHint": "हे कदाचित काढून टाकले गेले असेल किंवा तुम्हाला यापुढे प्रवेश नाही.",
+        "backToReports": "अहवालांकडे परत जा"
       },
       "faq": {
         "title": "मदत आणि FAQ",
@@ -18625,7 +18723,14 @@ const resources = {
         "replies": "जवाफहरू",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} जवाफ",
-        "replyCount_other": "{{count}} जवाफहरू"
+        "replyCount_other": "{{count}} जवाफहरू",
+        "awaitingReply": "जवाफको पर्खाइमा",
+        "newReportSubtitle": "तपाईंले सामना गरेको समस्या वर्णन गर्नुहोस्। हाम्रो टोली चाँडै तपाईंलाई सम्पर्क गर्नेछ।",
+        "loadingReports": "तपाईंको रिपोर्ट लोड हुँदैछ…",
+        "loadingReport": "रिपोर्ट लोड हुँदैछ…",
+        "reportNotFound": "रिपोर्ट फेला परेन",
+        "reportNotFoundHint": "यो हटाइएको हुन सक्छ वा तपाईंसँग अब पहुँच छैन।",
+        "backToReports": "रिपोर्टहरूमा फर्कनुहोस्"
       },
       "faq": {
         "title": "सहायता र FAQ",
@@ -19879,7 +19984,14 @@ const resources = {
         "replies": "ଉତ୍ତରଗୁଡ଼ିକ",
         "adminName": "ଆଡମିନ୍",
         "replyCount_one": "{{count}} ଟି ଉତ୍ତର",
-        "replyCount_other": "{{count}} ଟି ଉତ୍ତର"
+        "replyCount_other": "{{count}} ଟି ଉତ୍ତର",
+        "awaitingReply": "ଉତ୍ତର ପାଇଁ ଅପେକ୍ଷାରତ",
+        "newReportSubtitle": "ଆପଣ ସାମ୍ନା କରିଥିବା ସମସ୍ୟା ବର୍ଣ୍ଣନା କରନ୍ତୁ। ଆମ ଦଳ ଶୀଘ୍ର ଆପଣଙ୍କ ସହିତ ଯୋଗାଯୋଗ କରିବ।",
+        "loadingReports": "ଆପଣଙ୍କ ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+        "loadingReport": "ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+        "reportNotFound": "ରିପୋର୍ଟ ମିଳିଲା ନାହିଁ",
+        "reportNotFoundHint": "ଏହା ହୟତ ହଟାଯାଇଥିବ କିମ୍ବା ଆପଣଙ୍କ ପାଖରେ ଆଉ ପ୍ରବେଶାଧିକାର ନାହିଁ।",
+        "backToReports": "ରିପୋର୍ଟକୁ ଫେରନ୍ତୁ"
       },
       "faq": {
         "title": "ସହାୟତା ଏବଂ FAQ",
@@ -21132,7 +21244,14 @@ const resources = {
         "replies": "ਜਵਾਬ",
         "adminName": "ਐਡਮਿਨ",
         "replyCount_one": "{{count}} ਜਵਾਬ",
-        "replyCount_other": "{{count}} ਜਵਾਬ"
+        "replyCount_other": "{{count}} ਜਵਾਬ",
+        "awaitingReply": "ਜਵਾਬ ਦੀ ਉਡੀਕ",
+        "newReportSubtitle": "ਤੁਹਾਨੂੰ ਆਈ ਸਮੱਸਿਆ ਦਾ ਵਰਣਨ ਕਰੋ। ਸਾਡੀ ਟੀਮ ਜਲਦੀ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੇਗੀ।",
+        "loadingReports": "ਤੁਹਾਡੀ ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+        "loadingReport": "ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+        "reportNotFound": "ਰਿਪੋਰਟ ਨਹੀਂ ਮਿਲੀ",
+        "reportNotFoundHint": "ਇਹ ਹਟਾਈ ਗਈ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਤੁਹਾਡੇ ਕੋਲ ਹੁਣ ਪਹੁੰਚ ਨਹੀਂ ਹੈ।",
+        "backToReports": "ਰਿਪੋਰਟਾਂ ਤੇ ਵਾਪਸ ਜਾਓ"
       },
       "faq": {
         "title": "ਸਹਾਇਤਾ ਅਤੇ FAQ",
@@ -22396,7 +22515,14 @@ const resources = {
         "replies": "उत्तराणि",
         "adminName": "प्रशासकः",
         "replyCount_one": "{{count}} उत्तरम्",
-        "replyCount_other": "{{count}} उत्तराणि"
+        "replyCount_other": "{{count}} उत्तराणि",
+        "awaitingReply": "उत्तरं प्रतीक्ष्यते",
+        "newReportSubtitle": "भवता अनुभूतां समस्यां वर्णयतु। अस्माकं दलं शीघ्रं भवन्तं सम्पर्कयिष्यति।",
+        "loadingReports": "भवतः प्रतिवेदनानि आयोज्यन्ते…",
+        "loadingReport": "प्रतिवेदनम् आयोज्यते…",
+        "reportNotFound": "प्रतिवेदनं न प्राप्तम्",
+        "reportNotFoundHint": "इदं अपसारितं स्यात् अथवा भवतः अधुना प्रवेशः नास्ति।",
+        "backToReports": "प्रतिवेदनानि प्रति प्रत्यागच्छतु"
       },
       "faq": {
         "title": "सहायता तथा सामान्याः प्रश्नाः (FAQ)",
@@ -23650,7 +23776,14 @@ const resources = {
         "replies": "ᱨᱳᱲ ᱠᱚ",
         "adminName": "ᱮᱰᱢᱤᱱ",
         "replyCount_one": "{{count}} ᱴᱟᱝ ᱨᱳᱲ",
-        "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ"
+        "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ",
+        "awaitingReply": "ᱨᱩᱲᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱟᱹᱝᱜᱤ ᱠᱟᱱᱟ",
+        "newReportSubtitle": "ᱟᱢᱟᱜ ᱧᱟᱢ ᱠᱟᱛᱮ ᱠᱩᱠᱞᱤᱭᱟᱜ ᱵᱚᱭᱟᱱ ᱢᱮ᱾ ᱟᱞᱮᱴᱟᱜ ᱴᱤᱢ ᱡᱚᱛᱚ ᱟᱢ ᱠᱮᱛᱮ ᱨᱟᱵᱟᱲᱟ ᱠᱟᱛᱮ ᱮᱢᱟᱭ᱾",
+        "loadingReports": "ᱟᱢᱟᱜ ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "loadingReport": "ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "reportNotFound": "ᱨᱤᱯᱳᱨᱴ ᱵᱟᱝ ᱧᱟᱢᱮᱱᱟ",
+        "reportNotFoundHint": "ᱟᱭᱢᱟ ᱚᱰᱚᱠᱚᱱᱟ ᱠᱟᱱᱟ ᱥᱮ ᱟᱢᱟᱜ ᱦᱚᱸ ᱵᱟᱝ ᱟᱨᱩ ᱮᱠᱥᱮᱥ ᱢᱮᱱᱟᱜᱼᱟ᱾",
+        "backToReports": "ᱨᱤᱯᱳᱨᱴ ᱛᱮ ᱨᱩᱣᱟᱲ ᱢᱮ"
       },
       "faq": {
         "title": "ᱜᱚᱲᱚ ᱟᱨ ᱡᱟᱣᱜᱮ ᱠᱩᱠᱞᱤ (FAQ)",
@@ -24904,7 +25037,14 @@ const resources = {
         "replies": "جواب",
         "adminName": "ايڊمن",
         "replyCount_one": "{{count}} جواب",
-        "replyCount_other": "{{count}} جواب"
+        "replyCount_other": "{{count}} جواب",
+        "awaitingReply": "جواب جو انتظار",
+        "newReportSubtitle": "اوهان کي پيش آيل مسئلو بيان ڪريو. اسان جي ٽيم جلد اوهان سان رابطو ڪندي.",
+        "loadingReports": "اوهان جون رپورٽون لوڊ ٿي رهيون آهن…",
+        "loadingReport": "رپورٽ لوڊ ٿي رهي آهي…",
+        "reportNotFound": "رپورٽ نه لڌي",
+        "reportNotFoundHint": "اهو ممڪن آهي هٽايو ويو هجي يا اوهان کي هاڻي رسائي نه هجي.",
+        "backToReports": "رپورٽن ڏانهن واپس وڃو"
       },
       "faq": {
         "title": "مدد ۽ FAQ",
@@ -26158,7 +26298,14 @@ const resources = {
         "replies": "பதில்கள்",
         "adminName": "நிர்வாகி",
         "replyCount_one": "{{count}} பதில்",
-        "replyCount_other": "{{count}} பதில்கள்"
+        "replyCount_other": "{{count}} பதில்கள்",
+        "awaitingReply": "பதிலுக்காக காத்திருக்கிறது",
+        "newReportSubtitle": "நீங்கள் எதிர்கொண்ட சிக்கலை விவரிக்கவும். எங்கள் குழு விரைவில் உங்களைத் தொடர்பு கொள்ளும்.",
+        "loadingReports": "உங்கள் அறிக்கைகள் ஏற்றப்படுகின்றன…",
+        "loadingReport": "அறிக்கை ஏற்றப்படுகிறது…",
+        "reportNotFound": "அறிக்கை கிடைக்கவில்லை",
+        "reportNotFoundHint": "இது அகற்றப்பட்டிருக்கலாம் அல்லது உங்களுக்கு இனி அணுகல் இல்லை.",
+        "backToReports": "அறிக்கைகளுக்குத் திரும்பு"
       },
       "faq": {
         "title": "உதவி & அடிக்கடி கேட்கப்படும் கேள்விகள்",
@@ -27414,7 +27561,14 @@ const resources = {
         "replies": "సమాధానాలు",
         "adminName": "అడ్మిన్",
         "replyCount_one": "{{count}} సమాధానం",
-        "replyCount_other": "{{count}} సమాధానాలు"
+        "replyCount_other": "{{count}} సమాధానాలు",
+        "awaitingReply": "ప్రతిస్పందన కోసం వేచి ఉంది",
+        "newReportSubtitle": "మీరు ఎదుర్కొన్న సమస్యను వివరించండి. మా బృందం త్వరలో మిమ్మల్ని సంప్రదిస్తుంది.",
+        "loadingReports": "మీ నివేదికలు లోడ్ అవుతున్నాయి…",
+        "loadingReport": "నివేదిక లోడ్ అవుతోంది…",
+        "reportNotFound": "నివేదిక కనుగొనబడలేదు",
+        "reportNotFoundHint": "ఇది తీసివేయబడి ఉండవచ్చు లేదా మీకు ఇకపై యాక్సెస్ లేదు.",
+        "backToReports": "నివేదికలకు తిరిగి వెళ్ళండి"
       },
       "faq": {
         "title": "సహాయం & తరచుగా అడిగే ప్రశ్నలు (FAQ)",
@@ -28668,7 +28822,14 @@ const resources = {
         "replies": "جوابات",
         "adminName": "ایڈمن",
         "replyCount_one": "{{count}} جواب",
-        "replyCount_other": "{{count}} جوابات"
+        "replyCount_other": "{{count}} جوابات",
+        "awaitingReply": "جواب کا انتظار",
+        "newReportSubtitle": "آپ کو پیش آنے والے مسئلے کو بیان کریں۔ ہماری ٹیم جلد آپ سے رابطہ کرے گی۔",
+        "loadingReports": "آپ کی رپورٹس لوڈ ہو رہی ہیں…",
+        "loadingReport": "رپورٹ لوڈ ہو رہی ہے…",
+        "reportNotFound": "رپورٹ نہیں ملی",
+        "reportNotFoundHint": "یہ ہٹا دیا گیا ہو سکتا ہے یا اب آپ کو رسائی حاصل نہیں ہے۔",
+        "backToReports": "رپورٹس پر واپس جائیں"
       },
       "faq": {
         "title": "مدد اور اکثر پوچھے گئے سوالات",

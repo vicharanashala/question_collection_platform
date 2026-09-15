@@ -1081,7 +1081,14 @@
     "replies": "ᱨᱳᱲ ᱠᱚ",
     "adminName": "ᱮᱰᱢᱤᱱ",
     "replyCount_one": "{{count}} ᱴᱟᱝ ᱨᱳᱲ",
-    "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ"
+    "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ",
+    "awaitingReply": "ᱨᱩᱲᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱟᱹᱝᱜᱤ ᱠᱟᱱᱟ",
+    "newReportSubtitle": "ᱟᱢᱟᱜ ᱧᱟᱢ ᱠᱟᱛᱮ ᱠᱩᱠᱞᱤᱭᱟᱜ ᱵᱚᱭᱟᱱ ᱢᱮ᱾ ᱟᱞᱮᱴᱟᱜ ᱴᱤᱢ ᱡᱚᱛᱚ ᱟᱢ ᱠᱮᱛᱮ ᱨᱟᱵᱟᱲᱟ ᱠᱟᱛᱮ ᱮᱢᱟᱭ᱾",
+    "loadingReports": "ᱟᱢᱟᱜ ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+    "loadingReport": "ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+    "reportNotFound": "ᱨᱤᱯᱳᱨᱴ ᱵᱟᱝ ᱧᱟᱢᱮᱱᱟ",
+    "reportNotFoundHint": "ᱟᱭᱢᱟ ᱚᱰᱚᱠᱚᱱᱟ ᱠᱟᱱᱟ ᱥᱮ ᱟᱢᱟᱜ ᱦᱚᱸ ᱵᱟᱝ ᱟᱨᱩ ᱮᱠᱥᱮᱥ ᱢᱮᱱᱟᱜᱼᱟ᱾",
+    "backToReports": "ᱨᱤᱯᱳᱨᱴ ᱛᱮ ᱨᱩᱣᱟᱲ ᱢᱮ"
   },
   "profile.account": "ᱮᱠᱟᱣᱩᱱᱴ",
   "profile.personalInfo": "ᱱᱤᱡᱮᱨᱟᱜ ᱵᱤᱵᱚᱨᱚᱱ",

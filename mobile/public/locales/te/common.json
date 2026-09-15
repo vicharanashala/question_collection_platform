@@ -1083,7 +1083,14 @@
     "replies": "సమాధానాలు",
     "adminName": "అడ్మిన్",
     "replyCount_one": "{{count}} సమాధానం",
-    "replyCount_other": "{{count}} సమాధానాలు"
+    "replyCount_other": "{{count}} సమాధానాలు",
+    "awaitingReply": "ప్రతిస్పందన కోసం వేచి ఉంది",
+    "newReportSubtitle": "మీరు ఎదుర్కొన్న సమస్యను వివరించండి. మా బృందం త్వరలో మిమ్మల్ని సంప్రదిస్తుంది.",
+    "loadingReports": "మీ నివేదికలు లోడ్ అవుతున్నాయి…",
+    "loadingReport": "నివేదిక లోడ్ అవుతోంది…",
+    "reportNotFound": "నివేదిక కనుగొనబడలేదు",
+    "reportNotFoundHint": "ఇది తీసివేయబడి ఉండవచ్చు లేదా మీకు ఇకపై యాక్సెస్ లేదు.",
+    "backToReports": "నివేదికలకు తిరిగి వెళ్ళండి"
   },
   "profile.account": "ఖాతా",
   "profile.personalInfo": "వ్యక్తిగత సమాచారం",

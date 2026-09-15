@@ -1081,7 +1081,14 @@
     "replies": "উত্তরসমূহ",
     "adminName": "অ্যাডমিন",
     "replyCount_one": "{{count}} টি উত্তর",
-    "replyCount_other": "{{count}} টি উত্তর"
+    "replyCount_other": "{{count}} টি উত্তর",
+    "awaitingReply": "উত্তরের অপেক্ষায়",
+    "newReportSubtitle": "আপনি যে সমস্যায় পড়েছেন তা বর্ণনা করুন। আমাদের টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।",
+    "loadingReports": "আপনার রিপোর্ট লোড হচ্ছে…",
+    "loadingReport": "রিপোর্ট লোড হচ্ছে…",
+    "reportNotFound": "রিপোর্ট পাওয়া যায়নি",
+    "reportNotFoundHint": "এটি সরিয়ে ফেলা হতে পারে অথবা আপনার আর অ্যাক্সেস নেই।",
+    "backToReports": "রিপোর্টে ফিরে যান"
   },
   "profile.account": "একাউন্ট",
   "profile.personalInfo": "ব্যক্তিগত তথ্য",

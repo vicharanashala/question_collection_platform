@@ -1081,7 +1081,14 @@
     "replies": "ಉತ್ತರಗಳು",
     "adminName": "ಅಡ್ಮಿನ್",
     "replyCount_one": "{{count}} ಉತ್ತರ",
-    "replyCount_other": "{{count}} ಉತ್ತರಗಳು"
+    "replyCount_other": "{{count}} ಉತ್ತರಗಳು",
+    "awaitingReply": "ಪ್ರತಿಕ್ರಿಯೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ",
+    "newReportSubtitle": "ನೀವು ಎದುರಿಸಿದ ಸಮಸ್ಯೆಯನ್ನು ವಿವರಿಸಿ. ನಮ್ಮ ತಂಡ ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸುತ್ತದೆ.",
+    "loadingReports": "ನಿಮ್ಮ ವರದಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+    "loadingReport": "ವರದಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+    "reportNotFound": "ವರದಿ ಕಂಡುಬಂದಿಲ್ಲ",
+    "reportNotFoundHint": "ಇದನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿರಬಹುದು ಅಥವಾ ನಿಮಗೆ ಇನ್ನು ಮುಂದೆ ಪ್ರವೇಶವಿಲ್ಲ.",
+    "backToReports": "ವರದಿಗಳಿಗೆ ಹಿಂತಿರುಗಿ"
   },
   "profile.account": "ಖಾತೆ",
   "profile.personalInfo": "ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ",

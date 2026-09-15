@@ -1091,7 +1091,14 @@
     "replies": "उत्तराणि",
     "adminName": "प्रशासकः",
     "replyCount_one": "{{count}} उत्तरम्",
-    "replyCount_other": "{{count}} उत्तराणि"
+    "replyCount_other": "{{count}} उत्तराणि",
+    "awaitingReply": "उत्तरं प्रतीक्ष्यते",
+    "newReportSubtitle": "भवता अनुभूतां समस्यां वर्णयतु। अस्माकं दलं शीघ्रं भवन्तं सम्पर्कयिष्यति।",
+    "loadingReports": "भवतः प्रतिवेदनानि आयोज्यन्ते…",
+    "loadingReport": "प्रतिवेदनम् आयोज्यते…",
+    "reportNotFound": "प्रतिवेदनं न प्राप्तम्",
+    "reportNotFoundHint": "इदं अपसारितं स्यात् अथवा भवतः अधुना प्रवेशः नास्ति।",
+    "backToReports": "प्रतिवेदनानि प्रति प्रत्यागच्छतु"
   },
   "profile.account": "खातम्",
   "profile.personalInfo": "व्यक्तिगतसूचना",

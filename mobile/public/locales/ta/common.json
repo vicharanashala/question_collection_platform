@@ -1081,7 +1081,14 @@
     "replies": "பதில்கள்",
     "adminName": "நிர்வாகி",
     "replyCount_one": "{{count}} பதில்",
-    "replyCount_other": "{{count}} பதில்கள்"
+    "replyCount_other": "{{count}} பதில்கள்",
+    "awaitingReply": "பதிலுக்காக காத்திருக்கிறது",
+    "newReportSubtitle": "நீங்கள் எதிர்கொண்ட சிக்கலை விவரிக்கவும். எங்கள் குழு விரைவில் உங்களைத் தொடர்பு கொள்ளும்.",
+    "loadingReports": "உங்கள் அறிக்கைகள் ஏற்றப்படுகின்றன…",
+    "loadingReport": "அறிக்கை ஏற்றப்படுகிறது…",
+    "reportNotFound": "அறிக்கை கிடைக்கவில்லை",
+    "reportNotFoundHint": "இது அகற்றப்பட்டிருக்கலாம் அல்லது உங்களுக்கு இனி அணுகல் இல்லை.",
+    "backToReports": "அறிக்கைகளுக்குத் திரும்பு"
   },
   "profile.account": "கணக்கு",
   "profile.personalInfo": "தனிப்பட்ட தகவல்",

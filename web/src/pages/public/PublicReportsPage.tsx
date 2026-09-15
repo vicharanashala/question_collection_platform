@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { reportsApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -35,21 +36,21 @@ import type { Report, ReportCategory } from '@/types'
 
 interface CategoryOption {
   value: ReportCategory
-  label: string
+  labelKey: string
   icon: typeof Bug
 }
 
 const CATEGORY_OPTIONS: CategoryOption[] = [
-  { value: 'bug',             label: 'Bug Report',         icon: Bug },
-  { value: 'payout_issue',    label: 'Payout Issue',       icon: CreditCard },
-  { value: 'question_issue',  label: 'Question Issue',     icon: HelpCircle },
-  { value: 'abuse',           label: 'Abuse / Harassment', icon: ShieldAlert },
-  { value: 'feature_request', label: 'Feature Request',    icon: Lightbulb },
-  { value: 'other',           label: 'Other',              icon: MoreHorizontal },
+  { value: 'bug',             labelKey: 'report.categories.bug',             icon: Bug },
+  { value: 'payout_issue',    labelKey: 'report.categories.payout_issue',    icon: CreditCard },
+  { value: 'question_issue',  labelKey: 'report.categories.question_issue',  icon: HelpCircle },
+  { value: 'abuse',           labelKey: 'report.categories.abuse',           icon: ShieldAlert },
+  { value: 'feature_request', labelKey: 'report.categories.feature_request', icon: Lightbulb },
+  { value: 'other',           labelKey: 'report.categories.other',           icon: MoreHorizontal },
 ]
 
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  CATEGORY_OPTIONS.map((o) => [o.value, o.label]),
+const CATEGORY_LABEL_KEYS: Record<string, string> = Object.fromEntries(
+  CATEGORY_OPTIONS.map((o) => [o.value, o.labelKey]),
 )
 
 // ─── Status config (mirrors mobile ReportScreen STATUS_CONFIG) ──────────────
@@ -57,14 +58,14 @@ const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
 interface StatusConfig {
   color: string // text + dot + accent-bar
   bg: string // pill bg
-  label: string
+  labelKey: string
 }
 
 const STATUS_CONFIG: Record<string, StatusConfig> = {
-  open:        { color: 'text-blue-600 dark:text-blue-400',         bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200/70 dark:border-blue-900/40',       label: 'Open' },
-  in_progress: { color: 'text-amber-700 dark:text-amber-300',       bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/70 dark:border-amber-900/40', label: 'In Progress' },
-  resolved:    { color: 'text-emerald-700 dark:text-emerald-300',   bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/70 dark:border-emerald-900/40', label: 'Resolved' },
-  closed:      { color: 'text-slate-600 dark:text-slate-400',       bg: 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700',     label: 'Closed' },
+  open:        { color: 'text-blue-600 dark:text-blue-400',         bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200/70 dark:border-blue-900/40',       labelKey: 'report.status.open' },
+  in_progress: { color: 'text-amber-700 dark:text-amber-300',       bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/70 dark:border-amber-900/40', labelKey: 'report.status.in_progress' },
+  resolved:    { color: 'text-emerald-700 dark:text-emerald-300',   bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/70 dark:border-emerald-900/40', labelKey: 'report.status.resolved' },
+  closed:      { color: 'text-slate-600 dark:text-slate-400',       bg: 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700',     labelKey: 'report.status.closed' },
 }
 
 function statusFor(status: string): StatusConfig {
@@ -93,6 +94,7 @@ interface ReportCardProps {
   onPress: () => void
 }
 function ReportCard({ report, onPress }: ReportCardProps) {
+  const { t } = useTranslation()
   const cfg = statusFor(report.status)
   const Icon = categoryIcon(report.category)
   const date = formatRelativeDate(report.createdAt)
@@ -115,7 +117,7 @@ function ReportCard({ report, onPress }: ReportCardProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
             <Icon className="h-3 w-3" />
-            <span>{CATEGORY_LABELS[report.category] ?? report.category}</span>
+            <span>{CATEGORY_LABEL_KEYS[report.category] ? t(CATEGORY_LABEL_KEYS[report.category]) : report.category}</span>
           </div>
           <span className="shrink-0 text-[11px] font-medium text-text-tertiary">{date}</span>
         </div>
@@ -131,10 +133,10 @@ function ReportCard({ report, onPress }: ReportCardProps) {
           {replyCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
               <MessageSquareText className="h-3 w-3" />
-              {replyCount === 1 ? '1 reply' : `${replyCount} replies`}
+              {t('report.replyCount', { count: replyCount })}
             </span>
           ) : (
-            <span className="text-[11px] text-text-tertiary">Awaiting reply</span>
+            <span className="text-[11px] text-text-tertiary">{t('report.awaitingReply')}</span>
           )}
 
           <span className={cn(
@@ -142,7 +144,7 @@ function ReportCard({ report, onPress }: ReportCardProps) {
             cfg.bg, cfg.color,
           )}>
             <span className={cn('h-1.5 w-1.5 rounded-full', statusAccentBg(report.status))} aria-hidden />
-            {cfg.label}
+            {t(cfg.labelKey)}
           </span>
         </div>
       </div>
@@ -160,6 +162,7 @@ interface NewReportFormProps {
 }
 
 function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormProps) {
+  const { t } = useTranslation()
   const [category, setCategory] = useState<string>('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -177,12 +180,12 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const t = title.trim()
+    const titleTrimmed = title.trim()
     const d = description.trim()
-    if (t.length < 5) { setError('Title must be at least 5 characters'); return }
-    if (d.length < 10) { setError('Description must be at least 10 characters'); return }
-    if (!category) { setError('Please select a category'); return }
-    onSubmit({ category, title: t, description: d })
+    if (titleTrimmed.length < 5) { setError(t('report.titleMinLength')); return }
+    if (d.length < 10) { setError(t('report.descriptionMinLength')); return }
+    if (!category) { setError(t('report.categoryPlaceholder')); return }
+    onSubmit({ category, title: titleTrimmed, description: d })
   }
 
   return (
@@ -194,9 +197,9 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
     >
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New Report</DialogTitle>
+          <DialogTitle>{t('report.newReport')}</DialogTitle>
           <DialogDescription>
-            Describe the issue you faced. Our team will get back to you soon.
+            {t('report.newReportSubtitle')}
           </DialogDescription>
         </DialogHeader>
 
@@ -211,7 +214,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
 
           {/* Category */}
           <div className="space-y-1.5">
-            <Label>Category <span className="text-destructive">*</span></Label>
+            <Label>{t('report.category')} <span className="text-destructive">*</span></Label>
             <div className="grid grid-cols-2 gap-2">
               {CATEGORY_OPTIONS.map((opt) => {
                 const active = category === opt.value
@@ -231,7 +234,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{opt.label}</span>
+                    <span className="truncate">{t(opt.labelKey)}</span>
                     {active && <CheckCircle2 className="h-4 w-4 ml-auto text-emerald-600 dark:text-emerald-400" />}
                   </button>
                 )
@@ -241,10 +244,10 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label htmlFor="report-title">Title <span className="text-destructive">*</span></Label>
+            <Label htmlFor="report-title">{t('report.titleField')} <span className="text-destructive">*</span></Label>
             <Input
               id="report-title"
-              placeholder="Brief summary of the issue"
+              placeholder={t('report.titlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
@@ -255,10 +258,10 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label htmlFor="report-description">Description <span className="text-destructive">*</span></Label>
+            <Label htmlFor="report-description">{t('report.descriptionField')} <span className="text-destructive">*</span></Label>
             <Textarea
               id="report-description"
-              placeholder="Describe the issue in detail (min 10 characters)"
+              placeholder={t('report.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={5}
@@ -270,16 +273,16 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
-              Cancel
+              {t('report.cancel')}
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting…
+                  {t('report.submitting')}
                 </>
               ) : (
-                'Submit Report'
+                t('report.submit')
               )}
             </Button>
           </DialogFooter>
@@ -293,6 +296,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
 
 export function PublicReportsPage(): ReactNode {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [items, setItems] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
@@ -305,11 +309,11 @@ export function PublicReportsPage(): ReactNode {
       const res = await reportsApi.listMy({ page: 1, limit: 50 })
       setItems(res.items ?? [])
     } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load your reports'))
+      toast.error(getErrorMessage(e, t('report.loadError')))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     fetchMyReports()
@@ -319,12 +323,12 @@ export function PublicReportsPage(): ReactNode {
     setSubmitting(true)
     try {
       await reportsApi.create(input)
-      toast.success('Report submitted successfully')
+      toast.success(t('report.submitSuccess'))
       setFormOpen(false)
       // Refresh the list so the user sees their report immediately
       await fetchMyReports()
     } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to submit report'))
+      toast.error(getErrorMessage(e, t('report.submitError')))
     } finally {
       setSubmitting(false)
     }
@@ -336,7 +340,7 @@ export function PublicReportsPage(): ReactNode {
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="flex items-center justify-between gap-3 p-4">
           <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
-            Report an Issue
+            {t('report.title')}
           </h1>
           <Button
             onClick={() => setFormOpen(true)}
@@ -344,7 +348,7 @@ export function PublicReportsPage(): ReactNode {
             size="sm"
           >
             <Plus className="h-4 w-4" />
-            New Report
+            {t('report.newReport')}
           </Button>
         </CardContent>
       </Card>
@@ -354,7 +358,7 @@ export function PublicReportsPage(): ReactNode {
         <Card>
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading your reports…</p>
+            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">{t('report.loadingReports')}</p>
           </CardContent>
         </Card>
       ) : items.length === 0 ? (
@@ -364,13 +368,13 @@ export function PublicReportsPage(): ReactNode {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-variant dark:bg-surface-variant">
               <Flag className="h-12 w-12 text-text-tertiary" strokeWidth={1.75} />
             </div>
-            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">No Reports Yet</h2>
+            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">{t('report.noReports')}</h2>
             <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">
-              If you encounter an issue, submit a report and we&rsquo;ll get back to you.
+              {t('report.noReportsHint')}
             </p>
             <Button onClick={() => setFormOpen(true)} size="lg" className="mt-6">
               <Plus className="h-4 w-4" />
-              New Report
+              {t('report.newReport')}
             </Button>
           </CardContent>
         </Card>
@@ -395,7 +399,7 @@ export function PublicReportsPage(): ReactNode {
       />
 
       <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
-        AnnaDatha &mdash; To Strengthen Indian Farmers
+        {t('app.footer')}
       </p>
     </div>
   )

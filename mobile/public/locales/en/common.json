@@ -1083,7 +1083,14 @@
     "replies": "Replies",
     "adminName": "Admin",
     "replyCount_one": "{{count}} reply",
-    "replyCount_other": "{{count}} replies"
+    "replyCount_other": "{{count}} replies",
+    "awaitingReply": "Awaiting reply",
+    "newReportSubtitle": "Describe the issue you faced. Our team will get back to you soon.",
+    "loadingReports": "Loading your reports…",
+    "loadingReport": "Loading report…",
+    "reportNotFound": "Report not found",
+    "reportNotFoundHint": "It may have been removed or you no longer have access.",
+    "backToReports": "Back to reports"
   },
   "profile.account": "Account",
   "profile.personalInfo": "Personal Info",

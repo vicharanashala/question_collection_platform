@@ -1081,7 +1081,14 @@
     "replies": "फिननायफोर",
     "adminName": "एडमिन",
     "replyCount_one": "{{count}} टा फिननाय",
-    "replyCount_other": "{{count}} टा फिननाय"
+    "replyCount_other": "{{count}} टा फिननाय",
+    "awaitingReply": "फिनफिनाय गोसो सोंलाय दं",
+    "newReportSubtitle": "नोंथाङा मोनसे बिथोन जायखि बे बुंनाय। आं मोनसे दल जोबथाबनो थांगोन।",
+    "loadingReports": "नोंथाङा रिपर्टखौ लोड खालामनाय जासैदों…",
+    "loadingReport": "रिपर्टखौ लोड खालामनाय जासैदों…",
+    "reportNotFound": "रिपर्ट मोनाखै",
+    "reportNotFoundHint": "बेखौ फोजोब खालामनाय जाबाय एबा नोंथाङा गोदान अनजिमा गैया।",
+    "backToReports": "रिपर्ट फिसा जागोन"
   },
   "profile.account": "एकाउन्ट",
   "profile.personalInfo": "गावनाव विवरण",

@@ -1079,7 +1079,14 @@
     "replies": "ଉତ୍ତରଗୁଡ଼ିକ",
     "adminName": "ଆଡମିନ୍",
     "replyCount_one": "{{count}} ଟି ଉତ୍ତର",
-    "replyCount_other": "{{count}} ଟି ଉତ୍ତର"
+    "replyCount_other": "{{count}} ଟି ଉତ୍ତର",
+    "awaitingReply": "ଉତ୍ତର ପାଇଁ ଅପେକ୍ଷାରତ",
+    "newReportSubtitle": "ଆପଣ ସାମ୍ନା କରିଥିବା ସମସ୍ୟା ବର୍ଣ୍ଣନା କରନ୍ତୁ। ଆମ ଦଳ ଶୀଘ୍ର ଆପଣଙ୍କ ସହିତ ଯୋଗାଯୋଗ କରିବ।",
+    "loadingReports": "ଆପଣଙ୍କ ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+    "loadingReport": "ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+    "reportNotFound": "ରିପୋର୍ଟ ମିଳିଲା ନାହିଁ",
+    "reportNotFoundHint": "ଏହା ହୟତ ହଟାଯାଇଥିବ କିମ୍ବା ଆପଣଙ୍କ ପାଖରେ ଆଉ ପ୍ରବେଶାଧିକାର ନାହିଁ।",
+    "backToReports": "ରିପୋର୍ଟକୁ ଫେରନ୍ତୁ"
   },
   "profile.account": "ଆକାଉଣ୍ଟ୍",
   "profile.personalInfo": "ବ୍ୟକ୍ତିଗତ ସୂଚନା",

@@ -1081,7 +1081,14 @@
     "replies": "ਜਵਾਬ",
     "adminName": "ਐਡਮਿਨ",
     "replyCount_one": "{{count}} ਜਵਾਬ",
-    "replyCount_other": "{{count}} ਜਵਾਬ"
+    "replyCount_other": "{{count}} ਜਵਾਬ",
+    "awaitingReply": "ਜਵਾਬ ਦੀ ਉਡੀਕ",
+    "newReportSubtitle": "ਤੁਹਾਨੂੰ ਆਈ ਸਮੱਸਿਆ ਦਾ ਵਰਣਨ ਕਰੋ। ਸਾਡੀ ਟੀਮ ਜਲਦੀ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੇਗੀ।",
+    "loadingReports": "ਤੁਹਾਡੀ ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+    "loadingReport": "ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+    "reportNotFound": "ਰਿਪੋਰਟ ਨਹੀਂ ਮਿਲੀ",
+    "reportNotFoundHint": "ਇਹ ਹਟਾਈ ਗਈ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਤੁਹਾਡੇ ਕੋਲ ਹੁਣ ਪਹੁੰਚ ਨਹੀਂ ਹੈ।",
+    "backToReports": "ਰਿਪੋਰਟਾਂ ਤੇ ਵਾਪਸ ਜਾਓ"
   },
   "profile.account": "ਖਾਤਾ",
   "profile.personalInfo": "ਨਿੱਜੀ ਜਾਣਕਾਰੀ",

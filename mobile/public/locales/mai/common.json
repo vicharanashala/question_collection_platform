@@ -1081,7 +1081,14 @@
     "replies": "जवाब सब",
     "adminName": "प्रशासक (एडमिन)",
     "replyCount_one": "{{count}} जवाब",
-    "replyCount_other": "{{count}} जवाब सब"
+    "replyCount_other": "{{count}} जवाब सब",
+    "awaitingReply": "उत्तरक प्रतीक्षा",
+    "newReportSubtitle": "अहाँक भेटल समस्याक वर्णन करू। हमर टीम जल्दिये अहाँसँ संपर्क करत।",
+    "loadingReports": "अहाँक रिपोर्ट लोड भ रहल अछि…",
+    "loadingReport": "रिपोर्ट लोड भ रहल अछि…",
+    "reportNotFound": "रिपोर्ट नहि भेटल",
+    "reportNotFoundHint": "ई हटाओल गेल हएत अथवा अहाँक लग एखन पहुँच नहि अछि।",
+    "backToReports": "रिपोर्ट पर वापस जाउ"
   },
   "profile.account": "खाता",
   "profile.personalInfo": "व्यक्तिगत जानकारी",

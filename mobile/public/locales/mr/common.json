@@ -1081,7 +1081,14 @@
     "replies": "उत्तरे",
     "adminName": "अ‍ॅडमिन",
     "replyCount_one": "{{count}} उत्तर",
-    "replyCount_other": "{{count}} उत्तरे"
+    "replyCount_other": "{{count}} उत्तरे",
+    "awaitingReply": "उत्तराची प्रतीक्षा",
+    "newReportSubtitle": "तुम्हाला आलेल्या समस्येचे वर्णन करा. आमची टीम लवकरच तुमच्याशी संपर्क साधेल.",
+    "loadingReports": "तुमचे अहवाल लोड होत आहेत…",
+    "loadingReport": "अहवाल लोड होत आहे…",
+    "reportNotFound": "अहवाल सापडला नाही",
+    "reportNotFoundHint": "हे कदाचित काढून टाकले गेले असेल किंवा तुम्हाला यापुढे प्रवेश नाही.",
+    "backToReports": "अहवालांकडे परत जा"
   },
   "profile.account": "खाते",
   "profile.personalInfo": "वैयक्तिक माहिती",
