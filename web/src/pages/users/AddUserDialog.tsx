@@ -71,8 +71,8 @@ export function AddUserDialog({
   function validate(): boolean {
     const next: Record<string, string> = {}
     if (form.name.trim().length < 2) next.name = 'Enter the full name.'
-    if (!/^\d{10}$/.test(form.mobileNumber.trim())) {
-      next.mobileNumber = 'Enter a valid 10-digit mobile number.'
+    if (!/^[6-9]\d{9}$/.test(form.mobileNumber.trim())) {
+      next.mobileNumber = 'Mobile number must be a valid phone number.'
     }
     if (isEndUser && !form.category) next.category = 'Select a category.'
     setErrors(next)
