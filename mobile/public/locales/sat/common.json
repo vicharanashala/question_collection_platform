@@ -40,7 +40,20 @@
     "tapToPlay": "ᱟᱸᱡᱚᱢ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱱ ᱢᱮ",
     "delete": "ᱜᱮᱫ/ ᱢᱩᱪᱟᱹᱫᱽ",
     "stop": "ᱛᱷᱩᱠᱟᱹᱢ",
-    "playing": "ᱪᱟᱞᱟᱜ ᱠᱟᱱᱟ…"
+    "playing": "ᱪᱟᱞᱟᱜ ᱠᱟᱱᱟ…",
+    "noAudioCaptured": "ᱦᱚᱨᱟ ᱟᱣᱭᱚ ᱵᱟᱝ ᱢᱮᱱᱟᱜᱼᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+    "noWordsHeard": "ᱟᱠᱟᱱ ᱠᱟᱴᱷᱟ ᱵᱟᱝ ᱟᱭᱩᱢᱟᱱᱟ᱾ ᱥᱟᱱᱛᱤ ᱡᱟᱭᱜᱟ ᱨᱮ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+    "voiceCaptured": "ᱠᱩᱠᱞᱤ ᱢᱮᱱᱟᱜᱼᱟ᱾ ᱧᱮᱞ ᱛᱮ ᱞᱟᱦᱟ ᱢᱮ᱾",
+    "couldNotStop": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱛᱷᱩᱠᱟᱹ ᱵᱟᱝ ᱦᱩᱭ ᱮᱱᱟ᱾",
+    "notSupportedBrowser": "ᱱᱚᱣᱟ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱨᱮᱠᱳᱨᱰᱤᱝ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ᱾",
+    "recordingFailed": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+    "permissionDeniedRetry": "ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱮᱞᱟᱣ ᱵᱟᱹᱰᱨᱟᱹ ᱮᱱᱟ᱾ ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱛᱮᱭᱟᱨ ᱮᱢ ᱢᱮ ᱟᱨ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+    "couldNotStart": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱮᱛᱚᱦᱚᱵ ᱵᱟᱝ ᱦᱩᱭ ᱮᱱᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+    "tapToStopRecording": "ᱛᱷᱩᱠᱟᱹᱢ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱱ ᱢᱮ",
+    "doneSpeakAgain": "ᱛᱮᱭᱟᱨ — ᱚᱠᱛᱚ ᱞᱮᱠᱷᱟᱱᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱚᱲ ᱢᱮ",
+    "notSupportedShort": "ᱱᱚᱣᱟ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱢᱟᱭᱠ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ",
+    "stopRecordingAria": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱛᱷᱩᱠᱟᱹᱢ ᱢᱮ",
+    "startRecordingAria": "ᱠᱩᱠᱞᱤ ᱨᱮᱠᱳᱨᱰᱤᱝ ᱮᱛᱚᱦᱚᱵ ᱢᱮ"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "ᱟᱨ",
   "app": {
     "name": "AnnaDatha",
-    "tagline": "ᱟᱢᱟᱜ ᱡᱤᱞᱟᱹ, ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱛᱮ"
+    "tagline": "ᱟᱢᱟᱜ ᱡᱤᱞᱟᱹ, ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱛᱮ",
+    "footer": "AnnaDatha - ᱵᱷᱟᱨᱚᱛ ᱨᱮᱭᱚᱛ ᱠᱚ ᱡᱚᱨ ᱛᱮᱭᱟᱨ ᱞᱟᱹᱜᱤᱫ"
   },
   "loginPhone": {
     "signIn": "ᱥᱟᱭᱤᱱ ᱤᱱ (Sign In)",
@@ -219,7 +233,10 @@
     "sortBy": "ᱞᱮᱠᱟᱛᱮ ᱥᱟᱡᱟᱣ ᱢᱮ",
     "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
     "rupee": "ᱴᱟᱠᱟ",
-    "steps": "ठाहेन"
+    "steps": "ठाहेन",
+    "continue": "ᱞᱟᱦᱟ ᱢᱮ",
+    "noQuestionsFound": "ᱦᱚᱨᱟ ᱠᱩᱠᱞᱤ ᱵᱟᱝ ᱧᱟᱢ ᱮᱱᱟ",
+    "askYourFirstQuestion": "ᱟᱢᱟᱜ ᱯᱩᱭᱞᱩ ᱠᱩᱠᱞᱤ ᱠᱩᱠᱞᱤ ᱢᱮ"
   },
   "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
   "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -290,7 +307,15 @@
     "editWindowClosed": "ᱵᱷᱮᱡᱟ ᱠᱟᱛᱮ ᱠᱩᱠᱞᱤ ᱫᱚ ᱵᱟᱝ ᱥᱟᱯᱲᱟᱣ (edit) ᱜᱟᱱᱚᱜᱼᱟ",
     "quickActionsTip": "ᱥᱳᱡᱷᱮ 'ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ' ᱥᱮ ᱟᱢᱟᱜ 'ᱣᱟᱞᱮᱴ ᱵᱮᱞᱮᱱᱥ' ᱧᱮᱞ ᱨᱮ ᱪᱟᱞᱟᱜ ᱢᱮ᱾",
     "rewardsTip": "ᱟᱸᱜᱳᱪ ᱟᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱞᱮᱠᱟᱛᱮ ᱴᱟᱠᱟ ᱟᱨᱡᱟᱣ ᱢᱮ᱾ Silver ᱟᱨ Gold ᱛᱷᱚᱠ ᱨᱮ ᱡᱟᱹᱥᱛᱤ ᱥᱤᱨᱯᱷᱟᱹ ᱧᱟᱢᱚᱜᱼᱟ᱾",
-    "guidelinesTip": "ᱵᱷᱤᱰᱤᱭᱳ 60s ᱟᱨ 10MB ᱠᱷᱚᱱ ᱠᱚᱢ ᱫᱚᱦᱚᱭ ᱢᱮ᱾ ᱵᱷᱮᱡᱟ ᱠᱟᱛᱮ 30 ᱥᱮᱠᱮᱱᱰ ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ ᱧᱟᱢᱚᱜᱼᱟ᱾ ᱫᱤᱱᱟᱹᱢ ᱞᱤᱢᱤᱴ ᱫᱚ ᱧᱤᱸᱫᱟᱹ ᱑᱒ ᱵᱟᱡᱮ ᱟᱹᱨᱩᱣᱟ᱾"
+    "guidelinesTip": "ᱵᱷᱤᱰᱤᱭᱳ 60s ᱟᱨ 10MB ᱠᱷᱚᱱ ᱠᱚᱢ ᱫᱚᱦᱚᱭ ᱢᱮ᱾ ᱵᱷᱮᱡᱟ ᱠᱟᱛᱮ 30 ᱥᱮᱠᱮᱱᱰ ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ ᱧᱟᱢᱚᱜᱼᱟ᱾ ᱫᱤᱱᱟᱹᱢ ᱞᱤᱢᱤᱴ ᱫᱚ ᱧᱤᱸᱫᱟᱹ ᱑᱒ ᱵᱟᱡᱮ ᱟᱹᱨᱩᱣᱟ᱾",
+    "dailyLimitTitle": "ᱫᱤᱱᱟᱹᱢ ᱥᱤᱢᱟᱹ",
+    "editWindowTitle": "ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ",
+    "aiCheckTitle": "AI ᱡᱟᱸᱪᱟᱭ",
+    "verifiedUser": "ᱡᱟᱸᱪ ᱠᱟᱱ ᱵᱮᱣᱦᱟᱨᱤᱭᱟᱹ",
+    "startAsking": "ᱠᱩᱠᱞᱤ ᱮᱛᱦᱚᱵ ᱢᱮ",
+    "viewWallet": "ᱣᱟᱞᱮᱴ ᱧᱮᱞ ᱢᱮ",
+    "youAreHere": "ᱟᱢ ᱱᱚᱸᱰᱮ ᱢᱮᱱᱟᱢᱟ",
+    "currentTier": "ᱱᱤᱛᱚᱜ ᱛᱷᱚᱨ"
   },
   "iAcceptContinue": "ᱤᱧ ᱨᱮᱵᱮᱱ ᱟᱹᱧ ᱟᱨ ᱞᱟᱦᱟᱜ ᱟᱹᱧ",
   "invalidOtp": "ᱯᱩᱨᱟᱹ ᱖-ᱰᱤᱡᱤᱴ ᱠᱳᱰ ᱚᱞ ᱢᱮ",
@@ -447,7 +472,10 @@
     "suspended": "ᱛᱷᱩᱠᱟᱹᱢ ᱟᱠᱟᱱᱟ",
     "banned": "ᱵᱚᱱᱫᱚ ᱟᱠᱟᱱᱟ",
     "village": "ᱟᱛᱳ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ᱢᱟᱱᱟᱛ ᱠᱩᱠᱞᱤ",
+    "toNext": "{{count}} ᱛᱟᱭᱚᱢ ᱠᱷᱚᱱ",
+    "toTier": "{{tier}} ᱠᱷᱚᱱ {{count}}"
   },
   "profileLanguage": "ᱮᱯ ᱯᱟᱹᱨᱥᱤ",
   "profileLanguageDesc": "ᱱᱚᱶᱟ ᱫᱚ ᱮᱯ ᱵᱮᱣᱦᱟᱨ ᱟᱨ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱬᱩᱛ ᱯᱟᱹᱨᱥᱤ ᱛᱟᱦᱮᱸᱱᱟ",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे",
     "addVoice": "साड़े सेलेद मे",
     "tipDetailed": "बुटा ओल मे — गोहालि, जायगा आर आम नितोक् धाबिच् चेत् कुरुमुटु आकात् मेना, ओना ओल मे।",
-    "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना"
+    "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना",
+    "expertWillRespond": "ᱢᱤᱫ ᱮᱠᱥᱯᱳᱴᱴ ᱟᱢ ᱡᱟᱣᱟᱵᱽ ᱮᱢᱟᱢᱟ᱾",
+    "questionExample": "ᱡᱮᱢᱚᱱ: ᱤᱧᱟᱜ ᱴᱚᱢᱮᱴᱚ ᱚᱲᱟᱜ ᱦᱟᱹᱴᱤᱧ ᱦᱩᱭ ᱠᱟᱱᱟ — ᱤᱧ ᱪᱮᱫ ᱠᱟᱛᱷᱚᱢ?"
   },
   "readFullPolicy": "ᱯᱩᱨᱟᱹ Privacy Policy ᱯᱟᱲᱦᱟᱣ ᱢᱮ →",
   "resendOtp": "OTP ᱫᱚᱦᱲᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",
@@ -639,7 +669,16 @@
     "credit": "ᱡᱚᱢᱟ (Credit)",
     "debit": "ᱠᱷᱚᱨᱚᱪ (Debit)",
     "txNotFound": "ᱞᱮᱱ-ᱫᱮᱱ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
-    "notFoundSub": "ᱱᱚᱶᱟ ᱞᱮᱱ-ᱫᱮᱱ ᱫᱚ ᱚᱪᱚᱜ ᱟᱠᱟᱱᱟ ᱥᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ᱾"
+    "notFoundSub": "ᱱᱚᱶᱟ ᱞᱮᱱ-ᱫᱮᱱ ᱫᱚ ᱚᱪᱚᱜ ᱟᱠᱟᱱᱟ ᱥᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ᱾",
+    "sourceReward": "ᱯᱩᱨᱚᱥᱠᱟᱨ",
+    "sourceWithdrawal": "ᱩᱰᱩᱠ",
+    "sourceRefund": "ᱨᱤᱯᱷᱚᱱᱰ",
+    "sourceAdjustment": "ᱥᱟᱢᱟᱭᱚᱡᱚᱱ",
+    "statusCompleted": "ᱯᱩᱨᱟᱹᱣ",
+    "statusReversed": "ᱩᱞᱴᱟ",
+    "statusFailed": "ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+    "statusPending": "ᱛᱟᱹᱝᱜᱤ ᱨᱮ",
+    "currency": "ᱦᱤᱸᱰᱤ ᱨᱩᱯᱭᱟ"
   },
   "yourRole": "ᱟᱢᱟᱜ ᱛᱷᱟᱹᱱᱤᱛ/ ᱠᱟᱹᱢᱤ",
   "home.greeting.morning": "ᱥᱮᱛᱟᱜ ᱡᱚᱦᱟᱨ",
@@ -1042,7 +1081,14 @@
     "replies": "ᱨᱳᱲ ᱠᱚ",
     "adminName": "ᱮᱰᱢᱤᱱ",
     "replyCount_one": "{{count}} ᱴᱟᱝ ᱨᱳᱲ",
-    "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ"
+    "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ",
+    "awaitingReply": "ᱨᱩᱲᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱟᱹᱝᱜᱤ ᱠᱟᱱᱟ",
+    "newReportSubtitle": "ᱟᱢᱟᱜ ᱧᱟᱢ ᱠᱟᱛᱮ ᱠᱩᱠᱞᱤᱭᱟᱜ ᱵᱚᱭᱟᱱ ᱢᱮ᱾ ᱟᱞᱮᱴᱟᱜ ᱴᱤᱢ ᱡᱚᱛᱚ ᱟᱢ ᱠᱮᱛᱮ ᱨᱟᱵᱟᱲᱟ ᱠᱟᱛᱮ ᱮᱢᱟᱭ᱾",
+    "loadingReports": "ᱟᱢᱟᱜ ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+    "loadingReport": "ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+    "reportNotFound": "ᱨᱤᱯᱳᱨᱴ ᱵᱟᱝ ᱧᱟᱢᱮᱱᱟ",
+    "reportNotFoundHint": "ᱟᱭᱢᱟ ᱚᱰᱚᱠᱚᱱᱟ ᱠᱟᱱᱟ ᱥᱮ ᱟᱢᱟᱜ ᱦᱚᱸ ᱵᱟᱝ ᱟᱨᱩ ᱮᱠᱥᱮᱥ ᱢᱮᱱᱟᱜᱼᱟ᱾",
+    "backToReports": "ᱨᱤᱯᱳᱨᱴ ᱛᱮ ᱨᱩᱣᱟᱲ ᱢᱮ"
   },
   "profile.account": "ᱮᱠᱟᱣᱩᱱᱴ",
   "profile.personalInfo": "ᱱᱤᱡᱮᱨᱟᱜ ᱵᱤᱵᱚᱨᱚᱱ",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ",
       "article_other": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ ᱠᱚ"
-    }
+    },
+    "videoComingSoon": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ ᱡᱚᱛᱚ ᱦᱮᱡᱩᱜ ᱠᱟᱱᱟ",
+    "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ",
+    "loadError": "FAQ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
   },
   "faqAdmin": {
     "title": "FAQ ᱥᱟᱯᱲᱟᱣ",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
+    "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
+    "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
   }
 }

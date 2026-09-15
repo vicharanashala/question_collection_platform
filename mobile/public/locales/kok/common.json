@@ -40,7 +40,20 @@
     "tapToPlay": "प्ले करपाक टॅप करात",
     "delete": "काडून उडोयात",
     "stop": "थांबायात",
-    "playing": "प्ले जाता…"
+    "playing": "प्ले जाता…",
+    "noAudioCaptured": "कसलोच आवाज मेळूंक ना. उपकार करून परतून यत्न करात.",
+    "noWordsHeard": "कसलेच उतर आयकुंक नात. शांत सुवातेर परतून यत्न करात.",
+    "voiceCaptured": "आवाज मेळ्ळो. फुडें वचून तपासात.",
+    "couldNotStop": "रेकॉर्डिंग थांबोवपाक जालें ना.",
+    "notSupportedBrowser": "ह्या ब्राउझरांत मायक्रोफोन रेकॉर्डिंग सपोर्ट ना.",
+    "recordingFailed": "रेकॉर्डिंग अपयशी. उपकार करून परतून यत्न करात.",
+    "permissionDeniedRetry": "मायक्रोफोन परवानगी नाकारली. मायक्रोफोन प्रवेश दियात आनी परतून यत्न करात.",
+    "couldNotStart": "रेकॉर्डिंग सुरू जावंक ना. उपकार करून परतून यत्न करात.",
+    "tapToStopRecording": "थांबोवपाक टॅप करात",
+    "doneSpeakAgain": "जालें — केन्नाय वेळार परतून उलयात",
+    "notSupportedShort": "ह्या ब्राउझरार mic सपोर्ट ना",
+    "stopRecordingAria": "रेकॉर्डिंग थांबयात",
+    "startRecordingAria": "आवाज रेकॉर्डिंग सुरू करात"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "आनी",
   "app": {
     "name": "अन्नदाता",
-    "tagline": "तुमचो जिल्लो, तुमच्या भाशेंत"
+    "tagline": "तुमचो जिल्लो, तुमच्या भाशेंत",
+    "footer": "अन्नदाता - भारतीय शेतकऱ्यांक बळकट करपाक"
   },
   "loginPhone": {
     "signIn": "साइन इन करात",
@@ -219,7 +233,10 @@
     "sortBy": "अशे क्रमान लावा",
     "unknown": "अज्ञात",
     "rupee": "रु.",
-    "steps": "पावलां"
+    "steps": "पावलां",
+    "continue": "फुडें व्हरात",
+    "noQuestionsFound": "कसलोच प्रस्न मेळ्ळो ना",
+    "askYourFirstQuestion": "तुमचो पयलो प्रस्न विचारात"
   },
   "completeRegistration": "नोंदणी पुराय करात",
   "consentClause1": "तुमचो मोबाईल नंबर आनी नोंदणी तपशील सुरक्षित दवरतले आनी फकत प्लॅटफॉर्म प्रमाणीकरण आनी कृषी ज्ञान सेवांखातीर वापरतले.",
@@ -290,7 +307,15 @@
     "editWindowClosed": "प्रस्न दिलो की बदल करूंक मेळना",
     "quickActionsTip": "सरळ प्रस्न विचारात वा तुमचें वॉलेट बॅलन्स आनी हालींची कृती पळयात.",
     "rewardsTip": "एकुण मान्य जाल्ल्या प्रस्नांचेर आदारीत दर मान्य जाल्ल्या प्रस्नाफाटल्यान जोडात. सिल्वर आनी गोल्ड टियर चड इनाम दर उक्ते करतात.",
-    "guidelinesTip": "व्हिडिओ ६०s आनी १०MB परस उणो दवरात. प्रस्न दिल्ल्या उपरांत तुमकां ३० सेकंदांचो बदल करपाचो वेळ मेळटा. दिसपटी मर्यादा मध्यरात्री परतून सुरू जाता."
+    "guidelinesTip": "व्हिडिओ ६०s आनी १०MB परस उणो दवरात. प्रस्न दिल्ल्या उपरांत तुमकां ३० सेकंदांचो बदल करपाचो वेळ मेळटा. दिसपटी मर्यादा मध्यरात्री परतून सुरू जाता.",
+    "dailyLimitTitle": "दिसपटी मर्यादा",
+    "editWindowTitle": "बदल करपाचो वेळ",
+    "aiCheckTitle": "AI तपासणी",
+    "verifiedUser": "पडताळील्लो वापरपी",
+    "startAsking": "विचारपाक सुरवात करात",
+    "viewWallet": "वालेट पळयात",
+    "youAreHere": "तुमी हांगा आसात",
+    "currentTier": "सद्याचो स्तर"
   },
   "iAcceptContinue": "म्हाका मान्य आसा आनी मुखार वचात",
   "invalidOtp": "पुराय ६-आकड्यांचो कोड घालात",
@@ -447,7 +472,10 @@
     "suspended": "निलंबित",
     "banned": "बंद केलां",
     "village": "गांव",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} मान्य केल्ले प्रस्न",
+    "toNext": "{{count}} फुडल्या मेरेन",
+    "toTier": "{{tier}} मेरेन {{count}}"
   },
   "profileLanguage": "ॲप भास",
   "profileLanguageDesc": "ह्या ॲपाच्या इंटरफेसाखातीर आनी प्रस्न धाडपाखातीर ही मुलभूत भास आसतली",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "म्हजो प्रस्न सुदारात",
     "addVoice": "आवाज जोडात",
     "tipDetailed": "सविस्तर बरयात — पीक, सुवात आनी तुमी आतां मेरेन कितें करून पळयलां तें सांगात.",
-    "dailyLimitIndicator": "दिसाची मर्यादा सोंपली"
+    "dailyLimitIndicator": "दिसाची मर्यादा सोंपली",
+    "expertWillRespond": "एक तज्ञ तुमकां जाप दितलो.",
+    "questionExample": "देखीक: म्हज्या टोमॅटोचीं पानां पिंवळी जाताती — हांव कितें करूं?"
   },
   "readFullPolicy": "पुराय गुप्तताय धोरण वाचात →",
   "resendOtp": "परतून OTP धाडात",
@@ -639,7 +669,16 @@
     "credit": "जमा (Credit)",
     "debit": "खर्च (Debit)",
     "txNotFound": "व्यवहार मेळ्ळो ना",
-    "notFoundSub": "हो व्यवहार काडून उडयला वा आतां उपलब्ध ना."
+    "notFoundSub": "हो व्यवहार काडून उडयला वा आतां उपलब्ध ना.",
+    "sourceReward": "बक्षीस",
+    "sourceWithdrawal": "काडून घेवप",
+    "sourceRefund": "परतफेड",
+    "sourceAdjustment": "जुळावणी",
+    "statusCompleted": "पुराय जालें",
+    "statusReversed": "उलटावन घेतलां",
+    "statusFailed": "अपयशी",
+    "statusPending": "प्रलंबित",
+    "currency": "भारतीय रुपया"
   },
   "yourRole": "तुमची भूमिका",
   "home.greeting.morning": "देव बरे सकाळ",
@@ -1042,7 +1081,14 @@
     "replies": "जापो",
     "adminName": "प्रशासक",
     "replyCount_one": "{{count}} जाप",
-    "replyCount_other": "{{count}} जापो"
+    "replyCount_other": "{{count}} जापो",
+    "awaitingReply": "जबाबाची वाट पळयतां",
+    "newReportSubtitle": "तुमकां आयिल्ली अडचण सांगात. आमची टीम लवकरच तुमकां संपर्क करतली.",
+    "loadingReports": "तुमची रिपोर्ट लोड जातां…",
+    "loadingReport": "रिपोर्ट लोड जातां…",
+    "reportNotFound": "रिपोर्ट मेळ्ळी ना",
+    "reportNotFoundHint": "हें काडून उडयलां आसूं येता वा तुमकां आतां प्रवेश ना.",
+    "backToReports": "रिपोर्टींत परतून वचात"
   },
   "profile.account": "खातें",
   "profile.personalInfo": "वैयक्तीक म्हायती",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेख"
-    }
+    },
+    "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येतां",
+    "videoGuideTitle": "व्हिडिओ मार्गदर्शक",
+    "loadError": "FAQ लोड करपाक अपेस जालें"
   },
   "faqAdmin": {
     "title": "FAQ व्यवस्थापन",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "होल्डार आसा",
+    "published": "प्रकाशीत",
+    "yourSubmissions": "तुमी सादर केल्ले प्रस्न आनी तांची स्थिती."
   }
 }

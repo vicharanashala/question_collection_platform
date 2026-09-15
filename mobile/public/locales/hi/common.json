@@ -40,7 +40,20 @@
     "tapToPlay": "चलाने के लिए टैप करें",
     "delete": "हटाएं",
     "stop": "रोकें",
-    "playing": "चल रहा है…"
+    "playing": "चल रहा है…",
+    "noAudioCaptured": "कोई ऑडियो रिकॉर्ड नहीं हुआ। कृपया पुनः प्रयास करें।",
+    "noWordsHeard": "कोई शब्द सुनाई नहीं दिया। कृपया शांत जगह पर पुनः प्रयास करें।",
+    "voiceCaptured": "आवाज़ रिकॉर्ड हो गई। समीक्षा करें और जारी रखें।",
+    "couldNotStop": "रिकॉर्डिंग रोकी नहीं जा सकी।",
+    "notSupportedBrowser": "इस ब्राउज़र में माइक्रोफ़ोन रिकॉर्डिंग समर्थित नहीं है।",
+    "recordingFailed": "रिकॉर्डिंग विफल रही। कृपया पुनः प्रयास करें।",
+    "permissionDeniedRetry": "माइक्रोफ़ोन अनुमति अस्वीकृत। माइक्रोफ़ोन एक्सेस दें और पुनः प्रयास करें।",
+    "couldNotStart": "रिकॉर्डिंग शुरू नहीं हो सकी। कृपया पुनः प्रयास करें।",
+    "tapToStopRecording": "रोकने के लिए टैप करें",
+    "doneSpeakAgain": "पूर्ण — कभी भी फिर से बोलें",
+    "notSupportedShort": "इस ब्राउज़र पर माइक समर्थित नहीं है",
+    "stopRecordingAria": "रिकॉर्डिंग रोकें",
+    "startRecordingAria": "आवाज़ रिकॉर्डिंग शुरू करें"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "और",
   "app": {
     "name": "अन्नदाता",
-    "tagline": "आपका ज़िला, आपकी भाषा में"
+    "tagline": "आपका ज़िला, आपकी भाषा में",
+    "footer": "अन्नदाता - भारतीय किसानों को सशक्त बनाने के लिए"
   },
   "loginPhone": {
     "signIn": "साइन इन करें",
@@ -219,7 +233,10 @@
     "sortBy": "इसके अनुसार क्रमबद्ध करें",
     "unknown": "अज्ञात",
     "rupee": "रु.",
-    "steps": "चरण"
+    "steps": "चरण",
+    "continue": "जारी रखें",
+    "noQuestionsFound": "कोई प्रश्न नहीं मिला",
+    "askYourFirstQuestion": "अपना पहला प्रश्न पूछें"
   },
   "completeRegistration": "पंजीकरण पूरा करें",
   "consentClause1": "आपका मोबाइल नंबर और पंजीकरण विवरण सुरक्षित रूप से संग्रहीत किए जाएंगे और केवल प्लेटफॉर्म प्रमाणीकरण और कृषि ज्ञान सेवाओं के लिए उपयोग किए जाएंगे।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "सबमिट करने के बाद प्रश्नों को संपादित नहीं किया जा सकता",
     "quickActionsTip": "सीधे प्रश्न सबमिट करें पर जाएं या अपनी वॉलेट शेष राशि और हाल की गतिविधि देखें।",
     "rewardsTip": "कुल स्वीकृत प्रश्नों के आधार पर प्रति स्वीकृत प्रश्न कमाएं। सिल्वर और गोल्ड स्तर उच्च पुरस्कार दरों को अनलॉक करते हैं।",
-    "guidelinesTip": "वीडियो को 60 सेकंड और 10MB से कम रखें। सबमिट करने के बाद आपको 30-सेकंड की संपादन अवधि मिलती है। दैनिक सीमा आधी रात को रीसेट होती है।"
+    "guidelinesTip": "वीडियो को 60 सेकंड और 10MB से कम रखें। सबमिट करने के बाद आपको 30-सेकंड की संपादन अवधि मिलती है। दैनिक सीमा आधी रात को रीसेट होती है।",
+    "dailyLimitTitle": "दैनिक सीमा",
+    "editWindowTitle": "संपादन विंडो",
+    "aiCheckTitle": "AI प्रासंगिकता जांच",
+    "verifiedUser": "सत्यापित उपयोगकर्ता",
+    "startAsking": "पूछना शुरू करें",
+    "viewWallet": "वॉलेट देखें",
+    "youAreHere": "आप यहाँ हैं",
+    "currentTier": "वर्तमान स्तर"
   },
   "iAcceptContinue": "मैं स्वीकार करता हूँ और जारी रखें",
   "invalidOtp": "पूरा 6-अंकीय कोड दर्ज करें",
@@ -447,7 +472,10 @@
     "suspended": "निलंबित",
     "banned": "प्रतिबंधित",
     "village": "गाँव",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+    "toNext": "{{count}} अगले तक",
+    "toTier": "{{tier}} तक {{count}}"
   },
   "profileLanguage": "ऐप की भाषा",
   "profileLanguageDesc": "यह ऐप इंटरफ़ेस और प्रश्न सबमिशन के लिए डिफ़ॉल्ट भाषा होगी",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "मेरा प्रश्न सुधारें",
     "addVoice": "आवाज़ जोड़ें",
     "tipDetailed": "विस्तार से बताएं — फसल, स्थान और आपने अब तक क्या आजमाया है, यह भी लिखें।",
-    "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई"
+    "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई",
+    "expertWillRespond": "एक विशेषज्ञ आपके प्रश्न का उत्तर देगा।",
+    "questionExample": "जैसे: मेरे टमाटर के पत्ते पीले पड़ रहे हैं — मुझे क्या करना चाहिए?"
   },
   "readFullPolicy": "पूरी गोपनीयता नीति पढ़ें →",
   "resendOtp": "OTP पुनः भेजें",
@@ -639,7 +669,16 @@
     "credit": "क्रेडिट (जमा)",
     "debit": "डेबिट (निकासी)",
     "txNotFound": "लेन-देन नहीं मिला",
-    "notFoundSub": "लेन-देन हटा दिया गया हो सकता है या अब उपलब्ध नहीं है।"
+    "notFoundSub": "लेन-देन हटा दिया गया हो सकता है या अब उपलब्ध नहीं है।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "निकासी",
+    "sourceRefund": "धनवापसी",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण",
+    "statusReversed": "वापस लिया गया",
+    "statusFailed": "विफल",
+    "statusPending": "लंबित",
+    "currency": "भारतीय रुपये"
   },
   "yourRole": "आपकी भूमिका",
   "home.greeting.morning": "शुभ प्रभात",
@@ -1042,7 +1081,14 @@
     "replies": "जवाब",
     "adminName": "एडमिन",
     "replyCount_one": "{{count}} जवाब",
-    "replyCount_other": "{{count}} जवाब"
+    "replyCount_other": "{{count}} जवाब",
+    "awaitingReply": "उत्तर की प्रतीक्षा",
+    "newReportSubtitle": "आपको आई समस्या का वर्णन करें। हमारी टीम जल्द ही आपसे संपर्क करेगी।",
+    "loadingReports": "आपकी रिपोर्ट लोड हो रही है…",
+    "loadingReport": "रिपोर्ट लोड हो रही है…",
+    "reportNotFound": "रिपोर्ट नहीं मिली",
+    "reportNotFoundHint": "हो सकता है इसे हटा दिया गया हो या अब आपके पास पहुंच न हो।",
+    "backToReports": "रिपोर्ट पर वापस जाएं"
   },
   "profile.account": "खाता",
   "profile.personalInfo": "व्यक्तिगत जानकारी",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेख"
-    }
+    },
+    "videoComingSoon": "वीडियो गाइड जल्द आ रहा है",
+    "videoGuideTitle": "वीडियो गाइड",
+    "loadError": "FAQ लोड करने में विफल"
   },
   "faqAdmin": {
     "title": "FAQ प्रबंधन",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "सभी प्रश्न",
     "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
     "loadError": "क्यूरेटर आँकड़े लोड करने में विफल"
+  },
+  "submissions": {
+    "held": "होल्ड पर",
+    "published": "प्रकाशित",
+    "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
   }
 }

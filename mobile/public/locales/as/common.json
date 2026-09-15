@@ -40,7 +40,20 @@
     "tapToPlay": "প্লে কৰিবলৈ টেপ কৰক",
     "delete": "ডিলিট কৰক",
     "stop": "ৰখাওক",
-    "playing": "প্লে হৈ আছে…"
+    "playing": "প্লে হৈ আছে…",
+    "noAudioCaptured": "কোনো অডিঅ' পোৱা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+    "noWordsHeard": "কোনো শব্দ শুনা নগ'ল। শান্ত ঠাইত পুনৰ চেষ্টা কৰক।",
+    "voiceCaptured": "কণ্ঠস্বৰ পোৱা গ'ল। পৰ্যালোচনা কৰি অব্যাহত ৰাখক।",
+    "couldNotStop": "ৰেকৰ্ডিং বন্ধ কৰিব পৰা নগ'ল।",
+    "notSupportedBrowser": "এই ব্ৰাউজাৰত মাইক্ৰ'ফোন ৰেকৰ্ডিং সমৰ্থিত নহয়।",
+    "recordingFailed": "ৰেকৰ্ডিং বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+    "permissionDeniedRetry": "মাইক্ৰ'ফোনৰ অনুমতি নাকচ কৰা হৈছে। মাইক্ৰ'ফোন এক্সেছ দি পুনৰ চেষ্টা কৰক।",
+    "couldNotStart": "ৰেকৰ্ডিং আৰম্ভ কৰিব পৰা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+    "tapToStopRecording": "বন্ধ কৰিবলৈ টেপ কৰক",
+    "doneSpeakAgain": "সম্পূৰ্ণ — যিকোনো সময়ত পুনৰ কওক",
+    "notSupportedShort": "এই ব্ৰাউজাৰত মাইক সমৰ্থিত নহয়",
+    "stopRecordingAria": "ৰেকৰ্ডিং বন্ধ কৰক",
+    "startRecordingAria": "কণ্ঠস্বৰ ৰেকৰ্ডিং আৰম্ভ কৰক"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "আৰু",
   "app": {
     "name": "অন্নদাতা",
-    "tagline": "আপোনাৰ জিলা, আপোনাৰ ভাষাত"
+    "tagline": "আপোনাৰ জিলা, আপোনাৰ ভাষাত",
+    "footer": "অন্নদাতা - ভাৰতীয় কৃষকসকলক শক্তিশালী কৰিবলৈ"
   },
   "loginPhone": {
     "signIn": "চাইন ইন",
@@ -219,7 +233,10 @@
     "sortBy": "ক্ৰম অনুসাৰে",
     "unknown": "অজ্ঞাত",
     "rupee": "টকা",
-    "steps": "খোজ"
+    "steps": "খোজ",
+    "continue": "অব্যাহত ৰাখক",
+    "noQuestionsFound": "কোনো প্ৰশ্ন পোৱা নগ'ল",
+    "askYourFirstQuestion": "আপোনাৰ প্ৰথম প্ৰশ্ন সোধক"
   },
   "completeRegistration": "পঞ্জীয়ন সম্পূৰ্ণ কৰক",
   "consentClause1": "আপোনাৰ মোবাইল নম্বৰ আৰু পঞ্জীয়নৰ বিৱৰণ সুৰক্ষিতভাৱে সংৰক্ষিত কৰা হ'ব আৰু কেৱল প্লেটফৰ্ম অথেনটিকেচন আৰু কৃষি জ্ঞান সেৱাৰ বাবে ব্যৱহাৰ কৰা হ'ব।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "দাখিল কৰাৰ পিছত প্ৰশ্নবোৰ সম্পাদনা কৰিব নোৱাৰি",
     "quickActionsTip": "প্ৰশ্ন দাখিল কৰক বা আপোনাৰ ৱালেট বেলেঞ্চ আৰু শেহতীয়া কাৰ্যকলাপ চাওক।",
     "rewardsTip": "মুঠ অনুমোদিত প্ৰশ্নৰ আধাৰত প্ৰতি অনুমোদিত প্ৰশ্নত উপাৰ্জন কৰক। চিলভাৰ আৰু গ'ল্ড টিয়ায়ে উচ্চ পুৰস্কাৰ হাৰ আনলক কৰে।",
-    "guidelinesTip": "ভিডিঅ' ৬০ ছেকেণ্ড আৰু ১০MB-ৰ ভিতৰত ৰাখক। দাখিল কৰাৰ পিছত আপুনি ৩০ ছেকেণ্ডৰ সম্পাদনা সময় পাব। দৈনিক সীমা মাজনিশা ৰিছেট হয়।"
+    "guidelinesTip": "ভিডিঅ' ৬০ ছেকেণ্ড আৰু ১০MB-ৰ ভিতৰত ৰাখক। দাখিল কৰাৰ পিছত আপুনি ৩০ ছেকেণ্ডৰ সম্পাদনা সময় পাব। দৈনিক সীমা মাজনিশা ৰিছেট হয়।",
+    "dailyLimitTitle": "দৈনিক সীমা",
+    "editWindowTitle": "সম্পাদনা উইণ্ড'",
+    "aiCheckTitle": "AI প্ৰাসংগিকতা পৰীক্ষা",
+    "verifiedUser": "পৰীক্ষিত ব্যৱহাৰকাৰী",
+    "startAsking": "সোধা আৰম্ভ কৰক",
+    "viewWallet": "ৱালেট চাওক",
+    "youAreHere": "আপুনি ইয়াতে আছে",
+    "currentTier": "বৰ্তমান স্তৰ"
   },
   "iAcceptContinue": "মই গ্ৰহণ কৰিছো আৰু আগবাঢ়িছো",
   "invalidOtp": "সম্পূৰ্ণ ৬-ডিজিটৰ কোড দিয়ক",
@@ -447,7 +472,10 @@
     "suspended": "স্থগিত",
     "banned": "নিষিদ্ধ",
     "village": "গাওঁ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}}টা অনুমোদিত প্ৰশ্ন",
+    "toNext": "{{count}} পৰৱৰ্তীলৈ",
+    "toTier": "{{tier}}লৈ {{count}}"
   },
   "profileLanguage": "এপ ভাষা",
   "profileLanguageDesc": "এপ ইণ্টাৰফেচ আৰু প্ৰশ্ন দাখিলৰ বাবে এয়া ডিফল্ট ভাষা হ'ব",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "মোৰ প্ৰশ্ন সম্পাদনা কৰক",
     "addVoice": "মাত যোগ কৰক",
     "tipDetailed": "সবিশেষ লিখক — শস্য, ঠাই আৰু আপুনি ইতিমধ্যে কি চেষ্টা কৰিছে সেয়া উল্লেখ কৰক।",
-    "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে"
+    "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে",
+    "expertWillRespond": "এজন বিশেষজ্ঞই আপোনাক উত্তৰ দিব।",
+    "questionExample": "উদাহৰণ: মোৰ বিলাহীৰ পাত হালধীয়া হৈ আছে — মই কি কৰিব লাগে?"
   },
   "readFullPolicy": "সম্পূৰ্ণ গোপনীয়তা নীতি পঢ়ক →",
   "resendOtp": "OTP পুনৰ পঠিয়াওক",
@@ -639,7 +669,16 @@
     "credit": "ক্ৰেডিট",
     "debit": "ডেবিট",
     "txNotFound": "লেনদেন পোৱা নগ'ল",
-    "notFoundSub": "লেনদেনটো আঁতৰোৱা হ'ব পাৰে বা এতিয়া উপলব্ধ নহয়।"
+    "notFoundSub": "লেনদেনটো আঁতৰোৱা হ'ব পাৰে বা এতিয়া উপলব্ধ নহয়।",
+    "sourceReward": "পুৰস্কাৰ",
+    "sourceWithdrawal": "উঠোৱা",
+    "sourceRefund": "ঘূৰাই দিয়া",
+    "sourceAdjustment": "সমন্বয়",
+    "statusCompleted": "সম্পূৰ্ণ",
+    "statusReversed": "ওলোটা কৰা হৈছে",
+    "statusFailed": "বিফল",
+    "statusPending": "অপেক্ষাত",
+    "currency": "ভাৰতীয় টকা"
   },
   "yourRole": "আপোনাৰ ভূমিকা",
   "home.greeting.morning": "শুভ প্ৰভাত",
@@ -1042,7 +1081,14 @@
     "replies": "উত্তৰসমূহ",
     "adminName": "এডমিন",
     "replyCount_one": "{{count}} টা উত্তৰ",
-    "replyCount_other": "{{count}} টা উত্তৰ"
+    "replyCount_other": "{{count}} টা উত্তৰ",
+    "awaitingReply": "উত্তৰৰ অপেক্ষাত",
+    "newReportSubtitle": "আপুনি সন্মুখীন হোৱা সমস্যাটো বৰ্ণনা কৰক। আমাৰ দল সোনকালে আপোনাৰ সৈতে যোগাযোগ কৰিব।",
+    "loadingReports": "আপোনাৰ ৰিপৰ্ট ল'ড হৈ আছে…",
+    "loadingReport": "ৰিপৰ্ট ল'ড হৈ আছে…",
+    "reportNotFound": "ৰিপৰ্ট পোৱা নগ'ল",
+    "reportNotFoundHint": "ই আঁতৰোৱা হ'ব পাৰে অথবা আপুনি আৰু প্ৰৱেশাধিকাৰ নাই।",
+    "backToReports": "ৰিপৰ্টলৈ ঘূৰি যাওক"
   },
   "profile.account": "একাউণ্ট",
   "profile.personalInfo": "ব্যক্তিগত তথ্য",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "প্ৰবন্ধ",
       "article_other": "প্ৰবন্ধ"
-    }
+    },
+    "videoComingSoon": "ভিডিঅ' গাইড শীঘ্ৰেই আহিব",
+    "videoGuideTitle": "ভিডিঅ' গাইড",
+    "loadError": "FAQ ল'ড কৰাত বিফল হ'ল"
   },
   "faqAdmin": {
     "title": "FAQ ব্যৱস্থাপনা",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "হ'ল্ডত আছে",
+    "published": "প্ৰকাশিত",
+    "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
   }
 }

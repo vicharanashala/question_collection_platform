@@ -40,7 +40,20 @@
     "tapToPlay": "बजाउन ट्याप गर्नुहोस्",
     "delete": "हटाउनुहोस्",
     "stop": "रोक्नुहोस्",
-    "playing": "बज्दैछ..."
+    "playing": "बज्दैछ...",
+    "noAudioCaptured": "कुनै अडियो रेकर्ड भएन। कृपया पुनः प्रयास गर्नुहोस्।",
+    "noWordsHeard": "कुनै शब्द सुनिएन। शान्त ठाउँमा पुनः प्रयास गर्नुहोस्।",
+    "voiceCaptured": "आवाज रेकर्ड भयो। समीक्षा गरेर जारी राख्नुहोस्।",
+    "couldNotStop": "रेकर्डिङ रोक्न सकिएन।",
+    "notSupportedBrowser": "यो ब्राउजरमा माइक्रोफोन रेकर्डिङ समर्थित छैन।",
+    "recordingFailed": "रेकर्डिङ असफल भयो। कृपया पुनः प्रयास गर्नुहोस्।",
+    "permissionDeniedRetry": "माइक्रोफोन अनुमति अस्वीकृत भयो। माइक्रोफोन पहुँच दिनुहोस् र पुनः प्रयास गर्नुहोस्।",
+    "couldNotStart": "रेकर्डिङ सुरु गर्न सकिएन। कृपया पुनः प्रयास गर्नुहोस्।",
+    "tapToStopRecording": "रोक्न ट्याप गर्नुहोस्",
+    "doneSpeakAgain": "सम्पन्न — जुनसुकै बेला फेरि बोल्नुहोस्",
+    "notSupportedShort": "यो ब्राउजरमा माइक समर्थित छैन",
+    "stopRecordingAria": "रेकर्डिङ रोक्नुहोस्",
+    "startRecordingAria": "आवाज रेकर्डिङ सुरु गर्नुहोस्"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "र",
   "app": {
     "name": "AnnaDatha",
-    "tagline": "तपाईंको जिल्ला, तपाईंको भाषामा"
+    "tagline": "तपाईंको जिल्ला, तपाईंको भाषामा",
+    "footer": "AnnaDatha - भारतीय किसानहरूलाई सशक्त बनाउन"
   },
   "loginPhone": {
     "signIn": "साइन इन गर्नुहोस्",
@@ -219,7 +233,10 @@
     "sortBy": "क्रमबद्ध गर्नुहोस्",
     "unknown": "अज्ञात",
     "rupee": "रु.",
-    "steps": "चरणहरू"
+    "steps": "चरणहरू",
+    "continue": "जारी राख्नुहोस्",
+    "noQuestionsFound": "कुनै प्रश्न भेटिएन",
+    "askYourFirstQuestion": "तपाईंको पहिलो प्रश्न सोध्नुहोस्"
   },
   "completeRegistration": "दर्ता प्रक्रिया पूरा गर्नुहोस्",
   "consentClause1": "तपाईंको मोबाइल नम्बर र दर्ता विवरण सुरक्षित रूपमा भण्डारण गरिनेछ र केवल प्लेटफर्म प्रमाणीकरण र कृषि ज्ञान सेवाका लागि प्रयोग गरिनेछ।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "पेस गरेपछि प्रश्न सम्पादन गर्न सकिँदैन",
     "quickActionsTip": "सिधै प्रश्न पेस गर्नुहोस् वा तपाईंको वॉलेट ब्यालेन्स र हालैको गतिविधि हेर्नुहोस्।",
     "rewardsTip": "कुल स्वीकृत प्रश्नका आधारमा प्रति स्वीकृत प्रश्न कमाउनुहोस्। Silver र Gold स्तरले उच्च पुरस्कार दरहरू अनलक गर्दछ।",
-    "guidelinesTip": "भिडियो ६० सेकेन्ड र १०MB भन्दा कम राख्नुहोस्। पेस गरेपछि ३० सेकेन्डको सम्पादन समय पाइन्छ। दैनिक सीमा मध्यरातमा रिसेट हुन्छ।"
+    "guidelinesTip": "भिडियो ६० सेकेन्ड र १०MB भन्दा कम राख्नुहोस्। पेस गरेपछि ३० सेकेन्डको सम्पादन समय पाइन्छ। दैनिक सीमा मध्यरातमा रिसेट हुन्छ।",
+    "dailyLimitTitle": "दैनिक सीमा",
+    "editWindowTitle": "सम्पादन समय",
+    "aiCheckTitle": "AI सान्दर्भिकता जाँच",
+    "verifiedUser": "प्रमाणित प्रयोगकर्ता",
+    "startAsking": "सोध्न सुरु गर्नुहोस्",
+    "viewWallet": "वालेट हेर्नुहोस्",
+    "youAreHere": "तपाईं यहाँ हुनुहुन्छ",
+    "currentTier": "हालको तह"
   },
   "iAcceptContinue": "म स्वीकार गर्छु र अगाडि बढ्छु",
   "invalidOtp": "पूरा ६-अङ्कको कोड राख्नुहोस्",
@@ -447,7 +472,10 @@
     "suspended": "निलम्बित",
     "banned": "प्रतिबन्धित",
     "village": "गाउँ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्नहरू",
+    "toNext": "{{count}} अर्को सम्म",
+    "toTier": "{{tier}} सम्म {{count}}"
   },
   "profileLanguage": "एपको भाषा",
   "profileLanguageDesc": "यो एप इन्टरफेस र प्रश्न पेस गर्नका लागि पूर्वनिर्धारित (Default) भाषा हुनेछ",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "मेरो प्रश्न सम्पादन गर्नुहोस्",
     "addVoice": "आवाज थप्नुहोस्",
     "tipDetailed": "विस्तृत रूपमा लेख्नुहोस् — बाली, स्थान र तपाईंले अहिलेसम्म के प्रयास गर्नुभयो उल्लेख गर्नुहोस्।",
-    "dailyLimitIndicator": "दैनिक सीमा सकियो"
+    "dailyLimitIndicator": "दैनिक सीमा सकियो",
+    "expertWillRespond": "एक विशेषज्ञले तपाईंलाई जवाफ दिनेछन्।",
+    "questionExample": "जस्तै: मेरो टमाटरका पातहरू पहेंलो हुँदैछन् — मैले के गर्नुपर्छ?"
   },
   "readFullPolicy": "पूरा गोपनीयता नीति पढ्नुहोस् →",
   "resendOtp": "OTP पुनः पठाउनुहोस्",
@@ -639,7 +669,16 @@
     "credit": "क्रेडिट (जम्मा)",
     "debit": "डेबिट (खर्च/निकासी)",
     "txNotFound": "कारोबार भेटिएन",
-    "notFoundSub": "यो कारोबार हटाइएको हुन सक्छ वा अब उपलब्ध छैन।"
+    "notFoundSub": "यो कारोबार हटाइएको हुन सक्छ वा अब उपलब्ध छैन।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "झिकाइ",
+    "sourceRefund": "फिर्ता",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "सम्पन्न",
+    "statusReversed": "उल्टाइयो",
+    "statusFailed": "असफल",
+    "statusPending": "समीक्षाधीन",
+    "currency": "भारतीय रुपैयाँ"
   },
   "yourRole": "तपाईंको भूमिका",
   "home.greeting.morning": "शुभ प्रभात",
@@ -1042,7 +1081,14 @@
     "replies": "जवाफहरू",
     "adminName": "एडमिन",
     "replyCount_one": "{{count}} जवाफ",
-    "replyCount_other": "{{count}} जवाफहरू"
+    "replyCount_other": "{{count}} जवाफहरू",
+    "awaitingReply": "जवाफको पर्खाइमा",
+    "newReportSubtitle": "तपाईंले सामना गरेको समस्या वर्णन गर्नुहोस्। हाम्रो टोली चाँडै तपाईंलाई सम्पर्क गर्नेछ।",
+    "loadingReports": "तपाईंको रिपोर्ट लोड हुँदैछ…",
+    "loadingReport": "रिपोर्ट लोड हुँदैछ…",
+    "reportNotFound": "रिपोर्ट फेला परेन",
+    "reportNotFoundHint": "यो हटाइएको हुन सक्छ वा तपाईंसँग अब पहुँच छैन।",
+    "backToReports": "रिपोर्टहरूमा फर्कनुहोस्"
   },
   "profile.account": "खाता",
   "profile.personalInfo": "व्यक्तिगत विवरण",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेखहरू"
-    }
+    },
+    "videoComingSoon": "भिडियो गाइड चाँडै आउँदैछ",
+    "videoGuideTitle": "भिडियो गाइड",
+    "loadError": "FAQ लोड गर्न असफल भयो"
   },
   "faqAdmin": {
     "title": "FAQ व्यवस्थापन",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "होल्डमा छ",
+    "published": "प्रकाशित",
+    "yourSubmissions": "तपाईंले पेश गरेका प्रश्नहरू र तिनीहरूको स्थिति।"
   }
 }

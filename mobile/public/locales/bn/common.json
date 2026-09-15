@@ -40,7 +40,20 @@
     "tapToPlay": "প্লে করতে ট্যাপ করুন",
     "delete": "মুছে ফেলুন",
     "stop": "থামান",
-    "playing": "চলছে…"
+    "playing": "চলছে…",
+    "noAudioCaptured": "কোনো অডিও ধারণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+    "noWordsHeard": "কোনো শব্দ শোনা যায়নি। একটি শান্ত জায়গায় আবার চেষ্টা করুন।",
+    "voiceCaptured": "কণ্ঠস্বর ধারণ করা হয়েছে। পর্যালোচনা করে চালিয়ে যান।",
+    "couldNotStop": "রেকর্ডিং বন্ধ করা যায়নি।",
+    "notSupportedBrowser": "এই ব্রাউজারে মাইক্রোফোন রেকর্ডিং সমর্থিত নয়।",
+    "recordingFailed": "রেকর্ডিং ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+    "permissionDeniedRetry": "মাইক্রোফোনের অনুমতি প্রত্যাখ্যাত হয়েছে। মাইক্রোফোন অ্যাক্সেস দিন এবং আবার চেষ্টা করুন।",
+    "couldNotStart": "রেকর্ডিং শুরু করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+    "tapToStopRecording": "থামাতে ট্যাপ করুন",
+    "doneSpeakAgain": "সম্পন্ন — যেকোনো সময় আবার বলুন",
+    "notSupportedShort": "এই ব্রাউজারে মাইক সমর্থিত নয়",
+    "stopRecordingAria": "রেকর্ডিং বন্ধ করুন",
+    "startRecordingAria": "ভয়েস রেকর্ডিং শুরু করুন"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "এবং",
   "app": {
     "name": "আন্নাদাতা (AnnaDatha)",
-    "tagline": "আপনার জেলা, আপনার ভাষায়"
+    "tagline": "আপনার জেলা, আপনার ভাষায়",
+    "footer": "আন্নাদাতা (AnnaDatha) - ভারতীয় কৃষকদের শক্তিশালী করতে"
   },
   "loginPhone": {
     "signIn": "সাইন ইন",
@@ -219,7 +233,10 @@
     "sortBy": "ক্রমানুসারে সাজান",
     "unknown": "অজানা",
     "rupee": "টাকা",
-    "steps": "ধাপ"
+    "steps": "ধাপ",
+    "continue": "চালিয়ে যান",
+    "noQuestionsFound": "কোনো প্রশ্ন পাওয়া যায়নি",
+    "askYourFirstQuestion": "আপনার প্রথম প্রশ্ন জিজ্ঞাসা করুন"
   },
   "completeRegistration": "নিবন্ধন সম্পন্ন করুন",
   "consentClause1": "আপনার মোবাইল নম্বর এবং নিবন্ধনের বিবরণ নিরাপদে সংরক্ষণ করা হবে এবং শুধুমাত্র প্ল্যাটফর্ম প্রমাণীকরণ এবং কৃষি জ্ঞান পরিষেবার জন্য ব্যবহার করা হবে।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "জমা দেওয়ার পর প্রশ্ন সম্পাদনা করা যাবে না",
     "quickActionsTip": "সরাসরি 'প্রশ্ন জমা দিন' এ যান অথবা আপনার ওয়ালেট ব্যালেন্স এবং সাম্প্রতিক কার্যকলাপ দেখুন।",
     "rewardsTip": "মোট অনুমোদিত প্রশ্নের ওপর ভিত্তি করে প্রতি অনুমোদিত প্রশ্নে আয় করুন। সিলভার এবং গোল্ড স্তরগুলি উচ্চতর পুরস্কারের হার আনলক করে।",
-    "guidelinesTip": "ভিডিও ৬০ সেকেন্ড এবং ১০ এমবি-র নিচে রাখুন। জমা দেওয়ার পর ৩০ সেকেন্ডের সম্পাদনার সময় পাওয়া যাবে। দৈনিক সীমা মধ্যরাতে রিসেট হয়।"
+    "guidelinesTip": "ভিডিও ৬০ সেকেন্ড এবং ১০ এমবি-র নিচে রাখুন। জমা দেওয়ার পর ৩০ সেকেন্ডের সম্পাদনার সময় পাওয়া যাবে। দৈনিক সীমা মধ্যরাতে রিসেট হয়।",
+    "dailyLimitTitle": "দৈনিক সীমা",
+    "editWindowTitle": "সম্পাদনার সময়সীমা",
+    "aiCheckTitle": "AI প্রাসঙ্গিকতা পরীক্ষা",
+    "verifiedUser": "যাচাইকৃত ব্যবহারকারী",
+    "startAsking": "জিজ্ঞাসা শুরু করুন",
+    "viewWallet": "ওয়ালেট দেখুন",
+    "youAreHere": "আপনি এখানে আছেন",
+    "currentTier": "বর্তমান স্তর"
   },
   "iAcceptContinue": "আমি সম্মত ও এগিয়ে যান",
   "invalidOtp": "সম্পূর্ণ ৬-ডিজিটের কোডটি লিখুন",
@@ -447,7 +472,10 @@
     "suspended": "স্থগিত",
     "banned": "নিষিদ্ধ",
     "village": "গ্রাম",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}}টি অনুমোদিত প্রশ্ন",
+    "toNext": "{{count}} পরবর্তী পর্যন্ত",
+    "toTier": "{{tier}} পর্যন্ত {{count}}"
   },
   "profileLanguage": "অ্যাপের ভাষা",
   "profileLanguageDesc": "এটি অ্যাপ ইন্টারফেস এবং প্রশ্ন জমা দেওয়ার জন্য ডিফল্ট ভাষা হবে",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "আমার প্রশ্ন সম্পাদনা করুন",
     "addVoice": "কণ্ঠস্বর যোগ করুন",
     "tipDetailed": "বিস্তারিত লিখুন — ফসল, স্থান এবং আপনি ইতিমধ্যে যা চেষ্টা করেছেন তা উল্লেখ করুন।",
-    "dailyLimitIndicator": "দৈনিক সীমা শেষ"
+    "dailyLimitIndicator": "দৈনিক সীমা শেষ",
+    "expertWillRespond": "একজন বিশেষজ্ঞ আপনাকে উত্তর দেবেন।",
+    "questionExample": "যেমন: আমার টমেটো গাছের পাতা হলুদ হয়ে যাচ্ছে — আমার কী করা উচিত?"
   },
   "readFullPolicy": "সম্পূর্ণ গোপনীয়তা নীতি পড়ুন →",
   "resendOtp": "পুনরায় OTP পাঠান",
@@ -639,7 +669,16 @@
     "credit": "ক্রেডিট",
     "debit": "ডেবিট",
     "txNotFound": "লেনদেন পাওয়া যায়নি",
-    "notFoundSub": "লেনদেনটি সরিয়ে ফেলা হতে পারে বা আর উপলব্ধ নেই।"
+    "notFoundSub": "লেনদেনটি সরিয়ে ফেলা হতে পারে বা আর উপলব্ধ নেই।",
+    "sourceReward": "পুরস্কার",
+    "sourceWithdrawal": "উত্তোলন",
+    "sourceRefund": "ফেরত",
+    "sourceAdjustment": "সমন্বয়",
+    "statusCompleted": "সম্পন্ন",
+    "statusReversed": "প্রত্যাহার করা হয়েছে",
+    "statusFailed": "ব্যর্থ",
+    "statusPending": "অমীমাংসিত",
+    "currency": "ভারতীয় রুপি"
   },
   "yourRole": "আপনার ভূমিকা",
   "home.greeting.morning": "সুপ্রভাত",
@@ -1042,7 +1081,14 @@
     "replies": "উত্তরসমূহ",
     "adminName": "অ্যাডমিন",
     "replyCount_one": "{{count}} টি উত্তর",
-    "replyCount_other": "{{count}} টি উত্তর"
+    "replyCount_other": "{{count}} টি উত্তর",
+    "awaitingReply": "উত্তরের অপেক্ষায়",
+    "newReportSubtitle": "আপনি যে সমস্যায় পড়েছেন তা বর্ণনা করুন। আমাদের টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।",
+    "loadingReports": "আপনার রিপোর্ট লোড হচ্ছে…",
+    "loadingReport": "রিপোর্ট লোড হচ্ছে…",
+    "reportNotFound": "রিপোর্ট পাওয়া যায়নি",
+    "reportNotFoundHint": "এটি সরিয়ে ফেলা হতে পারে অথবা আপনার আর অ্যাক্সেস নেই।",
+    "backToReports": "রিপোর্টে ফিরে যান"
   },
   "profile.account": "একাউন্ট",
   "profile.personalInfo": "ব্যক্তিগত তথ্য",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "নিবন্ধ",
       "article_other": "নিবন্ধসমূহ"
-    }
+    },
+    "videoComingSoon": "ভিডিও গাইড শীঘ্রই আসছে",
+    "videoGuideTitle": "ভিডিও গাইড",
+    "loadError": "FAQ লোড করতে ব্যর্থ হয়েছে"
   },
   "faqAdmin": {
     "title": "FAQ ব্যবস্থাপনা",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "হোল্ডে আছে",
+    "published": "প্রকাশিত",
+    "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
   }
 }

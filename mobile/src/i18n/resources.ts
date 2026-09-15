@@ -45,7 +45,20 @@ const resources = {
         "tapToPlay": "Tap to play",
         "delete": "Delete",
         "stop": "Stop",
-        "playing": "Playing…"
+        "playing": "Playing…",
+        "noAudioCaptured": "No audio captured. Please try again.",
+        "noWordsHeard": "We could not hear any words. Try again in a quieter place.",
+        "voiceCaptured": "Voice captured. Review and continue.",
+        "couldNotStop": "Could not stop recording.",
+        "notSupportedBrowser": "Microphone recording is not supported in this browser.",
+        "recordingFailed": "Recording failed. Please try again.",
+        "permissionDeniedRetry": "Microphone permission denied. Allow microphone access and retry.",
+        "couldNotStart": "Could not start recording. Please try again.",
+        "tapToStopRecording": "Tap to stop recording",
+        "doneSpeakAgain": "Done — speak again any time",
+        "notSupportedShort": "Mic not supported on this browser",
+        "stopRecordingAria": "Stop recording",
+        "startRecordingAria": "Start voice recording"
       },
       "speech": {
         "stt": {
@@ -65,7 +78,8 @@ const resources = {
       "and": "and",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "Your district, in your language"
+        "tagline": "Your district, in your language",
+        "footer": "AnnaDatha - To Strengthen Indian Farmers"
       },
       "loginPhone": {
         "signIn": "Sign In",
@@ -224,7 +238,10 @@ const resources = {
         "sortBy": "Sort By",
         "unknown": "Unknown",
         "rupee": "Rs.",
-        "steps": "Steps"
+        "steps": "Steps",
+        "continue": "Continue",
+        "noQuestionsFound": "No questions found",
+        "askYourFirstQuestion": "Ask your first question"
       },
       "completeRegistration": "Complete Registration",
       "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -295,7 +312,15 @@ const resources = {
         "editWindowClosed": "Questions cannot be edited after submission",
         "quickActionsTip": "Jump straight to Submit a Question or view your Wallet balance and recent activity.",
         "rewardsTip": "Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates.",
-        "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight."
+        "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight.",
+        "dailyLimitTitle": "Daily limit",
+        "editWindowTitle": "Edit window",
+        "aiCheckTitle": "AI relevance check",
+        "verifiedUser": "Verified user",
+        "startAsking": "Start asking",
+        "viewWallet": "View wallet",
+        "youAreHere": "You are here",
+        "currentTier": "Current tier"
       },
       "iAcceptContinue": "I Accept & Continue",
       "invalidOtp": "Enter the complete 6-digit code",
@@ -452,7 +477,10 @@ const resources = {
         "suspended": "Suspended",
         "banned": "Banned",
         "village": "Village",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} approved questions",
+        "toNext": "{{count}} to next",
+        "toTier": "{{count}} to {{tier}}"
       },
       "profileLanguage": "App Language",
       "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -557,7 +585,9 @@ const resources = {
         "rejectedEditQuestion": "Edit My Question",
         "addVoice": "Add voice",
         "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
-        "dailyLimitIndicator": "Daily limit reached"
+        "dailyLimitIndicator": "Daily limit reached",
+        "expertWillRespond": "An expert will get back to you with an answer.",
+        "questionExample": "e.g. My tomato leaves are turning yellow — what should I do?"
       },
       "readFullPolicy": "Read full Privacy Policy →",
       "resendOtp": "Resend OTP",
@@ -646,7 +676,16 @@ const resources = {
         "credit": "Credit",
         "debit": "Debit",
         "txNotFound": "Transaction not found",
-        "notFoundSub": "The transaction may have been removed or is no longer available."
+        "notFoundSub": "The transaction may have been removed or is no longer available.",
+        "sourceReward": "Reward",
+        "sourceWithdrawal": "Withdrawal",
+        "sourceRefund": "Refund",
+        "sourceAdjustment": "Adjustment",
+        "statusCompleted": "Completed",
+        "statusReversed": "Reversed",
+        "statusFailed": "Failed",
+        "statusPending": "Pending",
+        "currency": "Indian Rupees"
       },
       "yourRole": "Your Role",
       "home.greeting.morning": "Good morning",
@@ -1049,7 +1088,14 @@ const resources = {
         "replies": "Replies",
         "adminName": "Admin",
         "replyCount_one": "{{count}} reply",
-        "replyCount_other": "{{count}} replies"
+        "replyCount_other": "{{count}} replies",
+        "awaitingReply": "Awaiting reply",
+        "newReportSubtitle": "Describe the issue you faced. Our team will get back to you soon.",
+        "loadingReports": "Loading your reports…",
+        "loadingReport": "Loading report…",
+        "reportNotFound": "Report not found",
+        "reportNotFoundHint": "It may have been removed or you no longer have access.",
+        "backToReports": "Back to reports"
       },
       "profile.account": "Account",
       "profile.personalInfo": "Personal Info",
@@ -1121,7 +1167,10 @@ const resources = {
         "group": {
           "article_one": "article",
           "article_other": "articles"
-        }
+        },
+        "videoComingSoon": "Video guide coming soon",
+        "videoGuideTitle": "Video Guide",
+        "loadError": "Failed to load FAQs"
       },
       "faqAdmin": {
         "title": "FAQ Management",
@@ -1301,6 +1350,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "On hold",
+        "published": "Published",
+        "yourSubmissions": "Your submitted questions and their status."
       }
     }
   },
@@ -1347,7 +1401,20 @@ const resources = {
         "tapToPlay": "প্লে কৰিবলৈ টেপ কৰক",
         "delete": "ডিলিট কৰক",
         "stop": "ৰখাওক",
-        "playing": "প্লে হৈ আছে…"
+        "playing": "প্লে হৈ আছে…",
+        "noAudioCaptured": "কোনো অডিঅ' পোৱা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "noWordsHeard": "কোনো শব্দ শুনা নগ'ল। শান্ত ঠাইত পুনৰ চেষ্টা কৰক।",
+        "voiceCaptured": "কণ্ঠস্বৰ পোৱা গ'ল। পৰ্যালোচনা কৰি অব্যাহত ৰাখক।",
+        "couldNotStop": "ৰেকৰ্ডিং বন্ধ কৰিব পৰা নগ'ল।",
+        "notSupportedBrowser": "এই ব্ৰাউজাৰত মাইক্ৰ'ফোন ৰেকৰ্ডিং সমৰ্থিত নহয়।",
+        "recordingFailed": "ৰেকৰ্ডিং বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "permissionDeniedRetry": "মাইক্ৰ'ফোনৰ অনুমতি নাকচ কৰা হৈছে। মাইক্ৰ'ফোন এক্সেছ দি পুনৰ চেষ্টা কৰক।",
+        "couldNotStart": "ৰেকৰ্ডিং আৰম্ভ কৰিব পৰা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "tapToStopRecording": "বন্ধ কৰিবলৈ টেপ কৰক",
+        "doneSpeakAgain": "সম্পূৰ্ণ — যিকোনো সময়ত পুনৰ কওক",
+        "notSupportedShort": "এই ব্ৰাউজাৰত মাইক সমৰ্থিত নহয়",
+        "stopRecordingAria": "ৰেকৰ্ডিং বন্ধ কৰক",
+        "startRecordingAria": "কণ্ঠস্বৰ ৰেকৰ্ডিং আৰম্ভ কৰক"
       },
       "speech": {
         "stt": {
@@ -1367,7 +1434,8 @@ const resources = {
       "and": "আৰু",
       "app": {
         "name": "অন্নদাতা",
-        "tagline": "আপোনাৰ জিলা, আপোনাৰ ভাষাত"
+        "tagline": "আপোনাৰ জিলা, আপোনাৰ ভাষাত",
+        "footer": "অন্নদাতা - ভাৰতীয় কৃষকসকলক শক্তিশালী কৰিবলৈ"
       },
       "loginPhone": {
         "signIn": "চাইন ইন",
@@ -1526,7 +1594,10 @@ const resources = {
         "sortBy": "ক্ৰম অনুসাৰে",
         "unknown": "অজ্ঞাত",
         "rupee": "টকা",
-        "steps": "খোজ"
+        "steps": "খোজ",
+        "continue": "অব্যাহত ৰাখক",
+        "noQuestionsFound": "কোনো প্ৰশ্ন পোৱা নগ'ল",
+        "askYourFirstQuestion": "আপোনাৰ প্ৰথম প্ৰশ্ন সোধক"
       },
       "completeRegistration": "পঞ্জীয়ন সম্পূৰ্ণ কৰক",
       "consentClause1": "আপোনাৰ মোবাইল নম্বৰ আৰু পঞ্জীয়নৰ বিৱৰণ সুৰক্ষিতভাৱে সংৰক্ষিত কৰা হ'ব আৰু কেৱল প্লেটফৰ্ম অথেনটিকেচন আৰু কৃষি জ্ঞান সেৱাৰ বাবে ব্যৱহাৰ কৰা হ'ব।",
@@ -1597,7 +1668,15 @@ const resources = {
         "editWindowClosed": "দাখিল কৰাৰ পিছত প্ৰশ্নবোৰ সম্পাদনা কৰিব নোৱাৰি",
         "quickActionsTip": "প্ৰশ্ন দাখিল কৰক বা আপোনাৰ ৱালেট বেলেঞ্চ আৰু শেহতীয়া কাৰ্যকলাপ চাওক।",
         "rewardsTip": "মুঠ অনুমোদিত প্ৰশ্নৰ আধাৰত প্ৰতি অনুমোদিত প্ৰশ্নত উপাৰ্জন কৰক। চিলভাৰ আৰু গ'ল্ড টিয়ায়ে উচ্চ পুৰস্কাৰ হাৰ আনলক কৰে।",
-        "guidelinesTip": "ভিডিঅ' ৬০ ছেকেণ্ড আৰু ১০MB-ৰ ভিতৰত ৰাখক। দাখিল কৰাৰ পিছত আপুনি ৩০ ছেকেণ্ডৰ সম্পাদনা সময় পাব। দৈনিক সীমা মাজনিশা ৰিছেট হয়।"
+        "guidelinesTip": "ভিডিঅ' ৬০ ছেকেণ্ড আৰু ১০MB-ৰ ভিতৰত ৰাখক। দাখিল কৰাৰ পিছত আপুনি ৩০ ছেকেণ্ডৰ সম্পাদনা সময় পাব। দৈনিক সীমা মাজনিশা ৰিছেট হয়।",
+        "dailyLimitTitle": "দৈনিক সীমা",
+        "editWindowTitle": "সম্পাদনা উইণ্ড'",
+        "aiCheckTitle": "AI প্ৰাসংগিকতা পৰীক্ষা",
+        "verifiedUser": "পৰীক্ষিত ব্যৱহাৰকাৰী",
+        "startAsking": "সোধা আৰম্ভ কৰক",
+        "viewWallet": "ৱালেট চাওক",
+        "youAreHere": "আপুনি ইয়াতে আছে",
+        "currentTier": "বৰ্তমান স্তৰ"
       },
       "iAcceptContinue": "মই গ্ৰহণ কৰিছো আৰু আগবাঢ়িছো",
       "invalidOtp": "সম্পূৰ্ণ ৬-ডিজিটৰ কোড দিয়ক",
@@ -1754,7 +1833,10 @@ const resources = {
         "suspended": "স্থগিত",
         "banned": "নিষিদ্ধ",
         "village": "গাওঁ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}}টা অনুমোদিত প্ৰশ্ন",
+        "toNext": "{{count}} পৰৱৰ্তীলৈ",
+        "toTier": "{{tier}}লৈ {{count}}"
       },
       "profileLanguage": "এপ ভাষা",
       "profileLanguageDesc": "এপ ইণ্টাৰফেচ আৰু প্ৰশ্ন দাখিলৰ বাবে এয়া ডিফল্ট ভাষা হ'ব",
@@ -1857,7 +1939,9 @@ const resources = {
         "rejectedEditQuestion": "মোৰ প্ৰশ্ন সম্পাদনা কৰক",
         "addVoice": "মাত যোগ কৰক",
         "tipDetailed": "সবিশেষ লিখক — শস্য, ঠাই আৰু আপুনি ইতিমধ্যে কি চেষ্টা কৰিছে সেয়া উল্লেখ কৰক।",
-        "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে"
+        "dailyLimitIndicator": "দৈনিক সীমা শেষ হৈছে",
+        "expertWillRespond": "এজন বিশেষজ্ঞই আপোনাক উত্তৰ দিব।",
+        "questionExample": "উদাহৰণ: মোৰ বিলাহীৰ পাত হালধীয়া হৈ আছে — মই কি কৰিব লাগে?"
       },
       "readFullPolicy": "সম্পূৰ্ণ গোপনীয়তা নীতি পঢ়ক →",
       "resendOtp": "OTP পুনৰ পঠিয়াওক",
@@ -1946,7 +2030,16 @@ const resources = {
         "credit": "ক্ৰেডিট",
         "debit": "ডেবিট",
         "txNotFound": "লেনদেন পোৱা নগ'ল",
-        "notFoundSub": "লেনদেনটো আঁতৰোৱা হ'ব পাৰে বা এতিয়া উপলব্ধ নহয়।"
+        "notFoundSub": "লেনদেনটো আঁতৰোৱা হ'ব পাৰে বা এতিয়া উপলব্ধ নহয়।",
+        "sourceReward": "পুৰস্কাৰ",
+        "sourceWithdrawal": "উঠোৱা",
+        "sourceRefund": "ঘূৰাই দিয়া",
+        "sourceAdjustment": "সমন্বয়",
+        "statusCompleted": "সম্পূৰ্ণ",
+        "statusReversed": "ওলোটা কৰা হৈছে",
+        "statusFailed": "বিফল",
+        "statusPending": "অপেক্ষাত",
+        "currency": "ভাৰতীয় টকা"
       },
       "yourRole": "আপোনাৰ ভূমিকা",
       "home.greeting.morning": "শুভ প্ৰভাত",
@@ -2349,7 +2442,14 @@ const resources = {
         "replies": "উত্তৰসমূহ",
         "adminName": "এডমিন",
         "replyCount_one": "{{count}} টা উত্তৰ",
-        "replyCount_other": "{{count}} টা উত্তৰ"
+        "replyCount_other": "{{count}} টা উত্তৰ",
+        "awaitingReply": "উত্তৰৰ অপেক্ষাত",
+        "newReportSubtitle": "আপুনি সন্মুখীন হোৱা সমস্যাটো বৰ্ণনা কৰক। আমাৰ দল সোনকালে আপোনাৰ সৈতে যোগাযোগ কৰিব।",
+        "loadingReports": "আপোনাৰ ৰিপৰ্ট ল'ড হৈ আছে…",
+        "loadingReport": "ৰিপৰ্ট ল'ড হৈ আছে…",
+        "reportNotFound": "ৰিপৰ্ট পোৱা নগ'ল",
+        "reportNotFoundHint": "ই আঁতৰোৱা হ'ব পাৰে অথবা আপুনি আৰু প্ৰৱেশাধিকাৰ নাই।",
+        "backToReports": "ৰিপৰ্টলৈ ঘূৰি যাওক"
       },
       "profile.account": "একাউণ্ট",
       "profile.personalInfo": "ব্যক্তিগত তথ্য",
@@ -2421,7 +2521,10 @@ const resources = {
         "group": {
           "article_one": "প্ৰবন্ধ",
           "article_other": "প্ৰবন্ধ"
-        }
+        },
+        "videoComingSoon": "ভিডিঅ' গাইড শীঘ্ৰেই আহিব",
+        "videoGuideTitle": "ভিডিঅ' গাইড",
+        "loadError": "FAQ ল'ড কৰাত বিফল হ'ল"
       },
       "faqAdmin": {
         "title": "FAQ ব্যৱস্থাপনা",
@@ -2601,6 +2704,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "হ'ল্ডত আছে",
+        "published": "প্ৰকাশিত",
+        "yourSubmissions": "আপোনাৰ দাখিল কৰা প্ৰশ্ন আৰু সেইবোৰৰ অৱস্থা।"
       }
     }
   },
@@ -2647,7 +2755,20 @@ const resources = {
         "tapToPlay": "প্লে করতে ট্যাপ করুন",
         "delete": "মুছে ফেলুন",
         "stop": "থামান",
-        "playing": "চলছে…"
+        "playing": "চলছে…",
+        "noAudioCaptured": "কোনো অডিও ধারণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "noWordsHeard": "কোনো শব্দ শোনা যায়নি। একটি শান্ত জায়গায় আবার চেষ্টা করুন।",
+        "voiceCaptured": "কণ্ঠস্বর ধারণ করা হয়েছে। পর্যালোচনা করে চালিয়ে যান।",
+        "couldNotStop": "রেকর্ডিং বন্ধ করা যায়নি।",
+        "notSupportedBrowser": "এই ব্রাউজারে মাইক্রোফোন রেকর্ডিং সমর্থিত নয়।",
+        "recordingFailed": "রেকর্ডিং ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "permissionDeniedRetry": "মাইক্রোফোনের অনুমতি প্রত্যাখ্যাত হয়েছে। মাইক্রোফোন অ্যাক্সেস দিন এবং আবার চেষ্টা করুন।",
+        "couldNotStart": "রেকর্ডিং শুরু করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "tapToStopRecording": "থামাতে ট্যাপ করুন",
+        "doneSpeakAgain": "সম্পন্ন — যেকোনো সময় আবার বলুন",
+        "notSupportedShort": "এই ব্রাউজারে মাইক সমর্থিত নয়",
+        "stopRecordingAria": "রেকর্ডিং বন্ধ করুন",
+        "startRecordingAria": "ভয়েস রেকর্ডিং শুরু করুন"
       },
       "speech": {
         "stt": {
@@ -2667,7 +2788,8 @@ const resources = {
       "and": "এবং",
       "app": {
         "name": "আন্নাদাতা (AnnaDatha)",
-        "tagline": "আপনার জেলা, আপনার ভাষায়"
+        "tagline": "আপনার জেলা, আপনার ভাষায়",
+        "footer": "আন্নাদাতা (AnnaDatha) - ভারতীয় কৃষকদের শক্তিশালী করতে"
       },
       "loginPhone": {
         "signIn": "সাইন ইন",
@@ -2826,7 +2948,10 @@ const resources = {
         "sortBy": "ক্রমানুসারে সাজান",
         "unknown": "অজানা",
         "rupee": "টাকা",
-        "steps": "ধাপ"
+        "steps": "ধাপ",
+        "continue": "চালিয়ে যান",
+        "noQuestionsFound": "কোনো প্রশ্ন পাওয়া যায়নি",
+        "askYourFirstQuestion": "আপনার প্রথম প্রশ্ন জিজ্ঞাসা করুন"
       },
       "completeRegistration": "নিবন্ধন সম্পন্ন করুন",
       "consentClause1": "আপনার মোবাইল নম্বর এবং নিবন্ধনের বিবরণ নিরাপদে সংরক্ষণ করা হবে এবং শুধুমাত্র প্ল্যাটফর্ম প্রমাণীকরণ এবং কৃষি জ্ঞান পরিষেবার জন্য ব্যবহার করা হবে।",
@@ -2897,7 +3022,15 @@ const resources = {
         "editWindowClosed": "জমা দেওয়ার পর প্রশ্ন সম্পাদনা করা যাবে না",
         "quickActionsTip": "সরাসরি 'প্রশ্ন জমা দিন' এ যান অথবা আপনার ওয়ালেট ব্যালেন্স এবং সাম্প্রতিক কার্যকলাপ দেখুন।",
         "rewardsTip": "মোট অনুমোদিত প্রশ্নের ওপর ভিত্তি করে প্রতি অনুমোদিত প্রশ্নে আয় করুন। সিলভার এবং গোল্ড স্তরগুলি উচ্চতর পুরস্কারের হার আনলক করে।",
-        "guidelinesTip": "ভিডিও ৬০ সেকেন্ড এবং ১০ এমবি-র নিচে রাখুন। জমা দেওয়ার পর ৩০ সেকেন্ডের সম্পাদনার সময় পাওয়া যাবে। দৈনিক সীমা মধ্যরাতে রিসেট হয়।"
+        "guidelinesTip": "ভিডিও ৬০ সেকেন্ড এবং ১০ এমবি-র নিচে রাখুন। জমা দেওয়ার পর ৩০ সেকেন্ডের সম্পাদনার সময় পাওয়া যাবে। দৈনিক সীমা মধ্যরাতে রিসেট হয়।",
+        "dailyLimitTitle": "দৈনিক সীমা",
+        "editWindowTitle": "সম্পাদনার সময়সীমা",
+        "aiCheckTitle": "AI প্রাসঙ্গিকতা পরীক্ষা",
+        "verifiedUser": "যাচাইকৃত ব্যবহারকারী",
+        "startAsking": "জিজ্ঞাসা শুরু করুন",
+        "viewWallet": "ওয়ালেট দেখুন",
+        "youAreHere": "আপনি এখানে আছেন",
+        "currentTier": "বর্তমান স্তর"
       },
       "iAcceptContinue": "আমি সম্মত ও এগিয়ে যান",
       "invalidOtp": "সম্পূর্ণ ৬-ডিজিটের কোডটি লিখুন",
@@ -3054,7 +3187,10 @@ const resources = {
         "suspended": "স্থগিত",
         "banned": "নিষিদ্ধ",
         "village": "গ্রাম",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}}টি অনুমোদিত প্রশ্ন",
+        "toNext": "{{count}} পরবর্তী পর্যন্ত",
+        "toTier": "{{tier}} পর্যন্ত {{count}}"
       },
       "profileLanguage": "অ্যাপের ভাষা",
       "profileLanguageDesc": "এটি অ্যাপ ইন্টারফেস এবং প্রশ্ন জমা দেওয়ার জন্য ডিফল্ট ভাষা হবে",
@@ -3157,7 +3293,9 @@ const resources = {
         "rejectedEditQuestion": "আমার প্রশ্ন সম্পাদনা করুন",
         "addVoice": "কণ্ঠস্বর যোগ করুন",
         "tipDetailed": "বিস্তারিত লিখুন — ফসল, স্থান এবং আপনি ইতিমধ্যে যা চেষ্টা করেছেন তা উল্লেখ করুন।",
-        "dailyLimitIndicator": "দৈনিক সীমা শেষ"
+        "dailyLimitIndicator": "দৈনিক সীমা শেষ",
+        "expertWillRespond": "একজন বিশেষজ্ঞ আপনাকে উত্তর দেবেন।",
+        "questionExample": "যেমন: আমার টমেটো গাছের পাতা হলুদ হয়ে যাচ্ছে — আমার কী করা উচিত?"
       },
       "readFullPolicy": "সম্পূর্ণ গোপনীয়তা নীতি পড়ুন →",
       "resendOtp": "পুনরায় OTP পাঠান",
@@ -3246,7 +3384,16 @@ const resources = {
         "credit": "ক্রেডিট",
         "debit": "ডেবিট",
         "txNotFound": "লেনদেন পাওয়া যায়নি",
-        "notFoundSub": "লেনদেনটি সরিয়ে ফেলা হতে পারে বা আর উপলব্ধ নেই।"
+        "notFoundSub": "লেনদেনটি সরিয়ে ফেলা হতে পারে বা আর উপলব্ধ নেই।",
+        "sourceReward": "পুরস্কার",
+        "sourceWithdrawal": "উত্তোলন",
+        "sourceRefund": "ফেরত",
+        "sourceAdjustment": "সমন্বয়",
+        "statusCompleted": "সম্পন্ন",
+        "statusReversed": "প্রত্যাহার করা হয়েছে",
+        "statusFailed": "ব্যর্থ",
+        "statusPending": "অমীমাংসিত",
+        "currency": "ভারতীয় রুপি"
       },
       "yourRole": "আপনার ভূমিকা",
       "home.greeting.morning": "সুপ্রভাত",
@@ -3649,7 +3796,14 @@ const resources = {
         "replies": "উত্তরসমূহ",
         "adminName": "অ্যাডমিন",
         "replyCount_one": "{{count}} টি উত্তর",
-        "replyCount_other": "{{count}} টি উত্তর"
+        "replyCount_other": "{{count}} টি উত্তর",
+        "awaitingReply": "উত্তরের অপেক্ষায়",
+        "newReportSubtitle": "আপনি যে সমস্যায় পড়েছেন তা বর্ণনা করুন। আমাদের টিম শীঘ্রই আপনার সাথে যোগাযোগ করবে।",
+        "loadingReports": "আপনার রিপোর্ট লোড হচ্ছে…",
+        "loadingReport": "রিপোর্ট লোড হচ্ছে…",
+        "reportNotFound": "রিপোর্ট পাওয়া যায়নি",
+        "reportNotFoundHint": "এটি সরিয়ে ফেলা হতে পারে অথবা আপনার আর অ্যাক্সেস নেই।",
+        "backToReports": "রিপোর্টে ফিরে যান"
       },
       "profile.account": "একাউন্ট",
       "profile.personalInfo": "ব্যক্তিগত তথ্য",
@@ -3721,7 +3875,10 @@ const resources = {
         "group": {
           "article_one": "নিবন্ধ",
           "article_other": "নিবন্ধসমূহ"
-        }
+        },
+        "videoComingSoon": "ভিডিও গাইড শীঘ্রই আসছে",
+        "videoGuideTitle": "ভিডিও গাইড",
+        "loadError": "FAQ লোড করতে ব্যর্থ হয়েছে"
       },
       "faqAdmin": {
         "title": "FAQ ব্যবস্থাপনা",
@@ -3901,6 +4058,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "হোল্ডে আছে",
+        "published": "প্রকাশিত",
+        "yourSubmissions": "আপনার জমা দেওয়া প্রশ্ন এবং তাদের অবস্থা।"
       }
     }
   },
@@ -3947,7 +4109,20 @@ const resources = {
         "tapToPlay": "दामनो थाखाय थु",
         "delete": "हुइग्रोनाय / बोखारनाय",
         "stop": "होबथानाय",
-        "playing": "दामगासिनो दं…"
+        "playing": "दामगासिनो दं…",
+        "noAudioCaptured": "कोंनो audio मोन्नाय नङा। अननानै आरोबाव नाजा।",
+        "noWordsHeard": "जायखि रा नुथिखा। रोगा जायगाव फिन नाजा।",
+        "voiceCaptured": "रा मोनजाबाय। सोदोब आरो सोलायख्लाम।",
+        "couldNotStop": "रेकर्डिं हबथानो हायाखै।",
+        "notSupportedBrowser": "बे browser आव माइक्र'फ'न रेकर्डिं गनायथि जायाखै।",
+        "recordingFailed": "रेकर्डिं जायासै। अननानै आरोबाव नाजा।",
+        "permissionDeniedRetry": "माइक्र'फ'ननि गनायथि हारि खालामबाय। माइक्र'फ'न access होन्नाय होबाय आरो फिन नाजा।",
+        "couldNotStart": "रेकर्डिं जागायनो हायाखै। अननानै आरोबाव नाजा।",
+        "tapToStopRecording": "हबथानो थाखाय थुना हो",
+        "doneSpeakAgain": "जोबनाय — जायखि सम'र फिन रायो",
+        "notSupportedShort": "बे browser आव mic गनायथि जायाखै",
+        "stopRecordingAria": "रेकर्डिं हबथा",
+        "startRecordingAria": "रा रेकर्डिं जागायख्लाम"
       },
       "speech": {
         "stt": {
@@ -3967,7 +4142,8 @@ const resources = {
       "and": "आरो",
       "app": {
         "name": "अन्नदाता (AnnaDatha)",
-        "tagline": "नोंथानि जिलानि, नोंथानि रावआव"
+        "tagline": "नोंथानि जिलानि, नोंथानि रावआव",
+        "footer": "अन्नदाता (AnnaDatha) - भारतारि रैयतखौ जोरगोरा खालामनोखौ थाखाय"
       },
       "loginPhone": {
         "signIn": "साइन इन (Sign In)",
@@ -4126,7 +4302,10 @@ const resources = {
         "sortBy": "सायख'नाय थि खालाम",
         "unknown": "मिथियै",
         "rupee": "रां",
-        "steps": "स्टेप"
+        "steps": "स्टेप",
+        "continue": "जारी खालाम",
+        "noQuestionsFound": "जायखि प्रश्न मोनाखै",
+        "askYourFirstQuestion": "नोंथाङ गथ्थ अनजिमा सोंगोन"
       },
       "completeRegistration": "रेजिस्ट्रेसन आबुं खालाम",
       "consentClause1": "नोंथानि मबाइल नम्बर आरो रेजिस्ट्रेसननि खारथायखौ रैखाथायै दोनगोन आरो खालि प्लाटफार्म थारसिमनाय आरो कृषि ग्यान सेवानि थाखायल' बाहायगोन।",
@@ -4197,7 +4376,15 @@ const resources = {
         "editWindowClosed": "सोंथिखौ दैथायहरनायनि उनाव सोलायनो हाया",
         "quickActionsTip": "थोंजों सोंथि दैथायहरनो एबा नोंथानि वॉलेट बेलेंस आरो दानि खामानि नायनो थां।",
         "rewardsTip": "गनायथि मोनाय गासै सोंथिनि सायाव बेसिखाना आर्जि। रूपा आरो सोना थाखोआव बांसिन बान्था मोनाव।",
-        "guidelinesTip": "भिडिअखौ 60s आरो 10MB नि सिङाव दोन। दैथायहरनायनि उनाव 30 सेकेन्द सोलायनाय समाव मोनाव। साननि सिमाया हरनि १२ बाजायाव फिन रोखोम जाफिनो।"
+        "guidelinesTip": "भिडिअखौ 60s आरो 10MB नि सिङाव दोन। दैथायहरनायनि उनाव 30 सेकेन्द सोलायनाय समाव मोनाव। साननि सिमाया हरनि १२ बाजायाव फिन रोखोम जाफिनो।",
+        "dailyLimitTitle": "साननि सिमा",
+        "editWindowTitle": "सोलायनाय समाव",
+        "aiCheckTitle": "AI नायफिननाय",
+        "verifiedUser": "थारसिनाय बाहायगिरि",
+        "startAsking": "सोंगोनाय एरजाबहो",
+        "viewWallet": "वालेट नुथाय",
+        "youAreHere": "नोंथाङ बे दं",
+        "currentTier": "दानि स्तर"
       },
       "iAcceptContinue": "आं गनायो आरो आगौवायो",
       "invalidOtp": "आबुं ६-डिजिटनि कोड सोमावना हो",
@@ -4354,7 +4541,10 @@ const resources = {
         "suspended": "सामयिकइ होबथानाय",
         "banned": "हबथानाय",
         "village": "गामि",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मानोन जाबाय सोदोब",
+        "toNext": "{{count}} उननिफ्राय",
+        "toTier": "{{tier}} फ्राय {{count}}"
       },
       "profileLanguage": "एपनि राव",
       "profileLanguageDesc": "बे एपनि गाहाय राव जागोन आरो सोंथि दैथायनायाव बाहायगोन",
@@ -4457,7 +4647,9 @@ const resources = {
         "rejectedEditQuestion": "आंनि सोंथिखौ सुद्रायो",
         "addVoice": "गोर दाजाब",
         "tipDetailed": "गुबुन गुबुन लिर — गाबसु, जायगा आरो नोंथाङा दानि सिम मा नाजादों बेखौ लिर।",
-        "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय"
+        "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय",
+        "expertWillRespond": "गोदान अनजिमा नोंथाङा जाबाब होगोन।",
+        "questionExample": "जेरै: आंनि tomato बिफांआ सिबिनि सोरजियो — आं मा खालामनांगौ?"
       },
       "readFullPolicy": "आबुं लाखिनाय खानथि फराय →",
       "resendOtp": "OTP फिन दैथायहर",
@@ -4546,7 +4738,16 @@ const resources = {
         "credit": "जमा (Credit)",
         "debit": "दंखांनाय (Debit)",
         "txNotFound": "लेनदेन मोनासै",
-        "notFoundSub": "लेनदेनखौ बोखारनाय जाबाय एबा मोना साबाय।"
+        "notFoundSub": "लेनदेनखौ बोखारनाय जाबाय एबा मोना साबाय।",
+        "sourceReward": "पुरस्कार",
+        "sourceWithdrawal": "फोजोबनाय",
+        "sourceRefund": "फिन होगोन",
+        "sourceAdjustment": "थिख्रुइनाय",
+        "statusCompleted": "सोदोबनाय",
+        "statusReversed": "फिन गोसो खालामनाय जादों",
+        "statusFailed": "हायाखै",
+        "statusPending": "नायफिननो थाखाय थानाय",
+        "currency": "भारतीय रुपी"
       },
       "yourRole": "नोंथानि बिबान",
       "home.greeting.morning": "सुप्रभात",
@@ -4949,7 +5150,14 @@ const resources = {
         "replies": "फिननायफोर",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} टा फिननाय",
-        "replyCount_other": "{{count}} टा फिननाय"
+        "replyCount_other": "{{count}} टा फिननाय",
+        "awaitingReply": "फिनफिनाय गोसो सोंलाय दं",
+        "newReportSubtitle": "नोंथाङा मोनसे बिथोन जायखि बे बुंनाय। आं मोनसे दल जोबथाबनो थांगोन।",
+        "loadingReports": "नोंथाङा रिपर्टखौ लोड खालामनाय जासैदों…",
+        "loadingReport": "रिपर्टखौ लोड खालामनाय जासैदों…",
+        "reportNotFound": "रिपर्ट मोनाखै",
+        "reportNotFoundHint": "बेखौ फोजोब खालामनाय जाबाय एबा नोंथाङा गोदान अनजिमा गैया।",
+        "backToReports": "रिपर्ट फिसा जागोन"
       },
       "profile.account": "एकाउन्ट",
       "profile.personalInfo": "गावनाव विवरण",
@@ -5021,7 +5229,10 @@ const resources = {
         "group": {
           "article_one": "आर्टिकेल",
           "article_other": "आर्टिकेलफोर"
-        }
+        },
+        "videoComingSoon": "भिडिअ गाइड गोदान फैया",
+        "videoGuideTitle": "भिडिअ गाइड",
+        "loadError": "FAQ लोड खालामनो हायाखै"
       },
       "faqAdmin": {
         "title": "FAQ सामलायनाय",
@@ -5201,6 +5412,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्ड आव दं",
+        "published": "उदांखांबाय",
+        "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
       }
     }
   },
@@ -5247,7 +5463,20 @@ const resources = {
         "tapToPlay": "चलाने लेई दबाओ",
         "delete": "मिटाओ",
         "stop": "रोको",
-        "playing": "चलदा राह्या ऐ…"
+        "playing": "चलदा राह्या ऐ…",
+        "noAudioCaptured": "कोई अवाज़ रिकार्ड नीं होई। कृपा करियै परतियै कोशिश करो।",
+        "noWordsHeard": "कोई शब्द सुणे नीं दित्ता। शांत जगह पर परतियै कोशिश करो।",
+        "voiceCaptured": "अवाज़ रिकार्ड होई गेई। समीक्षा करो ते जारी रखो।",
+        "couldNotStop": "रिकार्डिंग रोकी नीं जाई सकी।",
+        "notSupportedBrowser": "इस ब्राउज़र च माइक्रोफ़ोन रिकार्डिंग समर्थत नीं ऐ।",
+        "recordingFailed": "रिकार्डिंग फेल होई गेई। कृपा करियै परतियै कोशिश करो।",
+        "permissionDeniedRetry": "माइक्रोफ़ोन दी इजाज़त नीं दित्ती गेई। माइक्रोफ़ोन एक्सेस दिओ ते परतियै कोशिश करो।",
+        "couldNotStart": "रिकार्डिंग शुरू नीं होई सकी। कृपा करियै परतियै कोशिश करो।",
+        "tapToStopRecording": "रोकने लेई दबाओ",
+        "doneSpeakAgain": "पूरा होई गेआ — कदें बी फ्ेर बोल्लो",
+        "notSupportedShort": "इस ब्राउज़र पर माइक समर्थत नीं ऐ",
+        "stopRecordingAria": "रिकार्डिंग रोको",
+        "startRecordingAria": "अवाज़ रिकार्डिंग शुरू करो"
       },
       "speech": {
         "stt": {
@@ -5267,7 +5496,8 @@ const resources = {
       "and": "ते",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "तुआह्दा ज़िला, तुआह्दी भाषा च"
+        "tagline": "तुआह्दा ज़िला, तुआह्दी भाषा च",
+        "footer": "AnnaDatha - भारतीय किसानें गी मजबूत बनाने आस्तै"
       },
       "loginPhone": {
         "signIn": "साइन इन करो",
@@ -5426,7 +5656,10 @@ const resources = {
         "sortBy": "क्रमबद्ध करो (Sort By)",
         "unknown": "अज्ञात",
         "rupee": "रुपये",
-        "steps": "चरण"
+        "steps": "चरण",
+        "continue": "जारी रखो",
+        "noQuestionsFound": "कोई सवाल नीं मिल्या",
+        "askYourFirstQuestion": "अपना पैहला सवाल पुछो"
       },
       "completeRegistration": "पंजीकरण पूरा करो",
       "consentClause1": "तुआह्दा मोबाइल नंबर ते पंजीकरण विवरण सुरक्षित रखे जानगे ते सिर्फ प्लेटफ़ॉर्म प्रमाणीकरण ते कृषि ज्ञान सेवाएं लेई बड़ते जानगे।",
@@ -5497,7 +5730,15 @@ const resources = {
         "editWindowClosed": "भेजने दे बाद प्रश्नें च बदलाव नीं होई सकदा",
         "quickActionsTip": "सिधा 'प्रश्न भेजो' या अपना वॉलेट बैलेंस ते हालिया गतिविधियां देखो।",
         "rewardsTip": "कुल स्वीकृत प्रश्नें दे आधार पर प्रति स्वीकृत प्रश्न कमाई करो। सिल्वर ते गोल्ड स्तर तुसेंगी मते इनाम देंदे न।",
-        "guidelinesTip": "वीडियो 60s ते 10MB थूं घट्ट रखो। प्रश्न भेजने दे बाद तुसेंगी 30-सेकंड दा संपादन विंडो मिलदा ऐ। दैनिक सीमा आधी रात गी रीसेट होंदी ऐ।"
+        "guidelinesTip": "वीडियो 60s ते 10MB थूं घट्ट रखो। प्रश्न भेजने दे बाद तुसेंगी 30-सेकंड दा संपादन विंडो मिलदा ऐ। दैनिक सीमा आधी रात गी रीसेट होंदी ऐ।",
+        "dailyLimitTitle": "रोज़ाना दी सीमा",
+        "editWindowTitle": "बदलाव दा समां",
+        "aiCheckTitle": "AI प्रासंगिकता जांच",
+        "verifiedUser": "पुष्टि कीती उपयोगकर्ता",
+        "startAsking": "पुछणा शुरू करो",
+        "viewWallet": "वॉलेट दिक्खो",
+        "youAreHere": "तुसीं इत्थें ओ",
+        "currentTier": "मौजूदा स्तर"
       },
       "iAcceptContinue": "मैं स्वीकार करदा/करदी हां ते अग्गें बधदा/बधदी हां",
       "invalidOtp": "पूरा 6-अंकें दा कोड पाओ",
@@ -5654,7 +5895,10 @@ const resources = {
         "suspended": "सस्पेंड",
         "banned": "बैन",
         "village": "गरां",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मंजूर सवाल",
+        "toNext": "{{count}} अगले तगर",
+        "toTier": "{{tier}} तगर {{count}}"
       },
       "profileLanguage": "ऐप दी भाषा",
       "profileLanguageDesc": "एह् ऐप इंटरफ़ेस ते प्रश्न सबमिशन लेई डिफॉल्ट भाषा होगी",
@@ -5757,7 +6001,9 @@ const resources = {
         "rejectedEditQuestion": "मेरा सवाल सोधो",
         "addVoice": "अवाज जोड़ो",
         "tipDetailed": "विस्तार कन्नै लिखो — फसल, थाहर ते तुसें हुण तकर के अजमाया ऐ, दस्सो।",
-        "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई"
+        "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई",
+        "expertWillRespond": "इक माहिर तुहाड़े सवाल दा जवाब देंगा।",
+        "questionExample": "जि'यां: मेरे टमाटर दे पत्ते पीले होई गे न — मैं की करां?"
       },
       "readFullPolicy": "पूरी गोपनीयता नीत पढ़ो →",
       "resendOtp": "OTP परतियै भेज्जो",
@@ -5846,7 +6092,16 @@ const resources = {
         "credit": "जमा (Credit)",
         "debit": "निकासी (Debit)",
         "txNotFound": "लेन-देन नीं मिल्या",
-        "notFoundSub": "एह् लेन-देन हटाए दा होई सकदा ऐ या हुण उपलब्ध नीं ऐ।"
+        "notFoundSub": "एह् लेन-देन हटाए दा होई सकदा ऐ या हुण उपलब्ध नीं ऐ।",
+        "sourceReward": "इनाम",
+        "sourceWithdrawal": "निकासी",
+        "sourceRefund": "वापसी",
+        "sourceAdjustment": "समायोजन",
+        "statusCompleted": "पूर्ण",
+        "statusReversed": "उलटाया गया",
+        "statusFailed": "असफल",
+        "statusPending": "बकाया",
+        "currency": "भारतीय रुपे"
       },
       "yourRole": "तुआह्दी भूमिका",
       "home.greeting.morning": "शुभ प्रभात",
@@ -6249,7 +6504,14 @@ const resources = {
         "replies": "जवाब",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} जवाब",
-        "replyCount_other": "{{count}} जवाब"
+        "replyCount_other": "{{count}} जवाब",
+        "awaitingReply": "जवाब दी उडीक",
+        "newReportSubtitle": "तुसें आई समस्या दस्सो। साड्डी टीम छेती तुहाड़े कन्ने संपर्क करग।",
+        "loadingReports": "तुहाड़ी रिपोर्ट लोड होआ करदी ऐ…",
+        "loadingReport": "रिपोर्ट लोड होआ करदी ऐ…",
+        "reportNotFound": "रिपोर्ट नेईं मिली",
+        "reportNotFoundHint": "होई सकदा ऐ के इसेगी हटाई गेदा होए जां तुहाड़े कोल हुण पुज नेईं।",
+        "backToReports": "रिपोर्टें पर वापस जाओ"
       },
       "profile.account": "खाता",
       "profile.personalInfo": "व्यक्तिगत जानकारी",
@@ -6321,7 +6583,10 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "वीडियो गाइड जल्दी आवण आळा ऐ",
+        "videoGuideTitle": "वीडियो गाइड",
+        "loadError": "FAQ लोड करने च असफल"
       },
       "faqAdmin": {
         "title": "FAQ प्रबंधन",
@@ -6501,6 +6766,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्ड पर ऐ",
+        "published": "प्रकाशत होई गेआ",
+        "yourSubmissions": "तुहाड़े भेजे गे सवाल ते उंआं दी स्थिति।"
       }
     }
   },
@@ -6547,7 +6817,20 @@ const resources = {
         "tapToPlay": "પ્લે કરવા માટે ટેપ કરો",
         "delete": "સમાપ્ત કરો / ડિલીટ કરો",
         "stop": "રોકો",
-        "playing": "પ્લે થઈ રહ્યું છે…"
+        "playing": "પ્લે થઈ રહ્યું છે…",
+        "noAudioCaptured": "કોઈ ઓડિયો કેપ્ચર થયો નથી. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "noWordsHeard": "કોઈ શબ્દ સંભળાયો નથી. શાંત જગ્યાએ ફરી પ્રયાસ કરો.",
+        "voiceCaptured": "અવાજ કેપ્ચર થયો. સમીક્ષા કરો અને ચાલુ રાખો.",
+        "couldNotStop": "રેકોર્ડિંગ રોકી શકાયું નહીં.",
+        "notSupportedBrowser": "આ બ્રાઉઝરમાં માઇક્રોફોન રેકોર્ડિંગ સપોર્ટેડ નથી.",
+        "recordingFailed": "રેકોર્ડિંગ નિષ્ફળ ગયું. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "permissionDeniedRetry": "માઇક્રોફોનની મંજૂરી નકારવામાં આવી. માઇક્રોફોન એક્સેસ આપો અને ફરી પ્રયાસ કરો.",
+        "couldNotStart": "રેકોર્ડિંગ શરૂ કરી શકાયું નહીં. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        "tapToStopRecording": "રોકવા માટે ટેપ કરો",
+        "doneSpeakAgain": "પૂર્ણ — ગમે ત્યારે ફરી બોલો",
+        "notSupportedShort": "આ બ્રાઉઝર પર માઇક સપોર્ટેડ નથી",
+        "stopRecordingAria": "રેકોર્ડિંગ રોકો",
+        "startRecordingAria": "વોઇસ રેકોર્ડિંગ શરૂ કરો"
       },
       "speech": {
         "stt": {
@@ -6567,7 +6850,8 @@ const resources = {
       "and": "અને",
       "app": {
         "name": "અન્નદાતા",
-        "tagline": "તમારો જિલ્લો, તમારી ભાષામાં"
+        "tagline": "તમારો જિલ્લો, તમારી ભાષામાં",
+        "footer": "અન્નદાતા - ભારતીય ખેડૂતોને સશક્ત બનાવવા માટે"
       },
       "loginPhone": {
         "signIn": "સાઇન ઇન કરો",
@@ -6726,7 +7010,10 @@ const resources = {
         "sortBy": "આના દ્વારા ક્રમબદ્ધ કરો",
         "unknown": "અજ્ઞાત",
         "rupee": "રૂ.",
-        "steps": "પગલાં"
+        "steps": "પગલાં",
+        "continue": "ચાલુ રાખો",
+        "noQuestionsFound": "કોઈ પ્રશ્ન મળ્યો નથી",
+        "askYourFirstQuestion": "તમારો પ્રથમ પ્રશ્ન પૂછો"
       },
       "completeRegistration": "રજીસ્ટ્રેશન પૂર્ણ કરો",
       "consentClause1": "તમારો મોબાઇલ નંબર અને નોંધણી વિગતો સુરક્ષિત રીતે સંગ્રહિત કરવામાં આવશે અને તેનો ઉપયોગ ફક્ત પ્લેટફોર્મ પ્રમાણીકરણ અને કૃષિ જ્ઞાન સેવાઓ માટે કરવામાં આવશે.",
@@ -6797,7 +7084,15 @@ const resources = {
         "editWindowClosed": "સબમિશન પછી પ્રશ્નો સંપાદિત કરી શકાતા નથી",
         "quickActionsTip": "સીધા 'પ્રશ્ન સબમિટ કરો' પર જાઓ અથવા તમારું વોલેટ બેલેન્સ અને તાજેતરની પ્રવૃત્તિ જુઓ.",
         "rewardsTip": "કુલ મંજૂર થયેલા પ્રશ્નોના આધારે પ્રતિ મંજૂર પ્રશ્ન કમાઓ. સિલ્વર અને ગોલ્ડ સ્તર ઉચ્ચ ઇનામ દરો અનલૉક કરે છે.",
-        "guidelinesTip": "વીડિયો 60 સેકન્ડ અને 10MB ની અંદર રાખો. સબમિટ કર્યા પછી તમને 30-સેકન્ડનો એડિટિંગ વિન્ડો મળે છે. દૈનિક મર્યાદા મધ્યરાત્રિએ રિસેટ થાય છે."
+        "guidelinesTip": "વીડિયો 60 સેકન્ડ અને 10MB ની અંદર રાખો. સબમિટ કર્યા પછી તમને 30-સેકન્ડનો એડિટિંગ વિન્ડો મળે છે. દૈનિક મર્યાદા મધ્યરાત્રિએ રિસેટ થાય છે.",
+        "dailyLimitTitle": "દૈનિક મર્યાદા",
+        "editWindowTitle": "સંપાદન સમય",
+        "aiCheckTitle": "AI સંબંધિતતા ચકાસણી",
+        "verifiedUser": "ચકાસાયેલ વપરાશકર્તા",
+        "startAsking": "પૂછવાનું શરૂ કરો",
+        "viewWallet": "વોલેટ જુઓ",
+        "youAreHere": "તમે અહીં છો",
+        "currentTier": "વર્તમાન સ્તર"
       },
       "iAcceptContinue": "હું સ્વીકારું છું અને આગળ વધું છું",
       "invalidOtp": "સંપૂર્ણ 6-અંકનો કોડ દાખલ કરો",
@@ -6954,7 +7249,10 @@ const resources = {
         "suspended": "મોકૂફ રાખેલ",
         "banned": "પ્રતિબંધિત",
         "village": "ગામ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} મંજૂર થયેલા પ્રશ્નો",
+        "toNext": "{{count}} આગલા સુધી",
+        "toTier": "{{tier}} સુધી {{count}}"
       },
       "profileLanguage": "એપ ભાષા",
       "profileLanguageDesc": "આ એપ ઇન્ટરફેસ અને પ્રશ્ન સબમિશન માટે ડિફોલ્ટ ભાષા હશે",
@@ -7057,7 +7355,9 @@ const resources = {
         "rejectedEditQuestion": "મારો પ્રશ્ન સંપાદિત કરો",
         "addVoice": "અવાજ ઉમેરો",
         "tipDetailed": "વિગતવાર લખો — પાક, સ્થળ અને તમે અત્યાર સુધી શું અજમાવ્યું છે તે જણાવો.",
-        "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ"
+        "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ",
+        "expertWillRespond": "એક નિષ્ણાત તમને જવાબ આપશે.",
+        "questionExample": "દા.ત. મારા ટામેટાના પાન પીળા થઈ રહ્યા છે — મારે શું કરવું જોઈએ?"
       },
       "readFullPolicy": "સંપૂર્ણ ગોપનીયતા નીતિ વાંચો →",
       "resendOtp": "ફરીથી OTP મોકલો",
@@ -7146,7 +7446,16 @@ const resources = {
         "credit": "જમા (Credit)",
         "debit": "ઉધાર (Debit)",
         "txNotFound": "લેવડ-દેવડ મળી નથી",
-        "notFoundSub": "લેવડ-દેવડ દૂર કરવામાં આવી હોઈ શકે છે અથવા હવે ઉપલબ્ધ નથી."
+        "notFoundSub": "લેવડ-દેવડ દૂર કરવામાં આવી હોઈ શકે છે અથવા હવે ઉપલબ્ધ નથી.",
+        "sourceReward": "ઇનામ",
+        "sourceWithdrawal": "ઉપાડ",
+        "sourceRefund": "રિફંડ",
+        "sourceAdjustment": "ગોઠવણ",
+        "statusCompleted": "પૂર્ણ",
+        "statusReversed": "ઉલટાવ્યું",
+        "statusFailed": "નિષ્ફળ",
+        "statusPending": "બાકી",
+        "currency": "ભારતીય રૂપિયા"
       },
       "yourRole": "તમારી ભૂમિકા",
       "home.greeting.morning": "શુભ સવાર",
@@ -7549,7 +7858,14 @@ const resources = {
         "replies": "જવાબો",
         "adminName": "એડમિન",
         "replyCount_one": "{{count}} જવાબ",
-        "replyCount_other": "{{count}} જવાબો"
+        "replyCount_other": "{{count}} જવાબો",
+        "awaitingReply": "જવાબની રાહ જોવાઈ રહી છે",
+        "newReportSubtitle": "તમે અનુભવેલી સમસ્યાનું વર્ણન કરો. અમારી ટીમ ટૂંક સમયમાં તમારો સંપર્ક કરશે.",
+        "loadingReports": "તમારા રિપોર્ટ લોડ થઈ રહ્યા છે…",
+        "loadingReport": "રિપોર્ટ લોડ થઈ રહ્યો છે…",
+        "reportNotFound": "રિપોર્ટ મળ્યો નથી",
+        "reportNotFoundHint": "તે દૂર કરવામાં આવ્યો હોઈ શકે અથવા તમારી પાસે હવે ઍક્સેસ નથી.",
+        "backToReports": "રિપોર્ટ પર પાછા જાઓ"
       },
       "profile.account": "એકાઉન્ટ",
       "profile.personalInfo": "અંગત માહિતી",
@@ -7621,7 +7937,10 @@ const resources = {
         "group": {
           "article_one": "લેખ",
           "article_other": "લેખો"
-        }
+        },
+        "videoComingSoon": "વીડિયો માર્ગદર્શિકા ટૂંક સમયમાં આવી રહી છે",
+        "videoGuideTitle": "વીડિયો માર્ગદર્શિકા",
+        "loadError": "FAQ લોડ કરવામાં નિષ્ફળ"
       },
       "faqAdmin": {
         "title": "FAQ વ્યવસ્થાપન",
@@ -7801,6 +8120,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "હોલ્ડ પર",
+        "published": "પ્રકાશિત",
+        "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
       }
     }
   },
@@ -7847,7 +8171,20 @@ const resources = {
         "tapToPlay": "चलाने के लिए टैप करें",
         "delete": "हटाएं",
         "stop": "रोकें",
-        "playing": "चल रहा है…"
+        "playing": "चल रहा है…",
+        "noAudioCaptured": "कोई ऑडियो रिकॉर्ड नहीं हुआ। कृपया पुनः प्रयास करें।",
+        "noWordsHeard": "कोई शब्द सुनाई नहीं दिया। कृपया शांत जगह पर पुनः प्रयास करें।",
+        "voiceCaptured": "आवाज़ रिकॉर्ड हो गई। समीक्षा करें और जारी रखें।",
+        "couldNotStop": "रिकॉर्डिंग रोकी नहीं जा सकी।",
+        "notSupportedBrowser": "इस ब्राउज़र में माइक्रोफ़ोन रिकॉर्डिंग समर्थित नहीं है।",
+        "recordingFailed": "रिकॉर्डिंग विफल रही। कृपया पुनः प्रयास करें।",
+        "permissionDeniedRetry": "माइक्रोफ़ोन अनुमति अस्वीकृत। माइक्रोफ़ोन एक्सेस दें और पुनः प्रयास करें।",
+        "couldNotStart": "रिकॉर्डिंग शुरू नहीं हो सकी। कृपया पुनः प्रयास करें।",
+        "tapToStopRecording": "रोकने के लिए टैप करें",
+        "doneSpeakAgain": "पूर्ण — कभी भी फिर से बोलें",
+        "notSupportedShort": "इस ब्राउज़र पर माइक समर्थित नहीं है",
+        "stopRecordingAria": "रिकॉर्डिंग रोकें",
+        "startRecordingAria": "आवाज़ रिकॉर्डिंग शुरू करें"
       },
       "speech": {
         "stt": {
@@ -7867,7 +8204,8 @@ const resources = {
       "and": "और",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "आपका ज़िला, आपकी भाषा में"
+        "tagline": "आपका ज़िला, आपकी भाषा में",
+        "footer": "अन्नदाता - भारतीय किसानों को सशक्त बनाने के लिए"
       },
       "loginPhone": {
         "signIn": "साइन इन करें",
@@ -8026,7 +8364,10 @@ const resources = {
         "sortBy": "इसके अनुसार क्रमबद्ध करें",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "चरण"
+        "steps": "चरण",
+        "continue": "जारी रखें",
+        "noQuestionsFound": "कोई प्रश्न नहीं मिला",
+        "askYourFirstQuestion": "अपना पहला प्रश्न पूछें"
       },
       "completeRegistration": "पंजीकरण पूरा करें",
       "consentClause1": "आपका मोबाइल नंबर और पंजीकरण विवरण सुरक्षित रूप से संग्रहीत किए जाएंगे और केवल प्लेटफॉर्म प्रमाणीकरण और कृषि ज्ञान सेवाओं के लिए उपयोग किए जाएंगे।",
@@ -8097,7 +8438,15 @@ const resources = {
         "editWindowClosed": "सबमिट करने के बाद प्रश्नों को संपादित नहीं किया जा सकता",
         "quickActionsTip": "सीधे प्रश्न सबमिट करें पर जाएं या अपनी वॉलेट शेष राशि और हाल की गतिविधि देखें।",
         "rewardsTip": "कुल स्वीकृत प्रश्नों के आधार पर प्रति स्वीकृत प्रश्न कमाएं। सिल्वर और गोल्ड स्तर उच्च पुरस्कार दरों को अनलॉक करते हैं।",
-        "guidelinesTip": "वीडियो को 60 सेकंड और 10MB से कम रखें। सबमिट करने के बाद आपको 30-सेकंड की संपादन अवधि मिलती है। दैनिक सीमा आधी रात को रीसेट होती है।"
+        "guidelinesTip": "वीडियो को 60 सेकंड और 10MB से कम रखें। सबमिट करने के बाद आपको 30-सेकंड की संपादन अवधि मिलती है। दैनिक सीमा आधी रात को रीसेट होती है।",
+        "dailyLimitTitle": "दैनिक सीमा",
+        "editWindowTitle": "संपादन विंडो",
+        "aiCheckTitle": "AI प्रासंगिकता जांच",
+        "verifiedUser": "सत्यापित उपयोगकर्ता",
+        "startAsking": "पूछना शुरू करें",
+        "viewWallet": "वॉलेट देखें",
+        "youAreHere": "आप यहाँ हैं",
+        "currentTier": "वर्तमान स्तर"
       },
       "iAcceptContinue": "मैं स्वीकार करता हूँ और जारी रखें",
       "invalidOtp": "पूरा 6-अंकीय कोड दर्ज करें",
@@ -8254,7 +8603,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "प्रतिबंधित",
         "village": "गाँव",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+        "toNext": "{{count}} अगले तक",
+        "toTier": "{{tier}} तक {{count}}"
       },
       "profileLanguage": "ऐप की भाषा",
       "profileLanguageDesc": "यह ऐप इंटरफ़ेस और प्रश्न सबमिशन के लिए डिफ़ॉल्ट भाषा होगी",
@@ -8357,7 +8709,9 @@ const resources = {
         "rejectedEditQuestion": "मेरा प्रश्न सुधारें",
         "addVoice": "आवाज़ जोड़ें",
         "tipDetailed": "विस्तार से बताएं — फसल, स्थान और आपने अब तक क्या आजमाया है, यह भी लिखें।",
-        "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई"
+        "dailyLimitIndicator": "दैनिक सीमा पूरी हो गई",
+        "expertWillRespond": "एक विशेषज्ञ आपके प्रश्न का उत्तर देगा।",
+        "questionExample": "जैसे: मेरे टमाटर के पत्ते पीले पड़ रहे हैं — मुझे क्या करना चाहिए?"
       },
       "readFullPolicy": "पूरी गोपनीयता नीति पढ़ें →",
       "resendOtp": "OTP पुनः भेजें",
@@ -8446,7 +8800,16 @@ const resources = {
         "credit": "क्रेडिट (जमा)",
         "debit": "डेबिट (निकासी)",
         "txNotFound": "लेन-देन नहीं मिला",
-        "notFoundSub": "लेन-देन हटा दिया गया हो सकता है या अब उपलब्ध नहीं है।"
+        "notFoundSub": "लेन-देन हटा दिया गया हो सकता है या अब उपलब्ध नहीं है।",
+        "sourceReward": "पुरस्कार",
+        "sourceWithdrawal": "निकासी",
+        "sourceRefund": "धनवापसी",
+        "sourceAdjustment": "समायोजन",
+        "statusCompleted": "पूर्ण",
+        "statusReversed": "वापस लिया गया",
+        "statusFailed": "विफल",
+        "statusPending": "लंबित",
+        "currency": "भारतीय रुपये"
       },
       "yourRole": "आपकी भूमिका",
       "home.greeting.morning": "शुभ प्रभात",
@@ -8849,7 +9212,14 @@ const resources = {
         "replies": "जवाब",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} जवाब",
-        "replyCount_other": "{{count}} जवाब"
+        "replyCount_other": "{{count}} जवाब",
+        "awaitingReply": "उत्तर की प्रतीक्षा",
+        "newReportSubtitle": "आपको आई समस्या का वर्णन करें। हमारी टीम जल्द ही आपसे संपर्क करेगी।",
+        "loadingReports": "आपकी रिपोर्ट लोड हो रही है…",
+        "loadingReport": "रिपोर्ट लोड हो रही है…",
+        "reportNotFound": "रिपोर्ट नहीं मिली",
+        "reportNotFoundHint": "हो सकता है इसे हटा दिया गया हो या अब आपके पास पहुंच न हो।",
+        "backToReports": "रिपोर्ट पर वापस जाएं"
       },
       "profile.account": "खाता",
       "profile.personalInfo": "व्यक्तिगत जानकारी",
@@ -8921,7 +9291,10 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "वीडियो गाइड जल्द आ रहा है",
+        "videoGuideTitle": "वीडियो गाइड",
+        "loadError": "FAQ लोड करने में विफल"
       },
       "faqAdmin": {
         "title": "FAQ प्रबंधन",
@@ -9101,6 +9474,11 @@ const resources = {
         "actionAllQuestions": "सभी प्रश्न",
         "noVolumeData": "कोई वॉल्यूम डेटा उपलब्ध नहीं है",
         "loadError": "क्यूरेटर आँकड़े लोड करने में विफल"
+      },
+      "submissions": {
+        "held": "होल्ड पर",
+        "published": "प्रकाशित",
+        "yourSubmissions": "आपके सबमिट किए गए प्रश्न और उनकी स्थिति।"
       }
     }
   },
@@ -9147,7 +9525,20 @@ const resources = {
         "tapToPlay": "ಪ್ಲೇ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
         "delete": "ಅಳಿಸಿ",
         "stop": "ನಿಲ್ಲಿಸಿ",
-        "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…"
+        "playing": "ಪ್ಲೇ ಆಗುತ್ತಿದೆ…",
+        "noAudioCaptured": "ಯಾವುದೇ ಆಡಿಯೋ ಸೆರೆಹಿಡಿಯಲಾಗಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "noWordsHeard": "ಯಾವುದೇ ಪದಗಳು ಕೇಳಿಸಲಿಲ್ಲ. ಶಾಂತ ಸ್ಥಳದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "voiceCaptured": "ಧ್ವನಿ ಸೆರೆಹಿಡಿಯಲಾಗಿದೆ. ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮುಂದುವರಿಸಿ.",
+        "couldNotStop": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+        "notSupportedBrowser": "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಮೈಕ್ರೋಫೋನ್ ರೆಕಾರ್ಡಿಂಗ್ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ.",
+        "recordingFailed": "ರೆಕಾರ್ಡಿಂಗ್ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "permissionDeniedRetry": "ಮೈಕ್ರೋಫೋನ್ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಮೈಕ್ರೋಫೋನ್ ಪ್ರವೇಶ ಅನುಮತಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "couldNotStart": "ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        "tapToStopRecording": "ನಿಲ್ಲಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+        "doneSpeakAgain": "ಮುಗಿದಿದೆ — ಯಾವಾಗ ಬೇಕಾದರೂ ಮತ್ತೆ ಮಾತನಾಡಿ",
+        "notSupportedShort": "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಮೈಕ್ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ",
+        "stopRecordingAria": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
+        "startRecordingAria": "ಧ್ವನಿ ರೆಕಾರ್ಡಿಂಗ್ ಪ್ರಾರಂಭಿಸಿ"
       },
       "speech": {
         "stt": {
@@ -9167,7 +9558,8 @@ const resources = {
       "and": "ಮತ್ತು",
       "app": {
         "name": "ಅನ್ನದಾಥ",
-        "tagline": "ನಿಮ್ಮ ಜಿಲ್ಲೆ, ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ"
+        "tagline": "ನಿಮ್ಮ ಜಿಲ್ಲೆ, ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ",
+        "footer": "ಅನ್ನದಾಥ - ಭಾರತೀಯ ರೈತರನ್ನು ಬಲಪಡಿಸಲು"
       },
       "loginPhone": {
         "signIn": "ಸೈನ್ ಇನ್",
@@ -9326,7 +9718,10 @@ const resources = {
         "sortBy": "ಹೀಗೆ ವಿಂಗಡಿಸಿ",
         "unknown": "ಅಜ್ಞಾತ",
         "rupee": "ರೂ.",
-        "steps": "ಹಂತಗಳು"
+        "steps": "ಹಂತಗಳು",
+        "continue": "ಮುಂದುವರಿಸಿ",
+        "noQuestionsFound": "ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+        "askYourFirstQuestion": "ನಿಮ್ಮ ಮೊದಲ ಪ್ರಶ್ನೆಯನ್ನು ಕೇಳಿ"
       },
       "completeRegistration": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ",
       "consentClause1": "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ನೋಂದಣಿ ವಿವರಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ವೇದಿಕೆಯ ದೃಢೀಕರಣ ಮತ್ತು ಕೃಷಿ ಜ್ಞಾನ ಸೇವೆಗಳಿಗೆ ಮಾತ್ರ ಬಳಸಲಾಗುತ್ತದೆ.",
@@ -9397,7 +9792,15 @@ const resources = {
         "editWindowClosed": "ಸಲ್ಲಿಕೆಯ ನಂತರ ಪ್ರಶ್ನೆಗಳನ್ನು ಸಂಪಾದಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
         "quickActionsTip": "ನೇರವಾಗಿ ಪ್ರಶ್ನೆ ಸಲ್ಲಿಸಲು ಅಥವಾ ನಿಮ್ಮ ವಾಲೆಟ್ ಬ್ಯಾಲೆನ್ಸ್ ಮತ್ತು ಇತ್ತೀಚಿನ ಚಟುವಟಿಕೆಯನ್ನು ವೀಕ್ಷಿಸಲು ಇಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ.",
         "rewardsTip": "ಒಟ್ಟು ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳ ಆಧಾರದ ಮೇಲೆ ಪ್ರತಿ ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗೆ ಬಹುಮಾನ ಗಳಿಸಿ. ಸಿಲ್ವರ್ ಮತ್ತು ಗೋಲ್ಡ್ ಹಂತಗಳು ಹೆಚ್ಚಿನ ಬಹುಮಾನ ದರಗಳನ್ನು ನೀಡುತ್ತವೆ.",
-        "guidelinesTip": "ವೀಡಿಯೊವನ್ನು 60 ಸೆಕೆಂಡುಗಳು ಮತ್ತು 10MB ಒಳಗೆ ಇರಿಸಿ. ಸಲ್ಲಿಸಿದ ನಂತರ ನಿಮಗೆ 30 ಸೆಕೆಂಡುಗಳ ಸಂಪಾದನೆ ಸಮಯ ಸಿಗುತ್ತದೆ. ದೈನಂದಿನ ಮಿತಿ ಮಧ್ಯರಾತ್ರಿ ಮರುಹೊಂದಿಸಲ್ಪಡುತ್ತದೆ."
+        "guidelinesTip": "ವೀಡಿಯೊವನ್ನು 60 ಸೆಕೆಂಡುಗಳು ಮತ್ತು 10MB ಒಳಗೆ ಇರಿಸಿ. ಸಲ್ಲಿಸಿದ ನಂತರ ನಿಮಗೆ 30 ಸೆಕೆಂಡುಗಳ ಸಂಪಾದನೆ ಸಮಯ ಸಿಗುತ್ತದೆ. ದೈನಂದಿನ ಮಿತಿ ಮಧ್ಯರಾತ್ರಿ ಮರುಹೊಂದಿಸಲ್ಪಡುತ್ತದೆ.",
+        "dailyLimitTitle": "ದೈನಂದಿನ ಮಿತಿ",
+        "editWindowTitle": "ಸಂಪಾದನೆ ಸಮಯ",
+        "aiCheckTitle": "AI ಪ್ರಸ್ತುತತೆಯ ಪರಿಶೀಲನೆ",
+        "verifiedUser": "ಪರಿಶೀಲಿಸಲಾದ ಬಳಕೆದಾರ",
+        "startAsking": "ಕೇಳಲು ಪ್ರಾರಂಭಿಸಿ",
+        "viewWallet": "ವಾಲೆಟ್ ವೀಕ್ಷಿಸಿ",
+        "youAreHere": "ನೀವು ಇಲ್ಲಿದ್ದೀರಿ",
+        "currentTier": "ಪ್ರಸ್ತುತ ಹಂತ"
       },
       "iAcceptContinue": "ನಾನು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ ಮತ್ತು ಮುಂದುವರಿಯುತ್ತೇನೆ",
       "invalidOtp": "ಸಂಪೂರ್ಣ 6-ಅಂಕಿಯ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ",
@@ -9554,7 +9957,10 @@ const resources = {
         "suspended": "ಅಮಾನತುಗೊಳಿಸಲಾಗಿದೆ",
         "banned": "ನಿಷೇಧಿಸಲಾಗಿದೆ",
         "village": "ಗ್ರಾಮ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ಅನುಮೋದಿತ ಪ್ರಶ್ನೆಗಳು",
+        "toNext": "{{count}} ಮುಂದಿನದಕ್ಕೆ",
+        "toTier": "{{tier}}ಗೆ {{count}}"
       },
       "profileLanguage": "ಆಪ್ ಭಾಷೆ",
       "profileLanguageDesc": "ಇದು ಆಪ್ ಇಂಟರ್ಫೇಸ್ ಮತ್ತು ಪ್ರಶ್ನೆ ಸಲ್ಲಿಕೆಗಳಿಗೆ ಡೀಫಾಲ್ಟ್ ಭಾಷೆಯಾಗಿರುತ್ತದೆ",
@@ -9657,7 +10063,9 @@ const resources = {
         "rejectedEditQuestion": "ನನ್ನ ಪ್ರಶ್ನೆಯನ್ನು ಸಂಪಾದಿಸಿ",
         "addVoice": "ಧ್ವನಿ ಸೇರಿಸಿ",
         "tipDetailed": "ವಿವರವಾಗಿ ಬರೆಯಿರಿ — ಬೆಳೆ, ಸ್ಥಳ ಮತ್ತು ನೀವು ಈಗಾಗಲೇ ಏನು ಪ್ರಯತ್ನಿಸಿದ್ದೀರಿ ಎಂದು ತಿಳಿಸಿ.",
-        "dailyLimitIndicator": "ದೈನಂದಿನ ಮಿತಿ ಮುಗಿದಿದೆ"
+        "dailyLimitIndicator": "ದೈನಂದಿನ ಮಿತಿ ಮುಗಿದಿದೆ",
+        "expertWillRespond": "ಒಬ್ಬ ತಜ್ಞ ನಿಮಗೆ ಉತ್ತರ ನೀಡುತ್ತಾರೆ.",
+        "questionExample": "ಉದಾ: ನನ್ನ ಟೊಮ್ಯಾಟೊ ಎಲೆಗಳು ಹಳದಿಯಾಗುತ್ತಿವೆ — ನಾನು ಏನು ಮಾಡಬೇಕು?"
       },
       "readFullPolicy": "ಸಂಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ →",
       "resendOtp": "OTP ಯನ್ನು ಮರುಕಳುಹಿಸಿ",
@@ -9746,7 +10154,16 @@ const resources = {
         "credit": "ಕ್ರೆಡಿಟ್ (ಜಮೆ)",
         "debit": "ಡೆಬಿಟ್ (ಖರ್ಚು)",
         "txNotFound": "ವಹಿವಾಟು ಕಂಡುಬಂದಿಲ್ಲ",
-        "notFoundSub": "ವಹಿವಾಟನ್ನು ತೆಗೆದುಹಾಕಿರಬಹುದು ಅಥವಾ ಇನ್ನು ಮುಂದೆ ಲಭ್ಯವಿಲ್ಲದಿರಬಹುದು."
+        "notFoundSub": "ವಹಿವಾಟನ್ನು ತೆಗೆದುಹಾಕಿರಬಹುದು ಅಥವಾ ಇನ್ನು ಮುಂದೆ ಲಭ್ಯವಿಲ್ಲದಿರಬಹುದು.",
+        "sourceReward": "ಬಹುಮಾನ",
+        "sourceWithdrawal": "ಹಿಂಪಡೆಯುವಿಕೆ",
+        "sourceRefund": "ಮರುಪಾವತಿ",
+        "sourceAdjustment": "ಹೊಂದಾಣಿಕೆ",
+        "statusCompleted": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+        "statusReversed": "ಹಿಂತಿರುಗಿಸಲಾಗಿದೆ",
+        "statusFailed": "ವಿಫಲವಾಗಿದೆ",
+        "statusPending": "ಬಾಕಿ ಇದೆ",
+        "currency": "ಭಾರತೀಯ ರೂಪಾಯಿ"
       },
       "yourRole": "ನಿಮ್ಮ ಪಾತ್ರ",
       "home.greeting.morning": "ಶುಭೋದಯ",
@@ -10149,7 +10566,14 @@ const resources = {
         "replies": "ಉತ್ತರಗಳು",
         "adminName": "ಅಡ್ಮಿನ್",
         "replyCount_one": "{{count}} ಉತ್ತರ",
-        "replyCount_other": "{{count}} ಉತ್ತರಗಳು"
+        "replyCount_other": "{{count}} ಉತ್ತರಗಳು",
+        "awaitingReply": "ಪ್ರತಿಕ್ರಿಯೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ",
+        "newReportSubtitle": "ನೀವು ಎದುರಿಸಿದ ಸಮಸ್ಯೆಯನ್ನು ವಿವರಿಸಿ. ನಮ್ಮ ತಂಡ ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸುತ್ತದೆ.",
+        "loadingReports": "ನಿಮ್ಮ ವರದಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+        "loadingReport": "ವರದಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+        "reportNotFound": "ವರದಿ ಕಂಡುಬಂದಿಲ್ಲ",
+        "reportNotFoundHint": "ಇದನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿರಬಹುದು ಅಥವಾ ನಿಮಗೆ ಇನ್ನು ಮುಂದೆ ಪ್ರವೇಶವಿಲ್ಲ.",
+        "backToReports": "ವರದಿಗಳಿಗೆ ಹಿಂತಿರುಗಿ"
       },
       "profile.account": "ಖಾತೆ",
       "profile.personalInfo": "ವೈಯಕ್ತಿಕ ಮಾಹಿತಿ",
@@ -10221,7 +10645,10 @@ const resources = {
         "group": {
           "article_one": "ಲೇಖನ",
           "article_other": "ಲೇಖನಗಳು"
-        }
+        },
+        "videoComingSoon": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
+        "videoGuideTitle": "ವೀಡಿಯೊ ಮಾರ್ಗದರ್ಶಿ",
+        "loadError": "FAQ ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ"
       },
       "faqAdmin": {
         "title": "FAQ ನಿರ್ವಹಣೆ",
@@ -10401,6 +10828,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ಹೋಲ್ಡ್‌ನಲ್ಲಿ",
+        "published": "ಪ್ರಕಟಿಸಲಾಗಿದೆ",
+        "yourSubmissions": "ನಿಮ್ಮ ಸಲ್ಲಿಸಿದ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ಅವುಗಳ ಸ್ಥಿತಿ."
       }
     }
   },
@@ -10447,7 +10879,20 @@ const resources = {
         "tapToPlay": "باجناوَنہٕ باپتھ دباویو",
         "delete": "مٹایو",
         "stop": "بند کٔریو",
-        "playing": "چالان…"
+        "playing": "چالان…",
+        "noAudioCaptured": "کانہہ آڈیو ریکارڈ نہٕ آو۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+        "noWordsHeard": "کانہہ لفظ نہٕ آسنہٕ آمُت۔ سکون ہِنٛدِس جاے پؠٹھ دوبارہ کوشش کٔریو۔",
+        "voiceCaptured": "آواز ریکارڈ گئی۔ جائزہ لِیو تہٕ جاری رکھیو۔",
+        "couldNotStop": "ریکارڈنگ بند کرنہٕ مَنٛز آو رکاوٹ۔",
+        "notSupportedBrowser": "یہ براؤزر مَنٛز مائیکروفون ریکارڈنگ سپورٹ چھِ نہٕ۔",
+        "recordingFailed": "ریکارڈنگ ناکام گئی۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+        "permissionDeniedRetry": "مائیکروفونک اجازت رد گئی۔ مائیکروفونس رسائی دِیو تہٕ دوبارہ کوشش کٔریو۔",
+        "couldNotStart": "ریکارڈنگ شروع نہٕ گئی۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+        "tapToStopRecording": "بند کرنہٕ باپتھ دباویو",
+        "doneSpeakAgain": "مکمل — کینٛہہ ٕوقت دوبارہ واتش کریو",
+        "notSupportedShort": "یہ براؤزر پؠٹھ مائیک سپورٹ چھِ نہٕ",
+        "stopRecordingAria": "ریکارڈنگ بند کریو",
+        "startRecordingAria": "آواز ریکارڈنگ شروع کریو"
       },
       "speech": {
         "stt": {
@@ -10467,7 +10912,8 @@ const resources = {
       "and": "تہٕ",
       "app": {
         "name": "انّ داتا",
-        "tagline": "تہند ضلعہٕ، تہنزِ زبانہِ مَنٛز"
+        "tagline": "تہند ضلعہٕ، تہنزِ زبانہِ مَنٛز",
+        "footer": "انّ داتا - ہِندوستٲنؠ کاشتکاٮ۪رَن مضبوط بناونہٕ خٲطرٕ"
       },
       "loginPhone": {
         "signIn": "سائن ان کٔریو",
@@ -10626,7 +11072,10 @@ const resources = {
         "sortBy": "ترتیب دیو",
         "unknown": "نامعلوم",
         "rupee": "روپے",
-        "steps": "مرحلہٕ"
+        "steps": "مرحلہٕ",
+        "continue": "جاری رکھیو",
+        "noQuestionsFound": "کانہہ سوال نہٕ آمُت",
+        "askYourFirstQuestion": "پننٕ پؠٹھ سوال پوچھِیو"
       },
       "completeRegistration": "رجسٹریشن مکمل کٔریو",
       "consentClause1": "تہند موبائل نمبر تہٕ رجسٹریشن تفصیلات یین محفوظ تھاونہٕ تہٕ یین صرف پلیٹ فارم تصدیق تہٕ زرعی خدمات باپتھ استعمال کرنہٕ۔",
@@ -10697,7 +11146,15 @@ const resources = {
         "editWindowClosed": "جمع کرنہٕ پتہٕ ہیکن نہٕ سوال تبدیل کٔرِتھ",
         "quickActionsTip": "سیدھے جاو 'سوال جمع کٔریو' یا ووچھیو والٹ بیلنس تہٕ حالیہ سرگرمی۔",
         "rewardsTip": "منظور گٔمتین سوالن ہندِ تعدادس پیٹھ کمایو۔ سلور تہٕ گولڈ درجن مَنٛز چھُ زیادٔ انعام ملان۔",
-        "guidelinesTip": "ویڈیو تھویو 60s تہٕ 10MB کھوتہٕ کم۔ توہیہِ چھُ ملان 30 سیکنڈُک ایڈٹ ونڈو۔ دینی حد چھُ راتکِہ 12 بجے ری سیٹ گژھان۔"
+        "guidelinesTip": "ویڈیو تھویو 60s تہٕ 10MB کھوتہٕ کم۔ توہیہِ چھُ ملان 30 سیکنڈُک ایڈٹ ونڈو۔ دینی حد چھُ راتکِہ 12 بجے ری سیٹ گژھان۔",
+        "dailyLimitTitle": "دینچ حد",
+        "editWindowTitle": "تبدیلی ہنٛد وقت",
+        "aiCheckTitle": "AI ربط چیک",
+        "verifiedUser": "تصدیق شُدہ صارف",
+        "startAsking": "پوچھُن شروع کریو",
+        "viewWallet": "والیٹ ہیویو",
+        "youAreHere": "تۏہہِ یہٕ چھِو",
+        "currentTier": "حالی سطح"
       },
       "iAcceptContinue": "بؤ چھُس قبول کران تہٕ جاری تھاوان",
       "invalidOtp": "پورا 6 ہندسَن ہنٛد کوڈ درج کٔریو",
@@ -10854,7 +11311,10 @@ const resources = {
         "suspended": "معطل",
         "banned": "مستقل بند",
         "village": "گام",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} منظور شودہ سوال",
+        "toNext": "{{count}} بۆدہ کِنٛ",
+        "toTier": "{{tier}} تام {{count}}"
       },
       "profileLanguage": "ایپٕچ زبانہٕ",
       "profileLanguageDesc": "یہِ آسِ ایپ انٹرفیس تہٕ سوالات جمع کرنے باپتھ ڈیفالٹ زبانہٕ",
@@ -10957,7 +11417,9 @@ const resources = {
         "rejectedEditQuestion": "میٟون سوال درست کرِو",
         "addVoice": "آواز شٲمل کرِو",
         "tipDetailed": "تفصیلہٕ سٟتؠ لیکھِو — فصل، جاے تہٕ یُس توٚہہِ وُنی تام آزماومُت چھُ۔",
-        "dailyLimitIndicator": "ڈیلی حد چھِ مکمل"
+        "dailyLimitIndicator": "ڈیلی حد چھِ مکمل",
+        "expertWillRespond": "اکھ ماہر توہہِ جواب دِیہِ۔",
+        "questionExample": "مثلن: میۆن ٹماٹرہ سٕنٛز پَتہٕ زَرد گَژھان — بہٕ کیازِ کریم؟"
       },
       "readFullPolicy": "پورا پرائیویسی پالیسی پرِیو →",
       "resendOtp": "OTP دوبارہ سوزیو",
@@ -11046,7 +11508,16 @@ const resources = {
         "credit": "جمع (کریڈٹ)",
         "debit": "منہا (ڈیبٹ)",
         "txNotFound": "لین دین مِلِیو نہٕ",
-        "notFoundSub": "یہِ لین دین ہیکِہ مٹاونہٕ آمتُس یا چھُ نہٕ دستیاب۔"
+        "notFoundSub": "یہِ لین دین ہیکِہ مٹاونہٕ آمتُس یا چھُ نہٕ دستیاب۔",
+        "sourceReward": "انعام",
+        "sourceWithdrawal": "واپسی",
+        "sourceRefund": "واپسی رقم",
+        "sourceAdjustment": "ترمیم",
+        "statusCompleted": "مکمل",
+        "statusReversed": "واپس کورمُت",
+        "statusFailed": "ناکام",
+        "statusPending": "زیرِ التوا",
+        "currency": "ہِندوستانی روپیہ"
       },
       "yourRole": "تہنٛد کردار",
       "home.greeting.morning": "صبح بخیر",
@@ -11449,7 +11920,14 @@ const resources = {
         "replies": "جوابات",
         "adminName": "ایڈمن",
         "replyCount_one": "{{count}} جواب",
-        "replyCount_other": "{{count}} جوابات"
+        "replyCount_other": "{{count}} جوابات",
+        "awaitingReply": "جوابس ہیوٚتھ انتظار",
+        "newReportSubtitle": "تُہنٛدِس پیش آمُتس مسئلَس بیان کریو۔ اَسہِ ٹیٖم جلدی تُہنٛدِس نال رابطہ کریہِ۔",
+        "loadingReports": "تُہنٛد رپورٹ لوڈ گژھان…",
+        "loadingReport": "رپورٹ لوڈ گژھان…",
+        "reportNotFound": "رپورٹ نہٕ ملی",
+        "reportNotFoundHint": "یہ ہیوٚمُت ہیکہِ یا تُہنٛدِس اکھ نہٕ رٲزہِ رسائی۔",
+        "backToReports": "رپورٹن پؠٹھ واپس گژھیو"
       },
       "profile.account": "اکاؤنٹ",
       "profile.personalInfo": "شخصی معلومات",
@@ -11521,7 +11999,10 @@ const resources = {
         "group": {
           "article_one": "مضمون",
           "article_other": "مضامین"
-        }
+        },
+        "videoComingSoon": "ویڈیو گائیڈ جلدی ییہ",
+        "videoGuideTitle": "ویڈیو گائیڈ",
+        "loadError": "FAQ لوڈ کرنس منٛز ناکامی"
       },
       "faqAdmin": {
         "title": "FAQ انتظام",
@@ -11701,6 +12182,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ہولڈ پؠٹھ",
+        "published": "شائع",
+        "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
       }
     }
   },
@@ -11747,7 +12233,20 @@ const resources = {
         "tapToPlay": "प्ले करपाक टॅप करात",
         "delete": "काडून उडोयात",
         "stop": "थांबायात",
-        "playing": "प्ले जाता…"
+        "playing": "प्ले जाता…",
+        "noAudioCaptured": "कसलोच आवाज मेळूंक ना. उपकार करून परतून यत्न करात.",
+        "noWordsHeard": "कसलेच उतर आयकुंक नात. शांत सुवातेर परतून यत्न करात.",
+        "voiceCaptured": "आवाज मेळ्ळो. फुडें वचून तपासात.",
+        "couldNotStop": "रेकॉर्डिंग थांबोवपाक जालें ना.",
+        "notSupportedBrowser": "ह्या ब्राउझरांत मायक्रोफोन रेकॉर्डिंग सपोर्ट ना.",
+        "recordingFailed": "रेकॉर्डिंग अपयशी. उपकार करून परतून यत्न करात.",
+        "permissionDeniedRetry": "मायक्रोफोन परवानगी नाकारली. मायक्रोफोन प्रवेश दियात आनी परतून यत्न करात.",
+        "couldNotStart": "रेकॉर्डिंग सुरू जावंक ना. उपकार करून परतून यत्न करात.",
+        "tapToStopRecording": "थांबोवपाक टॅप करात",
+        "doneSpeakAgain": "जालें — केन्नाय वेळार परतून उलयात",
+        "notSupportedShort": "ह्या ब्राउझरार mic सपोर्ट ना",
+        "stopRecordingAria": "रेकॉर्डिंग थांबयात",
+        "startRecordingAria": "आवाज रेकॉर्डिंग सुरू करात"
       },
       "speech": {
         "stt": {
@@ -11767,7 +12266,8 @@ const resources = {
       "and": "आनी",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "तुमचो जिल्लो, तुमच्या भाशेंत"
+        "tagline": "तुमचो जिल्लो, तुमच्या भाशेंत",
+        "footer": "अन्नदाता - भारतीय शेतकऱ्यांक बळकट करपाक"
       },
       "loginPhone": {
         "signIn": "साइन इन करात",
@@ -11926,7 +12426,10 @@ const resources = {
         "sortBy": "अशे क्रमान लावा",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "पावलां"
+        "steps": "पावलां",
+        "continue": "फुडें व्हरात",
+        "noQuestionsFound": "कसलोच प्रस्न मेळ्ळो ना",
+        "askYourFirstQuestion": "तुमचो पयलो प्रस्न विचारात"
       },
       "completeRegistration": "नोंदणी पुराय करात",
       "consentClause1": "तुमचो मोबाईल नंबर आनी नोंदणी तपशील सुरक्षित दवरतले आनी फकत प्लॅटफॉर्म प्रमाणीकरण आनी कृषी ज्ञान सेवांखातीर वापरतले.",
@@ -11997,7 +12500,15 @@ const resources = {
         "editWindowClosed": "प्रस्न दिलो की बदल करूंक मेळना",
         "quickActionsTip": "सरळ प्रस्न विचारात वा तुमचें वॉलेट बॅलन्स आनी हालींची कृती पळयात.",
         "rewardsTip": "एकुण मान्य जाल्ल्या प्रस्नांचेर आदारीत दर मान्य जाल्ल्या प्रस्नाफाटल्यान जोडात. सिल्वर आनी गोल्ड टियर चड इनाम दर उक्ते करतात.",
-        "guidelinesTip": "व्हिडिओ ६०s आनी १०MB परस उणो दवरात. प्रस्न दिल्ल्या उपरांत तुमकां ३० सेकंदांचो बदल करपाचो वेळ मेळटा. दिसपटी मर्यादा मध्यरात्री परतून सुरू जाता."
+        "guidelinesTip": "व्हिडिओ ६०s आनी १०MB परस उणो दवरात. प्रस्न दिल्ल्या उपरांत तुमकां ३० सेकंदांचो बदल करपाचो वेळ मेळटा. दिसपटी मर्यादा मध्यरात्री परतून सुरू जाता.",
+        "dailyLimitTitle": "दिसपटी मर्यादा",
+        "editWindowTitle": "बदल करपाचो वेळ",
+        "aiCheckTitle": "AI तपासणी",
+        "verifiedUser": "पडताळील्लो वापरपी",
+        "startAsking": "विचारपाक सुरवात करात",
+        "viewWallet": "वालेट पळयात",
+        "youAreHere": "तुमी हांगा आसात",
+        "currentTier": "सद्याचो स्तर"
       },
       "iAcceptContinue": "म्हाका मान्य आसा आनी मुखार वचात",
       "invalidOtp": "पुराय ६-आकड्यांचो कोड घालात",
@@ -12154,7 +12665,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "बंद केलां",
         "village": "गांव",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मान्य केल्ले प्रस्न",
+        "toNext": "{{count}} फुडल्या मेरेन",
+        "toTier": "{{tier}} मेरेन {{count}}"
       },
       "profileLanguage": "ॲप भास",
       "profileLanguageDesc": "ह्या ॲपाच्या इंटरफेसाखातीर आनी प्रस्न धाडपाखातीर ही मुलभूत भास आसतली",
@@ -12257,7 +12771,9 @@ const resources = {
         "rejectedEditQuestion": "म्हजो प्रस्न सुदारात",
         "addVoice": "आवाज जोडात",
         "tipDetailed": "सविस्तर बरयात — पीक, सुवात आनी तुमी आतां मेरेन कितें करून पळयलां तें सांगात.",
-        "dailyLimitIndicator": "दिसाची मर्यादा सोंपली"
+        "dailyLimitIndicator": "दिसाची मर्यादा सोंपली",
+        "expertWillRespond": "एक तज्ञ तुमकां जाप दितलो.",
+        "questionExample": "देखीक: म्हज्या टोमॅटोचीं पानां पिंवळी जाताती — हांव कितें करूं?"
       },
       "readFullPolicy": "पुराय गुप्तताय धोरण वाचात →",
       "resendOtp": "परतून OTP धाडात",
@@ -12346,7 +12862,16 @@ const resources = {
         "credit": "जमा (Credit)",
         "debit": "खर्च (Debit)",
         "txNotFound": "व्यवहार मेळ्ळो ना",
-        "notFoundSub": "हो व्यवहार काडून उडयला वा आतां उपलब्ध ना."
+        "notFoundSub": "हो व्यवहार काडून उडयला वा आतां उपलब्ध ना.",
+        "sourceReward": "बक्षीस",
+        "sourceWithdrawal": "काडून घेवप",
+        "sourceRefund": "परतफेड",
+        "sourceAdjustment": "जुळावणी",
+        "statusCompleted": "पुराय जालें",
+        "statusReversed": "उलटावन घेतलां",
+        "statusFailed": "अपयशी",
+        "statusPending": "प्रलंबित",
+        "currency": "भारतीय रुपया"
       },
       "yourRole": "तुमची भूमिका",
       "home.greeting.morning": "देव बरे सकाळ",
@@ -12749,7 +13274,14 @@ const resources = {
         "replies": "जापो",
         "adminName": "प्रशासक",
         "replyCount_one": "{{count}} जाप",
-        "replyCount_other": "{{count}} जापो"
+        "replyCount_other": "{{count}} जापो",
+        "awaitingReply": "जबाबाची वाट पळयतां",
+        "newReportSubtitle": "तुमकां आयिल्ली अडचण सांगात. आमची टीम लवकरच तुमकां संपर्क करतली.",
+        "loadingReports": "तुमची रिपोर्ट लोड जातां…",
+        "loadingReport": "रिपोर्ट लोड जातां…",
+        "reportNotFound": "रिपोर्ट मेळ्ळी ना",
+        "reportNotFoundHint": "हें काडून उडयलां आसूं येता वा तुमकां आतां प्रवेश ना.",
+        "backToReports": "रिपोर्टींत परतून वचात"
       },
       "profile.account": "खातें",
       "profile.personalInfo": "वैयक्तीक म्हायती",
@@ -12821,7 +13353,10 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येतां",
+        "videoGuideTitle": "व्हिडिओ मार्गदर्शक",
+        "loadError": "FAQ लोड करपाक अपेस जालें"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -13001,6 +13536,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्डार आसा",
+        "published": "प्रकाशीत",
+        "yourSubmissions": "तुमी सादर केल्ले प्रस्न आनी तांची स्थिती."
       }
     }
   },
@@ -13047,7 +13587,20 @@ const resources = {
         "tapToPlay": "बजाबै लेल दबाऊ",
         "delete": "हटाऊ",
         "stop": "रोकू",
-        "playing": "बजि रहल अछि…"
+        "playing": "बजि रहल अछि…",
+        "noAudioCaptured": "कोनो अडियो रिकॉर्ड नहि भेल। कृपया पुनः प्रयास करू।",
+        "noWordsHeard": "कोनो शब्द नहि सुनल गेल। शांत जगहमे पुनः प्रयास करू।",
+        "voiceCaptured": "अवाज रिकॉर्ड भेल। समीक्षा करू आ जारी राखू।",
+        "couldNotStop": "रिकॉर्डिंग रोकल नहि जा सकल।",
+        "notSupportedBrowser": "एहि ब्राउजरमे माइक्रोफोन रिकॉर्डिंग समर्थित नहि अछि।",
+        "recordingFailed": "रिकॉर्डिंग असफल भेल। कृपया पुनः प्रयास करू।",
+        "permissionDeniedRetry": "माइक्रोफोनक अनुमति अस्वीकृत भेल। माइक्रोफोन पहुंच देल आ पुनः प्रयास करू।",
+        "couldNotStart": "रिकॉर्डिंग शुरू नहि भ' सकल। कृपया पुनः प्रयास करू।",
+        "tapToStopRecording": "रोकबा लेल दबाऊ",
+        "doneSpeakAgain": "पूर्ण — कहियो फेर बाजू",
+        "notSupportedShort": "एहि ब्राउजर पर माइक समर्थित नहि अछि",
+        "stopRecordingAria": "रिकॉर्डिंग रोकू",
+        "startRecordingAria": "अवाज रिकॉर्डिंग शुरू करू"
       },
       "speech": {
         "stt": {
@@ -13067,7 +13620,8 @@ const resources = {
       "and": "आओर",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "अहाँक जिला, अहाँक भाषामे"
+        "tagline": "अहाँक जिला, अहाँक भाषामे",
+        "footer": "अन्नदाता - भारतीय किसान सभक सशक्त करबाक लेल"
       },
       "loginPhone": {
         "signIn": "साइन इन करु",
@@ -13226,7 +13780,10 @@ const resources = {
         "sortBy": "क्रमबद्ध करु",
         "unknown": "अज्ञात",
         "rupee": "टका",
-        "steps": "चरण"
+        "steps": "चरण",
+        "continue": "जारी राखू",
+        "noQuestionsFound": "कोनो प्रश्न नहि भेटल",
+        "askYourFirstQuestion": "अपन पहिल प्रश्न पूछू"
       },
       "completeRegistration": "पंजीकरण पूरा करु",
       "consentClause1": "अहाँक मोबाइल नंबर आ पंजीकरण विवरण सुरक्षित रूप सँ राखल जाएत आ केवल प्लेटफॉर्म प्रमाणीकरण आ कृषि ज्ञान सेवा लेल उपयोग कएल जाएत।",
@@ -13297,7 +13854,15 @@ const resources = {
         "editWindowClosed": "जमा करबाक बाद प्रश्नमे संशोधन नहि कएल जा सकैत अछि",
         "quickActionsTip": "सोझै 'प्रश्न जमा करु' पर जाऊ या अपन वॉलेट शेष आ हालक गतिविधि देखू।",
         "rewardsTip": "स्वीकृत प्रश्नक कुल संख्याक आधार पर प्रति स्वीकृत प्रश्न कमाऊ। सिल्वर आ गोल्ड स्तर बेसी पुरस्कार दर अनलॉक करैत अछि।",
-        "guidelinesTip": "वीडियो ६० सेकंड आ १०एमबी सँ कम राखू। अहाँक जमा करबाक बाद ३० सेकंडक संशोधन समय भेटैत अछि। दैनिक सीमा मध्यरात्रिकेँ रीसेट भ जाइत अछि।"
+        "guidelinesTip": "वीडियो ६० सेकंड आ १०एमबी सँ कम राखू। अहाँक जमा करबाक बाद ३० सेकंडक संशोधन समय भेटैत अछि। दैनिक सीमा मध्यरात्रिकेँ रीसेट भ जाइत अछि।",
+        "dailyLimitTitle": "दैनिक सीमा",
+        "editWindowTitle": "संशोधन समय",
+        "aiCheckTitle": "AI प्रासंगिकता जाँच",
+        "verifiedUser": "सत्यापित उपयोगकर्ता",
+        "startAsking": "पुछब शुरू करू",
+        "viewWallet": "वालेट देखू",
+        "youAreHere": "अहाँ एतय छी",
+        "currentTier": "वर्तमान स्तर"
       },
       "iAcceptContinue": "हम स्वीकार करैत छी आ जारी राखैत छी",
       "invalidOtp": "पूरा ६-अंकक कोड दर्ज करु",
@@ -13454,7 +14019,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "प्रतिबंधित",
         "village": "गाम",
-        "kvk": "केवीके"
+        "kvk": "केवीके",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+        "toNext": "{{count}} अगिला धरि",
+        "toTier": "{{tier}} धरि {{count}}"
       },
       "profileLanguage": "ऐप भाषा",
       "profileLanguageDesc": "ई ऐप इंटरफेस आ प्रश्न सब जमा करबा लेल डिफ़ॉल्ट भाषा हेत",
@@ -13557,7 +14125,9 @@ const resources = {
         "rejectedEditQuestion": "हमर प्रश्न संपादित करू",
         "addVoice": "अवाज जोड़ू",
         "tipDetailed": "विस्तारसँ लिखू — फसल, स्थान आ अहाँ आब धरि की आजमेने छी, से बताउ।",
-        "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल"
+        "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल",
+        "expertWillRespond": "एकटा विशेषज्ञ अहाँकेँ उत्तर देताह।",
+        "questionExample": "जेना: हमर टमाटरक पात पिअर होइ रहल अछि — हम की करू?"
       },
       "readFullPolicy": "पूरा गोपनीयता नीति पढ़ू →",
       "resendOtp": "पुनः ओटीपी पठाऊ",
@@ -13646,7 +14216,16 @@ const resources = {
         "credit": "जमा (क्रेडिट)",
         "debit": "निकासी (डेबिट)",
         "txNotFound": "लेन-देन नहि भेटल",
-        "notFoundSub": "लेन-देन हटा देल गेल भ सकैत अछि या अब उपलब्ध नहि अछि।"
+        "notFoundSub": "लेन-देन हटा देल गेल भ सकैत अछि या अब उपलब्ध नहि अछि।",
+        "sourceReward": "पुरस्कार",
+        "sourceWithdrawal": "निकासी",
+        "sourceRefund": "रिफंड",
+        "sourceAdjustment": "समायोजन",
+        "statusCompleted": "पूर्ण",
+        "statusReversed": "वापस कएल गेल",
+        "statusFailed": "असफल",
+        "statusPending": "लंबित",
+        "currency": "भारतीय रुपैया"
       },
       "yourRole": "अहाँक भूमिका",
       "home.greeting.morning": "शुभ प्रभात",
@@ -14049,7 +14628,14 @@ const resources = {
         "replies": "जवाब सब",
         "adminName": "प्रशासक (एडमिन)",
         "replyCount_one": "{{count}} जवाब",
-        "replyCount_other": "{{count}} जवाब सब"
+        "replyCount_other": "{{count}} जवाब सब",
+        "awaitingReply": "उत्तरक प्रतीक्षा",
+        "newReportSubtitle": "अहाँक भेटल समस्याक वर्णन करू। हमर टीम जल्दिये अहाँसँ संपर्क करत।",
+        "loadingReports": "अहाँक रिपोर्ट लोड भ रहल अछि…",
+        "loadingReport": "रिपोर्ट लोड भ रहल अछि…",
+        "reportNotFound": "रिपोर्ट नहि भेटल",
+        "reportNotFoundHint": "ई हटाओल गेल हएत अथवा अहाँक लग एखन पहुँच नहि अछि।",
+        "backToReports": "रिपोर्ट पर वापस जाउ"
       },
       "profile.account": "खाता",
       "profile.personalInfo": "व्यक्तिगत जानकारी",
@@ -14121,7 +14707,10 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख सब"
-        }
+        },
+        "videoComingSoon": "वीडियो गाइड जल्दिये आबि रहल अछि",
+        "videoGuideTitle": "वीडियो गाइड",
+        "loadError": "FAQ लोड करबामे विफल"
       },
       "faqAdmin": {
         "title": "एफएक्यू प्रबंधन",
@@ -14301,6 +14890,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्ड पर अछि",
+        "published": "प्रकाशित",
+        "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
       }
     }
   },
@@ -14347,7 +14941,20 @@ const resources = {
         "tapToPlay": "കേൾക്കാൻ ടാപ്പ് ചെയ്യുക",
         "delete": "ഡിലീറ്റ് ചെയ്യുക",
         "stop": "നിർത്തുക",
-        "playing": "പ്ലേ ചെയ്യുന്നു…"
+        "playing": "പ്ലേ ചെയ്യുന്നു…",
+        "noAudioCaptured": "ഒരു ഓഡിയോയും ലഭിച്ചില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+        "noWordsHeard": "ഒരു വാക്കും കേട്ടില്ല. ശാന്തമായ സ്ഥലത്ത് വീണ്ടും ശ്രമിക്കുക.",
+        "voiceCaptured": "ശബ്ദം ലഭിച്ചു. അവലോകനം ചെയ്ത് തുടരുക.",
+        "couldNotStop": "റെക്കോർഡിംഗ് നിർത്താൻ കഴിഞ്ഞില്ല.",
+        "notSupportedBrowser": "ഈ ബ്രൗസറിൽ മൈക്രോഫോൺ റെക്കോർഡിംഗ് പിന്തുണയ്ക്കുന്നില്ല.",
+        "recordingFailed": "റെക്കോർഡിംഗ് പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+        "permissionDeniedRetry": "മൈക്രോഫോൺ അനുമതി നിരസിച്ചു. മൈക്രോഫോൺ ആക്‌സസ് അനുവദിച്ച് വീണ്ടും ശ്രമിക്കുക.",
+        "couldNotStart": "റെക്കോർഡിംഗ് ആരംഭിക്കാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+        "tapToStopRecording": "നിർത്താൻ ടാപ്പ് ചെയ്യുക",
+        "doneSpeakAgain": "പൂർത്തിയായി — ഇനി എപ്പോൾ വേണമെങ്കിലും വീണ്ടും സംസാരിക്കാം",
+        "notSupportedShort": "ഈ ബ്രൗസറിൽ മൈക്ക് പിന്തുണയ്ക്കുന്നില്ല",
+        "stopRecordingAria": "റെക്കോർഡിംഗ് നിർത്തുക",
+        "startRecordingAria": "വോയ്‌സ് റെക്കോർഡിംഗ് ആരംഭിക്കുക"
       },
       "speech": {
         "stt": {
@@ -14367,7 +14974,8 @@ const resources = {
       "and": "കൂടാതെ",
       "app": {
         "name": "അന്നദാതാ",
-        "tagline": "നിങ്ങളുടെ ജില്ല, നിങ്ങളുടെ ഭാഷയിൽ"
+        "tagline": "നിങ്ങളുടെ ജില്ല, നിങ്ങളുടെ ഭാഷയിൽ",
+        "footer": "അന്നദാതാ - ഇന്ത്യൻ കർഷകരെ ശക്തിപ്പെടുത്താൻ"
       },
       "loginPhone": {
         "signIn": "സൈൻ ഇൻ",
@@ -14526,7 +15134,10 @@ const resources = {
         "sortBy": "തരംതിരിക്കുക",
         "unknown": "അജ്ഞാതം",
         "rupee": "രൂപ",
-        "steps": "ഘട്ടങ്ങൾ"
+        "steps": "ഘട്ടങ്ങൾ",
+        "continue": "തുടരുക",
+        "noQuestionsFound": "ചോദ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല",
+        "askYourFirstQuestion": "നിങ്ങളുടെ ആദ്യ ചോദ്യം ചോദിക്കുക"
       },
       "completeRegistration": "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക",
       "consentClause1": "നിങ്ങളുടെ മൊബൈൽ നമ്പറും രജിസ്ട്രേഷൻ വിവരങ്ങളും സുരക്ഷിതമായി സൂക്ഷിക്കുകയും പ്ലാറ്റ്‌ഫോം ഓതന്റിക്കേഷനും കാർഷിക സേവനങ്ങൾക്കുമായി മാത്രം ഉപയോഗിക്കുകയും ചെയ്യും.",
@@ -14597,7 +15208,15 @@ const resources = {
         "editWindowClosed": "സമർപ്പിച്ച ശേഷം ചോദ്യങ്ങൾ തിരുത്താൻ കഴിയില്ല",
         "quickActionsTip": "ചോദ്യം ചോദിക്കുന്നതിനോ വാലറ്റ് ബാലൻസ് പരിശോധിക്കുന്നതിനോ ഉള്ള വഴി.",
         "rewardsTip": "അംഗീകരിക്കപ്പെട്ട ചോദ്യങ്ങൾക്ക് തുക നേടാം. സിൽവർ, ഗോൾഡ് തലങ്ങളിൽ ഉയർന്ന റിവാർഡുകൾ ലഭിക്കും.",
-        "guidelinesTip": "വീഡിയോ 60 സെക്കൻഡിലും 10MB യിലും കുറവായിരിക്കണം. സമർപ്പിച്ച ശേഷം 30 സെക്കൻഡ് തിരുത്താനുള്ള സമയം ലഭിക്കും."
+        "guidelinesTip": "വീഡിയോ 60 സെക്കൻഡിലും 10MB യിലും കുറവായിരിക്കണം. സമർപ്പിച്ച ശേഷം 30 സെക്കൻഡ് തിരുത്താനുള്ള സമയം ലഭിക്കും.",
+        "dailyLimitTitle": "ദിവസേനയുള്ള പരിധി",
+        "editWindowTitle": "തിരുത്താനുള്ള സമയം",
+        "aiCheckTitle": "AI അനുയോജ്യതാ പരിശോധന",
+        "verifiedUser": "സാക്ഷ്യപ്പെടുത്തിയ ഉപയോക്താവ്",
+        "startAsking": "ചോദിക്കാൻ തുടങ്ങുക",
+        "viewWallet": "വാലറ്റ് കാണുക",
+        "youAreHere": "നിങ്ങൾ ഇവിടെയാണ്",
+        "currentTier": "നിലവിലെ നില"
       },
       "iAcceptContinue": "ഞാൻ അംഗീകരിച്ച് മുന്നോട്ട് പോകുന്നു",
       "invalidOtp": "മുഴുവൻ 6 അക്ക കോഡും നൽകുക",
@@ -14754,7 +15373,10 @@ const resources = {
         "suspended": "സസ്പെൻഡ് ചെയ്തു",
         "banned": "നിരോധിച്ചു",
         "village": "ഗ്രാമം",
-        "kvk": "കെ.വി.കെ"
+        "kvk": "കെ.വി.കെ",
+        "approvedQuestionsCount": "{{count}} അംഗീകരിച്ച ചോദ്യങ്ങൾ",
+        "toNext": "{{count}} അടുത്തതിലേക്ക്",
+        "toTier": "{{tier}} വരെ {{count}}"
       },
       "profileLanguage": "ആപ്പിന്റെ ഭാഷ",
       "profileLanguageDesc": "ആപ്പ് ഉപയോഗത്തിനും ചോദ്യങ്ങൾ നൽകുന്നതിനും ഇത് പ്രധാന ഭാഷയായി ഉപയോഗിക്കും",
@@ -14857,7 +15479,9 @@ const resources = {
         "rejectedEditQuestion": "എന്റെ ചോദ്യം തിരുത്തുക",
         "addVoice": "ശബ്ദം ചേർക്കുക",
         "tipDetailed": "വിശദമായി എഴുതുക — വിള, സ്ഥലം, നിങ്ങൾ ഇതുവരെ പരീക്ഷിച്ചത് എന്നിവ ചേർക്കുക.",
-        "dailyLimitIndicator": "ദൈനംദിന പരിധി തീർന്നു"
+        "dailyLimitIndicator": "ദൈനംദിന പരിധി തീർന്നു",
+        "expertWillRespond": "ഒരു വിദഗ്ധൻ നിങ്ങൾക്ക് ഉത്തരം നൽകും.",
+        "questionExample": "ഉദാ: എന്റെ തക്കാളിയുടെ ഇലകൾ മഞ്ഞളിക്കുന്നു — ഞാൻ എന്ത് ചെയ്യണം?"
       },
       "readFullPolicy": "പൂർണ്ണ സ്വകാര്യതാ നയം വായിക്കുക →",
       "resendOtp": "വീണ്ടും OTP അയക്കുക",
@@ -14946,7 +15570,16 @@ const resources = {
         "credit": "വരവ് (Credit)",
         "debit": "ചെലവ് (Debit)",
         "txNotFound": "ഇടപാട് കണ്ടെത്തിയില്ല",
-        "notFoundSub": "ഇടപാട് നീക്കം ചെയ്തിട്ടുണ്ടാകാം അല്ലെങ്കിൽ അത് ലഭ്യമല്ല."
+        "notFoundSub": "ഇടപാട് നീക്കം ചെയ്തിട്ടുണ്ടാകാം അല്ലെങ്കിൽ അത് ലഭ്യമല്ല.",
+        "sourceReward": "റിവാർഡ്",
+        "sourceWithdrawal": "പിൻവലിക്കൽ",
+        "sourceRefund": "റീഫണ്ട്",
+        "sourceAdjustment": "ക്രമീകരണം",
+        "statusCompleted": "പൂർത്തിയായി",
+        "statusReversed": "തിരിച്ചടച്ചു",
+        "statusFailed": "പരാജയപ്പെട്ടു",
+        "statusPending": "പരിശോധനയിൽ",
+        "currency": "ഇന്ത്യൻ രൂപ"
       },
       "yourRole": "നിങ്ങളുടെ റോൾ/സ്ഥാനം",
       "home.greeting.morning": "സുപ്രഭാതം",
@@ -15349,7 +15982,14 @@ const resources = {
         "replies": "മറുപടികൾ",
         "adminName": "അഡ്മിൻ",
         "replyCount_one": "{{count}} മറുപടി",
-        "replyCount_other": "{{count}} മറുപടികൾ"
+        "replyCount_other": "{{count}} മറുപടികൾ",
+        "awaitingReply": "മറുപടിക്കായി കാത്തിരിക്കുന്നു",
+        "newReportSubtitle": "നിങ്ങൾ നേരിട്ട പ്രശ്നം വിവരിക്കുക. ഞങ്ങളുടെ ടീം ഉടൻ നിങ്ങളെ ബന്ധപ്പെടും.",
+        "loadingReports": "നിങ്ങളുടെ റിപ്പോർട്ടുകൾ ലോഡ് ചെയ്യുന്നു…",
+        "loadingReport": "റിപ്പോർട്ട് ലോഡ് ചെയ്യുന്നു…",
+        "reportNotFound": "റിപ്പോർട്ട് കണ്ടെത്തിയില്ല",
+        "reportNotFoundHint": "ഇത് നീക്കം ചെയ്തിരിക്കാം അല്ലെങ്കിൽ നിങ്ങൾക്ക് ഇനി ആക്‌സസ് ഇല്ല.",
+        "backToReports": "റിപ്പോർട്ടുകളിലേക്ക് മടങ്ങുക"
       },
       "profile.account": "അക്കൗണ്ട്",
       "profile.personalInfo": "വ്യക്തിഗത വിവരങ്ങൾ",
@@ -15421,7 +16061,10 @@ const resources = {
         "group": {
           "article_one": "ലേഖനം",
           "article_other": "ലേഖനങ്ങൾ"
-        }
+        },
+        "videoComingSoon": "വീഡിയോ ഗൈഡ് ഉടൻ വരുന്നു",
+        "videoGuideTitle": "വീഡിയോ ഗൈഡ്",
+        "loadError": "FAQ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
       },
       "faqAdmin": {
         "title": "FAQ കൈകാര്യം ചെയ്യൽ",
@@ -15601,6 +16244,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ഹോൾഡിലാണ്",
+        "published": "പ്രസിദ്ധീകരിച്ചു",
+        "yourSubmissions": "നിങ്ങൾ സമർപ്പിച്ച ചോദ്യങ്ങളും അവയുടെ നിലയും."
       }
     }
   },
@@ -15647,7 +16295,20 @@ const resources = {
         "tapToPlay": "শানবা নমবীয়ু",
         "delete": "মুতথোকপা",
         "stop": "লেপপা",
-        "playing": "শারি…"
+        "playing": "শারি…",
+        "noAudioCaptured": "অডিও ফংদ্রে। অমুক হন্না হোৎনবীয়ু।",
+        "noWordsHeard": "ৱাহেই তাদ্রে। ঙাইথিবা মফমদা হন্না হোৎনবীয়ু।",
+        "voiceCaptured": "খোন্জেল ফংলে। য়েংশিনবীয়ু অমসুং চঙদোককো।",
+        "couldNotStop": "রেকোদিং লেপ্পা ঙমদ্রে।",
+        "notSupportedBrowser": "ব্রাউজারসিদা মাইক্রোফোন রেকোদিং সাপোর্ট তৌদে।",
+        "recordingFailed": "রেকোদিং ঙমদ্রে। অমুক হন্না হোৎনবীয়ু।",
+        "permissionDeniedRetry": "মাইক্রোফোনগী অয়াবা য়াদ্রে। মাইক্রোফোন লৌবা য়াহল্লু অমসুং হন্না হোৎনবীয়ু।",
+        "couldNotStart": "রেকোদিং হৌবা ঙমদ্রে। অমুক হন্না হোৎনবীয়ু।",
+        "tapToStopRecording": "লেপনবা নমবীয়ু",
+        "doneSpeakAgain": "লৌখৎলে — মথং হৌবা মতমদা হন্না ঙাংবীয়ু",
+        "notSupportedShort": "ব্রাউজারসিদা মাইক সাপোর্ট তৌদে",
+        "stopRecordingAria": "রেকোদিং লেপ্পীয়ু",
+        "startRecordingAria": "খোন্জেল রেকোদিং হৌবীয়ু"
       },
       "speech": {
         "stt": {
@@ -15667,7 +16328,8 @@ const resources = {
       "and": "অমসুং",
       "app": {
         "name": "অন্নদাতা (AnnaDatha)",
-        "tagline": "নহাগী ডিস্ট্রিক্ট, নহাগী লোনদা"
+        "tagline": "নহাগী ডিস্ট্রিক্ট, নহাগী লোনদা",
+        "footer": "অন্নদাতা (AnnaDatha) - ভারতগী লৌমীশিংবু কনবীবা"
       },
       "loginPhone": {
         "signIn": "সাইন ইন তৌবু",
@@ -15826,7 +16488,10 @@ const resources = {
         "sortBy": "মথং-মনাও শেম্বা",
         "unknown": "খংদবা",
         "rupee": "লুপা",
-        "steps": "ফিভম"
+        "steps": "ফিভম",
+        "continue": "চঙদোককো",
+        "noQuestionsFound": "ৱাহঙ ফংদ্রে",
+        "askYourFirstQuestion": "নহাক্কী অহানবা হংজবা হংবীয়ু"
       },
       "completeRegistration": "রেজিষ্ট্রেশন মপুং ফাহনবা",
       "consentClause1": "নহাগী মোবাইল নম্বর অমসুং রেজিষ্ট্রেশন মরোলশিং অসিবু চে অমত্তা লৈতনা থমগনি অমসুং প্লেটফোর্ম অসিদা ভেরিফাই অমসুং লৌউ-শিংউগী সর্বিসগীদমক শীজিন্নগনি।",
@@ -15897,7 +16562,15 @@ const resources = {
         "editWindowClosed": "থারকপগী মতুংদা ওয়াহং সেমদোকবা য়ামদে",
         "quickActionsTip": "ওয়াহং থাবদা নত্রগা নহাগী ওয়ালেট ব্যালেন্স অমসুং হন্দকগী থৌরমশিংদা ডাইরেক্ত চতবীয়ু।",
         "rewardsTip": "অয়াবা পীরবা অপুনবা ওয়াহংগী মাংদা রিৱার্দ ফংবীয়ু। সিলভর অমসুং গোল্ড এপ্রুবেলশিংদা হেন্না ৱাংবা রিৱার্দ ফংগনি।",
-        "guidelinesTip": "ভিদিও অসি সেকেন্দ ৬০ অমসুং 10MB গী মনুংদা থমবীয়ু। থারকপগী মতুংদা সেকেন্দ ৩০ গী সেমদোকপগী মতম ফংগনি।"
+        "guidelinesTip": "ভিদিও অসি সেকেন্দ ৬০ অমসুং 10MB গী মনুংদা থমবীয়ু। থারকপগী মতুংদা সেকেন্দ ৩০ গী সেমদোকপগী মতম ফংগনি।",
+        "dailyLimitTitle": "নুমিত অমগী সীমা",
+        "editWindowTitle": "সেমদোকপগী মতম",
+        "aiCheckTitle": "AI চেক",
+        "verifiedUser": "ভেরিফাই তৌবা মীওই",
+        "startAsking": "হংনবা হৌবিয়ু",
+        "viewWallet": "ৱালেট য়েংগু",
+        "youAreHere": "নঙ মফমসিদা লৈ",
+        "currentTier": "হৌজিক্কী স্তর"
       },
       "iAcceptContinue": "ঐ য়ানবনি অমসুং মখা চতথবনি",
       "invalidOtp": "মপুং ফাবা ৬-দিজিৎকী কোড অদু চংহনবীয়ু",
@@ -16054,7 +16727,10 @@ const resources = {
         "suspended": "লেপহনখ্রে",
         "banned": "বোন তৌখ্রে",
         "village": "খুঙ্গং",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} লোইশিনখিবা হংজবা",
+        "toNext": "{{count}} মথংগী",
+        "toTier": "{{tier}} ফাওবা {{count}}"
       },
       "profileLanguage": "এপকী লোন",
       "profileLanguageDesc": "অসি এপকী ইন্তর্ফেস অমসুং ওয়াহং থাবগীদমক দিফোল্ত লোন ওইগনি",
@@ -16157,7 +16833,9 @@ const resources = {
         "rejectedEditQuestion": "ঐগী ৱাহং শেমদোকউ",
         "addVoice": "খোন্জেল হাপচিল্লু",
         "tipDetailed": "অকুপ্না ইযু — মহৈ, মফম অমসুং নহাক্না হৌজিক ফাওবা করি হোৎনখিবগে হায়বদু হাপচিল্লু।",
-        "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে"
+        "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে",
+        "expertWillRespond": "শিংনরবা মীওই অমনা নহাক্কী পাঙথোকপা পীগনি।",
+        "questionExample": "খুদামদা: ঐগী টমেটোগী মানবীশিং য়েল্লবা ওইরকই — ঐনা করিগুম্বা তৌগদগে?"
       },
       "readFullPolicy": "মপুং ফাবা প্রাইভেসি পোলিসি পারো →",
       "resendOtp": "OTP অমুক থাবীয়ু",
@@ -16246,7 +16924,16 @@ const resources = {
         "credit": "ক্রেদিট",
         "debit": "ডেবিট",
         "txNotFound": "লেন-থৌ ফংদ্রে",
-        "notFoundSub": "লেন-থৌ অসি মুতথোকখ্রে নত্রগা লৈতরে।"
+        "notFoundSub": "লেন-থৌ অসি মুতথোকখ্রে নত্রগা লৈতরে।",
+        "sourceReward": "পুরস্কার",
+        "sourceWithdrawal": "লৌথোকপা",
+        "sourceRefund": "রিফান্ড",
+        "sourceAdjustment": "সেমগৎ",
+        "statusCompleted": "লোইশিনখ্রে",
+        "statusReversed": "হনখিবা য়াখ্রে",
+        "statusFailed": "মায় পাকখ্রে",
+        "statusPending": "পেন্ডিং",
+        "currency": "ভারতীয় রূপী"
       },
       "yourRole": "নহাগী থৌদাং",
       "home.greeting.morning": "অয়ুক্কী খুরুমজরি",
@@ -16649,7 +17336,14 @@ const resources = {
         "replies": "পাউখুমশিং",
         "adminName": "এডমিন",
         "replyCount_one": "পাউখুম {{count}}",
-        "replyCount_other": "পাউখুম {{count}}"
+        "replyCount_other": "পাউখুম {{count}}",
+        "awaitingReply": "পাখোনবা লৈরি",
+        "newReportSubtitle": "নহাক্না মায়োক্খিবা হংজবা মশিং লেপ্পিয়ু। ঐখোয়গী টিমনা থুনামক নহাক্কী মনুংদা লাক্কনি।",
+        "loadingReports": "নহাক্কী রিপোর্ট লোড তৌরি…",
+        "loadingReport": "রিপোর্ট লোড তৌরি…",
+        "reportNotFound": "রিপোর্ট ফংদ্রে",
+        "reportNotFoundHint": "মসি লৌথোকখ্রবা য়াখ্রে নত্রগা নহাক্না হৌজিক্তি এক্সেস লৈত্রে।",
+        "backToReports": "রিপোর্টশিংদা হন্না চৎলু"
       },
       "profile.account": "একান্ত",
       "profile.personalInfo": "ইশাগী মরোল",
@@ -16721,7 +17415,10 @@ const resources = {
         "group": {
           "article_one": "আর্টিকেল",
           "article_other": "আর্টিকেলশিং"
-        }
+        },
+        "videoComingSoon": "ভিদিও গাইদ থুনামক লাক্কনি",
+        "videoGuideTitle": "ভিদিও গাইদ",
+        "loadError": "FAQ লোড তৌবদা মায় পাক্লে"
       },
       "faqAdmin": {
         "title": "FAQ মেটনেজমেন্ট",
@@ -16901,6 +17598,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "হোল্দ তৌরি",
+        "published": "থাদোকখ্রে",
+        "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
       }
     }
   },
@@ -16947,7 +17649,20 @@ const resources = {
         "tapToPlay": "ऐकण्यासाठी टॅप करा",
         "delete": "हटवा",
         "stop": "थांबवा",
-        "playing": "चालू आहे…"
+        "playing": "चालू आहे…",
+        "noAudioCaptured": "कोणताही ऑडिओ रेकॉर्ड झाला नाही. कृपया पुन्हा प्रयत्न करा.",
+        "noWordsHeard": "कोणतेही शब्द ऐकू आले नाहीत. शांत ठिकाणी पुन्हा प्रयत्न करा.",
+        "voiceCaptured": "आवाज रेकॉर्ड झाला. पुनरावलोकन करा आणि सुरू ठेवा.",
+        "couldNotStop": "रेकॉर्डिंग थांबवता आली नाही.",
+        "notSupportedBrowser": "या ब्राउझरमध्ये मायक्रोफोन रेकॉर्डिंग समर्थित नाही.",
+        "recordingFailed": "रेकॉर्डिंग अयशस्वी झाले. कृपया पुन्हा प्रयत्न करा.",
+        "permissionDeniedRetry": "मायक्रोफोन परवानगी नाकारली. मायक्रोफोन प्रवेश द्या आणि पुन्हा प्रयत्न करा.",
+        "couldNotStart": "रेकॉर्डिंग सुरू करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+        "tapToStopRecording": "थांबवण्यासाठी टॅप करा",
+        "doneSpeakAgain": "पूर्ण — केव्हाही पुन्हा बोला",
+        "notSupportedShort": "या ब्राउझरवर माइक समर्थित नाही",
+        "stopRecordingAria": "रेकॉर्डिंग थांबवा",
+        "startRecordingAria": "व्हॉइस रेकॉर्डिंग सुरू करा"
       },
       "speech": {
         "stt": {
@@ -16967,7 +17682,8 @@ const resources = {
       "and": "आणि",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "तुमचा जिल्हा, तुमच्या भाषेत"
+        "tagline": "तुमचा जिल्हा, तुमच्या भाषेत",
+        "footer": "अन्नदाता - भारतीय शेतकऱ्यांना सशक्त करण्यासाठी"
       },
       "loginPhone": {
         "signIn": "साइन इन करा",
@@ -17126,7 +17842,10 @@ const resources = {
         "sortBy": "क्रमानुसार लावा",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "पायऱ्या"
+        "steps": "पायऱ्या",
+        "continue": "सुरू ठेवा",
+        "noQuestionsFound": "कोणताही प्रश्न सापडला नाही",
+        "askYourFirstQuestion": "तुमचा पहिला प्रश्न विचारा"
       },
       "completeRegistration": "नोंदणी पूर्ण करा",
       "consentClause1": "तुमचा मोबाईल नंबर आणि नोंदणी तपशील सुरक्षितपणे संग्रहित केले जातील आणि केवळ प्लॅटफॉर्म प्रमाणीकरण आणि कृषी ज्ञान सेवांसाठी वापरले जातील.",
@@ -17197,7 +17916,15 @@ const resources = {
         "editWindowClosed": "सबमिट केल्यानंतर प्रश्न संपादित केले जाऊ शकत नाहीत",
         "quickActionsTip": "थेट 'प्रश्न सबमिट करा' वर जा किंवा तुमची वॉलेट शिल्लक आणि अलीकडील उपक्रम पहा.",
         "rewardsTip": "एकूण मंजूर प्रश्नांच्या आधारे प्रति मंजूर प्रश्न कमाई करा. सिल्व्हर आणि गोल्ड टियर उच्च बक्षीस दर उघडतात.",
-        "guidelinesTip": "व्हिडिओ ६० सेकंद आणि १०MB च्या आत ठेवा. सबमिट केल्यानंतर तुम्हाला ३०-सेकंदांची संपादन विंडो मिळते. दैनिक मर्यादा मध्यरात्री रीसेट होते."
+        "guidelinesTip": "व्हिडिओ ६० सेकंद आणि १०MB च्या आत ठेवा. सबमिट केल्यानंतर तुम्हाला ३०-सेकंदांची संपादन विंडो मिळते. दैनिक मर्यादा मध्यरात्री रीसेट होते.",
+        "dailyLimitTitle": "दैनिक मर्यादा",
+        "editWindowTitle": "संपादन वेळ",
+        "aiCheckTitle": "AI सुसंगतता तपासणी",
+        "verifiedUser": "पडताळणी केलेला वापरकर्ता",
+        "startAsking": "विचारायला सुरुवात करा",
+        "viewWallet": "वॉलेट पहा",
+        "youAreHere": "तुम्ही इथे आहात",
+        "currentTier": "सध्याचा स्तर"
       },
       "iAcceptContinue": "मी स्वीकारतो आणि पुढे जा",
       "invalidOtp": "पूर्ण ६-अंकी कोड प्रविष्ट करा",
@@ -17354,7 +18081,10 @@ const resources = {
         "suspended": "निलंबित",
         "banned": "प्रतिबंधित",
         "village": "गाव",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} मंजूर प्रश्न",
+        "toNext": "{{count}} पुढील पर्यंत",
+        "toTier": "{{tier}} पर्यंत {{count}}"
       },
       "profileLanguage": "अ‍ॅप भाषा",
       "profileLanguageDesc": "ही अ‍ॅप इंटरफेस आणि प्रश्न सबमिशनसाठी डीफॉल्ट भाषा असेल",
@@ -17457,7 +18187,9 @@ const resources = {
         "rejectedEditQuestion": "माझा प्रश्न संपादित करा",
         "addVoice": "आवाज जोडा",
         "tipDetailed": "सविस्तर लिहा — पीक, ठिकाण आणि तुम्ही आतापर्यंत काय करून पाहिले ते नमूद करा.",
-        "dailyLimitIndicator": "दैनंदिन मर्यादा संपली"
+        "dailyLimitIndicator": "दैनंदिन मर्यादा संपली",
+        "expertWillRespond": "एक तज्ञ तुम्हाला उत्तर देईल.",
+        "questionExample": "उदा: माझ्या टोमॅटोची पाने पिवळी पडत आहेत — मी काय करावे?"
       },
       "readFullPolicy": "पूर्ण गोपनीयता धोरण वाचा →",
       "resendOtp": "OTP पुन्हा पाठवा",
@@ -17546,7 +18278,16 @@ const resources = {
         "credit": "जमा (Credit)",
         "debit": "नावे (Debit)",
         "txNotFound": "व्यवहार आढळला नाही",
-        "notFoundSub": "व्यवहार हटवला गेला असावा किंवा आता उपलब्ध नसावा."
+        "notFoundSub": "व्यवहार हटवला गेला असावा किंवा आता उपलब्ध नसावा.",
+        "sourceReward": "बक्षीस",
+        "sourceWithdrawal": "पैसे काढणे",
+        "sourceRefund": "परतावा",
+        "sourceAdjustment": "समायोजन",
+        "statusCompleted": "पूर्ण झाले",
+        "statusReversed": "उलट केले",
+        "statusFailed": "अयशस्वी",
+        "statusPending": "प्रलंबित",
+        "currency": "भारतीय रुपये"
       },
       "yourRole": "तुमची भूमिका",
       "home.greeting.morning": "शुभ प्रभात",
@@ -17949,7 +18690,14 @@ const resources = {
         "replies": "उत्तरे",
         "adminName": "अ‍ॅडमिन",
         "replyCount_one": "{{count}} उत्तर",
-        "replyCount_other": "{{count}} उत्तरे"
+        "replyCount_other": "{{count}} उत्तरे",
+        "awaitingReply": "उत्तराची प्रतीक्षा",
+        "newReportSubtitle": "तुम्हाला आलेल्या समस्येचे वर्णन करा. आमची टीम लवकरच तुमच्याशी संपर्क साधेल.",
+        "loadingReports": "तुमचे अहवाल लोड होत आहेत…",
+        "loadingReport": "अहवाल लोड होत आहे…",
+        "reportNotFound": "अहवाल सापडला नाही",
+        "reportNotFoundHint": "हे कदाचित काढून टाकले गेले असेल किंवा तुम्हाला यापुढे प्रवेश नाही.",
+        "backToReports": "अहवालांकडे परत जा"
       },
       "profile.account": "खाते",
       "profile.personalInfo": "वैयक्तिक माहिती",
@@ -18021,7 +18769,10 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेख"
-        }
+        },
+        "videoComingSoon": "व्हिडिओ मार्गदर्शक लवकरच येत आहे",
+        "videoGuideTitle": "व्हिडिओ मार्गदर्शक",
+        "loadError": "FAQ लोड करण्यात अयशस्वी"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -18201,6 +18952,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्डवर आहे",
+        "published": "प्रकाशित",
+        "yourSubmissions": "तुम्ही सबमिट केलेले प्रश्न आणि त्यांची स्थिती."
       }
     }
   },
@@ -18247,7 +19003,20 @@ const resources = {
         "tapToPlay": "बजाउन ट्याप गर्नुहोस्",
         "delete": "हटाउनुहोस्",
         "stop": "रोक्नुहोस्",
-        "playing": "बज्दैछ..."
+        "playing": "बज्दैछ...",
+        "noAudioCaptured": "कुनै अडियो रेकर्ड भएन। कृपया पुनः प्रयास गर्नुहोस्।",
+        "noWordsHeard": "कुनै शब्द सुनिएन। शान्त ठाउँमा पुनः प्रयास गर्नुहोस्।",
+        "voiceCaptured": "आवाज रेकर्ड भयो। समीक्षा गरेर जारी राख्नुहोस्।",
+        "couldNotStop": "रेकर्डिङ रोक्न सकिएन।",
+        "notSupportedBrowser": "यो ब्राउजरमा माइक्रोफोन रेकर्डिङ समर्थित छैन।",
+        "recordingFailed": "रेकर्डिङ असफल भयो। कृपया पुनः प्रयास गर्नुहोस्।",
+        "permissionDeniedRetry": "माइक्रोफोन अनुमति अस्वीकृत भयो। माइक्रोफोन पहुँच दिनुहोस् र पुनः प्रयास गर्नुहोस्।",
+        "couldNotStart": "रेकर्डिङ सुरु गर्न सकिएन। कृपया पुनः प्रयास गर्नुहोस्।",
+        "tapToStopRecording": "रोक्न ट्याप गर्नुहोस्",
+        "doneSpeakAgain": "सम्पन्न — जुनसुकै बेला फेरि बोल्नुहोस्",
+        "notSupportedShort": "यो ब्राउजरमा माइक समर्थित छैन",
+        "stopRecordingAria": "रेकर्डिङ रोक्नुहोस्",
+        "startRecordingAria": "आवाज रेकर्डिङ सुरु गर्नुहोस्"
       },
       "speech": {
         "stt": {
@@ -18267,7 +19036,8 @@ const resources = {
       "and": "र",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "तपाईंको जिल्ला, तपाईंको भाषामा"
+        "tagline": "तपाईंको जिल्ला, तपाईंको भाषामा",
+        "footer": "AnnaDatha - भारतीय किसानहरूलाई सशक्त बनाउन"
       },
       "loginPhone": {
         "signIn": "साइन इन गर्नुहोस्",
@@ -18426,7 +19196,10 @@ const resources = {
         "sortBy": "क्रमबद्ध गर्नुहोस्",
         "unknown": "अज्ञात",
         "rupee": "रु.",
-        "steps": "चरणहरू"
+        "steps": "चरणहरू",
+        "continue": "जारी राख्नुहोस्",
+        "noQuestionsFound": "कुनै प्रश्न भेटिएन",
+        "askYourFirstQuestion": "तपाईंको पहिलो प्रश्न सोध्नुहोस्"
       },
       "completeRegistration": "दर्ता प्रक्रिया पूरा गर्नुहोस्",
       "consentClause1": "तपाईंको मोबाइल नम्बर र दर्ता विवरण सुरक्षित रूपमा भण्डारण गरिनेछ र केवल प्लेटफर्म प्रमाणीकरण र कृषि ज्ञान सेवाका लागि प्रयोग गरिनेछ।",
@@ -18497,7 +19270,15 @@ const resources = {
         "editWindowClosed": "पेस गरेपछि प्रश्न सम्पादन गर्न सकिँदैन",
         "quickActionsTip": "सिधै प्रश्न पेस गर्नुहोस् वा तपाईंको वॉलेट ब्यालेन्स र हालैको गतिविधि हेर्नुहोस्।",
         "rewardsTip": "कुल स्वीकृत प्रश्नका आधारमा प्रति स्वीकृत प्रश्न कमाउनुहोस्। Silver र Gold स्तरले उच्च पुरस्कार दरहरू अनलक गर्दछ।",
-        "guidelinesTip": "भिडियो ६० सेकेन्ड र १०MB भन्दा कम राख्नुहोस्। पेस गरेपछि ३० सेकेन्डको सम्पादन समय पाइन्छ। दैनिक सीमा मध्यरातमा रिसेट हुन्छ।"
+        "guidelinesTip": "भिडियो ६० सेकेन्ड र १०MB भन्दा कम राख्नुहोस्। पेस गरेपछि ३० सेकेन्डको सम्पादन समय पाइन्छ। दैनिक सीमा मध्यरातमा रिसेट हुन्छ।",
+        "dailyLimitTitle": "दैनिक सीमा",
+        "editWindowTitle": "सम्पादन समय",
+        "aiCheckTitle": "AI सान्दर्भिकता जाँच",
+        "verifiedUser": "प्रमाणित प्रयोगकर्ता",
+        "startAsking": "सोध्न सुरु गर्नुहोस्",
+        "viewWallet": "वालेट हेर्नुहोस्",
+        "youAreHere": "तपाईं यहाँ हुनुहुन्छ",
+        "currentTier": "हालको तह"
       },
       "iAcceptContinue": "म स्वीकार गर्छु र अगाडि बढ्छु",
       "invalidOtp": "पूरा ६-अङ्कको कोड राख्नुहोस्",
@@ -18654,7 +19435,10 @@ const resources = {
         "suspended": "निलम्बित",
         "banned": "प्रतिबन्धित",
         "village": "गाउँ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्नहरू",
+        "toNext": "{{count}} अर्को सम्म",
+        "toTier": "{{tier}} सम्म {{count}}"
       },
       "profileLanguage": "एपको भाषा",
       "profileLanguageDesc": "यो एप इन्टरफेस र प्रश्न पेस गर्नका लागि पूर्वनिर्धारित (Default) भाषा हुनेछ",
@@ -18757,7 +19541,9 @@ const resources = {
         "rejectedEditQuestion": "मेरो प्रश्न सम्पादन गर्नुहोस्",
         "addVoice": "आवाज थप्नुहोस्",
         "tipDetailed": "विस्तृत रूपमा लेख्नुहोस् — बाली, स्थान र तपाईंले अहिलेसम्म के प्रयास गर्नुभयो उल्लेख गर्नुहोस्।",
-        "dailyLimitIndicator": "दैनिक सीमा सकियो"
+        "dailyLimitIndicator": "दैनिक सीमा सकियो",
+        "expertWillRespond": "एक विशेषज्ञले तपाईंलाई जवाफ दिनेछन्।",
+        "questionExample": "जस्तै: मेरो टमाटरका पातहरू पहेंलो हुँदैछन् — मैले के गर्नुपर्छ?"
       },
       "readFullPolicy": "पूरा गोपनीयता नीति पढ्नुहोस् →",
       "resendOtp": "OTP पुनः पठाउनुहोस्",
@@ -18846,7 +19632,16 @@ const resources = {
         "credit": "क्रेडिट (जम्मा)",
         "debit": "डेबिट (खर्च/निकासी)",
         "txNotFound": "कारोबार भेटिएन",
-        "notFoundSub": "यो कारोबार हटाइएको हुन सक्छ वा अब उपलब्ध छैन।"
+        "notFoundSub": "यो कारोबार हटाइएको हुन सक्छ वा अब उपलब्ध छैन।",
+        "sourceReward": "पुरस्कार",
+        "sourceWithdrawal": "झिकाइ",
+        "sourceRefund": "फिर्ता",
+        "sourceAdjustment": "समायोजन",
+        "statusCompleted": "सम्पन्न",
+        "statusReversed": "उल्टाइयो",
+        "statusFailed": "असफल",
+        "statusPending": "समीक्षाधीन",
+        "currency": "भारतीय रुपैयाँ"
       },
       "yourRole": "तपाईंको भूमिका",
       "home.greeting.morning": "शुभ प्रभात",
@@ -19249,7 +20044,14 @@ const resources = {
         "replies": "जवाफहरू",
         "adminName": "एडमिन",
         "replyCount_one": "{{count}} जवाफ",
-        "replyCount_other": "{{count}} जवाफहरू"
+        "replyCount_other": "{{count}} जवाफहरू",
+        "awaitingReply": "जवाफको पर्खाइमा",
+        "newReportSubtitle": "तपाईंले सामना गरेको समस्या वर्णन गर्नुहोस्। हाम्रो टोली चाँडै तपाईंलाई सम्पर्क गर्नेछ।",
+        "loadingReports": "तपाईंको रिपोर्ट लोड हुँदैछ…",
+        "loadingReport": "रिपोर्ट लोड हुँदैछ…",
+        "reportNotFound": "रिपोर्ट फेला परेन",
+        "reportNotFoundHint": "यो हटाइएको हुन सक्छ वा तपाईंसँग अब पहुँच छैन।",
+        "backToReports": "रिपोर्टहरूमा फर्कनुहोस्"
       },
       "profile.account": "खाता",
       "profile.personalInfo": "व्यक्तिगत विवरण",
@@ -19321,7 +20123,10 @@ const resources = {
         "group": {
           "article_one": "लेख",
           "article_other": "लेखहरू"
-        }
+        },
+        "videoComingSoon": "भिडियो गाइड चाँडै आउँदैछ",
+        "videoGuideTitle": "भिडियो गाइड",
+        "loadError": "FAQ लोड गर्न असफल भयो"
       },
       "faqAdmin": {
         "title": "FAQ व्यवस्थापन",
@@ -19501,6 +20306,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "होल्डमा छ",
+        "published": "प्रकाशित",
+        "yourSubmissions": "तपाईंले पेश गरेका प्रश्नहरू र तिनीहरूको स्थिति।"
       }
     }
   },
@@ -19547,7 +20357,20 @@ const resources = {
         "tapToPlay": "ପ୍ଲେ କରିବା ପାଇଁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
         "delete": "ଲିଭାନ୍ତୁ",
         "stop": "ଅଟକାନ୍ତୁ",
-        "playing": "ଚାଲୁଅଛି…"
+        "playing": "ଚାଲୁଅଛି…",
+        "noAudioCaptured": "କୌଣସି ଅଡିଓ ପାଇଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "noWordsHeard": "କୌଣସି ଶବ୍ଦ ଶୁଣାଗଲା ନାହିଁ। ଶାନ୍ତ ସ୍ଥାନରେ ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "voiceCaptured": "ସ୍ୱର ପାଇଲା। ସମୀକ୍ଷା କରି ଜାରି ରଖନ୍ତୁ।",
+        "couldNotStop": "ରେକର୍ଡିଂ ବନ୍ଦ କରାଯାଇପାରିଲା ନାହିଁ।",
+        "notSupportedBrowser": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ରୋଫୋନ୍ ରେକର୍ଡିଂ ସମର୍ଥିତ ନୁହେଁ।",
+        "recordingFailed": "ରେକର୍ଡିଂ ବିଫଳ ହେଲା। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "permissionDeniedRetry": "ମାଇକ୍ରୋଫୋନ୍ ଅନୁମତି ପ୍ରତ୍ୟାଖ୍ୟାନ ହେଲା। ମାଇକ୍ରୋଫୋନ୍ ପ୍ରବେଶାଧିକାର ଦିଅନ୍ତୁ ଏବଂ ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "couldNotStart": "ରେକର୍ଡିଂ ଆରମ୍ଭ କରାଯାଇପାରିଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "tapToStopRecording": "ବନ୍ଦ କରିବା ପାଇଁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+        "doneSpeakAgain": "ସମ୍ପୂର୍ଣ୍ଣ — ଯେକୌଣସି ସମୟରେ ପୁନର୍ବାର କୁହନ୍ତୁ",
+        "notSupportedShort": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ ସମର୍ଥିତ ନୁହେଁ",
+        "stopRecordingAria": "ରେକର୍ଡିଂ ବନ୍ଦ କରନ୍ତୁ",
+        "startRecordingAria": "ସ୍ୱର ରେକର୍ଡିଂ ଆରମ୍ଭ କରନ୍ତୁ"
       },
       "speech": {
         "stt": {
@@ -19567,7 +20390,8 @@ const resources = {
       "and": "ଏବଂ",
       "app": {
         "name": "ଅନ୍ନଦାତା",
-        "tagline": "ଆପଣଙ୍କ ଜିଲ୍ଲା, ଆପଣଙ୍କ ଭାଷାରେ"
+        "tagline": "ଆପଣଙ୍କ ଜିଲ୍ଲା, ଆପଣଙ୍କ ଭାଷାରେ",
+        "footer": "ଅନ୍ନଦାତା - ଭାରତୀୟ କୃଷକମାନଙ୍କୁ ସଶକ୍ତ କରିବା ପାଇଁ"
       },
       "loginPhone": {
         "signIn": "ସାଇନ୍ ଇନ୍",
@@ -19724,7 +20548,10 @@ const resources = {
         "sortBy": "କ୍ରମାନ୍ୱୟ (Sort By)",
         "unknown": "ଅଜଣା",
         "rupee": "ଟଙ୍କା",
-        "steps": "ପର୍ଯ୍ୟାୟ"
+        "steps": "ପର୍ଯ୍ୟାୟ",
+        "continue": "ଜାରି ରଖନ୍ତୁ",
+        "noQuestionsFound": "କୌଣସି ପ୍ରଶ୍ନ ମିଳିଲା ନାହିଁ",
+        "askYourFirstQuestion": "ଆପଣଙ୍କର ପ୍ରଥମ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ"
       },
       "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
       "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -19795,7 +20622,15 @@ const resources = {
         "editWindowClosed": "ଦାଖଲ କରିବା ପରେ ପ୍ରଶ୍ନ ସମ୍ପାଦନା କରାଯାଇପାରିବ ନାହିଁ",
         "quickActionsTip": "ସିଧାସଳଖ 'ପ୍ରଶ୍ନ ଦାଖଲ କରନ୍ତୁ' କୁ ଯାଆନ୍ତୁ କିମ୍ବା ଆପଣଙ୍କ ୱାଲେଟ୍ ବାଲାନ୍ସ ଏବଂ ସମ୍ପ୍ରତି ଗତିବିଧି ଦେଖନ୍ତୁ।",
         "rewardsTip": "ମୋଟ ଅନୁମୋଦିତ ପ୍ରଶ୍ନ ଆଧାରରେ ପ୍ରତି ଅନୁମୋଦିତ ପ୍ରଶ୍ନ ପାଇଁ ରୋଜଗାର କରନ୍ତୁ। ସିଲଭର୍ ଏବଂ ଗୋଲ୍ଡ ସ୍ତରଗୁଡ଼ିକ ଅଧିକ ପୁରସ୍କାର ହାର ଅନ୍‌ଲକ୍ କରନ୍ତି।",
-        "guidelinesTip": "ଭିଡିଓ ୬୦ ସେକେଣ୍ଡ ଏବଂ 10MB ମଧ୍ୟରେ ରଖନ୍ତୁ। ଦାଖଲ କରିବା ପରେ ଆପଣଙ୍କୁ ୩୦-ସେକେଣ୍ଡର ସମ୍ପାଦନା ସମୟ ମିଳିବ। ଦୈନିକ ସୀମା ମଧ୍ୟରାତ୍ରିରେ ରିସେଟ୍ ହୁଏ।"
+        "guidelinesTip": "ଭିଡିଓ ୬୦ ସେକେଣ୍ଡ ଏବଂ 10MB ମଧ୍ୟରେ ରଖନ୍ତୁ। ଦାଖଲ କରିବା ପରେ ଆପଣଙ୍କୁ ୩୦-ସେକେଣ୍ଡର ସମ୍ପାଦନା ସମୟ ମିଳିବ। ଦୈନିକ ସୀମା ମଧ୍ୟରାତ୍ରିରେ ରିସେଟ୍ ହୁଏ।",
+        "dailyLimitTitle": "ଦୈନିକ ସୀମା",
+        "editWindowTitle": "ସମ୍ପାଦନା ସମୟ",
+        "aiCheckTitle": "AI ସୁସଙ୍ଗତତା ଯାଞ୍ଚ",
+        "verifiedUser": "ଯାଞ୍ଚିତ ବ୍ୟବହାରକାରୀ",
+        "startAsking": "ପଚାରିବା ଆରମ୍ଭ କରନ୍ତୁ",
+        "viewWallet": "ୱାଲେଟ୍ ଦେଖନ୍ତୁ",
+        "youAreHere": "ଆପଣ ଏଠାରେ ଅଛନ୍ତି",
+        "currentTier": "ବର୍ତ୍ତମାନ ସ୍ତର"
       },
       "iAcceptContinue": "ମୁଁ ଗ୍ରହଣ କରୁଛି ଏବଂ ଆଗକୁ ବଢ଼ୁଛି",
       "invalidOtp": "ସମ୍ପୂର୍ଣ୍ଣ ୬-ଅଙ୍କ ବିଶିଷ୍ଟ କୋଡ୍ ଦିଅନ୍ତୁ",
@@ -19952,7 +20787,10 @@ const resources = {
         "suspended": "ନିଲମ୍ବିତ",
         "banned": "ବ୍ୟାନ୍ ହୋଇଛି",
         "village": "ଗାଁ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ଅନୁମୋଦିତ ପ୍ରଶ୍ନ",
+        "toNext": "{{count}} ପରବର୍ତ୍ତୀ ପର୍ଯ୍ୟନ୍ତ",
+        "toTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ {{count}}"
       },
       "profileLanguage": "ଆପ୍ ଭାଷା",
       "profileLanguageDesc": "ଏହା ଆପ୍ ଇଣ୍ଟରଫେସ୍ ଏବଂ ପ୍ରଶ୍ନ ଦାଖଲ ପାଇଁ ଡିଫଲ୍ଟ ଭାଷା ହେବ",
@@ -20055,7 +20893,9 @@ const resources = {
         "rejectedEditQuestion": "ମୋ ପ୍ରଶ୍ନ ସମ୍ପାଦନ କରନ୍ତୁ",
         "addVoice": "ସ୍ୱର ଯୋଡ଼ନ୍ତୁ",
         "tipDetailed": "ବିସ୍ତୃତ ଭାବରେ ଲେଖନ୍ତୁ — ଫସଲ, ସ୍ଥାନ ଏବଂ ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କଣ ଚେଷ୍ଟା କରିଛନ୍ତି ଉଲ୍ଲେଖ କରନ୍ତୁ।",
-        "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ"
+        "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ",
+        "expertWillRespond": "ଜଣେ ବିଶେଷଜ୍ଞ ଆପଣଙ୍କୁ ଉତ୍ତର ଦେବେ।",
+        "questionExample": "ଉଦାହରଣ: ମୋ ଟମାଟୋ ପତ୍ର ହଳଦିଆ ହେଉଛି — ମୁଁ କଣ କରିବି?"
       },
       "readFullPolicy": "ସମ୍ପୂର୍ଣ୍ଣ ଗୋପନୀୟତା ନୀତି ପଢ଼ନ୍ତୁ →",
       "resendOtp": "OTP ପୁନର୍ବାର ପଠାନ୍ତୁ",
@@ -20144,7 +20984,16 @@ const resources = {
         "credit": "ଜମା (Credit)",
         "debit": "ଉଠାଣ (Debit)",
         "txNotFound": "ଲେଣଦେଣ ମିଳିଲା ନାହିଁ",
-        "notFoundSub": "ଏହି ଲେଣଦେଣଟି ହଟାଯାଇଥାଇପାରେ କିମ୍ବା ଆଉ ଉପଲବ୍ଧ ନାହିଁ।"
+        "notFoundSub": "ଏହି ଲେଣଦେଣଟି ହଟାଯାଇଥାଇପାରେ କିମ୍ବା ଆଉ ଉପଲବ୍ଧ ନାହିଁ।",
+        "sourceReward": "ପୁରସ୍କାର",
+        "sourceWithdrawal": "ଉଠାଣ",
+        "sourceRefund": "ରିଫଣ୍ଡ",
+        "sourceAdjustment": "ସାମଞ୍ଜସ୍ୟ",
+        "statusCompleted": "ସମ୍ପୂର୍ଣ୍ଣ",
+        "statusReversed": "ପ୍ରତ୍ୟାହାର ହୋଇଛି",
+        "statusFailed": "ବିଫଳ",
+        "statusPending": "ବିଚାରାଧୀନ",
+        "currency": "ଭାରତୀୟ ଟଙ୍କା"
       },
       "yourRole": "ଆପଣଙ୍କ ଭୂମିକା",
       "home.greeting.morning": "ଶୁଭ ସକାଳ",
@@ -20547,7 +21396,14 @@ const resources = {
         "replies": "ଉତ୍ତରଗୁଡ଼ିକ",
         "adminName": "ଆଡମିନ୍",
         "replyCount_one": "{{count}} ଟି ଉତ୍ତର",
-        "replyCount_other": "{{count}} ଟି ଉତ୍ତର"
+        "replyCount_other": "{{count}} ଟି ଉତ୍ତର",
+        "awaitingReply": "ଉତ୍ତର ପାଇଁ ଅପେକ୍ଷାରତ",
+        "newReportSubtitle": "ଆପଣ ସାମ୍ନା କରିଥିବା ସମସ୍ୟା ବର୍ଣ୍ଣନା କରନ୍ତୁ। ଆମ ଦଳ ଶୀଘ୍ର ଆପଣଙ୍କ ସହିତ ଯୋଗାଯୋଗ କରିବ।",
+        "loadingReports": "ଆପଣଙ୍କ ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+        "loadingReport": "ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+        "reportNotFound": "ରିପୋର୍ଟ ମିଳିଲା ନାହିଁ",
+        "reportNotFoundHint": "ଏହା ହୟତ ହଟାଯାଇଥିବ କିମ୍ବା ଆପଣଙ୍କ ପାଖରେ ଆଉ ପ୍ରବେଶାଧିକାର ନାହିଁ।",
+        "backToReports": "ରିପୋର୍ଟକୁ ଫେରନ୍ତୁ"
       },
       "profile.account": "ଆକାଉଣ୍ଟ୍",
       "profile.personalInfo": "ବ୍ୟକ୍ତିଗତ ସୂଚନା",
@@ -20619,7 +21475,10 @@ const resources = {
         "group": {
           "article_one": "ଟି ପ୍ରବନ୍ଧ",
           "article_other": "ଟି ପ୍ରବନ୍ଧ"
-        }
+        },
+        "videoComingSoon": "ଭିଡିଓ ଗାଇଡ୍ ଶୀଘ୍ର ଆସୁଛି",
+        "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍",
+        "loadError": "FAQ ଲୋଡ୍ କରିବାରେ ବିଫଳ"
       },
       "faqAdmin": {
         "title": "FAQ ପରିଚାଳନା",
@@ -20799,6 +21658,14 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ହୋଲ୍ଡରେ ଅଛି",
+        "published": "ପ୍ରକାଶିତ",
+        "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
+      },
+      "cat": {
+        "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
       }
     }
   },
@@ -20845,7 +21712,20 @@ const resources = {
         "tapToPlay": "ਚਲਾਉਣ ਲਈ ਟੈਪ ਕਰੋ",
         "delete": "ਹਟਾਓ",
         "stop": "ਰੋਕੋ",
-        "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
+        "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…",
+        "noAudioCaptured": "ਕੋਈ ਆਡੀਓ ਰਿਕਾਰਡ ਨਹੀਂ ਹੋਇਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "noWordsHeard": "ਕੋਈ ਸ਼ਬਦ ਸੁਣਾਈ ਨਹੀਂ ਦਿੱਤਾ। ਸ਼ਾਂਤ ਥਾਂ 'ਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "voiceCaptured": "ਆਵਾਜ਼ ਰਿਕਾਰਡ ਹੋ ਗਈ। ਸਮੀਖਿਆ ਕਰੋ ਅਤੇ ਜਾਰੀ ਰੱਖੋ।",
+        "couldNotStop": "ਰਿਕਾਰਡਿੰਗ ਰੋਕੀ ਨਹੀਂ ਜਾ ਸਕੀ।",
+        "notSupportedBrowser": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਮਾਈਕ੍ਰੋਫੋਨ ਰਿਕਾਰਡਿੰਗ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।",
+        "recordingFailed": "ਰਿਕਾਰਡਿੰਗ ਅਸਫਲ ਰਹੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "permissionDeniedRetry": "ਮਾਈਕ੍ਰੋਫੋਨ ਦੀ ਇਜਾਜ਼ਤ ਅਸਵੀਕਾਰ ਕੀਤੀ ਗਈ। ਮਾਈਕ੍ਰੋਫੋਨ ਪਹੁੰਚ ਦਿਓ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "couldNotStart": "ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        "tapToStopRecording": "ਰੋਕਣ ਲਈ ਟੈਪ ਕਰੋ",
+        "doneSpeakAgain": "ਪੂਰਾ ਹੋਇਆ — ਕਦੇ ਵੀ ਦੁਬਾਰਾ ਬੋਲੋ",
+        "notSupportedShort": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ 'ਤੇ ਮਾਈਕ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ",
+        "stopRecordingAria": "ਰਿਕਾਰਡਿੰਗ ਰੋਕੋ",
+        "startRecordingAria": "ਆਵਾਜ਼ ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਕਰੋ"
       },
       "speech": {
         "stt": {
@@ -20865,7 +21745,8 @@ const resources = {
       "and": "ਅਤੇ",
       "app": {
         "name": "ਅੰਨਦਾਤਾ (AnnaDatha)",
-        "tagline": "ਤੁਹਾਡਾ ਜ਼ਿਲ੍ਹਾ, ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ"
+        "tagline": "ਤੁਹਾਡਾ ਜ਼ਿਲ੍ਹਾ, ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ",
+        "footer": "ਅੰਨਦਾਤਾ (AnnaDatha) - ਭਾਰਤੀ ਕਿਸਾਨਾਂ ਨੂੰ ਮਜ਼ਬੂਤ ਬਣਾਉਣ ਲਈ"
       },
       "loginPhone": {
         "signIn": "ਸਾਈਨ ਇਨ (Sign In)",
@@ -21024,7 +21905,10 @@ const resources = {
         "sortBy": "ਕ੍ਰਮਬੱਧ ਕਰੋ (Sort By)",
         "unknown": "ਅਣਜਾਣ",
         "rupee": "ਰੁ.",
-        "steps": "ਪੜਾਅ"
+        "steps": "ਪੜਾਅ",
+        "continue": "ਜਾਰੀ ਰੱਖੋ",
+        "noQuestionsFound": "ਕੋਈ ਸਵਾਲ ਨਹੀਂ ਮਿਲਿਆ",
+        "askYourFirstQuestion": "ਆਪਣਾ ਪਹਿਲਾ ਸਵਾਲ ਪੁੱਛੋ"
       },
       "completeRegistration": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ",
       "consentClause1": "ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੇ ਜਾਣਗੇ ਅਤੇ ਕੇਵਲ ਪਲੇਟਫਾਰਮ ਪ੍ਰਮਾਣੀਕਰਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਗਿਆਨ ਸੇਵਾਵਾਂ ਲਈ ਵਰਤੇ ਜਾਣਗੇ।",
@@ -21095,7 +21979,15 @@ const resources = {
         "editWindowClosed": "ਸਵਾਲ ਭੇਜਣ ਤੋਂ ਬਾਅਦ ਸੋਧਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
         "quickActionsTip": "ਸਿੱਧਾ 'ਸਵਾਲ ਭੇਜੋ' 'ਤੇ ਜਾਓ ਜਾਂ ਆਪਣੇ ਵਾਲਿਟ ਦਾ ਬਕਾਇਆ ਅਤੇ ਹਾਲੀਆ ਗਤੀਵਿਧੀਆਂ ਦੇਖੋ।",
         "rewardsTip": "ਕੁੱਲ ਮਨਜ਼ੂਰਸ਼ੁਦਾ ਸਵਾਲਾਂ ਦੇ ਆਧਾਰ 'ਤੇ ਪ੍ਰਤੀ ਮਨਜ਼ੂਰ ਸਵਾਲ ਕਮਾਈ ਕਰੋ। ਸਿਲਵਰ ਅਤੇ ਗੋਲਡ ਤਹਿ ਉੱਚ ਇਨਾਮ ਦਰਾਂ ਨੂੰ ਅਨਲੌਕ ਕਰਦੇ ਹਨ।",
-        "guidelinesTip": "ਵੀਡੀਓ 60 ਸੈਕਿੰਡ ਅਤੇ 10MB ਤੋਂ ਘੱਟ ਰੱਖੋ। ਸਬਮਿਟ ਕਰਨ ਤੋਂ ਬਾਅਦ ਤੁਹਾਨੂੰ 30 ਸੈਕਿੰਡ ਦੀ ਐਡੀਟਿੰਗ ਵਿੰਡੋ ਮਿਲਦੀ ਹੈ। ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਅੱਧੀ ਰਾਤ ਨੂੰ ਰੀਸੈਟ ਹੁੰਦੀ ਹੈ।"
+        "guidelinesTip": "ਵੀਡੀਓ 60 ਸੈਕਿੰਡ ਅਤੇ 10MB ਤੋਂ ਘੱਟ ਰੱਖੋ। ਸਬਮਿਟ ਕਰਨ ਤੋਂ ਬਾਅਦ ਤੁਹਾਨੂੰ 30 ਸੈਕਿੰਡ ਦੀ ਐਡੀਟਿੰਗ ਵਿੰਡੋ ਮਿਲਦੀ ਹੈ। ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਅੱਧੀ ਰਾਤ ਨੂੰ ਰੀਸੈਟ ਹੁੰਦੀ ਹੈ।",
+        "dailyLimitTitle": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ",
+        "editWindowTitle": "ਸੋਧਣ ਦਾ ਸਮਾਂ",
+        "aiCheckTitle": "AI ਅਨੁਕੂਲਤਾ ਜਾਂਚ",
+        "verifiedUser": "ਪੁਸ਼ਟੀ ਕੀਤਾ ਉਪਭੋਗਤਾ",
+        "startAsking": "ਪੁੱਛਣਾ ਸ਼ੁਰੂ ਕਰੋ",
+        "viewWallet": "ਵਾਲਿਟ ਵੇਖੋ",
+        "youAreHere": "ਤੁਸੀਂ ਇੱਥੇ ਹੋ",
+        "currentTier": "ਮੌਜੂਦਾ ਪੱਧਰ"
       },
       "iAcceptContinue": "ਮੈਂ ਸਵੀਕਾਰ ਕਰਦਾ/ਕਰਦੀ ਹਾਂ ਅਤੇ ਜਾਰੀ ਰੱਖੋ",
       "invalidOtp": "ਪੂਰਾ 6-ਅੰਕਾਂ ਦਾ ਕੋਡ ਦਰਜ ਕਰੋ",
@@ -21252,7 +22144,10 @@ const resources = {
         "suspended": "ਮੁਅੱਤਲ",
         "banned": "ਬੈਨ ਕੀਤਾ",
         "village": "ਪਿੰਡ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ਮਨਜ਼ੂਰ ਸਵਾਲ",
+        "toNext": "{{count}} ਅਗਲੇ ਤੱਕ",
+        "toTier": "{{tier}} ਤੱਕ {{count}}"
       },
       "profileLanguage": "ਐਪ ਭਾਸ਼ਾ",
       "profileLanguageDesc": "ਇਹ ਐਪ ਇੰਟਰਫੇਸ ਅਤੇ ਸਵਾਲ ਸਬਮਿਸ਼ਨ ਲਈ ਡਿਫਾਲਟ ਭਾਸ਼ਾ ਹੋਵੇਗੀ",
@@ -21355,7 +22250,9 @@ const resources = {
         "rejectedEditQuestion": "ਮੇਰਾ ਸਵਾਲ ਸੋਧੋ",
         "addVoice": "ਆਵਾਜ਼ ਸ਼ਾਮਲ ਕਰੋ",
         "tipDetailed": "ਵਿਸਥਾਰ ਨਾਲ ਲਿਖੋ — ਫ਼ਸਲ, ਥਾਂ ਅਤੇ ਤੁਸੀਂ ਹੁਣ ਤੱਕ ਕੀ ਅਜ਼ਮਾਇਆ ਹੈ, ਦੱਸੋ।",
-        "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ"
+        "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ",
+        "expertWillRespond": "ਇੱਕ ਮਾਹਰ ਤੁਹਾਨੂੰ ਜਵਾਬ ਦੇਵੇਗਾ।",
+        "questionExample": "ਜਿਵੇਂ: ਮੇਰੇ ਟਮਾਟਰ ਦੇ ਪੱਤੇ ਪੀਲੇ ਹੋ ਰਹੇ ਹਨ — ਮੈਨੂੰ ਕੀ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ?"
       },
       "readFullPolicy": "ਪੂਰੀ ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ ਪੜ੍ਹੋ →",
       "resendOtp": "OTP ਦੁਬਾਰਾ ਭੇਜੋ",
@@ -21444,7 +22341,16 @@ const resources = {
         "credit": "ਜਮ੍ਹਾ (Credit)",
         "debit": "ਨਿਕਾਸੀ (Debit)",
         "txNotFound": "ਲੈਣ-ਦੇਣ ਨਹੀਂ ਮਿਲਿਆ",
-        "notFoundSub": "ਲੈਣ-ਦੇਣ ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।"
+        "notFoundSub": "ਲੈਣ-ਦੇਣ ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।",
+        "sourceReward": "ਇਨਾਮ",
+        "sourceWithdrawal": "ਕਢਵਾਈ",
+        "sourceRefund": "ਵਾਪਸੀ",
+        "sourceAdjustment": "ਸਮਾਯੋਜਨ",
+        "statusCompleted": "ਮੁਕੰਮਲ",
+        "statusReversed": "ਵਾਪਸ ਕੀਤਾ ਗਿਆ",
+        "statusFailed": "ਅਸਫਲ",
+        "statusPending": "ਬਕਾਇਆ",
+        "currency": "ਭਾਰਤੀ ਰੁਪਏ"
       },
       "yourRole": "ਤੁਹਾਡੀ ਭੂਮਿਕਾ",
       "home.greeting.morning": "ਸ਼ੁਭ ਸਵੇਰ",
@@ -21847,7 +22753,14 @@ const resources = {
         "replies": "ਜਵਾਬ",
         "adminName": "ਐਡਮਿਨ",
         "replyCount_one": "{{count}} ਜਵਾਬ",
-        "replyCount_other": "{{count}} ਜਵਾਬ"
+        "replyCount_other": "{{count}} ਜਵਾਬ",
+        "awaitingReply": "ਜਵਾਬ ਦੀ ਉਡੀਕ",
+        "newReportSubtitle": "ਤੁਹਾਨੂੰ ਆਈ ਸਮੱਸਿਆ ਦਾ ਵਰਣਨ ਕਰੋ। ਸਾਡੀ ਟੀਮ ਜਲਦੀ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੇਗੀ।",
+        "loadingReports": "ਤੁਹਾਡੀ ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+        "loadingReport": "ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+        "reportNotFound": "ਰਿਪੋਰਟ ਨਹੀਂ ਮਿਲੀ",
+        "reportNotFoundHint": "ਇਹ ਹਟਾਈ ਗਈ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਤੁਹਾਡੇ ਕੋਲ ਹੁਣ ਪਹੁੰਚ ਨਹੀਂ ਹੈ।",
+        "backToReports": "ਰਿਪੋਰਟਾਂ ਤੇ ਵਾਪਸ ਜਾਓ"
       },
       "profile.account": "ਖਾਤਾ",
       "profile.personalInfo": "ਨਿੱਜੀ ਜਾਣਕਾਰੀ",
@@ -21919,7 +22832,10 @@ const resources = {
         "group": {
           "article_one": "ਲੇਖ",
           "article_other": "ਲੇਖ"
-        }
+        },
+        "videoComingSoon": "ਵੀਡੀਓ ਗਾਈਡ ਜਲਦੀ ਆ ਰਹੀ ਹੈ",
+        "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ",
+        "loadError": "FAQ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
       },
       "faqAdmin": {
         "title": "FAQ ਪ੍ਰਬੰਧਨ",
@@ -22099,6 +23015,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ਹੋਲਡ 'ਤੇ",
+        "published": "ਪ੍ਰਕਾਸ਼ਿਤ",
+        "yourSubmissions": "ਤੁਹਾਡੇ ਭੇਜੇ ਗਏ ਸਵਾਲ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਸਥਿਤੀ।"
       }
     }
   },
@@ -22145,7 +23066,20 @@ const resources = {
         "tapToPlay": "श्रोतुं स्पृशतु",
         "delete": "मार्जयतु",
         "stop": "स्थगयतु",
-        "playing": "वाद्यते…"
+        "playing": "वाद्यते…",
+        "noAudioCaptured": "कोऽपि ध्वनिः न गृहीतः। कृपया पुनः यतताम्।",
+        "noWordsHeard": "कोऽपि शब्दः न श्रुतः। शान्तस्थाने पुनः यतताम्।",
+        "voiceCaptured": "ध्वनिः गृहीतः। पुनरीक्ष्य अग्रे गच्छतु।",
+        "couldNotStop": "ध्वन्यांकनं स्थगयितुं न शक्तम्।",
+        "notSupportedBrowser": "अस्मिन् ब्राउज़रे ध्वनिग्राहक-ध्वन्यांकनं न समर्थितम्।",
+        "recordingFailed": "ध्वन्यांकनं विफलम्। कृपया पुनः यतताम्।",
+        "permissionDeniedRetry": "ध्वनिग्राहकाधिकारः निराकृतः। ध्वनिग्राहकप्रवेशम् अनुमन्यताम् पुनः यतताम् च।",
+        "couldNotStart": "ध्वन्यांकनं आरब्धुं न शक्तम्। कृपया पुनः यतताम्।",
+        "tapToStopRecording": "स्थगयितुं स्पृशतु",
+        "doneSpeakAgain": "सम्पूर्णम् — यदा कदापि पुनः वदतु",
+        "notSupportedShort": "अस्मिन् ब्राउज़रे ध्वनिग्राहकः न समर्थितः",
+        "stopRecordingAria": "ध्वन्यांकनं स्थगयतु",
+        "startRecordingAria": "ध्वन्यांकनं आरभताम्"
       },
       "speech": {
         "stt": {
@@ -22165,7 +23099,8 @@ const resources = {
       "and": "तथा",
       "app": {
         "name": "अन्नदाता",
-        "tagline": "भवतः मण्डलं, भवतः भाषायाम्"
+        "tagline": "भवतः मण्डलं, भवतः भाषायाम्",
+        "footer": "अन्नदाता - भारतीयकृषकाणां सशक्तीकरणाय"
       },
       "loginPhone": {
         "signIn": "प्रवेशं करोतु",
@@ -22334,7 +23269,10 @@ const resources = {
         "sortBy": "वर्गीकरोतु",
         "unknown": "अज्ञातम्",
         "rupee": "रूप्यकाणि",
-        "steps": "सोपानानि"
+        "steps": "सोपानानि",
+        "continue": "अग्रे गच्छतु",
+        "noQuestionsFound": "कोऽपि प्रश्नः न लब्धः",
+        "askYourFirstQuestion": "भवतः प्रथमं प्रश्नं पृच्छतु"
       },
       "completeRegistration": "पञ्जीकरणं पूर्णं करोतु",
       "consentClause1": "भवतः चलदूरभाषसङ्ख्या पञ्जीकरणविवरणानि च सुरक्षितानि स्थापयिष्यन्ते तथा च केवलं मञ्चसत्यापनाय कृषिज्ञानसेवाभ्यः च उपयुक्ष्यन्ते।",
@@ -22405,7 +23343,15 @@ const resources = {
         "editWindowClosed": "समर्पणानन्तरं प्रश्नाः सम्पादयितुं न शक्यन्ते",
         "quickActionsTip": "साक्षात् 'प्रश्नं समर्पयतु' वा स्वकोशशेषं सद्यःप्रवृत्तिं च पश्यतु।",
         "rewardsTip": "कुल स्वीकृतप्रश्नानाम् आधारेण प्रति स्वीकृतप्रश्नम् अर्जयतु। रजत-स्वर्ण-स्तराः उच्चतरपारितोषिकदरान् उद्घाटयन्ति।",
-        "guidelinesTip": "चलच्चित्रं ६० क्षणाभ्यन्तरं १० एमबी अपि च स्थापयतु। समर्पणात् परं भवान् ३० क्षणस्य सम्पादनसमयं प्राप्नोति। दैनिकसीमा अर्धरात्रे पुनः सेट् भवति।"
+        "guidelinesTip": "चलच्चित्रं ६० क्षणाभ्यन्तरं १० एमबी अपि च स्थापयतु। समर्पणात् परं भवान् ३० क्षणस्य सम्पादनसमयं प्राप्नोति। दैनिकसीमा अर्धरात्रे पुनः सेट् भवति।",
+        "dailyLimitTitle": "दैनिकसीमा",
+        "editWindowTitle": "सम्पादनसमयः",
+        "aiCheckTitle": "AI सम्बद्धता जाँचः",
+        "verifiedUser": "सत्यापितः उपयोक्ता",
+        "startAsking": "पृच्छनं आरभस्व",
+        "viewWallet": "वालेट् पश्यतु",
+        "youAreHere": "भवान् अत्र अस्ति",
+        "currentTier": "वर्तमानस्तरः"
       },
       "iAcceptContinue": "अहं स्वीकरोमि अग्रे गच्छामि च",
       "invalidOtp": "पूर्णं ६-अङ्कीयसङ्केतं लिखतु",
@@ -22562,7 +23508,10 @@ const resources = {
         "suspended": "निलम्बितम्",
         "banned": "प्रतिबन्धितम्",
         "village": "ग्रामः",
-        "kvk": "केवीके"
+        "kvk": "केवीके",
+        "approvedQuestionsCount": "{{count}} स्वीकृताः प्रश्नाः",
+        "toNext": "{{count}} अग्रिमं यावत्",
+        "toTier": "{{tier}} यावत् {{count}}"
       },
       "profileLanguage": "अनुप्रयोगभाषा",
       "profileLanguageDesc": "एषा अनुप्रयोगान्तरफलकाय प्रश्नसमर्पणाय च मूलभाषा भविष्यति",
@@ -22665,7 +23614,9 @@ const resources = {
         "rejectedEditQuestion": "मम प्रश्नं सम्पादयतु",
         "addVoice": "ध्वनिं योजयतु",
         "tipDetailed": "विस्तरेण लिखतु — सस्यं, स्थानं, यत् च भवता पूर्वं प्रयत्नितं तत् अपि उल्लिखतु।",
-        "dailyLimitIndicator": "दैनिकसीमा समाप्ता"
+        "dailyLimitIndicator": "दैनिकसीमा समाप्ता",
+        "expertWillRespond": "विशेषज्ञः भवते उत्तरं दास्यति।",
+        "questionExample": "यथा: मम टमाटरस्य पत्राणि पीतानि भवन्ति — किं करणीयम्?"
       },
       "readFullPolicy": "गोपनीयतानीतिं पूरीं पठतु →",
       "resendOtp": "पुनः ओटीपी प्रेषयतु",
@@ -22754,7 +23705,16 @@ const resources = {
         "credit": "जमा (क्रेडिट्)",
         "debit": "निकासी (डेबिट्)",
         "txNotFound": "लेनदेनं न प्राप्तम्",
-        "notFoundSub": "एतत् लेनदेनं निष्कासितं स्यात् अथवा न उपलब्धं स्यात्।"
+        "notFoundSub": "एतत् लेनदेनं निष्कासितं स्यात् अथवा न उपलब्धं स्यात्।",
+        "sourceReward": "पुरस्कारः",
+        "sourceWithdrawal": "अपाकर्षणम्",
+        "sourceRefund": "प्रतिदानम्",
+        "sourceAdjustment": "समायोजनम्",
+        "statusCompleted": "सम्पूर्णम्",
+        "statusReversed": "प्रत्यावर्तितम्",
+        "statusFailed": "विफलम्",
+        "statusPending": "लम्बितम्",
+        "currency": "भारतीयरूप्यकम्"
       },
       "yourRole": "भवतः भूमिका",
       "home.greeting.morning": "सुप्रभातम्",
@@ -23157,7 +24117,14 @@ const resources = {
         "replies": "उत्तराणि",
         "adminName": "प्रशासकः",
         "replyCount_one": "{{count}} उत्तरम्",
-        "replyCount_other": "{{count}} उत्तराणि"
+        "replyCount_other": "{{count}} उत्तराणि",
+        "awaitingReply": "उत्तरं प्रतीक्ष्यते",
+        "newReportSubtitle": "भवता अनुभूतां समस्यां वर्णयतु। अस्माकं दलं शीघ्रं भवन्तं सम्पर्कयिष्यति।",
+        "loadingReports": "भवतः प्रतिवेदनानि आयोज्यन्ते…",
+        "loadingReport": "प्रतिवेदनम् आयोज्यते…",
+        "reportNotFound": "प्रतिवेदनं न प्राप्तम्",
+        "reportNotFoundHint": "इदं अपसारितं स्यात् अथवा भवतः अधुना प्रवेशः नास्ति।",
+        "backToReports": "प्रतिवेदनानि प्रति प्रत्यागच्छतु"
       },
       "profile.account": "खातम्",
       "profile.personalInfo": "व्यक्तिगतसूचना",
@@ -23229,7 +24196,10 @@ const resources = {
         "group": {
           "article_one": "लेखः",
           "article_other": "लेखाः"
-        }
+        },
+        "videoComingSoon": "चलच्चित्रमार्गदर्शिका शीघ्रं आगमिष्यति",
+        "videoGuideTitle": "चलच्चित्रमार्गदर्शिका",
+        "loadError": "FAQ आयोजने विफलम्"
       },
       "faqAdmin": {
         "title": "सामान्यानां प्रश्नानां प्रबन्धनम्",
@@ -23409,6 +24379,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "स्थगितम्",
+        "published": "प्रकाशितम्",
+        "yourSubmissions": "भवद्भिः प्रेषिताः प्रश्नाः तेषां च स्थितिः।"
       }
     }
   },
@@ -23455,7 +24430,20 @@ const resources = {
         "tapToPlay": "ᱟᱸᱡᱚᱢ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱱ ᱢᱮ",
         "delete": "ᱜᱮᱫ/ ᱢᱩᱪᱟᱹᱫᱽ",
         "stop": "ᱛᱷᱩᱠᱟᱹᱢ",
-        "playing": "ᱪᱟᱞᱟᱜ ᱠᱟᱱᱟ…"
+        "playing": "ᱪᱟᱞᱟᱜ ᱠᱟᱱᱟ…",
+        "noAudioCaptured": "ᱦᱚᱨᱟ ᱟᱣᱭᱚ ᱵᱟᱝ ᱢᱮᱱᱟᱜᱼᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "noWordsHeard": "ᱟᱠᱟᱱ ᱠᱟᱴᱷᱟ ᱵᱟᱝ ᱟᱭᱩᱢᱟᱱᱟ᱾ ᱥᱟᱱᱛᱤ ᱡᱟᱭᱜᱟ ᱨᱮ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "voiceCaptured": "ᱠᱩᱠᱞᱤ ᱢᱮᱱᱟᱜᱼᱟ᱾ ᱧᱮᱞ ᱛᱮ ᱞᱟᱦᱟ ᱢᱮ᱾",
+        "couldNotStop": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱛᱷᱩᱠᱟᱹ ᱵᱟᱝ ᱦᱩᱭ ᱮᱱᱟ᱾",
+        "notSupportedBrowser": "ᱱᱚᱣᱟ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱨᱮᱠᱳᱨᱰᱤᱝ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ᱾",
+        "recordingFailed": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "permissionDeniedRetry": "ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱮᱞᱟᱣ ᱵᱟᱹᱰᱨᱟᱹ ᱮᱱᱟ᱾ ᱢᱟᱭᱠᱨᱳᱯᱷᱳᱱ ᱛᱮᱭᱟᱨ ᱮᱢ ᱢᱮ ᱟᱨ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "couldNotStart": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱮᱛᱚᱦᱚᱵ ᱵᱟᱝ ᱦᱩᱭ ᱮᱱᱟ᱾ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ᱾",
+        "tapToStopRecording": "ᱛᱷᱩᱠᱟᱹᱢ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱱ ᱢᱮ",
+        "doneSpeakAgain": "ᱛᱮᱭᱟᱨ — ᱚᱠᱛᱚ ᱞᱮᱠᱷᱟᱱᱛᱮ ᱫᱚᱦᱲᱟ ᱨᱚᱲ ᱢᱮ",
+        "notSupportedShort": "ᱱᱚᱣᱟ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱢᱟᱭᱠ ᱵᱟᱝ ᱪᱟᱞᱟᱜᱼᱟ",
+        "stopRecordingAria": "ᱨᱮᱠᱳᱨᱰᱤᱝ ᱛᱷᱩᱠᱟᱹᱢ ᱢᱮ",
+        "startRecordingAria": "ᱠᱩᱠᱞᱤ ᱨᱮᱠᱳᱨᱰᱤᱝ ᱮᱛᱚᱦᱚᱵ ᱢᱮ"
       },
       "speech": {
         "stt": {
@@ -23475,7 +24463,8 @@ const resources = {
       "and": "ᱟᱨ",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "ᱟᱢᱟᱜ ᱡᱤᱞᱟᱹ, ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱛᱮ"
+        "tagline": "ᱟᱢᱟᱜ ᱡᱤᱞᱟᱹ, ᱟᱢᱟᱜ ᱯᱟᱹᱨᱥᱤ ᱛᱮ",
+        "footer": "AnnaDatha - ᱵᱷᱟᱨᱚᱛ ᱨᱮᱭᱚᱛ ᱠᱚ ᱡᱚᱨ ᱛᱮᱭᱟᱨ ᱞᱟᱹᱜᱤᱫ"
       },
       "loginPhone": {
         "signIn": "ᱥᱟᱭᱤᱱ ᱤᱱ (Sign In)",
@@ -23634,7 +24623,10 @@ const resources = {
         "sortBy": "ᱞᱮᱠᱟᱛᱮ ᱥᱟᱡᱟᱣ ᱢᱮ",
         "unknown": "ᱵᱟᱝ ᱵᱟᱰᱟᱭ",
         "rupee": "ᱴᱟᱠᱟ",
-        "steps": "ठाहेन"
+        "steps": "ठाहेन",
+        "continue": "ᱞᱟᱦᱟ ᱢᱮ",
+        "noQuestionsFound": "ᱦᱚᱨᱟ ᱠᱩᱠᱞᱤ ᱵᱟᱝ ᱧᱟᱢ ᱮᱱᱟ",
+        "askYourFirstQuestion": "ᱟᱢᱟᱜ ᱯᱩᱭᱞᱩ ᱠᱩᱠᱞᱤ ᱠᱩᱠᱞᱤ ᱢᱮ"
       },
       "completeRegistration": "ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",
       "consentClause1": "ᱟᱢᱟᱜ ᱢᱳᱵᱟᱭᱤᱞ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱨᱮᱡᱤᱥᱴᱨᱮᱥᱚᱱ ᱵᱤᱵᱚᱨᱚᱱ ᱫᱚ ᱥᱩᱨᱚᱠᱷᱤᱛ ᱛᱟᱦᱮᱸᱱᱟ ᱟᱨ ᱥᱩᱢᱩᱝ ᱯᱞᱮᱴᱯᱷᱳᱨᱢ ᱟᱨ ᱪᱟᱥ-ᱵᱟᱥ ᱥᱮᱵᱟ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱣᱦᱟᱨᱚᱜᱼᱟ᱾",
@@ -23705,7 +24697,15 @@ const resources = {
         "editWindowClosed": "ᱵᱷᱮᱡᱟ ᱠᱟᱛᱮ ᱠᱩᱠᱞᱤ ᱫᱚ ᱵᱟᱝ ᱥᱟᱯᱲᱟᱣ (edit) ᱜᱟᱱᱚᱜᱼᱟ",
         "quickActionsTip": "ᱥᱳᱡᱷᱮ 'ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ' ᱥᱮ ᱟᱢᱟᱜ 'ᱣᱟᱞᱮᱴ ᱵᱮᱞᱮᱱᱥ' ᱧᱮᱞ ᱨᱮ ᱪᱟᱞᱟᱜ ᱢᱮ᱾",
         "rewardsTip": "ᱟᱸᱜᱳᱪ ᱟᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱞᱮᱠᱟᱛᱮ ᱴᱟᱠᱟ ᱟᱨᱡᱟᱣ ᱢᱮ᱾ Silver ᱟᱨ Gold ᱛᱷᱚᱠ ᱨᱮ ᱡᱟᱹᱥᱛᱤ ᱥᱤᱨᱯᱷᱟᱹ ᱧᱟᱢᱚᱜᱼᱟ᱾",
-        "guidelinesTip": "ᱵᱷᱤᱰᱤᱭᱳ 60s ᱟᱨ 10MB ᱠᱷᱚᱱ ᱠᱚᱢ ᱫᱚᱦᱚᱭ ᱢᱮ᱾ ᱵᱷᱮᱡᱟ ᱠᱟᱛᱮ 30 ᱥᱮᱠᱮᱱᱰ ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ ᱧᱟᱢᱚᱜᱼᱟ᱾ ᱫᱤᱱᱟᱹᱢ ᱞᱤᱢᱤᱴ ᱫᱚ ᱧᱤᱸᱫᱟᱹ ᱑᱒ ᱵᱟᱡᱮ ᱟᱹᱨᱩᱣᱟ᱾"
+        "guidelinesTip": "ᱵᱷᱤᱰᱤᱭᱳ 60s ᱟᱨ 10MB ᱠᱷᱚᱱ ᱠᱚᱢ ᱫᱚᱦᱚᱭ ᱢᱮ᱾ ᱵᱷᱮᱡᱟ ᱠᱟᱛᱮ 30 ᱥᱮᱠᱮᱱᱰ ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ ᱧᱟᱢᱚᱜᱼᱟ᱾ ᱫᱤᱱᱟᱹᱢ ᱞᱤᱢᱤᱴ ᱫᱚ ᱧᱤᱸᱫᱟᱹ ᱑᱒ ᱵᱟᱡᱮ ᱟᱹᱨᱩᱣᱟ᱾",
+        "dailyLimitTitle": "ᱫᱤᱱᱟᱹᱢ ᱥᱤᱢᱟᱹ",
+        "editWindowTitle": "ᱥᱟᱯᱲᱟᱣ ᱚᱠᱛᱚ",
+        "aiCheckTitle": "AI ᱡᱟᱸᱪᱟᱭ",
+        "verifiedUser": "ᱡᱟᱸᱪ ᱠᱟᱱ ᱵᱮᱣᱦᱟᱨᱤᱭᱟᱹ",
+        "startAsking": "ᱠᱩᱠᱞᱤ ᱮᱛᱦᱚᱵ ᱢᱮ",
+        "viewWallet": "ᱣᱟᱞᱮᱴ ᱧᱮᱞ ᱢᱮ",
+        "youAreHere": "ᱟᱢ ᱱᱚᱸᱰᱮ ᱢᱮᱱᱟᱢᱟ",
+        "currentTier": "ᱱᱤᱛᱚᱜ ᱛᱷᱚᱨ"
       },
       "iAcceptContinue": "ᱤᱧ ᱨᱮᱵᱮᱱ ᱟᱹᱧ ᱟᱨ ᱞᱟᱦᱟᱜ ᱟᱹᱧ",
       "invalidOtp": "ᱯᱩᱨᱟᱹ ᱖-ᱰᱤᱡᱤᱴ ᱠᱳᱰ ᱚᱞ ᱢᱮ",
@@ -23862,7 +24862,10 @@ const resources = {
         "suspended": "ᱛᱷᱩᱠᱟᱹᱢ ᱟᱠᱟᱱᱟ",
         "banned": "ᱵᱚᱱᱫᱚ ᱟᱠᱟᱱᱟ",
         "village": "ᱟᱛᱳ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ᱢᱟᱱᱟᱛ ᱠᱩᱠᱞᱤ",
+        "toNext": "{{count}} ᱛᱟᱭᱚᱢ ᱠᱷᱚᱱ",
+        "toTier": "{{tier}} ᱠᱷᱚᱱ {{count}}"
       },
       "profileLanguage": "ᱮᱯ ᱯᱟᱹᱨᱥᱤ",
       "profileLanguageDesc": "ᱱᱚᱶᱟ ᱫᱚ ᱮᱯ ᱵᱮᱣᱦᱟᱨ ᱟᱨ ᱠᱩᱠᱞᱤ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱬᱩᱛ ᱯᱟᱹᱨᱥᱤ ᱛᱟᱦᱮᱸᱱᱟ",
@@ -23965,7 +24968,9 @@ const resources = {
         "rejectedEditQuestion": "इञाक् कुकli सापड़ाव मे",
         "addVoice": "साड़े सेलेद मे",
         "tipDetailed": "बुटा ओल मे — गोहालि, जायगा आर आम नितोक् धाबिच् चेत् कुरुमुटु आकात् मेना, ओना ओल मे।",
-        "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना"
+        "dailyLimitIndicator": "दिन दिनाक् सीमा चाबेना",
+        "expertWillRespond": "ᱢᱤᱫ ᱮᱠᱥᱯᱳᱴᱴ ᱟᱢ ᱡᱟᱣᱟᱵᱽ ᱮᱢᱟᱢᱟ᱾",
+        "questionExample": "ᱡᱮᱢᱚᱱ: ᱤᱧᱟᱜ ᱴᱚᱢᱮᱴᱚ ᱚᱲᱟᱜ ᱦᱟᱹᱴᱤᱧ ᱦᱩᱭ ᱠᱟᱱᱟ — ᱤᱧ ᱪᱮᱫ ᱠᱟᱛᱷᱚᱢ?"
       },
       "readFullPolicy": "ᱯᱩᱨᱟᱹ Privacy Policy ᱯᱟᱲᱦᱟᱣ ᱢᱮ →",
       "resendOtp": "OTP ᱫᱚᱦᱲᱟ ᱵᱷᱮᱡᱟᱭ ᱢᱮ",
@@ -24054,7 +25059,16 @@ const resources = {
         "credit": "ᱡᱚᱢᱟ (Credit)",
         "debit": "ᱠᱷᱚᱨᱚᱪ (Debit)",
         "txNotFound": "ᱞᱮᱱ-ᱫᱮᱱ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
-        "notFoundSub": "ᱱᱚᱶᱟ ᱞᱮᱱ-ᱫᱮᱱ ᱫᱚ ᱚᱪᱚᱜ ᱟᱠᱟᱱᱟ ᱥᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ᱾"
+        "notFoundSub": "ᱱᱚᱶᱟ ᱞᱮᱱ-ᱫᱮᱱ ᱫᱚ ᱚᱪᱚᱜ ᱟᱠᱟᱱᱟ ᱥᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ᱾",
+        "sourceReward": "ᱯᱩᱨᱚᱥᱠᱟᱨ",
+        "sourceWithdrawal": "ᱩᱰᱩᱠ",
+        "sourceRefund": "ᱨᱤᱯᱷᱚᱱᱰ",
+        "sourceAdjustment": "ᱥᱟᱢᱟᱭᱚᱡᱚᱱ",
+        "statusCompleted": "ᱯᱩᱨᱟᱹᱣ",
+        "statusReversed": "ᱩᱞᱴᱟ",
+        "statusFailed": "ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ",
+        "statusPending": "ᱛᱟᱹᱝᱜᱤ ᱨᱮ",
+        "currency": "ᱦᱤᱸᱰᱤ ᱨᱩᱯᱭᱟ"
       },
       "yourRole": "ᱟᱢᱟᱜ ᱛᱷᱟᱹᱱᱤᱛ/ ᱠᱟᱹᱢᱤ",
       "home.greeting.morning": "ᱥᱮᱛᱟᱜ ᱡᱚᱦᱟᱨ",
@@ -24457,7 +25471,14 @@ const resources = {
         "replies": "ᱨᱳᱲ ᱠᱚ",
         "adminName": "ᱮᱰᱢᱤᱱ",
         "replyCount_one": "{{count}} ᱴᱟᱝ ᱨᱳᱲ",
-        "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ"
+        "replyCount_other": "{{count}} ᱴᱟᱝ ᱨᱳᱲ ᱠᱚ",
+        "awaitingReply": "ᱨᱩᱲᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱟᱹᱝᱜᱤ ᱠᱟᱱᱟ",
+        "newReportSubtitle": "ᱟᱢᱟᱜ ᱧᱟᱢ ᱠᱟᱛᱮ ᱠᱩᱠᱞᱤᱭᱟᱜ ᱵᱚᱭᱟᱱ ᱢᱮ᱾ ᱟᱞᱮᱴᱟᱜ ᱴᱤᱢ ᱡᱚᱛᱚ ᱟᱢ ᱠᱮᱛᱮ ᱨᱟᱵᱟᱲᱟ ᱠᱟᱛᱮ ᱮᱢᱟᱭ᱾",
+        "loadingReports": "ᱟᱢᱟᱜ ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "loadingReport": "ᱨᱤᱯᱳᱨᱴ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ…",
+        "reportNotFound": "ᱨᱤᱯᱳᱨᱴ ᱵᱟᱝ ᱧᱟᱢᱮᱱᱟ",
+        "reportNotFoundHint": "ᱟᱭᱢᱟ ᱚᱰᱚᱠᱚᱱᱟ ᱠᱟᱱᱟ ᱥᱮ ᱟᱢᱟᱜ ᱦᱚᱸ ᱵᱟᱝ ᱟᱨᱩ ᱮᱠᱥᱮᱥ ᱢᱮᱱᱟᱜᱼᱟ᱾",
+        "backToReports": "ᱨᱤᱯᱳᱨᱴ ᱛᱮ ᱨᱩᱣᱟᱲ ᱢᱮ"
       },
       "profile.account": "ᱮᱠᱟᱣᱩᱱᱴ",
       "profile.personalInfo": "ᱱᱤᱡᱮᱨᱟᱜ ᱵᱤᱵᱚᱨᱚᱱ",
@@ -24529,7 +25550,10 @@ const resources = {
         "group": {
           "article_one": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ",
           "article_other": "ᱚᱞ/ ᱟᱨᱴᱤᱠᱮᱞ ᱠᱚ"
-        }
+        },
+        "videoComingSoon": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ ᱡᱚᱛᱚ ᱦᱮᱡᱩᱜ ᱠᱟᱱᱟ",
+        "videoGuideTitle": "ᱵᱷᱤᱰᱤᱭᱳ ᱜᱟᱭᱰ",
+        "loadError": "FAQ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱨᱮ ᱵᱟᱝ ᱜᱟᱱ ᱞᱮᱱᱟ"
       },
       "faqAdmin": {
         "title": "FAQ ᱥᱟᱯᱲᱟᱣ",
@@ -24709,6 +25733,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ᱦᱚᱞᱰ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ",
+        "published": "ᱯᱨᱚᱠᱟᱥᱤᱛ",
+        "yourSubmissions": "ᱟᱢᱟᱜ ᱡᱚᱢᱟ ᱠᱟᱱ ᱠᱩᱠᱞᱤ ᱟᱨ ᱚᱱᱟᱠᱚᱨᱮᱭᱟᱜ ᱦᱟᱞᱚᱛ᱾"
       }
     }
   },
@@ -24755,7 +25784,20 @@ const resources = {
         "tapToPlay": "هلائڻ لاءِ ٽئپ ڪريو",
         "delete": "ختم ڪريو",
         "stop": "روڪيو",
-        "playing": "هلي رهيو آهي..."
+        "playing": "هلي رهيو آهي...",
+        "noAudioCaptured": "ڪا به آواز رڪارڊ نه ٿي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+        "noWordsHeard": "ڪو به لفظ نه ٻڌو ويو. پرسڪون جاءِ تي ٻيهر ڪوشش ڪريو.",
+        "voiceCaptured": "آواز رڪارڊ ٿي وئي. جائزو وٺي جاري رکو.",
+        "couldNotStop": "رڪارڊنگ بند نه ٿي سگهي.",
+        "notSupportedBrowser": "هن برائوزر ۾ مائيڪروفون رڪارڊنگ سپورٽ نه ٿيل آهي.",
+        "recordingFailed": "رڪارڊنگ ناڪام ٿي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+        "permissionDeniedRetry": "مائيڪروفون جي اجازت رد ڪئي وئي. مائيڪروفون تائين رسائي ڏيو ۽ ٻيهر ڪوشش ڪريو.",
+        "couldNotStart": "رڪارڊنگ شروع نه ٿي سگهي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+        "tapToStopRecording": "روڪڻ لاءِ ٽئپ ڪريو",
+        "doneSpeakAgain": "مڪمل — ڪڏهن به وري ڳالهايو",
+        "notSupportedShort": "هن برائوزر تي مائڪ سپورٽ نه ٿيل آهي",
+        "stopRecordingAria": "رڪارڊنگ روڪيو",
+        "startRecordingAria": "آواز رڪارڊنگ شروع ڪريو"
       },
       "speech": {
         "stt": {
@@ -24775,7 +25817,8 @@ const resources = {
       "and": "۽",
       "app": {
         "name": "انّ داتا (AnnaDatha)",
-        "tagline": "توهان جو ضلعو، توهان جي ٻوليءَ ۾"
+        "tagline": "توهان جو ضلعو، توهان جي ٻوليءَ ۾",
+        "footer": "انّ داتا (AnnaDatha) - هندستاني هارين کي مضبوط بڻائڻ لاءِ"
       },
       "loginPhone": {
         "signIn": "سائين ان ڪريو",
@@ -24934,7 +25977,10 @@ const resources = {
         "sortBy": "ترتيب ڏيو",
         "unknown": "نامعلوم",
         "rupee": "روپيا",
-        "steps": "مرحلا"
+        "steps": "مرحلا",
+        "continue": "جاري رکو",
+        "noQuestionsFound": "ڪو به سوال نه مليو",
+        "askYourFirstQuestion": "پنهنجو پهريون سوال پڇو"
       },
       "completeRegistration": "رجسٽريشن مڪمل ڪريو",
       "consentClause1": "توهان جو موبائل نمبر ۽ رجسٽريشن جون تفصيلون محفوظ طريقي سان رکيون وينديون ۽ صرف پليٽ فارم جي تصديق ۽ زرعي علم جي خدمتن لاءِ استعمال ٿينديون.",
@@ -25005,7 +26051,15 @@ const resources = {
         "editWindowClosed": "جمع ڪرڻ کان پوءِ سوالن ۾ ترميم نٿي ڪري سگهجي",
         "quickActionsTip": "سڌو سوال جمع ڪرڻ واري صفحي تي وڃو يا پنهنجي والٽ بيلنس ۽ تازي سرگرمي ڏسو.",
         "rewardsTip": "منظور ٿيل سوالن جي ڪل تعداد جي بنياد تي هر منظور ٿيل سوال تي انعام ڪمايو. سلور ۽ گولڊ ليول وڌيڪ انعام ڏين ٿا.",
-        "guidelinesTip": "وڊيو کي 60 سيڪنڊن ۽ 10MB کان گھٽ رکو. جمع ڪرڻ کان پوءِ توھان کي 30 سيڪنڊن جي ترميمي ونڊو ملي ٿي. روزاني حد اڌ رات جو ري سيٽ ٿئي ٿي."
+        "guidelinesTip": "وڊيو کي 60 سيڪنڊن ۽ 10MB کان گھٽ رکو. جمع ڪرڻ کان پوءِ توھان کي 30 سيڪنڊن جي ترميمي ونڊو ملي ٿي. روزاني حد اڌ رات جو ري سيٽ ٿئي ٿي.",
+        "dailyLimitTitle": "روزاني حد",
+        "editWindowTitle": "ايڊٽ ونڊو",
+        "aiCheckTitle": "AI لاڳاپي چڪاس",
+        "verifiedUser": "تصديق ٿيل واپرائيندڙ",
+        "startAsking": "پڇڻ شروع ڪريو",
+        "viewWallet": "والیٽ ڏسو",
+        "youAreHere": "توهان هتي آهيو",
+        "currentTier": "مؤجوده سطح"
       },
       "iAcceptContinue": "مان قبول ڪريان ٿو/ٿي ۽ جاري رکان ٿو/ٿي",
       "invalidOtp": "مكمل 6 انگن جو ڪوڊ داخل ڪريو",
@@ -25162,7 +26216,10 @@ const resources = {
         "suspended": "معطل ٿيل",
         "banned": "پابندي مڙهيل",
         "village": "ڳوٺ",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} منظور ٿيل سوال",
+        "toNext": "{{count}} ايندڙ تائين",
+        "toTier": "{{tier}} تائين {{count}}"
       },
       "profileLanguage": "ائپ جي ٻولي",
       "profileLanguageDesc": "هي ائپ جي انٽرفيس ۽ سوالن کي جمع ڪرڻ لاءِ ڊيفالٽ ٻولي هوندي",
@@ -25265,7 +26322,9 @@ const resources = {
         "rejectedEditQuestion": "منهنجو سوال درست ڪريو",
         "addVoice": "آواز شامل ڪريو",
         "tipDetailed": "تفصيل سان لکو — فصل، جاءِ ۽ توهان هاڻي تائين ڇا آزمايو آهي، ٻڌايو.",
-        "dailyLimitIndicator": "روزاني حد پوري ٿي وئي"
+        "dailyLimitIndicator": "روزاني حد پوري ٿي وئي",
+        "expertWillRespond": "هڪ ماهر توهان کي جواب ڏيندو.",
+        "questionExample": "مثال طور: منهنجي ٽماٽي جا پن پيلا ٿي رهيا آهن — مون کي ڇا ڪرڻ گهرجي؟"
       },
       "readFullPolicy": "پوري رازداري پاليسي پڙهو →",
       "resendOtp": "ٻيهر OTP موڪليو",
@@ -25354,7 +26413,16 @@ const resources = {
         "credit": "جمع (Credit)",
         "debit": "خرچ (Debit)",
         "txNotFound": "ٽرانزيڪشن نه ملي",
-        "notFoundSub": "ٽرانزيڪشن ختم ڪئي وئي هجي يا هاڻي دستياب نه هجي."
+        "notFoundSub": "ٽرانزيڪشن ختم ڪئي وئي هجي يا هاڻي دستياب نه هجي.",
+        "sourceReward": "انعام",
+        "sourceWithdrawal": "نيڪالي",
+        "sourceRefund": "رقم واپسي",
+        "sourceAdjustment": "ترميم",
+        "statusCompleted": "مڪمل",
+        "statusReversed": "واپس ڪيل",
+        "statusFailed": "ناڪام",
+        "statusPending": "انتظار ۾",
+        "currency": "ڀارتي رپيا"
       },
       "yourRole": "توهان جو عهدو/ڪردار",
       "home.greeting.morning": "صبح جو سلام",
@@ -25757,7 +26825,14 @@ const resources = {
         "replies": "جواب",
         "adminName": "ايڊمن",
         "replyCount_one": "{{count}} جواب",
-        "replyCount_other": "{{count}} جواب"
+        "replyCount_other": "{{count}} جواب",
+        "awaitingReply": "جواب جو انتظار",
+        "newReportSubtitle": "اوهان کي پيش آيل مسئلو بيان ڪريو. اسان جي ٽيم جلد اوهان سان رابطو ڪندي.",
+        "loadingReports": "اوهان جون رپورٽون لوڊ ٿي رهيون آهن…",
+        "loadingReport": "رپورٽ لوڊ ٿي رهي آهي…",
+        "reportNotFound": "رپورٽ نه لڌي",
+        "reportNotFoundHint": "اهو ممڪن آهي هٽايو ويو هجي يا اوهان کي هاڻي رسائي نه هجي.",
+        "backToReports": "رپورٽن ڏانهن واپس وڃو"
       },
       "profile.account": "اکائونٽ",
       "profile.personalInfo": "شخصي معلومات",
@@ -25829,7 +26904,10 @@ const resources = {
         "group": {
           "article_one": "مضمون",
           "article_other": "مضمون"
-        }
+        },
+        "videoComingSoon": "وڊيو گائيڊ جلد اچي رهي آهي",
+        "videoGuideTitle": "وڊيو گائيڊ",
+        "loadError": "FAQ لوڊ ڪرڻ ۾ ناڪامي"
       },
       "faqAdmin": {
         "title": "FAQ انتظاميه",
@@ -26009,6 +27087,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "هولڊ تي",
+        "published": "شايع ٿيل",
+        "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
       }
     }
   },
@@ -26055,7 +27138,20 @@ const resources = {
         "tapToPlay": "இயக்க தட்டவும்",
         "delete": "நீக்கு",
         "stop": "நிறுத்து",
-        "playing": "இயங்குகிறது…"
+        "playing": "இயங்குகிறது…",
+        "noAudioCaptured": "எந்த ஆடியோவும் பதிவு செய்யப்படவில்லை. மீண்டும் முயற்சிக்கவும்.",
+        "noWordsHeard": "எந்த வார்த்தையும் கேட்கவில்லை. அமைதியான இடத்தில் மீண்டும் முயற்சிக்கவும்.",
+        "voiceCaptured": "குரல் பதிவு செய்யப்பட்டது. மதிப்பாய்வு செய்து தொடரவும்.",
+        "couldNotStop": "பதிவை நிறுத்த முடியவில்லை.",
+        "notSupportedBrowser": "இந்த உலாவியில் மைக்ரோஃபோன் பதிவு ஆதரிக்கப்படவில்லை.",
+        "recordingFailed": "பதிவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
+        "permissionDeniedRetry": "மைக்ரோஃபோன் அனுமதி மறுக்கப்பட்டது. மைக்ரோஃபோன் அணுகலை அனுமதித்து மீண்டும் முயற்சிக்கவும்.",
+        "couldNotStart": "பதிவைத் தொடங்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+        "tapToStopRecording": "நிறுத்த தட்டவும்",
+        "doneSpeakAgain": "முடிந்தது — எப்போது வேண்டுமானாலும் மீண்டும் பேசுங்கள்",
+        "notSupportedShort": "இந்த உலாவியில் மைக் ஆதரிக்கப்படவில்லை",
+        "stopRecordingAria": "பதிவை நிறுத்து",
+        "startRecordingAria": "குரல் பதிவைத் தொடங்கு"
       },
       "speech": {
         "stt": {
@@ -26075,7 +27171,8 @@ const resources = {
       "and": "மற்றும்",
       "app": {
         "name": "AnnaDatha",
-        "tagline": "உங்கள் மாவட்டம், உங்கள் மொழியில்"
+        "tagline": "உங்கள் மாவட்டம், உங்கள் மொழியில்",
+        "footer": "AnnaDatha - இந்திய விவசாயிகளை வலுப்படுத்த"
       },
       "loginPhone": {
         "signIn": "உள்நுழை",
@@ -26234,7 +27331,10 @@ const resources = {
         "sortBy": "வரிசைப்படுத்து",
         "unknown": "தெரியாதது",
         "rupee": "ரூ.",
-        "steps": "படிகள்"
+        "steps": "படிகள்",
+        "continue": "தொடரவும்",
+        "noQuestionsFound": "எந்த கேள்வியும் இல்லை",
+        "askYourFirstQuestion": "உங்கள் முதல் கேள்வியைக் கேளுங்கள்"
       },
       "completeRegistration": "பதிவை முடிக்கவும்",
       "consentClause1": "உங்கள் மொபைல் எண் மற்றும் பதிவு விவரங்கள் பாதுகாப்பாக சேமிக்கப்பட்டு, தள அங்கீகாரம் மற்றும் விவசாய சேவை நோக்கங்களுக்காக மட்டுமே பயன்படுத்தப்படும்.",
@@ -26305,7 +27405,15 @@ const resources = {
         "editWindowClosed": "சமர்ப்பித்த பிறகு கேள்விகளைத் திருத்த முடியாது",
         "quickActionsTip": "நேரடியாக கேள்விகளைச் சமர்ப்பிக்கவும் அல்லது உங்கள் வாலெட் இருப்பு மற்றும் சமீபத்திய நடவடிக்கைகளைப் பார்க்கவும்.",
         "rewardsTip": "ஒப்புதலளிக்கப்பட்ட மொத்த கேள்விகளின் அடிப்படையில் சம்பாதிக்கவும். Silver மற்றும் Gold நிலைகள் அதிக வெகுமதி விகிதங்களைத் திறக்கும்.",
-        "guidelinesTip": "வீடியோவை 60 வினாடிகள் மற்றும் 10MBக்குள் வைத்திருக்கவும். சமர்ப்பித்த பிறகு 30 வினாடி திருத்தும் அவகாசம் கிடைக்கும். தினசரி வரம்பு நள்ளிரவில் புதுப்பிக்கப்படும்."
+        "guidelinesTip": "வீடியோவை 60 வினாடிகள் மற்றும் 10MBக்குள் வைத்திருக்கவும். சமர்ப்பித்த பிறகு 30 வினாடி திருத்தும் அவகாசம் கிடைக்கும். தினசரி வரம்பு நள்ளிரவில் புதுப்பிக்கப்படும்.",
+        "dailyLimitTitle": "தினசரி வரம்பு",
+        "editWindowTitle": "திருத்தும் அவகாசம்",
+        "aiCheckTitle": "AI பொருத்தப் பரிசோதனை",
+        "verifiedUser": "சரிபார்க்கப்பட்ட பயனர்",
+        "startAsking": "கேட்க தொடங்குங்கள்",
+        "viewWallet": "வாலட்டைப் பார்க்கவும்",
+        "youAreHere": "நீங்கள் இங்கே இருக்கிறீர்கள்",
+        "currentTier": "தற்போதைய நிலை"
       },
       "iAcceptContinue": "நான் ஏற்கிறேன் & தொடர்கிறேன்",
       "invalidOtp": "முழுமையான 6-இலக்கக் குறியீட்டை உள்ளிடவும்",
@@ -26462,7 +27570,10 @@ const resources = {
         "suspended": "இடைநிறுத்தப்பட்டது",
         "banned": "தடை செய்யப்பட்டது",
         "village": "கிராமம்",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} அங்கீகரிக்கப்பட்ட கேள்விகள்",
+        "toNext": "{{count}} அடுத்ததற்கு",
+        "toTier": "{{tier}} வரை {{count}}"
       },
       "profileLanguage": "செயலி மொழி",
       "profileLanguageDesc": "இது செயலி இடைமுகம் மற்றும் கேள்வி சமர்ப்பிப்புகளுக்கான இயல்புநிலை மொழியாக இருக்கும்",
@@ -26565,7 +27676,9 @@ const resources = {
         "rejectedEditQuestion": "எனது கேள்வியைத் திருத்து",
         "addVoice": "குரலைச் சேர்க்கவும்",
         "tipDetailed": "விரிவாக எழுதுங்கள் — பயிர், இடம் மற்றும் நீங்கள் ஏற்கனவே முயற்சித்தவற்றைக் குறிப்பிடுங்கள்.",
-        "dailyLimitIndicator": "தினசரி வரம்பு முடிந்தது"
+        "dailyLimitIndicator": "தினசரி வரம்பு முடிந்தது",
+        "expertWillRespond": "ஒரு நிபுணர் உங்களுக்குப் பதில் தருவார்.",
+        "questionExample": "எ.கா: என் தக்காளி இலைகள் மஞ்சளாகி வருகின்றன — நான் என்ன செய்ய வேண்டும்?"
       },
       "readFullPolicy": "முழுமையான தனியுரிமைக் கொள்கையைப் படிக்கவும் →",
       "resendOtp": "மீண்டும் OTP அனுப்பு",
@@ -26654,7 +27767,16 @@ const resources = {
         "credit": "வரவு (Credit)",
         "debit": "பற்று (Debit)",
         "txNotFound": "பரிவர்த்தனை காணப்படவில்லை",
-        "notFoundSub": "பரிவர்த்தனை நீக்கப்பட்டிருக்கலாம் அல்லது இப்போது கிடைக்காமல் இருக்கலாம்."
+        "notFoundSub": "பரிவர்த்தனை நீக்கப்பட்டிருக்கலாம் அல்லது இப்போது கிடைக்காமல் இருக்கலாம்.",
+        "sourceReward": "வெகுமதி",
+        "sourceWithdrawal": "திரும்பப்பெறுதல்",
+        "sourceRefund": "பணத்திரும்பம்",
+        "sourceAdjustment": "சரிசெய்தல்",
+        "statusCompleted": "முடிந்தது",
+        "statusReversed": "மாற்றப்பட்டது",
+        "statusFailed": "தோல்வியடைந்தது",
+        "statusPending": "நிலுவையில்",
+        "currency": "இந்திய ரூபாய்"
       },
       "yourRole": "உங்கள் பங்கு/பதவி",
       "home.greeting.morning": "காலை வணக்கம்",
@@ -27057,7 +28179,14 @@ const resources = {
         "replies": "பதில்கள்",
         "adminName": "நிர்வாகி",
         "replyCount_one": "{{count}} பதில்",
-        "replyCount_other": "{{count}} பதில்கள்"
+        "replyCount_other": "{{count}} பதில்கள்",
+        "awaitingReply": "பதிலுக்காக காத்திருக்கிறது",
+        "newReportSubtitle": "நீங்கள் எதிர்கொண்ட சிக்கலை விவரிக்கவும். எங்கள் குழு விரைவில் உங்களைத் தொடர்பு கொள்ளும்.",
+        "loadingReports": "உங்கள் அறிக்கைகள் ஏற்றப்படுகின்றன…",
+        "loadingReport": "அறிக்கை ஏற்றப்படுகிறது…",
+        "reportNotFound": "அறிக்கை கிடைக்கவில்லை",
+        "reportNotFoundHint": "இது அகற்றப்பட்டிருக்கலாம் அல்லது உங்களுக்கு இனி அணுகல் இல்லை.",
+        "backToReports": "அறிக்கைகளுக்குத் திரும்பு"
       },
       "profile.account": "கணக்கு",
       "profile.personalInfo": "தனிப்பட்ட தகவல்",
@@ -27129,7 +28258,10 @@ const resources = {
         "group": {
           "article_one": "கட்டுரை",
           "article_other": "கட்டுரைகள்"
-        }
+        },
+        "videoComingSoon": "வீடியோ வழிகாட்டி விரைவில் வரும்",
+        "videoGuideTitle": "வீடியோ வழிகாட்டி",
+        "loadError": "FAQ ஏற்றுவதில் தோல்வி"
       },
       "faqAdmin": {
         "title": "FAQ மேலாண்மை",
@@ -27309,6 +28441,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "இடைநிறுத்தப்பட்டது",
+        "published": "வெளியிடப்பட்டது",
+        "yourSubmissions": "நீங்கள் சமர்ப்பித்த கேள்விகள் மற்றும் அவற்றின் நிலை."
       }
     }
   },
@@ -27355,7 +28492,20 @@ const resources = {
         "tapToPlay": "ప్లే చేయడానికి నొక్కండి",
         "delete": "తొలగించు",
         "stop": "ఆపు",
-        "playing": "ప్లే అవుతోంది…"
+        "playing": "ప్లే అవుతోంది…",
+        "noAudioCaptured": "ఏ ఆడియో క్యాప్చర్ కాలేదు. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "noWordsHeard": "ఏ మాటలు వినిపించలేదు. నిశ్శబ్ద ప్రదేశంలో మళ్ళీ ప్రయత్నించండి.",
+        "voiceCaptured": "వాయిస్ క్యాప్చర్ అయింది. సమీక్షించి కొనసాగించండి.",
+        "couldNotStop": "రికార్డింగ్ ఆపలేకపోయింది.",
+        "notSupportedBrowser": "ఈ బ్రౌజర్‌లో మైక్రోఫోన్ రికార్డింగ్ మద్దతు లేదు.",
+        "recordingFailed": "రికార్డింగ్ విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "permissionDeniedRetry": "మైక్రోఫోన్ అనుమతి తిరస్కరించబడింది. మైక్రోఫోన్ యాక్సెస్ ఇచ్చి మళ్ళీ ప్రయత్నించండి.",
+        "couldNotStart": "రికార్డింగ్ ప్రారంభించలేకపోయింది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "tapToStopRecording": "ఆపడానికి నొక్కండి",
+        "doneSpeakAgain": "పూర్తయింది — ఎప్పుడైనా మళ్ళీ మాట్లాడండి",
+        "notSupportedShort": "ఈ బ్రౌజర్‌లో మైక్ మద్దతు లేదు",
+        "stopRecordingAria": "రికార్డింగ్ ఆపండి",
+        "startRecordingAria": "వాయిస్ రికార్డింగ్ ప్రారంభించండి"
       },
       "speech": {
         "stt": {
@@ -27375,7 +28525,8 @@ const resources = {
       "and": "మరియు",
       "app": {
         "name": "అన్నదాత",
-        "tagline": "మీ జిల్లా, మీ భాషలో"
+        "tagline": "మీ జిల్లా, మీ భాషలో",
+        "footer": "అన్నదాత - భారతీయ రైతులను బలోపేతం చేయడానికి"
       },
       "loginPhone": {
         "signIn": "సైన్ ఇన్",
@@ -27536,7 +28687,10 @@ const resources = {
         "sortBy": "దీని ప్రకారం క్రమబద్ధీకరించు",
         "unknown": "తెలియదు",
         "rupee": "రూ.",
-        "steps": "దశలు"
+        "steps": "దశలు",
+        "continue": "కొనసాగించండి",
+        "noQuestionsFound": "ఏ ప్రశ్నలు కనుగొనబడలేదు",
+        "askYourFirstQuestion": "మీ మొదటి ప్రశ్న అడగండి"
       },
       "completeRegistration": "రిజిస్ట్రేషన్ పూర్తి చేయండి",
       "consentClause1": "మీ మొబైల్ సంఖ్య మరియు రిజిస్ట్రేషన్ వివరాలు సురక్షితంగా నిల్వ చేయబడతాయి మరియు వేదిక ప్రమాణీకరణ, వ్యవసాయ పరిజ్ఞాన సేవల కోసం మాత్రమే ఉపయోగించబడతాయి.",
@@ -27607,7 +28761,15 @@ const resources = {
         "editWindowClosed": "సమర్పించిన తర్వాత ప్రశ్నలను సవరించడం కుదరదు",
         "quickActionsTip": "నేరుగా ప్రశ్నను సమర్పించడానికి లేదా మీ వాలెట్ బ్యాలెన్స్ మరియు ఇటీవల జరిపిన కార్యకలాపాలను చూడటానికి వెళ్ళండి.",
         "rewardsTip": "ఆమోదించబడిన మొత్తం ప్రశ్నల ఆధారంగా ప్రతి ఆమోదిత ప్రశ్నకూ సంపాదించండి. సిల్వర్ మరియు గోల్డ్ శ్రేణులు అధిక రివార్డ్ రేట్లను అన్‌లాక్ చేస్తాయి.",
-        "guidelinesTip": "వీడియోను 60 సెకన్ల లోపు మరియు 10MB లోపు ఉంచండి. సమర్పించిన తర్వాత మీకు 30-సెకన్ల సవరణ వ్యవధి లభిస్తుంది. రోజువారీ పరిమితి అర్ధరాత్రి రీసెట్ అవుతుంది."
+        "guidelinesTip": "వీడియోను 60 సెకన్ల లోపు మరియు 10MB లోపు ఉంచండి. సమర్పించిన తర్వాత మీకు 30-సెకన్ల సవరణ వ్యవధి లభిస్తుంది. రోజువారీ పరిమితి అర్ధరాత్రి రీసెట్ అవుతుంది.",
+        "dailyLimitTitle": "రోజువారీ పరిమితి",
+        "editWindowTitle": "సవరణ వ్యవధి",
+        "aiCheckTitle": "AI సంబంధిత తనిఖీ",
+        "verifiedUser": "ధృవీకరించబడిన వినియోగదారు",
+        "startAsking": "అడగడం ప్రారంభించండి",
+        "viewWallet": "వాలెట్ చూడండి",
+        "youAreHere": "మీరు ఇక్కడ ఉన్నారు",
+        "currentTier": "ప్రస్తుత స్థాయి"
       },
       "iAcceptContinue": "నేను అంగీకరిస్తున్నాను & ముందుకు సాగుతున్నాను",
       "invalidOtp": "పూర్తి 6-అంకెల కోడ్‌ను నమోదు చేయండి",
@@ -27764,7 +28926,10 @@ const resources = {
         "suspended": "సస్పెండ్ చేయబడింది",
         "banned": "బ్యాన్ చేయబడింది",
         "village": "గ్రామం",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} ఆమోదించబడిన ప్రశ్నలు",
+        "toNext": "{{count}} తదుపరికి",
+        "toTier": "{{tier}} వరకు {{count}}"
       },
       "profileLanguage": "యాప్ భాష",
       "profileLanguageDesc": "యాప్ ఇంటర్‌ఫేస్ మరియు ప్రశ్నల సమర్పణ కోసం ఇది డిఫాల్ట్ భాషగా ఉంటుంది",
@@ -27867,7 +29032,9 @@ const resources = {
         "rejectedEditQuestion": "నా ప్రశ్నను సవరించండి",
         "addVoice": "వాయిస్ జోడించండి",
         "tipDetailed": "వివరంగా రాయండి — పంట, ప్రదేశం మరియు మీరు ఇప్పటివరకు ఏమి ప్రయత్నించారో తెలియజేయండి.",
-        "dailyLimitIndicator": "రోజువారీ పరిమితి పూర్తయింది"
+        "dailyLimitIndicator": "రోజువారీ పరిమితి పూర్తయింది",
+        "expertWillRespond": "ఒక నిపుణుడు మీకు సమాధానం ఇస్తారు.",
+        "questionExample": "ఉదా: నా టమాటా ఆకులు పసుపు రంగులోకి మారుతున్నాయి — నేను ఏమి చేయాలి?"
       },
       "readFullPolicy": "పూర్తి గోప్యతా విధానాన్ని చదవండి →",
       "resendOtp": "OTP ని మళ్ళీ పంపు",
@@ -27956,7 +29123,16 @@ const resources = {
         "credit": "జమ (Credit)",
         "debit": "ఖర్చు (Debit)",
         "txNotFound": "లావాదేవీ కనుగొనబడలేదు",
-        "notFoundSub": "లావాదేవీ తొలగించబడి ఉండవచ్చు లేదా ఇకపై అందుబాటులో లేకపోవచ్చు."
+        "notFoundSub": "లావాదేవీ తొలగించబడి ఉండవచ్చు లేదా ఇకపై అందుబాటులో లేకపోవచ్చు.",
+        "sourceReward": "రివార్డ్",
+        "sourceWithdrawal": "విత్‌డ్రా",
+        "sourceRefund": "రీఫండ్",
+        "sourceAdjustment": "సర్దుబాటు",
+        "statusCompleted": "పూర్తయింది",
+        "statusReversed": "రివర్స్ చేయబడింది",
+        "statusFailed": "విఫలమైంది",
+        "statusPending": "పెండింగ్‌లో ఉంది",
+        "currency": "భారతీయ రూపాయలు"
       },
       "yourRole": "మీ పాత్ర",
       "home.greeting.morning": "శుభోదయం",
@@ -28359,7 +29535,14 @@ const resources = {
         "replies": "సమాధానాలు",
         "adminName": "అడ్మిన్",
         "replyCount_one": "{{count}} సమాధానం",
-        "replyCount_other": "{{count}} సమాధానాలు"
+        "replyCount_other": "{{count}} సమాధానాలు",
+        "awaitingReply": "ప్రతిస్పందన కోసం వేచి ఉంది",
+        "newReportSubtitle": "మీరు ఎదుర్కొన్న సమస్యను వివరించండి. మా బృందం త్వరలో మిమ్మల్ని సంప్రదిస్తుంది.",
+        "loadingReports": "మీ నివేదికలు లోడ్ అవుతున్నాయి…",
+        "loadingReport": "నివేదిక లోడ్ అవుతోంది…",
+        "reportNotFound": "నివేదిక కనుగొనబడలేదు",
+        "reportNotFoundHint": "ఇది తీసివేయబడి ఉండవచ్చు లేదా మీకు ఇకపై యాక్సెస్ లేదు.",
+        "backToReports": "నివేదికలకు తిరిగి వెళ్ళండి"
       },
       "profile.account": "ఖాతా",
       "profile.personalInfo": "వ్యక్తిగత సమాచారం",
@@ -28431,7 +29614,10 @@ const resources = {
         "group": {
           "article_one": "వ్యాసం",
           "article_other": "వ్యాసాలు"
-        }
+        },
+        "videoComingSoon": "వీడియో గైడ్ త్వరలో వస్తుంది",
+        "videoGuideTitle": "వీడియో గైడ్",
+        "loadError": "FAQలను లోడ్ చేయడంలో విఫలమైంది"
       },
       "faqAdmin": {
         "title": "FAQ నిర్వహణ",
@@ -28611,6 +29797,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "హోల్డ్‌లో ఉంది",
+        "published": "ప్రచురించబడింది",
+        "yourSubmissions": "మీరు సమర్పించిన ప్రశ్నలు మరియు వాటి స్థితి."
       }
     }
   },
@@ -28657,7 +29848,20 @@ const resources = {
         "tapToPlay": "چلانے کے لیے تھپتھپائیں",
         "delete": "حذف کریں",
         "stop": "روکیں",
-        "playing": "چل رہا ہے…"
+        "playing": "چل رہا ہے…",
+        "noAudioCaptured": "کوئی آڈیو ریکارڈ نہیں ہوئی۔ براہ کرم دوبارہ کوشش کریں۔",
+        "noWordsHeard": "کوئی الفاظ سنائی نہیں دیے۔ خاموش جگہ پر دوبارہ کوشش کریں۔",
+        "voiceCaptured": "آواز ریکارڈ ہو گئی۔ جائزہ لے کر جاری رکھیں۔",
+        "couldNotStop": "ریکارڈنگ روکی نہیں جا سکی۔",
+        "notSupportedBrowser": "اس براؤزر میں مائیکروفون ریکارڈنگ سپورٹڈ نہیں ہے۔",
+        "recordingFailed": "ریکارڈنگ ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔",
+        "permissionDeniedRetry": "مائیکروفون کی اجازت مسترد کر دی گئی۔ مائیکروفون تک رسائی دیں اور دوبارہ کوشش کریں۔",
+        "couldNotStart": "ریکارڈنگ شروع نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔",
+        "tapToStopRecording": "روکنے کے لیے تھپتھپائیں",
+        "doneSpeakAgain": "مکمل — کبھی بھی دوبارہ بولیں",
+        "notSupportedShort": "اس براؤزر پر مائیک سپورٹڈ نہیں ہے",
+        "stopRecordingAria": "ریکارڈنگ روکیں",
+        "startRecordingAria": "آواز کی ریکارڈنگ شروع کریں"
       },
       "speech": {
         "stt": {
@@ -28677,7 +29881,8 @@ const resources = {
       "and": "اور",
       "app": {
         "name": "اناداتا",
-        "tagline": "آپ کا ضلع، آپ کی زبان میں"
+        "tagline": "آپ کا ضلع، آپ کی زبان میں",
+        "footer": "اناداتا - بھارتی کسانوں کو مضبوط بنانے کے لیے"
       },
       "loginPhone": {
         "signIn": "سائن ان کریں",
@@ -28836,7 +30041,10 @@ const resources = {
         "sortBy": "ترتیب دیں بلحاظ",
         "unknown": "نامعلوم",
         "rupee": "روپے",
-        "steps": "مراحل"
+        "steps": "مراحل",
+        "continue": "جاری رکھیں",
+        "noQuestionsFound": "کوئی سوال نہیں ملا",
+        "askYourFirstQuestion": "اپنا پہلا سوال پوچھیں"
       },
       "completeRegistration": "رجسٹریشن مکمل کریں",
       "consentClause1": "آپ کا موبائل نمبر اور رجسٹریشن کی تفصیلات محفوظ طریقے سے ذخیرہ کی جائیں گی اور صرف پلیٹ فارم کی توثیق اور زرعی معلوماتی خدمات کے لیے استعمال کی جائیں گی۔",
@@ -28907,7 +30115,15 @@ const resources = {
         "editWindowClosed": "جمع کرانے کے بعد سوالات میں ترمیم نہیں کی جا سکتی",
         "quickActionsTip": "براہ راست سوال جمع کرانے یا اپنے والٹ کا بیلنس اور حالیہ سرگرمی دیکھنے کے لیے جائیں۔",
         "rewardsTip": "کل منظور شدہ سوالات کی بنیاد پر ہر منظور شدہ سوال پر کمائیں۔ سلور اور گولڈ درجے زیادہ انعامی شرحیں کھولتے ہیں۔",
-        "guidelinesTip": "ویڈیو کو 60 سیکنڈ اور 10MB سے کم رکھیں۔ جمع کرانے کے بعد آپ کو 30 سیکنڈ کی ترمیمی ونڈو ملتی ہے۔ روزانہ حد آدھی رات کو دوبارہ سیٹ ہوتی ہے۔"
+        "guidelinesTip": "ویڈیو کو 60 سیکنڈ اور 10MB سے کم رکھیں۔ جمع کرانے کے بعد آپ کو 30 سیکنڈ کی ترمیمی ونڈو ملتی ہے۔ روزانہ حد آدھی رات کو دوبارہ سیٹ ہوتی ہے۔",
+        "dailyLimitTitle": "روزانہ حد",
+        "editWindowTitle": "ترمیمی ونڈو",
+        "aiCheckTitle": "AI متعلقہ چیک",
+        "verifiedUser": "تصدیق شدہ صارف",
+        "startAsking": "پوچھنا شروع کریں",
+        "viewWallet": "والیٹ دیکھیں",
+        "youAreHere": "آپ یہاں ہیں",
+        "currentTier": "موجودہ سطح"
       },
       "iAcceptContinue": "میں قبول کرتا/کرتی ہوں اور جاری رکھتا/رکھتی ہوں",
       "invalidOtp": "مکمل 6 ہندسوں کا کوڈ درج کریں",
@@ -29064,7 +30280,10 @@ const resources = {
         "suspended": "معطل",
         "banned": "بین شدہ",
         "village": "گاؤں",
-        "kvk": "KVK"
+        "kvk": "KVK",
+        "approvedQuestionsCount": "{{count}} منظور شدہ سوالات",
+        "toNext": "{{count}} اگلے تک",
+        "toTier": "{{tier}} تک {{count}}"
       },
       "profileLanguage": "ایپ کی زبان",
       "profileLanguageDesc": "یہ ایپ کے انٹرفیس اور سوالات جمع کرانے کے لیے ڈیفالٹ زبان ہو گی",
@@ -29167,7 +30386,9 @@ const resources = {
         "rejectedEditQuestion": "میرا سوال درست کریں",
         "addVoice": "آواز شامل کریں",
         "tipDetailed": "تفصیل سے لکھیں — فصل، مقام اور آپ نے اب تک کیا آزمایا ہے، بتائیں۔",
-        "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی"
+        "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی",
+        "expertWillRespond": "ایک ماہر آپ کو جواب دے گا۔",
+        "questionExample": "مثال کے طور پر: میرے ٹماٹر کے پتے پیلے ہو رہے ہیں — مجھے کیا کرنا چاہیے؟"
       },
       "readFullPolicy": "مکمل پرائیویسی پالیسی پڑھیں →",
       "resendOtp": "OTP دوبارہ بھیجیں",
@@ -29256,7 +30477,16 @@ const resources = {
         "credit": "کریڈٹ",
         "debit": "ڈیبٹ",
         "txNotFound": "لین دین نہیں ملا",
-        "notFoundSub": "ہو سکتا ہے لین دین ہٹا دیا گیا ہو یا اب دستیاب نہ ہو۔"
+        "notFoundSub": "ہو سکتا ہے لین دین ہٹا دیا گیا ہو یا اب دستیاب نہ ہو۔",
+        "sourceReward": "انعام",
+        "sourceWithdrawal": "نکاسی",
+        "sourceRefund": "رقم کی واپسی",
+        "sourceAdjustment": "ایڈجسٹمنٹ",
+        "statusCompleted": "مکمل",
+        "statusReversed": "واپس کر دیا گیا",
+        "statusFailed": "ناکام",
+        "statusPending": "زیرِ التوا",
+        "currency": "بھارتی روپے"
       },
       "yourRole": "آپ کا کردار",
       "home.greeting.morning": "صبح بخیر",
@@ -29659,7 +30889,14 @@ const resources = {
         "replies": "جوابات",
         "adminName": "ایڈمن",
         "replyCount_one": "{{count}} جواب",
-        "replyCount_other": "{{count}} جوابات"
+        "replyCount_other": "{{count}} جوابات",
+        "awaitingReply": "جواب کا انتظار",
+        "newReportSubtitle": "آپ کو پیش آنے والے مسئلے کو بیان کریں۔ ہماری ٹیم جلد آپ سے رابطہ کرے گی۔",
+        "loadingReports": "آپ کی رپورٹس لوڈ ہو رہی ہیں…",
+        "loadingReport": "رپورٹ لوڈ ہو رہی ہے…",
+        "reportNotFound": "رپورٹ نہیں ملی",
+        "reportNotFoundHint": "یہ ہٹا دیا گیا ہو سکتا ہے یا اب آپ کو رسائی حاصل نہیں ہے۔",
+        "backToReports": "رپورٹس پر واپس جائیں"
       },
       "profile.account": "اکاؤنٹ",
       "profile.personalInfo": "ذاتی معلومات",
@@ -29731,7 +30968,10 @@ const resources = {
         "group": {
           "article_one": "مضمون",
           "article_other": "مضامین"
-        }
+        },
+        "videoComingSoon": "ویڈیو گائیڈ جلد آرہا ہے",
+        "videoGuideTitle": "ویڈیو گائیڈ",
+        "loadError": "FAQ لوڈ کرنے میں ناکامی"
       },
       "faqAdmin": {
         "title": "FAQ کا انتظام",
@@ -29911,6 +31151,11 @@ const resources = {
         "actionAllQuestions": "All Questions",
         "noVolumeData": "No volume data available",
         "loadError": "Failed to load curator stats"
+      },
+      "submissions": {
+        "held": "ہولڈ پر",
+        "published": "شائع شدہ",
+        "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
       }
     }
   }

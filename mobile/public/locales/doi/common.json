@@ -40,7 +40,20 @@
     "tapToPlay": "चलाने लेई दबाओ",
     "delete": "मिटाओ",
     "stop": "रोको",
-    "playing": "चलदा राह्या ऐ…"
+    "playing": "चलदा राह्या ऐ…",
+    "noAudioCaptured": "कोई अवाज़ रिकार्ड नीं होई। कृपा करियै परतियै कोशिश करो।",
+    "noWordsHeard": "कोई शब्द सुणे नीं दित्ता। शांत जगह पर परतियै कोशिश करो।",
+    "voiceCaptured": "अवाज़ रिकार्ड होई गेई। समीक्षा करो ते जारी रखो।",
+    "couldNotStop": "रिकार्डिंग रोकी नीं जाई सकी।",
+    "notSupportedBrowser": "इस ब्राउज़र च माइक्रोफ़ोन रिकार्डिंग समर्थत नीं ऐ।",
+    "recordingFailed": "रिकार्डिंग फेल होई गेई। कृपा करियै परतियै कोशिश करो।",
+    "permissionDeniedRetry": "माइक्रोफ़ोन दी इजाज़त नीं दित्ती गेई। माइक्रोफ़ोन एक्सेस दिओ ते परतियै कोशिश करो।",
+    "couldNotStart": "रिकार्डिंग शुरू नीं होई सकी। कृपा करियै परतियै कोशिश करो।",
+    "tapToStopRecording": "रोकने लेई दबाओ",
+    "doneSpeakAgain": "पूरा होई गेआ — कदें बी फ्ेर बोल्लो",
+    "notSupportedShort": "इस ब्राउज़र पर माइक समर्थत नीं ऐ",
+    "stopRecordingAria": "रिकार्डिंग रोको",
+    "startRecordingAria": "अवाज़ रिकार्डिंग शुरू करो"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "ते",
   "app": {
     "name": "AnnaDatha",
-    "tagline": "तुआह्दा ज़िला, तुआह्दी भाषा च"
+    "tagline": "तुआह्दा ज़िला, तुआह्दी भाषा च",
+    "footer": "AnnaDatha - भारतीय किसानें गी मजबूत बनाने आस्तै"
   },
   "loginPhone": {
     "signIn": "साइन इन करो",
@@ -219,7 +233,10 @@
     "sortBy": "क्रमबद्ध करो (Sort By)",
     "unknown": "अज्ञात",
     "rupee": "रुपये",
-    "steps": "चरण"
+    "steps": "चरण",
+    "continue": "जारी रखो",
+    "noQuestionsFound": "कोई सवाल नीं मिल्या",
+    "askYourFirstQuestion": "अपना पैहला सवाल पुछो"
   },
   "completeRegistration": "पंजीकरण पूरा करो",
   "consentClause1": "तुआह्दा मोबाइल नंबर ते पंजीकरण विवरण सुरक्षित रखे जानगे ते सिर्फ प्लेटफ़ॉर्म प्रमाणीकरण ते कृषि ज्ञान सेवाएं लेई बड़ते जानगे।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "भेजने दे बाद प्रश्नें च बदलाव नीं होई सकदा",
     "quickActionsTip": "सिधा 'प्रश्न भेजो' या अपना वॉलेट बैलेंस ते हालिया गतिविधियां देखो।",
     "rewardsTip": "कुल स्वीकृत प्रश्नें दे आधार पर प्रति स्वीकृत प्रश्न कमाई करो। सिल्वर ते गोल्ड स्तर तुसेंगी मते इनाम देंदे न।",
-    "guidelinesTip": "वीडियो 60s ते 10MB थूं घट्ट रखो। प्रश्न भेजने दे बाद तुसेंगी 30-सेकंड दा संपादन विंडो मिलदा ऐ। दैनिक सीमा आधी रात गी रीसेट होंदी ऐ।"
+    "guidelinesTip": "वीडियो 60s ते 10MB थूं घट्ट रखो। प्रश्न भेजने दे बाद तुसेंगी 30-सेकंड दा संपादन विंडो मिलदा ऐ। दैनिक सीमा आधी रात गी रीसेट होंदी ऐ।",
+    "dailyLimitTitle": "रोज़ाना दी सीमा",
+    "editWindowTitle": "बदलाव दा समां",
+    "aiCheckTitle": "AI प्रासंगिकता जांच",
+    "verifiedUser": "पुष्टि कीती उपयोगकर्ता",
+    "startAsking": "पुछणा शुरू करो",
+    "viewWallet": "वॉलेट दिक्खो",
+    "youAreHere": "तुसीं इत्थें ओ",
+    "currentTier": "मौजूदा स्तर"
   },
   "iAcceptContinue": "मैं स्वीकार करदा/करदी हां ते अग्गें बधदा/बधदी हां",
   "invalidOtp": "पूरा 6-अंकें दा कोड पाओ",
@@ -447,7 +472,10 @@
     "suspended": "सस्पेंड",
     "banned": "बैन",
     "village": "गरां",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} मंजूर सवाल",
+    "toNext": "{{count}} अगले तगर",
+    "toTier": "{{tier}} तगर {{count}}"
   },
   "profileLanguage": "ऐप दी भाषा",
   "profileLanguageDesc": "एह् ऐप इंटरफ़ेस ते प्रश्न सबमिशन लेई डिफॉल्ट भाषा होगी",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "मेरा सवाल सोधो",
     "addVoice": "अवाज जोड़ो",
     "tipDetailed": "विस्तार कन्नै लिखो — फसल, थाहर ते तुसें हुण तकर के अजमाया ऐ, दस्सो।",
-    "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई"
+    "dailyLimitIndicator": "रोजाना सीमा पूरी होई गेई",
+    "expertWillRespond": "इक माहिर तुहाड़े सवाल दा जवाब देंगा।",
+    "questionExample": "जि'यां: मेरे टमाटर दे पत्ते पीले होई गे न — मैं की करां?"
   },
   "readFullPolicy": "पूरी गोपनीयता नीत पढ़ो →",
   "resendOtp": "OTP परतियै भेज्जो",
@@ -639,7 +669,16 @@
     "credit": "जमा (Credit)",
     "debit": "निकासी (Debit)",
     "txNotFound": "लेन-देन नीं मिल्या",
-    "notFoundSub": "एह् लेन-देन हटाए दा होई सकदा ऐ या हुण उपलब्ध नीं ऐ।"
+    "notFoundSub": "एह् लेन-देन हटाए दा होई सकदा ऐ या हुण उपलब्ध नीं ऐ।",
+    "sourceReward": "इनाम",
+    "sourceWithdrawal": "निकासी",
+    "sourceRefund": "वापसी",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण",
+    "statusReversed": "उलटाया गया",
+    "statusFailed": "असफल",
+    "statusPending": "बकाया",
+    "currency": "भारतीय रुपे"
   },
   "yourRole": "तुआह्दी भूमिका",
   "home.greeting.morning": "शुभ प्रभात",
@@ -1042,7 +1081,14 @@
     "replies": "जवाब",
     "adminName": "एडमिन",
     "replyCount_one": "{{count}} जवाब",
-    "replyCount_other": "{{count}} जवाब"
+    "replyCount_other": "{{count}} जवाब",
+    "awaitingReply": "जवाब दी उडीक",
+    "newReportSubtitle": "तुसें आई समस्या दस्सो। साड्डी टीम छेती तुहाड़े कन्ने संपर्क करग।",
+    "loadingReports": "तुहाड़ी रिपोर्ट लोड होआ करदी ऐ…",
+    "loadingReport": "रिपोर्ट लोड होआ करदी ऐ…",
+    "reportNotFound": "रिपोर्ट नेईं मिली",
+    "reportNotFoundHint": "होई सकदा ऐ के इसेगी हटाई गेदा होए जां तुहाड़े कोल हुण पुज नेईं।",
+    "backToReports": "रिपोर्टें पर वापस जाओ"
   },
   "profile.account": "खाता",
   "profile.personalInfo": "व्यक्तिगत जानकारी",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेख"
-    }
+    },
+    "videoComingSoon": "वीडियो गाइड जल्दी आवण आळा ऐ",
+    "videoGuideTitle": "वीडियो गाइड",
+    "loadError": "FAQ लोड करने च असफल"
   },
   "faqAdmin": {
     "title": "FAQ प्रबंधन",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "होल्ड पर ऐ",
+    "published": "प्रकाशत होई गेआ",
+    "yourSubmissions": "तुहाड़े भेजे गे सवाल ते उंआं दी स्थिति।"
   }
 }

@@ -40,7 +40,20 @@
     "tapToPlay": "बजाबै लेल दबाऊ",
     "delete": "हटाऊ",
     "stop": "रोकू",
-    "playing": "बजि रहल अछि…"
+    "playing": "बजि रहल अछि…",
+    "noAudioCaptured": "कोनो अडियो रिकॉर्ड नहि भेल। कृपया पुनः प्रयास करू।",
+    "noWordsHeard": "कोनो शब्द नहि सुनल गेल। शांत जगहमे पुनः प्रयास करू।",
+    "voiceCaptured": "अवाज रिकॉर्ड भेल। समीक्षा करू आ जारी राखू।",
+    "couldNotStop": "रिकॉर्डिंग रोकल नहि जा सकल।",
+    "notSupportedBrowser": "एहि ब्राउजरमे माइक्रोफोन रिकॉर्डिंग समर्थित नहि अछि।",
+    "recordingFailed": "रिकॉर्डिंग असफल भेल। कृपया पुनः प्रयास करू।",
+    "permissionDeniedRetry": "माइक्रोफोनक अनुमति अस्वीकृत भेल। माइक्रोफोन पहुंच देल आ पुनः प्रयास करू।",
+    "couldNotStart": "रिकॉर्डिंग शुरू नहि भ' सकल। कृपया पुनः प्रयास करू।",
+    "tapToStopRecording": "रोकबा लेल दबाऊ",
+    "doneSpeakAgain": "पूर्ण — कहियो फेर बाजू",
+    "notSupportedShort": "एहि ब्राउजर पर माइक समर्थित नहि अछि",
+    "stopRecordingAria": "रिकॉर्डिंग रोकू",
+    "startRecordingAria": "अवाज रिकॉर्डिंग शुरू करू"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "आओर",
   "app": {
     "name": "अन्नदाता",
-    "tagline": "अहाँक जिला, अहाँक भाषामे"
+    "tagline": "अहाँक जिला, अहाँक भाषामे",
+    "footer": "अन्नदाता - भारतीय किसान सभक सशक्त करबाक लेल"
   },
   "loginPhone": {
     "signIn": "साइन इन करु",
@@ -219,7 +233,10 @@
     "sortBy": "क्रमबद्ध करु",
     "unknown": "अज्ञात",
     "rupee": "टका",
-    "steps": "चरण"
+    "steps": "चरण",
+    "continue": "जारी राखू",
+    "noQuestionsFound": "कोनो प्रश्न नहि भेटल",
+    "askYourFirstQuestion": "अपन पहिल प्रश्न पूछू"
   },
   "completeRegistration": "पंजीकरण पूरा करु",
   "consentClause1": "अहाँक मोबाइल नंबर आ पंजीकरण विवरण सुरक्षित रूप सँ राखल जाएत आ केवल प्लेटफॉर्म प्रमाणीकरण आ कृषि ज्ञान सेवा लेल उपयोग कएल जाएत।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "जमा करबाक बाद प्रश्नमे संशोधन नहि कएल जा सकैत अछि",
     "quickActionsTip": "सोझै 'प्रश्न जमा करु' पर जाऊ या अपन वॉलेट शेष आ हालक गतिविधि देखू।",
     "rewardsTip": "स्वीकृत प्रश्नक कुल संख्याक आधार पर प्रति स्वीकृत प्रश्न कमाऊ। सिल्वर आ गोल्ड स्तर बेसी पुरस्कार दर अनलॉक करैत अछि।",
-    "guidelinesTip": "वीडियो ६० सेकंड आ १०एमबी सँ कम राखू। अहाँक जमा करबाक बाद ३० सेकंडक संशोधन समय भेटैत अछि। दैनिक सीमा मध्यरात्रिकेँ रीसेट भ जाइत अछि।"
+    "guidelinesTip": "वीडियो ६० सेकंड आ १०एमबी सँ कम राखू। अहाँक जमा करबाक बाद ३० सेकंडक संशोधन समय भेटैत अछि। दैनिक सीमा मध्यरात्रिकेँ रीसेट भ जाइत अछि।",
+    "dailyLimitTitle": "दैनिक सीमा",
+    "editWindowTitle": "संशोधन समय",
+    "aiCheckTitle": "AI प्रासंगिकता जाँच",
+    "verifiedUser": "सत्यापित उपयोगकर्ता",
+    "startAsking": "पुछब शुरू करू",
+    "viewWallet": "वालेट देखू",
+    "youAreHere": "अहाँ एतय छी",
+    "currentTier": "वर्तमान स्तर"
   },
   "iAcceptContinue": "हम स्वीकार करैत छी आ जारी राखैत छी",
   "invalidOtp": "पूरा ६-अंकक कोड दर्ज करु",
@@ -447,7 +472,10 @@
     "suspended": "निलंबित",
     "banned": "प्रतिबंधित",
     "village": "गाम",
-    "kvk": "केवीके"
+    "kvk": "केवीके",
+    "approvedQuestionsCount": "{{count}} स्वीकृत प्रश्न",
+    "toNext": "{{count}} अगिला धरि",
+    "toTier": "{{tier}} धरि {{count}}"
   },
   "profileLanguage": "ऐप भाषा",
   "profileLanguageDesc": "ई ऐप इंटरफेस आ प्रश्न सब जमा करबा लेल डिफ़ॉल्ट भाषा हेत",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "हमर प्रश्न संपादित करू",
     "addVoice": "अवाज जोड़ू",
     "tipDetailed": "विस्तारसँ लिखू — फसल, स्थान आ अहाँ आब धरि की आजमेने छी, से बताउ।",
-    "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल"
+    "dailyLimitIndicator": "दैनिक सीमा पूर भ' गेल",
+    "expertWillRespond": "एकटा विशेषज्ञ अहाँकेँ उत्तर देताह।",
+    "questionExample": "जेना: हमर टमाटरक पात पिअर होइ रहल अछि — हम की करू?"
   },
   "readFullPolicy": "पूरा गोपनीयता नीति पढ़ू →",
   "resendOtp": "पुनः ओटीपी पठाऊ",
@@ -639,7 +669,16 @@
     "credit": "जमा (क्रेडिट)",
     "debit": "निकासी (डेबिट)",
     "txNotFound": "लेन-देन नहि भेटल",
-    "notFoundSub": "लेन-देन हटा देल गेल भ सकैत अछि या अब उपलब्ध नहि अछि।"
+    "notFoundSub": "लेन-देन हटा देल गेल भ सकैत अछि या अब उपलब्ध नहि अछि।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "निकासी",
+    "sourceRefund": "रिफंड",
+    "sourceAdjustment": "समायोजन",
+    "statusCompleted": "पूर्ण",
+    "statusReversed": "वापस कएल गेल",
+    "statusFailed": "असफल",
+    "statusPending": "लंबित",
+    "currency": "भारतीय रुपैया"
   },
   "yourRole": "अहाँक भूमिका",
   "home.greeting.morning": "शुभ प्रभात",
@@ -1042,7 +1081,14 @@
     "replies": "जवाब सब",
     "adminName": "प्रशासक (एडमिन)",
     "replyCount_one": "{{count}} जवाब",
-    "replyCount_other": "{{count}} जवाब सब"
+    "replyCount_other": "{{count}} जवाब सब",
+    "awaitingReply": "उत्तरक प्रतीक्षा",
+    "newReportSubtitle": "अहाँक भेटल समस्याक वर्णन करू। हमर टीम जल्दिये अहाँसँ संपर्क करत।",
+    "loadingReports": "अहाँक रिपोर्ट लोड भ रहल अछि…",
+    "loadingReport": "रिपोर्ट लोड भ रहल अछि…",
+    "reportNotFound": "रिपोर्ट नहि भेटल",
+    "reportNotFoundHint": "ई हटाओल गेल हएत अथवा अहाँक लग एखन पहुँच नहि अछि।",
+    "backToReports": "रिपोर्ट पर वापस जाउ"
   },
   "profile.account": "खाता",
   "profile.personalInfo": "व्यक्तिगत जानकारी",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "लेख",
       "article_other": "लेख सब"
-    }
+    },
+    "videoComingSoon": "वीडियो गाइड जल्दिये आबि रहल अछि",
+    "videoGuideTitle": "वीडियो गाइड",
+    "loadError": "FAQ लोड करबामे विफल"
   },
   "faqAdmin": {
     "title": "एफएक्यू प्रबंधन",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "होल्ड पर अछि",
+    "published": "प्रकाशित",
+    "yourSubmissions": "अहाँक सबमिट कएल प्रश्न आ हुनका सभक स्थिति।"
   }
 }

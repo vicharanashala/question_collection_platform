@@ -40,7 +40,20 @@
     "tapToPlay": "ਚਲਾਉਣ ਲਈ ਟੈਪ ਕਰੋ",
     "delete": "ਹਟਾਓ",
     "stop": "ਰੋਕੋ",
-    "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…"
+    "playing": "ਚੱਲ ਰਿਹਾ ਹੈ…",
+    "noAudioCaptured": "ਕੋਈ ਆਡੀਓ ਰਿਕਾਰਡ ਨਹੀਂ ਹੋਇਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "noWordsHeard": "ਕੋਈ ਸ਼ਬਦ ਸੁਣਾਈ ਨਹੀਂ ਦਿੱਤਾ। ਸ਼ਾਂਤ ਥਾਂ 'ਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "voiceCaptured": "ਆਵਾਜ਼ ਰਿਕਾਰਡ ਹੋ ਗਈ। ਸਮੀਖਿਆ ਕਰੋ ਅਤੇ ਜਾਰੀ ਰੱਖੋ।",
+    "couldNotStop": "ਰਿਕਾਰਡਿੰਗ ਰੋਕੀ ਨਹੀਂ ਜਾ ਸਕੀ।",
+    "notSupportedBrowser": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਮਾਈਕ੍ਰੋਫੋਨ ਰਿਕਾਰਡਿੰਗ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।",
+    "recordingFailed": "ਰਿਕਾਰਡਿੰਗ ਅਸਫਲ ਰਹੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "permissionDeniedRetry": "ਮਾਈਕ੍ਰੋਫੋਨ ਦੀ ਇਜਾਜ਼ਤ ਅਸਵੀਕਾਰ ਕੀਤੀ ਗਈ। ਮਾਈਕ੍ਰੋਫੋਨ ਪਹੁੰਚ ਦਿਓ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "couldNotStart": "ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "tapToStopRecording": "ਰੋਕਣ ਲਈ ਟੈਪ ਕਰੋ",
+    "doneSpeakAgain": "ਪੂਰਾ ਹੋਇਆ — ਕਦੇ ਵੀ ਦੁਬਾਰਾ ਬੋਲੋ",
+    "notSupportedShort": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ 'ਤੇ ਮਾਈਕ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ",
+    "stopRecordingAria": "ਰਿਕਾਰਡਿੰਗ ਰੋਕੋ",
+    "startRecordingAria": "ਆਵਾਜ਼ ਰਿਕਾਰਡਿੰਗ ਸ਼ੁਰੂ ਕਰੋ"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "ਅਤੇ",
   "app": {
     "name": "ਅੰਨਦਾਤਾ (AnnaDatha)",
-    "tagline": "ਤੁਹਾਡਾ ਜ਼ਿਲ੍ਹਾ, ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ"
+    "tagline": "ਤੁਹਾਡਾ ਜ਼ਿਲ੍ਹਾ, ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ",
+    "footer": "ਅੰਨਦਾਤਾ (AnnaDatha) - ਭਾਰਤੀ ਕਿਸਾਨਾਂ ਨੂੰ ਮਜ਼ਬੂਤ ਬਣਾਉਣ ਲਈ"
   },
   "loginPhone": {
     "signIn": "ਸਾਈਨ ਇਨ (Sign In)",
@@ -219,7 +233,10 @@
     "sortBy": "ਕ੍ਰਮਬੱਧ ਕਰੋ (Sort By)",
     "unknown": "ਅਣਜਾਣ",
     "rupee": "ਰੁ.",
-    "steps": "ਪੜਾਅ"
+    "steps": "ਪੜਾਅ",
+    "continue": "ਜਾਰੀ ਰੱਖੋ",
+    "noQuestionsFound": "ਕੋਈ ਸਵਾਲ ਨਹੀਂ ਮਿਲਿਆ",
+    "askYourFirstQuestion": "ਆਪਣਾ ਪਹਿਲਾ ਸਵਾਲ ਪੁੱਛੋ"
   },
   "completeRegistration": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ",
   "consentClause1": "ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੇ ਜਾਣਗੇ ਅਤੇ ਕੇਵਲ ਪਲੇਟਫਾਰਮ ਪ੍ਰਮਾਣੀਕਰਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਗਿਆਨ ਸੇਵਾਵਾਂ ਲਈ ਵਰਤੇ ਜਾਣਗੇ।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "ਸਵਾਲ ਭੇਜਣ ਤੋਂ ਬਾਅਦ ਸੋਧਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
     "quickActionsTip": "ਸਿੱਧਾ 'ਸਵਾਲ ਭੇਜੋ' 'ਤੇ ਜਾਓ ਜਾਂ ਆਪਣੇ ਵਾਲਿਟ ਦਾ ਬਕਾਇਆ ਅਤੇ ਹਾਲੀਆ ਗਤੀਵਿਧੀਆਂ ਦੇਖੋ।",
     "rewardsTip": "ਕੁੱਲ ਮਨਜ਼ੂਰਸ਼ੁਦਾ ਸਵਾਲਾਂ ਦੇ ਆਧਾਰ 'ਤੇ ਪ੍ਰਤੀ ਮਨਜ਼ੂਰ ਸਵਾਲ ਕਮਾਈ ਕਰੋ। ਸਿਲਵਰ ਅਤੇ ਗੋਲਡ ਤਹਿ ਉੱਚ ਇਨਾਮ ਦਰਾਂ ਨੂੰ ਅਨਲੌਕ ਕਰਦੇ ਹਨ।",
-    "guidelinesTip": "ਵੀਡੀਓ 60 ਸੈਕਿੰਡ ਅਤੇ 10MB ਤੋਂ ਘੱਟ ਰੱਖੋ। ਸਬਮਿਟ ਕਰਨ ਤੋਂ ਬਾਅਦ ਤੁਹਾਨੂੰ 30 ਸੈਕਿੰਡ ਦੀ ਐਡੀਟਿੰਗ ਵਿੰਡੋ ਮਿਲਦੀ ਹੈ। ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਅੱਧੀ ਰਾਤ ਨੂੰ ਰੀਸੈਟ ਹੁੰਦੀ ਹੈ।"
+    "guidelinesTip": "ਵੀਡੀਓ 60 ਸੈਕਿੰਡ ਅਤੇ 10MB ਤੋਂ ਘੱਟ ਰੱਖੋ। ਸਬਮਿਟ ਕਰਨ ਤੋਂ ਬਾਅਦ ਤੁਹਾਨੂੰ 30 ਸੈਕਿੰਡ ਦੀ ਐਡੀਟਿੰਗ ਵਿੰਡੋ ਮਿਲਦੀ ਹੈ। ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਅੱਧੀ ਰਾਤ ਨੂੰ ਰੀਸੈਟ ਹੁੰਦੀ ਹੈ।",
+    "dailyLimitTitle": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ",
+    "editWindowTitle": "ਸੋਧਣ ਦਾ ਸਮਾਂ",
+    "aiCheckTitle": "AI ਅਨੁਕੂਲਤਾ ਜਾਂਚ",
+    "verifiedUser": "ਪੁਸ਼ਟੀ ਕੀਤਾ ਉਪਭੋਗਤਾ",
+    "startAsking": "ਪੁੱਛਣਾ ਸ਼ੁਰੂ ਕਰੋ",
+    "viewWallet": "ਵਾਲਿਟ ਵੇਖੋ",
+    "youAreHere": "ਤੁਸੀਂ ਇੱਥੇ ਹੋ",
+    "currentTier": "ਮੌਜੂਦਾ ਪੱਧਰ"
   },
   "iAcceptContinue": "ਮੈਂ ਸਵੀਕਾਰ ਕਰਦਾ/ਕਰਦੀ ਹਾਂ ਅਤੇ ਜਾਰੀ ਰੱਖੋ",
   "invalidOtp": "ਪੂਰਾ 6-ਅੰਕਾਂ ਦਾ ਕੋਡ ਦਰਜ ਕਰੋ",
@@ -447,7 +472,10 @@
     "suspended": "ਮੁਅੱਤਲ",
     "banned": "ਬੈਨ ਕੀਤਾ",
     "village": "ਪਿੰਡ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ਮਨਜ਼ੂਰ ਸਵਾਲ",
+    "toNext": "{{count}} ਅਗਲੇ ਤੱਕ",
+    "toTier": "{{tier}} ਤੱਕ {{count}}"
   },
   "profileLanguage": "ਐਪ ਭਾਸ਼ਾ",
   "profileLanguageDesc": "ਇਹ ਐਪ ਇੰਟਰਫੇਸ ਅਤੇ ਸਵਾਲ ਸਬਮਿਸ਼ਨ ਲਈ ਡਿਫਾਲਟ ਭਾਸ਼ਾ ਹੋਵੇਗੀ",
@@ -550,7 +578,9 @@
     "rejectedEditQuestion": "ਮੇਰਾ ਸਵਾਲ ਸੋਧੋ",
     "addVoice": "ਆਵਾਜ਼ ਸ਼ਾਮਲ ਕਰੋ",
     "tipDetailed": "ਵਿਸਥਾਰ ਨਾਲ ਲਿਖੋ — ਫ਼ਸਲ, ਥਾਂ ਅਤੇ ਤੁਸੀਂ ਹੁਣ ਤੱਕ ਕੀ ਅਜ਼ਮਾਇਆ ਹੈ, ਦੱਸੋ।",
-    "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ"
+    "dailyLimitIndicator": "ਰੋਜ਼ਾਨਾ ਸੀਮਾ ਪੂਰੀ ਹੋ ਗਈ",
+    "expertWillRespond": "ਇੱਕ ਮਾਹਰ ਤੁਹਾਨੂੰ ਜਵਾਬ ਦੇਵੇਗਾ।",
+    "questionExample": "ਜਿਵੇਂ: ਮੇਰੇ ਟਮਾਟਰ ਦੇ ਪੱਤੇ ਪੀਲੇ ਹੋ ਰਹੇ ਹਨ — ਮੈਨੂੰ ਕੀ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ?"
   },
   "readFullPolicy": "ਪੂਰੀ ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ ਪੜ੍ਹੋ →",
   "resendOtp": "OTP ਦੁਬਾਰਾ ਭੇਜੋ",
@@ -639,7 +669,16 @@
     "credit": "ਜਮ੍ਹਾ (Credit)",
     "debit": "ਨਿਕਾਸੀ (Debit)",
     "txNotFound": "ਲੈਣ-ਦੇਣ ਨਹੀਂ ਮਿਲਿਆ",
-    "notFoundSub": "ਲੈਣ-ਦੇਣ ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।"
+    "notFoundSub": "ਲੈਣ-ਦੇਣ ਹਟਾਇਆ ਗਿਆ ਹੋ ਸਕਦਾ ਹੈ ਜਾਂ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।",
+    "sourceReward": "ਇਨਾਮ",
+    "sourceWithdrawal": "ਕਢਵਾਈ",
+    "sourceRefund": "ਵਾਪਸੀ",
+    "sourceAdjustment": "ਸਮਾਯੋਜਨ",
+    "statusCompleted": "ਮੁਕੰਮਲ",
+    "statusReversed": "ਵਾਪਸ ਕੀਤਾ ਗਿਆ",
+    "statusFailed": "ਅਸਫਲ",
+    "statusPending": "ਬਕਾਇਆ",
+    "currency": "ਭਾਰਤੀ ਰੁਪਏ"
   },
   "yourRole": "ਤੁਹਾਡੀ ਭੂਮਿਕਾ",
   "home.greeting.morning": "ਸ਼ੁਭ ਸਵੇਰ",
@@ -1042,7 +1081,14 @@
     "replies": "ਜਵਾਬ",
     "adminName": "ਐਡਮਿਨ",
     "replyCount_one": "{{count}} ਜਵਾਬ",
-    "replyCount_other": "{{count}} ਜਵਾਬ"
+    "replyCount_other": "{{count}} ਜਵਾਬ",
+    "awaitingReply": "ਜਵਾਬ ਦੀ ਉਡੀਕ",
+    "newReportSubtitle": "ਤੁਹਾਨੂੰ ਆਈ ਸਮੱਸਿਆ ਦਾ ਵਰਣਨ ਕਰੋ। ਸਾਡੀ ਟੀਮ ਜਲਦੀ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੇਗੀ।",
+    "loadingReports": "ਤੁਹਾਡੀ ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+    "loadingReport": "ਰਿਪੋਰਟ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…",
+    "reportNotFound": "ਰਿਪੋਰਟ ਨਹੀਂ ਮਿਲੀ",
+    "reportNotFoundHint": "ਇਹ ਹਟਾਈ ਗਈ ਹੋ ਸਕਦੀ ਹੈ ਜਾਂ ਤੁਹਾਡੇ ਕੋਲ ਹੁਣ ਪਹੁੰਚ ਨਹੀਂ ਹੈ।",
+    "backToReports": "ਰਿਪੋਰਟਾਂ ਤੇ ਵਾਪਸ ਜਾਓ"
   },
   "profile.account": "ਖਾਤਾ",
   "profile.personalInfo": "ਨਿੱਜੀ ਜਾਣਕਾਰੀ",
@@ -1114,7 +1160,10 @@
     "group": {
       "article_one": "ਲੇਖ",
       "article_other": "ਲੇਖ"
-    }
+    },
+    "videoComingSoon": "ਵੀਡੀਓ ਗਾਈਡ ਜਲਦੀ ਆ ਰਹੀ ਹੈ",
+    "videoGuideTitle": "ਵੀਡੀਓ ਗਾਈਡ",
+    "loadError": "FAQ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
   },
   "faqAdmin": {
     "title": "FAQ ਪ੍ਰਬੰਧਨ",
@@ -1294,5 +1343,10 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
+  },
+  "submissions": {
+    "held": "ਹੋਲਡ 'ਤੇ",
+    "published": "ਪ੍ਰਕਾਸ਼ਿਤ",
+    "yourSubmissions": "ਤੁਹਾਡੇ ਭੇਜੇ ਗਏ ਸਵਾਲ ਅਤੇ ਉਨ੍ਹਾਂ ਦੀ ਸਥਿਤੀ।"
   }
 }
