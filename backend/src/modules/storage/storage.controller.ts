@@ -83,7 +83,7 @@ export class StorageController {
       file.mimetype,
       file.originalname,
       req.user.id,
-      "questions/images",
+      "images",
     );
 
     return { url, sizeBytes: file.size };
@@ -91,8 +91,8 @@ export class StorageController {
 
   /**
    * Upload a single audio recording.
-   * Dev: stored in-memory + disk via MockStorageService (served at /static/...).
-   * Prod: stored in GCP Nearline via GcpStorageService (public CDN URL).
+   * Stored privately in the environment's GCS bucket under {env}/audios/...; the
+   * response carries a time-limited signed URL minted from the returned storage URI.
    */
   @Post("upload/audio")
   @HttpCode(HttpStatus.OK)
@@ -118,7 +118,7 @@ export class StorageController {
       file.mimetype,
       file.originalname,
       req.user.id,
-      "audio",
+      "audios",
     );
 
     return { url, sizeBytes: file.size };

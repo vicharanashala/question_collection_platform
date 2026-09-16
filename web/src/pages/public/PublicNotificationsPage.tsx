@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { notificationApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -93,6 +94,7 @@ function NotificationRow({ item, onPress }: { item: Notification; onPress: () =>
 
 export function PublicNotificationsPage(): ReactNode {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unread, setUnread] = useState(0)
@@ -109,12 +111,12 @@ export function PublicNotificationsPage(): ReactNode {
       setTotal(res.total)
       setPage(p)
     } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load notifications'))
+      toast.error(getErrorMessage(e, t('notifications.loadError')))
     } finally {
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     fetchPage(1, false)
@@ -126,7 +128,7 @@ export function PublicNotificationsPage(): ReactNode {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
       setUnread(0)
     } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to mark notifications as read'))
+      toast.error(getErrorMessage(e, t('notifications.markAllReadError')))
     }
   }
 
@@ -151,11 +153,11 @@ export function PublicNotificationsPage(): ReactNode {
     <div className="mx-auto max-w-2xl space-y-5 pb-4">
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="flex items-center justify-between gap-3 p-4">
-          <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">Notifications</h1>
+          <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">{t('notifications.title')}</h1>
           {unread > 0 && (
             <Button variant="outline" size="sm" onClick={handleMarkAllRead} className="rounded-full">
               <CheckCheck className="h-4 w-4" />
-              Mark all read
+              {t('notifications.markAllRead')}
             </Button>
           )}
         </CardContent>
@@ -165,7 +167,7 @@ export function PublicNotificationsPage(): ReactNode {
         <Card>
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading notifications…</p>
+            <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">{t('notifications.loading')}</p>
           </CardContent>
         </Card>
       ) : notifications.length === 0 ? (
@@ -174,8 +176,8 @@ export function PublicNotificationsPage(): ReactNode {
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-variant dark:bg-surface-variant">
               <Bell className="h-12 w-12 text-text-tertiary" strokeWidth={1.75} />
             </div>
-            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">No notifications yet</h2>
-            <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">You&rsquo;re all caught up!</p>
+            <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">{t('notifications.emptyTitle')}</h2>
+            <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">{t('notifications.emptySub')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -187,14 +189,14 @@ export function PublicNotificationsPage(): ReactNode {
             <div className="flex justify-center pt-2">
               <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
                 {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Load more
+                {t('notifications.loadMore')}
               </Button>
             </div>
           )}
         </div>
       )}
 
-      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha &mdash; To Strengthen Indian Farmers</p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('app.footer')}</p>
     </div>
   )
 }

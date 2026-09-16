@@ -1,6 +1,9 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { RedisService } from './redis.service';
+import { RateLimitCounterService } from './rate-limit-counter.service';
+import { RateLimitCounterSchema } from '../mongodb/schemas/rate-limit-counter.schema';
 import { SessionService } from './session.service';
 import { CacheWarmupService } from './cache-warmup.service';
 import { QueryCacheService } from './query-cache.service';
@@ -14,9 +17,17 @@ import { DbModule } from '../db.module';
 
 @Global()
 @Module({
-  imports: [DbModule, ConfigModule],
+  imports: [
+    DbModule,
+    ConfigModule,
+    // Backing store for rate limiting when Redis is disabled.
+    MongooseModule.forFeature([
+      { name: 'RateLimitCounter', schema: RateLimitCounterSchema },
+    ]),
+  ],
   providers: [
     RedisService,
+    RateLimitCounterService,
     SessionService,
     CacheWarmupService,
     QueryCacheService,
@@ -35,6 +46,7 @@ import { DbModule } from '../db.module';
   ],
   exports: [
     RedisService,
+    RateLimitCounterService,
     SessionService,
     CacheWarmupService,
     QueryCacheService,

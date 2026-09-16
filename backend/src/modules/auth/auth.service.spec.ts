@@ -7,6 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
 import { RedisService } from '../../shared/database/cache/redis.service';
+import { RateLimitCounterService } from '../../shared/database/cache/rate-limit-counter.service';
 import { AdminService } from '../admin/admin.service';
 import { User, Wallet, AuditLog } from '../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
@@ -51,6 +52,12 @@ const mockSmsService = () => ({
   sendOtp: jest.fn(),
 });
 
+const mockRateLimitCounterService = () => ({
+  peek: jest.fn().mockResolvedValue(null),
+  hit: jest.fn().mockResolvedValue({ count: 1, ttlSeconds: 900 }),
+  reset: jest.fn(),
+});
+
 const mockRedisService = () => ({
   get: jest.fn(),
   incr: jest.fn(),
@@ -75,6 +82,7 @@ describe('AuthService', () => {
   let configService: ReturnType<typeof mockConfigService>;
   let smsService: ReturnType<typeof mockSmsService>;
   let redisService: ReturnType<typeof mockRedisService>;
+  let rateLimitCounter: ReturnType<typeof mockRateLimitCounterService>;
 
   // Factory functions to avoid mutation across tests
   const makeMockUser = (): Partial<User> => ({
@@ -117,6 +125,10 @@ describe('AuthService', () => {
         { provide: ConfigService, useFactory: mockConfigService },
         { provide: SmsService, useFactory: mockSmsService },
         { provide: RedisService, useFactory: mockRedisService },
+        {
+          provide: RateLimitCounterService,
+          useFactory: mockRateLimitCounterService,
+        },
         { provide: AdminService, useFactory: mockAdminService },
       ],
     }).compile();
@@ -127,6 +139,7 @@ describe('AuthService', () => {
     configService = module.get(ConfigService);
     smsService = module.get(SmsService);
     redisService = module.get(RedisService);
+    rateLimitCounter = module.get(RateLimitCounterService);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -138,7 +151,7 @@ describe('AuthService', () => {
 
     it('should throw BadRequestException when rate limit is exceeded', async () => {
       configService.get.mockReturnValue(true); // rate limit enabled
-      redisService.get.mockResolvedValue('3'); // already at max
+      rateLimitCounter.peek.mockResolvedValue({ count: 10, ttlSeconds: 900 }); // already at max
 
       await expect(service.requestOtp(dto)).rejects.toThrow(
         BadRequestException,
@@ -169,8 +182,6 @@ describe('AuthService', () => {
       userRepo.create.mockReturnValue(makeMockUser());
       userRepo.save.mockResolvedValue(makeMockUser());
       smsService.sendOtp.mockResolvedValue(undefined);
-      redisService.incr.mockResolvedValue(1);
-      redisService.expire.mockResolvedValue(true);
 
       const result = await service.requestOtp(dto);
 
@@ -197,7 +208,7 @@ describe('AuthService', () => {
 
     it('should increment rate limit counter after sending OTP', async () => {
       configService.get.mockReturnValue(true);
-      redisService.get.mockResolvedValue('0');
+      rateLimitCounter.peek.mockResolvedValue({ count: 0, ttlSeconds: 900 });
       userRepo.findOne.mockResolvedValue(null);
       userRepo.create.mockReturnValue(makeMockUser());
       userRepo.save.mockResolvedValue(makeMockUser());
@@ -205,8 +216,7 @@ describe('AuthService', () => {
 
       await service.requestOtp(dto);
 
-      expect(redisService.incr).toHaveBeenCalledWith('otp_rl:9876543210');
-      expect(redisService.expire).toHaveBeenCalledWith(
+      expect(rateLimitCounter.hit).toHaveBeenCalledWith(
         'otp_rl:9876543210',
         15 * 60,
       );

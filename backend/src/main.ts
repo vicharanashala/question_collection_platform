@@ -11,6 +11,9 @@ import { AppModule } from './app.module';
 import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
 import { installVmProxy } from './bootstrap/tailnetProxy.js';
 import { spaFallback } from './shared/middleware/spa-fallback.middleware';
+import { SignedUrlInterceptor } from './shared/middleware/interceptors/signed-url.interceptor';
+import { StorageService } from './modules/storage/storage.service';
+import { getAppEnvironment, isDevelopment, isProduction } from './config/environment';
 
 // Validate required env vars before attempting to start.
 // These are eagerly evaluated during ConfigModule.forRoot() and would throw
@@ -20,6 +23,14 @@ import { spaFallback } from './shared/middleware/spa-fallback.middleware';
 // local SOCKS/HTTP proxy.
 installVmProxy();
 
+const INSECURE_JWT_SECRET = 'change-me-in-production';
+const MIN_JWT_SECRET_LENGTH = 32;
+
+/**
+ * Fails fast on misconfiguration. Beyond presence checks, this refuses the combinations
+ * that would quietly weaken a deployed environment: a placeholder signing key, or the
+ * developer OTP shortcut left switched on.
+ */
 function validateRequiredEnv(): void {
   const required = ['MONGODB_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'REDIS_HOST', 'REDIS_PORT'];
   for (const key of required) {
@@ -34,7 +45,39 @@ function validateRequiredEnv(): void {
       throw new Error(`Missing required env var: ${key}`);
     }
   }
-  console.log('[Bootstrap] All required env vars present');
+
+  if (!isDevelopment()) {
+    // Storage is environment-scoped inside a shared bucket; without a prefix staging
+    // would write into production's folder.
+    for (const key of ['GCP_PROJECT_ID', 'GCP_BUCKET_NAME', 'GCP_STORAGE_PREFIX']) {
+      if (!process.env[key]) {
+        throw new Error(`Missing required env var: ${key}`);
+      }
+    }
+
+    const jwtSecret = process.env.JWT_SECRET as string;
+    if (jwtSecret === INSECURE_JWT_SECRET) {
+      throw new Error('JWT_SECRET is still the placeholder value — set a real secret.');
+    }
+    if (jwtSecret.length < MIN_JWT_SECRET_LENGTH) {
+      throw new Error(
+        `JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters in ${getAppEnvironment()}.`,
+      );
+    }
+  }
+
+  if (isProduction()) {
+    if (process.env.OTP_DEV_BYPASS === 'true') {
+      throw new Error('OTP_DEV_BYPASS is enabled in production — refusing to start.');
+    }
+    for (const key of ['PINELABS_MOCK_VERIFICATION', 'RAZORPAY_MOCK_VERIFICATION']) {
+      if (process.env[key] === 'true') {
+        throw new Error(`${key} is enabled in production — refusing to start.`);
+      }
+    }
+  }
+
+  console.log(`[Bootstrap] Environment: ${getAppEnvironment()} — all required env vars present`);
 }
 
 async function bootstrap() {
@@ -131,13 +174,17 @@ async function bootstrap() {
     );
   }
 
-  // Serve uploaded audio files statically so external services (e.g. Sarvam) can fetch them
-  app.useStaticAssets(join(__dirname, '..'), {
-    prefix: '/uploads/',
-    setHeaders: (res) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-    },
-  });
+  // Local development only: serve files written to ./uploads so tooling can fetch them.
+  // Deployed environments keep all media in the private storage bucket — the previous
+  // mount exposed the whole application directory under /uploads/.
+  if (isDevelopment()) {
+    app.useStaticAssets(join(process.cwd(), 'uploads'), {
+      prefix: '/uploads/',
+      setHeaders: (res) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+      },
+    });
+  }
 
   // Expose app reference globally so class-validator constraints
   // (which are instantiated outside DI) can access NestJS services
@@ -155,17 +202,35 @@ async function bootstrap() {
     }),
   );
 
-  // CORS — allow mobile app connections
-  app.enableCors({
-    origin: '*', // Restrict to your mobile app origin in production
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+  const configService = app.get(ConfigService);
+
+  // CORS — the admin dashboard is served from this same origin and native apps send no
+  // Origin header, so production locks down to an explicit allow-list. CORS_ORIGINS can
+  // be widened later without a code change.
+  const corsOrigins = configService.get<string[]>('app.corsOrigins') ?? [];
+  if (corsOrigins.length > 0) {
+    app.enableCors({
+      origin: corsOrigins,
+      methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
+  } else if (isProduction()) {
+    logger.warn('CORS_ORIGINS is not set — allowing same-origin requests only.');
+    app.enableCors({ origin: false });
+  } else {
+    app.enableCors({
+      origin: '*',
+      methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
+  }
+
+  // Turns persisted gs:// media URIs into short-lived signed URLs on every response.
+  app.useGlobalInterceptors(new SignedUrlInterceptor(app.get(StorageService)));
 
   // Global prefix for all routes
   app.setGlobalPrefix('api/v1');
 
-  const configService = app.get(ConfigService);
   // Cloud Run injects PORT=8080; read it first so the container listens on the port the orchestrator expects.
   const portFromEnv = parseInt(process.env.PORT ?? '', 10);
   const port = portFromEnv || (configService.get<number>('app.port') ?? 3000);

@@ -1,4 +1,5 @@
 import { registerAs } from "@nestjs/config";
+import { getAppEnvironment, isDevelopment, isProduction, isStaging } from "./environment";
 
 export const dbConfig = registerAs("db", () => ({
   mongoUri:
@@ -63,9 +64,21 @@ export const smsConfig = registerAs("sms", () => ({
 
 export const appConfig = registerAs("app", () => ({
   port: parseInt(process.env.PORT || "3000", 10),
-  environment: process.env.NODE_ENV || "development",
+  environment: getAppEnvironment(),
+  isProduction: isProduction(),
+  isStaging: isStaging(),
+  isDevelopment: isDevelopment(),
   otpRateLimit: process.env.OTP_RATE_LIMIT !== "false", // defaults to true
   throttleEnabled: process.env.THROTTLE_ENABLED !== "false", // defaults to true
+  // Comma-separated allowed browser origins. Empty means "same-origin only" in
+  // production and "any origin" elsewhere — see main.ts.
+  corsOrigins: (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  // Skips OTP hash/expiry verification so local development does not need a real SMS
+  // gateway. Can never be enabled in production — main.ts refuses to boot if it is.
+  otpDevBypass: process.env.OTP_DEV_BYPASS === "true",
 }));
 
 export const questionConfig = registerAs("question", () => ({
@@ -80,14 +93,22 @@ export const questionConfig = registerAs("question", () => ({
 }));
 
 export const gcpStorageConfig = registerAs("gcpStorage", () => ({
-  // projectId: process.env.GCP_PROJECT_ID || '',
-  // bucketName: process.env.GCP_BUCKET_NAME || '',
-  // keyFile: process.env.GCP_KEY_FILE || '',
-
   projectId: process.env.GCP_PROJECT_ID || "",
   bucketName: process.env.GCP_BUCKET_NAME || process.env.STORAGE_BUCKET_NAME || "",
   keyFile: process.env.GCP_KEY_FILE || "",
   emulatorHost: process.env.FIREBASE_STORAGE_EMULATOR_HOST || "",
+  // Top-level folder inside the shared bucket, so staging and production objects
+  // never mix: <bucket>/<prefix>/audios/... Defaults to the current environment.
+  prefix: process.env.GCP_STORAGE_PREFIX || getAppEnvironment(),
+  // Storage class applied to uploaded objects. Nearline has a 30-day minimum
+  // billable duration, which suits write-once audio.
+  storageClass: process.env.GCP_STORAGE_CLASS || "NEARLINE",
+  // Lifetime of generated V4 signed URLs, in seconds. 7 days is the maximum
+  // Google accepts for V4 signing.
+  signedUrlTtlSeconds: parseInt(
+    process.env.GCP_SIGNED_URL_TTL_SECONDS || String(7 * 24 * 60 * 60),
+    10,
+  ),
 }));
 
 export const reviewerConfig = registerAs("reviewerConfig", () => ({

@@ -40,7 +40,20 @@
     "tapToPlay": "باجناوَنہٕ باپتھ دباویو",
     "delete": "مٹایو",
     "stop": "بند کٔریو",
-    "playing": "چالان…"
+    "playing": "چالان…",
+    "noAudioCaptured": "کانہہ آڈیو ریکارڈ نہٕ آو۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+    "noWordsHeard": "کانہہ لفظ نہٕ آسنہٕ آمُت۔ سکون ہِنٛدِس جاے پؠٹھ دوبارہ کوشش کٔریو۔",
+    "voiceCaptured": "آواز ریکارڈ گئی۔ جائزہ لِیو تہٕ جاری رکھیو۔",
+    "couldNotStop": "ریکارڈنگ بند کرنہٕ مَنٛز آو رکاوٹ۔",
+    "notSupportedBrowser": "یہ براؤزر مَنٛز مائیکروفون ریکارڈنگ سپورٹ چھِ نہٕ۔",
+    "recordingFailed": "ریکارڈنگ ناکام گئی۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+    "permissionDeniedRetry": "مائیکروفونک اجازت رد گئی۔ مائیکروفونس رسائی دِیو تہٕ دوبارہ کوشش کٔریو۔",
+    "couldNotStart": "ریکارڈنگ شروع نہٕ گئی۔ مہربانی کرِتھ دوبارہ کوشش کٔریو۔",
+    "tapToStopRecording": "بند کرنہٕ باپتھ دباویو",
+    "doneSpeakAgain": "مکمل — کینٛہہ ٕوقت دوبارہ واتش کریو",
+    "notSupportedShort": "یہ براؤزر پؠٹھ مائیک سپورٹ چھِ نہٕ",
+    "stopRecordingAria": "ریکارڈنگ بند کریو",
+    "startRecordingAria": "آواز ریکارڈنگ شروع کریو"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "تہٕ",
   "app": {
     "name": "انّ داتا",
-    "tagline": "تہند ضلعہٕ، تہنزِ زبانہِ مَنٛز"
+    "tagline": "تہند ضلعہٕ، تہنزِ زبانہِ مَنٛز",
+    "footer": "انّ داتا - ہِندوستٲنؠ کاشتکاٮ۪رَن مضبوط بناونہٕ خٲطرٕ"
   },
   "loginPhone": {
     "signIn": "سائن ان کٔریو",
@@ -219,7 +233,10 @@
     "sortBy": "ترتیب دیو",
     "unknown": "نامعلوم",
     "rupee": "روپے",
-    "steps": "مرحلہٕ"
+    "steps": "مرحلہٕ",
+    "continue": "جاری رکھیو",
+    "noQuestionsFound": "کانہہ سوال نہٕ آمُت",
+    "askYourFirstQuestion": "پننٕ پؠٹھ سوال پوچھِیو"
   },
   "completeRegistration": "رجسٹریشن مکمل کٔریو",
   "consentClause1": "تہند موبائل نمبر تہٕ رجسٹریشن تفصیلات یین محفوظ تھاونہٕ تہٕ یین صرف پلیٹ فارم تصدیق تہٕ زرعی خدمات باپتھ استعمال کرنہٕ۔",
@@ -290,7 +307,15 @@
     "editWindowClosed": "جمع کرنہٕ پتہٕ ہیکن نہٕ سوال تبدیل کٔرِتھ",
     "quickActionsTip": "سیدھے جاو 'سوال جمع کٔریو' یا ووچھیو والٹ بیلنس تہٕ حالیہ سرگرمی۔",
     "rewardsTip": "منظور گٔمتین سوالن ہندِ تعدادس پیٹھ کمایو۔ سلور تہٕ گولڈ درجن مَنٛز چھُ زیادٔ انعام ملان۔",
-    "guidelinesTip": "ویڈیو تھویو 60s تہٕ 10MB کھوتہٕ کم۔ توہیہِ چھُ ملان 30 سیکنڈُک ایڈٹ ونڈو۔ دینی حد چھُ راتکِہ 12 بجے ری سیٹ گژھان۔"
+    "guidelinesTip": "ویڈیو تھویو 60s تہٕ 10MB کھوتہٕ کم۔ توہیہِ چھُ ملان 30 سیکنڈُک ایڈٹ ونڈو۔ دینی حد چھُ راتکِہ 12 بجے ری سیٹ گژھان۔",
+    "dailyLimitTitle": "دینچ حد",
+    "editWindowTitle": "تبدیلی ہنٛد وقت",
+    "aiCheckTitle": "AI ربط چیک",
+    "verifiedUser": "تصدیق شُدہ صارف",
+    "startAsking": "پوچھُن شروع کریو",
+    "viewWallet": "والیٹ ہیویو",
+    "youAreHere": "تۏہہِ یہٕ چھِو",
+    "currentTier": "حالی سطح"
   },
   "iAcceptContinue": "بؤ چھُس قبول کران تہٕ جاری تھاوان",
   "invalidOtp": "پورا 6 ہندسَن ہنٛد کوڈ درج کٔریو",
@@ -363,7 +388,11 @@
       "held": "روکِتھ",
       "approved": "منظور گٔمِت",
       "rejected": "نا منظور"
-    }
+    },
+    "loading": "اطلاع نامہٕ لوڈ گژھان…",
+    "loadMore": "مزید لوڈ کریو",
+    "loadError": "اطلاع نامہٕ لوڈ کرنس منٛز ناکامی",
+    "markAllReadError": "اطلاع نامہٕ پرنہ ہیٚنٛز نشان لگاونس منٛز ناکامی"
   },
   "organisationName": "تنظیمُک ناو",
   "organisationNamePlaceholder": "تنظیمُک ناو درج کٔریو",
@@ -447,7 +476,10 @@
     "suspended": "معطل",
     "banned": "مستقل بند",
     "village": "گام",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} منظور شودہ سوال",
+    "toNext": "{{count}} بۆدہ کِنٛ",
+    "toTier": "{{tier}} تام {{count}}"
   },
   "profileLanguage": "ایپٕچ زبانہٕ",
   "profileLanguageDesc": "یہِ آسِ ایپ انٹرفیس تہٕ سوالات جمع کرنے باپتھ ڈیفالٹ زبانہٕ",
@@ -550,7 +582,9 @@
     "rejectedEditQuestion": "میٟون سوال درست کرِو",
     "addVoice": "آواز شٲمل کرِو",
     "tipDetailed": "تفصیلہٕ سٟتؠ لیکھِو — فصل، جاے تہٕ یُس توٚہہِ وُنی تام آزماومُت چھُ۔",
-    "dailyLimitIndicator": "ڈیلی حد چھِ مکمل"
+    "dailyLimitIndicator": "ڈیلی حد چھِ مکمل",
+    "expertWillRespond": "اکھ ماہر توہہِ جواب دِیہِ۔",
+    "questionExample": "مثلن: میۆن ٹماٹرہ سٕنٛز پَتہٕ زَرد گَژھان — بہٕ کیازِ کریم؟"
   },
   "readFullPolicy": "پورا پرائیویسی پالیسی پرِیو →",
   "resendOtp": "OTP دوبارہ سوزیو",
@@ -639,7 +673,16 @@
     "credit": "جمع (کریڈٹ)",
     "debit": "منہا (ڈیبٹ)",
     "txNotFound": "لین دین مِلِیو نہٕ",
-    "notFoundSub": "یہِ لین دین ہیکِہ مٹاونہٕ آمتُس یا چھُ نہٕ دستیاب۔"
+    "notFoundSub": "یہِ لین دین ہیکِہ مٹاونہٕ آمتُس یا چھُ نہٕ دستیاب۔",
+    "sourceReward": "انعام",
+    "sourceWithdrawal": "واپسی",
+    "sourceRefund": "واپسی رقم",
+    "sourceAdjustment": "ترمیم",
+    "statusCompleted": "مکمل",
+    "statusReversed": "واپس کورمُت",
+    "statusFailed": "ناکام",
+    "statusPending": "زیرِ التوا",
+    "currency": "ہِندوستانی روپیہ"
   },
   "yourRole": "تہنٛد کردار",
   "home.greeting.morning": "صبح بخیر",
@@ -1042,7 +1085,14 @@
     "replies": "جوابات",
     "adminName": "ایڈمن",
     "replyCount_one": "{{count}} جواب",
-    "replyCount_other": "{{count}} جوابات"
+    "replyCount_other": "{{count}} جوابات",
+    "awaitingReply": "جوابس ہیوٚتھ انتظار",
+    "newReportSubtitle": "تُہنٛدِس پیش آمُتس مسئلَس بیان کریو۔ اَسہِ ٹیٖم جلدی تُہنٛدِس نال رابطہ کریہِ۔",
+    "loadingReports": "تُہنٛد رپورٹ لوڈ گژھان…",
+    "loadingReport": "رپورٹ لوڈ گژھان…",
+    "reportNotFound": "رپورٹ نہٕ ملی",
+    "reportNotFoundHint": "یہ ہیوٚمُت ہیکہِ یا تُہنٛدِس اکھ نہٕ رٲزہِ رسائی۔",
+    "backToReports": "رپورٹن پؠٹھ واپس گژھیو"
   },
   "profile.account": "اکاؤنٹ",
   "profile.personalInfo": "شخصی معلومات",
@@ -1114,7 +1164,10 @@
     "group": {
       "article_one": "مضمون",
       "article_other": "مضامین"
-    }
+    },
+    "videoComingSoon": "ویڈیو گائیڈ جلدی ییہ",
+    "videoGuideTitle": "ویڈیو گائیڈ",
+    "loadError": "FAQ لوڈ کرنس منٛز ناکامی"
   },
   "faqAdmin": {
     "title": "FAQ انتظام",
@@ -1294,5 +1347,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "ہولڈ پؠٹھ",
+    "published": "شائع",
+    "yourSubmissions": "توہہِ ہٕنٛدہ جمع کرمٕژ سوال تہٕ تِمن ہٕنٛز حالت۔"
+  },
+  "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنس منٛز ناکامی",
+  "leaderboard.loadMore": "مزید لوڈ کریو",
+  "leaderboard.loadingMore": "لوڈ کران...",
+  "leaderboard.reachedEnd": "توہیں لیڈر بورڈ ہنٛدِس اندام منٛز پہژیو۔"
 }

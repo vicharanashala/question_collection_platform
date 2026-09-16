@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Mic, MicOff, Square, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -66,6 +67,7 @@ export function MicButton({
   languageCode = 'unknown',
   maxDurationMs = 55_000,
 }: MicButtonProps) {
+  const { t } = useTranslation()
   const [state, setState] = useState<MicState>('idle')
   const [elapsedMs, setElapsedMs] = useState(0)
   const [supported] = useState(() =>
@@ -142,7 +144,7 @@ export function MicButton({
 
       if (blob.size === 0) {
         setState('error')
-        toast.error('No audio captured. Please try again.')
+        toast.error(t('audio.noAudioCaptured'))
         return
       }
 
@@ -171,17 +173,17 @@ export function MicButton({
         const text = (result.text ?? '').trim()
         if (!text) {
           setState('error')
-          toast.error('We could not hear any words. Try again in a quieter place.')
+          toast.error(t('audio.noWordsHeard'))
           return
         }
         setState('done')
         onTranscribedRef.current?.(text)
-        toast.success('Voice captured. Review and continue.', {
+        toast.success(t('audio.voiceCaptured'), {
           description: text.length > 80 ? text.slice(0, 80) + '…' : text,
         })
       } catch (err) {
         console.error('[MicButton] speechToText error:', err)
-        const msg = err instanceof Error ? err.message : 'Transcription failed.'
+        const msg = err instanceof Error ? err.message : t('audio.transcribeError')
         setState('error')
         toast.error(msg)
       }
@@ -193,13 +195,13 @@ export function MicButton({
       console.error('[MicButton] stop() error:', err)
       cleanupStream()
       setState('error')
-      toast.error('Could not stop recording.')
+      toast.error(t('audio.couldNotStop'))
     }
   }, [cleanupStream, languageCode])
 
   const startRecording = useCallback(async () => {
     if (!supported) {
-      toast.error('Microphone recording is not supported in this browser.')
+      toast.error(t('audio.notSupportedBrowser'))
       return
     }
     try {
@@ -241,7 +243,7 @@ export function MicButton({
       recorder.onerror = (event) => {
         console.error('[MicButton] recorder error:', event)
         setState('error')
-        toast.error('Recording failed. Please try again.')
+        toast.error(t('audio.recordingFailed'))
         cleanupStream()
       }
 
@@ -268,8 +270,8 @@ export function MicButton({
       console.error('[MicButton] startRecording error:', err)
       const msg =
         err instanceof Error && /denied|permission/i.test(err.message)
-          ? 'Microphone permission denied. Allow microphone access and retry.'
-          : 'Could not start recording. Please try again.'
+          ? t('audio.permissionDeniedRetry')
+          : t('audio.couldNotStart')
       toast.error(msg)
       cleanupStream()
       setState('error')
@@ -306,14 +308,14 @@ export function MicButton({
           : 'bg-primary'
 
   const label = !supported
-    ? 'Mic not supported on this browser'
+    ? t('audio.notSupportedShort')
     : isUploading
-      ? 'Transcribing…'
+      ? t('audio.transcribing')
       : isFinal
-        ? 'Done — speak again any time'
+        ? t('audio.doneSpeakAgain')
         : isRecording
-          ? 'Tap to stop recording'
-          : 'Tap the mic to speak your question'
+          ? t('audio.tapToStopRecording')
+          : t('question.tapMicHint')
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -330,7 +332,7 @@ export function MicButton({
           type="button"
           onClick={handleClick}
           disabled={isDisabled}
-          aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
+          aria-label={isRecording ? t('audio.stopRecordingAria') : t('audio.startRecordingAria')}
           aria-pressed={isRecording}
           className={cn(
             'relative h-[88px] w-[88px] rounded-full shadow-lg ring-offset-background transition-all duration-200',

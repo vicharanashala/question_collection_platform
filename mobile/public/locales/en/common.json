@@ -40,7 +40,20 @@
     "tapToPlay": "Tap to play",
     "delete": "Delete",
     "stop": "Stop",
-    "playing": "Playing…"
+    "playing": "Playing…",
+    "noAudioCaptured": "No audio captured. Please try again.",
+    "noWordsHeard": "We could not hear any words. Try again in a quieter place.",
+    "voiceCaptured": "Voice captured. Review and continue.",
+    "couldNotStop": "Could not stop recording.",
+    "notSupportedBrowser": "Microphone recording is not supported in this browser.",
+    "recordingFailed": "Recording failed. Please try again.",
+    "permissionDeniedRetry": "Microphone permission denied. Allow microphone access and retry.",
+    "couldNotStart": "Could not start recording. Please try again.",
+    "tapToStopRecording": "Tap to stop recording",
+    "doneSpeakAgain": "Done — speak again any time",
+    "notSupportedShort": "Mic not supported on this browser",
+    "stopRecordingAria": "Stop recording",
+    "startRecordingAria": "Start voice recording"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "and",
   "app": {
     "name": "AnnaDatha",
-    "tagline": "Your district, in your language"
+    "tagline": "Your district, in your language",
+    "footer": "AnnaDatha - To Strengthen Indian Farmers"
   },
   "loginPhone": {
     "signIn": "Sign In",
@@ -219,7 +233,10 @@
     "sortBy": "Sort By",
     "unknown": "Unknown",
     "rupee": "Rs.",
-    "steps": "Steps"
+    "steps": "Steps",
+    "continue": "Continue",
+    "noQuestionsFound": "No questions found",
+    "askYourFirstQuestion": "Ask your first question"
   },
   "completeRegistration": "Complete Registration",
   "consentClause1": "Your mobile number and registration details will be stored securely and used solely for platform authentication and agricultural knowledge services.",
@@ -290,7 +307,15 @@
     "editWindowClosed": "Questions cannot be edited after submission",
     "quickActionsTip": "Jump straight to Submit a Question or view your Wallet balance and recent activity.",
     "rewardsTip": "Earn per approved question based on total approved questions. Silver and Gold tiers unlock higher reward rates.",
-    "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight."
+    "guidelinesTip": "Keep video under 60s and 10MB. You get a 30-second editing window after submitting. Daily limit resets at midnight.",
+    "dailyLimitTitle": "Daily limit",
+    "editWindowTitle": "Edit window",
+    "aiCheckTitle": "AI relevance check",
+    "verifiedUser": "Verified user",
+    "startAsking": "Start asking",
+    "viewWallet": "View wallet",
+    "youAreHere": "You are here",
+    "currentTier": "Current tier"
   },
   "iAcceptContinue": "I Accept & Continue",
   "invalidOtp": "Enter the complete 6-digit code",
@@ -363,7 +388,11 @@
       "held": "On Hold",
       "approved": "Approved",
       "rejected": "Not Approved"
-    }
+    },
+    "loading": "Loading notifications…",
+    "loadMore": "Load more",
+    "loadError": "Failed to load notifications",
+    "markAllReadError": "Failed to mark notifications as read"
   },
   "organisationName": "Organisation Name",
   "organisationNamePlaceholder": "Enter organisation name",
@@ -447,7 +476,10 @@
     "suspended": "Suspended",
     "banned": "Banned",
     "village": "Village",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} approved questions",
+    "toNext": "{{count}} to next",
+    "toTier": "{{count}} to {{tier}}"
   },
   "profileLanguage": "App Language",
   "profileLanguageDesc": "This will be the default language for the app interface and question submissions",
@@ -552,7 +584,9 @@
     "rejectedEditQuestion": "Edit My Question",
     "addVoice": "Add voice",
     "tipDetailed": "Be specific — include crop, location, and what you've already tried.",
-    "dailyLimitIndicator": "Daily limit reached"
+    "dailyLimitIndicator": "Daily limit reached",
+    "expertWillRespond": "An expert will get back to you with an answer.",
+    "questionExample": "e.g. My tomato leaves are turning yellow — what should I do?"
   },
   "readFullPolicy": "Read full Privacy Policy →",
   "resendOtp": "Resend OTP",
@@ -641,7 +675,16 @@
     "credit": "Credit",
     "debit": "Debit",
     "txNotFound": "Transaction not found",
-    "notFoundSub": "The transaction may have been removed or is no longer available."
+    "notFoundSub": "The transaction may have been removed or is no longer available.",
+    "sourceReward": "Reward",
+    "sourceWithdrawal": "Withdrawal",
+    "sourceRefund": "Refund",
+    "sourceAdjustment": "Adjustment",
+    "statusCompleted": "Completed",
+    "statusReversed": "Reversed",
+    "statusFailed": "Failed",
+    "statusPending": "Pending",
+    "currency": "Indian Rupees"
   },
   "yourRole": "Your Role",
   "home.greeting.morning": "Good morning",
@@ -1044,7 +1087,14 @@
     "replies": "Replies",
     "adminName": "Admin",
     "replyCount_one": "{{count}} reply",
-    "replyCount_other": "{{count}} replies"
+    "replyCount_other": "{{count}} replies",
+    "awaitingReply": "Awaiting reply",
+    "newReportSubtitle": "Describe the issue you faced. Our team will get back to you soon.",
+    "loadingReports": "Loading your reports…",
+    "loadingReport": "Loading report…",
+    "reportNotFound": "Report not found",
+    "reportNotFoundHint": "It may have been removed or you no longer have access.",
+    "backToReports": "Back to reports"
   },
   "profile.account": "Account",
   "profile.personalInfo": "Personal Info",
@@ -1116,7 +1166,10 @@
     "group": {
       "article_one": "article",
       "article_other": "articles"
-    }
+    },
+    "videoComingSoon": "Video guide coming soon",
+    "videoGuideTitle": "Video Guide",
+    "loadError": "Failed to load FAQs"
   },
   "faqAdmin": {
     "title": "FAQ Management",
@@ -1296,5 +1349,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "On hold",
+    "published": "Published",
+    "yourSubmissions": "Your submitted questions and their status."
+  },
+  "leaderboard.loadError": "Failed to load leaderboard",
+  "leaderboard.loadMore": "Load more",
+  "leaderboard.loadingMore": "Loading...",
+  "leaderboard.reachedEnd": "You've reached the end of the leaderboard."
 }

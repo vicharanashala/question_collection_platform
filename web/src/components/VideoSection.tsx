@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Play, X, VideoOff } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 /// <reference types="vite/client" />
@@ -16,6 +17,7 @@ function isYouTubeEmbedUrl(url: string): boolean {
 }
 
 export function VideoSection() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   // No URL configured — show nothing
@@ -29,8 +31,8 @@ export function VideoSection() {
           <VideoOff className="h-5 w-5 text-text-tertiary" />
         </div>
         <div className="text-left">
-          <p className="text-xs font-semibold text-foreground">Watch Video Guide</p>
-          <p className="text-[11px] text-muted-foreground">Video guide coming soon</p>
+          <p className="text-xs font-semibold text-foreground">{t('faq.videoSectionTitle')}</p>
+          <p className="text-[11px] text-muted-foreground">{t('faq.videoComingSoon')}</p>
         </div>
       </div>
     )
@@ -47,8 +49,8 @@ export function VideoSection() {
           <Play className="h-5 w-5 text-primary fill-primary ml-0.5" />
         </div>
         <div className="text-left">
-          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Watch Video Guide</p>
-          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Tap to watch the FAQ video</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{t('faq.videoSectionTitle')}</p>
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('faq.tapToWatch')}</p>
         </div>
       </button>
 
@@ -57,7 +59,7 @@ export function VideoSection() {
         <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0">
           {/* Modal header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
-            <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Video Guide</p>
+            <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{t('faq.videoGuideTitle')}</p>
             <button
               className="p-1.5 rounded-md hover:bg-surface-variant transition-colors text-muted-foreground hover:text-foreground"
               onClick={() => setOpen(false)}

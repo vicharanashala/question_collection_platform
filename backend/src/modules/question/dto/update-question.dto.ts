@@ -6,6 +6,7 @@ import {
   MaxLength,
   ArrayMinSize,
 } from 'class-validator';
+import { NormalizeMediaUrls } from '../../../shared/middleware/transformers/normalize-media-urls.transformer';
 
 export class UpdateQuestionDto {
   @IsString()
@@ -33,5 +34,6 @@ export class UpdateQuestionDto {
   mediaType?: 'none' | 'image' | 'video' | 'audio';
 
   @IsOptional()
+  @NormalizeMediaUrls()
   mediaUrls?: string[];
 }

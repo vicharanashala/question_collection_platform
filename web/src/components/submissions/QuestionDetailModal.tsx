@@ -47,7 +47,9 @@ function statusLabelKey(s: string): string {
 /** Audio extensions — mirrors the admin QuestionsPage so reviewers and users
  *  see the same media split. */
 const AUDIO_EXT = /\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i
-const isAudioUrl = (url: string) => AUDIO_EXT.test(url)
+// Signed storage URLs carry a query string, so the extension is matched against the
+// path only — otherwise every recording is misread as an image.
+const isAudioUrl = (url: string) => AUDIO_EXT.test(url.split('?')[0])
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 

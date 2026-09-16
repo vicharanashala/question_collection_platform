@@ -44,11 +44,24 @@ const TX_STATUS_COLORS: Record<string, string> = {
   rejected:  'bg-destructive text-white',
 }
 
-const TX_SOURCE_LABELS: Record<string, string> = {
-  reward:     'Reward',
-  withdrawal: 'Withdrawal',
-  refund:     'Refund',
-  adjustment: 'Adjustment',
+function txSourceLabel(t: (key: string) => string, source: string): string {
+  switch (source) {
+    case 'reward':     return t('wallet.sourceReward')
+    case 'withdrawal': return t('wallet.sourceWithdrawal')
+    case 'refund':     return t('wallet.sourceRefund')
+    case 'adjustment': return t('wallet.sourceAdjustment')
+    default:           return source
+  }
+}
+
+function txStatusLabel(t: (key: string) => string, status: string): string {
+  switch (status) {
+    case 'completed': return t('wallet.statusCompleted')
+    case 'pending':   return t('wallet.statusPending')
+    case 'failed':    return t('wallet.statusFailed')
+    case 'reversed':  return t('wallet.statusReversed')
+    default:          return status
+  }
 }
 
 const TX_TYPE_COLORS: Record<string, string> = {
@@ -137,7 +150,7 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
             )}
           </div>
           <Row label={t('wallet.txType')} value={<span className="capitalize">{tx.type === 'credit' ? t('wallet.credit') : t('wallet.debit')}</span>} />
-          <Row label={t('wallet.txSource')} value={TX_SOURCE_LABELS[tx.source] ?? tx.source} />
+          <Row label={t('wallet.txSource')} value={txSourceLabel(t, tx.source)} />
           <Row label="Status" value={
             <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', TX_STATUS_COLORS[tx.status] ?? 'bg-muted text-muted-foreground')}>
               {tx.status}
@@ -409,7 +422,7 @@ export function PublicWalletPage() {
               <p className="mt-2 text-4xl font-extrabold tabular-nums leading-tight sm:text-5xl">
                 ₹{formatINRFull(balance ?? 0)}
               </p>
-              <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs opacity-80">Indian Rupees</p>
+              <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs opacity-80">{t('wallet.currency')}</p>
             </div>
             <div className="shrink-0">
               {belowMin ? (
@@ -541,7 +554,7 @@ export function PublicWalletPage() {
                     {(['all', 'reward', 'withdrawal', 'refund'] as TxSource[]).map((f) => (
                       <FilterPill
                         key={f}
-                        label={f === 'all' ? t('wallet.filterAll') : (TX_SOURCE_LABELS[f] ?? f).replace(/_/g, ' ')}
+                        label={f === 'all' ? t('wallet.filterAll') : txSourceLabel(t, f)}
                         active={filterSource === f}
                         onClick={() => setFilterSource(f)}
                       />
@@ -554,7 +567,7 @@ export function PublicWalletPage() {
                     {(['all', 'completed', 'pending', 'failed', 'reversed'] as TxStatus[]).map((f) => (
                       <FilterPill
                         key={f}
-                        label={f === 'all' ? t('wallet.filterAll') : f.charAt(0).toUpperCase() + f.slice(1)}
+                        label={f === 'all' ? t('wallet.filterAll') : txStatusLabel(t, f)}
                         active={filterStatus === f}
                         onClick={() => setFilterStatus(f)}
                       />
@@ -607,15 +620,15 @@ export function PublicWalletPage() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="truncate text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
-                              {TX_SOURCE_LABELS[tx.source] ?? tx.source}
+                              {txSourceLabel(t, tx.source)}
                               {tx.status === 'pending' && (
-                                <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-warning">Pending</span>
+                                <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-warning">{t('wallet.statusPending')}</span>
                               )}
                               {tx.status === 'failed' && (
-                                <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-destructive">Failed</span>
+                                <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-destructive">{t('wallet.statusFailed')}</span>
                               )}
                               {tx.status === 'reversed' && (
-                                <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">Reversed</span>
+                                <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary">{t('wallet.statusReversed')}</span>
                               )}
                             </p>
                             <p className="mt-0.5 truncate text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
@@ -659,7 +672,7 @@ export function PublicWalletPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha · To Strengthen Indian Farmers</p>
+        <p className="text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('app.footer')}</p>
       </div>
 
       <TxDetailDialog tx={selectedTx} open={selectedTx !== null} onClose={() => setSelectedTx(null)} />

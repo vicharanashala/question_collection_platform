@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request, Response } from 'express';
-import { RedisService } from '../redis.service';
+import { RateLimitCounterService } from '../rate-limit-counter.service';
 import { rateLimitKey } from '../cache.keys';
 
 @Injectable()
@@ -16,16 +16,13 @@ export class RateLimitGuard implements CanActivate {
   private readonly logger = new Logger(RateLimitGuard.name);
 
   constructor(
-    private readonly redis: RedisService,
+    private readonly counter: RateLimitCounterService,
     private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const rateLimitMeta = this.reflector.get('rate_limit', context.getHandler());
     if (!rateLimitMeta) return true;
-
-    // Skip rate limiting when Redis is disabled
-    if (!this.redis.isEnabled()) return true;
 
     const { limit, windowSeconds, keyPrefix } = rateLimitMeta;
     const request = context.switchToHttp().getRequest() as Request;
@@ -34,18 +31,13 @@ export class RateLimitGuard implements CanActivate {
     const key = this.buildKey(keyPrefix, request, limit, windowSeconds);
 
     try {
-      const current = await this.redis.incr(key);
-
-      // Set TTL on first request in the window
-      if (current === 1) {
-        await this.redis.expire(key, windowSeconds);
-      }
-
-      // Get actual TTL remaining so reset time is accurate regardless of when the window started
-      const ttlRemaining = await this.redis.ttl(key);
-      const resetEpoch = ttlRemaining > 0
-        ? Math.ceil(Date.now() / 1000) + ttlRemaining
-        : Math.ceil(Date.now() / 1000) + windowSeconds;
+      // Counts through Redis when it is enabled and through MongoDB when it is not, so
+      // limits hold in every environment.
+      const { count: current, ttlSeconds: ttlRemaining } = await this.counter.hit(
+        key,
+        windowSeconds,
+      );
+      const resetEpoch = Math.ceil(Date.now() / 1000) + ttlRemaining;
 
       // Expose headers
       response.setHeader('X-RateLimit-Limit', String(limit));
@@ -63,8 +55,10 @@ export class RateLimitGuard implements CanActivate {
       return true;
     } catch (err: unknown) {
       if (err instanceof HttpException) throw err;
-      // If Redis fails, allow the request (fail open)
-      this.logger.warn(`[RateLimitGuard] Redis error: ${(err as Error).message} — allowing request`);
+      // If the counter store fails, allow the request (fail open)
+      this.logger.warn(
+        `[RateLimitGuard] counter error: ${(err as Error).message} — allowing request`,
+      );
       return true;
     }
   }

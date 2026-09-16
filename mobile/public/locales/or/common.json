@@ -40,7 +40,20 @@
     "tapToPlay": "ପ୍ଲେ କରିବା ପାଇଁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
     "delete": "ଲିଭାନ୍ତୁ",
     "stop": "ଅଟକାନ୍ତୁ",
-    "playing": "ଚାଲୁଅଛି…"
+    "playing": "ଚାଲୁଅଛି…",
+    "noAudioCaptured": "କୌଣସି ଅଡିଓ ପାଇଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "noWordsHeard": "କୌଣସି ଶବ୍ଦ ଶୁଣାଗଲା ନାହିଁ। ଶାନ୍ତ ସ୍ଥାନରେ ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "voiceCaptured": "ସ୍ୱର ପାଇଲା। ସମୀକ୍ଷା କରି ଜାରି ରଖନ୍ତୁ।",
+    "couldNotStop": "ରେକର୍ଡିଂ ବନ୍ଦ କରାଯାଇପାରିଲା ନାହିଁ।",
+    "notSupportedBrowser": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ରୋଫୋନ୍ ରେକର୍ଡିଂ ସମର୍ଥିତ ନୁହେଁ।",
+    "recordingFailed": "ରେକର୍ଡିଂ ବିଫଳ ହେଲା। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "permissionDeniedRetry": "ମାଇକ୍ରୋଫୋନ୍ ଅନୁମତି ପ୍ରତ୍ୟାଖ୍ୟାନ ହେଲା। ମାଇକ୍ରୋଫୋନ୍ ପ୍ରବେଶାଧିକାର ଦିଅନ୍ତୁ ଏବଂ ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "couldNotStart": "ରେକର୍ଡିଂ ଆରମ୍ଭ କରାଯାଇପାରିଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
+    "tapToStopRecording": "ବନ୍ଦ କରିବା ପାଇଁ ଟ୍ୟାପ୍ କରନ୍ତୁ",
+    "doneSpeakAgain": "ସମ୍ପୂର୍ଣ୍ଣ — ଯେକୌଣସି ସମୟରେ ପୁନର୍ବାର କୁହନ୍ତୁ",
+    "notSupportedShort": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ ସମର୍ଥିତ ନୁହେଁ",
+    "stopRecordingAria": "ରେକର୍ଡିଂ ବନ୍ଦ କରନ୍ତୁ",
+    "startRecordingAria": "ସ୍ୱର ରେକର୍ଡିଂ ଆରମ୍ଭ କରନ୍ତୁ"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "ଏବଂ",
   "app": {
     "name": "ଅନ୍ନଦାତା",
-    "tagline": "ଆପଣଙ୍କ ଜିଲ୍ଲା, ଆପଣଙ୍କ ଭାଷାରେ"
+    "tagline": "ଆପଣଙ୍କ ଜିଲ୍ଲା, ଆପଣଙ୍କ ଭାଷାରେ",
+    "footer": "ଅନ୍ନଦାତା - ଭାରତୀୟ କୃଷକମାନଙ୍କୁ ସଶକ୍ତ କରିବା ପାଇଁ"
   },
   "loginPhone": {
     "signIn": "ସାଇନ୍ ଇନ୍",
@@ -217,7 +231,10 @@
     "sortBy": "କ୍ରମାନ୍ୱୟ (Sort By)",
     "unknown": "ଅଜଣା",
     "rupee": "ଟଙ୍କା",
-    "steps": "ପର୍ଯ୍ୟାୟ"
+    "steps": "ପର୍ଯ୍ୟାୟ",
+    "continue": "ଜାରି ରଖନ୍ତୁ",
+    "noQuestionsFound": "କୌଣସି ପ୍ରଶ୍ନ ମିଳିଲା ନାହିଁ",
+    "askYourFirstQuestion": "ଆପଣଙ୍କର ପ୍ରଥମ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ"
   },
   "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
   "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -288,7 +305,15 @@
     "editWindowClosed": "ଦାଖଲ କରିବା ପରେ ପ୍ରଶ୍ନ ସମ୍ପାଦନା କରାଯାଇପାରିବ ନାହିଁ",
     "quickActionsTip": "ସିଧାସଳଖ 'ପ୍ରଶ୍ନ ଦାଖଲ କରନ୍ତୁ' କୁ ଯାଆନ୍ତୁ କିମ୍ବା ଆପଣଙ୍କ ୱାଲେଟ୍ ବାଲାନ୍ସ ଏବଂ ସମ୍ପ୍ରତି ଗତିବିଧି ଦେଖନ୍ତୁ।",
     "rewardsTip": "ମୋଟ ଅନୁମୋଦିତ ପ୍ରଶ୍ନ ଆଧାରରେ ପ୍ରତି ଅନୁମୋଦିତ ପ୍ରଶ୍ନ ପାଇଁ ରୋଜଗାର କରନ୍ତୁ। ସିଲଭର୍ ଏବଂ ଗୋଲ୍ଡ ସ୍ତରଗୁଡ଼ିକ ଅଧିକ ପୁରସ୍କାର ହାର ଅନ୍‌ଲକ୍ କରନ୍ତି।",
-    "guidelinesTip": "ଭିଡିଓ ୬୦ ସେକେଣ୍ଡ ଏବଂ 10MB ମଧ୍ୟରେ ରଖନ୍ତୁ। ଦାଖଲ କରିବା ପରେ ଆପଣଙ୍କୁ ୩୦-ସେକେଣ୍ଡର ସମ୍ପାଦନା ସମୟ ମିଳିବ। ଦୈନିକ ସୀମା ମଧ୍ୟରାତ୍ରିରେ ରିସେଟ୍ ହୁଏ।"
+    "guidelinesTip": "ଭିଡିଓ ୬୦ ସେକେଣ୍ଡ ଏବଂ 10MB ମଧ୍ୟରେ ରଖନ୍ତୁ। ଦାଖଲ କରିବା ପରେ ଆପଣଙ୍କୁ ୩୦-ସେକେଣ୍ଡର ସମ୍ପାଦନା ସମୟ ମିଳିବ। ଦୈନିକ ସୀମା ମଧ୍ୟରାତ୍ରିରେ ରିସେଟ୍ ହୁଏ।",
+    "dailyLimitTitle": "ଦୈନିକ ସୀମା",
+    "editWindowTitle": "ସମ୍ପାଦନା ସମୟ",
+    "aiCheckTitle": "AI ସୁସଙ୍ଗତତା ଯାଞ୍ଚ",
+    "verifiedUser": "ଯାଞ୍ଚିତ ବ୍ୟବହାରକାରୀ",
+    "startAsking": "ପଚାରିବା ଆରମ୍ଭ କରନ୍ତୁ",
+    "viewWallet": "ୱାଲେଟ୍ ଦେଖନ୍ତୁ",
+    "youAreHere": "ଆପଣ ଏଠାରେ ଅଛନ୍ତି",
+    "currentTier": "ବର୍ତ୍ତମାନ ସ୍ତର"
   },
   "iAcceptContinue": "ମୁଁ ଗ୍ରହଣ କରୁଛି ଏବଂ ଆଗକୁ ବଢ଼ୁଛି",
   "invalidOtp": "ସମ୍ପୂର୍ଣ୍ଣ ୬-ଅଙ୍କ ବିଶିଷ୍ଟ କୋଡ୍ ଦିଅନ୍ତୁ",
@@ -361,7 +386,11 @@
       "held": "ରଖାଯାଇଛି (On Hold)",
       "approved": "ଅନୁମୋଦିତ",
       "rejected": "ଅନୁମୋଦିତ ହୋଇନାହିଁ"
-    }
+    },
+    "loading": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ ହେଉଛି…",
+    "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+    "loadError": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+    "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ"
   },
   "organisationName": "ସଂସ୍ଥାର ନାମ",
   "organisationNamePlaceholder": "ସଂସ୍ଥାର ନାମ ଦିଅନ୍ତୁ",
@@ -445,7 +474,10 @@
     "suspended": "ନିଲମ୍ବିତ",
     "banned": "ବ୍ୟାନ୍ ହୋଇଛି",
     "village": "ଗାଁ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} ଅନୁମୋଦିତ ପ୍ରଶ୍ନ",
+    "toNext": "{{count}} ପରବର୍ତ୍ତୀ ପର୍ଯ୍ୟନ୍ତ",
+    "toTier": "{{tier}} ପର୍ଯ୍ୟନ୍ତ {{count}}"
   },
   "profileLanguage": "ଆପ୍ ଭାଷା",
   "profileLanguageDesc": "ଏହା ଆପ୍ ଇଣ୍ଟରଫେସ୍ ଏବଂ ପ୍ରଶ୍ନ ଦାଖଲ ପାଇଁ ଡିଫଲ୍ଟ ଭାଷା ହେବ",
@@ -548,7 +580,9 @@
     "rejectedEditQuestion": "ମୋ ପ୍ରଶ୍ନ ସମ୍ପାଦନ କରନ୍ତୁ",
     "addVoice": "ସ୍ୱର ଯୋଡ଼ନ୍ତୁ",
     "tipDetailed": "ବିସ୍ତୃତ ଭାବରେ ଲେଖନ୍ତୁ — ଫସଲ, ସ୍ଥାନ ଏବଂ ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କଣ ଚେଷ୍ଟା କରିଛନ୍ତି ଉଲ୍ଲେଖ କରନ୍ତୁ।",
-    "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ"
+    "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ",
+    "expertWillRespond": "ଜଣେ ବିଶେଷଜ୍ଞ ଆପଣଙ୍କୁ ଉତ୍ତର ଦେବେ।",
+    "questionExample": "ଉଦାହରଣ: ମୋ ଟମାଟୋ ପତ୍ର ହଳଦିଆ ହେଉଛି — ମୁଁ କଣ କରିବି?"
   },
   "readFullPolicy": "ସମ୍ପୂର୍ଣ୍ଣ ଗୋପନୀୟତା ନୀତି ପଢ଼ନ୍ତୁ →",
   "resendOtp": "OTP ପୁନର୍ବାର ପଠାନ୍ତୁ",
@@ -637,7 +671,16 @@
     "credit": "ଜମା (Credit)",
     "debit": "ଉଠାଣ (Debit)",
     "txNotFound": "ଲେଣଦେଣ ମିଳିଲା ନାହିଁ",
-    "notFoundSub": "ଏହି ଲେଣଦେଣଟି ହଟାଯାଇଥାଇପାରେ କିମ୍ବା ଆଉ ଉପଲବ୍ଧ ନାହିଁ।"
+    "notFoundSub": "ଏହି ଲେଣଦେଣଟି ହଟାଯାଇଥାଇପାରେ କିମ୍ବା ଆଉ ଉପଲବ୍ଧ ନାହିଁ।",
+    "sourceReward": "ପୁରସ୍କାର",
+    "sourceWithdrawal": "ଉଠାଣ",
+    "sourceRefund": "ରିଫଣ୍ଡ",
+    "sourceAdjustment": "ସାମଞ୍ଜସ୍ୟ",
+    "statusCompleted": "ସମ୍ପୂର୍ଣ୍ଣ",
+    "statusReversed": "ପ୍ରତ୍ୟାହାର ହୋଇଛି",
+    "statusFailed": "ବିଫଳ",
+    "statusPending": "ବିଚାରାଧୀନ",
+    "currency": "ଭାରତୀୟ ଟଙ୍କା"
   },
   "yourRole": "ଆପଣଙ୍କ ଭୂମିକା",
   "home.greeting.morning": "ଶୁଭ ସକାଳ",
@@ -1040,7 +1083,14 @@
     "replies": "ଉତ୍ତରଗୁଡ଼ିକ",
     "adminName": "ଆଡମିନ୍",
     "replyCount_one": "{{count}} ଟି ଉତ୍ତର",
-    "replyCount_other": "{{count}} ଟି ଉତ୍ତର"
+    "replyCount_other": "{{count}} ଟି ଉତ୍ତର",
+    "awaitingReply": "ଉତ୍ତର ପାଇଁ ଅପେକ୍ଷାରତ",
+    "newReportSubtitle": "ଆପଣ ସାମ୍ନା କରିଥିବା ସମସ୍ୟା ବର୍ଣ୍ଣନା କରନ୍ତୁ। ଆମ ଦଳ ଶୀଘ୍ର ଆପଣଙ୍କ ସହିତ ଯୋଗାଯୋଗ କରିବ।",
+    "loadingReports": "ଆପଣଙ୍କ ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+    "loadingReport": "ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+    "reportNotFound": "ରିପୋର୍ଟ ମିଳିଲା ନାହିଁ",
+    "reportNotFoundHint": "ଏହା ହୟତ ହଟାଯାଇଥିବ କିମ୍ବା ଆପଣଙ୍କ ପାଖରେ ଆଉ ପ୍ରବେଶାଧିକାର ନାହିଁ।",
+    "backToReports": "ରିପୋର୍ଟକୁ ଫେରନ୍ତୁ"
   },
   "profile.account": "ଆକାଉଣ୍ଟ୍",
   "profile.personalInfo": "ବ୍ୟକ୍ତିଗତ ସୂଚନା",
@@ -1112,7 +1162,10 @@
     "group": {
       "article_one": "ଟି ପ୍ରବନ୍ଧ",
       "article_other": "ଟି ପ୍ରବନ୍ଧ"
-    }
+    },
+    "videoComingSoon": "ଭିଡିଓ ଗାଇଡ୍ ଶୀଘ୍ର ଆସୁଛି",
+    "videoGuideTitle": "ଭିଡିଓ ଗାଇଡ୍",
+    "loadError": "FAQ ଲୋଡ୍ କରିବାରେ ବିଫଳ"
   },
   "faqAdmin": {
     "title": "FAQ ପରିଚାଳନା",
@@ -1292,5 +1345,17 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "ହୋଲ୍ଡରେ ଅଛି",
+    "published": "ପ୍ରକାଶିତ",
+    "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
+  },
+  "cat": {
+    "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
+  },
+  "leaderboard.loadError": "ଲିଡରବୋର୍ଡ ଲୋଡ୍ କରିବାରେ ବିଫଳ",
+  "leaderboard.loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
+  "leaderboard.loadingMore": "ଲୋଡ୍ ହେଉଛି...",
+  "leaderboard.reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।"
 }
