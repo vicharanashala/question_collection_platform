@@ -73,6 +73,34 @@ jobs:
           path: web/dist
           retention-days: 1
 
+  deploy_hosting:
+    name: Deploy Web to Firebase Hosting
+    runs-on: ubuntu-latest
+    needs: build_web
+    environment: production
+    if: ${{ github.event.inputs.action == 'all' || github.event.inputs.action == 'deploy' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Reuses the bundle built by build_web so Hosting and Cloud Run always serve the
+      # same frontend build.
+      - name: Download web dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.GCP_GH_SA_KEY }}
+          projectId: ${{ secrets.GCP_PROJECT_ID }}
+          target: production
+          channelId: live
+          entryPoint: .
+
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
