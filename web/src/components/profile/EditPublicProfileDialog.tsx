@@ -464,8 +464,8 @@ export function EditPublicProfileDialog({
     if (
       form.age.trim() &&
       (!Number.isInteger(Number(form.age)) ||
-        Number(form.age) < 1 ||
-        Number(form.age) > 120)
+        Number(form.age) < 16 ||
+        Number(form.age) > 80)
     ) {
       toast.error("Please enter a valid age.");
       return;
