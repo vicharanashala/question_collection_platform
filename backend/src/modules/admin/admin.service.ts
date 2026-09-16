@@ -109,6 +109,12 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
     value: 5,
     description: "Maximum image file size per question (MB)",
   },
+  // 0 = disabled, 1 = enabled. Withdrawals and payment-account verification stay off
+  // until the payment integration is signed off; flipping this is an admin action.
+  payment_withdrawal_enabled: {
+    value: 0,
+    description: "Enable wallet withdrawals and payment account verification (0 = off, 1 = on)",
+  },
 };
 
 @Injectable()
@@ -1100,10 +1106,8 @@ export class AdminService implements OnModuleInit {
 
   async listConfig() {
     // Seed defaults that don't exist yet
-    console.log("This is  called----------------for the frontend");
     for (const [key, cfg] of Object.entries(DEFAULT_CONFIG)) {
       const existing = await this.configRepo.findOne({ where: { key } });
-      console.log("Existing repo", existing);
       if (!existing) {
         await this.configRepo.save({
           key,
@@ -1117,7 +1121,6 @@ export class AdminService implements OnModuleInit {
       where: {},
       order: { key: "ASC" },
     });
-    console.log("Configs we got are", configs);
     return {
       items: configs.map((c) => ({
         key: c.key,
@@ -1195,7 +1198,6 @@ export class AdminService implements OnModuleInit {
 
   // Get a single config value (with fallback to default) — uses in-memory cache
   async getConfigValue(key: string): Promise<number> {
-    console.log("This can also come---------for the frontend");
     return this.getCachedConfigValue(key);
   }
 

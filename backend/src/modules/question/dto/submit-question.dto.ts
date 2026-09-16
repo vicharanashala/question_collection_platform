@@ -12,6 +12,7 @@ import {
 import { Season } from '../../../shared/classes/enums';
 import { MaxQuestionChars } from '../../../shared/middleware/validators/max-question-chars.validator';
 import { DOMAINS } from '../constants/domains';
+import { NormalizeMediaUrls } from '../../../shared/middleware/transformers/normalize-media-urls.transformer';
 
 export class SubmitQuestionDto {
   /**
@@ -65,6 +66,7 @@ export class SubmitQuestionDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @NormalizeMediaUrls()
   mediaUrls?: string[];
 
   @IsOptional()
@@ -98,6 +100,7 @@ export class PreviewQuestionDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @NormalizeMediaUrls()
   mediaUrls?: string[];
 }
 

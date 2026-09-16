@@ -1,6 +1,6 @@
 
 import { UserAccountLockedException } from '../../shared/classes/exceptions/user-status.exception';
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, ForbiddenException, Inject, Optional } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, BadRequestException, NotFoundException, ForbiddenException, Inject, Optional } from '@nestjs/common';
 import { MoreThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -17,9 +17,11 @@ import {
 import { RequestOtpDto, VerifyOtpDto, RegisterDto } from './dto';
 import { SmsService } from './sms.service';
 import { RedisService } from '../../shared/database/cache/redis.service';
+import { RateLimitCounterService } from '../../shared/database/cache/rate-limit-counter.service';
 import { AdminService } from '../admin/admin.service';
 import { usernameKey } from '../../shared/database/cache/cache.keys';
 import { CacheTTL } from '../../config/cache-ttl.constants';
+import { isDevelopment } from '../../config/environment';
 import {
   IUserRepository,
   IWalletRepository,
@@ -75,8 +77,10 @@ export interface PublicUser {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly otpExpiryMinutes = 5;
   private readonly otpMaxRequestsPerWindow = 10; // per 15-minute window
+  private readonly otpRateLimitWindowSeconds = 15 * 60;
 
   constructor(
     @Inject(REPOSITORY_TOKENS.User)
@@ -89,6 +93,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly smsService: SmsService,
     private readonly redisService: RedisService,
+    private readonly rateLimitCounter: RateLimitCounterService,
     private readonly adminService: AdminService,
   ) {}
 
@@ -144,8 +149,8 @@ export class AuthService {
     // Rate-limit check via Redis — skip in dev when OTP_RATE_LIMIT=false
     const otpRateLimitEnabled = this.configService.get<boolean>('app.otpRateLimit') ?? true;
     if (otpRateLimitEnabled) {
-      const current = await this.redisService.get(rateLimitKey);
-      if (current !== null && parseInt(current, 10) >= this.otpMaxRequestsPerWindow) {
+      const current = await this.rateLimitCounter.peek(rateLimitKey);
+      if (current !== null && current.count >= this.otpMaxRequestsPerWindow) {
         throw new BadRequestException(
           'Too many OTP requests. Please try again after 15 minutes.',
         );
@@ -154,7 +159,11 @@ export class AuthService {
 
     // Generate 6-digit OTP
     const otp = randomInt(100000, 999999).toString();
-    console.log(`[OTP] >>> ${otp} <<< for mobile=${mobileNumber}`);
+    // The OTP is a credential — printing it would put it in Cloud Logging for every
+    // login. Only local development, which has no real SMS gateway, may see it.
+    if (isDevelopment()) {
+      this.logger.debug(`[OTP] ${otp} for mobile=${mobileNumber}`);
+    }
     const otpHash = await bcrypt.hash(otp, 12);
     const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
 
@@ -222,8 +231,7 @@ export class AuthService {
 
     // Increment rate-limit counter
     if (otpRateLimitEnabled) {
-      await this.redisService.incr(rateLimitKey);
-      await this.redisService.expire(rateLimitKey, 15 * 60); // 15 minutes
+      await this.rateLimitCounter.hit(rateLimitKey, this.otpRateLimitWindowSeconds);
     }
 
     // Send OTP via SMS gateway
@@ -242,7 +250,11 @@ export class AuthService {
    */
   async verifyOtp(rawMobile: string, dto: VerifyOtpDto): Promise<AuthResponse | { requiresRegistration: true; tempToken: string; role: UserRole }> {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
-    const isDev = process.env.NODE_ENV === 'development';
+    // Opt-in local shortcut for developing without a live SMS gateway. main.ts refuses
+    // to boot if this is ever enabled in production.
+    const bypassOtpChecks =
+      (this.configService.get<boolean>('app.otpDevBypass') ?? false) &&
+      isDevelopment();
     let user = await this.userRepo.findOne({ where: { mobileNumber } });
 
     if (!user) {
@@ -284,11 +296,11 @@ export class AuthService {
       });
     }
 
-    if (!isDev && (!user.otpHash || !user.otpExpiresAt)) {
+    if (!bypassOtpChecks && (!user.otpHash || !user.otpExpiresAt)) {
       throw new UnauthorizedException('No OTP was requested for this number');
     }
 
-    if (!isDev) {
+    if (!bypassOtpChecks) {
       if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
         throw new UnauthorizedException('OTP has expired. Please request a new one.');
       }
@@ -344,7 +356,7 @@ export class AuthService {
    * Creates user wallet and returns auth tokens.
    */
   async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
-    const isDev = process.env.NODE_ENV === 'development';
+    const isDev = isDevelopment();
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {

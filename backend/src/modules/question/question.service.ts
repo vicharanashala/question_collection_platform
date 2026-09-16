@@ -182,8 +182,14 @@ export class QuestionService {
         throw new BadRequestException('At most 1 image is allowed per question');
       }
       const url = dto.mediaUrls[0];
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        throw new BadRequestException('mediaUrls must be valid HTTP(S) URLs');
+      // Uploads are normalised to gs:// storage URIs; http(s) is still accepted for
+      // records created before media moved into the bucket.
+      if (
+        !url.startsWith('gs://') &&
+        !url.startsWith('http://') &&
+        !url.startsWith('https://')
+      ) {
+        throw new BadRequestException('mediaUrls must be storage URIs or HTTP(S) URLs');
       }
     }
 
