@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { faqApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { ArrowLeft, ChevronDown, ChevronUp, HelpCircle, HelpingHand } from 'lucide-react'
@@ -10,11 +11,11 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 
 const CATEGORIES = [
-  { key: 'all', label: 'All', color: '#6366F1' },
-  { key: 'account', label: 'Account', color: '#4A90D9' },
-  { key: 'payment', label: 'Payments', color: '#27AE60' },
-  { key: 'question', label: 'Questions', color: '#E67E22' },
-  { key: 'general', label: 'General', color: '#8E44AD' },
+  { key: 'all', labelKey: 'wallet.filterAll', color: '#6366F1' },
+  { key: 'account', labelKey: 'faqCategory.account', color: '#4A90D9' },
+  { key: 'payment', labelKey: 'faqCategory.payment', color: '#27AE60' },
+  { key: 'question', labelKey: 'faqCategory.question', color: '#E67E22' },
+  { key: 'general', labelKey: 'faqCategory.general', color: '#8E44AD' },
 ]
 
 function FaqItem({ item }: { item: Faq }) {
@@ -39,6 +40,7 @@ function FaqItem({ item }: { item: Faq }) {
 }
 
 export function PublicFaqsPage() {
+  const { t } = useTranslation()
   const [items, setItems] = useState<Faq[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCat, setActiveCat] = useState<string>('all')
@@ -49,7 +51,7 @@ export function PublicFaqsPage() {
       const data = await faqApi.getVisible({ category })
       setItems(data)
     } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load FAQs'))
+      toast.error(getErrorMessage(e, t('faq.loadError')))
     } finally {
       setLoading(false)
     }
@@ -82,8 +84,8 @@ export function PublicFaqsPage() {
               </div>
 {/* 
       <div>
-        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground text-center">Help &amp; FAQ</h2>
-        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5 text-center">Find answers to common questions.</p>
+        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('faq.title')}</h2>
+        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">{t('faq.subtitle')}</p>
       </div> */}
       <VideoSection />
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -93,7 +95,7 @@ export function PublicFaqsPage() {
             <button key={cat.key} onClick={() => setActiveCat(cat.key)} className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all',
               isActive ? 'text-white shadow-sm' : 'bg-surface border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground')}
               style={isActive ? { backgroundColor: cat.color } : {}}>
-              {cat.label}
+              {t(cat.labelKey)}
             </button>
           )
         })}
@@ -106,14 +108,14 @@ export function PublicFaqsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <HelpCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
-            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">No FAQs available yet</p>
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">Check back later for help content</p>
+            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">{t('faq.emptyTitle')}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">{t('faq.emptySubtitle')}</p>
           </CardContent>
         </Card>
       ) : (
         <>
           <div className="flex items-center justify-between px-1">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'article' : 'articles'}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{items.length} {t('faq.group.article', { count: items.length })}</p>
           </div>
           <Card><CardContent className="p-0">{items.map((item) => <FaqItem key={item.id} item={item} />)}</CardContent></Card>
         </>

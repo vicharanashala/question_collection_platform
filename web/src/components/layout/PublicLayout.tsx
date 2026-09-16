@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { VerificationBanner } from '@/components/VerificationBanner'
 import { PublicSidebar } from './PublicSidebar'
 import { PublicHeader } from './PublicHeader'
 import { PublicMobileNav } from './PublicMobileNav'
@@ -26,6 +27,7 @@ export function PublicLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
+        <VerificationBanner />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 md:pb-6">
           <Outlet />
         </main>

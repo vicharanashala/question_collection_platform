@@ -109,6 +109,12 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
     value: 5,
     description: "Maximum image file size per question (MB)",
   },
+  // 0 = disabled, 1 = enabled. Withdrawals and payment-account verification stay off
+  // until the payment integration is signed off; flipping this is an admin action.
+  payment_withdrawal_enabled: {
+    value: 0,
+    description: "Enable wallet withdrawals and payment account verification (0 = off, 1 = on)",
+  },
 };
 
 @Injectable()

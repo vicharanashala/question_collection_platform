@@ -198,16 +198,7 @@ export function PublicHomePage() {
   const isVerified = user?.verificationStatus === 'verified'
   const initials = (user?.name?.charAt(0) || '?').toUpperCase()
 
-  const CATEGORY_KEYS: Record<string, string> = {
-    farmer: 'home.farmer',
-    fpo: 'home.fpo',
-    student: 'home.student',
-    volunteer: 'home.volunteer',
-    ngo: 'home.ngo',
-  }
-  const categoryText = user?.category
-    ? (CATEGORY_KEYS[user.category] ? t(CATEGORY_KEYS[user.category]) : categoryLabel(user.category))
-    : null
+  const categoryText = user?.category ? categoryLabel(t, user.category) : null
 
   const tierIdx = currentTierIndex(stats?.totalApproved ?? 0)
   const currentTier = TIER_DISPLAY[tierIdx]
@@ -310,7 +301,7 @@ export function PublicHomePage() {
             <p className={cn('text-[10px] font-black uppercase tracking-widest sm:text-xs', currentTier.text)}>
               {t(`home.${currentTier.key}`)}
             </p>
-            <p className="text-[10px] text-emerald-400/60">Current tier</p>
+            <p className="text-[10px] text-emerald-400/60">{t('home.currentTier')}</p>
           </div>
         </div>
 
@@ -365,7 +356,7 @@ export function PublicHomePage() {
             iconBg="bg-gradient-to-br from-emerald-500 to-emerald-700"
             title={t('home.askQuestion')}
             description={t('home.askQuestionSub')}
-            cta="Start asking"
+            cta={t('home.startAsking')}
             onClick={() => navigate('/home/ask')}
           />
           <ActionCard
@@ -373,7 +364,7 @@ export function PublicHomePage() {
             iconBg="bg-gradient-to-br from-blue-500 to-blue-700"
             title={t('home.myWallet')}
             description={t('home.myWalletSub')}
-            cta="View wallet"
+            cta={t('home.viewWallet')}
             onClick={() => navigate('/home/wallet')}
           />
         </div>
@@ -428,7 +419,7 @@ export function PublicHomePage() {
                     </div>
                     {isCurrent && (
                       <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:text-xs">
-                        You are here
+                        {t('home.youAreHere')}
                       </span>
                     )}
                   </div>
@@ -487,13 +478,13 @@ export function PublicHomePage() {
           <TipCard
             icon={<Calendar className="h-4 w-4 text-white" />}
             iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-            title={`Daily limit: ${dailyLimit} Qs`}
+            title={t('home.dailyLimitTitle')}
             description={t('home.dailyLimitTip', { count: dailyLimit })}
           />
           <TipCard
             icon={<PenLine className="h-4 w-4 text-white" />}
             iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
-            title="Edit window"
+            title={t('home.editWindowTitle')}
             description={
               editWindowSec === 0
                 ? t('home.editWindowClosed')
@@ -503,7 +494,7 @@ export function PublicHomePage() {
           <TipCard
             icon={<Lightbulb className="h-4 w-4 text-white" />}
             iconBg="bg-gradient-to-br from-violet-500 to-purple-600"
-            title="AI relevance check"
+            title={t('home.aiCheckTitle')}
             description={t('home.aiCheckTip')}
           />
         </div>

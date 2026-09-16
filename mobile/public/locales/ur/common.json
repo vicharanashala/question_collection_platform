@@ -40,7 +40,20 @@
     "tapToPlay": "چلانے کے لیے تھپتھپائیں",
     "delete": "حذف کریں",
     "stop": "روکیں",
-    "playing": "چل رہا ہے…"
+    "playing": "چل رہا ہے…",
+    "noAudioCaptured": "کوئی آڈیو ریکارڈ نہیں ہوئی۔ براہ کرم دوبارہ کوشش کریں۔",
+    "noWordsHeard": "کوئی الفاظ سنائی نہیں دیے۔ خاموش جگہ پر دوبارہ کوشش کریں۔",
+    "voiceCaptured": "آواز ریکارڈ ہو گئی۔ جائزہ لے کر جاری رکھیں۔",
+    "couldNotStop": "ریکارڈنگ روکی نہیں جا سکی۔",
+    "notSupportedBrowser": "اس براؤزر میں مائیکروفون ریکارڈنگ سپورٹڈ نہیں ہے۔",
+    "recordingFailed": "ریکارڈنگ ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔",
+    "permissionDeniedRetry": "مائیکروفون کی اجازت مسترد کر دی گئی۔ مائیکروفون تک رسائی دیں اور دوبارہ کوشش کریں۔",
+    "couldNotStart": "ریکارڈنگ شروع نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔",
+    "tapToStopRecording": "روکنے کے لیے تھپتھپائیں",
+    "doneSpeakAgain": "مکمل — کبھی بھی دوبارہ بولیں",
+    "notSupportedShort": "اس براؤزر پر مائیک سپورٹڈ نہیں ہے",
+    "stopRecordingAria": "ریکارڈنگ روکیں",
+    "startRecordingAria": "آواز کی ریکارڈنگ شروع کریں"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "اور",
   "app": {
     "name": "اناداتا",
-    "tagline": "آپ کا ضلع، آپ کی زبان میں"
+    "tagline": "آپ کا ضلع، آپ کی زبان میں",
+    "footer": "اناداتا - بھارتی کسانوں کو مضبوط بنانے کے لیے"
   },
   "loginPhone": {
     "signIn": "سائن ان کریں",
@@ -219,7 +233,10 @@
     "sortBy": "ترتیب دیں بلحاظ",
     "unknown": "نامعلوم",
     "rupee": "روپے",
-    "steps": "مراحل"
+    "steps": "مراحل",
+    "continue": "جاری رکھیں",
+    "noQuestionsFound": "کوئی سوال نہیں ملا",
+    "askYourFirstQuestion": "اپنا پہلا سوال پوچھیں"
   },
   "completeRegistration": "رجسٹریشن مکمل کریں",
   "consentClause1": "آپ کا موبائل نمبر اور رجسٹریشن کی تفصیلات محفوظ طریقے سے ذخیرہ کی جائیں گی اور صرف پلیٹ فارم کی توثیق اور زرعی معلوماتی خدمات کے لیے استعمال کی جائیں گی۔",
@@ -290,7 +307,15 @@
     "editWindowClosed": "جمع کرانے کے بعد سوالات میں ترمیم نہیں کی جا سکتی",
     "quickActionsTip": "براہ راست سوال جمع کرانے یا اپنے والٹ کا بیلنس اور حالیہ سرگرمی دیکھنے کے لیے جائیں۔",
     "rewardsTip": "کل منظور شدہ سوالات کی بنیاد پر ہر منظور شدہ سوال پر کمائیں۔ سلور اور گولڈ درجے زیادہ انعامی شرحیں کھولتے ہیں۔",
-    "guidelinesTip": "ویڈیو کو 60 سیکنڈ اور 10MB سے کم رکھیں۔ جمع کرانے کے بعد آپ کو 30 سیکنڈ کی ترمیمی ونڈو ملتی ہے۔ روزانہ حد آدھی رات کو دوبارہ سیٹ ہوتی ہے۔"
+    "guidelinesTip": "ویڈیو کو 60 سیکنڈ اور 10MB سے کم رکھیں۔ جمع کرانے کے بعد آپ کو 30 سیکنڈ کی ترمیمی ونڈو ملتی ہے۔ روزانہ حد آدھی رات کو دوبارہ سیٹ ہوتی ہے۔",
+    "dailyLimitTitle": "روزانہ حد",
+    "editWindowTitle": "ترمیمی ونڈو",
+    "aiCheckTitle": "AI متعلقہ چیک",
+    "verifiedUser": "تصدیق شدہ صارف",
+    "startAsking": "پوچھنا شروع کریں",
+    "viewWallet": "والیٹ دیکھیں",
+    "youAreHere": "آپ یہاں ہیں",
+    "currentTier": "موجودہ سطح"
   },
   "iAcceptContinue": "میں قبول کرتا/کرتی ہوں اور جاری رکھتا/رکھتی ہوں",
   "invalidOtp": "مکمل 6 ہندسوں کا کوڈ درج کریں",
@@ -363,7 +388,11 @@
       "held": "روکا گیا",
       "approved": "منظور شدہ",
       "rejected": "منظور نہیں ہوا"
-    }
+    },
+    "loading": "اطلاعات لوڈ ہو رہی ہیں…",
+    "loadMore": "مزید لوڈ کریں",
+    "loadError": "اطلاعات لوڈ کرنے میں ناکامی",
+    "markAllReadError": "اطلاعات کو پڑھا ہوا نشان زد کرنے میں ناکامی"
   },
   "organisationName": "تنظیم کا نام",
   "organisationNamePlaceholder": "تنظیم کا نام درج کریں",
@@ -447,7 +476,10 @@
     "suspended": "معطل",
     "banned": "بین شدہ",
     "village": "گاؤں",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} منظور شدہ سوالات",
+    "toNext": "{{count}} اگلے تک",
+    "toTier": "{{tier}} تک {{count}}"
   },
   "profileLanguage": "ایپ کی زبان",
   "profileLanguageDesc": "یہ ایپ کے انٹرفیس اور سوالات جمع کرانے کے لیے ڈیفالٹ زبان ہو گی",
@@ -550,7 +582,9 @@
     "rejectedEditQuestion": "میرا سوال درست کریں",
     "addVoice": "آواز شامل کریں",
     "tipDetailed": "تفصیل سے لکھیں — فصل، مقام اور آپ نے اب تک کیا آزمایا ہے، بتائیں۔",
-    "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی"
+    "dailyLimitIndicator": "روزانہ کی حد مکمل ہو گئی",
+    "expertWillRespond": "ایک ماہر آپ کو جواب دے گا۔",
+    "questionExample": "مثال کے طور پر: میرے ٹماٹر کے پتے پیلے ہو رہے ہیں — مجھے کیا کرنا چاہیے؟"
   },
   "readFullPolicy": "مکمل پرائیویسی پالیسی پڑھیں →",
   "resendOtp": "OTP دوبارہ بھیجیں",
@@ -639,7 +673,16 @@
     "credit": "کریڈٹ",
     "debit": "ڈیبٹ",
     "txNotFound": "لین دین نہیں ملا",
-    "notFoundSub": "ہو سکتا ہے لین دین ہٹا دیا گیا ہو یا اب دستیاب نہ ہو۔"
+    "notFoundSub": "ہو سکتا ہے لین دین ہٹا دیا گیا ہو یا اب دستیاب نہ ہو۔",
+    "sourceReward": "انعام",
+    "sourceWithdrawal": "نکاسی",
+    "sourceRefund": "رقم کی واپسی",
+    "sourceAdjustment": "ایڈجسٹمنٹ",
+    "statusCompleted": "مکمل",
+    "statusReversed": "واپس کر دیا گیا",
+    "statusFailed": "ناکام",
+    "statusPending": "زیرِ التوا",
+    "currency": "بھارتی روپے"
   },
   "yourRole": "آپ کا کردار",
   "home.greeting.morning": "صبح بخیر",
@@ -1042,7 +1085,14 @@
     "replies": "جوابات",
     "adminName": "ایڈمن",
     "replyCount_one": "{{count}} جواب",
-    "replyCount_other": "{{count}} جوابات"
+    "replyCount_other": "{{count}} جوابات",
+    "awaitingReply": "جواب کا انتظار",
+    "newReportSubtitle": "آپ کو پیش آنے والے مسئلے کو بیان کریں۔ ہماری ٹیم جلد آپ سے رابطہ کرے گی۔",
+    "loadingReports": "آپ کی رپورٹس لوڈ ہو رہی ہیں…",
+    "loadingReport": "رپورٹ لوڈ ہو رہی ہے…",
+    "reportNotFound": "رپورٹ نہیں ملی",
+    "reportNotFoundHint": "یہ ہٹا دیا گیا ہو سکتا ہے یا اب آپ کو رسائی حاصل نہیں ہے۔",
+    "backToReports": "رپورٹس پر واپس جائیں"
   },
   "profile.account": "اکاؤنٹ",
   "profile.personalInfo": "ذاتی معلومات",
@@ -1114,7 +1164,10 @@
     "group": {
       "article_one": "مضمون",
       "article_other": "مضامین"
-    }
+    },
+    "videoComingSoon": "ویڈیو گائیڈ جلد آرہا ہے",
+    "videoGuideTitle": "ویڈیو گائیڈ",
+    "loadError": "FAQ لوڈ کرنے میں ناکامی"
   },
   "faqAdmin": {
     "title": "FAQ کا انتظام",
@@ -1294,5 +1347,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "ہولڈ پر",
+    "published": "شائع شدہ",
+    "yourSubmissions": "آپ کے جمع کردہ سوالات اور ان کی حیثیت۔"
+  },
+  "leaderboard.loadError": "لیڈر بورڈ لوڈ کرنے میں ناکامی",
+  "leaderboard.loadMore": "مزید لوڈ کریں",
+  "leaderboard.loadingMore": "لوڈ ہو رہا ہے...",
+  "leaderboard.reachedEnd": "آپ لیڈر بورڈ کے اختتام تک پہنچ گئے ہیں۔"
 }

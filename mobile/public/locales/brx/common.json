@@ -40,7 +40,20 @@
     "tapToPlay": "दामनो थाखाय थु",
     "delete": "हुइग्रोनाय / बोखारनाय",
     "stop": "होबथानाय",
-    "playing": "दामगासिनो दं…"
+    "playing": "दामगासिनो दं…",
+    "noAudioCaptured": "कोंनो audio मोन्नाय नङा। अननानै आरोबाव नाजा।",
+    "noWordsHeard": "जायखि रा नुथिखा। रोगा जायगाव फिन नाजा।",
+    "voiceCaptured": "रा मोनजाबाय। सोदोब आरो सोलायख्लाम।",
+    "couldNotStop": "रेकर्डिं हबथानो हायाखै।",
+    "notSupportedBrowser": "बे browser आव माइक्र'फ'न रेकर्डिं गनायथि जायाखै।",
+    "recordingFailed": "रेकर्डिं जायासै। अननानै आरोबाव नाजा।",
+    "permissionDeniedRetry": "माइक्र'फ'ननि गनायथि हारि खालामबाय। माइक्र'फ'न access होन्नाय होबाय आरो फिन नाजा।",
+    "couldNotStart": "रेकर्डिं जागायनो हायाखै। अननानै आरोबाव नाजा।",
+    "tapToStopRecording": "हबथानो थाखाय थुना हो",
+    "doneSpeakAgain": "जोबनाय — जायखि सम'र फिन रायो",
+    "notSupportedShort": "बे browser आव mic गनायथि जायाखै",
+    "stopRecordingAria": "रेकर्डिं हबथा",
+    "startRecordingAria": "रा रेकर्डिं जागायख्लाम"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "आरो",
   "app": {
     "name": "अन्नदाता (AnnaDatha)",
-    "tagline": "नोंथानि जिलानि, नोंथानि रावआव"
+    "tagline": "नोंथानि जिलानि, नोंथानि रावआव",
+    "footer": "अन्नदाता (AnnaDatha) - भारतारि रैयतखौ जोरगोरा खालामनोखौ थाखाय"
   },
   "loginPhone": {
     "signIn": "साइन इन (Sign In)",
@@ -219,7 +233,10 @@
     "sortBy": "सायख'नाय थि खालाम",
     "unknown": "मिथियै",
     "rupee": "रां",
-    "steps": "स्टेप"
+    "steps": "स्टेप",
+    "continue": "जारी खालाम",
+    "noQuestionsFound": "जायखि प्रश्न मोनाखै",
+    "askYourFirstQuestion": "नोंथाङ गथ्थ अनजिमा सोंगोन"
   },
   "completeRegistration": "रेजिस्ट्रेसन आबुं खालाम",
   "consentClause1": "नोंथानि मबाइल नम्बर आरो रेजिस्ट्रेसननि खारथायखौ रैखाथायै दोनगोन आरो खालि प्लाटफार्म थारसिमनाय आरो कृषि ग्यान सेवानि थाखायल' बाहायगोन।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "सोंथिखौ दैथायहरनायनि उनाव सोलायनो हाया",
     "quickActionsTip": "थोंजों सोंथि दैथायहरनो एबा नोंथानि वॉलेट बेलेंस आरो दानि खामानि नायनो थां।",
     "rewardsTip": "गनायथि मोनाय गासै सोंथिनि सायाव बेसिखाना आर्जि। रूपा आरो सोना थाखोआव बांसिन बान्था मोनाव।",
-    "guidelinesTip": "भिडिअखौ 60s आरो 10MB नि सिङाव दोन। दैथायहरनायनि उनाव 30 सेकेन्द सोलायनाय समाव मोनाव। साननि सिमाया हरनि १२ बाजायाव फिन रोखोम जाफिनो।"
+    "guidelinesTip": "भिडिअखौ 60s आरो 10MB नि सिङाव दोन। दैथायहरनायनि उनाव 30 सेकेन्द सोलायनाय समाव मोनाव। साननि सिमाया हरनि १२ बाजायाव फिन रोखोम जाफिनो।",
+    "dailyLimitTitle": "साननि सिमा",
+    "editWindowTitle": "सोलायनाय समाव",
+    "aiCheckTitle": "AI नायफिननाय",
+    "verifiedUser": "थारसिनाय बाहायगिरि",
+    "startAsking": "सोंगोनाय एरजाबहो",
+    "viewWallet": "वालेट नुथाय",
+    "youAreHere": "नोंथाङ बे दं",
+    "currentTier": "दानि स्तर"
   },
   "iAcceptContinue": "आं गनायो आरो आगौवायो",
   "invalidOtp": "आबुं ६-डिजिटनि कोड सोमावना हो",
@@ -363,7 +388,11 @@
       "held": "हमथानाय",
       "approved": "गनायथि मोनाय",
       "rejected": "गनायथि मोनासै"
-    }
+    },
+    "loading": "सोदोबखौ लोड खालामनाय जायोगोन…",
+    "loadMore": "गोबां लोड खालाम",
+    "loadError": "सोदोबखौ लोड खालामनो हायाखै",
+    "markAllReadError": "सोदोबखौ फोरमानथिफ्राय दिन्थिबहोनो हायाखै"
   },
   "organisationName": "आफादनि मुं",
   "organisationNamePlaceholder": "आफादनि मुं सोमावना हो",
@@ -447,7 +476,10 @@
     "suspended": "सामयिकइ होबथानाय",
     "banned": "हबथानाय",
     "village": "गामि",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} मानोन जाबाय सोदोब",
+    "toNext": "{{count}} उननिफ्राय",
+    "toTier": "{{tier}} फ्राय {{count}}"
   },
   "profileLanguage": "एपनि राव",
   "profileLanguageDesc": "बे एपनि गाहाय राव जागोन आरो सोंथि दैथायनायाव बाहायगोन",
@@ -550,7 +582,9 @@
     "rejectedEditQuestion": "आंनि सोंथिखौ सुद्रायो",
     "addVoice": "गोर दाजाब",
     "tipDetailed": "गुबुन गुबुन लिर — गाबसु, जायगा आरो नोंथाङा दानि सिम मा नाजादों बेखौ लिर।",
-    "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय"
+    "dailyLimitIndicator": "सानफ्रोमबोनि सिमा जोबबाय",
+    "expertWillRespond": "गोदान अनजिमा नोंथाङा जाबाब होगोन।",
+    "questionExample": "जेरै: आंनि tomato बिफांआ सिबिनि सोरजियो — आं मा खालामनांगौ?"
   },
   "readFullPolicy": "आबुं लाखिनाय खानथि फराय →",
   "resendOtp": "OTP फिन दैथायहर",
@@ -639,7 +673,16 @@
     "credit": "जमा (Credit)",
     "debit": "दंखांनाय (Debit)",
     "txNotFound": "लेनदेन मोनासै",
-    "notFoundSub": "लेनदेनखौ बोखारनाय जाबाय एबा मोना साबाय।"
+    "notFoundSub": "लेनदेनखौ बोखारनाय जाबाय एबा मोना साबाय।",
+    "sourceReward": "पुरस्कार",
+    "sourceWithdrawal": "फोजोबनाय",
+    "sourceRefund": "फिन होगोन",
+    "sourceAdjustment": "थिख्रुइनाय",
+    "statusCompleted": "सोदोबनाय",
+    "statusReversed": "फिन गोसो खालामनाय जादों",
+    "statusFailed": "हायाखै",
+    "statusPending": "नायफिननो थाखाय थानाय",
+    "currency": "भारतीय रुपी"
   },
   "yourRole": "नोंथानि बिबान",
   "home.greeting.morning": "सुप्रभात",
@@ -1042,7 +1085,14 @@
     "replies": "फिननायफोर",
     "adminName": "एडमिन",
     "replyCount_one": "{{count}} टा फिननाय",
-    "replyCount_other": "{{count}} टा फिननाय"
+    "replyCount_other": "{{count}} टा फिननाय",
+    "awaitingReply": "फिनफिनाय गोसो सोंलाय दं",
+    "newReportSubtitle": "नोंथाङा मोनसे बिथोन जायखि बे बुंनाय। आं मोनसे दल जोबथाबनो थांगोन।",
+    "loadingReports": "नोंथाङा रिपर्टखौ लोड खालामनाय जासैदों…",
+    "loadingReport": "रिपर्टखौ लोड खालामनाय जासैदों…",
+    "reportNotFound": "रिपर्ट मोनाखै",
+    "reportNotFoundHint": "बेखौ फोजोब खालामनाय जाबाय एबा नोंथाङा गोदान अनजिमा गैया।",
+    "backToReports": "रिपर्ट फिसा जागोन"
   },
   "profile.account": "एकाउन्ट",
   "profile.personalInfo": "गावनाव विवरण",
@@ -1114,7 +1164,10 @@
     "group": {
       "article_one": "आर्टिकेल",
       "article_other": "आर्टिकेलफोर"
-    }
+    },
+    "videoComingSoon": "भिडिअ गाइड गोदान फैया",
+    "videoGuideTitle": "भिडिअ गाइड",
+    "loadError": "FAQ लोड खालामनो हायाखै"
   },
   "faqAdmin": {
     "title": "FAQ सामलायनाय",
@@ -1294,5 +1347,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "होल्ड आव दं",
+    "published": "उदांखांबाय",
+    "yourSubmissions": "नोंथाङनि होगोबाय अनजिमाफोर आरो बेफोरनि थाखोमानि जायगा।"
+  },
+  "leaderboard.loadError": "लीडरबर्ड लोड खालामनो हायाखै",
+  "leaderboard.loadMore": "गोबां लोड खालाम",
+  "leaderboard.loadingMore": "लोड जायोगोन...",
+  "leaderboard.reachedEnd": "नोंथाङा लीडरबर्डनि जोबथानो सायखौ।"
 }

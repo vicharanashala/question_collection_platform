@@ -40,7 +40,20 @@
     "tapToPlay": "শানবা নমবীয়ু",
     "delete": "মুতথোকপা",
     "stop": "লেপপা",
-    "playing": "শারি…"
+    "playing": "শারি…",
+    "noAudioCaptured": "অডিও ফংদ্রে। অমুক হন্না হোৎনবীয়ু।",
+    "noWordsHeard": "ৱাহেই তাদ্রে। ঙাইথিবা মফমদা হন্না হোৎনবীয়ু।",
+    "voiceCaptured": "খোন্জেল ফংলে। য়েংশিনবীয়ু অমসুং চঙদোককো।",
+    "couldNotStop": "রেকোদিং লেপ্পা ঙমদ্রে।",
+    "notSupportedBrowser": "ব্রাউজারসিদা মাইক্রোফোন রেকোদিং সাপোর্ট তৌদে।",
+    "recordingFailed": "রেকোদিং ঙমদ্রে। অমুক হন্না হোৎনবীয়ু।",
+    "permissionDeniedRetry": "মাইক্রোফোনগী অয়াবা য়াদ্রে। মাইক্রোফোন লৌবা য়াহল্লু অমসুং হন্না হোৎনবীয়ু।",
+    "couldNotStart": "রেকোদিং হৌবা ঙমদ্রে। অমুক হন্না হোৎনবীয়ু।",
+    "tapToStopRecording": "লেপনবা নমবীয়ু",
+    "doneSpeakAgain": "লৌখৎলে — মথং হৌবা মতমদা হন্না ঙাংবীয়ু",
+    "notSupportedShort": "ব্রাউজারসিদা মাইক সাপোর্ট তৌদে",
+    "stopRecordingAria": "রেকোদিং লেপ্পীয়ু",
+    "startRecordingAria": "খোন্জেল রেকোদিং হৌবীয়ু"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "অমসুং",
   "app": {
     "name": "অন্নদাতা (AnnaDatha)",
-    "tagline": "নহাগী ডিস্ট্রিক্ট, নহাগী লোনদা"
+    "tagline": "নহাগী ডিস্ট্রিক্ট, নহাগী লোনদা",
+    "footer": "অন্নদাতা (AnnaDatha) - ভারতগী লৌমীশিংবু কনবীবা"
   },
   "loginPhone": {
     "signIn": "সাইন ইন তৌবু",
@@ -219,7 +233,10 @@
     "sortBy": "মথং-মনাও শেম্বা",
     "unknown": "খংদবা",
     "rupee": "লুপা",
-    "steps": "ফিভম"
+    "steps": "ফিভম",
+    "continue": "চঙদোককো",
+    "noQuestionsFound": "ৱাহঙ ফংদ্রে",
+    "askYourFirstQuestion": "নহাক্কী অহানবা হংজবা হংবীয়ু"
   },
   "completeRegistration": "রেজিষ্ট্রেশন মপুং ফাহনবা",
   "consentClause1": "নহাগী মোবাইল নম্বর অমসুং রেজিষ্ট্রেশন মরোলশিং অসিবু চে অমত্তা লৈতনা থমগনি অমসুং প্লেটফোর্ম অসিদা ভেরিফাই অমসুং লৌউ-শিংউগী সর্বিসগীদমক শীজিন্নগনি।",
@@ -290,7 +307,15 @@
     "editWindowClosed": "থারকপগী মতুংদা ওয়াহং সেমদোকবা য়ামদে",
     "quickActionsTip": "ওয়াহং থাবদা নত্রগা নহাগী ওয়ালেট ব্যালেন্স অমসুং হন্দকগী থৌরমশিংদা ডাইরেক্ত চতবীয়ু।",
     "rewardsTip": "অয়াবা পীরবা অপুনবা ওয়াহংগী মাংদা রিৱার্দ ফংবীয়ু। সিলভর অমসুং গোল্ড এপ্রুবেলশিংদা হেন্না ৱাংবা রিৱার্দ ফংগনি।",
-    "guidelinesTip": "ভিদিও অসি সেকেন্দ ৬০ অমসুং 10MB গী মনুংদা থমবীয়ু। থারকপগী মতুংদা সেকেন্দ ৩০ গী সেমদোকপগী মতম ফংগনি।"
+    "guidelinesTip": "ভিদিও অসি সেকেন্দ ৬০ অমসুং 10MB গী মনুংদা থমবীয়ু। থারকপগী মতুংদা সেকেন্দ ৩০ গী সেমদোকপগী মতম ফংগনি।",
+    "dailyLimitTitle": "নুমিত অমগী সীমা",
+    "editWindowTitle": "সেমদোকপগী মতম",
+    "aiCheckTitle": "AI চেক",
+    "verifiedUser": "ভেরিফাই তৌবা মীওই",
+    "startAsking": "হংনবা হৌবিয়ু",
+    "viewWallet": "ৱালেট য়েংগু",
+    "youAreHere": "নঙ মফমসিদা লৈ",
+    "currentTier": "হৌজিক্কী স্তর"
   },
   "iAcceptContinue": "ঐ য়ানবনি অমসুং মখা চতথবনি",
   "invalidOtp": "মপুং ফাবা ৬-দিজিৎকী কোড অদু চংহনবীয়ু",
@@ -363,7 +388,11 @@
       "held": "থমজিনখ্রে",
       "approved": "অয়াবা পীরবা",
       "rejected": "অয়াবা পীদে"
-    }
+    },
+    "loading": "পাউদম লোড তৌরি…",
+    "loadMore": "হেনগৎ লোড তৌ",
+    "loadError": "পাউদম লোড তৌবদা মায় পাক্লে",
+    "markAllReadError": "পাউদমশিং পাব্রেখ্রবা ওইনা মার্ক তৌবদা মায় পাক্লে"
   },
   "organisationName": "ওর্গানাইজেসনগী মিং",
   "organisationNamePlaceholder": "ওর্গানাইজেসনগী মিং চংহনবীয়ু",
@@ -447,7 +476,10 @@
     "suspended": "লেপহনখ্রে",
     "banned": "বোন তৌখ্রে",
     "village": "খুঙ্গং",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} লোইশিনখিবা হংজবা",
+    "toNext": "{{count}} মথংগী",
+    "toTier": "{{tier}} ফাওবা {{count}}"
   },
   "profileLanguage": "এপকী লোন",
   "profileLanguageDesc": "অসি এপকী ইন্তর্ফেস অমসুং ওয়াহং থাবগীদমক দিফোল্ত লোন ওইগনি",
@@ -550,7 +582,9 @@
     "rejectedEditQuestion": "ঐগী ৱাহং শেমদোকউ",
     "addVoice": "খোন্জেল হাপচিল্লু",
     "tipDetailed": "অকুপ্না ইযু — মহৈ, মফম অমসুং নহাক্না হৌজিক ফাওবা করি হোৎনখিবগে হায়বদু হাপচিল্লু।",
-    "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে"
+    "dailyLimitIndicator": "নুমিৎকী লিমিৎ লোয়রে",
+    "expertWillRespond": "শিংনরবা মীওই অমনা নহাক্কী পাঙথোকপা পীগনি।",
+    "questionExample": "খুদামদা: ঐগী টমেটোগী মানবীশিং য়েল্লবা ওইরকই — ঐনা করিগুম্বা তৌগদগে?"
   },
   "readFullPolicy": "মপুং ফাবা প্রাইভেসি পোলিসি পারো →",
   "resendOtp": "OTP অমুক থাবীয়ু",
@@ -639,7 +673,16 @@
     "credit": "ক্রেদিট",
     "debit": "ডেবিট",
     "txNotFound": "লেন-থৌ ফংদ্রে",
-    "notFoundSub": "লেন-থৌ অসি মুতথোকখ্রে নত্রগা লৈতরে।"
+    "notFoundSub": "লেন-থৌ অসি মুতথোকখ্রে নত্রগা লৈতরে।",
+    "sourceReward": "পুরস্কার",
+    "sourceWithdrawal": "লৌথোকপা",
+    "sourceRefund": "রিফান্ড",
+    "sourceAdjustment": "সেমগৎ",
+    "statusCompleted": "লোইশিনখ্রে",
+    "statusReversed": "হনখিবা য়াখ্রে",
+    "statusFailed": "মায় পাকখ্রে",
+    "statusPending": "পেন্ডিং",
+    "currency": "ভারতীয় রূপী"
   },
   "yourRole": "নহাগী থৌদাং",
   "home.greeting.morning": "অয়ুক্কী খুরুমজরি",
@@ -1042,7 +1085,14 @@
     "replies": "পাউখুমশিং",
     "adminName": "এডমিন",
     "replyCount_one": "পাউখুম {{count}}",
-    "replyCount_other": "পাউখুম {{count}}"
+    "replyCount_other": "পাউখুম {{count}}",
+    "awaitingReply": "পাখোনবা লৈরি",
+    "newReportSubtitle": "নহাক্না মায়োক্খিবা হংজবা মশিং লেপ্পিয়ু। ঐখোয়গী টিমনা থুনামক নহাক্কী মনুংদা লাক্কনি।",
+    "loadingReports": "নহাক্কী রিপোর্ট লোড তৌরি…",
+    "loadingReport": "রিপোর্ট লোড তৌরি…",
+    "reportNotFound": "রিপোর্ট ফংদ্রে",
+    "reportNotFoundHint": "মসি লৌথোকখ্রবা য়াখ্রে নত্রগা নহাক্না হৌজিক্তি এক্সেস লৈত্রে।",
+    "backToReports": "রিপোর্টশিংদা হন্না চৎলু"
   },
   "profile.account": "একান্ত",
   "profile.personalInfo": "ইশাগী মরোল",
@@ -1114,7 +1164,10 @@
     "group": {
       "article_one": "আর্টিকেল",
       "article_other": "আর্টিকেলশিং"
-    }
+    },
+    "videoComingSoon": "ভিদিও গাইদ থুনামক লাক্কনি",
+    "videoGuideTitle": "ভিদিও গাইদ",
+    "loadError": "FAQ লোড তৌবদা মায় পাক্লে"
   },
   "faqAdmin": {
     "title": "FAQ মেটনেজমেন্ট",
@@ -1294,5 +1347,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "হোল্দ তৌরি",
+    "published": "থাদোকখ্রে",
+    "yourSubmissions": "নহাক্কী থাদোকখিবা হংজবা অমসুং মখোয়গী ফিভম।"
+  },
+  "leaderboard.loadError": "লীডরবোর্দ লোড তৌবদা মায় পাক্লে",
+  "leaderboard.loadMore": "হেনগৎ লোড তৌ",
+  "leaderboard.loadingMore": "লোড তৌরি...",
+  "leaderboard.reachedEnd": "নহাক্না লীডরবোর্দগী অরোয়বদা য়ৌরে।"
 }

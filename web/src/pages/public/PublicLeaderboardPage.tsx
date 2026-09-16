@@ -5,6 +5,7 @@
  * row, and a ranked list of the rest of the participants.
  */
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { leaderboardApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Banknote, HelpCircle, Trophy, Medal, Star, Loader2 } from 'lucide-react'
@@ -28,9 +29,9 @@ function getInitials(name?: string): string {
 }
 
 const MEDALS = {
-  gold:   { color: 'text-amber-600 dark:text-amber-400',   ring: 'ring-amber-400',  bg: 'bg-amber-50 dark:bg-amber-950/40',   label: '1st' },
-  silver: { color: 'text-slate-600 dark:text-slate-300',   ring: 'ring-slate-400',  bg: 'bg-slate-100 dark:bg-slate-800/60',  label: '2nd' },
-  bronze: { color: 'text-orange-700 dark:text-orange-400', ring: 'ring-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/40', label: '3rd' },
+  gold:   { color: 'text-amber-600 dark:text-amber-400',   ring: 'ring-amber-400',  bg: 'bg-amber-50 dark:bg-amber-950/40',   labelKey: 'leaderboard.podium.rank1' },
+  silver: { color: 'text-slate-600 dark:text-slate-300',   ring: 'ring-slate-400',  bg: 'bg-slate-100 dark:bg-slate-800/60',  labelKey: 'leaderboard.podium.rank2' },
+  bronze: { color: 'text-orange-700 dark:text-orange-400', ring: 'ring-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/40', labelKey: 'leaderboard.podium.rank3' },
 } as const
 
 // ─── Avatar ──────────────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ function StatCard({ icon: Icon, iconClassName, value, label }: { icon: typeof Ba
 // ─── Podium ──────────────────────────────────────────────────────────────────
 
 function PodiumSlot({ entry, medal, height }: { entry: LeaderboardEntry; medal: keyof typeof MEDALS; height: number }) {
+  const { t } = useTranslation()
   const m = MEDALS[medal]
   const isWinner = medal === 'gold'
   return (
@@ -85,7 +87,7 @@ function PodiumSlot({ entry, medal, height }: { entry: LeaderboardEntry; medal: 
       >
         <Medal className={cn(isWinner ? 'h-6 w-6' : 'h-5 w-5', m.color)} />
         <span className={cn('font-black', m.color, isWinner ? 'text-lg sm:text-xl' : 'text-sm sm:text-sm sm:text-base')}>{entry.rank}</span>
-        <span className={cn('text-[9px] font-bold uppercase tracking-wide', m.color)}>{m.label}</span>
+        <span className={cn('text-[9px] font-bold uppercase tracking-wide', m.color)}>{t(m.labelKey)}</span>
       </div>
     </div>
   )
@@ -251,6 +253,7 @@ function ListRow({ entry }: { entry: LeaderboardEntry }) {
 // }
 
 export function PublicLeaderboardPage(): ReactNode {
+  const { t } = useTranslation()
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [userRank, setUserRank] = useState<number | null>(null)
   const [total, setTotal] = useState(0)
@@ -301,7 +304,7 @@ export function PublicLeaderboardPage(): ReactNode {
         toast.error(
           getErrorMessage(
             e,
-            'Failed to load leaderboard',
+            t('leaderboard.loadError'),
           ),
         )
       } finally {
@@ -309,7 +312,7 @@ export function PublicLeaderboardPage(): ReactNode {
         setLoadingMore(false)
       }
     },
-    [],
+    [t],
   )
 
   // ─────────────────────────────────────────────────────────────
@@ -388,13 +391,13 @@ export function PublicLeaderboardPage(): ReactNode {
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="p-4">
           <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
-            Leaderboard
+            {t('leaderboard.title')}
           </h1>
 
           <p className="mt-0.5 text-xs sm:text-sm text-text-secondary">
             {total > 0
-              ? `${total} participants`
-              : 'Loading…'}
+              ? `${total} ${t('leaderboard.participants')}`
+              : t('leaderboard.loading')}
           </p>
         </CardContent>
       </Card>
@@ -409,7 +412,7 @@ export function PublicLeaderboardPage(): ReactNode {
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
 
             <p className="mt-3 text-xs sm:text-sm font-medium">
-              Loading leaderboard…
+              {t('leaderboard.loading')}
             </p>
           </CardContent>
         </Card>
@@ -429,11 +432,11 @@ export function PublicLeaderboardPage(): ReactNode {
             </div>
 
             <h2 className="mt-5 text-lg sm:text-xl font-extrabold text-foreground">
-              No rankings yet
+              {t('leaderboard.empty.title')}
             </h2>
 
             <p className="mt-2 max-w-sm text-xs sm:text-sm text-text-secondary">
-              Submit and get questions approved to appear on the leaderboard.
+              {t('leaderboard.empty.subtitle')}
             </p>
           </CardContent>
         </Card>
@@ -450,7 +453,7 @@ export function PublicLeaderboardPage(): ReactNode {
               icon={Banknote}
               iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
               value={formatINR(totalEarningsAll)}
-              label="Total rewards"
+              label={t('leaderboard.stats.totalRewards')}
             />
 
             <StatCard
@@ -461,7 +464,7 @@ export function PublicLeaderboardPage(): ReactNode {
                   ? totalQuestionsAll
                   : '—'
               }
-              label="Approved Qs"
+              label={t('leaderboard.stats.approvedQs')}
             />
 
             <StatCard
@@ -472,7 +475,7 @@ export function PublicLeaderboardPage(): ReactNode {
                   ? `#${userRank}`
                   : '—'
               }
-              label="Your rank"
+              label={t('leaderboard.stats.yourRank')}
             />
           </div>
 
@@ -489,7 +492,7 @@ export function PublicLeaderboardPage(): ReactNode {
           {rest.length > 0 && (
             <div>
               <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
-                All participants
+                {t('leaderboard.section.allParticipants')}
               </p>
 
               <div className="space-y-2">
@@ -521,10 +524,10 @@ export function PublicLeaderboardPage(): ReactNode {
                     {loadingMore ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Loading...
+                        {t('leaderboard.loadingMore')}
                       </span>
                     ) : (
-                      'Load more'
+                      t('leaderboard.loadMore')
                     )}
                   </button>
                 </div>
@@ -532,7 +535,7 @@ export function PublicLeaderboardPage(): ReactNode {
 
               {!hasMore && (
                 <p className="pt-5 text-center text-[11px] sm:text-xs text-text-tertiary">
-                  You've reached the end of the leaderboard.
+                  {t('leaderboard.reachedEnd')}
                 </p>
               )}
             </div>
@@ -541,14 +544,14 @@ export function PublicLeaderboardPage(): ReactNode {
           {/* If there are only 1–3 users */}
           {rest.length === 0 && hasMore === false && (
             <p className="text-center text-[11px] sm:text-xs text-text-tertiary">
-              You've reached the end of the leaderboard.
+              {t('leaderboard.reachedEnd')}
             </p>
           )}
         </>
       )}
 
       <p className="pt-2 text-center text-[11px] sm:text-xs text-text-tertiary">
-        AnnaDatha &mdash; To Strengthen Indian Farmers
+        {t('app.footer')}
       </p>
     </div>
   )

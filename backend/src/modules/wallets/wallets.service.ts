@@ -67,6 +67,21 @@ export class WalletsService {
   ) {}
 
   /**
+   * Blocks payment operations while withdrawals are switched off in system settings.
+   * Reads stay available so users can still see their balance and saved accounts.
+   */
+  private async assertWithdrawalsEnabled(): Promise<void> {
+    const enabled = await this.adminService.getConfigValue(
+      'payment_withdrawal_enabled',
+    );
+    if (!enabled) {
+      throw new BadRequestException(
+        'Withdrawals are temporarily unavailable. Please try again later.',
+      );
+    }
+  }
+
+  /**
    * Returns the reward amount in rupees for a given approved question count.
    * Tier 1: 1–25 approved  → ₹1
    * Tier 2: 26–250 approved → ₹5
@@ -207,6 +222,8 @@ export class WalletsService {
    *  3. One pending request at a time (idempotency)
    */
   async withdraw(userId: string, dto: WithdrawDto): Promise<WithdrawalRequest> {
+    await this.assertWithdrawalsEnabled();
+
     const [wallet, minAmount] = await Promise.all([
       this.walletRepo.findOne({ where: { userId } }),
       this.adminService.getConfigValue('min_withdrawal_amount'),
@@ -411,6 +428,8 @@ export class WalletsService {
     status: string;
     message: string;
   }> {
+    await this.assertWithdrawalsEnabled();
+
     // Check: no duplicate verified UPI already on this account
     if (dto.payoutMethod === 'upi') {
       const existing = await this.paymentDetailRepo.findOne({
@@ -565,6 +584,8 @@ export class WalletsService {
    * Marks the payment detail as verified without any ₹1 micro-transaction.
    */
   async autoVerifyPaymentDetail(userId: string, detailId: string): Promise<{ success: boolean; message: string }> {
+    await this.assertWithdrawalsEnabled();
+
     const mockVerification = this.configService.get<boolean>('payment.pinelabs.mockVerification') ?? false;
 
     if (!mockVerification) {

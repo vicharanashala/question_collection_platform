@@ -40,7 +40,20 @@
     "tapToPlay": "هلائڻ لاءِ ٽئپ ڪريو",
     "delete": "ختم ڪريو",
     "stop": "روڪيو",
-    "playing": "هلي رهيو آهي..."
+    "playing": "هلي رهيو آهي...",
+    "noAudioCaptured": "ڪا به آواز رڪارڊ نه ٿي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+    "noWordsHeard": "ڪو به لفظ نه ٻڌو ويو. پرسڪون جاءِ تي ٻيهر ڪوشش ڪريو.",
+    "voiceCaptured": "آواز رڪارڊ ٿي وئي. جائزو وٺي جاري رکو.",
+    "couldNotStop": "رڪارڊنگ بند نه ٿي سگهي.",
+    "notSupportedBrowser": "هن برائوزر ۾ مائيڪروفون رڪارڊنگ سپورٽ نه ٿيل آهي.",
+    "recordingFailed": "رڪارڊنگ ناڪام ٿي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+    "permissionDeniedRetry": "مائيڪروفون جي اجازت رد ڪئي وئي. مائيڪروفون تائين رسائي ڏيو ۽ ٻيهر ڪوشش ڪريو.",
+    "couldNotStart": "رڪارڊنگ شروع نه ٿي سگهي. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+    "tapToStopRecording": "روڪڻ لاءِ ٽئپ ڪريو",
+    "doneSpeakAgain": "مڪمل — ڪڏهن به وري ڳالهايو",
+    "notSupportedShort": "هن برائوزر تي مائڪ سپورٽ نه ٿيل آهي",
+    "stopRecordingAria": "رڪارڊنگ روڪيو",
+    "startRecordingAria": "آواز رڪارڊنگ شروع ڪريو"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "۽",
   "app": {
     "name": "انّ داتا (AnnaDatha)",
-    "tagline": "توهان جو ضلعو، توهان جي ٻوليءَ ۾"
+    "tagline": "توهان جو ضلعو، توهان جي ٻوليءَ ۾",
+    "footer": "انّ داتا (AnnaDatha) - هندستاني هارين کي مضبوط بڻائڻ لاءِ"
   },
   "loginPhone": {
     "signIn": "سائين ان ڪريو",
@@ -219,7 +233,10 @@
     "sortBy": "ترتيب ڏيو",
     "unknown": "نامعلوم",
     "rupee": "روپيا",
-    "steps": "مرحلا"
+    "steps": "مرحلا",
+    "continue": "جاري رکو",
+    "noQuestionsFound": "ڪو به سوال نه مليو",
+    "askYourFirstQuestion": "پنهنجو پهريون سوال پڇو"
   },
   "completeRegistration": "رجسٽريشن مڪمل ڪريو",
   "consentClause1": "توهان جو موبائل نمبر ۽ رجسٽريشن جون تفصيلون محفوظ طريقي سان رکيون وينديون ۽ صرف پليٽ فارم جي تصديق ۽ زرعي علم جي خدمتن لاءِ استعمال ٿينديون.",
@@ -290,7 +307,15 @@
     "editWindowClosed": "جمع ڪرڻ کان پوءِ سوالن ۾ ترميم نٿي ڪري سگهجي",
     "quickActionsTip": "سڌو سوال جمع ڪرڻ واري صفحي تي وڃو يا پنهنجي والٽ بيلنس ۽ تازي سرگرمي ڏسو.",
     "rewardsTip": "منظور ٿيل سوالن جي ڪل تعداد جي بنياد تي هر منظور ٿيل سوال تي انعام ڪمايو. سلور ۽ گولڊ ليول وڌيڪ انعام ڏين ٿا.",
-    "guidelinesTip": "وڊيو کي 60 سيڪنڊن ۽ 10MB کان گھٽ رکو. جمع ڪرڻ کان پوءِ توھان کي 30 سيڪنڊن جي ترميمي ونڊو ملي ٿي. روزاني حد اڌ رات جو ري سيٽ ٿئي ٿي."
+    "guidelinesTip": "وڊيو کي 60 سيڪنڊن ۽ 10MB کان گھٽ رکو. جمع ڪرڻ کان پوءِ توھان کي 30 سيڪنڊن جي ترميمي ونڊو ملي ٿي. روزاني حد اڌ رات جو ري سيٽ ٿئي ٿي.",
+    "dailyLimitTitle": "روزاني حد",
+    "editWindowTitle": "ايڊٽ ونڊو",
+    "aiCheckTitle": "AI لاڳاپي چڪاس",
+    "verifiedUser": "تصديق ٿيل واپرائيندڙ",
+    "startAsking": "پڇڻ شروع ڪريو",
+    "viewWallet": "والیٽ ڏسو",
+    "youAreHere": "توهان هتي آهيو",
+    "currentTier": "مؤجوده سطح"
   },
   "iAcceptContinue": "مان قبول ڪريان ٿو/ٿي ۽ جاري رکان ٿو/ٿي",
   "invalidOtp": "مكمل 6 انگن جو ڪوڊ داخل ڪريو",
@@ -363,7 +388,11 @@
       "held": "روڪيل",
       "approved": "منظور ٿيل",
       "rejected": "منظور نه ٿيو"
-    }
+    },
+    "loading": "اطلاعون لوڊ ٿي رهيون آهن…",
+    "loadMore": "وڌيڪ لوڊ ڪريو",
+    "loadError": "اطلاعون لوڊ ڪرڻ ۾ ناڪامي",
+    "markAllReadError": "اطلاعن کي پڙهيل طور نشان لڳائڻ ۾ ناڪامي"
   },
   "organisationName": "تنظيم جو نالو",
   "organisationNamePlaceholder": "تنظيم جو نالو داخل ڪريو",
@@ -447,7 +476,10 @@
     "suspended": "معطل ٿيل",
     "banned": "پابندي مڙهيل",
     "village": "ڳوٺ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} منظور ٿيل سوال",
+    "toNext": "{{count}} ايندڙ تائين",
+    "toTier": "{{tier}} تائين {{count}}"
   },
   "profileLanguage": "ائپ جي ٻولي",
   "profileLanguageDesc": "هي ائپ جي انٽرفيس ۽ سوالن کي جمع ڪرڻ لاءِ ڊيفالٽ ٻولي هوندي",
@@ -550,7 +582,9 @@
     "rejectedEditQuestion": "منهنجو سوال درست ڪريو",
     "addVoice": "آواز شامل ڪريو",
     "tipDetailed": "تفصيل سان لکو — فصل، جاءِ ۽ توهان هاڻي تائين ڇا آزمايو آهي، ٻڌايو.",
-    "dailyLimitIndicator": "روزاني حد پوري ٿي وئي"
+    "dailyLimitIndicator": "روزاني حد پوري ٿي وئي",
+    "expertWillRespond": "هڪ ماهر توهان کي جواب ڏيندو.",
+    "questionExample": "مثال طور: منهنجي ٽماٽي جا پن پيلا ٿي رهيا آهن — مون کي ڇا ڪرڻ گهرجي؟"
   },
   "readFullPolicy": "پوري رازداري پاليسي پڙهو →",
   "resendOtp": "ٻيهر OTP موڪليو",
@@ -639,7 +673,16 @@
     "credit": "جمع (Credit)",
     "debit": "خرچ (Debit)",
     "txNotFound": "ٽرانزيڪشن نه ملي",
-    "notFoundSub": "ٽرانزيڪشن ختم ڪئي وئي هجي يا هاڻي دستياب نه هجي."
+    "notFoundSub": "ٽرانزيڪشن ختم ڪئي وئي هجي يا هاڻي دستياب نه هجي.",
+    "sourceReward": "انعام",
+    "sourceWithdrawal": "نيڪالي",
+    "sourceRefund": "رقم واپسي",
+    "sourceAdjustment": "ترميم",
+    "statusCompleted": "مڪمل",
+    "statusReversed": "واپس ڪيل",
+    "statusFailed": "ناڪام",
+    "statusPending": "انتظار ۾",
+    "currency": "ڀارتي رپيا"
   },
   "yourRole": "توهان جو عهدو/ڪردار",
   "home.greeting.morning": "صبح جو سلام",
@@ -1042,7 +1085,14 @@
     "replies": "جواب",
     "adminName": "ايڊمن",
     "replyCount_one": "{{count}} جواب",
-    "replyCount_other": "{{count}} جواب"
+    "replyCount_other": "{{count}} جواب",
+    "awaitingReply": "جواب جو انتظار",
+    "newReportSubtitle": "اوهان کي پيش آيل مسئلو بيان ڪريو. اسان جي ٽيم جلد اوهان سان رابطو ڪندي.",
+    "loadingReports": "اوهان جون رپورٽون لوڊ ٿي رهيون آهن…",
+    "loadingReport": "رپورٽ لوڊ ٿي رهي آهي…",
+    "reportNotFound": "رپورٽ نه لڌي",
+    "reportNotFoundHint": "اهو ممڪن آهي هٽايو ويو هجي يا اوهان کي هاڻي رسائي نه هجي.",
+    "backToReports": "رپورٽن ڏانهن واپس وڃو"
   },
   "profile.account": "اکائونٽ",
   "profile.personalInfo": "شخصي معلومات",
@@ -1114,7 +1164,10 @@
     "group": {
       "article_one": "مضمون",
       "article_other": "مضمون"
-    }
+    },
+    "videoComingSoon": "وڊيو گائيڊ جلد اچي رهي آهي",
+    "videoGuideTitle": "وڊيو گائيڊ",
+    "loadError": "FAQ لوڊ ڪرڻ ۾ ناڪامي"
   },
   "faqAdmin": {
     "title": "FAQ انتظاميه",
@@ -1294,5 +1347,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "هولڊ تي",
+    "published": "شايع ٿيل",
+    "yourSubmissions": "توهان جا جمع ڪيل سوال ۽ انهن جي حالت."
+  },
+  "leaderboard.loadError": "ليڊر بورڊ لوڊ ڪرڻ ۾ ناڪامي",
+  "leaderboard.loadMore": "وڌيڪ لوڊ ڪريو",
+  "leaderboard.loadingMore": "لوڊ ٿي رهيو آهي...",
+  "leaderboard.reachedEnd": "توهان ليڊر بورڊ جي آخر تائين پهچي ويا آهيو."
 }

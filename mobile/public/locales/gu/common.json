@@ -40,7 +40,20 @@
     "tapToPlay": "પ્લે કરવા માટે ટેપ કરો",
     "delete": "સમાપ્ત કરો / ડિલીટ કરો",
     "stop": "રોકો",
-    "playing": "પ્લે થઈ રહ્યું છે…"
+    "playing": "પ્લે થઈ રહ્યું છે…",
+    "noAudioCaptured": "કોઈ ઓડિયો કેપ્ચર થયો નથી. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    "noWordsHeard": "કોઈ શબ્દ સંભળાયો નથી. શાંત જગ્યાએ ફરી પ્રયાસ કરો.",
+    "voiceCaptured": "અવાજ કેપ્ચર થયો. સમીક્ષા કરો અને ચાલુ રાખો.",
+    "couldNotStop": "રેકોર્ડિંગ રોકી શકાયું નહીં.",
+    "notSupportedBrowser": "આ બ્રાઉઝરમાં માઇક્રોફોન રેકોર્ડિંગ સપોર્ટેડ નથી.",
+    "recordingFailed": "રેકોર્ડિંગ નિષ્ફળ ગયું. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    "permissionDeniedRetry": "માઇક્રોફોનની મંજૂરી નકારવામાં આવી. માઇક્રોફોન એક્સેસ આપો અને ફરી પ્રયાસ કરો.",
+    "couldNotStart": "રેકોર્ડિંગ શરૂ કરી શકાયું નહીં. કૃપા કરીને ફરી પ્રયાસ કરો.",
+    "tapToStopRecording": "રોકવા માટે ટેપ કરો",
+    "doneSpeakAgain": "પૂર્ણ — ગમે ત્યારે ફરી બોલો",
+    "notSupportedShort": "આ બ્રાઉઝર પર માઇક સપોર્ટેડ નથી",
+    "stopRecordingAria": "રેકોર્ડિંગ રોકો",
+    "startRecordingAria": "વોઇસ રેકોર્ડિંગ શરૂ કરો"
   },
   "speech": {
     "stt": {
@@ -60,7 +73,8 @@
   "and": "અને",
   "app": {
     "name": "અન્નદાતા",
-    "tagline": "તમારો જિલ્લો, તમારી ભાષામાં"
+    "tagline": "તમારો જિલ્લો, તમારી ભાષામાં",
+    "footer": "અન્નદાતા - ભારતીય ખેડૂતોને સશક્ત બનાવવા માટે"
   },
   "loginPhone": {
     "signIn": "સાઇન ઇન કરો",
@@ -219,7 +233,10 @@
     "sortBy": "આના દ્વારા ક્રમબદ્ધ કરો",
     "unknown": "અજ્ઞાત",
     "rupee": "રૂ.",
-    "steps": "પગલાં"
+    "steps": "પગલાં",
+    "continue": "ચાલુ રાખો",
+    "noQuestionsFound": "કોઈ પ્રશ્ન મળ્યો નથી",
+    "askYourFirstQuestion": "તમારો પ્રથમ પ્રશ્ન પૂછો"
   },
   "completeRegistration": "રજીસ્ટ્રેશન પૂર્ણ કરો",
   "consentClause1": "તમારો મોબાઇલ નંબર અને નોંધણી વિગતો સુરક્ષિત રીતે સંગ્રહિત કરવામાં આવશે અને તેનો ઉપયોગ ફક્ત પ્લેટફોર્મ પ્રમાણીકરણ અને કૃષિ જ્ઞાન સેવાઓ માટે કરવામાં આવશે.",
@@ -290,7 +307,15 @@
     "editWindowClosed": "સબમિશન પછી પ્રશ્નો સંપાદિત કરી શકાતા નથી",
     "quickActionsTip": "સીધા 'પ્રશ્ન સબમિટ કરો' પર જાઓ અથવા તમારું વોલેટ બેલેન્સ અને તાજેતરની પ્રવૃત્તિ જુઓ.",
     "rewardsTip": "કુલ મંજૂર થયેલા પ્રશ્નોના આધારે પ્રતિ મંજૂર પ્રશ્ન કમાઓ. સિલ્વર અને ગોલ્ડ સ્તર ઉચ્ચ ઇનામ દરો અનલૉક કરે છે.",
-    "guidelinesTip": "વીડિયો 60 સેકન્ડ અને 10MB ની અંદર રાખો. સબમિટ કર્યા પછી તમને 30-સેકન્ડનો એડિટિંગ વિન્ડો મળે છે. દૈનિક મર્યાદા મધ્યરાત્રિએ રિસેટ થાય છે."
+    "guidelinesTip": "વીડિયો 60 સેકન્ડ અને 10MB ની અંદર રાખો. સબમિટ કર્યા પછી તમને 30-સેકન્ડનો એડિટિંગ વિન્ડો મળે છે. દૈનિક મર્યાદા મધ્યરાત્રિએ રિસેટ થાય છે.",
+    "dailyLimitTitle": "દૈનિક મર્યાદા",
+    "editWindowTitle": "સંપાદન સમય",
+    "aiCheckTitle": "AI સંબંધિતતા ચકાસણી",
+    "verifiedUser": "ચકાસાયેલ વપરાશકર્તા",
+    "startAsking": "પૂછવાનું શરૂ કરો",
+    "viewWallet": "વોલેટ જુઓ",
+    "youAreHere": "તમે અહીં છો",
+    "currentTier": "વર્તમાન સ્તર"
   },
   "iAcceptContinue": "હું સ્વીકારું છું અને આગળ વધું છું",
   "invalidOtp": "સંપૂર્ણ 6-અંકનો કોડ દાખલ કરો",
@@ -363,7 +388,11 @@
       "held": "હોલ્ડ પર",
       "approved": "મંજૂર થયેલ",
       "rejected": "મંજૂર થયેલ નથી"
-    }
+    },
+    "loading": "સૂચનાઓ લોડ થઈ રહી છે…",
+    "loadMore": "વધુ લોડ કરો",
+    "loadError": "સૂચનાઓ લોડ કરવામાં નિષ્ફળ",
+    "markAllReadError": "સૂચનાઓને વાંચેલી તરીકે ચિહ્નિત કરવામાં નિષ્ફળ"
   },
   "organisationName": "સંસ્થાનું નામ",
   "organisationNamePlaceholder": "સંસ્થાનું નામ દાખલ કરો",
@@ -447,7 +476,10 @@
     "suspended": "મોકૂફ રાખેલ",
     "banned": "પ્રતિબંધિત",
     "village": "ગામ",
-    "kvk": "KVK"
+    "kvk": "KVK",
+    "approvedQuestionsCount": "{{count}} મંજૂર થયેલા પ્રશ્નો",
+    "toNext": "{{count}} આગલા સુધી",
+    "toTier": "{{tier}} સુધી {{count}}"
   },
   "profileLanguage": "એપ ભાષા",
   "profileLanguageDesc": "આ એપ ઇન્ટરફેસ અને પ્રશ્ન સબમિશન માટે ડિફોલ્ટ ભાષા હશે",
@@ -550,7 +582,9 @@
     "rejectedEditQuestion": "મારો પ્રશ્ન સંપાદિત કરો",
     "addVoice": "અવાજ ઉમેરો",
     "tipDetailed": "વિગતવાર લખો — પાક, સ્થળ અને તમે અત્યાર સુધી શું અજમાવ્યું છે તે જણાવો.",
-    "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ"
+    "dailyLimitIndicator": "દૈનિક મર્યાદા પૂરી થઈ",
+    "expertWillRespond": "એક નિષ્ણાત તમને જવાબ આપશે.",
+    "questionExample": "દા.ત. મારા ટામેટાના પાન પીળા થઈ રહ્યા છે — મારે શું કરવું જોઈએ?"
   },
   "readFullPolicy": "સંપૂર્ણ ગોપનીયતા નીતિ વાંચો →",
   "resendOtp": "ફરીથી OTP મોકલો",
@@ -639,7 +673,16 @@
     "credit": "જમા (Credit)",
     "debit": "ઉધાર (Debit)",
     "txNotFound": "લેવડ-દેવડ મળી નથી",
-    "notFoundSub": "લેવડ-દેવડ દૂર કરવામાં આવી હોઈ શકે છે અથવા હવે ઉપલબ્ધ નથી."
+    "notFoundSub": "લેવડ-દેવડ દૂર કરવામાં આવી હોઈ શકે છે અથવા હવે ઉપલબ્ધ નથી.",
+    "sourceReward": "ઇનામ",
+    "sourceWithdrawal": "ઉપાડ",
+    "sourceRefund": "રિફંડ",
+    "sourceAdjustment": "ગોઠવણ",
+    "statusCompleted": "પૂર્ણ",
+    "statusReversed": "ઉલટાવ્યું",
+    "statusFailed": "નિષ્ફળ",
+    "statusPending": "બાકી",
+    "currency": "ભારતીય રૂપિયા"
   },
   "yourRole": "તમારી ભૂમિકા",
   "home.greeting.morning": "શુભ સવાર",
@@ -1042,7 +1085,14 @@
     "replies": "જવાબો",
     "adminName": "એડમિન",
     "replyCount_one": "{{count}} જવાબ",
-    "replyCount_other": "{{count}} જવાબો"
+    "replyCount_other": "{{count}} જવાબો",
+    "awaitingReply": "જવાબની રાહ જોવાઈ રહી છે",
+    "newReportSubtitle": "તમે અનુભવેલી સમસ્યાનું વર્ણન કરો. અમારી ટીમ ટૂંક સમયમાં તમારો સંપર્ક કરશે.",
+    "loadingReports": "તમારા રિપોર્ટ લોડ થઈ રહ્યા છે…",
+    "loadingReport": "રિપોર્ટ લોડ થઈ રહ્યો છે…",
+    "reportNotFound": "રિપોર્ટ મળ્યો નથી",
+    "reportNotFoundHint": "તે દૂર કરવામાં આવ્યો હોઈ શકે અથવા તમારી પાસે હવે ઍક્સેસ નથી.",
+    "backToReports": "રિપોર્ટ પર પાછા જાઓ"
   },
   "profile.account": "એકાઉન્ટ",
   "profile.personalInfo": "અંગત માહિતી",
@@ -1114,7 +1164,10 @@
     "group": {
       "article_one": "લેખ",
       "article_other": "લેખો"
-    }
+    },
+    "videoComingSoon": "વીડિયો માર્ગદર્શિકા ટૂંક સમયમાં આવી રહી છે",
+    "videoGuideTitle": "વીડિયો માર્ગદર્શિકા",
+    "loadError": "FAQ લોડ કરવામાં નિષ્ફળ"
   },
   "faqAdmin": {
     "title": "FAQ વ્યવસ્થાપન",
@@ -1294,5 +1347,14 @@
     "actionAllQuestions": "All Questions",
     "noVolumeData": "No volume data available",
     "loadError": "Failed to load curator stats"
-  }
+  },
+  "submissions": {
+    "held": "હોલ્ડ પર",
+    "published": "પ્રકાશિત",
+    "yourSubmissions": "તમારા સબમિટ કરેલા પ્રશ્નો અને તેમની સ્થિતિ."
+  },
+  "leaderboard.loadError": "લીડરબોર્ડ લોડ કરવામાં નિષ્ફળ",
+  "leaderboard.loadMore": "વધુ લોડ કરો",
+  "leaderboard.loadingMore": "લોડ થઈ રહ્યું છે...",
+  "leaderboard.reachedEnd": "તમે લીડરબોર્ડના અંત સુધી પહોંચી ગયા છો."
 }

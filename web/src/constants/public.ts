@@ -353,7 +353,17 @@ export const GENDER_OPTIONS: { value: 'male' | 'female' | 'other'; label: string
   { value: 'other', label: 'Other' },
 ]
 
-export function categoryLabel(c: UserCategory | string | null | undefined): string {
+const CATEGORY_I18N_KEYS: Record<string, string> = {
+  farmer:    'cat.farmer',
+  fpo:       'cat.fpoMember',
+  student:   'cat.student',
+  volunteer: 'cat.volunteer',
+  ngo:       'cat.ngoPartner',
+}
+
+export function categoryLabel(t: (key: string) => string, c: UserCategory | string | null | undefined): string {
   if (!c) return '—'
+  const key = CATEGORY_I18N_KEYS[c]
+  if (key) return t(key)
   return USER_CATEGORIES.find((x) => x.value === c)?.label ?? c
 }
