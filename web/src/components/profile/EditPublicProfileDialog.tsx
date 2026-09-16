@@ -35,6 +35,7 @@ import {
 import { MultiSearchableSelect } from "../ui/multi-searchable-select";
 import { OTHER_VALUE } from "./CompleteProfileWizard";
 import { useTranslation } from "react-i18next";
+import { LegalDocumentModal } from "../ui/legal-document-modal";
 
 interface EditableProfile {
   name: string;
@@ -1556,6 +1557,13 @@ export function EditPublicProfileDialog({
         open={logoutConfirmOpen}
         onOpenChange={setLogoutConfirmOpen}
       />
+
+            <LegalDocumentModal
+              type={legalModal ?? "terms"}
+              open={legalModal !== null}
+              onOpenChange={(open) => !open && setLegalModal(null)}
+            />
+
     </>
   );
 }
