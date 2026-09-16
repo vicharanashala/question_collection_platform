@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { VerificationBanner } from '@/components/VerificationBanner'
 import { Header } from './Header'
 import { MobileNav } from './MobileNav'
 import { Sidebar } from './Sidebar'
@@ -19,6 +20,7 @@ export function AppLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header onOpenMobileNav={openMobileNav} />
+        <VerificationBanner />
         {/*
           Extra bottom padding (`pb-20`) on small screens so page content
           isn't hidden under the fixed bottom tab bar. Reverts to default
