@@ -125,6 +125,38 @@ jobs:
     if: ${{ github.event.inputs.action == 'all' || github.event.inputs.action == 'deploy' }}
 
     steps:
+      # gcloud reports an empty --service-account as a confusing argument-parsing
+      # error, and a placeholder bucket name only surfaces at runtime. Fail here with
+      # a message that names the setting instead.
+      - name: Validate production configuration
+        env:
+          RUNTIME_SA: ${{ secrets.GCP_RUNTIME_SA_PROD || vars.GCP_RUNTIME_SA_PROD }}
+          MONGODB_URL: ${{ secrets.MONGODB_URL_PROD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET_PROD }}
+          BUCKET_NAME: ${{ vars.GCP_BUCKET_NAME }}
+        run: |
+          fail=0
+          require() {
+            if [ -z "$2" ]; then
+              echo "::error::$1 is not set"
+              fail=1
+            fi
+          }
+          require "GCP_RUNTIME_SA_PROD (secret or variable)" "$RUNTIME_SA"
+          require "secrets.MONGODB_URL_PROD" "$MONGODB_URL"
+          require "secrets.JWT_SECRET_PROD" "$JWT_SECRET"
+          require "vars.GCP_BUCKET_NAME" "$BUCKET_NAME"
+
+          if [ -n "$BUCKET_NAME" ] && [ "$BUCKET_NAME" = "GCP_BUCKET_NAME" ]; then
+            echo "::error::vars.GCP_BUCKET_NAME holds the literal string 'GCP_BUCKET_NAME' — set it to the bucket name, e.g. annam-annadatha"
+            fail=1
+          fi
+          if [ -n "$JWT_SECRET" ] && [ ${#JWT_SECRET} -lt 32 ]; then
+            echo "::error::secrets.JWT_SECRET_PROD must be at least 32 characters — the app refuses to boot otherwise"
+            fail=1
+          fi
+          exit $fail
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -143,7 +175,7 @@ jobs:
           # Dedicated runtime identity. It needs storage.objectAdmin on the media bucket
           # and iam.serviceAccountTokenCreator on itself so V4 URL signing works without
           # a private key on disk.
-          flags: --allow-unauthenticated --service-account=${{ secrets.GCP_RUNTIME_SA_PROD }}
+          flags: --allow-unauthenticated --service-account=${{ secrets.GCP_RUNTIME_SA_PROD || vars.GCP_RUNTIME_SA_PROD }}
           env_vars: |
             NODE_ENV=production
             MONGODB_URL=${{ secrets.MONGODB_URL_PROD }}
