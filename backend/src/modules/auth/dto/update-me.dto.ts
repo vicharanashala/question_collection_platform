@@ -106,7 +106,6 @@ export class UpdateMeDto {
 
   @IsOptional()
   @IsInt()
-  @Min(1)
   numberOfFarmers?: number;
 
   @IsOptional()

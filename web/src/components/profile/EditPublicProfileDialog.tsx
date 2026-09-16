@@ -205,7 +205,7 @@ export function EditPublicProfileDialog({
   const [kvks, setKvks] = useState<LgdKvk[]>([]);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  const [course, setCourse] = useState<string | null>(null);
+  // const [course, setCourse] = useState<string | null>(null);
 
   const [usernameStatus, setUsernameStatus] = useState<
     "idle" | "checking" | "available" | "taken"
@@ -394,6 +394,8 @@ export function EditPublicProfileDialog({
       <Input
         id={`profile-${key}`}
         type={type}
+        min={0}
+        max={100}
         value={form[key]}
         required={required}
         onChange={(e) => {
@@ -465,7 +467,7 @@ export function EditPublicProfileDialog({
       form.age.trim() &&
       (!Number.isInteger(Number(form.age)) ||
         Number(form.age) < 16 ||
-        Number(form.age) > 80)
+        Number(form.age) > 100)
     ) {
       toast.error("Please enter a valid age.");
       return;
@@ -475,9 +477,9 @@ export function EditPublicProfileDialog({
       : null;
     if (
       numberOfFarmers !== null &&
-      (!Number.isInteger(numberOfFarmers) || numberOfFarmers < 1)
+      (!Number.isInteger(numberOfFarmers))
     ) {
-      toast.error("Number of farmers must be a whole number.");
+      toast.error("Number of farmers is required.");
       return;
     }
     if (isOrganisationUser && form.organizationState.length === 0) {
@@ -527,6 +529,14 @@ export function EditPublicProfileDialog({
         toast.error("Please select at least one operating state.");
         return;
       }
+    }
+
+    if(!form.courseName.trim()){
+      toast.error("Please select a course name")
+    }
+
+    if(!form.collegeName.trim()){
+      toast.error("Please enter college name")
     }
 
     setSaving(true);
@@ -754,7 +764,7 @@ export function EditPublicProfileDialog({
                   <h3 className="text-sm font-bold text-primary">Education</h3>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="course-select">Course</Label>
+                      <Label htmlFor="course-select">Course <span className="text-red-500">*</span></Label>
                       <Select
                         value={form.courseName}
                         onValueChange={(event) =>
@@ -763,6 +773,7 @@ export function EditPublicProfileDialog({
                             courseName: event,
                           }))
                         }
+                        required
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose course" />
