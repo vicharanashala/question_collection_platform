@@ -88,6 +88,7 @@ export function AddUserDialog({
       await adminApi.createUser({
         name: form.name.trim(),
         isUserCreatedBySuperAdmin: true,
+        profileCreatedByAdminCompleted: false,
         mobileNumber: form.mobileNumber.trim(),
         role: form.role,
         ...(isEndUser ? { category: form.category } : {}),

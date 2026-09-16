@@ -236,7 +236,8 @@ describe('AdminService', () => {
         mobileNumber: '9123456789',
         role: UserRole.USER,
         category: UserCategory.FARMER,
-        isUserCreatedBySuperAdmin: false
+        isUserCreatedBySuperAdmin: false,
+        profileCreatedByAdminCompleted: false
       });
 
       expect(userRepo.create).toHaveBeenCalledWith({
@@ -262,7 +263,8 @@ describe('AdminService', () => {
         name: 'Finance Staff',
         mobileNumber: '9000000011',
         role: UserRole.FINANCE,
-        isUserCreatedBySuperAdmin: false
+        isUserCreatedBySuperAdmin: false,
+        profileCreatedByAdminCompleted: false
       });
 
       expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({
@@ -284,7 +286,8 @@ describe('AdminService', () => {
           name: 'User Without Category',
           mobileNumber: '9000000012',
           role: UserRole.USER,
-          isUserCreatedBySuperAdmin: false
+          isUserCreatedBySuperAdmin: false,
+          profileCreatedByAdminCompleted: false
         }),
       ).rejects.toThrow(/Category is required/);
     });
@@ -298,7 +301,8 @@ describe('AdminService', () => {
         mobileNumber: '+91 9876543210',
         role: UserRole.USER,
         category: UserCategory.FARMER,
-        isUserCreatedBySuperAdmin: false
+        isUserCreatedBySuperAdmin: false,
+        profileCreatedByAdminCompleted: false
       });
 
       expect(result.user.mobileNumber).toBe('9876543210');
@@ -313,7 +317,8 @@ describe('AdminService', () => {
           mobileNumber: '9876543210',
           role: UserRole.USER,
           category: UserCategory.FARMER,
-          isUserCreatedBySuperAdmin: false
+          isUserCreatedBySuperAdmin: false,
+          profileCreatedByAdminCompleted: false
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -324,7 +329,8 @@ describe('AdminService', () => {
           name: 'Super',
           mobileNumber: '9000000003',
           role: UserRole.SUPER_ADMIN,
-          isUserCreatedBySuperAdmin: false
+          isUserCreatedBySuperAdmin: false,
+          profileCreatedByAdminCompleted: false
         }),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -335,7 +341,8 @@ describe('AdminService', () => {
           name: 'Another Super',
           mobileNumber: '9000000004',
           role: UserRole.SUPER_ADMIN,
-          isUserCreatedBySuperAdmin: false
+          isUserCreatedBySuperAdmin: false,
+          profileCreatedByAdminCompleted: false
         }),
       ).rejects.toThrow(ForbiddenException);
     });

@@ -37,4 +37,7 @@ export class CreateUserDto {
 
   @IsBoolean()
   isUserCreatedBySuperAdmin: boolean
+
+  @IsBoolean()
+  profileCreatedByAdminCompleted: boolean
 }
