@@ -26,6 +26,7 @@ import {
   Plus, Flag, AlertCircle, Bug, CreditCard, HelpCircle,
   ShieldAlert, Lightbulb, MoreHorizontal, Loader2,
   MessageSquareText, CheckCircle2,
+  ArrowLeft,
 } from 'lucide-react'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -332,6 +333,17 @@ export function PublicReportsPage(): ReactNode {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-4">
+              <div className="flex items-center gap-3">
+          <Button
+            variant={"outline"}
+            size={"sm"}
+            onClick={() => navigate(-1)}
+            className="rounded-full"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to profile
+          </Button>
+        </div>
       {/* Header card — title + "New Report" pill (matches mobile teal button) */}
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="flex items-center justify-between gap-3 p-4">

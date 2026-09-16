@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { faqApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, HelpCircle, HelpingHand } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Faq } from '@/types'
 import { VideoSection } from '@/components/VideoSection'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { useNavigate } from 'react-router-dom'
 
 const CATEGORIES = [
   { key: 'all', label: 'All', color: '#6366F1' },
@@ -54,13 +56,35 @@ export function PublicFaqsPage() {
   }
   useEffect(() => { load() }, [])
   useEffect(() => { load(activeCat === 'all' ? undefined : activeCat) }, [activeCat])
-
+  const navigate = useNavigate();
   return (
     <div className="mx-auto max-w-2xl space-y-5">
+              <div className="flex items-center gap-3">
+          <Button
+            variant={"outline"}
+            size={"sm"}
+            onClick={() => navigate(-1)}
+            className="rounded-full"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to profile
+          </Button>
+        </div>
+
+              <div className="flex flex-col items-center py-2 text-center">
+                <div className="mb-3 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  <HelpingHand className="h-8 w-8" />
+                </div>
+                <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">Help &amp; FAQ</h1>
+                <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
+                  Find answers to common questions.
+                </p>
+              </div>
+{/* 
       <div>
-        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Help &amp; FAQ</h2>
-        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">Find answers to common questions.</p>
-      </div>
+        <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground text-center">Help &amp; FAQ</h2>
+        <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5 text-center">Find answers to common questions.</p>
+      </div> */}
       <VideoSection />
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {CATEGORIES.map((cat) => {
