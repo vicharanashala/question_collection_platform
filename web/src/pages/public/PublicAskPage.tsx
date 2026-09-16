@@ -24,6 +24,11 @@ import {
 import { QuestionRejectedDialog } from '@/components/QuestionRejectedDialog'
 import { DuplicateFoundDialog, type DuplicateInfo } from '@/components/DuplicateFoundDialog'
 import { QuestionSubmittedDialog } from '@/components/QuestionSubmittedDialog'
+import {
+  getQuestionDraft,
+  saveQuestionDraft,
+  clearQuestionDraft,
+} from '@/utils/questionDraft'
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -133,11 +138,15 @@ export function PublicAskPage() {
   // it server-side (Gemma LLM) and returns suggested domain(s)/season/crop
   // plus profile-derived location, which seed the details step below instead
   // of the user picking everything from empty dropdowns.
+
+  
+
+
   const [step, setStep] = useState<'ask' | 'details'>('ask')
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewMeta, setPreviewMeta] = useState<PreviewMeta | null>(null)
 
-  const [questionText, setQuestionText] = useState('')
+  const [questionText, setQuestionText] = useState(getQuestionDraft)
   const [domains, setDomains] = useState<string[]>([])
   const [season, setSeason] = useState<string>('')
   const [cropType, setCropType] = useState('')
@@ -150,6 +159,13 @@ export function PublicAskPage() {
   const [micExpanded, setMicExpanded] = useState(true)
 
   const atLimit = stats != null && stats.remainingToday <= 0
+
+
+useEffect(() => {
+  saveQuestionDraft(questionText)
+}, [questionText])
+
+
 
   // Lock body scroll on the details step to prevent pull-to-scroll ghosting
   useEffect(() => {
@@ -340,6 +356,7 @@ export function PublicAskPage() {
         return
       }
       toast.success(res.message || 'Question submitted!')
+      clearQuestionDraft()
       // Cache the submitted question so future drafts are checked against it
       // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
       // endpoint returns either `{ id: string, status, message }` (current

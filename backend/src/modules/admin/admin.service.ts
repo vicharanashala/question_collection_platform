@@ -277,19 +277,8 @@ export class AdminService implements OnModuleInit {
       name: string;
       mobileNumber: string;
       role: UserRole;
-      category?: string;
-      state: string;
-      district: string;
-      block: string;
-      village: string;
-      kvk?: string;
-      languagePreference?: string;
-      courseName?: string;
-      collegeName?: string;
-      universityName?: string;
-      organisationType?: string;
-      organisationName?: string;
-      memberRole?: string;
+      category?: UserCategory;
+      isUserCreatedBySuperAdmin: boolean
     },
   ) {
     // Super admin cannot create another super admin
@@ -322,54 +311,30 @@ export class AdminService implements OnModuleInit {
       );
     }
 
-    // Enforce max_users_per_state (only for non-privileged roles)
-    if (
-      dto.role !== UserRole.ADMIN &&
-      dto.role !== UserRole.CURATOR &&
-      dto.role !== UserRole.FINANCE &&
-      dto.role !== UserRole.DISTRIBUTOR
-    ) {
-      const maxPerState = await this.getConfigValue("max_users_per_state");
-      const stateCount = await this.userRepo.count({
-        where: { state: dto.state },
-      });
-      if (stateCount >= maxPerState) {
-        throw new BadRequestException(
-          `State '${dto.state}' has reached its maximum of ${maxPerState} users.`,
-        );
-      }
+    const isEndUser = dto.role === UserRole.USER;
+    if (isEndUser && !dto.category) {
+      throw new BadRequestException("Category is required for user accounts.");
     }
+const isCreatedBySuperAdmin =
+  dto.isUserCreatedBySuperAdmin ?? true;
 
-    const isPrivilegedRole =
-      dto.role === UserRole.ADMIN ||
-      dto.role === UserRole.CURATOR ||
-      dto.role === UserRole.FINANCE ||
-      dto.role === UserRole.DISTRIBUTOR;
 
-    const user = await this.userRepo.create({
-      name: dto.name.trim(),
-      mobileNumber: mobile,
-      role: dto.role,
-      // Admins/curators don't have a category
-      category: (isPrivilegedRole ? null : dto.category) as UserCategory | null,
-      state: dto.state,
-      district: dto.district,
-      block: dto.block ?? null,
-      village: dto.village ?? null,
-      kvk: dto.kvk ?? null,
-      languagePreference: dto.languagePreference ?? "en",
-      organisationType: dto.organisationType ?? null,
-      courseName: dto.courseName ?? null,
-      collegeName: dto.collegeName ?? null,
-      universityName: dto.universityName ?? null,
-      organizationName: dto.organisationName ?? null,
-      organizationRole: dto.memberRole ?? null,
-      verificationStatus: VerificationStatus.VERIFIED,
-      tokenVersion: 0,
-      lastLoginAt: null,
-    });
+const user = await this.userRepo.create({
+  name: dto.name.trim(),
+  mobileNumber: mobile,
+  role: dto.role,
+  category: isEndUser ? dto.category! : null,
+  languagePreference: "en",
+  consentGiven: false,
+  verificationStatus: VerificationStatus.VERIFIED,
+  tokenVersion: 0,
+  lastLoginAt: null,
+  isUserCreatedBySuperAdmin: isCreatedBySuperAdmin,
+});
 
-    await this.userRepo.save(user);
+
+await this.userRepo.save(user);
+
 
     await this.logAudit({
       actorType:
@@ -383,11 +348,8 @@ export class AdminService implements OnModuleInit {
         mobileNumber: user.mobileNumber,
         role: user.role,
         category: user.category,
-        state: user.state,
-        district: user.district,
       },
     });
-
     return { user: this.toPublicUser(user) };
   }
 
@@ -4012,6 +3974,7 @@ export class AdminService implements OnModuleInit {
       role: user.role,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
+      isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin
     };
   }
 

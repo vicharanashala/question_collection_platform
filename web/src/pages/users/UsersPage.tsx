@@ -5,12 +5,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
 import {
   Search, ChevronLeft, ChevronRight, Plus,
@@ -18,6 +14,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User as UserType } from '@/types'
+import { AddUserDialog } from './AddUserDialog'
 
 const STATUS_COLORS: Record<string, string> = {
   verified: 'bg-success text-white',
@@ -34,7 +31,7 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   banned: Ban,
 }
 
-const STATUS_FILTER_CHIPS: Array<{ value: string; label: string; dot: string }> = [
+const STATUS_FILTER_CHIPS: { value: string; label: string; dot: string }[] = [
   { value: '',               label: 'All',     dot: 'bg-muted' },
   { value: 'verified',      label: 'Verified', dot: 'bg-emerald-500' },
   { value: 'pending',       label: 'Pending',  dot: 'bg-amber-500' },
@@ -65,57 +62,14 @@ export function UsersPage() {
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
-  // ── Create user dialog state ─────────────────────────────────────────────
   const [createOpen, setCreateOpen] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    mobileNumber: '',
-    role: 'user',
-    category: 'farmer',
-    state: '',
-    district: '',
-    block: '',
-    village: '',
-  })
-  const [formError, setFormError] = useState('')
 
-  function openCreate() {
-    setForm({ name: '', mobileNumber: '', role: 'user', category: 'farmer', state: '', district: '', block: '', village: '' })
-    setFormError('')
-    setCreateOpen(true)
-  }
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!form.name.trim() || !form.mobileNumber.trim() || !form.state.trim() || !form.district.trim() || !form.block.trim() || !form.village.trim()) {
-      setFormError('Name, mobile number, state, district, block, and village are required.')
-      return
-    }
-    setCreating(true)
-    setFormError('')
-    try {
-      await adminApi.createUser({
-        name: form.name.trim(),
-        mobileNumber: form.mobileNumber.trim(),
-        role: form.role,
-        category: form.role === 'user' ? form.category : undefined,
-        state: form.state.trim(),
-        district: form.district.trim(),
-        block: form.block.trim(),
-        village: form.village.trim(),
-      })
-      toast.success('User created successfully')
-      setCreateOpen(false)
-      setPage(1)
-      adminApi.getUsers({ page: 1, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
-        .then((res) => { setUsers(res.items); setTotal(res.total) })
-        .catch(() => { /* error handled elsewhere */ })
-    } catch (err) {
-      setFormError(getErrorMessage(err, 'Failed to create user'))
-    } finally {
-      setCreating(false)
-    }
+  function handleUserCreated() {
+    toast.success('User created successfully')
+    setPage(1)
+    adminApi.getUsers({ page: 1, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
+      .then((res) => { setUsers(res.items); setTotal(res.total) })
+      .catch((error) => toast.error(getErrorMessage(error, 'User created, but the list could not be refreshed')))
   }
 
   return (
@@ -126,7 +80,7 @@ export function UsersPage() {
           <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{total.toLocaleString()} total users</p>
         </div>
         {isSuperAdmin && (
-          <Button onClick={openCreate} size="sm">
+          <Button onClick={() => setCreateOpen(true)} size="sm">
             <Plus className="h-4 w-4" />
             Add User
           </Button>
@@ -171,6 +125,8 @@ export function UsersPage() {
               <option value="">All Roles</option>
               <option value="user">User</option>
               <option value="curator">Curator</option>
+              <option value="finance">Finance</option>
+              <option value="distributor">Distributor</option>
               <option value="admin">Admin</option>
               <option value="super_admin">Super Admin</option>
             </select>
@@ -312,119 +268,7 @@ export function UsersPage() {
         )}
       </Card>
 
-      {/* Create user dialog */}
-      <Dialog open={createOpen} onOpenChange={(v) => !v && setCreateOpen(false)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <Label htmlFor="cu-name">Full Name</Label>
-                <Input
-                  id="cu-name"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Ramesh Kumar"
-                  required
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="cu-mobile">Mobile Number</Label>
-                <Input
-                  id="cu-mobile"
-                  type="tel"
-                  value={form.mobileNumber}
-                  onChange={(e) => setForm((f) => ({ ...f, mobileNumber: e.target.value }))}
-                  placeholder="9876543210"
-                  maxLength={10}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="cu-role">Role</Label>
-                <select
-                  id="cu-role"
-                  className="mt-1 flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 py-2 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
-                  value={form.role}
-                  onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                >
-                  <option value="user">User</option>
-                  <option value="curator">Curator</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              {form.role === 'user' && (
-                <div>
-                  <Label htmlFor="cu-category">Category</Label>
-                  <select
-                    id="cu-category"
-                    className="mt-1 flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 py-2 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
-                    value={form.category}
-                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  >
-                    <option value="farmer">Farmer</option>
-                    <option value="fpo">FPO</option>
-                    <option value="student">Student</option>
-                    <option value="volunteer">Volunteer</option>
-                    <option value="ngo">NGO</option>
-                  </select>
-                </div>
-              )}
-              <div>
-                <Label htmlFor="cu-state">State</Label>
-                <Input
-                  id="cu-state"
-                  value={form.state}
-                  onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
-                  placeholder="Maharashtra"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="cu-district">District</Label>
-                <Input
-                  id="cu-district"
-                  value={form.district}
-                  onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
-                  placeholder="Pune"
-                  required
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="cu-block">Block</Label>
-                <Input
-                  id="cu-block"
-                  value={form.block}
-                  onChange={(e) => setForm((f) => ({ ...f, block: e.target.value }))}
-                  placeholder="Haveli"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="cu-village">Village</Label>
-                <Input
-                  id="cu-village"
-                  value={form.village}
-                  onChange={(e) => setForm((f) => ({ ...f, village: e.target.value }))}
-                  placeholder="Hadapsar"
-                />
-              </div>
-            </div>
-
-            {formError && <p className="text-xs sm:text-xs sm:text-sm text-destructive">{formError}</p>}
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={creating}>
-                {creating ? 'Creating...' : 'Create User'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddUserDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={handleUserCreated} />
     </div>
   )
 }

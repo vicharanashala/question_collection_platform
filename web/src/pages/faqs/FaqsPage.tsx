@@ -321,7 +321,7 @@ function FaqDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg p-3 w-[85vw] !max-w-[85vw]">
         <DialogHeader>
           <DialogTitle>{initial ? 'Edit FAQ' : 'Add FAQ'}</DialogTitle>
           <DialogDescription>

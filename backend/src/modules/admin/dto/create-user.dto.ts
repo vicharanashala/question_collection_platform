@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsMobilePhone, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { UserCategory, UserRole } from '../../../shared/classes/enums';
 
 export class CreateUserDto {
@@ -7,68 +7,34 @@ export class CreateUserDto {
   @MinLength(1)
   name: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsMobilePhone('en-IN')
   mobileNumber: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsIn([UserRole.USER, UserRole.ADMIN, UserRole.CURATOR, UserRole.FINANCE, UserRole.DISTRIBUTOR, UserRole.SUPER_ADMIN])
+  @IsIn([
+    UserRole.USER,
+    UserRole.ADMIN,
+    UserRole.CURATOR,
+    UserRole.FINANCE,
+    UserRole.DISTRIBUTOR,
+    UserRole.SUPER_ADMIN,
+  ])
   role: UserRole;
 
-  // Category is required only for USER role — admin/curator don't need it
+  /** Required by the service only when role is USER. */
   @IsOptional()
   @IsString()
-  @IsIn(['farmer', 'fpo', 'student', 'volunteer', 'ngo'])
+  @IsIn([
+    UserCategory.FARMER,
+    UserCategory.FPO,
+    UserCategory.STUDENT,
+    UserCategory.VOLUNTEER,
+    UserCategory.NGO,
+  ])
   category?: UserCategory;
 
-  @IsString()
-  @IsNotEmpty()
-  state: string;
-
-  @IsString()
-  @IsNotEmpty()
-  district: string;
-
-  @IsString()
-  @IsNotEmpty()
-  block: string;
-
-  @IsString()
-  @IsNotEmpty()
-  village: string;
-
-  @IsOptional()
-  @IsString()
-  kvk?: string;
-
-  @IsOptional()
-  @IsString()
-  languagePreference?: string;
-
-  // Student-specific profile fields
-  @IsOptional()
-  @IsString()
-  courseName?: string;
-
-  @IsOptional()
-  @IsString()
-  collegeName?: string;
-
-  @IsOptional()
-  @IsString()
-  universityName?: string;
-
-  // Volunteer / NGO / FPO-specific profile fields
-  @IsOptional()
-  @IsString()
-  organisationType?: string;
-
-  @IsOptional()
-  @IsString()
-  organisationName?: string;
-
-  @IsOptional()
-  @IsString()
-  memberRole?: string;
+  @IsBoolean()
+  isUserCreatedBySuperAdmin: boolean
 }

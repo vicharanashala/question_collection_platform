@@ -1,8 +1,13 @@
-import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
-import { useAuth } from '@/context/AuthContext'
+import { useState } from "react";
+
+import { NavLink, useLocation } from "react-router-dom";
+
+import { useTranslation } from "react-i18next";
+
+import { cn } from "@/lib/utils";
+
+import { useAuth } from "@/context/AuthContext";
+
 import {
   Home,
   MessageSquarePlus,
@@ -10,22 +15,30 @@ import {
   User,
   Wallet,
   LogOut,
-} from 'lucide-react'
-import { BrandLogo } from '@/components/BrandLogo'
-import { SignOutDialog } from '@/components/SignOutDialog'
+  FilePenLine,
+} from "lucide-react";
+
+import { BrandLogo } from "@/components/BrandLogo";
+
+import { SignOutDialog } from "@/components/SignOutDialog";
+
+import { useQuestionDraft } from "@/hooks/useQuestionDraft";
 
 const navItems = [
-  { to: '/home',           labelKey: 'nav.home',        icon: Home,             end: true },
-  { to: '/home/ask',       labelKey: 'nav.submit',      icon: MessageSquarePlus },
-  { to: '/home/questions', labelKey: 'nav.submissions', icon: ListChecks },
-  { to: '/home/wallet',    labelKey: 'nav.wallet',      icon: Wallet },
-  { to: '/home/profile',   labelKey: 'nav.profile',     icon: User },
-]
+  { to: "/home", labelKey: "nav.home", icon: Home, end: true },
+  { to: "/home/ask", labelKey: "nav.submit", icon: MessageSquarePlus },
+  { to: "/home/questions", labelKey: "nav.submissions", icon: ListChecks },
+  { to: "/home/wallet", labelKey: "nav.wallet", icon: Wallet },
+  { to: "/home/profile", labelKey: "nav.profile", icon: User },
+];
 
 export function PublicSidebar() {
-  const { t } = useTranslation()
-  const { user } = useAuth()
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+  const { pathname } = useLocation()
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+
+  const { hasDraft } = useQuestionDraft()
 
   return (
     <aside className="flex h-full w-56 flex-col border-r border-border-subtle bg-white dark:border-border-subtle dark:bg-surface">
@@ -34,55 +47,90 @@ export function PublicSidebar() {
         <div className="flex h-9 w-9 items-center justify-center">
           <BrandLogo className="h-9 w-9" />
         </div>
+
         <div>
-          <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
-          <p className="text-[11px] text-text-tertiary leading-tight">Public Portal</p>
+          <p className="text-xs font-bold leading-tight text-foreground sm:text-sm">
+            AnnaDatha
+          </p>
+          <p className="text-[11px] leading-tight text-text-tertiary">
+            Public Portal
+          </p>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, labelKey, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-text-secondary hover:bg-surface-variant hover:text-foreground',
-              )
-            }
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {t(labelKey)}
-          </NavLink>
-        ))}
+        {navItems.map(({ to, labelKey, icon: Icon, end }) => {
+  const isSubmitTab = to === '/home/ask'
+  const isOnSubmitPage =
+    pathname === '/home/ask' || pathname.startsWith('/home/ask/')
+
+  return (
+    <NavLink
+      key={to}
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        cn(
+          'flex items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm',
+          isActive
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-text-secondary hover:bg-surface-variant hover:text-foreground',
+        )
+      }
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+
+      <span className="flex-1">
+        {t(labelKey)}
+      </span>
+
+      {isSubmitTab && hasDraft && !isOnSubmitPage && (
+        <FilePenLine
+          aria-label={t('nav.draftQuestion', {
+            defaultValue: 'Draft question',
+          })}
+          className="h-4 w-4 shrink-0 text-orange-500"
+        />
+      )}
+    </NavLink>
+  )
+})}
       </nav>
 
       {/* User + Logout */}
       <div className="border-t border-border-subtle p-3 dark:border-border-subtle">
         <div className="mb-2 flex items-center gap-2 rounded-md bg-surface-variant px-3 py-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">
-            {(user?.name || user?.mobileNumber || '?').slice(0, 2).toUpperCase()}
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:text-xs">
+            {(user?.name || user?.mobileNumber || "?")
+              .slice(0, 2)
+              .toUpperCase()}
           </div>
+
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground">{user?.name || 'Welcome'}</p>
-            <p className="truncate text-[11px] text-text-tertiary">{user?.mobileNumber}</p>
+            <p className="truncate text-[11px] font-semibold text-foreground sm:text-xs">
+              {user?.name || "Welcome"}
+            </p>
+
+            <p className="truncate text-[11px] text-text-tertiary">
+              {user?.mobileNumber}
+            </p>
           </div>
         </div>
+
         <button
           onClick={() => setLogoutConfirmOpen(true)}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium text-text-secondary hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30 transition-colors"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30 sm:text-sm"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {t('profile.signOut')}
+          {t("profile.signOut")}
         </button>
       </div>
 
-      <SignOutDialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen} />
+      <SignOutDialog
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+      />
     </aside>
-  )
+  );
 }

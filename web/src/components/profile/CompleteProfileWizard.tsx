@@ -83,7 +83,7 @@ const STEP_KEYS = [
   "About you",
   "Language & Consent",
 ];
-const OTHER_VALUE = "__other__";
+export const OTHER_VALUE = "__other__";
 
 interface WizardFormState {
   category: UserCategory | "";
@@ -1488,6 +1488,7 @@ export function CompleteProfileWizard({
         gender: form.gender || undefined,
         languagePreference: form.languagePreference,
         consentGiven: true,
+        isUserCreatedBySuperAdmin: false
       };
       if (form.category === "farmer") {
         payload.farmSize = form.farmSize.trim();

@@ -5,6 +5,8 @@ import {
   Min,
   MaxLength,
   IsArray,
+  MinLength,
+  Matches,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -14,6 +16,13 @@ export class UpdateMeDto {
   @IsString()
   @MaxLength(100)
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches(/^[a-zA-Z0-9_]+$/)
+  username?: string;
 
   // ── Personal ────────────────────────────────────────────────────────────────
   @IsOptional()
@@ -97,7 +106,6 @@ export class UpdateMeDto {
 
   @IsOptional()
   @IsInt()
-  @Min(1)
   numberOfFarmers?: number;
 
   @IsOptional()
@@ -131,6 +139,9 @@ export class UpdateMeDto {
   @IsOptional()
   @IsString()
   languagePreference?: string;
+
+  @IsOptional()
+  consentGiven?: boolean;
 
   // ── Crops (array of strings) ─────────────────────────────────────────────────
   @IsOptional()

@@ -343,7 +343,7 @@ function EditProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="h-[85vh] !max-h-[85vh] w-[85vw] !max-w-[85vw] overflow-y-auto p-2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit2 className="h-4 w-4" />

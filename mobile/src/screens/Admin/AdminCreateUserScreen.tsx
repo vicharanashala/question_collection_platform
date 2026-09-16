@@ -137,11 +137,6 @@ export function AdminCreateUserScreen({ navigation }: Props) {
         mobileNumber: mobileNumber.trim(),
         role,
         ...(role === 'user' ? { category } : {}),
-        state,
-        district: district.trim(),
-        block: block.trim(),
-        village: village.trim(),
-        kvk: kvk.trim(),
       });
       showToast('User created successfully', 'success');
       navigation.goBack();
