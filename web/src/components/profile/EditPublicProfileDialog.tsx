@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowRight, Languages, Loader2, LogOut } from "lucide-react";
+import { ArrowRight, Check, Languages, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import {
   authApi,
@@ -59,6 +59,7 @@ interface EditableProfile {
   organizationState: string[];
   organisationTypeOther: string;
   languagePreference: string;
+  consentGiven: boolean;
 }
 
 const blank = (value: string | number | null | undefined) =>
@@ -66,7 +67,7 @@ const blank = (value: string | number | null | undefined) =>
 
 // NOTE: `fallbackLanguage` should be the app's *current* i18n language
 // (pass `i18n.language` from the caller) — used only when the user record
-// itself has no saved `languagePreference` yet (e.g. never set it before).
+// itself has no saved `languagePreference` yet.
 const fromUser = (
   user: AuthUser,
   fallbackLanguage: string,
@@ -113,13 +114,93 @@ const fromUser = (
       : [],
 
   organisationTypeOther: blank(user.organisationTypeOther),
-  // NOTE: `AuthUser` needs a `languagePreference?: string` field for this to
-  // read the user's actual saved preference. Falls back to whatever
-  // language the app is currently running in if the user has none saved.
   languagePreference: blank(user.languagePreference) || fallbackLanguage,
+  // NOTE: `AuthUser` needs a `consentGiven?: boolean` field for this to
+  // reflect whatever was recorded during initial registration.
+  consentGiven: Boolean(user.consentGiven),
 });
 
 const emptyToNull = (value: string) => value.trim() || null;
+
+/**
+ * Pure, synchronous per-field validation used both for live "while typing"
+ * feedback (called from onChange) and as part of the step-gating functions
+ * below. Username availability (async) is handled separately via
+ * `usernameStatus`, not here.
+ */
+function validateSingleField(
+  key: keyof EditableProfile,
+  value: string,
+): string | undefined {
+  switch (key) {
+    case "name":
+      return value.trim().length < 2
+        ? "Please enter your full name."
+        : undefined;
+
+    case "username": {
+      const username = value.trim();
+      if (username.length < 3) {
+        return "Username must be at least 3 characters long.";
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return "Username can contain only letters, numbers, and underscores.";
+      }
+      return undefined;
+    }
+
+    case "age": {
+      if (!value.trim()) return "Age is required.";
+      const age = Number(value);
+      return !Number.isInteger(age) || age < 16 || age > 100
+        ? "Age must be a whole number between 16 and 100."
+        : undefined;
+    }
+
+    case "organizationName":
+      return value.trim()
+        ? undefined
+        : "Please enter your organisation name.";
+
+    case "organizationRole":
+      return value.trim() ? undefined : "Please enter your role.";
+
+    case "numberOfFarmers":
+      if (!value.trim()) return undefined;
+      return Number.isInteger(Number(value))
+        ? undefined
+        : "Number of farmers must be a whole number.";
+
+    case "collegeName":
+      return value.trim() ? undefined : "Please enter college name.";
+
+    case "organisationTypeOther":
+      return value.trim()
+        ? undefined
+        : "Please specify the organisation type.";
+
+    case "farmSize": {
+      if (!value.trim()) return "Farm size is required.";
+      const size = Number(value);
+      return Number.isFinite(size) && size >= 0
+        ? undefined
+        : "Farm size must be a positive number.";
+    }
+
+    default:
+      return undefined;
+  }
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+
+  return (
+    <p className="mt-1 text-xs text-rose-600" role="alert">
+      {message}
+    </p>
+  );
+}
 
 function LocationSelect({
   label,
@@ -129,6 +210,7 @@ function LocationSelect({
   onChange,
   placeholder,
   required,
+  error,
 }: {
   label: string;
   value: string;
@@ -137,6 +219,7 @@ function LocationSelect({
   onChange: (value: string) => void;
   placeholder: string;
   required?: boolean;
+  error?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -158,6 +241,7 @@ function LocationSelect({
           </option>
         ))}
       </select>
+      <FieldError message={error} />
     </div>
   );
 }
@@ -165,9 +249,11 @@ function LocationSelect({
 function CropSelector({
   crops,
   onClick,
+  error,
 }: {
   crops: string[];
   onClick: () => void;
+  error?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -187,6 +273,7 @@ function CropSelector({
           {crops.join(", ")}
         </p>
       )}
+      <FieldError message={error} />
     </div>
   );
 }
@@ -197,7 +284,7 @@ function CropSelector({
 const PROFILE_STEPS = [
   { number: 1 as const, label: "Location" },
   { number: 2 as const, label: "Details" },
-  { number: 3 as const, label: "Language" },
+  { number: 3 as const, label: "Language & Consent" },
 ];
 
 export function EditPublicProfileDialog({
@@ -238,9 +325,36 @@ export function EditPublicProfileDialog({
 
   // Step 1 = location, step 2 = details, step 3 = language.
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(
+    null,
+  );
+
+  // Field-level validation messages, keyed by EditableProfile field name
+  // (plus "organisationTypeOther"), shown inline under each field instead
+  // of via toast.
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function setFieldError(field: string, message?: string) {
+    setErrors((current) => {
+      if (!message) {
+        if (!(field in current)) return current;
+        const next = { ...current };
+        delete next[field];
+        return next;
+      }
+      if (current[field] === message) return current;
+      return { ...current, [field]: message };
+    });
+  }
 
   useEffect(() => {
     const username = form.username.trim();
+
+    if (!username) {
+      setUsernameStatus("idle");
+      setUsernameSuggestions([]);
+      return;
+    }
 
     if (username === originalUsername.trim()) {
       setUsernameStatus("available");
@@ -289,7 +403,7 @@ export function EditPublicProfileDialog({
   const category = user.category;
   const isOrganisationUser =
     category === "fpo" || category === "ngo" || category === "volunteer";
-  const isStudent = user.category === "student";
+  const isStudent = category === "student";
   const navigate = useNavigate();
 
   // Live language preview, same idea as the registration wizard's Step4:
@@ -300,6 +414,7 @@ export function EditPublicProfileDialog({
   // dir/lang> sync included).
   function handleLanguageChange(value: string) {
     setForm((current) => ({ ...current, languagePreference: value }));
+    setFieldError("languagePreference", undefined);
     void i18n.changeLanguage(value);
   }
 
@@ -308,6 +423,7 @@ export function EditPublicProfileDialog({
     const initialForm = fromUser(user, i18n.language);
     setForm(initialForm);
     setStep(1);
+    setErrors({});
     let active = true;
     async function loadCurrentLocation() {
       setLoadingLocation(true);
@@ -373,6 +489,11 @@ export function EditPublicProfileDialog({
     setBlocks([]);
     setVillages([]);
     setKvks([]);
+    setFieldError("state", stateName ? undefined : "Please select a state.");
+    setFieldError("district", undefined);
+    setFieldError("block", undefined);
+    setFieldError("village", undefined);
+    setFieldError("kvk", undefined);
     const state = states.find((item) => item.name === stateName);
     if (!state) return;
     setLoadingLocation(true);
@@ -396,6 +517,13 @@ export function EditPublicProfileDialog({
     setBlocks([]);
     setVillages([]);
     setKvks([]);
+    setFieldError(
+      "district",
+      districtName ? undefined : "Please select a district.",
+    );
+    setFieldError("block", undefined);
+    setFieldError("village", undefined);
+    setFieldError("kvk", undefined);
     const district = districts.find((item) => item.name === districtName);
     if (!district) return;
     setLoadingLocation(true);
@@ -416,6 +544,8 @@ export function EditPublicProfileDialog({
   async function selectBlock(blockName: string) {
     setForm((current) => ({ ...current, block: blockName, village: "" }));
     setVillages([]);
+    setFieldError("block", blockName ? undefined : "Please select a block.");
+    setFieldError("village", undefined);
     const block = blocks.find((item) => item.name === blockName);
     if (!block) return;
     setLoadingLocation(true);
@@ -433,6 +563,7 @@ export function EditPublicProfileDialog({
     label: string,
     type = "text",
     required = false,
+    numberRange?: { min?: number; max?: number },
   ) => (
     <div className="space-y-1.5" key={key}>
       <Label htmlFor={`profile-${key}`}>
@@ -442,8 +573,8 @@ export function EditPublicProfileDialog({
       <Input
         id={`profile-${key}`}
         type={type}
-        min={0}
-        max={100}
+        min={numberRange?.min}
+        max={numberRange?.max}
         value={form[key]}
         required={required}
         onChange={(e) => {
@@ -456,9 +587,10 @@ export function EditPublicProfileDialog({
             ...prev,
             [key]: value,
           }));
+          setFieldError(key, validateSingleField(key, value));
         }}
       />
-      {key === "username" && (
+      {key === "username" ? (
         <>
           {usernameStatus === "checking" && (
             <p className="text-sm text-muted-foreground">
@@ -491,144 +623,192 @@ export function EditPublicProfileDialog({
               </div>
             </div>
           )}
+
+          {usernameStatus === "idle" && <FieldError message={errors.username} />}
         </>
+      ) : (
+        <FieldError message={errors[key]} />
       )}
     </div>
   );
 
   /** Validates the location step before letting the user move on to step 2. */
   function validateLocationStep(): boolean {
+    const nextErrors: Record<string, string> = {};
+
     if (!form.state.trim()) {
-      toast.error("Please select a state.");
-      return false;
+      nextErrors.state = "Please select a state.";
     }
 
     if (!form.district.trim()) {
-      toast.error("Please select a district.");
-      return false;
+      nextErrors.district = "Please select a district.";
     }
 
     if (category === "farmer") {
       if (!form.block.trim()) {
-        toast.error("Please select a block.");
-        return false;
+        nextErrors.block = "Please select a block.";
       }
 
       if (!form.village.trim()) {
-        toast.error("Please select a village.");
-        return false;
+        nextErrors.village = "Please select a village.";
       }
 
       if (!form.kvk.trim()) {
-        toast.error("Please select a KVK.");
-        return false;
+        nextErrors.kvk = "Please select a KVK.";
       }
     }
 
-    return true;
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.state;
+      delete next.district;
+      delete next.block;
+      delete next.village;
+      delete next.kvk;
+      return { ...next, ...nextErrors };
+    });
+
+    return Object.keys(nextErrors).length === 0;
   }
 
   /** Validates the details step before letting the user move on to step 3. */
   function validateDetailsStep(): boolean {
-    const name = form.name.trim();
+    const nextErrors: Record<string, string> = {};
+
+    if (form.name.trim().length < 2) {
+      nextErrors.name = "Please enter your full name.";
+    }
+
     const username = form.username.trim();
-
-    if (name.length < 2) {
-      toast.error("Please enter your full name.");
-      return false;
-    }
-
     if (username.length < 3) {
-      toast.error("Username must be at least 3 characters long.");
-      return false;
+      nextErrors.username = "Username must be at least 3 characters long.";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      nextErrors.username =
+        "Username can contain only letters, numbers, and underscores.";
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      toast.error(
-        "Username can contain only letters, numbers, and underscores.",
-      );
-      return false;
-    }
-
-    if (usernameStatus === "checking") {
-      toast.error("Please wait while we check username availability.");
-      return false;
-    }
-
-    if (usernameStatus === "taken") {
-      toast.error("This username is already taken.");
-      return false;
-    }
-
-    if (
-      form.age.trim() &&
-      (!Number.isInteger(Number(form.age)) ||
-        Number(form.age) < 16 ||
-        Number(form.age) > 100)
+    if (!form.age.trim()) {
+      nextErrors.age = "Age is required.";
+    } else if (
+      !Number.isInteger(Number(form.age)) ||
+      Number(form.age) < 16 ||
+      Number(form.age) > 100
     ) {
-      toast.error("Please enter a valid age.");
-      return false;
+      nextErrors.age = "Age must be a whole number between 16 and 100.";
     }
+
+    if (!form.gender.trim()) {
+      nextErrors.gender = "Please select your gender.";
+    }
+
+    if (category === "farmer") {
+      if (!form.farmSize.trim()) {
+        nextErrors.farmSize = "Farm size is required.";
+      } else if (!(Number.isFinite(Number(form.farmSize)) && Number(form.farmSize) >= 0)) {
+        nextErrors.farmSize = "Farm size must be a positive number.";
+      }
+    }
+
+    if ((category === "farmer" || category === "volunteer") && form.crops.length === 0) {
+      nextErrors.crops = "Please select at least one crop.";
+    }
+
     const numberOfFarmers = form.numberOfFarmers.trim()
       ? Number(form.numberOfFarmers)
       : null;
     if (numberOfFarmers !== null && !Number.isInteger(numberOfFarmers)) {
-      toast.error("Number of farmers is required.");
-      return false;
-    }
-    if (isOrganisationUser && form.organizationState.length === 0) {
-      toast.error("Please select at least one operating state.");
-      return false;
+      nextErrors.numberOfFarmers = "Number of farmers must be a whole number.";
     }
 
     if (isOrganisationUser) {
+      if (form.organizationState.length === 0) {
+        nextErrors.organizationState =
+          "Please select at least one operating state.";
+      }
+
       if (!form.organisationType.trim()) {
-        toast.error("Please select an organisation type.");
-        return false;
+        nextErrors.organisationType = "Please select an organisation type.";
+      } else if (
+        form.organisationType === OTHER_VALUE &&
+        !form.organisationTypeOther.trim()
+      ) {
+        nextErrors.organisationTypeOther =
+          "Please specify the organisation type.";
       }
 
       if (!form.organizationName.trim()) {
-        toast.error("Please enter your organisation name.");
-        return false;
+        nextErrors.organizationName = "Please enter your organisation name.";
       }
 
       if (!form.organizationRole.trim()) {
-        toast.error("Please enter your role.");
-        return false;
-      }
-
-      if (form.organizationState.length === 0) {
-        toast.error("Please select at least one operating state.");
-        return false;
+        nextErrors.organizationRole = "Please enter your role.";
       }
     }
 
-    // NOTE: kept as-is from the original implementation — these two checks
-    // show a toast but (like before) don't block navigation/save, and run
-    // for every category rather than just "student". Flagging in case this
-    // wasn't intentional; happy to tighten it up if you want it to actually
-    // require a course/college for students only.
     if (isStudent) {
       if (!form.courseName.trim()) {
-        toast.error("Please select a course name");
+        nextErrors.courseName = "Please select a course name.";
       }
 
       if (!form.collegeName.trim()) {
-        toast.error("Please enter college name");
+        nextErrors.collegeName = "Please enter college name.";
       }
     }
 
-    return true;
-  }
+    setErrors((current) => {
+      const next = { ...current };
+      for (const key of [
+        "name",
+        "username",
+        "age",
+        "gender",
+        "farmSize",
+        "crops",
+        "numberOfFarmers",
+        "organizationState",
+        "organisationType",
+        "organisationTypeOther",
+        "organizationName",
+        "organizationRole",
+        "courseName",
+        "collegeName",
+      ]) {
+        delete next[key];
+      }
+      return { ...next, ...nextErrors };
+    });
 
-  /** Validates the language step before letting the user save. */
-  function validateLanguageStep(): boolean {
-    if (!form.languagePreference) {
-      toast.error("Please select a preferred language.");
+    // Username availability is shown live via the checking/available/taken
+    // states in `field()` above rather than as a FieldError message, but it
+    // should still block moving on.
+    if (usernameStatus === "checking" || usernameStatus === "taken") {
       return false;
     }
 
-    return true;
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  /** Validates the language + consent step before letting the user save. */
+  function validateLanguageStep(): boolean {
+    const nextErrors: Record<string, string> = {};
+
+    if (!form.languagePreference) {
+      nextErrors.languagePreference = "Please select a preferred language.";
+    }
+
+    if (!form.consentGiven) {
+      nextErrors.consentGiven =
+        "Please accept the Terms of Service and Privacy Policy to continue.";
+    }
+
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.languagePreference;
+      delete next.consentGiven;
+      return { ...next, ...nextErrors };
+    });
+
+    return Object.keys(nextErrors).length === 0;
   }
 
   function goToDetailsStep(event: React.MouseEvent) {
@@ -688,7 +868,7 @@ export function EditPublicProfileDialog({
       const payload: Parameters<typeof authApi.updateMe>[0] = {
         name: form.name.trim(),
         username: form.username.trim(),
-        consentGiven: required ? true : undefined,
+        consentGiven: form.consentGiven,
         age: form.age.trim() ? Number(form.age) : null,
         gender: emptyToNull(form.gender),
         // State and district are required database fields, so an empty editor
@@ -714,17 +894,12 @@ export function EditPublicProfileDialog({
           collegeName: emptyToNull(form.collegeName),
           universityName: emptyToNull(form.universityName),
         });
-      if (
-        isOrganisationUser &&
-        form.organisationType === OTHER_VALUE &&
-        !form.organisationTypeOther.trim()
-      ) {
-        toast.error("Please specify the organisation type.");
-        return;
-      }
       if (isOrganisationUser) {
         Object.assign(payload, {
-          organisationType: emptyToNull(form.organisationType),
+          organisationType:
+            form.organisationType === OTHER_VALUE
+              ? emptyToNull(form.organisationTypeOther)
+              : emptyToNull(form.organisationType),
           organizationName: emptyToNull(form.organizationName),
           organizationRole: emptyToNull(form.organizationRole),
           // Multi-select returns an array
@@ -844,17 +1019,21 @@ export function EditPublicProfileDialog({
                       onChange={selectState}
                       placeholder="Select state"
                       required
+                      error={errors.state}
                     />
                     <LocationSelect
                       label="District"
                       value={form.district}
                       options={districts}
                       disabled={
-                        loadingLocation || !form.state || districts.length === 0
+                        loadingLocation ||
+                        !form.state ||
+                        districts.length === 0
                       }
                       onChange={selectDistrict}
                       placeholder="Select district"
                       required
+                      error={errors.district}
                     />
                     {category === "farmer" && (
                       <LocationSelect
@@ -869,6 +1048,7 @@ export function EditPublicProfileDialog({
                         onChange={selectBlock}
                         placeholder="Select block"
                         required
+                        error={errors.block}
                       />
                     )}
                     {category === "farmer" && (
@@ -881,11 +1061,16 @@ export function EditPublicProfileDialog({
                           !form.block ||
                           villages.length === 0
                         }
-                        onChange={(village) =>
-                          setForm((current) => ({ ...current, village }))
-                        }
+                        onChange={(village) => {
+                          setForm((current) => ({ ...current, village }));
+                          setFieldError(
+                            "village",
+                            village ? undefined : "Please select a village.",
+                          );
+                        }}
                         placeholder="Select village"
                         required
+                        error={errors.village}
                       />
                     )}
                     {category === "farmer" && (
@@ -894,13 +1079,20 @@ export function EditPublicProfileDialog({
                         value={form.kvk}
                         options={kvks}
                         disabled={
-                          loadingLocation || !form.district || kvks.length === 0
+                          loadingLocation ||
+                          !form.district ||
+                          kvks.length === 0
                         }
-                        onChange={(kvk) =>
-                          setForm((current) => ({ ...current, kvk }))
-                        }
+                        onChange={(kvk) => {
+                          setForm((current) => ({ ...current, kvk }));
+                          setFieldError(
+                            "kvk",
+                            kvk ? undefined : "Please select a KVK.",
+                          );
+                        }}
                         placeholder="Select KVK"
                         required
+                        error={errors.kvk}
                       />
                     )}
                   </section>
@@ -915,19 +1107,21 @@ export function EditPublicProfileDialog({
                     </h3>
                     {field("name", "Full name", "text", true)}
                     {field("username", "Username", "text", true)}
-                    {field("age", "Age", "number", true)}
+                    {field("age", "Age", "number", true, { min: 16, max: 100 })}
                     <div className="space-y-1.5">
                       Gender <span className="text-red-500">*</span>
                       <select
                         id="profile-gender"
                         value={form.gender}
                         disabled={Boolean(user.gender)}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            gender: event.target.value,
-                          }))
-                        }
+                        onChange={(event) => {
+                          const gender = event.target.value;
+                          setForm((current) => ({ ...current, gender }));
+                          setFieldError(
+                            "gender",
+                            gender ? undefined : "Please select your gender.",
+                          );
+                        }}
                         className="flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 text-sm disabled:cursor-not-allowed disabled:opacity-80"
                       >
                         {user.gender ? (
@@ -941,6 +1135,7 @@ export function EditPublicProfileDialog({
                           </>
                         )}
                       </select>
+                      <FieldError message={errors.gender} />
                     </div>
                   </section>
 
@@ -950,10 +1145,13 @@ export function EditPublicProfileDialog({
                         Farming
                       </h3>
                       <div className="grid gap-3 sm:grid-cols-2">
-                        {field("farmSize", "Farm size (acres)", "text", true)}
+                        {field("farmSize", "Farm size (acres)", "number", true, {
+                          min: 0,
+                        })}
                         <CropSelector
                           crops={form.crops}
                           onClick={() => setCropPickerOpen(true)}
+                          error={errors.crops}
                         />
                       </div>
                     </section>
@@ -970,12 +1168,13 @@ export function EditPublicProfileDialog({
                           </Label>
                           <Select
                             value={form.courseName}
-                            onValueChange={(event) =>
+                            onValueChange={(value) => {
                               setForm((current) => ({
                                 ...current,
-                                courseName: event,
-                              }))
-                            }
+                                courseName: value,
+                              }));
+                              setFieldError("courseName", undefined);
+                            }}
                             required
                           >
                             <SelectTrigger>
@@ -989,6 +1188,7 @@ export function EditPublicProfileDialog({
                               ))}
                             </SelectContent>
                           </Select>
+                          <FieldError message={errors.courseName} />
                         </div>
                         {field("collegeName", "College name", "text", true)}
                         {field("universityName", "University")}
@@ -1009,7 +1209,7 @@ export function EditPublicProfileDialog({
 
                           <Select
                             value={form.organisationType}
-                            onValueChange={(value) =>
+                            onValueChange={(value) => {
                               setForm((current) => ({
                                 ...current,
                                 organisationType: value,
@@ -1017,8 +1217,15 @@ export function EditPublicProfileDialog({
                                   value === OTHER_VALUE
                                     ? current.organisationTypeOther
                                     : "",
-                              }))
-                            }
+                              }));
+                              setFieldError("organisationType", undefined);
+                              if (value !== OTHER_VALUE) {
+                                setFieldError(
+                                  "organisationTypeOther",
+                                  undefined,
+                                );
+                              }
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Choose type" />
@@ -1039,19 +1246,33 @@ export function EditPublicProfileDialog({
                               </SelectItem>
                             </SelectContent>
                           </Select>
+                          <FieldError message={errors.organisationType} />
 
                           {form.organisationType === OTHER_VALUE && (
-                            <Input
-                              className="mt-2"
-                              value={form.organisationTypeOther}
-                              onChange={(event) =>
-                                setForm((current) => ({
-                                  ...current,
-                                  organisationTypeOther: event.target.value,
-                                }))
-                              }
-                              placeholder="Specify organisation type"
-                            />
+                            <>
+                              <Input
+                                className="mt-2"
+                                value={form.organisationTypeOther}
+                                onChange={(event) => {
+                                  const value = event.target.value;
+                                  setForm((current) => ({
+                                    ...current,
+                                    organisationTypeOther: value,
+                                  }));
+                                  setFieldError(
+                                    "organisationTypeOther",
+                                    validateSingleField(
+                                      "organisationTypeOther",
+                                      value,
+                                    ),
+                                  );
+                                }}
+                                placeholder="Specify organisation type"
+                              />
+                              <FieldError
+                                message={errors.organisationTypeOther}
+                              />
+                            </>
                           )}
                         </div>
                         {field(
@@ -1067,6 +1288,7 @@ export function EditPublicProfileDialog({
                             "Farmers / members served",
                             "number",
                             true,
+                            { min: 0 },
                           )}
                       </div>
                     </section>
@@ -1090,15 +1312,22 @@ export function EditPublicProfileDialog({
                               label: state.label,
                             }))}
                             values={form.organizationState}
-                            onValuesChange={(values) =>
+                            onValuesChange={(values) => {
                               setForm((current) => ({
                                 ...current,
                                 organizationState: values,
-                              }))
-                            }
+                              }));
+                              setFieldError(
+                                "organizationState",
+                                values.length === 0
+                                  ? "Please select at least one operating state."
+                                  : undefined,
+                              );
+                            }}
                             placeholder="Search states…"
                             helperText="Select all states where your organisation operates. You can pick more than one."
                           />
+                          <FieldError message={errors.organizationState} />
                         </div>
                       </div>
                     </section>
@@ -1113,6 +1342,7 @@ export function EditPublicProfileDialog({
                         <CropSelector
                           crops={form.crops}
                           onClick={() => setCropPickerOpen(true)}
+                          error={errors.crops}
                         />
                         <div className="space-y-3">
                           {/* Season first */}
@@ -1147,36 +1377,101 @@ export function EditPublicProfileDialog({
               )}
 
               {step === 3 && (
-                <section className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                      <Languages className="h-3.5 w-3.5" />
+                <>
+                  <section className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                        <Languages className="h-3.5 w-3.5" />
+                      </div>
+                      <h3 className="text-sm font-bold text-primary">
+                        Preferred language
+                      </h3>
                     </div>
-                    <h3 className="text-sm font-bold text-primary">
-                      Preferred language
-                    </h3>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="profile-language">
-                      Language <span className="text-rose-600">*</span>
-                    </Label>
-                    <Select
-                      value={form.languagePreference}
-                      onValueChange={handleLanguageChange}
-                    >
-                      <SelectTrigger id="profile-language">
-                        <SelectValue placeholder="Choose language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {LANGUAGES.map((l) => (
-                          <SelectItem key={l.code} value={l.code}>
-                            {l.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </section>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="profile-language">
+                        Language <span className="text-rose-600">*</span>
+                      </Label>
+                      <Select
+                        value={form.languagePreference}
+                        onValueChange={handleLanguageChange}
+                      >
+                        <SelectTrigger id="profile-language">
+                          <SelectValue placeholder="Choose language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LANGUAGES.map((l) => (
+                            <SelectItem key={l.code} value={l.code}>
+                              {l.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FieldError message={errors.languagePreference} />
+                    </div>
+                  </section>
+
+                  <section
+                    className={`rounded-xl border p-3 transition-colors sm:p-4 ${
+                      form.consentGiven
+                        ? "border-emerald-300 bg-emerald-500/10"
+                        : "border-border-subtle bg-surface-variant"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          const consentGiven = !form.consentGiven;
+                          setForm((current) => ({ ...current, consentGiven }));
+                          setFieldError(
+                            "consentGiven",
+                            consentGiven
+                              ? undefined
+                              : "Please accept the Terms of Service and Privacy Policy to continue.",
+                          );
+                        }}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all ${
+                          form.consentGiven
+                            ? "border-emerald-500 bg-emerald-500"
+                            : "border-border-subtle bg-surface hover:border-emerald-400"
+                        }`}
+                      >
+                        {form.consentGiven && (
+                          <Check className="h-3 w-3 text-white" />
+                        )}
+                      </button>
+
+                      <div className="flex-1 space-y-1.5">
+                        <p className="text-xs font-medium leading-snug text-foreground sm:text-sm">
+                          I have read and agree to the{" "}
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setLegalModal("terms");
+                            }}
+                            className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
+                          >
+                            Terms of Service
+                          </button>{" "}
+                          and{" "}
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setLegalModal("privacy");
+                            }}
+                            className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
+                          >
+                            Privacy Policy
+                          </button>
+                        </p>
+                      </div>
+                    </div>
+                    <FieldError message={errors.consentGiven} />
+                  </section>
+                </>
               )}
             </div>
             <div className="flex shrink-0 justify-end gap-2 border-t border-border-subtle px-5 py-4">
@@ -1245,9 +1540,15 @@ export function EditPublicProfileDialog({
             open={cropPickerOpen}
             onOpenChange={setCropPickerOpen}
             selected={form.crops}
-            onSelectionChange={(crops) =>
-              setForm((current) => ({ ...current, crops }))
-            }
+            onSelectionChange={(crops) => {
+              setForm((current) => ({ ...current, crops }));
+              setFieldError(
+                "crops",
+                crops.length === 0
+                  ? "Please select at least one crop."
+                  : undefined,
+              );
+            }}
           />
         </DialogContent>
       </Dialog>
