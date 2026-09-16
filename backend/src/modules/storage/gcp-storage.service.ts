@@ -124,20 +124,38 @@ export class GcpStorageService implements StorageService, OnModuleInit {
     const objectName = `${this.prefix}/${category}/${userId}/${yyyyMm}/${uuidv4()}_${base}.${ext}`;
 
     const file = this.bucket.file(objectName);
-    await file.save(buffer, {
-      contentType: mimeType,
-      metadata: { cacheControl: "private, max-age=86400" },
-      resumable: false,
-    });
+    try {
+      await file.save(buffer, {
+        contentType: mimeType,
+        metadata: { cacheControl: "private, max-age=86400" },
+        resumable: false,
+      });
 
-    // The emulator does not implement storage classes.
-    if (!this.isEmulator) {
-      await file.setStorageClass(this.storageClass);
+      // The emulator does not implement storage classes.
+      if (!this.isEmulator) {
+        await file.setStorageClass(this.storageClass);
+      }
+    } catch (err: unknown) {
+      throw this.toSafeError(err, `upload ${objectName}`);
     }
 
     const uri = `gs://${this.bucketName}/${objectName}`;
     this.logger.debug(`Uploaded ${objectName}`);
     return uri;
+  }
+
+  /**
+   * Converts a GCS SDK error into a plain Error carrying only its status and message.
+   *
+   * The SDK attaches the whole HTTP exchange to the error it throws, including the
+   * Authorization header. Letting that reach Nest's exception handler prints a live
+   * OAuth access token into Cloud Logging on every storage failure.
+   */
+  private toSafeError(err: unknown, context: string): Error {
+    const { code, message } = err as { code?: number; message?: string };
+    const detail = message?.split("\n")[0] ?? "unknown error";
+    this.logger.error(`Storage ${context} failed (${code ?? "no code"}): ${detail}`);
+    return new Error(`Storage ${context} failed: ${detail}`);
   }
 
   async delete(path: string): Promise<void> {
@@ -151,7 +169,7 @@ export class GcpStorageService implements StorageService, OnModuleInit {
     } catch (err: unknown) {
       const e = err as { code?: number };
       if (e.code === 404) return;
-      throw err;
+      throw this.toSafeError(err, `delete ${objectName}`);
     }
   }
 
@@ -170,11 +188,16 @@ export class GcpStorageService implements StorageService, OnModuleInit {
     }
 
     const expiresAtMs = Date.now() + this.signedUrlTtlSeconds * 1000;
-    const [url] = await this.bucket.file(objectName).getSignedUrl({
-      version: "v4",
-      action: "read",
-      expires: expiresAtMs,
-    });
+    let url: string;
+    try {
+      [url] = await this.bucket.file(objectName).getSignedUrl({
+        version: "v4",
+        action: "read",
+        expires: expiresAtMs,
+      });
+    } catch (err: unknown) {
+      throw this.toSafeError(err, `sign ${objectName}`);
+    }
 
     // Expire the cache entry a minute early so a URL is never handed out as it lapses.
     this.signedUrlCache.set(objectName, {
