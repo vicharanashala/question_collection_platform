@@ -75,7 +75,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                 <span className="flex-1 flex items-center justify-between">
                   <span>{t(labelKey)}</span>
                   {to === '/home/wallet' && (
-                    <span className="ml-2 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning">
                       {t('common.comingSoon', 'Coming Soon')}
                     </span>
                   )}
