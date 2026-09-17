@@ -81,8 +81,13 @@ export function PublicSidebar() {
     >
       <Icon className="h-4 w-4 shrink-0" />
 
-      <span className="flex-1">
-        {t(labelKey)}
+      <span className="flex-1 flex items-center justify-between">
+        <span>{t(labelKey)}</span>
+        {to === '/home/wallet' && (
+          <span className="ml-2 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            {t('common.comingSoon', 'Coming Soon')}
+          </span>
+        )}
       </span>
 
       {isSubmitTab && hasDraft && !isOnSubmitPage && (

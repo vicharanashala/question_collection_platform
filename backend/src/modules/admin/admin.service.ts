@@ -109,11 +109,19 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
     value: 5,
     description: "Maximum image file size per question (MB)",
   },
-  // 0 = disabled, 1 = enabled. Withdrawals and payment-account verification stay off
-  // until the payment integration is signed off; flipping this is an admin action.
+  // 0 = disabled, 1 = enabled. Withdrawals stay off until the payment integration
+  // is signed off; flipping this is an admin action.
   payment_withdrawal_enabled: {
     value: 0,
-    description: "Enable wallet withdrawals and payment account verification (0 = off, 1 = on)",
+    description: "Enable wallet withdrawals (0 = off, 1 = on)",
+  },
+  // 0 = disabled, 1 = enabled. Independent from payment_withdrawal_enabled —
+  // gates adding a new UPI/bank payment method and its verification, so the
+  // two can be turned on/off separately (e.g. let users verify a payout
+  // method before withdrawals themselves go live).
+  payment_verification_enabled: {
+    value: 0,
+    description: "Enable adding and verifying payment methods (0 = off, 1 = on)",
   },
 };
 

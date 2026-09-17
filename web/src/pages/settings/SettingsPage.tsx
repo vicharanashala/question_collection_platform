@@ -27,7 +27,12 @@ const CONFIG_META: Record<string, { label: string; suffix: string; description?:
   payment_withdrawal_enabled: {
     label: 'Payment Withdrawals',
     suffix: '',
-    description: 'Enable wallet withdrawals and payment account verification',
+    description: 'Enable wallet withdrawals',
+  },
+  payment_verification_enabled: {
+    label: 'Payment Method Verification',
+    suffix: '',
+    description: 'Enable adding and verifying payment methods (UPI/bank account)',
   },
 }
 
@@ -43,6 +48,7 @@ const HIDDEN_CONFIG_KEYS = new Set([
 // as a switch instead of a numeric value + Edit dialog.
 const BOOLEAN_CONFIG_KEYS = new Set([
   'payment_withdrawal_enabled',
+  'payment_verification_enabled',
 ])
 
 export function SettingsPage() {
@@ -178,7 +184,7 @@ export function SettingsPage() {
                       </p>
                       {isBoolean ? (
                         <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text">
-                          {cfg.value ? 'On' : 'Off'}
+                          {cfg.value ? 'Enabled' : 'Disabled'}
                         </p>
                       ) : (
                         <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text tabular-nums">
