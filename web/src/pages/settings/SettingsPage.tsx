@@ -182,19 +182,17 @@ export function SettingsPage() {
                       <p className="text-xs sm:text-xs sm:text-sm text-text-secondary truncate">
                         {meta?.label ?? cfg.key}
                       </p>
-                      {isBoolean ? (
-                        <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text">
-                          {cfg.value ? 'Enabled' : 'Disabled'}
-                        </p>
-                      ) : (
+                      {!isBoolean && (
                         <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text tabular-nums">
                           {meta?.suffix === ' ₹' ? '₹' : ''}
                           {cfg.value}
                           {(meta?.suffix && meta?.suffix !== ' ₹') ? meta.suffix : ''}
                         </p>
                       )}
-                      {cfg.description && (
-                        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{cfg.description}</p>
+                      {(meta?.description || cfg.description) && (
+                        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
+                          {(meta?.description ?? cfg.description)?.replace('(0 = off, 1 = on)', '').trim()}
+                        </p>
                       )}
                     </div>
                     {isBoolean ? (

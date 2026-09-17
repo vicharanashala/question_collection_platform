@@ -412,11 +412,11 @@ export function PublicWalletPage() {
         </div>
 
         {/* ── Coming Soon Banner ────────────────────────────────── */}
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-100">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-warning">
+          <Info className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <h3 className="text-sm font-bold">{t('wallet.comingSoonTitle', 'Wallet Coming Soon!')}</h3>
-            <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
+            <p className="mt-1 text-xs opacity-90">
               {t('wallet.comingSoonDesc', 'We are working hard to bring you the wallet feature. Stay tuned for updates on when you can start earning and withdrawing rewards.')}
             </p>
           </div>

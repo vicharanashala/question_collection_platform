@@ -113,7 +113,7 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   // is signed off; flipping this is an admin action.
   payment_withdrawal_enabled: {
     value: 0,
-    description: "Enable wallet withdrawals (0 = off, 1 = on)",
+    description: "Enable wallet withdrawals",
   },
   // 0 = disabled, 1 = enabled. Independent from payment_withdrawal_enabled —
   // gates adding a new UPI/bank payment method and its verification, so the
@@ -121,7 +121,7 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   // method before withdrawals themselves go live).
   payment_verification_enabled: {
     value: 0,
-    description: "Enable adding and verifying payment methods (0 = off, 1 = on)",
+    description: "Enable adding and verifying payment methods",
   },
 };
 
