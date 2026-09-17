@@ -149,6 +149,15 @@ export class User {
 })
 isUserCreatedBySuperAdmin: boolean;
 
+  @Prop({
+  name: 'profileCreatedByAdminCompleted',
+  type: Boolean,
+  default: false,
+})
+profileCreatedByAdminCompleted: boolean
+
+
+
   createdAt: Date;
   updatedAt: Date;
 }

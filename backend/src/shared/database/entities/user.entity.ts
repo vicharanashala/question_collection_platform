@@ -206,4 +206,7 @@ export class User {
 
   @Column({name: "is_created_by_super_admin", type: 'boolean', default: false})
   isUserCreatedBySuperAdmin: boolean
+
+  @Column({name:"is_admin_created_profile_completed", type: "boolean", default: false })
+  profileCreatedByAdminCompleted: boolean
 }

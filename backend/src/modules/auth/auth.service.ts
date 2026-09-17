@@ -73,7 +73,8 @@ export interface PublicUser {
   organizationBlock:   string | null;
   organizationVillage: string | null;
   consentGiven: boolean;
-  isUserCreatedBySuperAdmin: boolean
+  isUserCreatedBySuperAdmin: boolean;
+  profileCreatedByAdminCompleted: boolean
 }
 
 @Injectable()
@@ -639,6 +640,7 @@ export class AuthService {
       season?: string | null;
       languagePreference?: string | null;
       consentGiven?: boolean;
+      profileCreatedByAdminCompleted?: boolean;
       crops?: string[] | null;
     },
   ): Promise<PublicUser> {
@@ -661,7 +663,7 @@ export class AuthService {
       'courseName', 'collegeName', 'universityName',
       'organisationType', 'organizationName', 'organizationRole', 'numberOfFarmers',
       'organizationState', 'organizationDistrict', 'organizationBlock', 'organizationVillage',
-      'season', 'languagePreference', 'consentGiven',
+      'season', 'languagePreference', 'consentGiven', 'profileCreatedByAdminCompleted'
     ];
     for (const f of fields) {
       if (dto[f] !== undefined) (user as any)[f] = dto[f];
@@ -795,6 +797,7 @@ export class AuthService {
       organizationVillage:  user.organizationVillage,
       consentGiven:         user.consentGiven,
       isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
+      profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted
     };
   }
 

@@ -162,6 +162,7 @@ export interface AuthUser {
   organizationVillage?:  string | null;
   consentGiven?:         boolean;
   isUserCreatedBySuperAdmin?: boolean;
+  profileCreatedByAdminCompleted?: boolean;
   organisationTypeOther?: string
 }
 
