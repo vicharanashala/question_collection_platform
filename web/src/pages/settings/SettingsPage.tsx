@@ -9,11 +9,12 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { Settings2, RefreshCw, Lock } from 'lucide-react'
 import type { ConfigItem } from '@/types'
 
-const CONFIG_META: Record<string, { label: string; suffix: string }> = {
+const CONFIG_META: Record<string, { label: string; suffix: string; description?: string }> = {
   max_users_per_state:            { label: 'Max Users per State',       suffix: '' },
   min_withdrawal_amount:          { label: 'Min Withdrawal Amount',     suffix: ' \u20b9' },
   question_edit_window_seconds:   { label: 'Edit Window',                suffix: 's' },
@@ -21,6 +22,13 @@ const CONFIG_META: Record<string, { label: string; suffix: string }> = {
   duplicate_similarity_threshold: { label: 'Duplicate Similarity',       suffix: '' },
   max_question_chars:             { label: 'Max Question Characters',   suffix: '' },
   max_image_size_mb:              { label: 'Max Image Size',             suffix: ' MB' },
+  // The backend description still reads "(0 = off, 1 = on)", which no longer
+  // applies now that this is rendered as a switch \u2014 override it here.
+  payment_withdrawal_enabled: {
+    label: 'Payment Withdrawals',
+    suffix: '',
+    description: 'Enable wallet withdrawals and payment account verification',
+  },
 }
 
 const HIDDEN_CONFIG_KEYS = new Set([
@@ -29,6 +37,12 @@ const HIDDEN_CONFIG_KEYS = new Set([
   'ai_confidence_threshold',
   'question_edit_window_seconds',
   'max_audio_size_mb',
+])
+
+// Config keys that are conceptually on/off flags (stored as 0/1) — rendered
+// as a switch instead of a numeric value + Edit dialog.
+const BOOLEAN_CONFIG_KEYS = new Set([
+  'payment_withdrawal_enabled',
 ])
 
 export function SettingsPage() {
@@ -41,6 +55,7 @@ export function SettingsPage() {
   const [editKey, setEditKey] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const [togglingKey, setTogglingKey] = useState<string | null>(null)
 
   async function loadConfigs() {
     try {
@@ -95,6 +110,22 @@ export function SettingsPage() {
     }
   }
 
+  async function toggleBoolean(cfg: ConfigItem, checked: boolean) {
+    const val = checked ? 1 : 0
+    setTogglingKey(cfg.key)
+    try {
+      await adminApi.updateConfig({ key: cfg.key, value: val })
+      setConfigs((prev) =>
+        prev.map((c) => (c.key === cfg.key ? { ...c, value: val } : c)),
+      )
+      toast.success('Configuration updated')
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Update failed'))
+    } finally {
+      setTogglingKey(null)
+    }
+  }
+
   if (loading) {
     return <SettingsSkeleton />
   }
@@ -136,6 +167,7 @@ export function SettingsPage() {
           .filter((cfg) => !HIDDEN_CONFIG_KEYS.has(cfg.key))
           .map((cfg) => {
             const meta = CONFIG_META[cfg.key]
+            const isBoolean = BOOLEAN_CONFIG_KEYS.has(cfg.key)
             return (
               <Card key={cfg.key} className="shadow-xs">
                 <CardContent className="p-5">
@@ -144,24 +176,39 @@ export function SettingsPage() {
                       <p className="text-xs sm:text-xs sm:text-sm text-text-secondary truncate">
                         {meta?.label ?? cfg.key}
                       </p>
-                      <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text tabular-nums">
-                        {meta?.suffix === ' ₹' ? '₹' : ''}
-                        {cfg.value}
-                        {(meta?.suffix && meta?.suffix !== ' ₹') ? meta.suffix : ''}
-                      </p>
+                      {isBoolean ? (
+                        <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text">
+                          {cfg.value ? 'On' : 'Off'}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text tabular-nums">
+                          {meta?.suffix === ' ₹' ? '₹' : ''}
+                          {cfg.value}
+                          {(meta?.suffix && meta?.suffix !== ' ₹') ? meta.suffix : ''}
+                        </p>
+                      )}
                       {cfg.description && (
                         <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{cfg.description}</p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(cfg)}
-                      disabled={!isSuperAdmin}
-                      className="shrink-0 text-text-tertiary hover:text-text"
-                    >
-                      Edit
-                    </Button>
+                    {isBoolean ? (
+                      <Switch
+                        checked={!!cfg.value}
+                        onCheckedChange={(checked) => toggleBoolean(cfg, checked)}
+                        disabled={!isSuperAdmin || togglingKey === cfg.key}
+                        className="shrink-0 mt-1"
+                      />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(cfg)}
+                        disabled={!isSuperAdmin}
+                        className="shrink-0 text-text-tertiary hover:text-text"
+                      >
+                        Edit
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
