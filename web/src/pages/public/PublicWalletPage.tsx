@@ -133,7 +133,7 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
   if (!tx) return null
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent>
+      <DialogContent className="p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle>{t('wallet.txDetail')}</DialogTitle>
         </DialogHeader>
@@ -690,7 +690,7 @@ export function PublicWalletPage() {
 
       {/* ── Withdraw confirmation dialog ─────────────────────────── */}
       <Dialog open={withdrawOpen} onOpenChange={(v) => !v && !withdrawing && setWithdrawOpen(false)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm p-5 sm:p-6">
           <DialogHeader className="items-center text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
               <ArrowUpRight className="h-6 w-6" />
@@ -709,9 +709,9 @@ export function PublicWalletPage() {
             </div>
 
             <div>
-              <div className="flex h-12 items-center gap-1.5 rounded-md border border-border-subtle bg-background px-3">
+              <div className="flex h-12 items-center gap-1.5 rounded-md border border-border-subtle bg-background px-3 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-1 dark:focus-within:ring-offset-background">
                 <span className="text-base sm:text-base sm:text-lg font-bold text-text-secondary">₹</span>
-                <Input
+                <input
                   type="text"
                   inputMode="decimal"
                   placeholder={String(minWithdrawal)}
@@ -719,7 +719,7 @@ export function PublicWalletPage() {
                   onChange={(e) => setWithdrawAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                   maxLength={8}
                   autoFocus
-                  className="h-full border-0 p-0 text-base sm:text-base sm:text-lg font-bold shadow-none focus-visible:ring-0"
+                  className="h-full w-full bg-transparent border-0 p-0 text-base sm:text-base sm:text-lg font-bold outline-none focus:ring-0 focus:outline-none"
                 />
               </div>
               {!isValidAmount && withdrawAmount.length > 0 && (
@@ -794,7 +794,7 @@ export function PublicWalletPage() {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-row gap-3 space-x-0 sm:space-x-0 w-full pt-2">
             <Button
               variant="outline"
               className="flex-1"
