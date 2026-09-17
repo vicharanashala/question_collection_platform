@@ -73,11 +73,16 @@ export function PublicBottomNav() {
               key={to}
               to={to}
               end={end}
+              tabIndex={to === '/home/wallet' ? -1 : 0}
+              onClick={(e) => {
+                if (to === '/home/wallet') e.preventDefault()
+              }}
               className={cn(
                 'flex min-w-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors',
                 isActive
                   ? 'text-primary'
                   : 'text-text-tertiary hover:text-primary',
+                to === '/home/wallet' && 'pointer-events-none opacity-50'
               )}
             >
               <div className="relative">

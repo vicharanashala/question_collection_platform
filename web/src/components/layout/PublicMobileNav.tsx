@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useState } from 'react'
 import { SignOutDialog } from '@/components/SignOutDialog'
+import { cn } from '@/lib/utils'
 
 interface PublicMobileNavProps {
   open: boolean
@@ -62,13 +63,22 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                 key={to}
                 to={to}
                 end={end}
-                onClick={onClose}
+                tabIndex={to === '/home/wallet' ? -1 : 0}
+                onClick={(e) => {
+                  if (to === '/home/wallet') {
+                    e.preventDefault()
+                  } else {
+                    onClose()
+                  }
+                }}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium transition-colors ${
+                  cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-text-secondary hover:bg-surface-variant hover:text-foreground'
-                  }`
+                      : 'text-text-secondary hover:bg-surface-variant hover:text-foreground',
+                    to === '/home/wallet' && 'pointer-events-none opacity-50'
+                  )
                 }
               >
                 <Icon className="h-4 w-4 shrink-0" />
