@@ -870,6 +870,7 @@ export function EditPublicProfileDialog({
         name: form.name.trim(),
         username: form.username.trim(),
         consentGiven: form.consentGiven,
+        profileCreatedByAdminCompleted: true,
         age: form.age.trim() ? Number(form.age) : null,
         gender: emptyToNull(form.gender),
         // State and district are required database fields, so an empty editor

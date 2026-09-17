@@ -247,7 +247,7 @@ export const authApi = {
     courseName?: string | null; collegeName?: string | null; universityName?: string | null; organisationType?: string | null
     organizationName?: string | null; organizationRole?: string | null; numberOfFarmers?: number | null; organizationState?: string[] | null
     organizationDistrict?: string | null; organizationBlock?: string | null; organizationVillage?: string | null; season?: string | null
-    languagePreference?: string | null; consentGiven?: boolean; crops?: string[] | null
+    languagePreference?: string | null; consentGiven?: boolean; crops?: string[] | null; profileCreatedByAdminCompleted?: boolean
   }) =>
     request<{ user: AuthUser }>('/auth/me', {
       method: 'PATCH',
@@ -380,6 +380,7 @@ export const adminApi = {
   createUser: (body: {
     name: string
     isUserCreatedBySuperAdmin?: boolean,
+    profileCreatedByAdminCompleted?: boolean
     mobileNumber: string
     role: string
     category?: string

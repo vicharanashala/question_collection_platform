@@ -143,6 +143,9 @@ export class UpdateMeDto {
   @IsOptional()
   consentGiven?: boolean;
 
+  @IsOptional()
+  profileCreatedByAdminCompleted?: boolean
+
   // ── Crops (array of strings) ─────────────────────────────────────────────────
   @IsOptional()
   @IsArray()

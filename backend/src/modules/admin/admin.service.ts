@@ -278,7 +278,8 @@ export class AdminService implements OnModuleInit {
       mobileNumber: string;
       role: UserRole;
       category?: UserCategory;
-      isUserCreatedBySuperAdmin: boolean
+      isUserCreatedBySuperAdmin: boolean;
+      profileCreatedByAdminCompleted: boolean
     },
   ) {
     // Super admin cannot create another super admin
@@ -319,6 +320,9 @@ const isCreatedBySuperAdmin =
   dto.isUserCreatedBySuperAdmin ?? true;
 
 
+  const profileCreatedByAdminCompleted = dto.profileCreatedByAdminCompleted ?? false
+
+
 const user = await this.userRepo.create({
   name: dto.name.trim(),
   mobileNumber: mobile,
@@ -330,6 +334,7 @@ const user = await this.userRepo.create({
   tokenVersion: 0,
   lastLoginAt: null,
   isUserCreatedBySuperAdmin: isCreatedBySuperAdmin,
+  profileCreatedByAdminCompleted: profileCreatedByAdminCompleted
 });
 
 
@@ -3974,7 +3979,8 @@ await this.userRepo.save(user);
       role: user.role,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
-      isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin
+      isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
+      profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted
     };
   }
 
