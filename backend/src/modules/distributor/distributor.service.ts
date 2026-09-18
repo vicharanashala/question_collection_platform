@@ -20,14 +20,14 @@ import { INDIAN_STATES } from '../../shared/constants/indian-states.constant';
 import { mongoLike, toObjectIdOrNull } from '../../shared/database/abstractions/mongo-utils';
 
 import { AssignStatesDto, ListApprovedQuestionsDto, ListDistributionsDto } from './dto';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Reviewer ingestion endpoint. Called from `assignStates` after a question is
  * successfully distributed into `final_questions` so the reviewer backend
  * can generate embeddings asynchronously server-side.
  */
-const REVIEWER_INGEST_URL =
-  'https://reviewer-backend-239934307367.asia-south2.run.app/api/questions';
+
 
 /**
  * The reviewer ingestion API typically returns a JSON body shaped like:
@@ -86,7 +86,6 @@ export interface AssignStatesResult {
    * validate the reviewer's response shape — see the docblock above
    * for the typical shape.
    */
-  reviewerResponse?: unknown;
 }
 
 /**
@@ -106,7 +105,8 @@ function toObjectIdOrThrow(value: string, fieldName: string): Types.ObjectId {
 @Injectable()
 export class DistributorService {
   private readonly logger = new Logger(DistributorService.name);
-
+  private readonly reviewerIngestUri: string;
+  private readonly apiKey: string
   constructor(
     @Inject(REPOSITORY_TOKENS.FinalQuestion)
     private readonly finalQuestionRepo: IFinalQuestionRepository,
@@ -116,7 +116,11 @@ export class DistributorService {
     private readonly auditRepo: IAuditLogRepository,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
-  ) {}
+    private readonly configService: ConfigService
+  ) {
+    this.reviewerIngestUri = this.configService.get<string>("reviewSystem.reviewerUri") || process.env.REVIEWER_INGEST_URL || "";
+    this.apiKey = this.configService.get<string>("reviewSystem.apiKey") || process.env.REVIEW_SYSTEM_AUTH_KEY || ''
+  }
 
   // ── Approved-questions queue ─────────────────────────────────────────────
 
@@ -384,15 +388,15 @@ export class DistributorService {
     // in a confusing state where rows are saved but the API returns 502.
     // Instead we log a warning, adjust the `message` to be clear about what
     // succeeded, and omit `reviewerResponse` from the return envelope.
-    let reviewerResponseData: unknown;
+    let reviewerResponseData;
     let reviewerIngestFailed = false;
     let reviewerFailureReason = 'unknown error';
     try {
       const res = await axios.post(
-        REVIEWER_INGEST_URL,
+        this.reviewerIngestUri,
         reviewerPayload,
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json',  'x-internal-api-key': this.apiKey },
           timeout: 30_000,
         },
       );
@@ -424,20 +428,18 @@ export class DistributorService {
       // reviewer backend later via a separate retry job if needed.
     }
 
-    return {
-      success: true,
-      message: reviewerIngestFailed
-        ? `Assigned ${inserted.length} question(s) locally; reviewer ingestion failed (${reviewerFailureReason}). The distribution rows have been saved and can be re-ingested later.`
-        : `Successfully distributed ${inserted.length} question(s) to the reviewer backend.`,
-      count: inserted.length,
-      questionIds: inserted
+    if(reviewerIngestFailed){
+      return {
+        success: false,
+        message: `Assigned ${inserted.length} question(s) locally; reviewer ingestion failed (${reviewerFailureReason}).`,
+        count: inserted.length,
+        questionIds: inserted
         .map((r) => (r as unknown as { id?: string }).id)
         .filter((id): id is string => typeof id === 'string' && id.length > 0),
-      // Omit `reviewerResponse` on failure (set to undefined) so the
-      // frontend can detect "reviewer not consulted vs reviewer returned
-      // something" by checking `reviewerResponse !== undefined`.
-      reviewerResponse: reviewerIngestFailed ? undefined : reviewerResponseData,
-    };
+      }
+    }
+
+    return reviewerResponseData as AssignStatesResult;
   }
 
   /**

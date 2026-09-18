@@ -135,3 +135,8 @@ export const gdbConfig = registerAs("gdb", () => ({
 export const embedConfig = registerAs("embed", () => ({
   baseUrl: `${required("VM_SERVER_URL")}:${required("EMBED_PORT")}`,
 }));
+
+export const reviwerConfig = registerAs("reviewSystem", ()=>({
+  reviewerUri: process.env.REVIEWER_INGEST_URL,
+  apiKey: process.env.REVIEW_SYSTEM_AUTH_KEY
+}))
