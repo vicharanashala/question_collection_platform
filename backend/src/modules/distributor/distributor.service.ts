@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import axios, { AxiosError } from 'axios';
 import { Types } from 'mongoose';
 
 import { UserRole, QuestionStatus, AuditAction, ActorType } from '../../shared/classes/enums';
@@ -19,6 +20,74 @@ import { INDIAN_STATES } from '../../shared/constants/indian-states.constant';
 import { mongoLike, toObjectIdOrNull } from '../../shared/database/abstractions/mongo-utils';
 
 import { AssignStatesDto, ListApprovedQuestionsDto, ListDistributionsDto } from './dto';
+
+/**
+ * Reviewer ingestion endpoint. Called from `assignStates` after a question is
+ * successfully distributed into `final_questions` so the reviewer backend
+ * can generate embeddings asynchronously server-side.
+ */
+const REVIEWER_INGEST_URL =
+  'https://reviewer-backend-239934307367.asia-south2.run.app/api/questions';
+
+/**
+ * The reviewer ingestion API typically returns a JSON body shaped like:
+ *
+ *     {
+ *       "success": true,
+ *       "message": "Successfully ingested N Question Collection question(s). Embeddings are being generated in the background.",
+ *       "count": N,
+ *       "questionIds": ["..."]
+ *     }
+ *
+ * The reviewer team owns that schema and may change it without notice, so
+ * we DO NOT validate it here. We just pass `res.data` through to the
+ * caller under `reviewerResponse` (typed `unknown`). Callers that want to
+ * read specific fields must narrow the value first.
+ */
+
+/**
+ * Return shape of `assignStates`.
+ *
+ * The top-level fields (`success`, `message`, `count`, `questionIds`)
+ * describe what *this* service did locally — they are stable, we
+ * control them, and they are always populated. `success` reflects
+ * the local distribution only (DB inserts), NOT the reviewer call.
+ *
+ * The `reviewerResponse` field carries the raw JSON body the reviewer
+ * ingestion API returned via `res.data`. It is omitted (i.e. `undefined`)
+ * in two cases:
+ *   1. No rows were inserted (we don't call the reviewer in that case).
+ *   2. The reviewer API failed (timeout, network error, non-2xx response).
+ *      In that case the local distribution still succeeded — see the
+ *      `message` field — and `reviewerResponse` will be `undefined` so
+ *      the frontend can distinguish "reviewer not consulted" from
+ *      "reviewer returned something".
+ *
+ * Exported so the controller's public `assignStates` method has a named
+ * return type — without it TS reports TS4053 because the inferred return
+ * shape is unnameable from outside this module.
+ */
+export interface AssignStatesResult {
+  /** Whether the local distribution operation succeeded (DB inserts). */
+  success: boolean;
+  /**
+   * Human-readable summary of what this service did. Reflects both
+   * the local result and (when relevant) the reviewer ingestion outcome.
+   */
+  message: string;
+  /** Number of `final_question` rows we created in our DB. */
+  count: number;
+  /** IDs of the `final_question` rows we created (our local Mongo IDs). */
+  questionIds: string[];
+  /**
+   * Raw response body from the reviewer ingestion API (`res.data`).
+   * Omitted (`undefined`) when no rows were inserted OR when the
+   * reviewer call failed. Typed as `unknown` because we do not
+   * validate the reviewer's response shape — see the docblock above
+   * for the typical shape.
+   */
+  reviewerResponse?: unknown;
+}
 
 /**
  * Build an `ObjectId` from a 24-char hex string. Throws `BadRequestException`
@@ -96,7 +165,7 @@ export class DistributorService {
     actorRole: UserRole,
     questionId: string,
     dto: AssignStatesDto,
-  ) {
+  ): Promise<AssignStatesResult> {
     const question = await this.questionRepo.findById(questionId);
     if (!question) throw new NotFoundException('Question not found.');
 
@@ -254,15 +323,120 @@ export class DistributorService {
       } as never);
     }
 
+    // ── Step 3: Forward the newly-distributed question to the reviewer
+    // ingestion API ────────────────────────────────────────────────────────
+    // The reviewer backend generates embeddings asynchronously server-side,
+    // so we POST synchronously and surface the ingestion IDs it returns.
+    //
+    // Every row in `inserted` shares the same source-question snapshot
+    // (questionText, state, district, cropType, season, domains); they
+    // differ only in `distributionState`, which the reviewer API doesn't
+    // care about. So a single ingestion request — built from the first
+    // inserted row — is sufficient regardless of how many states were
+    // assigned in this call.
+    if (inserted.length === 0) {
+      // All requested states were already distributed (no new rows).
+      // No reviewer call is needed; return our local summary shape with
+      // no `reviewerResponse` (we don't know what the reviewer would have
+      // said since we didn't call it).
+      return {
+        success: true,
+        message: 'No new state assignments to ingest.',
+        count: 0,
+        questionIds: [],
+      };
+    }
+
+    const sample = inserted[0] as unknown as {
+      questionText?: string | null;
+      state?: string | null;
+      district?: string | null;
+      cropType?: string | null;
+      season?: string | null;
+      domains?: unknown;
+    };
+
+    const reviewerPayload = {
+      question_collection_questions: [
+        {
+          question: sample.questionText ?? '',
+          priority: 'medium' as const,
+          details: {
+            state: sample.state ?? null,
+            district: sample.district ?? null,
+            crop: sample.cropType ?? null,
+            season: sample.season ?? null,
+            domain: Array.isArray(sample.domains) ? sample.domains : [],
+          },
+        },
+      ],
+    };
+
+    // ── Step 3: Forward the newly-distributed question to the reviewer
+    // ingestion API ────────────────────────────────────────────────────────
+    // The reviewer backend generates embeddings asynchronously server-side,
+    // so we POST synchronously and surface the ingestion IDs it returns.
+    //
+    // **Reviewer ingestion is best-effort.** The user's primary intent is to
+    // assign states (which is already committed in `final_questions` above).
+    // If the reviewer API is unreachable, times out, or returns an error,
+    // we MUST NOT fail the whole request — that would leave the user's DB
+    // in a confusing state where rows are saved but the API returns 502.
+    // Instead we log a warning, adjust the `message` to be clear about what
+    // succeeded, and omit `reviewerResponse` from the return envelope.
+    let reviewerResponseData: unknown;
+    let reviewerIngestFailed = false;
+    let reviewerFailureReason = 'unknown error';
+    try {
+      const res = await axios.post(
+        REVIEWER_INGEST_URL,
+        reviewerPayload,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 30_000,
+        },
+      );
+      // Pass `res.data` through verbatim. We don't validate the reviewer's
+      // response shape (the reviewer team owns it), so this is `unknown`
+      // and the caller can narrow if they need specific fields.
+      reviewerResponseData = res.data;
+    } catch (err) {
+      reviewerIngestFailed = true;
+      const axiosErr = err as AxiosError;
+      if (axiosErr.response?.status) {
+        reviewerFailureReason = `HTTP ${axiosErr.response.status}`;
+      } else if (axiosErr.code) {
+        reviewerFailureReason = `${axiosErr.code} (${axiosErr.message})`;
+      } else {
+        reviewerFailureReason = axiosErr.message || 'unknown error';
+      }
+      this.logger.warn(
+        `[assignStates] Reviewer ingestion FAILED for questionId=${questionId} ` +
+          `— local distribution still succeeded: ${reviewerFailureReason}` +
+          (axiosErr.response?.data
+            ? ` response=${JSON.stringify(axiosErr.response.data)}`
+            : ''),
+      );
+      // Intentionally do NOT re-throw. The user's primary operation
+      // (state assignment + `final_questions` inserts) has already
+      // committed and must not be rolled back / failed by a downstream
+      // reviewer-side outage. The question can be re-ingested into the
+      // reviewer backend later via a separate retry job if needed.
+    }
+
     return {
-      referenceQuestionId: questionId,
-      referenceDocId: referenceDocId.toHexString(),
-      referenceDocCreated,
-      insertedStates: toInsert,
-      skippedStates: skipped,
-      insertedCount: inserted.length,
-      totalStates: INDIAN_STATES.length,
-      questionStatus: QuestionStatus.MOVED_TO_FINAL,
+      success: true,
+      message: reviewerIngestFailed
+        ? `Assigned ${inserted.length} question(s) locally; reviewer ingestion failed (${reviewerFailureReason}). The distribution rows have been saved and can be re-ingested later.`
+        : `Successfully distributed ${inserted.length} question(s) to the reviewer backend.`,
+      count: inserted.length,
+      questionIds: inserted
+        .map((r) => (r as unknown as { id?: string }).id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      // Omit `reviewerResponse` on failure (set to undefined) so the
+      // frontend can detect "reviewer not consulted vs reviewer returned
+      // something" by checking `reviewerResponse !== undefined`.
+      reviewerResponse: reviewerIngestFailed ? undefined : reviewerResponseData,
     };
   }
 

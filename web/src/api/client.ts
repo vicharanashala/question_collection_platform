@@ -1189,12 +1189,21 @@ export const distributor = {
   /** Assign 0..N Indian states to an approved question. Pass `states: []` to move a non-state-specific question to `moved_to_final` without distributing to any state. */
   assignStates: (questionId: string, payload: AssignStatesPayload) =>
     request<{
-      questionId: string;
-      insertedStates: string[];
-      skippedStates: string[];
-      insertedCount: number;
-      totalStates: number;
-      questionStatus: string;
+      /**
+       * What THIS service did locally — populated by the backend, stable shape.
+       */
+      success: boolean;
+      message: string;
+      count: number;
+      /** IDs of the `final_question` rows WE inserted (our local Mongo IDs). */
+      questionIds: string[];
+      /**
+       * Raw JSON body returned by the reviewer ingestion API. Typed as
+       * `unknown` because the reviewer team owns that schema and we don't
+       * validate it. Narrow before reading specific fields. Omitted when
+       * no rows were inserted.
+       */
+      reviewerResponse?: unknown;
     }>(`/distributor/questions/${questionId}/assign-states`, {
       method: 'POST',
       body: JSON.stringify(payload),
