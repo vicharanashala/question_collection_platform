@@ -147,6 +147,12 @@ export class AdminService implements OnModuleInit {
   }
 
   private async getCachedConfigValue(key: string): Promise<number> {
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable && (key === 'payment_withdrawal_enabled' || key === 'payment_verification_enabled')) {
+      return 0;
+    }
+
     if (Date.now() > this.configCacheExpiry) {
       await this.refreshConfigCache();
     }
@@ -196,6 +202,14 @@ export class AdminService implements OnModuleInit {
         }
       }
     }
+    
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable) {
+      if (keys.includes('payment_withdrawal_enabled')) result['payment_withdrawal_enabled'] = 0;
+      if (keys.includes('payment_verification_enabled')) result['payment_verification_enabled'] = 0;
+    }
+
     return result;
   }
   constructor(
@@ -1096,16 +1110,34 @@ await this.userRepo.save(user);
       where: {},
       order: { key: "ASC" },
     });
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+
     return {
-      items: configs.map((c) => ({
-        key: c.key,
-        value: c.value,
-        description: c.description,
-      })),
+      items: configs.map((c) => {
+        if (!isPaymentModifiable && (c.key === 'payment_withdrawal_enabled' || c.key === 'payment_verification_enabled')) {
+          return {
+            key: c.key,
+            value: 0,
+            description: c.description,
+          };
+        }
+        return {
+          key: c.key,
+          value: c.value,
+          description: c.description,
+        };
+      }),
     };
   }
 
   async updateConfig(adminId: string, dto: UpdateConfigDto) {
+    // TEMPORARY RESTRICTION: Block enabling/disabling payment features
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable && (dto.key === 'payment_withdrawal_enabled' || dto.key === 'payment_verification_enabled')) {
+      throw new BadRequestException('Payment features cannot be enabled or disabled at the moment. Kindly contact the development team.');
+    }
+
     const config = await this.configRepo.findOne({ where: { key: dto.key } });
     if (!config)
       throw new NotFoundException(`Config key '${dto.key}' not found`);
