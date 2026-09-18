@@ -109,11 +109,19 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
     value: 5,
     description: "Maximum image file size per question (MB)",
   },
-  // 0 = disabled, 1 = enabled. Withdrawals and payment-account verification stay off
-  // until the payment integration is signed off; flipping this is an admin action.
+  // 0 = disabled, 1 = enabled. Withdrawals stay off until the payment integration
+  // is signed off; flipping this is an admin action.
   payment_withdrawal_enabled: {
     value: 0,
-    description: "Enable wallet withdrawals and payment account verification (0 = off, 1 = on)",
+    description: "Enable wallet withdrawals",
+  },
+  // 0 = disabled, 1 = enabled. Independent from payment_withdrawal_enabled —
+  // gates adding a new UPI/bank payment method and its verification, so the
+  // two can be turned on/off separately (e.g. let users verify a payout
+  // method before withdrawals themselves go live).
+  payment_verification_enabled: {
+    value: 0,
+    description: "Enable adding and verifying payment methods",
   },
 };
 
@@ -139,6 +147,12 @@ export class AdminService implements OnModuleInit {
   }
 
   private async getCachedConfigValue(key: string): Promise<number> {
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable && (key === 'payment_withdrawal_enabled' || key === 'payment_verification_enabled')) {
+      return 0;
+    }
+
     if (Date.now() > this.configCacheExpiry) {
       await this.refreshConfigCache();
     }
@@ -188,6 +202,14 @@ export class AdminService implements OnModuleInit {
         }
       }
     }
+    
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable) {
+      if (keys.includes('payment_withdrawal_enabled')) result['payment_withdrawal_enabled'] = 0;
+      if (keys.includes('payment_verification_enabled')) result['payment_verification_enabled'] = 0;
+    }
+
     return result;
   }
   constructor(
@@ -1088,16 +1110,34 @@ await this.userRepo.save(user);
       where: {},
       order: { key: "ASC" },
     });
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+
     return {
-      items: configs.map((c) => ({
-        key: c.key,
-        value: c.value,
-        description: c.description,
-      })),
+      items: configs.map((c) => {
+        if (!isPaymentModifiable && (c.key === 'payment_withdrawal_enabled' || c.key === 'payment_verification_enabled')) {
+          return {
+            key: c.key,
+            value: 0,
+            description: c.description,
+          };
+        }
+        return {
+          key: c.key,
+          value: c.value,
+          description: c.description,
+        };
+      }),
     };
   }
 
   async updateConfig(adminId: string, dto: UpdateConfigDto) {
+    // TEMPORARY RESTRICTION: Block enabling/disabling payment features
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable && (dto.key === 'payment_withdrawal_enabled' || dto.key === 'payment_verification_enabled')) {
+      throw new BadRequestException('Payment features cannot be enabled or disabled at the moment. Kindly contact the development team.');
+    }
+
     const config = await this.configRepo.findOne({ where: { key: dto.key } });
     if (!config)
       throw new NotFoundException(`Config key '${dto.key}' not found`);

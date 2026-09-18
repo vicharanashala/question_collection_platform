@@ -70,19 +70,29 @@ export function PublicSidebar() {
       key={to}
       to={to}
       end={end}
+      tabIndex={to === '/home/wallet' ? -1 : 0}
+      onClick={(e) => {
+        if (to === '/home/wallet') e.preventDefault()
+      }}
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm',
           isActive
             ? 'bg-primary text-primary-foreground shadow-sm'
             : 'text-text-secondary hover:bg-surface-variant hover:text-foreground',
+          to === '/home/wallet' && 'pointer-events-none opacity-50'
         )
       }
     >
       <Icon className="h-4 w-4 shrink-0" />
 
-      <span className="flex-1">
-        {t(labelKey)}
+      <span className="flex-1 flex items-center justify-between">
+        <span>{t(labelKey)}</span>
+        {to === '/home/wallet' && (
+          <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning">
+            {t('common.comingSoon', 'Coming Soon')}
+          </span>
+        )}
       </span>
 
       {isSubmitTab && hasDraft && !isOnSubmitPage && (

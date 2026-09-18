@@ -142,17 +142,20 @@ interface ActionRowProps {
   label: string
   onClick: () => void
   danger?: boolean
+  disabled?: boolean
 }
-function ActionRow({ icon: Icon, label, onClick, danger }: ActionRowProps) {
+function ActionRow({ icon: Icon, label, onClick, danger, disabled }: ActionRowProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        'flex w-full items-center gap-3 border-b border-border-subtle px-4 py-3 text-left last:border-b-0',
+        'flex w-full items-center gap-3 border-b border-border-subtle px-4 py-3 text-left last:border-b-0 transition-colors',
         danger
           ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20'
           : 'text-foreground hover:bg-surface-variant/50',
+        disabled && 'pointer-events-none opacity-50'
       )}
     >
       <span className={cn(
@@ -533,7 +536,7 @@ export function PublicProfilePage() {
         <SectionHeader icon={Trophy} title={t('profile.actions')} />
         <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <ActionRow icon={Wallet} label={t('profile.paymentMethods')} onClick={() => navigate('/home/payment-methods')} />
+            <ActionRow icon={Wallet} label={t('profile.paymentMethods')} onClick={() => navigate('/home/payment-methods')} disabled />
             <ActionRow icon={Flag} label={t('report.title')} onClick={() => navigate('/home/reports')} />
             <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} />
             <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={() => navigate('/home/terms')} />

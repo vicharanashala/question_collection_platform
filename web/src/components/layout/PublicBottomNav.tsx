@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { Home, MessageSquarePlus, Wallet, User, ListChecks } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 
 interface Tab {
@@ -26,6 +27,7 @@ const tabs: Tab[] = [
  */
 export function PublicBottomNav() {
   const { pathname } = useLocation()
+  const { t } = useTranslation()
 
   return (
     <nav
@@ -71,14 +73,26 @@ export function PublicBottomNav() {
               key={to}
               to={to}
               end={end}
+              tabIndex={to === '/home/wallet' ? -1 : 0}
+              onClick={(e) => {
+                if (to === '/home/wallet') e.preventDefault()
+              }}
               className={cn(
                 'flex min-w-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors',
                 isActive
                   ? 'text-primary'
                   : 'text-text-tertiary hover:text-primary',
+                to === '/home/wallet' && 'pointer-events-none opacity-50'
               )}
             >
-              <Icon className="h-5 w-5" />
+              <div className="relative">
+                <Icon className="h-5 w-5" />
+                {to === '/home/wallet' && (
+                  <span className="absolute -right-4 -top-1.5 flex h-3.5 items-center justify-center rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground shadow-sm">
+                    {t('common.soon', 'Soon')}
+                  </span>
+                )}
+              </div>
               <span>{label}</span>
             </NavLink>
           )

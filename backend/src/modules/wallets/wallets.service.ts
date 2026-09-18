@@ -67,8 +67,9 @@ export class WalletsService {
   ) {}
 
   /**
-   * Blocks payment operations while withdrawals are switched off in system settings.
-   * Reads stay available so users can still see their balance and saved accounts.
+   * Blocks requesting a withdrawal while withdrawals are switched off in system
+   * settings. Independent from assertPaymentVerificationEnabled — reads stay
+   * available so users can still see their balance and saved accounts.
    */
   private async assertWithdrawalsEnabled(): Promise<void> {
     const enabled = await this.adminService.getConfigValue(
@@ -77,6 +78,23 @@ export class WalletsService {
     if (!enabled) {
       throw new BadRequestException(
         'Withdrawals are temporarily unavailable. Please try again later.',
+      );
+    }
+  }
+
+  /**
+   * Blocks adding or verifying a payment method (UPI/bank account) while that
+   * flow is switched off in system settings. Independent from
+   * assertWithdrawalsEnabled — this can be on while withdrawals themselves
+   * are still off, e.g. to let users verify a payout method ahead of time.
+   */
+  private async assertPaymentVerificationEnabled(): Promise<void> {
+    const enabled = await this.adminService.getConfigValue(
+      'payment_verification_enabled',
+    );
+    if (!enabled) {
+      throw new BadRequestException(
+        'Adding or verifying payment methods is temporarily unavailable. Please try again later.',
       );
     }
   }
@@ -428,7 +446,7 @@ export class WalletsService {
     status: string;
     message: string;
   }> {
-    await this.assertWithdrawalsEnabled();
+    await this.assertPaymentVerificationEnabled();
 
     // Check: no duplicate verified UPI already on this account
     if (dto.payoutMethod === 'upi') {
@@ -584,7 +602,7 @@ export class WalletsService {
    * Marks the payment detail as verified without any ₹1 micro-transaction.
    */
   async autoVerifyPaymentDetail(userId: string, detailId: string): Promise<{ success: boolean; message: string }> {
-    await this.assertWithdrawalsEnabled();
+    await this.assertPaymentVerificationEnabled();
 
     const mockVerification = this.configService.get<boolean>('payment.pinelabs.mockVerification') ?? false;
 

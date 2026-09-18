@@ -344,7 +344,8 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
               <button
                 type="button"
                 onClick={() => onDelete(detail.id)}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                disabled={true}
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Remove"
               >
                 <Trash2 className="h-3 w-3" />
@@ -418,10 +419,22 @@ export function PublicPaymentMethodsPage() {
           variant={mode === 'add' ? 'outline' : 'default'}
           onClick={() => setMode((m) => (m === 'list' ? 'add' : 'list'))}
           className={mode === 'add' ? '' : 'bg-emerald-500 hover:bg-emerald-600'}
+          disabled={true}
         >
           {mode === 'add' ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {mode === 'add' ? t('common.close', 'Close') : t('paymentMethods.addButton')}
         </Button>
+      </div>
+
+      {/* ── Feature Disabled banner ─────────────────────────────────────────── */}
+      <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div>
+          <h3 className="text-sm font-bold">{t('paymentMethods.disabledTitle', 'Payment Methods Disabled')}</h3>
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+            {t('paymentMethods.disabledDesc', 'Adding and modifying payment methods is currently disabled as we are preparing for the upcoming wallet feature. Please check back soon.')}
+          </p>
+        </div>
       </div>
 
       {/* ── Info banner ─────────────────────────────────────────── */}
@@ -452,6 +465,7 @@ export function PublicPaymentMethodsPage() {
           <Button
             onClick={() => setMode('add')}
             className="mt-6 bg-emerald-500 hover:bg-emerald-600"
+            disabled={true}
           >
             <Plus className="h-4 w-4" />
             {t('paymentMethods.addButton')}
