@@ -193,7 +193,287 @@ export class MongoUserRepository
   //   return result;
   // }
 
-  async getLeaderboard(opts: {
+//   async getLeaderboard(opts: {
+//   limit: number;
+//   offset: number;
+//   state?: string;
+//   category?: UserCategory;
+// }): Promise<{
+//   entries: LeaderboardEntry[];
+//   total: number;
+// }> {
+//   const {
+//     limit,
+//     offset,
+//     state,
+//     category,
+//   } = opts;
+
+//   const userFilter: Record<string, unknown> = {
+//     role: UserRole.USER,
+//      verificationStatus: VerificationStatus.VERIFIED,
+//   };
+
+//   if (state) {
+//     userFilter.state = state;
+//   }
+
+//   if (category) {
+//     userFilter.category = category;
+//   }
+
+//   const result = await this._model.aggregate([
+//     // --------------------------------------------------
+//     // 1. Only eligible users
+//     // --------------------------------------------------
+//     {
+//       $match: userFilter,
+//     },
+
+//     // --------------------------------------------------
+//     // 2. Count approved questions
+//     // --------------------------------------------------
+//     {
+//       $lookup: {
+//         from: 'questions',
+//         let: {
+//           userId: {
+//             $toString: '$_id',
+//           },
+//         },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: {
+//                 $and: [
+//                   {
+//                     $eq: [
+//                       '$userId',
+//                       '$$userId',
+//                     ],
+//                   },
+//                   {
+//                     $eq: [
+//                       '$status',
+//                       QuestionStatus.APPROVED,
+//                     ],
+//                   },
+//                 ],
+//               },
+//             },
+//           },
+//           {
+//             $count: 'count',
+//           },
+//         ],
+//         as: 'questionStats',
+//       },
+//     },
+
+//     {
+//       $addFields: {
+//         totalQuestions: {
+//           $ifNull: [
+//             {
+//               $arrayElemAt: [
+//                 '$questionStats.count',
+//                 0,
+//               ],
+//             },
+//             0,
+//           ],
+//         },
+//       },
+//     },
+
+//     // --------------------------------------------------
+//     // 3. Find user's wallet
+//     // --------------------------------------------------
+//     {
+//       $lookup: {
+//         from: 'wallets',
+//         let: {
+//           userId: {
+//             $toString: '$_id',
+//           },
+//         },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: {
+//                 $eq: [
+//                   '$userId',
+//                   '$$userId',
+//                 ],
+//               },
+//             },
+//           },
+//           {
+//             $project: {
+//               _id: 1,
+//             },
+//           },
+//         ],
+//         as: 'wallets',
+//       },
+//     },
+
+//     // --------------------------------------------------
+//     // 4. Find completed reward transactions
+//     // --------------------------------------------------
+//     {
+//       $lookup: {
+//         from: 'transactions',
+//         let: {
+//           walletIds: {
+//             $map: {
+//               input: '$wallets',
+//               as: 'wallet',
+//               in: {
+//                 $toString: '$$wallet._id',
+//               },
+//             },
+//           },
+//         },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: {
+//                 $and: [
+//                   {
+//                     $in: [
+//                       '$walletId',
+//                       '$$walletIds',
+//                     ],
+//                   },
+//                   {
+//                     $eq: [
+//                       '$type',
+//                       TransactionType.CREDIT,
+//                     ],
+//                   },
+//                   {
+//                     $eq: [
+//                       '$source',
+//                       TransactionSource.REWARD,
+//                     ],
+//                   },
+//                   {
+//                     $eq: [
+//                       '$status',
+//                       TransactionStatus.COMPLETED,
+//                     ],
+//                   },
+//                 ],
+//               },
+//             },
+//           },
+//           {
+//             $group: {
+//               _id: null,
+//               total: {
+//                 $sum: '$amount',
+//               },
+//             },
+//           },
+//         ],
+//         as: 'earnedStats',
+//       },
+//     },
+
+//     // --------------------------------------------------
+//     // 5. Calculate total earned
+//     // --------------------------------------------------
+//     {
+//       $addFields: {
+//         totalEarned: {
+//           $ifNull: [
+//             {
+//               $arrayElemAt: [
+//                 '$earnedStats.total',
+//                 0,
+//               ],
+//             },
+//             0,
+//           ],
+//         },
+//       },
+//     },
+
+//     // --------------------------------------------------
+//     // IMPORTANT:
+//     // DO NOT filter totalQuestions > 0 here.
+//     //
+//     // Leaderboard is based on money earned.
+//     // --------------------------------------------------
+
+//     // --------------------------------------------------
+//     // 6. Sort BEFORE pagination
+//     // --------------------------------------------------
+//     {
+//       $sort: {
+//         totalEarned: -1,
+//         totalQuestions: -1,
+//         _id: 1,
+//       },
+//     },
+
+//     // --------------------------------------------------
+//     // 7. Get total number of users
+//     // --------------------------------------------------
+//     {
+//       $facet: {
+//         entries: [
+//           {
+//             $skip: offset,
+//           },
+//           {
+//             $limit: limit,
+//           },
+//           {
+//             $project: {
+//               _id: 0,
+//               id: {
+//                 $toString: '$_id',
+//               },
+//               name: 1,
+//               totalEarned: 1,
+//               totalQuestions: 1,
+//             },
+//           },
+//         ],
+
+//         total: [
+//           {
+//             $count: 'count',
+//           },
+//         ],
+//       },
+//     },
+//   ]).exec();
+
+//   const facetResult = result[0] ?? {
+//     entries: [],
+//     total: [],
+//   };
+
+//   const entries = (
+//     facetResult.entries ?? []
+//   ) as LeaderboardEntry[];
+
+//   const total =
+//     facetResult.total?.[0]?.count ?? 0;
+
+//     console.log("Enteries", entries);
+
+//   return {
+//     entries,
+//     total,
+//   };
+// }
+
+
+async getLeaderboard(opts: {
   limit: number;
   offset: number;
   state?: string;
@@ -211,7 +491,7 @@ export class MongoUserRepository
 
   const userFilter: Record<string, unknown> = {
     role: UserRole.USER,
-     verificationStatus: VerificationStatus.VERIFIED,
+    verificationStatus: VerificationStatus.VERIFIED,
   };
 
   if (state) {
@@ -235,180 +515,124 @@ export class MongoUserRepository
     // --------------------------------------------------
     {
       $lookup: {
-        from: 'questions',
+        from: "questions",
         let: {
           userId: {
-            $toString: '$_id',
+            $toString: "$_id",
           },
         },
         pipeline: [
           {
             $match: {
               $expr: {
-                $and: [
-                  {
-                    $eq: [
-                      '$userId',
-                      '$$userId',
-                    ],
-                  },
-                  {
-                    $eq: [
-                      '$status',
-                      QuestionStatus.APPROVED,
-                    ],
-                  },
-                ],
+                $eq: ["$userId", "$$userId"],
               },
             },
           },
-          {
-            $count: 'count',
-          },
-        ],
-        as: 'questionStats',
-      },
-    },
-
-    {
-      $addFields: {
-        totalQuestions: {
-          $ifNull: [
-            {
-              $arrayElemAt: [
-                '$questionStats.count',
-                0,
-              ],
-            },
-            0,
-          ],
-        },
-      },
-    },
-
-    // --------------------------------------------------
-    // 3. Find user's wallet
-    // --------------------------------------------------
-    {
-      $lookup: {
-        from: 'wallets',
-        let: {
-          userId: {
-            $toString: '$_id',
-          },
-        },
-        pipeline: [
           {
             $match: {
-              $expr: {
-                $eq: [
-                  '$userId',
-                  '$$userId',
-                ],
-              },
-            },
-          },
-          {
-            $project: {
-              _id: 1,
-            },
-          },
-        ],
-        as: 'wallets',
-      },
-    },
-
-    // --------------------------------------------------
-    // 4. Find completed reward transactions
-    // --------------------------------------------------
-    {
-      $lookup: {
-        from: 'transactions',
-        let: {
-          walletIds: {
-            $map: {
-              input: '$wallets',
-              as: 'wallet',
-              in: {
-                $toString: '$$wallet._id',
-              },
-            },
-          },
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  {
-                    $in: [
-                      '$walletId',
-                      '$$walletIds',
-                    ],
-                  },
-                  {
-                    $eq: [
-                      '$type',
-                      TransactionType.CREDIT,
-                    ],
-                  },
-                  {
-                    $eq: [
-                      '$source',
-                      TransactionSource.REWARD,
-                    ],
-                  },
-                  {
-                    $eq: [
-                      '$status',
-                      TransactionStatus.COMPLETED,
-                    ],
-                  },
-                ],
-              },
+              status: QuestionStatus.APPROVED,
             },
           },
           {
             $group: {
               _id: null,
-              total: {
-                $sum: '$amount',
+              countOfApproved: {
+                $sum: 1,
               },
             },
           },
+          {
+            $project: {
+              _id: 0,
+              countOfApproved: 1,
+            },
+          },
         ],
-        as: 'earnedStats',
+        as: "questionStats",
       },
     },
 
     // --------------------------------------------------
-    // 5. Calculate total earned
+    // 3. Ensure questionStats always exists
     // --------------------------------------------------
     {
       $addFields: {
-        totalEarned: {
+        questionStats: {
           $ifNull: [
             {
-              $arrayElemAt: [
-                '$earnedStats.total',
-                0,
-              ],
+              $arrayElemAt: ["$questionStats", 0],
             },
-            0,
+            {
+              countOfApproved: 0,
+            },
           ],
         },
       },
     },
 
     // --------------------------------------------------
-    // IMPORTANT:
-    // DO NOT filter totalQuestions > 0 here.
-    //
-    // Leaderboard is based on money earned.
+    // 4. Find user's wallet
     // --------------------------------------------------
+    {
+      $lookup: {
+        from: "wallets",
+        let: {
+          userId: {
+            $toString: "$_id",
+          },
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$userId", "$$userId"],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              balance: 1,
+            },
+          },
+        ],
+        as: "walletStats",
+      },
+    },
 
     // --------------------------------------------------
-    // 6. Sort BEFORE pagination
+    // 5. Ensure walletStats always exists
+    // --------------------------------------------------
+    {
+      $addFields: {
+        walletStats: {
+          $ifNull: [
+            {
+              $arrayElemAt: ["$walletStats", 0],
+            },
+            {
+              balance: 0,
+            },
+          ],
+        },
+      },
+    },
+
+    // --------------------------------------------------
+    // 6. Prepare leaderboard fields
+    // --------------------------------------------------
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        totalEarned: "$walletStats.balance",
+        totalQuestions: "$questionStats.countOfApproved",
+      },
+    },
+
+    // --------------------------------------------------
+    // 7. Sort BEFORE pagination
     // --------------------------------------------------
     {
       $sort: {
@@ -419,7 +643,7 @@ export class MongoUserRepository
     },
 
     // --------------------------------------------------
-    // 7. Get total number of users
+    // 8. Pagination and total count
     // --------------------------------------------------
     {
       $facet: {
@@ -434,7 +658,7 @@ export class MongoUserRepository
             $project: {
               _id: 0,
               id: {
-                $toString: '$_id',
+                $toString: "$_id",
               },
               name: 1,
               totalEarned: 1,
@@ -442,10 +666,9 @@ export class MongoUserRepository
             },
           },
         ],
-
         total: [
           {
-            $count: 'count',
+            $count: "count",
           },
         ],
       },
@@ -464,11 +687,14 @@ export class MongoUserRepository
   const total =
     facetResult.total?.[0]?.count ?? 0;
 
+  console.log("Entries", entries);
+
   return {
     entries,
     total,
   };
 }
+
 
   async getApprovedQuestionCount(userId: string): Promise<number> {
     const result = await this._questionModel
