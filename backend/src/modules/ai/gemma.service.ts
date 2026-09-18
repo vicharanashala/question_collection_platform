@@ -19,6 +19,7 @@ import axios, { AxiosError } from 'axios';
 import { inferDomains, DOMAINS } from '../question/constants/domains';
 import { CROPS } from '../question/constants/crops';
 import { GemmaInferenceResult } from './dto/infer-crop-domain.dto';
+import { isDevelopment } from '../../config/environment';
 
 const RETRY_DELAY_MS = 500;
 const MAX_RETRIES = 2;
@@ -289,6 +290,9 @@ export class GemmaService {
   // ─── Private helpers ─────────────────────────────────────────────────────────
 
   private isEnabled(): boolean {
+    // The LLM is hosted on the deployed VM, so local development uses the
+    // keyword fallback instead of calling it.
+    if (isDevelopment()) return false;
     const url = this.configService.get<string>('llm.baseUrl')?.trim();
     const apiKey = this.configService.get<string>('llm.apiKey')?.trim();
     return url !== '' && apiKey !== undefined && apiKey !== '';

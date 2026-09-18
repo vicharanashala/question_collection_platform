@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isDevelopment } from '../../config/environment';
 
 @Injectable()
 export class EmbedService {
@@ -16,8 +17,14 @@ export class EmbedService {
    *
    * Returns null when the service is unreachable or returns an invalid response.
    * Callers should handle null gracefully (e.g. store null in the DB and log a warning).
+   * Skipped in local development — the service only runs on the deployed VM.
    */
   async embed(text: string): Promise<number[] | null> {
+    if (isDevelopment()) {
+      this.logger.debug('[Embed] skipped — development environment');
+      return null;
+    }
+
     try {
       const res = await fetch(`${this.baseUrl}/embed`, {
         method: 'POST',

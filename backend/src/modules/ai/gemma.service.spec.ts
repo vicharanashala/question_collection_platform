@@ -33,6 +33,18 @@ function domainCompletion(domains: string[], confidence: number) {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('GemmaService', () => {
+  // The service only calls the LLM outside local development, and Jest defaults
+  // NODE_ENV to 'test' (resolved as development), so pin a deployed environment.
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  beforeAll(() => {
+    process.env.NODE_ENV = 'staging';
+  });
+
+  afterAll(() => {
+    process.env.NODE_ENV = originalNodeEnv;
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });

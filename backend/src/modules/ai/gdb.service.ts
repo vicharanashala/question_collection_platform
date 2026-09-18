@@ -24,6 +24,7 @@ import { QuestionRejectionCategory } from '../../shared/classes/enums';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { SarvamService } from '../speech/sarvam.service';
+import { isDevelopment } from '../../config/environment';
 
 export interface SimilarQuestionResponse {
   query: string;
@@ -88,11 +89,19 @@ export class GdbService {
    * Returns `rejection` when the query is abusive or off-topic (the caller must
    * block the submission), or `isDuplicate` when the question already exists.
    * Network and parse failures fail open so a GDB outage never blocks a farmer.
+   * Skipped entirely in local development — GDB only runs on the deployed VM.
    */
   async checkDuplicate(payload: {
     questionText: string;
     languageCode?: string;
   }): Promise<DuplicateCheckResult> {
+    // GDB is reachable only from the deployed environments (staging/production),
+    // so local development skips the call and treats the question as new.
+    if (isDevelopment()) {
+      this.logger.debug('[GDB] skipped — development environment');
+      return this.noDuplicate();
+    }
+
     const baseUrl = this.configService.get<string>('gdb.baseUrl')!;
     const apiKey = this.configService.get<string>('gdb.apiKey')!;
 
