@@ -11,9 +11,11 @@ import { toast } from 'sonner'
 import type { Question } from '@/types'
 
 interface AssignResult {
-  insertedStates: string[]
-  skippedStates: string[]
-  insertedCount: number
+  success: boolean
+  message: string
+  count: number
+  questionIds: string[]
+  reviewerResponse?: unknown
 }
 
 export function AssignStatesDialog({
@@ -46,10 +48,10 @@ export function AssignStatesDialog({
     try {
       const r = await distributor.assignStates(question.id, { states, notes: notes || undefined })
       setResult(r)
-      // The backend reports `insertedCount` (NEW rows) and `skippedStates`
-      // (states that were already in final_questions for this question —
-      // skipped because of the unique index on
-      // (referenceQuestionId, distributionState)). `r` is surfaced in the
+      // The backend returns a local summary (`success`, `message`, `count`,
+      // `questionIds`) plus an optional `reviewerResponse` that carries the
+      // raw reviewer-API body (or is `undefined` when reviewer ingestion
+      // wasn't attempted or failed). The full `r` is surfaced in the
       // success card below; the toast itself is intentionally neutral.
       toast.success('Questions moved')
       setTimeout(onDone, 1500)
@@ -120,15 +122,21 @@ export function AssignStatesDialog({
           {result && (
             <div className="rounded-md border border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900 p-3 text-[11px] sm:text-[11px] sm:text-xs">
               <div className="font-medium text-green-700 dark:text-green-300">
-                {result.insertedCount === 0 && result.skippedStates.length === 0
-                  ? '✓ Moved to final with no state assignment'
-                  : result.insertedCount === 0
-                  ? `✓ All ${result.skippedStates.length} picked state${result.skippedStates.length === 1 ? '' : 's'} already assigned — no new rows created`
-                  : `✓ Inserted ${result.insertedCount} new distribution${result.insertedCount === 1 ? '' : 's'}`}
+                {result.message}
               </div>
-              {result.skippedStates.length > 0 && result.insertedCount > 0 && (
+              {result.count > 0 && (
                 <div className="mt-1 text-green-700 dark:text-green-400">
-                  Skipped (already distributed): {result.skippedStates.join(', ')}
+                  Inserted {result.count} new final_question row{result.count === 1 ? '' : 's'}.
+                </div>
+              )}
+              {result.count > 0 && result.reviewerResponse === undefined && (
+                <div className="mt-1 text-amber-700 dark:text-amber-400">
+                  Note: reviewer ingestion didn't return a response. The local rows have been saved and can be re-ingested later.
+                </div>
+              )}
+              {result.count > 0 && result.reviewerResponse !== undefined && (
+                <div className="mt-1 text-green-700 dark:text-green-400 opacity-75">
+                  Reviewer ingestion acknowledged.
                 </div>
               )}
             </div>
