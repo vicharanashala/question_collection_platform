@@ -8,6 +8,9 @@ export class BrpsTokenService {
 
   private token: string | null = null;
   private tokenExpiry: Date | null = null;
+  // Shared in-flight refresh so concurrent callers do not create competing tokens
+  // in the same BRPS slot (each new token invalidates the previous one).
+  private refreshInFlight: Promise<void> | null = null;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -18,8 +21,24 @@ export class BrpsTokenService {
     if (this.token && this.tokenExpiry && new Date() < this.tokenExpiry) {
       return this.token;
     }
-    await this.refreshToken();
-    return this.token!;
+    if (!this.refreshInFlight) {
+      this.refreshInFlight = this.refreshToken().finally(() => {
+        this.refreshInFlight = null;
+      });
+    }
+    await this.refreshInFlight;
+    if (!this.token) {
+      throw new Error('BRPS token refresh returned no token');
+    }
+    return this.token;
+  }
+
+  // Drops the cached token if it still matches the rejected one, so the next call fetches a fresh token.
+  invalidateToken(rejectedToken: string): void {
+    if (this.token === rejectedToken) {
+      this.token = null;
+      this.tokenExpiry = null;
+    }
   }
 
   /**
