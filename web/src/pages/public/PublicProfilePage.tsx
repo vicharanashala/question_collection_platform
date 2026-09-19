@@ -23,7 +23,7 @@ import {
   AtSign, Tag, Users, MapPin, Building2, MapPinned, Home, School,
   ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
-  CalendarDays, Sprout, Ruler, Loader2, HelpCircle, Pencil,
+  CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { REWARD_TIERS, categoryLabel } from '@/constants/public'

@@ -66,6 +66,17 @@ interface EditableProfile {
 const blank = (value: string | number | null | undefined) =>
   value == null ? "" : String(value);
 
+// Keys of EditableProfile whose values are plain strings, usable with text inputs.
+type TextFieldKey = {
+  [K in keyof EditableProfile]: EditableProfile[K] extends string ? K : never;
+}[keyof EditableProfile];
+
+// Normalizes stored organisation states, also accepting legacy comma separated strings.
+const toStateList = (value: string[] | string | null | undefined): string[] => {
+  const items = Array.isArray(value) ? value : (value ?? "").split(",");
+  return items.map((state) => String(state).trim()).filter(Boolean);
+};
+
 // NOTE: `fallbackLanguage` should be the app's *current* i18n language
 // (pass `i18n.language` from the caller) — used only when the user record
 // itself has no saved `languagePreference` yet.
@@ -103,16 +114,7 @@ const fromUser = (
   organizationRole: blank(user.organizationRole),
   numberOfFarmers: blank(user.numberOfFarmers),
 
-  organizationState: Array.isArray(user.organizationState)
-    ? user.organizationState
-        .map((state) => String(state).trim())
-        .filter(Boolean)
-    : user.organizationState
-      ? user.organizationState
-          .split(",")
-          .map((state: string) => state.trim())
-          .filter(Boolean)
-      : [],
+  organizationState: toStateList(user.organizationState),
 
   organisationTypeOther: blank(user.organisationTypeOther),
   languagePreference: blank(user.languagePreference) || fallbackLanguage,
@@ -560,7 +562,7 @@ export function EditPublicProfileDialog({
   }
 
   const field = (
-    key: keyof EditableProfile,
+    key: TextFieldKey,
     label: string,
     type = "text",
     required = false,

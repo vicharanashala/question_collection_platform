@@ -15,7 +15,6 @@ import { useTranslation } from 'react-i18next'
 import { walletApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
