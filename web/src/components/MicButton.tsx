@@ -9,6 +9,25 @@ import { cn } from '@/lib/utils'
 
 type MicState = 'idle' | 'recording' | 'uploading' | 'done' | 'error'
 
+// Default recording cap. Long audio is transcribed in ~30 s chunks, so this
+// keeps the whole transcription inside the client STT request timeout.
+export const DEFAULT_MAX_RECORDING_MS = 180_000
+
+// Recording auto-stops after this long without detected speech.
+export const SILENCE_TIMEOUT_MS = 60_000
+
+// RMS level (0 to 1) above which input counts as speech. Browser noise
+// suppression keeps a quiet room well below this.
+const SPEECH_RMS_THRESHOLD = 0.015
+
+// Returns the RMS level of the analyser's current audio frame.
+function readInputLevel(analyser: AnalyserNode, samples: Float32Array): number {
+  analyser.getFloatTimeDomainData(samples)
+  let sumOfSquares = 0
+  for (const sample of samples) sumOfSquares += sample * sample
+  return Math.sqrt(sumOfSquares / samples.length)
+}
+
 interface MicButtonProps {
   /**
    * Called with the transcribed text when recording completes and
@@ -29,7 +48,9 @@ interface MicButtonProps {
   languageCode?: string
   /**
    * Max recording duration in milliseconds. When reached, the recorder
-   * auto-stops, mirroring the mobile 55-second cap. Set to 0 to disable.
+   * auto-stops. The backend splits long audio into ~30 s chunks, so this is
+   * kept at 3 minutes to stay within the client STT request timeout.
+   * Set to 0 to disable.
    */
   maxDurationMs?: number
 }
@@ -65,7 +86,7 @@ export function MicButton({
   onRecordingStart,
   disabled,
   languageCode = 'unknown',
-  maxDurationMs = 55_000,
+  maxDurationMs = DEFAULT_MAX_RECORDING_MS,
 }: MicButtonProps) {
   const { t } = useTranslation()
   const [state, setState] = useState<MicState>('idle')
@@ -84,6 +105,10 @@ export function MicButton({
   const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tickerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startTimeRef = useRef<number | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const levelSamplesRef = useRef<Float32Array | null>(null)
+  const lastSpeechAtRef = useRef<number>(0)
   // Keep callback refs up to date without re-creating listeners.
   const onTranscribedRef = useRef(onTranscribed)
   const onRecordingStartRef = useRef(onRecordingStart)
@@ -105,6 +130,7 @@ export function MicButton({
       if (autoStopTimeoutRef.current) clearTimeout(autoStopTimeoutRef.current)
       if (tickerRef.current) clearInterval(tickerRef.current)
       streamRef.current?.getTracks().forEach((t) => t.stop())
+      void audioContextRef.current?.close().catch(() => undefined)
     }
   }, [])
 
@@ -120,6 +146,40 @@ export function MicButton({
     streamRef.current?.getTracks().forEach((t) => t.stop())
     streamRef.current = null
     mediaRecorderRef.current = null
+    void audioContextRef.current?.close().catch(() => undefined)
+    audioContextRef.current = null
+    analyserRef.current = null
+    levelSamplesRef.current = null
+  }, [])
+
+  // Attaches a level analyser to the stream for silence detection. Failure is
+  // non-fatal: recording continues and only the silence auto-stop is skipped.
+  const startSilenceMonitor = useCallback((stream: MediaStream) => {
+    try {
+      const audioContext = new AudioContext()
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 2048
+      audioContext.createMediaStreamSource(stream).connect(analyser)
+      void audioContext.resume().catch(() => undefined)
+      audioContextRef.current = audioContext
+      analyserRef.current = analyser
+      levelSamplesRef.current = new Float32Array(analyser.fftSize)
+    } catch (err) {
+      console.warn('[MicButton] silence detection unavailable:', err)
+    }
+    lastSpeechAtRef.current = Date.now()
+  }, [])
+
+  // Returns true when no speech has been detected for SILENCE_TIMEOUT_MS.
+  const hasBeenSilentTooLong = useCallback((now: number) => {
+    const analyser = analyserRef.current
+    const samples = levelSamplesRef.current
+    if (!analyser || !samples) return false
+    if (readInputLevel(analyser, samples) >= SPEECH_RMS_THRESHOLD) {
+      lastSpeechAtRef.current = now
+      return false
+    }
+    return now - lastSpeechAtRef.current >= SILENCE_TIMEOUT_MS
   }, [])
 
   const stopRecording = useCallback(() => {
@@ -216,6 +276,7 @@ export function MicButton({
         },
       })
       streamRef.current = stream
+      startSilenceMonitor(stream)
 
       // Pick the first supported MIME type. Safari iOS sometimes only has 'audio/mp4'.
       const preferredTypes = [
@@ -253,10 +314,15 @@ export function MicButton({
       setElapsedMs(0)
       setState('recording')
 
-      // 4 Hz ticker for the duration badge
+      // 4 Hz ticker for the duration badge and silence auto-stop
       tickerRef.current = setInterval(() => {
+        const now = Date.now()
         if (startTimeRef.current != null) {
-          setElapsedMs(Date.now() - startTimeRef.current)
+          setElapsedMs(now - startTimeRef.current)
+        }
+        if (hasBeenSilentTooLong(now)) {
+          toast.info(t('audio.stoppedForSilence', 'No speech detected for 1 minute, so recording was stopped.'))
+          stopRecording()
         }
       }, 250)
 
@@ -276,7 +342,7 @@ export function MicButton({
       cleanupStream()
       setState('error')
     }
-  }, [cleanupStream, stopRecording, supported, maxDurationMs])
+  }, [cleanupStream, stopRecording, supported, maxDurationMs, startSilenceMonitor, hasBeenSilentTooLong])
 
   function handleClick() {
     if (isDisabled) return

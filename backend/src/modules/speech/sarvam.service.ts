@@ -46,8 +46,8 @@ export class SarvamService {
    *
    * Process:
    *  1. Convert to 16 kHz mono 16-bit PCM WAV via ffmpeg / afconvert.
-   *  2. Probe duration with ffprobe; reject if < 0.5 s or > 60 s.
-   *  3. If > 30 s, split into non-overlapping 30 s chunks and transcribe
+   *  2. Probe duration with ffprobe; reject if < 0.5 s.
+   *  3. If > 29 s, split into non-overlapping 29 s chunks and transcribe
    *     each sequentially, concatenating the results.
    *  4. Call Sarvam STT API with model="saaras:v3" and mode="transcribe".
    */
@@ -80,8 +80,9 @@ export class SarvamService {
       );
     }
 
-    // Step 3 – Chunk if > 5 min so Sarvam receives manageable segments.
-    const MAX_CHUNK_SEC = 5 * 60;
+    // Step 3 – Sarvam's synchronous REST STT rejects audio longer than 30 s,
+    // so longer recordings are split into chunks just under that limit.
+    const MAX_CHUNK_SEC = 29;
     if (durationSec <= MAX_CHUNK_SEC) {
       return this.callSarvamStt(wavBuffer, filename, languageCode);
     }

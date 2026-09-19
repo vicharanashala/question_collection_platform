@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
-import { MicButton } from '@/components/MicButton'
+import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
 import { AIValidationBanner } from '@/components/AIValidationBanner'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
@@ -157,6 +158,7 @@ export function PublicAskPage() {
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null)
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
+  const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
 
   const atLimit = stats != null && stats.remainingToday <= 0
 
@@ -672,7 +674,29 @@ useEffect(() => {
 
               <div className="flex flex-col gap-2 lg:col-span-2">
                 <div>
-                  <span className="text-xs font-medium leading-none text-text sm:text-sm">{t('question.addVoice', 'Add voice')}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-medium leading-none text-text sm:text-sm">{t('question.addVoice', 'Add voice')}</span>
+                    {/* Controlled so the tooltip also opens on tap for touch devices. */}
+                    <Tooltip open={voiceInfoOpen} onOpenChange={setVoiceInfoOpen}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => setVoiceInfoOpen((open) => !open)}
+                          className="flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-variant hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40"
+                          aria-label={t('question.voiceLimitInfoAria', 'About voice recording limit')}
+                        >
+                          <Info className="h-3.5 w-3.5" aria-hidden />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        {t('question.voiceLimitInfo', {
+                          defaultValue: 'You can record up to {{minutes}} minutes. Recording also stops automatically if no speech is heard for {{silenceMinutes}} minute. Your voice is then converted to text.',
+                          minutes: DEFAULT_MAX_RECORDING_MS / 60_000,
+                          silenceMinutes: SILENCE_TIMEOUT_MS / 60_000,
+                        })}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <p className="mt-0.5 text-[11px] text-text-tertiary sm:text-xs">{t('question.tapMicHint')}</p>
                 </div>
                 {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
