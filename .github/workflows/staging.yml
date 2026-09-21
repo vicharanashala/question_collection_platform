@@ -165,7 +165,7 @@ jobs:
             GEMMA_API_KEY=${{ secrets.GEMMA_API_KEY }}
             GEMMA_VERSION=${{ vars.GEMMA_VERSION }}
             GEMMA_MODEL=${{ vars.GEMMA_MODEL }}
-            REVIEWER_URI=${{ secrets.REVIEWER_URI }}
+            REVIEWER_URI=${{ secrets.STAGING_REVIEWER_URI }}
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
