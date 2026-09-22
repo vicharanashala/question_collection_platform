@@ -196,15 +196,15 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
         if (!v && !submitting) onCancel()
       }}
     >
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="mb-2 sm:mb-4">
           <DialogTitle>{t('report.newReport')}</DialogTitle>
           <DialogDescription>
             {t('report.newReportSubtitle')}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-1">
+        <form onSubmit={handleSubmit} className="space-y-6 py-1">
           {/* Error banner */}
           {error && (
             <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 dark:bg-red-950/40 dark:border-red-900/50 px-3 py-2 text-xs sm:text-xs sm:text-sm text-red-700 dark:text-red-300">
@@ -214,9 +214,9 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
           )}
 
           {/* Category */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label>{t('report.category')} <span className="text-destructive">*</span></Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {CATEGORY_OPTIONS.map((opt) => {
                 const active = category === opt.value
                 const Icon = opt.icon
@@ -227,7 +227,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
                     onClick={() => setCategory(opt.value)}
                     disabled={submitting}
                     className={cn(
-                      'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-xs sm:text-xs sm:text-sm font-medium transition-colors',
+                      'flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-xs sm:text-xs sm:text-sm font-medium transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                       active
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
@@ -244,7 +244,7 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
           </div>
 
           {/* Title */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="report-title">{t('report.titleField')} <span className="text-destructive">*</span></Label>
             <Input
               id="report-title"
@@ -253,12 +253,13 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
               disabled={submitting}
+              className="mt-1"
             />
             <p className="text-right text-[11px] text-text-tertiary">{title.length}/100</p>
           </div>
 
           {/* Description */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="report-description">{t('report.descriptionField')} <span className="text-destructive">*</span></Label>
             <Textarea
               id="report-description"
@@ -268,18 +269,19 @@ function NewReportForm({ open, submitting, onCancel, onSubmit }: NewReportFormPr
               rows={5}
               maxLength={2000}
               disabled={submitting}
+              className="mt-1"
             />
             <p className="text-right text-[11px] text-text-tertiary">{description.length}/2000</p>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-2 sm:pt-4">
             <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
               {t('report.cancel')}
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   {t('report.submitting')}
                 </>
               ) : (
