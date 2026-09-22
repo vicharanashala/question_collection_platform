@@ -571,20 +571,26 @@ export class QuestionService {
 
     const { state, district, block } = user;
 
+    // 1b. Translate to English via GDB before any AI processing below — Gemma
+    //     inference and the GDB semantic search both expect English text. The
+    //     original dto.questionText (local language) is untouched and is still
+    //     what gets saved to the DB and returned in the response.
+    const englishQuestionText = await this.gdbService.translateToEnglish(dto.questionText);
+
     // 2. Gemma inference: domains + cropType  (run first so we have crop for GDB call)
-    const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
+    const inferred = await this.gemmaService.inferCropAndDomains(englishQuestionText);
 
     // 3. Check our own DB first — exact text match (case-insensitive, trimmed).
     //     Preferred over GDB because we know the exact submitter's display name.
+    //     Matched against the local-language text, since that's what's stored.
     const dbDup = await this.findExactDuplicate(dto.questionText, userId);
 
     // 4. GDB semantic search runs second — may add matchedAnswer + similarityScore
-    //    if GDB has a confident match beyond what our DB found.
-    //    PreviewQuestionDto has no `language` field, so always fall back to
-    //    the user's languagePreference so non-English text gets translated.
+    //    if GDB has a confident match beyond what our DB found. questionText is
+    //    already English (translated above), so languageCode is omitted —
+    //    checkDuplicate's own Sarvam translation step is skipped for English text.
     const gdbDup = await this.gdbService.checkDuplicate({
-      questionText: dto.questionText,
-      languageCode: user.languagePreference,
+      questionText: englishQuestionText,
     });
 
     // Abusive / non-agricultural queries are blocked here — nothing is persisted
