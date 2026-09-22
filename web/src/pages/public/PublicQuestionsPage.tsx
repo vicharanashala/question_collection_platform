@@ -5,7 +5,7 @@ import { questionApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, MessageSquarePlus, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react'
+import { Loader2, MessageSquarePlus, ChevronLeft, ChevronRight, Image as ImageIcon, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { QuestionDetailModal } from '@/components/submissions/QuestionDetailModal'
@@ -97,10 +97,23 @@ export function PublicQuestionsPage() {
           <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('submissions.title')}</h2>
           <p className="mt-0.5 text-xs sm:text-sm text-text-secondary">{t('submissions.yourSubmissions')}</p>
         </div>
-        <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600 shrink-0" aria-label={t('question.askQuestion')}>
-          <MessageSquarePlus className="h-4 w-4 sm:hidden" />
-          <span className="hidden sm:inline">{t('question.askQuestion')}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/home/reports')}
+            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/50"
+            aria-label={t('report.title', 'Report an Issue')}
+          >
+            <Flag className="h-4 w-4 sm:mr-1.5" />
+            <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
+          </Button>
+          <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600 shrink-0" aria-label={t('question.askQuestion')}>
+            <MessageSquarePlus className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">{t('question.askQuestion')}</span>
+          </Button>
+        </div>
       </div>
 
       <div className="hidden sm:flex gap-2 overflow-x-auto pb-1">
