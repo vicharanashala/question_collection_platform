@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
@@ -56,6 +56,7 @@ interface AskHeaderProps {
   title: string
   subtitle: string
   onBack: () => void
+  onReport?: () => void
   remainingToday?: number
   dailyLimit?: number
   atLimit: boolean
@@ -65,7 +66,7 @@ interface AskHeaderProps {
  * Shared header for both steps of the ask flow: back action, daily-limit chip,
  * page title and a two-step progress indicator.
  */
-function AskHeader({ step, title, subtitle, onBack, remainingToday, dailyLimit, atLimit }: AskHeaderProps) {
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit }: AskHeaderProps) {
   const { t } = useTranslation()
   const steps = [
     { n: 1 as const, label: t('question.yourQuestion') },
@@ -79,20 +80,35 @@ function AskHeader({ step, title, subtitle, onBack, remainingToday, dailyLimit, 
           <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
         </Button>
 
-        {remainingToday != null && dailyLimit != null && (
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
-              atLimit
-                ? 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'
-                : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${atLimit ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-            {atLimit
-              ? t('question.dailyLimitIndicator')
-              : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {onReport && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onReport}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/50"
+              aria-label={t('report.title', 'Report an Issue')}
+            >
+              <Flag className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
+            </Button>
+          )}
+          {remainingToday != null && dailyLimit != null && (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
+                atLimit
+                  ? 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+                  : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${atLimit ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+              {atLimit
+                ? t('question.dailyLimitIndicator')
+                : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
+            </span>
+          )}
+        </div>
       </div>
 
       <div>
@@ -418,6 +434,7 @@ useEffect(() => {
           title={t('question.submitQuestion')}
           subtitle={t('question.askSubtitle')}
           onBack={() => setStep('ask')}
+          onReport={() => navigate('/home/reports')}
           remainingToday={previewMeta.remainingToday}
           dailyLimit={previewMeta.dailyLimit}
           atLimit={false}
@@ -611,6 +628,7 @@ useEffect(() => {
         title={t('question.askQuestion')}
         subtitle={t('question.expertWillRespond')}
         onBack={() => navigate(-1)}
+        onReport={() => navigate('/home/reports')}
         remainingToday={stats?.remainingToday}
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
