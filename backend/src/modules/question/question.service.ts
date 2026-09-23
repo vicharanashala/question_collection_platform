@@ -575,7 +575,10 @@ export class QuestionService {
     //     inference and the GDB semantic search both expect English text. The
     //     original dto.questionText (local language) is untouched and is still
     //     what gets saved to the DB and returned in the response.
+    console.log('[QuestionService][preview] dto.questionText (original, local language):', dto.questionText);
     const englishQuestionText = await this.gdbService.translateToEnglish(dto.questionText);
+    console.log('[QuestionService][preview] englishQuestionText (after translateToEnglish):', englishQuestionText);
+    console.log('[QuestionService][preview] translation actually changed the text?', englishQuestionText !== dto.questionText);
 
     // 2. Gemma inference: domains + cropType  (run first so we have crop for GDB call)
     const inferred = await this.gemmaService.inferCropAndDomains(englishQuestionText);
@@ -589,6 +592,7 @@ export class QuestionService {
     //    if GDB has a confident match beyond what our DB found. questionText is
     //    already English (translated above), so languageCode is omitted —
     //    checkDuplicate's own Sarvam translation step is skipped for English text.
+    console.log('[QuestionService][preview] calling gdbService.checkDuplicate with questionText:', englishQuestionText);
     const gdbDup = await this.gdbService.checkDuplicate({
       questionText: englishQuestionText,
     });
