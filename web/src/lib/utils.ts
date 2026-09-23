@@ -73,6 +73,15 @@ export function calcChange(current: number, previous: number): { value: number; 
   return { value: pct, label: `${sign}${pct}%` }
 }
 
+export function formatDuration(totalMinutes: number): string {
+  const mins = Math.max(0, Math.round(totalMinutes))
+  const d = Math.floor(mins / 1440)
+  const h = Math.floor((mins % 1440) / 60)
+  const m = mins % 60
+  const parts = [d && `${d}d`, h && `${h}h`, m && `${m}m`].filter(Boolean)
+  return parts.length ? parts.join(' ') : '0m'
+}
+
 export function formatINR(n: number): string {
   if (n >= 1_00_00_000) return `${(n / 1_00_00_000).toFixed(1)}Cr`
   if (n >= 1_00_000) return `${(n / 1_00_000).toFixed(1)}L`

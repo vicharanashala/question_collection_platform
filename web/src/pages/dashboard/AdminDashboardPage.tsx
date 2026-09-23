@@ -12,7 +12,7 @@ import { BulletChartComponent } from '@/components/charts/BulletChartComponent'
 import { TreemapChartComponent } from '@/components/charts/TreemapChartComponent'
 import { RankedBarList } from '@/components/charts/RankedBarList'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
-import { cn, formatNumber, formatINR } from '@/lib/utils'
+import { cn, formatNumber, formatINR, formatDuration } from '@/lib/utils'
 // import { isAdmin } from '@/lib/roles'
 import { format, parseISO } from 'date-fns'
 import {
@@ -380,7 +380,7 @@ export function AdminDashboardPage() {
         <StatCard
           icon={Activity}
           label="Avg Review Turnaround"
-          value={analytics?.avgReviewTurnaroundMinutes != null ? `${analytics.avgReviewTurnaroundMinutes}m` : '—'}
+          value={analytics?.avgReviewTurnaroundMinutes != null ? formatDuration(analytics.avgReviewTurnaroundMinutes) : '—'}
           sub="submission to decision"
           variant="info"
         />
