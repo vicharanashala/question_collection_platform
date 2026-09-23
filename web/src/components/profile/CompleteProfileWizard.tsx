@@ -754,6 +754,9 @@ function Step3({
               onChange={(e) => setField("universityName", e.target.value)}
               placeholder="Optional"
             />
+            {errors.universityName && (
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.universityName}</p>
+            )}
           </div>
         </>
       )}
@@ -1309,27 +1312,45 @@ export function CompleteProfileWizard({
       }
     }
     if (s === 3) {
-      if (!form.name.trim() || form.name.trim().length < 2)
-        e.name = "Please enter your full name";
+      if (!form.name.trim() || form.name.trim().length < 3)
+        e.name = "Name must be at least 3 characters";
+      else if (form.name.trim().length > 50)
+        e.name = "Name must be less than 50 characters";
+      else if (/\d/.test(form.name))
+        e.name = "Name cannot contain numbers";
+
       if (!form.username.trim()) e.username = "Please choose a username";
       else if (form.username.trim().length < 3)
         e.username = "Username must be at least 3 characters";
       else if (usernameStatus === "taken")
         e.username =
           "That username is taken. Pick or click a suggestion below.";
+      
       if (!form.gender) e.gender = "Please choose a gender";
-      if (!form.age || form.age && (Number(form.age) < 16 || Number(form.age) > 100))
-        e.age = "Age is required and must be between 16 and 100";
+      
+      if (!form.age || form.age && (Number(form.age) < 16 || Number(form.age) > 99))
+        e.age = "Age is required and must be between 16 and 99";
+      
       if (form.category === "farmer") {
         if (!form.farmSize.trim()) e.farmSize = "Farm size is required";
         if (form.cropType.length === 0) e.cropType = "Pick at least one crop";
       }
       if (form.category === "student") {
         if (!form.courseName) e.courseName = "Course is required";
-        if (form.courseName === OTHER_VALUE && !form.courseNameOther.trim())
-          e.courseNameOther = "Please enter course name";
-        if (!form.collegeName.trim())
-          e.collegeName = "College name is required";
+        if (form.courseName === OTHER_VALUE && (!form.courseNameOther.trim() || form.courseNameOther.trim().length < 3))
+          e.courseNameOther = "Course name must be at least 3 characters";
+        
+        if (!form.collegeName.trim() || form.collegeName.trim().length < 3)
+          e.collegeName = "College name must be at least 3 characters";
+        else if (/^\d/.test(form.collegeName.trim()))
+          e.collegeName = "College name cannot start with a number";
+          
+        if (form.universityName.trim()) {
+          if (form.universityName.trim().length < 3)
+            e.universityName = "University name must be at least 3 characters";
+          else if (/^\d/.test(form.universityName.trim()))
+            e.universityName = "University name cannot start with a number";
+        }
       }
       if (
         form.category === "fpo" ||
