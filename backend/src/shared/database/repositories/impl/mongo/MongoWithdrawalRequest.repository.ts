@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { IWithdrawalRequestRepository, ListWithdrawalsOptions, ListWithdrawalsResult, WithdrawalFinancialSummary, WithdrawalRewardSummary } from '../../IWithdrawalRequest.repository';
+import { IWithdrawalRequestRepository, ListWithdrawalsOptions, ListWithdrawalsResult, WithdrawalFinancialSummary, WithdrawalRewardSummary, WithdrawalStatusSummary } from '../../IWithdrawalRequest.repository';
 import { WithdrawalRequest } from '../../../entities';
 import { TransactionType, WithdrawalStatus } from '../../../../classes/enums';
 
@@ -243,6 +243,37 @@ export class MongoWithdrawalRequestRepository
         amount: Number(item.amount ?? 0),
       }),
     ),
+  };
+}
+
+async getStatusSummary(
+  from: Date,
+  to: Date,
+): Promise<WithdrawalStatusSummary> {
+  const countWhere = (status: WithdrawalStatus) => ({
+    $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] },
+  });
+
+  const [result] = await this._model.aggregate([
+    { $match: { createdAt: { $gte: from, $lte: to } } },
+    {
+      $group: {
+        _id: null,
+        totalWithdrawn: { $sum: '$amount' },
+        withdrawalCount: { $sum: 1 },
+        pending: countWhere(WithdrawalStatus.PENDING),
+        completed: countWhere(WithdrawalStatus.COMPLETED),
+        failed: countWhere(WithdrawalStatus.FAILED),
+      },
+    },
+  ]);
+
+  return {
+    totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
+    withdrawalCount: Number(result?.withdrawalCount ?? 0),
+    pending: Number(result?.pending ?? 0),
+    completed: Number(result?.completed ?? 0),
+    failed: Number(result?.failed ?? 0),
   };
 }
 

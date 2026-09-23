@@ -317,6 +317,12 @@ export interface SignupTrendPoint {
 
 export interface UserAnalytics {
   totalUsers: number
+  /** Registered within the selected range */
+  newUsers: number
+  newVerified: number
+  newPending: number
+  /** Last login within the selected range */
+  activeUsers: number
   mau: number
   dau: number
   signupGrowth: number
@@ -369,6 +375,8 @@ export interface AnalyticsDashboard {
   datasetGrowthRate: number
   costPerApprovedQuestion: number
   stateParticipationRate: number
+  statesWithApprovedQuestions: number
+  avgReviewTurnaroundMinutes: number | null
   // Sub-sections
   users: UserAnalytics
   questions: QuestionAnalytics

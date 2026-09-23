@@ -157,6 +157,13 @@ countSubmittedBetween(
   to: Date,
 ): Promise<number>;
 
+/** Number of distinct question `state` values with any of the given statuses, submitted within [from, to]. */
+countDistinctStates(
+  from: Date,
+  to: Date,
+  statuses: QuestionStatus[],
+): Promise<number>;
+
 getDailyStatsSince(from: Date): Promise<Array<{
   date: string;
   users: number;

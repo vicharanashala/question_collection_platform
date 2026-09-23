@@ -12,6 +12,9 @@ import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex } from '../../../abstractions/mongo-utils';
 
+/** Distributed questions (moved_to_final) were approved first, so they count as approved. */
+const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
+
 @Injectable()
 export class MongoQuestionRepository
   extends MongoRepository<Question>
@@ -166,6 +169,21 @@ export class MongoQuestionRepository
       .map((r) => ({ domain: String(r._id), count: r.count }));
   }
 
+  async countDistinctStates(
+    from: Date,
+    to: Date,
+    statuses: QuestionStatus[],
+  ): Promise<number> {
+    const states = await this._model
+      .distinct('state', {
+        status: { $in: statuses },
+        submittedAt: { $gte: from, $lte: to },
+        state: { $nin: [null, ''] },
+      })
+      .exec();
+    return states.length;
+  }
+
   async avgReviewTurnaroundMinutesSince(
     from: Date,
     statuses: QuestionStatus[],
@@ -239,7 +257,7 @@ export class MongoQuestionRepository
               approved: {
                 $sum: {
                   $cond: [
-                    { $eq: ['$status', QuestionStatus.APPROVED] },
+                    { $in: ['$status', APPROVED_STATUSES] },
                     1,
                     0,
                   ],
@@ -297,7 +315,7 @@ export class MongoQuestionRepository
               approved: {
                 $sum: {
                   $cond: [
-                    { $eq: ['$status', QuestionStatus.APPROVED] },
+                    { $in: ['$status', APPROVED_STATUSES] },
                     1,
                     0,
                   ],
@@ -338,7 +356,7 @@ export class MongoQuestionRepository
               approved: {
                 $sum: {
                   $cond: [
-                    { $eq: ['$status', QuestionStatus.APPROVED] },
+                    { $in: ['$status', APPROVED_STATUSES] },
                     1,
                     0,
                   ],
@@ -373,7 +391,7 @@ export class MongoQuestionRepository
               approved: {
                 $sum: {
                   $cond: [
-                    { $eq: ['$status', QuestionStatus.APPROVED] },
+                    { $in: ['$status', APPROVED_STATUSES] },
                     1,
                     0,
                   ],
@@ -412,7 +430,7 @@ export class MongoQuestionRepository
               approved: {
                 $sum: {
                   $cond: [
-                    { $eq: ['$status', QuestionStatus.APPROVED] },
+                    { $in: ['$status', APPROVED_STATUSES] },
                     1,
                     0,
                   ],
@@ -454,7 +472,7 @@ export class MongoQuestionRepository
               approved: {
                 $sum: {
                   $cond: [
-                    { $eq: ['$status', QuestionStatus.APPROVED] },
+                    { $in: ['$status', APPROVED_STATUSES] },
                     1,
                     0,
                   ],
@@ -543,7 +561,7 @@ async getQuestionStats(): Promise<{
         approved: {
           $sum: {
             $cond: [
-              { $eq: ['$status', QuestionStatus.APPROVED] },
+              { $in: ['$status', APPROVED_STATUSES] },
               1,
               0,
             ],
@@ -641,7 +659,7 @@ async getDailyStatsSince(
         approved: {
           $sum: {
             $cond: [
-              { $eq: ['$status', QuestionStatus.APPROVED] },
+              { $in: ['$status', APPROVED_STATUSES] },
               1,
               0,
             ],

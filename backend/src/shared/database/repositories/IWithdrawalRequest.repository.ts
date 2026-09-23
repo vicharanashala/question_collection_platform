@@ -45,6 +45,14 @@ export interface WithdrawalRewardSummary {
   pendingWithdrawals: number;
 }
 
+export interface WithdrawalStatusSummary {
+  totalWithdrawn: number;
+  withdrawalCount: number;
+  pending: number;
+  completed: number;
+  failed: number;
+}
+
 export interface ListWithdrawalsOptions {
   page: number;
   limit: number;
@@ -97,6 +105,11 @@ getRewardSummary(
   from: Date,
   to: Date,
 ): Promise<WithdrawalRewardSummary>;
+
+getStatusSummary(
+  from: Date,
+  to: Date,
+): Promise<WithdrawalStatusSummary>;
 
 listWithdrawals(
   options: ListWithdrawalsOptions,

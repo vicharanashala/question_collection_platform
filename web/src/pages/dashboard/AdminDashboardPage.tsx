@@ -182,6 +182,12 @@ function timeRangeDays(tr: TimeRange) {
   return TIME_RANGES.find((r) => r.value === tr)?.days ?? 30
 }
 
+const QUESTION_VOLUME_SERIES = [
+  { dataKey: 'Submitted', color: 'hsl(var(--chart-2))' },
+  { dataKey: 'Approved', color: 'hsl(var(--success))' },
+  { dataKey: 'Rejected', color: 'hsl(var(--destructive))' },
+]
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function AdminDashboardPage() {
@@ -193,29 +199,34 @@ export function AdminDashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [tab, setTab] = useState<'questions' | 'users' | 'rewards'>('questions')
 
-  // ── Admin+: load both legacy stats and new analytics in parallel ──
+  const rangeDays = timeRangeDays(timeRange)
+
   useEffect(() => {
-    Promise.all([
-      adminApi.getStats().catch((e) => {
-        toast.error(getErrorMessage(e, 'Failed to load stats'))
-        return null
-      }),
-      analyticsApi.getDashboard().catch((e) => {
-        toast.error(getErrorMessage(e, 'Failed to load analytics'))
-        return null
-      }),
-    ])
-      .then(([s, a]) => {
-        if (s) setStats(s)
-        if (a) setAnalytics(a)
-      })
-      .finally(() => {
-        setLoading(false)
-        setAnalyticsLoading(false)
-      })
+    adminApi
+      .getStats()
+      .then(setStats)
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load stats')))
+      .finally(() => setLoading(false))
   }, [])
 
-  const rangeDays = timeRangeDays(timeRange)
+  useEffect(() => {
+    let cancelled = false
+    setAnalyticsLoading(true)
+    analyticsApi
+      .getDashboard({ days: rangeDays })
+      .then((a) => {
+        if (!cancelled) setAnalytics(a)
+      })
+      .catch((e) => {
+        if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load analytics'))
+      })
+      .finally(() => {
+        if (!cancelled) setAnalyticsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [rangeDays])
   const d = stats?.dashboard
 
   const days = rangeDays
@@ -314,30 +325,31 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Users}
-          label="Registered Users"
-          value={analytics?.totalRegisteredUsers ?? d?.totalUsers ?? 0}
-          sub={`${analytics?.monthlyActiveUsers ?? 0} Monthly Active Users`}
+          label="New Registrations"
+          value={uAnalytics?.newUsers ?? 0}
+          sub={`${formatNumber(analytics?.totalRegisteredUsers ?? d?.totalUsers ?? 0)} total · ${uAnalytics?.activeUsers ?? 0} active`}
           variant="primary"
         />
         <StatCard
           icon={MessageSquare}
-          label="Total Approved Questions"
-          value={analytics?.totalApprovedQuestions ?? d?.approvedQuestions ?? 0}
-          sub={`${analytics?.stateParticipationRate ?? 0}% state coverage`}
+          label="Approved Questions"
+          value={qAnalytics?.summary.approved ?? 0}
+          sub={`${qAnalytics?.summary.approvalRate ?? 0}% approval rate`}
           variant="info"
         />
         <StatCard
           icon={CheckCircle}
           label="Verified Users"
-          value={d?.verifiedUsers ?? 0}
-          sub={`${d?.pendingUsers ?? 0} pending review`}
+          value={uAnalytics?.newVerified ?? 0}
+          sub={`${uAnalytics?.newPending ?? 0} pending review`}
           variant="success"
         />
         <StatCard
           icon={TrendingUp}
-          label="Questions This Week"
-          value={d?.questionsThisWeek ?? 0}
-          sub={`+${d?.usersThisWeek ?? 0} new users`}
+          label="Questions Submitted"
+          value={qAnalytics?.summary.total ?? 0}
+          change={qAnalytics?.summary.growthRate}
+          sub="vs previous period"
           variant="success"
         />
       </div>
@@ -348,26 +360,27 @@ export function AdminDashboardPage() {
           icon={IndianRupee}
           label="Cost per Approved Question"
           value={analytics?.costPerApprovedQuestion != null ? `₹${analytics.costPerApprovedQuestion.toFixed(2)}` : '—'}
-          sub={analytics ? `₹${formatINR(analytics.totalRewarded)} total rewarded` : undefined}
+          sub={analytics ? `₹${formatINR(analytics.totalRewarded)} rewarded` : undefined}
           variant="warning"
         />
         <StatCard
           icon={MapPin}
           label="State Participation"
           value={`${analytics?.stateParticipationRate ?? 0}%`}
-          sub={`${uAnalytics?.totalUsers ?? 0} total users`}
+          sub={`${analytics?.statesWithApprovedQuestions ?? 0} of 37 states with approvals`}
           variant="info"
         />
         <StatCard
           icon={Clock}
           label="Pending Questions"
-          value={d?.pendingQuestions ?? 0}
+          value={qAnalytics?.summary.pending ?? 0}
+          sub={`${formatNumber(d?.pendingQuestions ?? 0)} pending overall`}
           variant="warning"
         />
         <StatCard
           icon={Activity}
           label="Avg Review Turnaround"
-          value={stats?.avgReviewTurnaroundMinutes != null ? `${stats.avgReviewTurnaroundMinutes}m` : '—'}
+          value={analytics?.avgReviewTurnaroundMinutes != null ? `${analytics.avgReviewTurnaroundMinutes}m` : '—'}
           sub="submission to decision"
           variant="info"
         />
@@ -382,7 +395,7 @@ export function AdminDashboardPage() {
           action={
             <div className="flex gap-4 text-[11px] sm:text-[11px] sm:text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-primary" /> Submitted
+                <span className="h-2 w-2 rounded-full bg-[hsl(var(--chart-2))]" /> Submitted
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-success" /> Approved
@@ -402,7 +415,7 @@ export function AdminDashboardPage() {
               <AreaChartComponent
                 data={qAnalytics.dailyVolume.map((v) => ({ date: v.date, Submitted: v.submitted, Approved: v.approved, Rejected: v.rejected }))}
                 dataKey="Submitted"
-                color="hsl(var(--primary))"
+                series={QUESTION_VOLUME_SERIES}
                 gradientId="qTrend"
                 height={200}
                 valueFormatter={(v) => formatNumber(v)}
@@ -425,7 +438,7 @@ export function AdminDashboardPage() {
           )}
         </ChartCard>
 
-        <ChartCard title="Questions by Status" subtitle="Current distribution">
+        <ChartCard title="Questions by Status" subtitle={`Submitted in the last ${days} days`}>
           <BarChartComponent
             data={qStatusData.map((d_) => ({ name: d_.name, value: d_.value }))}
             dataKey="value"
@@ -512,7 +525,7 @@ export function AdminDashboardPage() {
                   <AreaChartComponent
                     data={(qAnalytics?.dailyVolume ?? []).map((v) => ({ date: v.date, Submitted: v.submitted, Approved: v.approved, Rejected: v.rejected }))}
                     dataKey="Submitted"
-                    color="hsl(var(--primary))"
+                    series={QUESTION_VOLUME_SERIES}
                     gradientId="qTabTrend"
                     height={180}
                     valueFormatter={(v) => formatNumber(v)}
@@ -542,7 +555,7 @@ export function AdminDashboardPage() {
                 <StatCard icon={CheckCircle} label="Verified" value={d?.verifiedUsers ?? 0} variant="success" />
               </div>
               <div className="grid gap-4 xl:grid-cols-2">
-                <ChartCard title="Daily Signups & DAU" subtitle="Last 30 days">
+                <ChartCard title="Daily Signups & DAU" subtitle={`Last ${days} days`}>
                   <AreaChartComponent
                     data={(uAnalytics?.signupTrend ?? []).map((s) => ({ date: s.date, Signups: s.signups, DAU: s.dau }))}
                     dataKey="Signups"

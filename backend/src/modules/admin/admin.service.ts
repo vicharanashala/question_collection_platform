@@ -2851,6 +2851,15 @@ await this.userRepo.save(user);
   // Section 8c: Analytics (Task 11 — dedicated analytics endpoints)
   // ─────────────────────────────────────────────────────────────
 
+  /** Explicit fromDate/toDate win; otherwise the window is the last `days` (default 30). */
+  private resolveAnalyticsRange(query: AnalyticsQueryDto) {
+    const to = query.toDate ? new Date(query.toDate) : new Date();
+    const from = query.fromDate
+      ? new Date(query.fromDate)
+      : new Date(to.getTime() - (query.days ?? 30) * 24 * 60 * 60 * 1000);
+    return { from, to };
+  }
+
   /**
    * All analytics dashboard data in a single call.
    * GET /analytics/dashboard  →  getAnalyticsDashboard
@@ -2901,18 +2910,23 @@ await this.userRepo.save(user);
         ? parseFloat((totalRewarded / totalApproved).toFixed(2))
         : 0;
 
-    // State participation rate (distinct user-profile states with approved questions / 37)
-    const statesWithSubmissions = await this.questionRepo
-      .createQueryBuilder("q")
-      .leftJoin("users", "u", "q.user_id = u.id")
-      .select("COUNT(DISTINCT u.state)", "count")
-      .where("q.status = :status", { status: QuestionStatus.APPROVED })
-      .getRawOne<{ count: string }>();
+    const { from, to } = this.resolveAnalyticsRange(query);
+    const [statesWithApproved, avgReviewTurnaroundMinutes] = await Promise.all([
+      this.questionRepo.countDistinctStates(from, to, [
+        QuestionStatus.APPROVED,
+        QuestionStatus.MOVED_TO_FINAL,
+      ]),
+      this.questionRepo.avgReviewTurnaroundMinutesSince(from, [
+        QuestionStatus.APPROVED,
+        QuestionStatus.MOVED_TO_FINAL,
+        QuestionStatus.REJECTED,
+      ]),
+    ]);
 
     // Indian states count reference (29 states + 8 UTs)
     const totalPossibleStates = 37;
     const participationRate = Math.round(
-      (Number(statesWithSubmissions?.count ?? 0) / totalPossibleStates) * 100,
+      (statesWithApproved / totalPossibleStates) * 100,
     );
 
     return {
@@ -2924,6 +2938,8 @@ await this.userRepo.save(user);
       datasetGrowthRate: growthRate,
       costPerApprovedQuestion: costPerApproved,
       stateParticipationRate: participationRate,
+      statesWithApprovedQuestions: statesWithApproved,
+      avgReviewTurnaroundMinutes,
       // Sub-analytics (for charts)
       users: userAnalytics,
       questions: questionAnalytics,
@@ -2936,82 +2952,44 @@ await this.userRepo.save(user);
    * GET /analytics/users  →  getUserAnalytics
    */
   async getUserAnalytics(query: AnalyticsQueryDto) {
-    const { fromDate, toDate, state } = query;
-    const from = fromDate
-      ? new Date(fromDate)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const to = toDate ? new Date(toDate) : new Date();
+    const { state } = query;
+    const { from, to } = this.resolveAnalyticsRange(query);
+    const DAY_MS = 24 * 60 * 60 * 1000;
 
-    const totalUsers = await this.userRepo.count();
-
-    // MAU — distinct users who logged in (lastLoginAt) in last 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const mauRaw = await this.userRepo
-      .createQueryBuilder("u")
-      .select("COUNT(DISTINCT u.id)", "count")
-      .where("u.lastLoginAt >= :thirtyDaysAgo", { thirtyDaysAgo })
-      .getRawOne<{ count: string }>();
-    const mau = Number(mauRaw?.count ?? 0);
-
-    // DAU — distinct users active today (lastLoginAt = today)
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const dauRaw = await this.userRepo
-      .createQueryBuilder("u")
-      .select("COUNT(DISTINCT u.id)", "count")
-      .where("u.lastLoginAt >= :todayStart", { todayStart })
-      .getRawOne<{ count: string }>();
-    const dau = Number(dauRaw?.count ?? 0);
 
-    // Daily signups for chart (last 30 days)
-    const signupRaw: Array<{ date: string; signups: string }> =
-      await this.userRepo
-        .createQueryBuilder("u")
-        .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", "date")
-        .addSelect("COUNT(*)", "signups")
-        .where("u.createdAt >= :from", { from })
-        .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
-        .orderBy("date", "ASC")
-        .getRawMany();
-
-    // DAU per day for chart (users who logged in each day)
-    const dauRawDaily: Array<{ date: string; dau: string }> =
-      await this.userRepo
-        .createQueryBuilder("u")
-        .select("TO_CHAR(u.lastLoginAt, 'YYYY-MM-DD')", "date")
-        .addSelect("COUNT(DISTINCT u.id)", "dau")
-        .where("u.lastLoginAt >= :from", { from })
-        .groupBy("TO_CHAR(u.lastLoginAt, 'YYYY-MM-DD')")
-        .orderBy("date", "ASC")
-        .getRawMany();
-
-    const dauMap = new Map(dauRawDaily.map((r) => [r.date, Number(r.dau)]));
-
-    const signupTrend = signupRaw.map((r) => ({
-      date: r.date,
-      signups: Number(r.signups),
-      dau: dauMap.get(r.date) ?? 0,
-    }));
-
-    // New signups in current period vs prior period (for growth delta)
-    const periodDays = Math.max(
-      1,
-      Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)),
-    );
-    const priorFrom = new Date(
-      from.getTime() - periodDays * 24 * 60 * 60 * 1000,
-    );
+    // Prior window of equal length, for the signup growth delta
+    const periodMs = Math.max(DAY_MS, to.getTime() - from.getTime());
+    const priorFrom = new Date(from.getTime() - periodMs);
     const priorTo = new Date(from.getTime() - 1);
-    const priorSignupsRaw = await this.userRepo
-      .createQueryBuilder("u")
-      .select("COUNT(*)", "count")
-      .where("u.createdAt BETWEEN :priorFrom AND :priorTo", {
-        priorFrom,
-        priorTo,
-      })
-      .getRawOne<{ count: string }>();
-    const priorSignups = Number(priorSignupsRaw?.count ?? 0);
-    const currSignups = signupRaw.reduce((s, r) => s + Number(r.signups), 0);
+
+    const [totalUsers, activity, priorSignups, categoryBreakdown, roleDistribution] =
+      await Promise.all([
+        this.userRepo.count(),
+        this.userRepo.getActivityAnalytics({
+          from,
+          to,
+          mauFrom: new Date(Date.now() - 30 * DAY_MS),
+          todayStart,
+          state,
+        }),
+        this.userRepo.countCreatedBetween(priorFrom, priorTo),
+        this.userRepo.getCategoryDistribution(),
+        this.userRepo.getRoleDistribution(),
+      ]);
+
+    const signupMap = new Map(activity.signupTrend.map((r) => [r.date, r.signups]));
+    const loginMap = new Map(activity.loginTrend.map((r) => [r.date, r.dau]));
+    const signupTrend = [...new Set([...signupMap.keys(), ...loginMap.keys()])]
+      .sort()
+      .map((date) => ({
+        date,
+        signups: signupMap.get(date) ?? 0,
+        dau: loginMap.get(date) ?? 0,
+      }));
+
+    const currSignups = activity.newUsers;
     const signupGrowth =
       priorSignups > 0
         ? Math.round(((currSignups - priorSignups) / priorSignups) * 100)
@@ -3019,77 +2997,18 @@ await this.userRepo.save(user);
           ? 100
           : 0;
 
-    // State breakdown
-    let stateQb = this.userRepo
-      .createQueryBuilder("u")
-      .select("u.state", "state")
-      .addSelect("COUNT(*)", "count")
-      .groupBy("u.state")
-      .orderBy("count", "DESC");
-    if (state) stateQb = stateQb.andWhere("u.state = :state", { state });
-    const stateBreakdown: Array<{ state: string; count: number }> = (
-      await stateQb.getRawMany()
-    ).map((r) => ({ state: r.state as string, count: Number(r.count) }));
-
-    // District breakdown (top 20 per state if filtered, else overall top 20)
-    let districtQb = this.userRepo
-      .createQueryBuilder("u")
-      .select("u.district", "district")
-      .addSelect("u.state", "state")
-      .addSelect("COUNT(*)", "count")
-      .groupBy("u.district")
-      .addGroupBy("u.state")
-      .orderBy("count", "DESC")
-      .limit(50);
-    if (state) districtQb = districtQb.andWhere("u.state = :state", { state });
-    const districtBreakdownRaw: Array<{
-      district: string;
-      state: string;
-      count: string;
-    }> = await districtQb.getRawMany();
-    const districtBreakdown = districtBreakdownRaw
-      .filter((r) => r.district != null)
-      .map((r) => ({
-        district: r.district,
-        state: r.state,
-        count: Number(r.count),
-      }));
-
-    // Category breakdown
-    const categoryBreakdownRaw = await this.userRepo
-      .createQueryBuilder("u")
-      .select("u.category", "category")
-      .addSelect("COUNT(*)", "count")
-      .groupBy("u.category")
-      .orderBy("count", "DESC")
-      .getRawMany();
-    const categoryBreakdown = categoryBreakdownRaw
-      .filter((r) => r.category != null)
-      .map((r) => ({
-        category: r.category as UserCategory,
-        count: Number(r.count),
-      }));
-
-    // Role distribution
-    const roleDistributionRaw = await this.userRepo
-      .createQueryBuilder("u")
-      .select("u.role", "role")
-      .addSelect("COUNT(*)", "count")
-      .groupBy("u.role")
-      .getRawMany();
-    const roleDistribution = roleDistributionRaw.map((r) => ({
-      role: r.role as UserRole,
-      count: Number(r.count),
-    }));
-
     return {
       totalUsers,
-      mau,
-      dau,
+      newUsers: activity.newUsers,
+      newVerified: activity.newVerified,
+      newPending: activity.newPending,
+      activeUsers: activity.activeUsers,
+      mau: activity.mau,
+      dau: activity.dau,
       signupGrowth,
       signupTrend,
-      stateBreakdown,
-      districtBreakdown,
+      stateBreakdown: activity.stateBreakdown,
+      districtBreakdown: activity.districtBreakdown,
       categoryBreakdown,
       roleDistribution,
     };
@@ -3231,34 +3150,40 @@ await this.userRepo.save(user);
   // }
 
   async getQuestionAnalytics(query: AnalyticsQueryDto) {
-    const { fromDate, toDate, state, cropType } = query;
+    const { state, cropType } = query;
+    const { from, to } = this.resolveAnalyticsRange(query);
 
-    const from = fromDate
-      ? new Date(fromDate)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    // Prior window of equal length, for the submission growth delta
+    const periodMs = Math.max(24 * 60 * 60 * 1000, to.getTime() - from.getTime());
+    const priorFrom = new Date(from.getTime() - periodMs);
+    const priorTo = new Date(from.getTime() - 1);
 
-    const to = toDate ? new Date(toDate) : new Date();
+    const [analytics, priorTotal] = await Promise.all([
+      this.questionRepo.getQuestionAnalytics({
+        from,
+        to,
+        state,
+        cropType,
+      }),
+      this.questionRepo.countSubmittedBetween(priorFrom, priorTo),
+    ]);
 
-    const analytics = await this.questionRepo.getQuestionAnalytics({
-      from,
-      to,
-      state,
-      cropType,
-    });
-
-    const { total, approved, rejected, pending } = analytics.summary;
+    const { total, approved } = analytics.summary;
 
     const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
-
-    // Growth calculation can remain here
-    // or be moved into the repository if you want
-    // the repository to own all analytics DB logic.
+    const growthRate =
+      priorTotal > 0
+        ? Math.round(((total - priorTotal) / priorTotal) * 100)
+        : total > 0
+          ? 100
+          : 0;
 
     return {
       ...analytics,
       summary: {
         ...analytics.summary,
         approvalRate,
+        growthRate,
       },
     };
   }
@@ -3268,98 +3193,21 @@ await this.userRepo.save(user);
    * GET /analytics/rewards  →  getRewardAnalytics
    */
   async getRewardAnalytics(query: AnalyticsQueryDto) {
-    const { fromDate, toDate, state } = query;
-    const from = fromDate
-      ? new Date(fromDate)
-      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const to = toDate ? new Date(toDate) : new Date();
+    const { state } = query;
+    const { from, to } = this.resolveAnalyticsRange(query);
 
-    const txWhere: Record<string, unknown> = {
-      source: TransactionSource.REWARD,
-      status: "completed",
-      createdAt: Between(from, to),
-    };
-
-    let txQb = this.transactionRepo
-      .createQueryBuilder("tx")
-      .innerJoin("tx.wallet", "w")
-      .innerJoinAndSelect("w.user", "u")
-      .select([
-        "SUM(tx.amount) as total_rewarded",
-        "COUNT(tx.id) as reward_count",
-        "AVG(tx.amount) as avg_reward",
-        "TO_CHAR(tx.createdAt, 'YYYY-MM-DD') as date",
-      ])
-      .where("tx.source = :source", { source: TransactionSource.REWARD })
-      .andWhere("tx.status = :status", { status: "completed" })
-      .andWhere("tx.createdAt BETWEEN :from AND :to", { from, to })
-      .groupBy("TO_CHAR(tx.createdAt, 'YYYY-MM-DD')")
-      .orderBy("date", "ASC");
-
-    if (state) txQb = txQb.andWhere("u.state = :state", { state });
-
-    const rewardTxsRaw = await txQb.getRawMany<{
-      total_rewarded: string;
-      reward_count: string;
-      avg_reward: string;
-      date: string;
-    }>();
-
-    const totalRewarded = rewardTxsRaw.reduce(
-      (s, r) => s + Number(r.total_rewarded),
-      0,
-    );
-    const rewardCount = rewardTxsRaw.reduce(
-      (s, r) => s + Number(r.reward_count),
-      0,
-    );
-    const avgReward =
-      rewardCount > 0
-        ? parseFloat((totalRewarded / rewardCount).toFixed(2))
-        : 0;
-
-    // Daily reward trend
-    const dailyRewardTrend = rewardTxsRaw.map((r) => ({
-      date: r.date,
-      amount: Number(r.total_rewarded),
-      count: Number(r.reward_count),
-    }));
-
-    // Withdrawal stats
-    const withdrawalStats = await this.withdrawalRepo
-      .createQueryBuilder("wr")
-      .select([
-        "COALESCE(SUM(wr.amount), 0) as total_withdrawn",
-        "COUNT(wr.id) as withdrawal_count",
-        "COUNT(CASE WHEN wr.status = 'pending' THEN 1 END) as pending_count",
-        "COUNT(CASE WHEN wr.status = 'completed' THEN 1 END) as completed_count",
-        "COUNT(CASE WHEN wr.status = 'failed' THEN 1 END) as failed_count",
-      ])
-      .where("wr.createdAt BETWEEN :from AND :to", { from, to })
-      .getRawOne();
-
-    // Total pool (all-time rewards)
-    const totalPoolRaw = await this.transactionRepo
-      .createQueryBuilder("tx")
-      .select("COALESCE(SUM(tx.amount), 0)", "total")
-      .where("tx.source = :source", { source: TransactionSource.REWARD })
-      .andWhere("tx.status = :status", { status: "completed" })
-      .getRawOne<{ total: string }>();
-    const totalPool = Number(totalPoolRaw?.total ?? 0);
+    const [rewards, withdrawals] = await Promise.all([
+      this.transactionRepo.getRewardAnalytics(from, to, state),
+      this.withdrawalRepo.getStatusSummary(from, to),
+    ]);
 
     return {
-      totalRewarded: parseFloat(totalRewarded.toFixed(2)),
-      rewardCount,
-      avgReward,
-      totalPool,
-      dailyRewardTrend,
-      withdrawals: {
-        totalWithdrawn: Number(withdrawalStats?.total_withdrawn ?? 0),
-        withdrawalCount: Number(withdrawalStats?.withdrawal_count ?? 0),
-        pending: Number(withdrawalStats?.pending_count ?? 0),
-        completed: Number(withdrawalStats?.completed_count ?? 0),
-        failed: Number(withdrawalStats?.failed_count ?? 0),
-      },
+      totalRewarded: parseFloat(rewards.totalRewarded.toFixed(2)),
+      rewardCount: rewards.rewardCount,
+      avgReward: parseFloat(rewards.avgReward.toFixed(2)),
+      totalPool: rewards.totalPool,
+      dailyRewardTrend: rewards.dailyRewardTrend,
+      withdrawals,
     };
   }
 

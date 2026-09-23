@@ -44,6 +44,24 @@ export interface LeaderboardEntry {
 
 
 
+export interface UserActivityAnalytics {
+  /** Users created within [from, to]. */
+  newUsers: number;
+  /** Of the users created within [from, to], how many are verified / awaiting review. */
+  newVerified: number;
+  newPending: number;
+  /** Users whose lastLoginAt falls within [from, to]. */
+  activeUsers: number;
+  /** Users whose lastLoginAt is on/after mauFrom. */
+  mau: number;
+  /** Users whose lastLoginAt is on/after todayStart. */
+  dau: number;
+  signupTrend: Array<{ date: string; signups: number }>;
+  loginTrend: Array<{ date: string; dau: number }>;
+  stateBreakdown: Array<{ state: string; count: number }>;
+  districtBreakdown: Array<{ district: string; state: string; count: number }>;
+}
+
 /** ─── IUserRepository ─────────────────────────────────────────────────────── */
 export interface IUserRepository extends BaseRepository<User> {
   findByMobile(mobileNumber: string): Promise<User | null>;
@@ -108,4 +126,12 @@ getDailySignupsSince(from: Date): Promise<Array<{
   date: string;
   signups: number;
 }>>;
+
+getActivityAnalytics(opts: {
+  from: Date;
+  to: Date;
+  mauFrom: Date;
+  todayStart: Date;
+  state?: string;
+}): Promise<UserActivityAnalytics>;
 }
