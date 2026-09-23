@@ -108,9 +108,7 @@ export class GdbService {
     const url = `${baseUrl}/v1/gdb/find-similar-questions`;
     this.logger.debug(`[GDB] find-similar-questions → ${url}`);
 
-    console.log('[GDB][checkDuplicate] payload.questionText:', payload.questionText, '| payload.languageCode:', payload.languageCode);
     const queryText = await this.toEnglish(payload.questionText, payload.languageCode);
-    console.log('[GDB][checkDuplicate] queryText sent to find-similar-questions (after toEnglish):', queryText);
 
     // ── Call GDB ──────────────────────────────────────────────────────────────
     let response: Response;
@@ -200,10 +198,7 @@ export class GdbService {
    * runs on the deployed VM.
    */
   async translateToEnglish(text: string): Promise<string> {
-    console.log('[GDB][translateToEnglish] called with input:', text);
-
     if (isDevelopment()) {
-      console.log('[GDB][translateToEnglish] SKIPPED — isDevelopment() is true, returning input unchanged:', text);
       this.logger.debug('[GDB] translateToEnglish skipped — development environment');
       return text;
     }
@@ -212,7 +207,6 @@ export class GdbService {
     const apiKey = this.configService.get<string>('gdb.apiKey')!;
 
     const url = `${baseUrl}/v1/translate/to-english`;
-    console.log('[GDB][translateToEnglish] baseUrl:', baseUrl, '| apiKey set:', !!apiKey, '| url:', url);
     this.logger.debug(`[GDB] translate/to-english → ${url}`);
 
     let response: Response;
@@ -225,9 +219,7 @@ export class GdbService {
         },
         body: JSON.stringify({ text }),
       });
-      console.log('[GDB][translateToEnglish] fetch resolved, status:', response.status, response.statusText);
     } catch (err) {
-      console.log('[GDB][translateToEnglish] NETWORK ERROR, returning input unchanged:', err);
       this.logger.error(`[GDB] translate network error: ${err}`);
       return text;
     }
@@ -235,16 +227,13 @@ export class GdbService {
     let responseText = '';
     try {
       responseText = await response.text();
-      console.log('[GDB][translateToEnglish] raw response body:', responseText);
       this.logger.debug(`[GDB] translate raw response (${response.status}): ${responseText.slice(0, 500)}`);
     } catch (err) {
-      console.log('[GDB][translateToEnglish] FAILED TO READ RESPONSE BODY, returning input unchanged:', err);
       this.logger.error(`[GDB] translate failed to read response body: ${err}`);
       return text;
     }
 
     if (!response.ok) {
-      console.log('[GDB][translateToEnglish] NON-OK HTTP STATUS, returning input unchanged:', response.status, responseText);
       this.logger.warn(`[GDB] translate HTTP ${response.status}`);
       return text;
     }
@@ -252,10 +241,8 @@ export class GdbService {
     try {
       const parsed = JSON.parse(responseText) as { translated_text?: string };
       const result = parsed.translated_text?.trim() || text;
-      console.log('[GDB][translateToEnglish] SUCCESS — parsed.translated_text:', parsed.translated_text, '| returning:', result);
       return result;
     } catch (err) {
-      console.log('[GDB][translateToEnglish] NON-JSON RESPONSE, returning input unchanged:', responseText, err);
       this.logger.error(`[GDB] translate non-JSON response body: ${responseText.slice(0, 200)}`);
       return text;
     }
