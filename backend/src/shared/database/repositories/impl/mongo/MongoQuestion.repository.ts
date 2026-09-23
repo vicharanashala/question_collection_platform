@@ -10,7 +10,7 @@ import {
 } from '../../IQuestion.repository';
 import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
-import { mongoLike, escapeRegex } from '../../../abstractions/mongo-utils';
+import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
@@ -721,4 +721,48 @@ async getDailyStatsSince(
     },
   ]);
 }
+
+  async findForExport(filters: {
+    from: Date;
+    to: Date;
+    state?: string;
+    cropType?: string;
+  }): Promise<Record<string, unknown>[]> {
+    const { from, to, state, cropType } = filters;
+    return this._model
+      .aggregate([
+        {
+          $match: {
+            submittedAt: { $gte: from, $lte: to },
+            ...(state ? { state } : {}),
+            ...(cropType ? { cropType } : {}),
+          },
+        },
+        { $sort: { submittedAt: -1 } },
+        ...lookupByStringId('users', 'userId', 'u'),
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: '$_id' },
+            mobileNumber: '$u.mobileNumber',
+            name: '$u.name',
+            questionText: 1,
+            language: 1,
+            domains: 1,
+            cropType: 1,
+            season: 1,
+            state: 1,
+            district: 1,
+            mediaType: 1,
+            status: 1,
+            submittedAt: 1,
+            reviewedAt: 1,
+            rejectionReason: 1,
+            heldReason: 1,
+            approvalReason: 1,
+          },
+        },
+      ])
+      .exec();
+  }
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
+import { lookupByStringId } from '../../../abstractions/mongo-utils';
 import {
   ITransactionRepository,
   RewardAnalyticsResult,
@@ -198,4 +199,36 @@ export class MongoTransactionRepository
     avgReward: Number(result?.avgReward ?? 0),
   };
 }
+
+  async findRewardsForExport(filters: {
+    from: Date;
+    to: Date;
+    state?: string;
+  }): Promise<Record<string, unknown>[]> {
+    const { from, to, state } = filters;
+    return this._model
+      .aggregate([
+        { $match: { source: TransactionSource.REWARD, createdAt: { $gte: from, $lte: to } } },
+        { $sort: { createdAt: -1 } },
+        ...lookupByStringId('wallets', 'walletId', 'w'),
+        ...lookupByStringId('users', 'w.userId', 'u'),
+        ...(state ? [{ $match: { 'u.state': state } }] : []),
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: '$_id' },
+            mobileNumber: '$u.mobileNumber',
+            name: '$u.name',
+            amount: 1,
+            type: 1,
+            source: 1,
+            description: 1,
+            status: 1,
+            referenceId: 1,
+            createdAt: 1,
+          },
+        },
+      ])
+      .exec();
+  }
 }

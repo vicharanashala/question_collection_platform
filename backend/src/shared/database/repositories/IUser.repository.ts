@@ -134,4 +134,7 @@ getActivityAnalytics(opts: {
   todayStart: Date;
   state?: string;
 }): Promise<UserActivityAnalytics>;
+
+/** Flat rows for CSV/Excel export, filtered by createdAt. */
+findForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
 }

@@ -76,9 +76,11 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
 
 interface ExportPanelProps {
   disabled?: boolean
+  /** Export covers the same window as the dashboard's 7D/30D/90D filter */
+  days: number
 }
 
-function ExportPanel({ disabled }: ExportPanelProps) {
+function ExportPanel({ disabled, days }: ExportPanelProps) {
   const [open, setOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [dataType, setDataType] = useState<ExportParams['dataType']>('questions')
@@ -86,13 +88,16 @@ function ExportPanel({ disabled }: ExportPanelProps) {
 
   const handleExport = async () => {
     setExporting(true)
+    const toDate = new Date()
+    const fromDate = new Date(toDate.getTime() - days * 24 * 60 * 60 * 1000)
+    const params = { dataType, fromDate: fromDate.toISOString(), toDate: toDate.toISOString() }
     try {
       if (format === 'csv') {
-        await analyticsApi.downloadCSV({ dataType, format: 'csv' })
+        await analyticsApi.downloadCSV({ ...params, format: 'csv' }, `${dataType}_last_${days}_days.csv`)
       } else {
-        await analyticsApi.downloadExcel({ dataType, format: 'excel' })
+        await analyticsApi.downloadExcel({ ...params, format: 'excel' }, `${dataType}_last_${days}_days.xlsx`)
       }
-      toast.success(`Exporting ${dataType} as ${format.toUpperCase()}…`)
+      toast.success(`Exported ${dataType} for the last ${days} days`)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Export failed'))
     } finally {
@@ -317,7 +322,7 @@ export function AdminDashboardPage() {
               </Button>
             ))}
           </div>
-          {user?.role !== 'curator' && <ExportPanel />}
+          {user?.role !== 'curator' && <ExportPanel days={rangeDays} />}
         </div>
       </div>
 

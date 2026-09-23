@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
+import { lookupByStringId } from '../../../abstractions/mongo-utils';
 import { IWithdrawalRequestRepository, ListWithdrawalsOptions, ListWithdrawalsResult, WithdrawalFinancialSummary, WithdrawalRewardSummary, WithdrawalStatusSummary } from '../../IWithdrawalRequest.repository';
 import { WithdrawalRequest } from '../../../entities';
 import { TransactionType, WithdrawalStatus } from '../../../../classes/enums';
@@ -574,4 +575,54 @@ async listWithdrawals(
   };
 }
 
+async findForExport(filters: {
+  from: Date;
+  to: Date;
+  state?: string;
+}): Promise<Record<string, unknown>[]> {
+  const { from, to, state } = filters;
+  return this._model
+    .aggregate([
+      { $match: { createdAt: { $gte: from, $lte: to } } },
+      { $sort: { createdAt: -1 } },
+      ...lookupByStringId('users', 'userId', 'u'),
+      ...(state ? [{ $match: { 'u.state': state } }] : []),
+      {
+        $lookup: {
+          from: 'transactions',
+          let: { wid: { $toString: '$_id' } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$referenceId', '$$wid'] },
+                    { $eq: ['$type', TransactionType.DEBIT] },
+                  ],
+                },
+              },
+            },
+            { $project: { rejectionReason: 1 } },
+            { $limit: 1 },
+          ],
+          as: 'tx',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: '$_id' },
+          mobileNumber: '$u.mobileNumber',
+          name: '$u.name',
+          amount: 1,
+          payoutMethod: 1,
+          status: 1,
+          createdAt: 1,
+          processedAt: 1,
+          rejectionReason: { $arrayElemAt: ['$tx.rejectionReason', 0] },
+        },
+      },
+    ])
+    .exec();
+}
 }

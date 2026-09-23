@@ -33,4 +33,7 @@ export interface ITransactionRepository extends BaseRepository<Transaction> {
   to: Date,
   state?: string,
 ): Promise<RewardTransactionSummary>;
+
+  /** Reward transactions (joined with user name/mobile) for CSV/Excel export. */
+  findRewardsForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
 }

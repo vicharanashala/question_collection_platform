@@ -314,3 +314,20 @@ export const includeFields = (
   fields: string[],
 ): Record<string, 0 | 1> =>
   Object.fromEntries(fields.map((f) => [f, 1]));
+
+export function lookupByStringId(from: string, localField: string, as: string) {
+  return [
+    {
+      $lookup: {
+        from,
+        let: { ref: { $toString: `$${localField}` } },
+        pipeline: [
+          { $match: { $expr: { $eq: [{ $toString: '$_id' }, '$$ref'] } } },
+          { $limit: 1 },
+        ],
+        as,
+      },
+    },
+    { $unwind: { path: `$${as}`, preserveNullAndEmptyArrays: true } },
+  ];
+}

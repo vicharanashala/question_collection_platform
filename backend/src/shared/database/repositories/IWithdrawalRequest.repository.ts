@@ -114,4 +114,7 @@ getStatusSummary(
 listWithdrawals(
   options: ListWithdrawalsOptions,
 ): Promise<ListWithdrawalsResult>;
+
+/** Flat rows (joined with user and debit-transaction rejection reason) for CSV/Excel export. */
+findForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
 }

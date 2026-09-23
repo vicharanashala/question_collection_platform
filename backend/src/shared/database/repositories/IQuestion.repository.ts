@@ -171,4 +171,7 @@ getDailyStatsSince(from: Date): Promise<Array<{
   approved: number;
   rejected: number;
 }>>;
+
+/** Flat rows (joined with submitter name/mobile) for CSV/Excel export. */
+  findForExport(filters: { from: Date; to: Date; state?: string; cropType?: string }): Promise<Record<string, unknown>[]>;
 }

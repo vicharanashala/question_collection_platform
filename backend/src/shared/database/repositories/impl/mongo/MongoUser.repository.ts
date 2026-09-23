@@ -1431,4 +1431,33 @@ export class MongoUserRepository
       ),
     };
   }
+
+  async findForExport(filters: {
+    from: Date;
+    to: Date;
+    state?: string;
+  }): Promise<Record<string, unknown>[]> {
+    const { from, to, state } = filters;
+    return this._model
+      .aggregate([
+        { $match: { createdAt: { $gte: from, $lte: to }, ...(state ? { state } : {}) } },
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: "$_id" },
+            mobileNumber: 1,
+            name: 1,
+            category: 1,
+            state: 1,
+            district: 1,
+            verificationStatus: 1,
+            role: 1,
+            createdAt: 1,
+            lastLoginAt: 1,
+          },
+        },
+      ])
+      .exec();
+  }
 }

@@ -3244,171 +3244,61 @@ await this.userRepo.save(user);
     const from = fromDate ? new Date(fromDate) : new Date(0);
     const to = toDate ? new Date(toDate) : new Date();
 
-    let rows: Record<string, unknown>[];
-    let columns: string[];
+    const COLUMNS: Record<NonNullable<ExportQueryDto["dataType"]>, string[]> = {
+      questions: [
+        "id", "mobileNumber", "name", "questionText", "language", "domains",
+        "cropType", "season", "state", "district", "mediaType", "status",
+        "submittedAt", "reviewedAt", "rejectionReason", "heldReason", "approvalReason",
+      ],
+      users: [
+        "id", "mobileNumber", "name", "category", "state", "district",
+        "verificationStatus", "role", "createdAt", "lastLoginAt",
+      ],
+      rewards: [
+        "id", "mobileNumber", "name", "amount", "type", "source",
+        "description", "status", "referenceId", "createdAt",
+      ],
+      withdrawals: [
+        "id", "mobileNumber", "name", "amount", "payoutMethod", "status",
+        "createdAt", "processedAt", "rejectionReason",
+      ],
+    };
+    const columns = COLUMNS[dataType];
 
-    if (dataType === "questions") {
-      const qb = this.questionRepo
-        .createQueryBuilder("q")
-        .leftJoinAndSelect("q.user", "u")
-        .select([
-          "q.id",
-          "u.mobileNumber",
-          "u.name",
-          "q.questionText",
-          "q.language",
-          "q.domains",
-          "q.cropType",
-          "q.season",
-          "q.state",
-          "q.district",
-          "q.mediaType",
-          "q.status",
-          "q.submittedAt",
-          "q.reviewedAt",
-          "q.rejectionReason",
-          "q.heldReason",
-          "q.approvalReason",
-        ])
-        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
-        .orderBy("q.submittedAt", "DESC");
-      if (state) qb.andWhere("q.state = :state", { state });
-      if (cropType) qb.andWhere("q.cropType = :cropType", { cropType });
-      rows = (await qb.getMany()) as unknown as Record<string, unknown>[];
-      columns = [
-        "id",
-        "mobileNumber",
-        "name",
-        "questionText",
-        "language",
-        "domains",
-        "cropType",
-        "season",
-        "state",
-        "district",
-        "mediaType",
-        "status",
-        "submittedAt",
-        "reviewedAt",
-        "rejectionReason",
-        "heldReason",
-        "approvalReason",
-      ];
-    } else if (dataType === "users") {
-      const qb = this.userRepo
-        .createQueryBuilder("u")
-        .select([
-          "u.id",
-          "u.mobileNumber",
-          "u.name",
-          "u.category",
-          "u.state",
-          "u.district",
-          "u.verificationStatus",
-          "u.role",
-          "u.createdAt",
-          "u.lastLoginAt",
-        ])
-        .where("u.createdAt BETWEEN :from AND :to", { from, to })
-        .orderBy("u.createdAt", "DESC");
-      if (state) qb.andWhere("u.state = :state", { state });
-      rows = (await qb.getMany()) as unknown as Record<string, unknown>[];
-      columns = [
-        "id",
-        "mobileNumber",
-        "name",
-        "category",
-        "state",
-        "district",
-        "verificationStatus",
-        "role",
-        "createdAt",
-        "lastLoginAt",
-      ];
-    } else if (dataType === "rewards") {
-      const qb = this.transactionRepo
-        .createQueryBuilder("tx")
-        .innerJoin("tx.wallet", "w")
-        .innerJoinAndSelect("w.user", "u")
-        .select([
-          "tx.id",
-          "u.mobileNumber",
-          "u.name",
-          "tx.amount",
-          "tx.type",
-          "tx.source",
-          "tx.description",
-          "tx.status",
-          "tx.referenceId",
-          "tx.createdAt",
-        ])
-        .where("tx.source = :source", { source: TransactionSource.REWARD })
-        .andWhere("tx.createdAt BETWEEN :from AND :to", { from, to })
-        .orderBy("tx.createdAt", "DESC");
-      if (state) qb.andWhere("u.state = :state", { state });
-      rows = (await qb.getMany()) as unknown as Record<string, unknown>[];
-      columns = [
-        "id",
-        "mobileNumber",
-        "name",
-        "amount",
-        "type",
-        "source",
-        "description",
-        "status",
-        "referenceId",
-        "createdAt",
-      ];
-    } else {
-      const qb = this.withdrawalRepo
-        .createQueryBuilder("wr")
-        .leftJoinAndSelect("wr.user", "u")
-        .leftJoin(
-          "Transaction",
-          "tx",
-          "tx.reference_id = CAST(wr.id AS varchar) AND tx.type = :debitType",
-          { debitType: TransactionType.DEBIT },
-        )
-        .select([
-          "wr.id",
-          "u.mobileNumber",
-          "u.name",
-          "wr.amount",
-          "wr.payoutMethod",
-          "wr.status",
-          "wr.createdAt",
-          "wr.processedAt",
-          "tx.rejectionReason",
-        ])
-        .where("wr.createdAt BETWEEN :from AND :to", { from, to })
-        .orderBy("wr.createdAt", "DESC");
-      if (state) qb.andWhere("u.state = :state", { state });
-      rows = (await qb.getMany()) as unknown as Record<string, unknown>[];
-      columns = [
-        "id",
-        "mobileNumber",
-        "name",
-        "amount",
-        "payoutMethod",
-        "status",
-        "createdAt",
-        "processedAt",
-        "rejectionReason",
-      ];
-    }
+    const filters = { from, to, state };
+    const rawRows =
+      dataType === "questions"
+        ? await this.questionRepo.findForExport({ ...filters, cropType })
+        : dataType === "users"
+          ? await this.userRepo.findForExport(filters)
+          : dataType === "rewards"
+            ? await this.transactionRepo.findRewardsForExport(filters)
+            : await this.withdrawalRepo.findForExport(filters);
+
+    // Flatten to plain strings/numbers so CSV and Excel cells are readable
+    const rows = rawRows.map((row) =>
+      Object.fromEntries(
+        columns.map((col) => {
+          const v = row[col];
+          if (v == null) return [col, ""];
+          if (v instanceof Date) return [col, v.toISOString()];
+          if (Array.isArray(v)) return [col, v.join(", ")];
+          if (typeof v === "number") return [col, v];
+          return [col, String(v)];
+        }),
+      ),
+    );
 
     if (format === "csv") {
       return { format: "csv", data: this.toCSV(rows, columns) };
     }
 
-    // Excel via json2xls
+    // json2xls reads column types from the first row, so it needs at least one
     const json2xls = require("json2xls");
-    const xls = json2xls(rows, {
-      fields: columns.reduce(
-        (acc, col) => ({ ...acc, [col]: col }),
-        {} as Record<string, string>,
-      ),
-    });
+    const xls = json2xls(
+      rows.length ? rows : [Object.fromEntries(columns.map((c) => [c, ""]))],
+      { fields: columns },
+    );
     return { format: "excel", xls: xls as unknown as string };
   }
 

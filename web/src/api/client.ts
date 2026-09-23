@@ -572,17 +572,15 @@ export const analyticsApi = {
     URL.revokeObjectURL(url)
   },
 
-  downloadCSV: (params: ExportParams) => {
+  downloadCSV: (params: ExportParams, filename = `export_${Date.now()}.csv`) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    const filename = `export_${Date.now()}.csv`
     return analyticsApi._download(`/export/csv${qs ? `?${qs}` : ''}`, filename)
   },
 
-  downloadExcel: (params: ExportParams) => {
+  downloadExcel: (params: ExportParams, filename = `export_${Date.now()}.xlsx`) => {
     const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
     const qs = new URLSearchParams(p).toString()
-    const filename = `export_${Date.now()}.xlsx`
     return analyticsApi._download(`/export/excel${qs ? `?${qs}` : ''}`, filename)
   },
 }
