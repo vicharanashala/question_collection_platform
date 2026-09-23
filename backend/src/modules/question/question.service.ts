@@ -654,6 +654,7 @@ export class QuestionService {
         cropType: inferred.crop,
         season,
         questionText: dto.questionText,
+        englishQuestionText,
         mediaType: dto.mediaType ?? 'none',
         mediaUrls: dto.mediaUrls ?? [],
         agroClimaticZone,
@@ -721,6 +722,7 @@ export class QuestionService {
         cropType: inferred.crop,
         season,
         questionText: dto.questionText,
+        englishQuestionText,
         mediaType: dto.mediaType ?? 'none',
         mediaUrls: dto.mediaUrls ?? [],
         agroClimaticZone,
@@ -751,6 +753,7 @@ export class QuestionService {
       season,
 
       questionText: dto.questionText,
+      englishQuestionText,
       mediaType: dto.mediaType ?? 'none',
       mediaUrls: dto.mediaUrls ?? [],
 
