@@ -545,9 +545,10 @@ export function PublicProfilePage() {
               icon={MessageSquarePlus}
               label={t('profile.contactAdmin')}
               onClick={() => {
-                const email = (import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined
+                const email = ((import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined)?.trim()
                 if (!email) { toast.error('Support email not configured.'); return }
-                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent('AnnaDatha Support')}`, '_blank', 'noopener,noreferrer')
+                // mailto keeps the recipient on every platform; Gmail compose URLs drop it when Gmail redirects to sign-in or the account chooser.
+                window.location.href = `mailto:${email}?subject=${encodeURIComponent('AnnaDatha Support')}`
               }}
             />
           </CardContent>
