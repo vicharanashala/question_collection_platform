@@ -114,7 +114,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
               {initials}
             </div>
             {user?.name && (
-              <span className="text-xs sm:text-xs sm:text-sm font-medium text-text hidden sm:block">{user.name}</span>
+              <span className="text-xs sm:text-xs sm:text-sm font-medium text-text hidden sm:block truncate max-w-[150px]">{user.name}</span>
             )}
           </button>
 
