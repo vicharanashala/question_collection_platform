@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { MessageCircleQuestion, Sprout, Leaf, Bug, Microscope, type LucideIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
+import { cn } from '@/lib/utils'
 import type { AgriEntityType } from '@/types'
 
 export type SubmissionTab = 'question' | AgriEntityType
@@ -22,20 +23,22 @@ const SUBMISSION_TAB_ICONS: Record<SubmissionTab, LucideIcon> = {
 interface SubmissionTypeTabsProps {
   value: SubmissionTab
   onChange: (tab: SubmissionTab) => void
+  /** Hide the Question tab where only crop / weed / pest / disease apply. */
+  showQuestion?: boolean
 }
 
 /** Tab strip switching between question and crop / weed / pest / disease. */
-export function SubmissionTypeTabs({ value, onChange }: SubmissionTypeTabsProps) {
+export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: SubmissionTypeTabsProps) {
   const { t } = useTranslation()
   const tabs: { value: SubmissionTab; label: string }[] = [
-    { value: 'question', label: t('agriEntity.tabs.question', 'Question') },
+    ...(showQuestion ? [{ value: 'question' as const, label: t('agriEntity.tabs.question', 'Question') }] : []),
     ...AGRI_ENTITY_TYPES.map((type) => ({ value: type.value, label: t(`agriEntity.tabs.${type.value}`, type.label) })),
   ]
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as SubmissionTab)}>
-      {/* Five equal columns so every tab stays visible without horizontal
+      {/* Equal columns so every tab stays visible without horizontal
           scrolling: icon stacked over the label on phones, inline from sm up. */}
-      <TabsList className="grid h-auto w-full grid-cols-5 gap-1 p-1">
+      <TabsList className={cn('grid h-auto w-full gap-1 p-1', showQuestion ? 'grid-cols-5' : 'grid-cols-4')}>
         {tabs.map((tab) => {
           const Icon = SUBMISSION_TAB_ICONS[tab.value]
           return (

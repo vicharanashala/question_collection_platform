@@ -1,6 +1,9 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
+import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
+import { Roles } from '../../shared/middleware/decorators/roles.decorator';
+import { UserRole } from '../../shared/classes/enums';
 import { AgriEntitiesService } from './agri-entities.service';
 import { ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 
@@ -17,6 +20,14 @@ export class AgriEntitiesController {
   @Get()
   async listMine(@Query() dto: ListAgriEntitiesDto, @Req() req: AuthenticatedRequest) {
     return this.agriEntitiesService.listMine(req.user.id, dto);
+  }
+
+  // GET /agri-entities/all — every user's submissions, for staff review.
+  @Get('all')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.CURATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  async listAll(@Query() dto: ListAgriEntitiesDto) {
+    return this.agriEntitiesService.listAll(dto);
   }
 
   // POST /agri-entities — submit a crop, weed, pest or disease record.

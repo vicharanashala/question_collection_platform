@@ -23,15 +23,18 @@ const buildDto = (overrides: Partial<SubmitAgriEntityDto> = {}): SubmitAgriEntit
 describe('AgriEntitiesService', () => {
   let service: AgriEntitiesService;
   const repo = { create: jest.fn(), findAndCount: jest.fn() };
+  const userRepo = { findByIds: jest.fn() };
 
   beforeEach(async () => {
     repo.create.mockReset();
     repo.findAndCount.mockReset();
+    userRepo.findByIds.mockReset();
     repo.create.mockImplementation((data) => Promise.resolve({ id: 'entity-1', ...data }));
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AgriEntitiesService,
         { provide: REPOSITORY_TOKENS.AgriEntity, useValue: repo },
+        { provide: REPOSITORY_TOKENS.User, useValue: userRepo },
       ],
     }).compile();
     service = module.get(AgriEntitiesService);
@@ -98,5 +101,27 @@ describe('AgriEntitiesService', () => {
       { userId: USER_ID },
       { pagination: { page: 1, limit: 20, sort: { createdAt: -1 } } },
     );
+  });
+
+  it("lists every user's submissions with the submitter attached", async () => {
+    const OTHER_ID = '22222222-2222-2222-2222-222222222222';
+    repo.findAndCount.mockResolvedValue({
+      data: [{ id: 'e1', userId: USER_ID }, { id: 'e2', userId: OTHER_ID }],
+      total: 2, page: 1, limit: 20, totalPages: 1,
+    });
+    userRepo.findByIds.mockResolvedValue([{ id: USER_ID, name: 'Ravi', username: 'ravi' }]);
+
+    const result = await service.listAll({ type: AgriEntityType.PEST });
+
+    expect(repo.findAndCount).toHaveBeenCalledWith(
+      { type: AgriEntityType.PEST },
+      { pagination: { page: 1, limit: 20, sort: { createdAt: -1 } } },
+    );
+    expect(userRepo.findByIds).toHaveBeenCalledWith([USER_ID, OTHER_ID]);
+    expect(result.items).toEqual([
+      { id: 'e1', userId: USER_ID, submitter: { id: USER_ID, name: 'Ravi', username: 'ravi' } },
+      { id: 'e2', userId: OTHER_ID, submitter: null },
+    ]);
+    expect(result).toMatchObject({ total: 2, page: 1, limit: 20, pages: 1 });
   });
 });

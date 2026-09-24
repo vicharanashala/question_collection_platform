@@ -714,6 +714,14 @@ export interface AgriEntitySubmission {
   status: AgriEntityStatus;
   createdAt: string;
   updatedAt: string;
+  /** Present only in the staff listing; null when the user no longer exists. */
+  submitter?: AgriEntitySubmitter | null;
+}
+
+export interface AgriEntitySubmitter {
+  id: string;
+  name: string;
+  username: string | null;
 }
 
 export interface SubmitAgriEntityResponse {

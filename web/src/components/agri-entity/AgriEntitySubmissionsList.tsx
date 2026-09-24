@@ -12,7 +12,7 @@ import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagin
 import { useRelativeTime } from '@/components/submissions/useRelativeTime'
 import type { AgriEntityStatus, AgriEntitySubmission, AgriEntityType } from '@/types'
 import { AgriEntityDetailModal } from './AgriEntityDetailModal'
-import { agriEntityStatusBadge, agriEntityStatusLabel } from './agriEntityStatus'
+import { agriEntityStatusBadge, agriEntityStatusLabel, submitterName } from './agriEntityStatus'
 
 const PAGE_SIZE = 20
 
@@ -20,10 +20,12 @@ interface AgriEntitySubmissionsListProps {
   type: AgriEntityType
   /** Translated type name, e.g. "Weed". */
   typeLabel: string
+  /** "mine" = the signed-in user's records; "all" = every user's, for staff. */
+  scope?: 'mine' | 'all'
 }
 
-/** The signed-in user's crop / weed / pest / disease submissions of one type. */
-export function AgriEntitySubmissionsList({ type, typeLabel }: AgriEntitySubmissionsListProps) {
+/** Crop / weed / pest / disease submissions of one type. */
+export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: AgriEntitySubmissionsListProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const formatDate = useRelativeTime()
@@ -44,8 +46,8 @@ export function AgriEntitySubmissionsList({ type, typeLabel }: AgriEntitySubmiss
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    agriEntityApi
-      .listMine({ type, status: status || undefined, page, limit: PAGE_SIZE })
+    const list = scope === 'all' ? agriEntityApi.listAll : agriEntityApi.listMine
+    list({ type, status: status || undefined, page, limit: PAGE_SIZE })
       .then((res) => {
         if (cancelled) return
         setItems(res.items ?? [])
@@ -60,7 +62,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel }: AgriEntitySubmiss
     return () => {
       cancelled = true
     }
-  }, [type, status, page, t])
+  }, [type, status, page, scope, t])
 
   return (
     <>
@@ -75,9 +77,11 @@ export function AgriEntitySubmissionsList({ type, typeLabel }: AgriEntitySubmiss
               <p className="text-xs sm:text-sm font-medium text-text-secondary">
                 {t('agriEntity.noSubmissions', { type: typeLabel.toLowerCase(), defaultValue: 'No {{type}} submissions yet' })}
               </p>
-              <Button onClick={() => navigate(`/home/ask?tab=${type}`)} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
-                <Plus className="h-4 w-4" /> {t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}
-              </Button>
+              {scope === 'mine' && (
+                <Button onClick={() => navigate(`/home/ask?tab=${type}`)} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
+                  <Plus className="h-4 w-4" /> {t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}
+                </Button>
+              )}
             </div>
           ) : (
             <ul className="divide-y divide-border-subtle">
@@ -112,6 +116,12 @@ export function AgriEntitySubmissionsList({ type, typeLabel }: AgriEntitySubmiss
                         </span>
                         <span>·</span>
                         <span>{formatDate(item.createdAt)}</span>
+                        {scope === 'all' && (
+                          <>
+                            <span>·</span>
+                            <span className="truncate">{submitterName(item)}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

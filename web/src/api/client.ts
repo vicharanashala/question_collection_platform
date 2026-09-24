@@ -1076,6 +1076,14 @@ export const agriEntityApi = {
     ).toString()
     return request<PaginatedResponse<AgriEntitySubmission>>(`/agri-entities${qs ? `?${qs}` : ''}`, {}, false)
   },
+
+  /** Staff only (curator, admin, super admin): every user's submissions, with the submitter attached. */
+  listAll: (params: { type?: AgriEntityType; status?: AgriEntityStatus; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+    ).toString()
+    return request<PaginatedResponse<AgriEntitySubmission>>(`/agri-entities/all${qs ? `?${qs}` : ''}`, {}, false)
+  },
 }
 
 // ─── FAQ API ──────────────────────────────────────────────────────────────────

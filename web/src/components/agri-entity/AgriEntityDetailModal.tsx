@@ -6,7 +6,7 @@ import { ImageIcon, Tags, BookOpen } from 'lucide-react'
 import { cn, formatDateTime } from '@/lib/utils'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import type { AgriEntitySubmission } from '@/types'
-import { agriEntityStatusBadge, agriEntityStatusLabel } from './agriEntityStatus'
+import { agriEntityStatusBadge, agriEntityStatusLabel, submitterName } from './agriEntityStatus'
 
 interface AgriEntityDetailModalProps {
   /** Submission to show; null closes the dialog. */
@@ -29,7 +29,9 @@ export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModal
             <DialogHeader className="sticky top-0 z-10 border-b border-border-subtle bg-surface px-4 py-3 sm:px-5">
               <div className="flex items-center justify-between gap-2">
                 <DialogTitle className="text-base sm:text-lg font-extrabold leading-tight text-foreground">
-                  {t('agriEntity.yourSubmission', { type: typeLabel, defaultValue: 'Your {{type}} submission' })}
+                  {entity.submitter === undefined
+                    ? t('agriEntity.yourSubmission', { type: typeLabel, defaultValue: 'Your {{type}} submission' })
+                    : t('agriEntity.submissionTitle', { type: typeLabel, defaultValue: '{{type}} submission' })}
                 </DialogTitle>
                 <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(entity.status))}>
                   {agriEntityStatusLabel(t, entity.status)}
@@ -37,6 +39,7 @@ export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModal
               </div>
               <p className="mt-0.5 text-[11px] sm:text-xs text-text-tertiary">
                 {t('submissions.submitted')} {formatDateTime(entity.createdAt)}
+                {entity.submitter !== undefined && <> · {submitterName(entity)}</>}
               </p>
             </DialogHeader>
 
