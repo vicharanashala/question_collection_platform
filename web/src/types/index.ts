@@ -690,3 +690,50 @@ export interface DistributorStats {
   indianStatesTotal: number;
   byState: { state: string; count: number }[];
 }
+export type AgriEntityType = 'crop' | 'weed' | 'pest' | 'disease';
+
+export interface AgriEntityAlternateName {
+  name: string;
+  source: string;
+}
+
+export interface SubmitAgriEntityPayload {
+  type: AgriEntityType;
+  localName: string;
+  englishName: string;
+  botanicalName: string;
+  localNameSource: string;
+  alternateNames: AgriEntityAlternateName[];
+  imageUrls: string[];
+}
+
+export type AgriEntityStatus = 'pending' | 'approved' | 'rejected';
+
+/** A crop / weed / pest / disease record as returned to its submitter. imageUrls are signed URLs. */
+export interface AgriEntitySubmission {
+  id: string;
+  type: AgriEntityType;
+  localName: string;
+  englishName: string;
+  botanicalName: string;
+  localNameSource: string;
+  alternateNames: AgriEntityAlternateName[];
+  imageUrls: string[];
+  status: AgriEntityStatus;
+  createdAt: string;
+  updatedAt: string;
+  /** Present only in the staff listing; null when the user no longer exists. */
+  submitter?: AgriEntitySubmitter | null;
+}
+
+export interface AgriEntitySubmitter {
+  id: string;
+  name: string;
+  username: string | null;
+}
+
+export interface SubmitAgriEntityResponse {
+  id: string;
+  status: string;
+  message: string;
+}
