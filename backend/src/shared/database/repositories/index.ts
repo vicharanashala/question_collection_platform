@@ -23,7 +23,7 @@ export { IReportRepository } from './IReport.repository';
 export { IReportReplyRepository } from './IReportReply.repository';
 export { IFaqRepository } from './IFaq.repository';
 export { IFinalQuestionRepository } from './IFinalQuestion.repository';
-
+export { IAnveshanCandidateRepository } from './IAnveshCandidate.repository'
 // ─── Repository Tokens ────────────────────────────────────────────────────
 
 export const REPOSITORY_TOKENS = {
@@ -41,6 +41,7 @@ export const REPOSITORY_TOKENS = {
   ReportReply:       'REPOSITORY_ReportReply',
   Faq:               'REPOSITORY_Faq',
   FinalQuestion:     'REPOSITORY_FinalQuestion',
+  Candidate: 'REPOSITORY_AnveshanCandidate'
 } as const;
 
 // ─── Concrete implementations (MongoDB only) ──────────────────────────────
@@ -59,7 +60,7 @@ import { MongoReportRepository } from './impl/mongo/MongoReport.repository';
 import { MongoReportReplyRepository } from './impl/mongo/MongoReportReply.repository';
 import { MongoFaqRepository } from './impl/mongo/MongoFaq.repository';
 import { MongoFinalQuestionRepository } from './impl/mongo/MongoFinalQuestion.repository';
-
+import { MongoAnveshCandidateRepository } from './impl/mongo/MongoAnveshCandidate.repository';
 // ─── Build Repository Providers ───────────────────────────────────────────
 
 /**
@@ -84,5 +85,6 @@ export function buildRepositoryProviders(): Provider[] {
     { provide: REPOSITORY_TOKENS.ReportReply,       useClass: MongoReportReplyRepository },
     { provide: REPOSITORY_TOKENS.Faq,               useClass: MongoFaqRepository },
     { provide: REPOSITORY_TOKENS.FinalQuestion,     useClass: MongoFinalQuestionRepository },
+    {provide: REPOSITORY_TOKENS.Candidate,          useClass: MongoAnveshCandidateRepository}
   ];
 }

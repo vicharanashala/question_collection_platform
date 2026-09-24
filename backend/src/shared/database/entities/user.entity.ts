@@ -209,4 +209,7 @@ export class User {
 
   @Column({name:"is_admin_created_profile_completed", type: "boolean", default: false })
   profileCreatedByAdminCompleted: boolean
+
+  @Column({name: "anveshan_user", type: "boolean", default: false})
+  isAnveshanUser: boolean
 }
