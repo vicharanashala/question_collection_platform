@@ -380,27 +380,24 @@ await this.userRepo.save(user);
     return { user: this.toPublicUser(user) };
   }
 
-  async listUsers(dto: ListUsersDto) {
-    const {
-      page = 1,
-      limit = 20,
-      state,
-      category,
-      status,
-      search,
-      sortBy = "createdAt",
-      sortOrder = "DESC",
-    } = dto;
+async listUsers(dto: ListUsersDto) {
+  const {
+    page = 1,
+    limit = 20,
+    state,
+    category,
+    status,
+    role,          // ← destructure it
+    search,
+    sortBy = "createdAt",
+    sortOrder = "DESC",
+  } = dto;
 
-    // Built as a native Mongo filter rather than via createQueryBuilder().andWhere(<SQL string>) —
-    // the query builder's SQL-string translator only recognizes a handful of exact patterns
-    // (=, >=, <=, IN, LIKE/ILIKE); "!=" and multi-field "(...OR...)" clauses silently fall through
-    // to a broken fallback that produces an unmatchable filter key, so those conditions used to
-    // zero out the entire result set (e.g. excludeId, which the admin UI always sends).
-    const filter: Record<string, unknown> = {};
-    if (state) filter.state = state;
-    if (category) filter.category = category;
-    if (status) filter.verificationStatus = status;
+  const filter: Record<string, unknown> = {};
+  if (state) filter.state = state;
+  if (category) filter.category = category;
+  if (status) filter.verificationStatus = status;
+  if (role) filter.role = role;   // ← apply it
     if (search) {
       const regex = { $regex: search, $options: "i" };
       filter.$or = [
