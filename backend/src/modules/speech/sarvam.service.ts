@@ -3,7 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
 import * as FormData from 'form-data';
 import { execSync } from 'child_process';
-import { writeFileSync, unlinkSync, readFileSync } from 'fs';
+import {
+  writeFileSync,
+  unlinkSync,
+  readFileSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+} from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -46,8 +53,8 @@ export class SarvamService {
    *
    * Process:
    *  1. Convert to 16 kHz mono 16-bit PCM WAV via ffmpeg / afconvert.
-   *  2. Probe duration with ffprobe; reject if < 0.5 s or > 60 s.
-   *  3. If > 30 s, split into non-overlapping 30 s chunks and transcribe
+   *  2. Probe duration with ffprobe; reject if < 0.5 s.
+   *  3. If > 29 s, split into non-overlapping 29 s chunks and transcribe
    *     each sequentially, concatenating the results.
    *  4. Call Sarvam STT API with model="saaras:v3" and mode="transcribe".
    */
@@ -80,8 +87,9 @@ export class SarvamService {
       );
     }
 
-    // Step 3 – Chunk if > 5 min so Sarvam receives manageable segments.
-    const MAX_CHUNK_SEC = 5 * 60;
+    // Step 3 – Sarvam's synchronous REST STT rejects audio longer than 30 s,
+    // so longer recordings are split into chunks just under that limit.
+    const MAX_CHUNK_SEC = 29;
     if (durationSec <= MAX_CHUNK_SEC) {
       return this.callSarvamStt(wavBuffer, filename, languageCode);
     }
@@ -139,6 +147,11 @@ export class SarvamService {
 
     // Convert to 16 kHz mono WAV if needed.
     const wavBuffer = await this.toWav(buffer, filename, mimeType);
+
+    // 16 kHz mono 16-bit PCM = 32 000 B/s; the sync API rejects audio over 30 s.
+    if (wavBuffer.length > 29 * 32_000) {
+      return this.transcribeFile(wavBuffer, 'audio.wav', 'audio/wav', languageCode);
+    }
 
     let attempt = 0;
     const maxAttempts = 3;
@@ -421,31 +434,23 @@ export class SarvamService {
    * using ffmpeg's segment muxer for byte-accurate cuts at WAV packet boundaries.
    */
   private async splitAudio(buffer: Buffer, maxSec: number): Promise<Buffer[]> {
-    const tmpInput = join(tmpdir(), `split_${Date.now()}_in.wav`);
-    const tmpDir = join(tmpdir(), `split_${Date.now()}_chunks`);
+    const tmpDir = mkdtempSync(join(tmpdir(), 'split_'));
+    const tmpInput = join(tmpDir, 'in.wav');
 
     try {
       writeFileSync(tmpInput, buffer);
-      execSync(`mkdir -p "${tmpDir}"`, { stdio: 'pipe' });
 
       execSync(
-        `ffmpeg -y -i "${tmpInput}" -f segment -segment_time ${maxSec} -c copy "${tmpDir}/chunk_%03d.wav"`,
+        `ffmpeg -y -i "${tmpInput}" -f segment -segment_time ${maxSec} -c copy "${join(tmpDir, 'chunk_%03d.wav')}"`,
         { timeout: 60_000, stdio: 'pipe' },
       );
 
-      const files = execSync(
-        `ls -1 "${tmpDir}"/chunk_*.wav | sort -V`,
-        { stdio: 'pipe' },
-      )
-        .toString()
-        .trim()
-        .split('\n')
-        .filter(Boolean);
-
-      return files.map((f) => readFileSync(f));
+      return readdirSync(tmpDir)
+        .filter((f) => /^chunk_\d+\.wav$/.test(f))
+        .sort()
+        .map((f) => readFileSync(join(tmpDir, f)));
     } finally {
-      try { unlinkSync(tmpInput); } catch { /* ignore */ }
-      try { execSync(`rm -rf "${tmpDir}"`, { stdio: 'pipe' }); } catch { /* ignore */ }
+      try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* ignore */ }
     }
   }
 

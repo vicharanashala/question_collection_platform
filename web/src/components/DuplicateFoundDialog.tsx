@@ -46,7 +46,7 @@ export function DuplicateFoundDialog({ duplicate, onOpenChange, onTryAnother, on
         <div className="max-h-[45vh] overflow-y-auto px-6 py-5">
           <div className="rounded-lg border border-border-subtle bg-surface-variant/50 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-              {t('question.yourQuestion')}
+              {t('question.duplicate.existingQuestion', 'Existing Question')}
             </p>
             <p className="mt-1 text-sm font-semibold leading-relaxed text-foreground">
               {duplicate?.matchedQuestion}

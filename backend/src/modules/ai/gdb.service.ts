@@ -187,6 +187,67 @@ export class GdbService {
     };
   }
 
+  /**
+   * Calls GDB's own `/v1/translate/to-english` endpoint directly (Claude-based
+   * translation; preserves agricultural terminology and crop names). This is
+   * independent of `checkDuplicate`'s Sarvam-based translation below — it exists
+   * as a standalone entry point for callers who want GDB's translation specifically.
+   *
+   * Fails open: any network, HTTP or parse error returns the original text rather
+   * than blocking the caller. Skipped entirely in local development — GDB only
+   * runs on the deployed VM.
+   */
+  async translateToEnglish(text: string): Promise<string> {
+    if (isDevelopment()) {
+      this.logger.debug('[GDB] translateToEnglish skipped — development environment');
+      return text;
+    }
+
+    const baseUrl = this.configService.get<string>('gdb.baseUrl')!;
+    const apiKey = this.configService.get<string>('gdb.apiKey')!;
+
+    const url = `${baseUrl}/v1/translate/to-english`;
+    this.logger.debug(`[GDB] translate/to-english → ${url}`);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        },
+        body: JSON.stringify({ text }),
+      });
+    } catch (err) {
+      this.logger.error(`[GDB] translate network error: ${err}`);
+      return text;
+    }
+
+    let responseText = '';
+    try {
+      responseText = await response.text();
+      this.logger.debug(`[GDB] translate raw response (${response.status}): ${responseText.slice(0, 500)}`);
+    } catch (err) {
+      this.logger.error(`[GDB] translate failed to read response body: ${err}`);
+      return text;
+    }
+
+    if (!response.ok) {
+      this.logger.warn(`[GDB] translate HTTP ${response.status}`);
+      return text;
+    }
+
+    try {
+      const parsed = JSON.parse(responseText) as { translated_text?: string };
+      const result = parsed.translated_text?.trim() || text;
+      return result;
+    } catch (err) {
+      this.logger.error(`[GDB] translate non-JSON response body: ${responseText.slice(0, 200)}`);
+      return text;
+    }
+  }
+
   // ─── Private helpers ─────────────────────────────────────────────────────────
 
   /**

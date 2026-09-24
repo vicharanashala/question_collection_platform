@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { IWithdrawalRequestRepository, ListWithdrawalsOptions, ListWithdrawalsResult, WithdrawalFinancialSummary, WithdrawalRewardSummary } from '../../IWithdrawalRequest.repository';
+import { lookupByStringId } from '../../../abstractions/mongo-utils';
+import { IWithdrawalRequestRepository, ListWithdrawalsOptions, ListWithdrawalsResult, WithdrawalFinancialSummary, WithdrawalRewardSummary, WithdrawalStatusSummary } from '../../IWithdrawalRequest.repository';
 import { WithdrawalRequest } from '../../../entities';
 import { TransactionType, WithdrawalStatus } from '../../../../classes/enums';
 
@@ -243,6 +244,37 @@ export class MongoWithdrawalRequestRepository
         amount: Number(item.amount ?? 0),
       }),
     ),
+  };
+}
+
+async getStatusSummary(
+  from: Date,
+  to: Date,
+): Promise<WithdrawalStatusSummary> {
+  const countWhere = (status: WithdrawalStatus) => ({
+    $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] },
+  });
+
+  const [result] = await this._model.aggregate([
+    { $match: { createdAt: { $gte: from, $lte: to } } },
+    {
+      $group: {
+        _id: null,
+        totalWithdrawn: { $sum: '$amount' },
+        withdrawalCount: { $sum: 1 },
+        pending: countWhere(WithdrawalStatus.PENDING),
+        completed: countWhere(WithdrawalStatus.COMPLETED),
+        failed: countWhere(WithdrawalStatus.FAILED),
+      },
+    },
+  ]);
+
+  return {
+    totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
+    withdrawalCount: Number(result?.withdrawalCount ?? 0),
+    pending: Number(result?.pending ?? 0),
+    completed: Number(result?.completed ?? 0),
+    failed: Number(result?.failed ?? 0),
   };
 }
 
@@ -543,4 +575,54 @@ async listWithdrawals(
   };
 }
 
+async findForExport(filters: {
+  from: Date;
+  to: Date;
+  state?: string;
+}): Promise<Record<string, unknown>[]> {
+  const { from, to, state } = filters;
+  return this._model
+    .aggregate([
+      { $match: { createdAt: { $gte: from, $lte: to } } },
+      { $sort: { createdAt: -1 } },
+      ...lookupByStringId('users', 'userId', 'u'),
+      ...(state ? [{ $match: { 'u.state': state } }] : []),
+      {
+        $lookup: {
+          from: 'transactions',
+          let: { wid: { $toString: '$_id' } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$referenceId', '$$wid'] },
+                    { $eq: ['$type', TransactionType.DEBIT] },
+                  ],
+                },
+              },
+            },
+            { $project: { rejectionReason: 1 } },
+            { $limit: 1 },
+          ],
+          as: 'tx',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: '$_id' },
+          mobileNumber: '$u.mobileNumber',
+          name: '$u.name',
+          amount: 1,
+          payoutMethod: 1,
+          status: 1,
+          createdAt: 1,
+          processedAt: 1,
+          rejectionReason: { $arrayElemAt: ['$tx.rejectionReason', 0] },
+        },
+      },
+    ])
+    .exec();
+}
 }

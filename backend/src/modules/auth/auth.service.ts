@@ -142,17 +142,19 @@ export class AuthService {
           "This number is not registered on the platform. Please use the mobile app to sign up.",
         );
       }
-      if (
-        user.role !== UserRole.ADMIN &&
-        user.role !== UserRole.SUPER_ADMIN &&
-        user.role !== UserRole.CURATOR &&
-        user.role !== UserRole.FINANCE &&
-        user.role !== UserRole.DISTRIBUTOR
-      ) {
-        throw new ForbiddenException(
-          "Only admin, curator, finance, and distributor accounts can access the web portal. Please use the mobile app.",
-        );
-      }
+      
+      // if (
+      //   user.role !== UserRole.ADMIN &&
+      //   user.role !== UserRole.SUPER_ADMIN &&
+      //   user.role !== UserRole.CURATOR &&
+      //   user.role !== UserRole.FINANCE &&
+      //   user.role !== UserRole.DISTRIBUTOR
+      // ) {
+      //   throw new ForbiddenException(
+      //     'Only admin, curator, finance, and distributor accounts can access the web portal. Please use the mobile app.',
+      //   );
+      // }
+
       if (user.verificationStatus !== VerificationStatus.VERIFIED) {
         throw new ForbiddenException(
           "Your account is not yet verified. Please complete mobile app verification first.",

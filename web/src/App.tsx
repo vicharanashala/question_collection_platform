@@ -99,7 +99,8 @@ function RootGate({ children }: { children: React.ReactNode }) {
 
 /**
  * Public-side guard: must be authenticated AND must be role="user". Staff
- * (admin/super_admin/curator/etc.) get bounced to the staff dashboard.
+ * (admin/super_admin/curator/etc.) get bounced to the staff dashboard, and
+ * accounts still awaiting admin verification are held on the pending screen.
  */
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth()
@@ -113,6 +114,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) return null
   if (!isAuthenticated && !postOtpNeedingProfile) return <Navigate to="/login" replace />
   if (user?.role && user.role !== 'user') return <Navigate to="/dashboard" replace />
+  // Accounts an admin has not approved yet stay on the pending screen. The backend
+  // rejects their submissions, so the rest of the public app would only dead-end.
+  if (user?.verificationStatus && user.verificationStatus !== 'verified') {
+    return <Navigate to="/home/verification-pending" replace />
+  }
   return <>{children}</>
 }
 

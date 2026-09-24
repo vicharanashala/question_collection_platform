@@ -114,7 +114,7 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
         <div className="relative" ref={menuRef}>
           <button onClick={() => setProfileOpen((o) => !o)} className="flex items-center gap-2 rounded-md p-1.5 hover:bg-surface-variant transition-colors">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">{initials}</div>
-            {user?.name && <span className="text-xs sm:text-xs sm:text-sm font-medium text-foreground hidden sm:block">{user.name}</span>}
+            {user?.name && <span className="text-xs sm:text-xs sm:text-sm font-medium text-foreground hidden sm:block truncate max-w-[150px]">{user.name}</span>}
           </button>
           {profileOpen && (
             <div className="absolute right-0 top-full mt-1.5 w-52 rounded-lg border border-border-subtle bg-white shadow-lg z-50 overflow-hidden dark:bg-surface">

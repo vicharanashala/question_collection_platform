@@ -8,11 +8,12 @@ import { authApi } from '@/api/client'
 import { toast } from 'sonner'
 
 /**
- * Shown immediately after a public user successfully registers.
- * The backend sets `verificationStatus = 'pending'` for new users.
- * Pressing "Continue" calls /auth/me; if the admin has already verified
- * the user we route them into the public app, otherwise we let them in
- * with the still-pending status (questions can still be submitted).
+ * Shown while a public user waits for admin approval, and the only page such an
+ * account can reach — `PublicRoute` redirects the rest of `/home` here until
+ * `verificationStatus` is `verified`.
+ *
+ * Pressing the button calls /auth/me; the user is routed into the public app only
+ * once the admin has verified them, otherwise they stay here.
  *
  * All UI text is translated via the i18n namespace `verificationPending.*`.
  * When the user picks a language in the profile-completion wizard's Step 4,
@@ -21,7 +22,7 @@ import { toast } from 'sonner'
  */
 export function PublicVerificationPendingPage() {
   const navigate = useNavigate()
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, logout } = useAuth()
   const { t } = useTranslation()
   const [status, setStatus] = useState<string>(user?.verificationStatus ?? 'pending')
   const [checking, setChecking] = useState(false)
@@ -29,8 +30,16 @@ export function PublicVerificationPendingPage() {
   useEffect(() => {
     if (!user) { navigate('/login', { replace: true }); return }
     if (user.role !== 'user') { navigate('/dashboard', { replace: true }); return }
+    if (user.verificationStatus === 'verified') { navigate('/home', { replace: true }) }
   }, [user, navigate])
 
+  /** Signs the pending account out so a different account can be used from this screen. */
+  function handleLogout() {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
+  /** Re-reads the account from /auth/me and enters the app only once it is verified. */
   async function checkNow() {
     setChecking(true)
     try {
@@ -39,12 +48,12 @@ export function PublicVerificationPendingPage() {
       setStatus(fresh.verificationStatus ?? 'pending')
       if (fresh.verificationStatus === 'verified') {
         toast.success(t('verificationPending.toastVerified'))
+        navigate('/home', { replace: true })
+        return
       }
-      navigate('/home', { replace: true })
+      toast.info(t('verificationPending.statusNote'))
     } catch {
       toast.error(t('verificationPending.toastCheckFailed'))
-      // Still let them in — the dashboard will just show pending state.
-      navigate('/home', { replace: true })
     } finally {
       setChecking(false)
     }
@@ -58,7 +67,7 @@ export function PublicVerificationPendingPage() {
         </div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">{t('verificationPending.welcomeHeading')}</h1>
         <p className="mt-2 text-xs sm:text-xs sm:text-sm text-text-secondary">
-          {t('verificationPending.welcomeDescription')}
+          {t('verificationPending.subtitle')}
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-3 text-left">
@@ -88,7 +97,17 @@ export function PublicVerificationPendingPage() {
 
         <Button onClick={checkNow} disabled={checking} className="mt-5 w-full bg-emerald-500 hover:bg-emerald-600">
           {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-          {checking ? t('verificationPending.checkingStatus') : t('verificationPending.continueToApp')}
+          {checking
+            ? t('verificationPending.checkingStatus')
+            : t('verificationPending.checkStatus', 'Check verification status')}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className="mt-2 w-full text-xs text-text-secondary sm:text-sm"
+        >
+          {t('verificationPending.logout')}
         </Button>
       </div>
     </div>
