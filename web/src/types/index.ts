@@ -699,6 +699,23 @@ export interface SubmitAgriEntityPayload {
   imageUrls: string[];
 }
 
+export type AgriEntityStatus = 'pending' | 'approved' | 'rejected';
+
+/** A crop / weed / pest / disease record as returned to its submitter. imageUrls are signed URLs. */
+export interface AgriEntitySubmission {
+  id: string;
+  type: AgriEntityType;
+  localName: string;
+  englishName: string;
+  botanicalName: string;
+  localNameSource: string;
+  alternateNames: AgriEntityAlternateName[];
+  imageUrls: string[];
+  status: AgriEntityStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SubmitAgriEntityResponse {
   id: string;
   status: string;

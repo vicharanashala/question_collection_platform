@@ -36,6 +36,9 @@ import type {
   AuditLogQuery,
   SubmitAgriEntityPayload,
   SubmitAgriEntityResponse,
+  AgriEntitySubmission,
+  AgriEntityStatus,
+  AgriEntityType,
 } from '@/types'
 import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
@@ -1065,6 +1068,14 @@ export const agriEntityApi = {
       method: 'POST',
       body: JSON.stringify(body),
     }, false),
+
+  /** The signed-in user's own submissions, newest first. */
+  listMine: (params: { type?: AgriEntityType; status?: AgriEntityStatus; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+    ).toString()
+    return request<PaginatedResponse<AgriEntitySubmission>>(`/agri-entities${qs ? `?${qs}` : ''}`, {}, false)
+  },
 }
 
 // ─── FAQ API ──────────────────────────────────────────────────────────────────

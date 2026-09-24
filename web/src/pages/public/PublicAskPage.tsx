@@ -9,12 +9,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag, MessageCircleQuestion, Sprout, Leaf, Bug, Microscope, type LucideIcon } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, AGRI_ENTITY_TYPES } from '@/constants/public'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AgriEntitySubmitForm } from '@/components/agri-entity/AgriEntitySubmitForm'
-import type { AgriEntityType } from '@/types'
+import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
@@ -53,56 +52,6 @@ interface PreviewMeta {
 // isn't in the list can still submit. Module-scope so its identity is stable
 // across renders (same rationale as MobileStage / OtpStage in PublicRegisterPage).
 
-
-type SubmitTab = 'question' | AgriEntityType
-
-// Reads the active submit tab from the URL, falling back to the question tab.
-function parseSubmitTab(value: string | null): SubmitTab {
-  return AGRI_ENTITY_TYPES.some((type) => type.value === value) ? (value as AgriEntityType) : 'question'
-}
-
-const SUBMIT_TAB_ICONS: Record<SubmitTab, LucideIcon> = {
-  question: MessageCircleQuestion,
-  crop: Sprout,
-  weed: Leaf,
-  pest: Bug,
-  disease: Microscope,
-}
-
-interface SubmitTabsProps {
-  value: SubmitTab
-  onChange: (tab: SubmitTab) => void
-}
-
-/** Tab strip switching between question and crop / weed / pest / disease submission. */
-function SubmitTabs({ value, onChange }: SubmitTabsProps) {
-  const { t } = useTranslation()
-  const tabs: { value: SubmitTab; label: string }[] = [
-    { value: 'question', label: t('agriEntity.tabs.question', 'Question') },
-    ...AGRI_ENTITY_TYPES.map((type) => ({ value: type.value, label: t(`agriEntity.tabs.${type.value}`, type.label) })),
-  ]
-  return (
-    <Tabs value={value} onValueChange={(v) => onChange(v as SubmitTab)}>
-      {/* Five equal columns so every tab stays visible without horizontal
-          scrolling: icon stacked over the label on phones, inline from sm up. */}
-      <TabsList className="grid h-auto w-full grid-cols-5 gap-1 p-1">
-        {tabs.map((tab) => {
-          const Icon = SUBMIT_TAB_ICONS[tab.value]
-          return (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-1.5 text-[11px] sm:flex-row sm:gap-2 sm:px-3 sm:text-sm"
-            >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="max-w-full truncate">{tab.label}</span>
-            </TabsTrigger>
-          )
-        })}
-      </TabsList>
-    </Tabs>
-  )
-}
 
 interface AskHeaderProps {
   /** Omit to hide the two-step progress indicator. */
@@ -204,10 +153,10 @@ export function PublicAskPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = parseSubmitTab(searchParams.get('tab'))
+  const activeTab = parseSubmissionTab(searchParams.get('tab'))
 
   // Keeps the selected tab in the URL so it survives refresh and can be linked to.
-  function handleTabChange(tab: SubmitTab) {
+  function handleTabChange(tab: SubmissionTab) {
     setSearchParams(tab === 'question' ? {} : { tab }, { replace: true })
   }
   // ─── Two-step flow ─────────────────────────────────────────────────────────
@@ -693,7 +642,7 @@ useEffect(() => {
           onReport={() => navigate('/home/reports')}
           atLimit={false}
         />
-        <SubmitTabs value={activeTab} onChange={handleTabChange} />
+        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
         <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
       </div>
     )
@@ -712,7 +661,7 @@ useEffect(() => {
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
       />
-      <SubmitTabs value={activeTab} onChange={handleTabChange} />
+      <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">

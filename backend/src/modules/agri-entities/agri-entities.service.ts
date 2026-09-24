@@ -3,7 +3,7 @@ import { IAgriEntityRepository, REPOSITORY_TOKENS } from '../../shared/database/
 import { AgriEntityStatus, AgriEntityType } from '../../shared/classes/enums';
 import { isStorageUri } from '../storage/storage.service';
 import { getAgriEntityImageCategory } from './agri-entities.constants';
-import { SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
+import { ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 
 @Injectable()
 export class AgriEntitiesService {
@@ -33,6 +33,16 @@ export class AgriEntitiesService {
       status: saved.status,
       message: 'Submitted successfully',
     };
+  }
+
+  // Lists the user's own submissions, newest first, optionally narrowed by type and status.
+  async listMine(userId: string, dto: ListAgriEntitiesDto) {
+    const { type, status, page = 1, limit = 20 } = dto;
+    const { data, total } = await this.agriEntityRepo.findAndCount(
+      { userId, ...(type ? { type } : {}), ...(status ? { status } : {}) },
+      { pagination: { page, limit, sort: { createdAt: -1 } } },
+    );
+    return { items: data, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
   // Only accepts images this user uploaded into the folder for this entity type,

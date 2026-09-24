@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, MessageSquarePlus, ChevronLeft, ChevronRight, Image as ImageIcon, Flag } from 'lucide-react'
+import { Loader2, MessageSquarePlus, Image as ImageIcon, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { QuestionDetailModal } from '@/components/submissions/QuestionDetailModal'
+import { SubmissionStatusFilter } from '@/components/submissions/SubmissionStatusFilter'
+import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
+import { useRelativeTime } from '@/components/submissions/useRelativeTime'
+import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
+import { AgriEntitySubmissionsList } from '@/components/agri-entity/AgriEntitySubmissionsList'
+import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import type { Question } from '@/types'
 
 const STATUS_TABS: { key: '' | 'pending' | 'approved' | 'rejected' | 'held' | 'moved_to_final'; labelKey: string }[] = [
@@ -46,49 +51,16 @@ function statusLabelKey(s: string): string {
 export function PublicQuestionsPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [items, setItems] = useState<Question[]>([])
-  const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState<typeof STATUS_TABS[number]['key']>('')
-  const [page, setPage] = useState(1)
-  const limit = 20
-  const [total, setTotal] = useState(0)
-  // Selected question for the read-only detail dialog — null when closed.
-  // Kept as `id` (not the full object) so the modal owns its own fetch / cache
-  // and we never have to keep two copies of the question in sync.
-  const [openQuestionId, setOpenQuestionId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = parseSubmissionTab(searchParams.get('tab'))
+  const typeLabel = activeTab === 'question'
+    ? ''
+    : t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')
 
-  /** Format an ISO timestamp as a localised relative-time string. */
-  function formatDate(s: string) {
-    try {
-      const d = new Date(s)
-      const now = new Date()
-      const diffH = Math.floor((now.getTime() - d.getTime()) / 3600000)
-      if (diffH < 1) return t('common.justNow')
-      if (diffH < 24) return t('common.hoursAgo', { count: diffH })
-      const days = Math.floor(diffH / 24)
-      if (days < 7) return t('common.daysAgo', { count: days })
-      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-    } catch { return s }
+  // Keeps the selected tab in the URL so it survives refresh and can be linked to.
+  function handleTabChange(tab: SubmissionTab) {
+    setSearchParams(tab === 'question' ? {} : { tab }, { replace: true })
   }
-
-  async function load() {
-    setLoading(true)
-    try {
-      const res = await questionApi.listMyQuestions({ status: status || undefined, page, limit })
-      setItems(res.items ?? [])
-      setTotal(res.total ?? 0)
-    } catch (err) {
-      toast.error(getErrorMessage(err, t('submissions.loadError')))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load() }, [status, page])
-
-  const pages = Math.max(1, Math.ceil(total / limit))
-  const start = (page - 1) * limit + 1
-  const end = Math.min(page * limit, total)
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-5">
@@ -109,32 +81,73 @@ export function PublicQuestionsPage() {
             <Flag className="h-4 w-4 sm:mr-1.5" />
             <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
           </Button>
-          <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600 shrink-0" aria-label={t('question.askQuestion')}>
-            <MessageSquarePlus className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">{t('question.askQuestion')}</span>
-          </Button>
+          {activeTab === 'question' ? (
+            <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600 shrink-0" aria-label={t('question.askQuestion')}>
+              <MessageSquarePlus className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">{t('question.askQuestion')}</span>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => navigate(`/home/ask?tab=${activeTab}`)}
+              className="bg-emerald-500 hover:bg-emerald-600 shrink-0"
+              aria-label={t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}
+            >
+              <MessageSquarePlus className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">{t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="hidden sm:flex gap-2 overflow-x-auto pb-1">
-        {STATUS_TABS.map((s) => (
-          <button key={s.key || 'all'} type="button" onClick={() => { setStatus(s.key); setPage(1) }} className={cn('shrink-0 rounded-full px-3 py-1.5 text-[11px] sm:text-xs font-semibold transition-colors', status === s.key ? 'bg-primary text-primary-foreground' : 'border border-border-subtle bg-surface text-text-secondary hover:border-primary/40 dark:hover:border-primary/60')}>
-            {t(s.labelKey)}
-          </button>
-        ))}
-      </div>
-      <div className="sm:hidden">
-        <Select value={status} onValueChange={(v) => { setStatus(v as typeof status); setPage(1) }}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t('submissions.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_TABS.map((s) => (
-              <SelectItem key={s.key || 'all'} value={s.key}>{t(s.labelKey)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+
+      {activeTab === 'question' ? (
+        <QuestionSubmissions />
+      ) : (
+        <AgriEntitySubmissionsList key={activeTab} type={activeTab} typeLabel={typeLabel} />
+      )}
+    </div>
+  )
+}
+
+/** The signed-in user's questions, filterable by review status. */
+function QuestionSubmissions() {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const formatDate = useRelativeTime()
+  const [items, setItems] = useState<Question[]>([])
+  const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState<typeof STATUS_TABS[number]['key']>('')
+  const [page, setPage] = useState(1)
+  const limit = 20
+  const [total, setTotal] = useState(0)
+  // Selected question for the read-only detail dialog — null when closed.
+  // Kept as `id` (not the full object) so the modal owns its own fetch / cache
+  // and we never have to keep two copies of the question in sync.
+  const [openQuestionId, setOpenQuestionId] = useState<string | null>(null)
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await questionApi.listMyQuestions({ status: status || undefined, page, limit })
+      setItems(res.items ?? [])
+      setTotal(res.total ?? 0)
+    } catch (err) {
+      toast.error(getErrorMessage(err, t('submissions.loadError')))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [status, page])
+
+  return (
+    <>
+      <SubmissionStatusFilter
+        options={STATUS_TABS.map((s) => ({ key: s.key, label: t(s.labelKey) }))}
+        value={status}
+        onChange={(s) => { setStatus(s); setPage(1) }}
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -185,18 +198,7 @@ export function PublicQuestionsPage() {
       </Card>
 
       {!loading && items.length > 0 && (
-        <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
-          <span>{t('common.showing', { start, end, total })}</span>
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="h-7 px-2">
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <span className="px-2 text-foreground">{t('common.pageX', { page, total: pages })}</span>
-            <Button size="sm" variant="outline" disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="h-7 px-2">
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
+        <SubmissionsPagination page={page} limit={limit} total={total} onPageChange={setPage} />
       )}
 
       {/* Read-only detail dialog — opens when a list row is clicked and closes
@@ -207,6 +209,6 @@ export function PublicQuestionsPage() {
         onOpenChange={(open) => { if (!open) setOpenQuestionId(null) }}
         questionId={openQuestionId}
       />
-    </div>
+    </>
   )
 }

@@ -22,10 +22,11 @@ const buildDto = (overrides: Partial<SubmitAgriEntityDto> = {}): SubmitAgriEntit
 
 describe('AgriEntitiesService', () => {
   let service: AgriEntitiesService;
-  const repo = { create: jest.fn() };
+  const repo = { create: jest.fn(), findAndCount: jest.fn() };
 
   beforeEach(async () => {
     repo.create.mockReset();
+    repo.findAndCount.mockReset();
     repo.create.mockImplementation((data) => Promise.resolve({ id: 'entity-1', ...data }));
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -69,5 +70,33 @@ describe('AgriEntitiesService', () => {
     await expect(
       service.submit(USER_ID, buildDto({ type: AgriEntityType.WEED })),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("lists only the user's own submissions, newest first, with filters", async () => {
+    repo.findAndCount.mockResolvedValue({ data: [{ id: 'entity-1' }], total: 21, page: 2, limit: 20, totalPages: 2 });
+
+    const result = await service.listMine(USER_ID, {
+      type: AgriEntityType.WEED,
+      status: AgriEntityStatus.PENDING,
+      page: 2,
+      limit: 20,
+    });
+
+    expect(repo.findAndCount).toHaveBeenCalledWith(
+      { userId: USER_ID, type: AgriEntityType.WEED, status: AgriEntityStatus.PENDING },
+      { pagination: { page: 2, limit: 20, sort: { createdAt: -1 } } },
+    );
+    expect(result).toEqual({ items: [{ id: 'entity-1' }], total: 21, page: 2, limit: 20, pages: 2 });
+  });
+
+  it('omits type and status from the filter when not given', async () => {
+    repo.findAndCount.mockResolvedValue({ data: [], total: 0, page: 1, limit: 20, totalPages: 0 });
+
+    await service.listMine(USER_ID, {});
+
+    expect(repo.findAndCount).toHaveBeenCalledWith(
+      { userId: USER_ID },
+      { pagination: { page: 1, limit: 20, sort: { createdAt: -1 } } },
+    );
   });
 });
