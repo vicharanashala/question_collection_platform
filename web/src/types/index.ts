@@ -682,3 +682,25 @@ export interface DistributorStats {
   indianStatesTotal: number;
   byState: { state: string; count: number }[];
 }
+export type AgriEntityType = 'crop' | 'weed' | 'pest' | 'disease';
+
+export interface AgriEntityAlternateName {
+  name: string;
+  source: string;
+}
+
+export interface SubmitAgriEntityPayload {
+  type: AgriEntityType;
+  localName: string;
+  englishName: string;
+  botanicalName: string;
+  localNameSource: string;
+  alternateNames: AgriEntityAlternateName[];
+  imageUrls: string[];
+}
+
+export interface SubmitAgriEntityResponse {
+  id: string;
+  status: string;
+  message: string;
+}

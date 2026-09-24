@@ -34,6 +34,8 @@ import type {
   FinalQuestion,
   DistributorStats,
   AuditLogQuery,
+  SubmitAgriEntityPayload,
+  SubmitAgriEntityResponse,
 } from '@/types'
 import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
@@ -1052,6 +1054,17 @@ export const reportsApi = {
   /** Get a single report belonging to the current user — backed by GET /reports/my/:id */
   getMy: (reportId: string) =>
     request<Report>(`/reports/my/${reportId}`, {}, false),
+}
+
+// ─── Crop / Weed / Pest / Disease API ─────────────────────────────────────────
+
+export const agriEntityApi = {
+  /** Submit a crop, weed, pest or disease record. Images must be uploaded first via storageApi. */
+  submit: (body: SubmitAgriEntityPayload) =>
+    request<SubmitAgriEntityResponse>('/agri-entities', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
 }
 
 // ─── FAQ API ──────────────────────────────────────────────────────────────────

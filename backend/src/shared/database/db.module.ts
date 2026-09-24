@@ -43,6 +43,7 @@ import { ReportSchema } from './mongodb/schemas/report.schema';
 import { ReportReplySchema } from './mongodb/schemas/report-reply.schema';
 import { FaqSchema } from './mongodb/schemas/faq.schema';
 import { FinalQuestionSchema } from './mongodb/schemas/final-question.schema';
+import { AgriEntitySchema } from './mongodb/schemas/agri-entity.schema';
 
 const MONGO_SCHEMA_ENTRIES = [
   { name: 'User', schema: UserSchema },
@@ -59,6 +60,7 @@ const MONGO_SCHEMA_ENTRIES = [
   { name: 'ReportReply', schema: ReportReplySchema },
   { name: 'Faq', schema: FaqSchema },
   { name: 'FinalQuestion', schema: FinalQuestionSchema },
+  { name: 'AgriEntity', schema: AgriEntitySchema },
 ];
 
 @Global()

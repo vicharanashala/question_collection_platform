@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
@@ -9,9 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag } from 'lucide-react'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag, MessageCircleQuestion, Sprout, Leaf, Bug, Microscope, type LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
-import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
+import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, AGRI_ENTITY_TYPES } from '@/constants/public'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AgriEntitySubmitForm } from '@/components/agri-entity/AgriEntitySubmitForm'
+import type { AgriEntityType } from '@/types'
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
@@ -51,8 +54,59 @@ interface PreviewMeta {
 // across renders (same rationale as MobileStage / OtpStage in PublicRegisterPage).
 
 
+type SubmitTab = 'question' | AgriEntityType
+
+// Reads the active submit tab from the URL, falling back to the question tab.
+function parseSubmitTab(value: string | null): SubmitTab {
+  return AGRI_ENTITY_TYPES.some((type) => type.value === value) ? (value as AgriEntityType) : 'question'
+}
+
+const SUBMIT_TAB_ICONS: Record<SubmitTab, LucideIcon> = {
+  question: MessageCircleQuestion,
+  crop: Sprout,
+  weed: Leaf,
+  pest: Bug,
+  disease: Microscope,
+}
+
+interface SubmitTabsProps {
+  value: SubmitTab
+  onChange: (tab: SubmitTab) => void
+}
+
+/** Tab strip switching between question and crop / weed / pest / disease submission. */
+function SubmitTabs({ value, onChange }: SubmitTabsProps) {
+  const { t } = useTranslation()
+  const tabs: { value: SubmitTab; label: string }[] = [
+    { value: 'question', label: t('agriEntity.tabs.question', 'Question') },
+    ...AGRI_ENTITY_TYPES.map((type) => ({ value: type.value, label: t(`agriEntity.tabs.${type.value}`, type.label) })),
+  ]
+  return (
+    <Tabs value={value} onValueChange={(v) => onChange(v as SubmitTab)}>
+      {/* Five equal columns so every tab stays visible without horizontal
+          scrolling: icon stacked over the label on phones, inline from sm up. */}
+      <TabsList className="grid h-auto w-full grid-cols-5 gap-1 p-1">
+        {tabs.map((tab) => {
+          const Icon = SUBMIT_TAB_ICONS[tab.value]
+          return (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-1.5 text-[11px] sm:flex-row sm:gap-2 sm:px-3 sm:text-sm"
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="max-w-full truncate">{tab.label}</span>
+            </TabsTrigger>
+          )
+        })}
+      </TabsList>
+    </Tabs>
+  )
+}
+
 interface AskHeaderProps {
-  step: 1 | 2
+  /** Omit to hide the two-step progress indicator. */
+  step?: 1 | 2
   title: string
   subtitle: string
   onBack: () => void
@@ -118,7 +172,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
 
       {/* Progress — current step is marked by weight and an aria-current, not
           colour alone, and completed steps carry a check icon. */}
-      <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
+      {step && <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
         {steps.map(({ n, label }) => {
           const done = n < step
           const current = n === step
@@ -140,7 +194,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
             </li>
           )
         })}
-      </ol>
+      </ol>}
     </div>
   )
 }
@@ -149,6 +203,13 @@ export function PublicAskPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = parseSubmitTab(searchParams.get('tab'))
+
+  // Keeps the selected tab in the URL so it survives refresh and can be linked to.
+  function handleTabChange(tab: SubmitTab) {
+    setSearchParams(tab === 'question' ? {} : { tab }, { replace: true })
+  }
   // ─── Two-step flow ─────────────────────────────────────────────────────────
   // Mirrors mobile's QuestionScreen → QuestionPreviewScreen split: the user
   // first writes their question text, then `questionApi.preview` classifies
@@ -620,6 +681,24 @@ useEffect(() => {
     )
   }
 
+  // ─── Crop / Weed / Pest / Disease tabs ─────────────────────────────────────
+  if (activeTab !== 'question') {
+    const typeLabel = t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        <AskHeader
+          title={t('agriEntity.title', { type: typeLabel, defaultValue: 'Submit a {{type}}' })}
+          subtitle={t('agriEntity.subtitle', 'Share names, sources and photos. All fields are required.')}
+          onBack={() => navigate(-1)}
+          onReport={() => navigate('/home/reports')}
+          atLimit={false}
+        />
+        <SubmitTabs value={activeTab} onChange={handleTabChange} />
+        <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+      </div>
+    )
+  }
+
   // ─── Step 1 — free-text question entry ─────────────────────────────────────
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -633,6 +712,7 @@ useEffect(() => {
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
       />
+      <SubmitTabs value={activeTab} onChange={handleTabChange} />
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">

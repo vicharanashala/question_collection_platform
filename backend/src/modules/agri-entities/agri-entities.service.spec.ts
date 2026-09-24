@@ -1,0 +1,73 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
+import { AgriEntitiesService } from './agri-entities.service';
+import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { AgriEntityStatus, AgriEntityType } from '../../shared/classes/enums';
+import { SubmitAgriEntityDto } from './dto';
+
+const USER_ID = '11111111-1111-1111-1111-111111111111';
+const ownImage = `gs://bucket/staging/agri-entities/crops/${USER_ID}/2026-09/abc_tomato_1.jpg`;
+
+// Builds a valid crop submission, optionally overriding fields.
+const buildDto = (overrides: Partial<SubmitAgriEntityDto> = {}): SubmitAgriEntityDto => ({
+  type: AgriEntityType.CROP,
+  localName: 'Thakkali',
+  englishName: 'Tomato',
+  botanicalName: 'Solanum lycopersicum',
+  localNameSource: 'TNAU Agritech Portal',
+  alternateNames: [{ name: 'Tamatar', source: 'ICAR crop glossary' }],
+  imageUrls: [ownImage],
+  ...overrides,
+});
+
+describe('AgriEntitiesService', () => {
+  let service: AgriEntitiesService;
+  const repo = { create: jest.fn() };
+
+  beforeEach(async () => {
+    repo.create.mockReset();
+    repo.create.mockImplementation((data) => Promise.resolve({ id: 'entity-1', ...data }));
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AgriEntitiesService,
+        { provide: REPOSITORY_TOKENS.AgriEntity, useValue: repo },
+      ],
+    }).compile();
+    service = module.get(AgriEntitiesService);
+  });
+
+  it('saves a valid submission as pending for the user', async () => {
+    const result = await service.submit(USER_ID, buildDto());
+
+    expect(repo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: USER_ID,
+        type: AgriEntityType.CROP,
+        englishName: 'Tomato',
+        imageUrls: [ownImage],
+        status: AgriEntityStatus.PENDING,
+      }),
+    );
+    expect(result).toEqual({ id: 'entity-1', status: AgriEntityStatus.PENDING, message: expect.any(String) });
+  });
+
+  it('rejects images that are not storage URIs', async () => {
+    await expect(
+      service.submit(USER_ID, buildDto({ imageUrls: ['https://example.com/a.jpg'] })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects images from another user's folder", async () => {
+    const foreign = ownImage.replace(USER_ID, '22222222-2222-2222-2222-222222222222');
+    await expect(service.submit(USER_ID, buildDto({ imageUrls: [foreign] }))).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('rejects images uploaded for a different entity type', async () => {
+    await expect(
+      service.submit(USER_ID, buildDto({ type: AgriEntityType.WEED })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+});

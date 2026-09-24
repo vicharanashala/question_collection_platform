@@ -3,7 +3,7 @@
  * Mirrors mobile/src/utils/constants.ts so the web signup wizard and
  * ask-question form share vocabulary with the mobile app.
  */
-import type { UserCategory } from '@/types'
+import type { AgriEntityType, UserCategory } from '@/types'
 
 export const LANGUAGES: { code: string; label: string; labelEnglish: string }[] = [
   { code: 'en', label: 'English', labelEnglish: 'English' },
@@ -367,3 +367,14 @@ export function categoryLabel(t: (key: string) => string, c: UserCategory | stri
   if (key) return t(key)
   return USER_CATEGORIES.find((x) => x.value === c)?.label ?? c
 }
+// Crop / Weed / Pest / Disease submissions. Limits mirror the backend DTO.
+export const AGRI_ENTITY_TYPES: { value: AgriEntityType; label: string }[] = [
+  { value: 'crop', label: 'Crop' },
+  { value: 'weed', label: 'Weed' },
+  { value: 'pest', label: 'Pest' },
+  { value: 'disease', label: 'Disease' },
+]
+export const MAX_AGRI_ENTITY_IMAGES = 5
+export const MAX_AGRI_ENTITY_NAME_LENGTH = 200
+export const MAX_AGRI_ENTITY_SOURCE_LENGTH = 500
+export const AGRI_ENTITY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
