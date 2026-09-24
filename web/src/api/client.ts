@@ -34,6 +34,11 @@ import type {
   FinalQuestion,
   DistributorStats,
   AuditLogQuery,
+  SubmitAgriEntityPayload,
+  SubmitAgriEntityResponse,
+  AgriEntitySubmission,
+  AgriEntityStatus,
+  AgriEntityType,
 } from '@/types'
 import { accountLockedEmitter, parseAccountLocked } from '@/events/accountLockedEvents'
 
@@ -1050,6 +1055,33 @@ export const reportsApi = {
   /** Get a single report belonging to the current user — backed by GET /reports/my/:id */
   getMy: (reportId: string) =>
     request<Report>(`/reports/my/${reportId}`, {}, false),
+}
+
+// ─── Crop / Weed / Pest / Disease API ─────────────────────────────────────────
+
+export const agriEntityApi = {
+  /** Submit a crop, weed, pest or disease record. Images must be uploaded first via storageApi. */
+  submit: (body: SubmitAgriEntityPayload) =>
+    request<SubmitAgriEntityResponse>('/agri-entities', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }, false),
+
+  /** The signed-in user's own submissions, newest first. */
+  listMine: (params: { type?: AgriEntityType; status?: AgriEntityStatus; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+    ).toString()
+    return request<PaginatedResponse<AgriEntitySubmission>>(`/agri-entities${qs ? `?${qs}` : ''}`, {}, false)
+  },
+
+  /** Staff only (curator, admin, super admin): every user's submissions, with the submitter attached. */
+  listAll: (params: { type?: AgriEntityType; status?: AgriEntityStatus; page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+    ).toString()
+    return request<PaginatedResponse<AgriEntitySubmission>>(`/agri-entities/all${qs ? `?${qs}` : ''}`, {}, false)
+  },
 }
 
 // ─── FAQ API ──────────────────────────────────────────────────────────────────

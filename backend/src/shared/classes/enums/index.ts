@@ -225,3 +225,18 @@ export enum QuestionRejectionCategory {
   NOT_AGRICULTURE = 'NOT_AGRICULTURE',
   OTHER = 'OTHER',
 }
+
+/** Kind of reference record a user can submit alongside questions. */
+export enum AgriEntityType {
+  CROP = 'crop',
+  WEED = 'weed',
+  PEST = 'pest',
+  DISEASE = 'disease',
+}
+
+/** Review lifecycle of a submitted crop, weed, pest or disease record. */
+export enum AgriEntityStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}

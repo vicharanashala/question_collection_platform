@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag } from 'lucide-react'
 import { toast } from 'sonner'
-import { DOMAINS, SEASONS, MAX_QUESTION_CHARS } from '@/constants/public'
+import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, AGRI_ENTITY_TYPES } from '@/constants/public'
+import { AgriEntitySubmitForm } from '@/components/agri-entity/AgriEntitySubmitForm'
+import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
@@ -52,7 +54,8 @@ interface PreviewMeta {
 
 
 interface AskHeaderProps {
-  step: 1 | 2
+  /** Omit to hide the two-step progress indicator. */
+  step?: 1 | 2
   title: string
   subtitle: string
   onBack: () => void
@@ -118,7 +121,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
 
       {/* Progress — current step is marked by weight and an aria-current, not
           colour alone, and completed steps carry a check icon. */}
-      <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
+      {step && <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
         {steps.map(({ n, label }) => {
           const done = n < step
           const current = n === step
@@ -140,7 +143,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
             </li>
           )
         })}
-      </ol>
+      </ol>}
     </div>
   )
 }
@@ -149,6 +152,13 @@ export function PublicAskPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = parseSubmissionTab(searchParams.get('tab'))
+
+  // Keeps the selected tab in the URL so it survives refresh and can be linked to.
+  function handleTabChange(tab: SubmissionTab) {
+    setSearchParams(tab === 'question' ? {} : { tab }, { replace: true })
+  }
   // ─── Two-step flow ─────────────────────────────────────────────────────────
   // Mirrors mobile's QuestionScreen → QuestionPreviewScreen split: the user
   // first writes their question text, then `questionApi.preview` classifies
@@ -620,6 +630,24 @@ useEffect(() => {
     )
   }
 
+  // ─── Crop / Weed / Pest / Disease tabs ─────────────────────────────────────
+  if (activeTab !== 'question') {
+    const typeLabel = t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        <AskHeader
+          title={t('agriEntity.title', { type: typeLabel, defaultValue: 'Submit a {{type}}' })}
+          subtitle={t('agriEntity.subtitle', 'Share names, sources and photos. All fields are required.')}
+          onBack={() => navigate(-1)}
+          onReport={() => navigate('/home/reports')}
+          atLimit={false}
+        />
+        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+        <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+      </div>
+    )
+  }
+
   // ─── Step 1 — free-text question entry ─────────────────────────────────────
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -633,6 +661,7 @@ useEffect(() => {
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
       />
+      <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">

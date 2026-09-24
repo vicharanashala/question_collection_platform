@@ -16,6 +16,7 @@ import {
   Flag,
   HelpCircle,
   Send,
+  Sprout,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { SignOutDialog } from '@/components/SignOutDialog'
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/users',          labelKey: 'nav.userManagement', icon: Users,           roles: ['finance', 'admin', 'super_admin'] },
   { to: '/questions',      labelKey: 'nav.questions',      icon: MessageSquare,   roles: ['user', 'curator', 'admin', 'super_admin'] },
   { to: '/reviews',        labelKey: 'nav.reviewQueue',    icon: CheckSquare,     roles: ['curator', 'super_admin'] },
+  { to: '/agri-entities',  labelKey: 'nav.agriEntities',   icon: Sprout,          roles: ['curator', 'admin', 'super_admin'], defaultLabel: 'Agri Entities' },
   { to: '/distributions',  labelKey: 'nav.distributions',  icon: Send,            roles: ['distributor', 'admin', 'super_admin'] },
   { to: '/withdrawals',    labelKey: 'nav.withdrawals',    icon: CreditCard,      roles: ['finance', 'admin', 'super_admin'] },
   { to: '/wallets',        labelKey: 'nav.wallets',        icon: Wallet,          roles: ['finance', 'admin', 'super_admin'] },
@@ -63,7 +65,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, labelKey, icon: Icon, roles }) => {
+        {navItems.map(({ to, labelKey, icon: Icon, roles, defaultLabel }) => {
           if (!roles?.includes(user?.role as string)) return null
           return (
             <NavLink
@@ -79,7 +81,7 @@ export function Sidebar() {
               }
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {t(labelKey)}
+              {t(labelKey, { defaultValue: defaultLabel })}
             </NavLink>
           )
         })}

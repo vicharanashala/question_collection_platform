@@ -11,4 +11,4 @@ export * from './notification.entity';
 export * from './report.entity';
 export * from './report-reply.entity';
 export * from './faq.entity';
-export * from './final-question.entity';
+export * from './final-question.entity';export * from './agri-entity.entity';

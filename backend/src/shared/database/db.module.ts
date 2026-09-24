@@ -45,6 +45,8 @@ import { FaqSchema } from './mongodb/schemas/faq.schema';
 import { FinalQuestionSchema } from './mongodb/schemas/final-question.schema';
 import { CandidateSchema } from './mongodb/schemas/anveshan.schema';
 import { ANVESHAN_CONNECTION } from './mongodb/mongo.module';
+import { AgriEntitySchema } from './mongodb/schemas/agri-entity.schema';
+
 const MONGO_SCHEMA_ENTRIES = [
   { name: 'User', schema: UserSchema },
   { name: 'Wallet', schema: WalletSchema },
@@ -60,6 +62,7 @@ const MONGO_SCHEMA_ENTRIES = [
   { name: 'ReportReply', schema: ReportReplySchema },
   { name: 'Faq', schema: FaqSchema },
   { name: 'FinalQuestion', schema: FinalQuestionSchema },
+  { name: 'AgriEntity', schema: AgriEntitySchema },
 ];
 
 @Global()
