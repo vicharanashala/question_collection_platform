@@ -11,7 +11,7 @@ import {
   UserCategory,
   VerificationStatus,
 } from "../../../../classes/enums";
-import type { LeaderboardEntry } from "../../IUser.repository";
+import type { LeaderboardEntry, UserActivityAnalytics } from "../../IUser.repository";
 import { UserRole } from "../../../../classes/enums";
 import {
   TransactionSource,
@@ -1317,5 +1317,147 @@ export class MongoUserRepository
       date: row._id,
       signups: row.signups,
     }));
+  }
+
+  async getActivityAnalytics(opts: {
+    from: Date;
+    to: Date;
+    mauFrom: Date;
+    todayStart: Date;
+    state?: string;
+  }): Promise<UserActivityAnalytics> {
+    const { from, to, mauFrom, todayStart, state } = opts;
+    const createdInRange = { createdAt: { $gte: from, $lte: to } };
+    const loggedInRange = { lastLoginAt: { $gte: from, $lte: to } };
+    const count = [{ $count: "n" }];
+
+    const [result] = await this._model
+      .aggregate([
+        ...(state ? [{ $match: { state } }] : []),
+        {
+          $facet: {
+            newUsers: [{ $match: createdInRange }, ...count],
+            newVerified: [
+              {
+                $match: {
+                  ...createdInRange,
+                  verificationStatus: VerificationStatus.VERIFIED,
+                },
+              },
+              ...count,
+            ],
+            newPending: [
+              {
+                $match: {
+                  ...createdInRange,
+                  verificationStatus: {
+                    $in: [
+                      VerificationStatus.PENDING,
+                      VerificationStatus.MANUAL_REVIEW,
+                    ],
+                  },
+                },
+              },
+              ...count,
+            ],
+            activeUsers: [{ $match: loggedInRange }, ...count],
+            mau: [{ $match: { lastLoginAt: { $gte: mauFrom } } }, ...count],
+            dau: [{ $match: { lastLoginAt: { $gte: todayStart } } }, ...count],
+            signupTrend: [
+              { $match: createdInRange },
+              {
+                $group: {
+                  _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                  signups: { $sum: 1 },
+                },
+              },
+              { $sort: { _id: 1 } },
+            ],
+            loginTrend: [
+              { $match: loggedInRange },
+              {
+                $group: {
+                  _id: { $dateToString: { format: "%Y-%m-%d", date: "$lastLoginAt" } },
+                  dau: { $sum: 1 },
+                },
+              },
+              { $sort: { _id: 1 } },
+            ],
+            stateBreakdown: [
+              { $match: { state: { $nin: [null, ""] } } },
+              { $group: { _id: "$state", count: { $sum: 1 } } },
+              { $sort: { count: -1 } },
+            ],
+            districtBreakdown: [
+              { $match: { district: { $nin: [null, ""] } } },
+              {
+                $group: {
+                  _id: { district: "$district", state: "$state" },
+                  count: { $sum: 1 },
+                },
+              },
+              { $sort: { count: -1 } },
+              { $limit: 50 },
+            ],
+          },
+        },
+      ])
+      .exec();
+
+    const n = (rows?: Array<{ n: number }>) => rows?.[0]?.n ?? 0;
+
+    return {
+      newUsers: n(result?.newUsers),
+      newVerified: n(result?.newVerified),
+      newPending: n(result?.newPending),
+      activeUsers: n(result?.activeUsers),
+      mau: n(result?.mau),
+      dau: n(result?.dau),
+      signupTrend: (result?.signupTrend ?? []).map(
+        (r: { _id: string; signups: number }) => ({ date: r._id, signups: r.signups }),
+      ),
+      loginTrend: (result?.loginTrend ?? []).map(
+        (r: { _id: string; dau: number }) => ({ date: r._id, dau: r.dau }),
+      ),
+      stateBreakdown: (result?.stateBreakdown ?? []).map(
+        (r: { _id: string; count: number }) => ({ state: r._id, count: r.count }),
+      ),
+      districtBreakdown: (result?.districtBreakdown ?? []).map(
+        (r: { _id: { district: string; state: string }; count: number }) => ({
+          district: r._id.district,
+          state: r._id.state,
+          count: r.count,
+        }),
+      ),
+    };
+  }
+
+  async findForExport(filters: {
+    from: Date;
+    to: Date;
+    state?: string;
+  }): Promise<Record<string, unknown>[]> {
+    const { from, to, state } = filters;
+    return this._model
+      .aggregate([
+        { $match: { createdAt: { $gte: from, $lte: to }, ...(state ? { state } : {}) } },
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: "$_id" },
+            mobileNumber: 1,
+            name: 1,
+            category: 1,
+            state: 1,
+            district: 1,
+            verificationStatus: 1,
+            role: 1,
+            createdAt: 1,
+            lastLoginAt: 1,
+          },
+        },
+      ])
+      .exec();
   }
 }

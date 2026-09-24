@@ -45,6 +45,14 @@ export interface WithdrawalRewardSummary {
   pendingWithdrawals: number;
 }
 
+export interface WithdrawalStatusSummary {
+  totalWithdrawn: number;
+  withdrawalCount: number;
+  pending: number;
+  completed: number;
+  failed: number;
+}
+
 export interface ListWithdrawalsOptions {
   page: number;
   limit: number;
@@ -98,7 +106,15 @@ getRewardSummary(
   to: Date,
 ): Promise<WithdrawalRewardSummary>;
 
+getStatusSummary(
+  from: Date,
+  to: Date,
+): Promise<WithdrawalStatusSummary>;
+
 listWithdrawals(
   options: ListWithdrawalsOptions,
 ): Promise<ListWithdrawalsResult>;
+
+/** Flat rows (joined with user and debit-transaction rejection reason) for CSV/Excel export. */
+findForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
 }

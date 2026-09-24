@@ -18,7 +18,14 @@ export interface RewardTransactionSummary {
   avgReward: number;
 }
 
+export interface RewardAnalyticsResult extends RewardTransactionSummary {
+  /** All-time completed reward total, ignoring the date window. */
+  totalPool: number;
+  dailyRewardTrend: Array<{ date: string; amount: number; count: number }>;
+}
+
 export interface ITransactionRepository extends BaseRepository<Transaction> {
+  getRewardAnalytics(from: Date, to: Date, state?: string): Promise<RewardAnalyticsResult>;
   findByWalletId(walletId: string, limit?: number): Promise<Transaction[]>;
   findByReferenceId(referenceId: string): Promise<Transaction | null>;
   getRewardSummary(
@@ -26,4 +33,7 @@ export interface ITransactionRepository extends BaseRepository<Transaction> {
   to: Date,
   state?: string,
 ): Promise<RewardTransactionSummary>;
+
+  /** Reward transactions (joined with user name/mobile) for CSV/Excel export. */
+  findRewardsForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
 }

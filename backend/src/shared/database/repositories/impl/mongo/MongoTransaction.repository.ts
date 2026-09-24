@@ -2,9 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { ITransactionRepository, RewardTransactionSummary } from '../../ITransaction.repository';
+import { lookupByStringId } from '../../../abstractions/mongo-utils';
+import {
+  ITransactionRepository,
+  RewardAnalyticsResult,
+  RewardTransactionSummary,
+} from '../../ITransaction.repository';
 import { Transaction } from '../../../entities';
-import { TransactionSource } from '@/shared/classes/enums';
+import { TransactionSource, TransactionStatus } from '@/shared/classes/enums';
 
 @Injectable()
 export class MongoTransactionRepository
@@ -25,6 +30,83 @@ export class MongoTransactionRepository
     return this._model
       .findOne({ referenceId } as Record<string, unknown>)
       .exec() as Promise<Transaction | null>;
+  }
+
+  async getRewardAnalytics(
+    from: Date,
+    to: Date,
+    state?: string,
+  ): Promise<RewardAnalyticsResult> {
+    const completedRewards = {
+      source: TransactionSource.REWARD,
+      status: TransactionStatus.COMPLETED,
+    };
+
+    // walletId / wallet.userId are stored as strings, so compare against stringified _id.
+    const stateFilter = state
+      ? [
+          {
+            $lookup: {
+              from: 'wallets',
+              let: { wid: '$walletId' },
+              pipeline: [{ $match: { $expr: { $eq: [{ $toString: '$_id' }, '$$wid'] } } }],
+              as: 'wallet',
+            },
+          },
+          { $unwind: '$wallet' },
+          {
+            $lookup: {
+              from: 'users',
+              let: { uid: '$wallet.userId' },
+              pipeline: [{ $match: { $expr: { $eq: [{ $toString: '$_id' }, '$$uid'] } } }],
+              as: 'user',
+            },
+          },
+          { $unwind: '$user' },
+          { $match: { 'user.state': state } },
+        ]
+      : [];
+
+    const [result] = await this._model
+      .aggregate([
+        { $match: completedRewards },
+        {
+          $facet: {
+            totalPool: [{ $group: { _id: null, total: { $sum: '$amount' } } }],
+            daily: [
+              { $match: { createdAt: { $gte: from, $lte: to } } },
+              ...stateFilter,
+              {
+                $group: {
+                  _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                  amount: { $sum: '$amount' },
+                  count: { $sum: 1 },
+                },
+              },
+              { $sort: { _id: 1 } },
+            ],
+          },
+        },
+      ])
+      .exec();
+
+    const dailyRewardTrend: RewardAnalyticsResult['dailyRewardTrend'] = (result?.daily ?? []).map(
+      (r: { _id: string; amount: number; count: number }) => ({
+        date: r._id,
+        amount: r.amount,
+        count: r.count,
+      }),
+    );
+    const totalRewarded = dailyRewardTrend.reduce((s, r) => s + r.amount, 0);
+    const rewardCount = dailyRewardTrend.reduce((s, r) => s + r.count, 0);
+
+    return {
+      totalRewarded,
+      rewardCount,
+      avgReward: rewardCount > 0 ? totalRewarded / rewardCount : 0,
+      totalPool: Number(result?.totalPool?.[0]?.total ?? 0),
+      dailyRewardTrend,
+    };
   }
 
   async getRewardSummary(
@@ -117,4 +199,36 @@ export class MongoTransactionRepository
     avgReward: Number(result?.avgReward ?? 0),
   };
 }
+
+  async findRewardsForExport(filters: {
+    from: Date;
+    to: Date;
+    state?: string;
+  }): Promise<Record<string, unknown>[]> {
+    const { from, to, state } = filters;
+    return this._model
+      .aggregate([
+        { $match: { source: TransactionSource.REWARD, createdAt: { $gte: from, $lte: to } } },
+        { $sort: { createdAt: -1 } },
+        ...lookupByStringId('wallets', 'walletId', 'w'),
+        ...lookupByStringId('users', 'w.userId', 'u'),
+        ...(state ? [{ $match: { 'u.state': state } }] : []),
+        {
+          $project: {
+            _id: 0,
+            id: { $toString: '$_id' },
+            mobileNumber: '$u.mobileNumber',
+            name: '$u.name',
+            amount: 1,
+            type: 1,
+            source: 1,
+            description: 1,
+            status: 1,
+            referenceId: 1,
+            createdAt: 1,
+          },
+        },
+      ])
+      .exec();
+  }
 }
