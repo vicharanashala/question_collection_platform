@@ -123,6 +123,7 @@ jobs:
           env_vars: |
             NODE_ENV=staging
             MONGODB_URL=${{ secrets.MONGODB_URL }}
+            ANVESHAN_DB_URL=${{ secrets.ANVESHAN_DB_URL }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}

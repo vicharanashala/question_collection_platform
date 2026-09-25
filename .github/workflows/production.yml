@@ -209,6 +209,7 @@ jobs:
           env_vars: |
             NODE_ENV=production
             MONGODB_URL=${{ secrets.MONGODB_URL_PROD }}
+            ANVESHAN_DB_URL=${{ secrets.ANVESHAN_DB_URL_PROD }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS_PROD }}
             JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}
             JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}
