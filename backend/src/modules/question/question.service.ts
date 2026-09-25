@@ -168,9 +168,10 @@ export class QuestionService {
     }
 
     // 1. Enforce daily_question_limit
-    const dailyLimit = await this.adminService.getConfigValue('daily_question_limit');
-    await this.checkDailyLimit(userId, dailyLimit);
-
+    if (!user.isAnveshanUser) {
+      const dailyLimit = await this.adminService.getConfigValue('daily_question_limit');
+      await this.checkDailyLimit(userId, dailyLimit);
+    }
     // 2. Validate image submission: when mediaType is 'image' exactly 1 URL is required
     if (dto.mediaType === 'image') {
       if (!dto.mediaUrls || dto.mediaUrls.length === 0) {
