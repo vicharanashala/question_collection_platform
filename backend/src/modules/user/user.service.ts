@@ -14,6 +14,7 @@ import {
 import {
   AuditAction,
   ActorType,
+  AgriEntityType,
   QuestionStatus,
   TransactionType,
   TransactionSource,
@@ -27,6 +28,7 @@ import {
   INotificationRepository,
   IQuestionRepository,
   ITransactionRepository,
+  IAgriEntityRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 
@@ -43,6 +45,8 @@ export class UserService {
     private readonly questionRepo: IQuestionRepository,
     @Inject(REPOSITORY_TOKENS.Transaction)
     private readonly transactionRepo: ITransactionRepository,
+    @Inject(REPOSITORY_TOKENS.AgriEntity)
+    private readonly agriEntityRepo: IAgriEntityRepository,
   ) {}
 
   async getProfile(userId: string): Promise<User> {
@@ -51,6 +55,62 @@ export class UserService {
       throw new NotFoundException("User not found");
     }
     return user;
+  }
+
+  // ─── Anveshan Progress ──────────────────────────────────────────────────────
+
+  async getAnveshanProgress(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const isAnveshanUser = user.isAnveshanUser === true;
+
+    // If not an Anveshan user, short-circuit — nothing to check
+    if (!isAnveshanUser) {
+      return {
+        isCompleted: false,
+        isAnveshanUser: false,
+        requirements: {
+          questions: { required: 25, submitted: 0, met: false },
+          crop:      { required: 1,  submitted: 0, met: false },
+          pest:      { required: 1,  submitted: 0, met: false },
+          weed:      { required: 1,  submitted: 0, met: false },
+          disease:   { required: 1,  submitted: 0, met: false },
+        },
+      };
+    }
+
+    // Run all counts in parallel for performance
+    const [questionCount, cropCount, pestCount, weedCount, diseaseCount] =
+      await Promise.all([
+        this.questionRepo.countByUserId(userId),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+      ]);
+
+    const questionsMet = questionCount >= 25;
+    const cropMet      = cropCount >= 1;
+    const pestMet      = pestCount >= 1;
+    const weedMet      = weedCount >= 1;
+    const diseaseMet   = diseaseCount >= 1;
+
+    const isCompleted = questionsMet && cropMet && pestMet && weedMet && diseaseMet;
+
+    return {
+      isCompleted,
+      isAnveshanUser: true,
+      requirements: {
+        questions: { required: 25, submitted: questionCount, met: questionsMet },
+        crop:      { required: 1,  submitted: cropCount,     met: cropMet },
+        pest:      { required: 1,  submitted: pestCount,     met: pestMet },
+        weed:      { required: 1,  submitted: weedCount,     met: weedMet },
+        disease:   { required: 1,  submitted: diseaseCount,  met: diseaseMet },
+      },
+    };
   }
 
   async updateProfile(

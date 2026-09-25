@@ -68,6 +68,17 @@ export class UserController {
   }
 
   /**
+   * GET /users/:id/anveshan-progress
+   * Returns whether the given user has completed all Anveshan
+   * submission requirements (25 questions + 1 crop + 1 pest + 1 weed + 1 disease).
+   */
+  @Get(':id/anveshan-progress')
+  @HttpCode(HttpStatus.OK)
+  async getAnveshanProgress(@Param('id') id: string) {
+    return this.userService.getAnveshanProgress(id);
+  }
+
+  /**
    * GET /users/me/leaderboard
    * Returns the top users ranked by total earnings, with the current user's position.
    */
