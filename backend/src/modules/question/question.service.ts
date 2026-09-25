@@ -200,77 +200,82 @@ export class QuestionService {
     const cropType = dto.cropType?.trim() || inferred.crop;
     const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
 
-    // 4. Fast exact-duplicate gate via Redis — throws ConflictException (HTTP 409) if exact dup found.
-    //    cropType must be resolved above first.
+    // 4. Handle duplicates and query classification
     const userIdNum = parseInt(userId, 10);
-    await this.duplicateDetectionService.checkDuplicate(
-      userIdNum,
-      user.state,
-      cropType,
-      dto.questionText,
-    );
+    let duplicateResult;
 
-    // 4b. Check our own DB first — exact text match (case-insensitive, trimmed).
-    //     If found, we already know the submitter and can show a user-friendly message
-    //     ("submitted by rakesh_farmer42") without needing the GDB semantic check.
-    const dbDup = await this.findExactDuplicate(dto.questionText, userId);
-    if (dbDup) {
-      const dup = dbDup.matchedQuestion;
-      const duplicateQuestion = await this.questionRepo.create({
-        userId,
-        domains,
-        season: dto.season,
-        cropType,
-        agroClimaticZone: dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state),
+    if (user.isAnveshanUser) {
+      // 4a. For Anveshan users, bypass all duplicate checks and just check for safety/relevance.
+      duplicateResult = await this.gdbService.classifyQuery({
         questionText: dto.questionText,
-        state: user.state,
-        district: user.district,
-        block: user.block ?? null,
-        mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
-        mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
-        deviceInfo: dto.deviceInfo ?? null,
-        status: QuestionStatus.REJECTED,
-        rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
-        submittedAt: now,
-        embedding: [0],
+        languageCode: dto.language ?? user.languagePreference,
       });
-      await this.auditRepo.save({
-        actorType: ActorType.USER,
-        actorId: userId,
-        action: AuditAction.QUESTION_REJECTED,
-        entityType: 'question',
-        entityId: duplicateQuestion.id,
-        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
-        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+      // Abusive / non-agricultural queries are blocked here
+      this.assertNotRejected(duplicateResult.rejection);
+    } else {
+      // 4b. Fast exact-duplicate gate via Redis — throws ConflictException (HTTP 409) if exact dup found.
+      await this.duplicateDetectionService.checkDuplicate(
+        userIdNum,
+        user.state,
+        cropType,
+        dto.questionText,
+      );
+
+      // 4c. Check our own DB first — exact text match (case-insensitive, trimmed).
+      const dbDup = await this.findExactDuplicate(dto.questionText, userId);
+      if (dbDup) {
+        const dup = dbDup.matchedQuestion;
+        const duplicateQuestion = await this.questionRepo.create({
+          userId,
+          domains,
+          season: dto.season,
+          cropType,
+          agroClimaticZone: dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state),
+          questionText: dto.questionText,
+          state: user.state,
+          district: user.district,
+          block: user.block ?? null,
+          mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+          mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+          deviceInfo: dto.deviceInfo ?? null,
+          status: QuestionStatus.REJECTED,
+          rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
+          submittedAt: now,
+          embedding: [0],
+        });
+        await this.auditRepo.save({
+          actorType: ActorType.USER,
+          actorId: userId,
+          action: AuditAction.QUESTION_REJECTED,
+          entityType: 'question',
+          entityId: duplicateQuestion.id,
+          newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+          metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+        });
+        return {
+          id: duplicateQuestion.id,
+          status: 'DUPLICATE',
+          message: 'This question already exists in our database',
+          duplicate: {
+            isDuplicate: true,
+            matchedQuestionId: dup.id,
+            matchedQuestion: dup.questionText,
+            matchedAnswer: null,
+            similarityScore: null,
+            matchedUserName: dbDup.matchedUserName,
+          },
+        };
+      }
+
+      // 4d. GDB semantic duplicate check
+      duplicateResult = await this.gdbService.checkDuplicate({
+        questionText: dto.questionText,
+        languageCode: dto.language ?? user.languagePreference,
       });
-      return {
-        id: duplicateQuestion.id,
-        status: 'DUPLICATE',
-        message: 'This question already exists in our database',
-        duplicate: {
-          isDuplicate: true,
-          matchedQuestionId: dup.id,
-          matchedQuestion: dup.questionText,
-          matchedAnswer: null,
-          similarityScore: null,
-          matchedUserName: dbDup.matchedUserName,
-        },
-      };
+
+      // Abusive / non-agricultural queries are blocked here
+      this.assertNotRejected(duplicateResult.rejection);
     }
-
-    // 4c. GDB semantic duplicate check — run after our DB check; may add additional
-    //     context (matchedAnswer, similarityScore) if GDB has a confident match.
-    //     Pass the question's language (from the DTO if the client supplied it,
-    //     otherwise the user's languagePreference) so non-English question text
-    //     is translated to English before the semantic GDB search.
-    const duplicateResult = await this.gdbService.checkDuplicate({
-      questionText: dto.questionText,
-      languageCode: dto.language ?? user.languagePreference,
-    });
-
-    // Abusive / non-agricultural queries are blocked here — nothing is persisted
-    // and no daily slot is consumed.
-    this.assertNotRejected(duplicateResult.rejection);
 
     // Derive agro-climatic zone from user's profile state.
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state);
@@ -328,12 +333,14 @@ export class QuestionService {
     }
 
     // 5. Record in Redis dup index (only after all duplicate checks pass).
-    await this.duplicateDetectionService.recordQuestion(
-      userIdNum,
-      user.state,
-      cropType,
-      dto.questionText,
-    );
+    if (!user.isAnveshanUser) {
+      await this.duplicateDetectionService.recordQuestion(
+        userIdNum,
+        user.state,
+        cropType,
+        dto.questionText,
+      );
+    }
 
     // 6. Update real-time analytics counters
     await this.analyticsCacheService.onQuestionSubmitted().catch(() => {/* best-effort */});
@@ -580,22 +587,26 @@ export class QuestionService {
     // 2. Gemma inference: domains + cropType  (run first so we have crop for GDB call)
     const inferred = await this.gemmaService.inferCropAndDomains(englishQuestionText);
 
-    // 3. Check our own DB first — exact text match (case-insensitive, trimmed).
-    //     Preferred over GDB because we know the exact submitter's display name.
-    //     Matched against the local-language text, since that's what's stored.
-    const dbDup = await this.findExactDuplicate(dto.questionText, userId);
+    let dbDup = null;
+    let gdbDup: any = { isDuplicate: false };
 
-    // 4. GDB semantic search runs second — may add matchedAnswer + similarityScore
-    //    if GDB has a confident match beyond what our DB found. questionText is
-    //    already English (translated above), so languageCode is omitted —
-    //    checkDuplicate's own Sarvam translation step is skipped for English text.
-    const gdbDup = await this.gdbService.checkDuplicate({
-      questionText: englishQuestionText,
-    });
+    if (user.isAnveshanUser) {
+      gdbDup = await this.gdbService.classifyQuery({
+        questionText: englishQuestionText,
+      });
+      this.assertNotRejected(gdbDup.rejection);
+    } else {
+      // 3. Check our own DB first — exact text match (case-insensitive, trimmed).
+      dbDup = await this.findExactDuplicate(dto.questionText, userId);
 
-    // Abusive / non-agricultural queries are blocked here — nothing is persisted
-    // and no daily slot is consumed.
-    this.assertNotRejected(gdbDup.rejection);
+      // 4. GDB semantic search runs second
+      gdbDup = await this.gdbService.checkDuplicate({
+        questionText: englishQuestionText,
+      });
+
+      // Abusive / non-agricultural queries are blocked here
+      this.assertNotRejected(gdbDup.rejection);
+    }
 
     // 5. Derive season from current month (India-centric calendar)
     const season = deriveSeasonFromMonth(new Date().getMonth()); // 0-indexed

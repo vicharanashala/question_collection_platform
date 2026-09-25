@@ -332,49 +332,109 @@ export function LoginPage() {
     }
   }
 
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault();
-    const cleaned = otp.replace(/\D/g, "").slice(0, 6);
-    if (cleaned.length !== 6) {
-      toast.error("Enter the 6-digit OTP");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await authApi.verifyOtp(mobile, cleaned);
+  // async function handleVerifyOtp(e: React.FormEvent) {
+  //   e.preventDefault();
+  //   const cleaned = otp.replace(/\D/g, "").slice(0, 6);
+  //   if (cleaned.length !== 6) {
+  //     toast.error("Enter the 6-digit OTP");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   try {
+  //     const res = await authApi.verifyOtp(mobile, cleaned);
 
-      if ("requiresRegistration" in res && res.requiresRegistration) {
-        if (res.role === "user") {
-          navigate("/home", { state: { mobileNumber: mobile }, replace: true });
-        } else {
-          toast.error(
-            "Your account is not yet activated. Please contact your administrator.",
-          );
-        }
+  //     if ("requiresRegistration" in res && res.requiresRegistration) {
+  //       if (res.role === "user") {
+  //         navigate("/home", { state: { mobileNumber: mobile }, replace: true });
+  //       } else {
+  //         toast.error(
+  //           "Your account is not yet activated. Please contact your administrator.",
+  //         );
+  //       }
+  //       return;
+  //     }
+
+  //     const tokens = res.tokens!;
+  //     const user = res.user!;
+  //     login(
+  //       { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+  //       { ...user, token: tokens.accessToken },
+  //     );
+
+  //     if (user.role === "user") {
+  //       toast.success("Welcome back!");
+  //       navigate("/home", { replace: true });
+  //     } else {
+  //       toast.success("Welcome back!");
+  //       navigate("/dashboard", { replace: true });
+  //     }
+  //   } catch (err) {
+  //     toast.error(getErrorMessage(err, "Invalid OTP"));
+  //     setOtp("");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+
+
+  async function handleVerifyOtp(e: React.FormEvent) {
+  e.preventDefault();
+  const cleaned = otp.replace(/\D/g, "").slice(0, 6);
+  if (cleaned.length !== 6) {
+    toast.error("Enter the 6-digit OTP");
+    return;
+  }
+  setLoading(true);
+  try {
+    const res = await authApi.verifyOtp(mobile, cleaned);
+
+    if ("requiresRegistration" in res && res.requiresRegistration) {
+      if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
+        navigate("/home/anveshan-phase-gate", {
+          state: res.anveshanPhaseInfo,
+          replace: true,
+        });
         return;
       }
-
-      const tokens = res.tokens!;
-      const user = res.user!;
-      login(
-        { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
-        { ...user, token: tokens.accessToken },
-      );
-
-      if (user.role === "user") {
-        toast.success("Welcome back!");
-        navigate("/home", { replace: true });
+      if (res.role === "user") {
+        navigate("/home", { state: { mobileNumber: mobile }, replace: true });
       } else {
-        toast.success("Welcome back!");
-        navigate("/dashboard", { replace: true });
+        toast.error(
+          "Your account is not yet activated. Please contact your administrator.",
+        );
       }
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Invalid OTP"));
-      setOtp("");
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    const tokens = res.tokens!;
+    const user = res.user!;
+    login(
+      { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+      { ...user, token: tokens.accessToken },
+    );
+
+    if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
+      navigate("/home/anveshan-phase-gate", {
+        state: res.anveshanPhaseInfo,
+        replace: true,
+      });
+      return;
+    }
+
+    if (user.role === "user") {
+      toast.success("Welcome back!");
+      navigate("/home", { replace: true });
+    } else {
+      toast.success("Welcome back!");
+      navigate("/dashboard", { replace: true });
+    }
+  } catch (err) {
+    toast.error(getErrorMessage(err, "Invalid OTP"));
+    setOtp("");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function handleResend() {
     if (countdown.active) return;

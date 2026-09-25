@@ -14,6 +14,7 @@ import {
   llmConfig,
   gdbConfig,
   embedConfig,
+  anveshanDbConfig,
 } from './config/configuration';
 import { paymentConfig } from './config/payment.config';
 import { sarvamConfig } from './config/sarvam.config';
@@ -48,7 +49,7 @@ import { DbModule } from './shared/database/db.module';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [dbConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, gdbConfig, embedConfig, sarvamConfig, lgdConfig, paymentConfig],
+      load: [dbConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, gdbConfig, embedConfig, sarvamConfig, lgdConfig, paymentConfig, anveshanDbConfig],
       envFilePath: ['.env'],
     }),
  

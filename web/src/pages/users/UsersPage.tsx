@@ -47,17 +47,34 @@ export function UsersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
 
+  // useEffect(() => {
+  //   setLoading(true)
+  //   adminApi.getUsers({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
+  //     .then((res) => { setUsers(res.items); setTotal(res.total) })
+  //     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
+  //     .finally(() => setLoading(false))
+  // }, [page, debouncedSearch, statusFilter, roleFilter, currentUser?.id])
+
+
   useEffect(() => {
-    setLoading(true)
-    adminApi.getUsers({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
-      .then((res) => { setUsers(res.items); setTotal(res.total) })
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
-      .finally(() => setLoading(false))
-  }, [page, debouncedSearch, statusFilter, roleFilter, currentUser?.id])
+  setLoading(true)
+  adminApi.getUsers({
+    page, limit,
+    search: debouncedSearch || undefined,
+    status: statusFilter || undefined,
+    role: roleFilter || undefined,
+    category: categoryFilter || undefined,   // ← add this
+    excludeId: currentUser?.id,
+  })
+    .then((res) => { setUsers(res.items); setTotal(res.total) })
+    .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
+    .finally(() => setLoading(false))
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, currentUser?.id])
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -118,18 +135,29 @@ export function UsersPage() {
           </div>
           {isSuperAdmin && (
             <select
-              className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
-              value={roleFilter}
-              onChange={(e) => { setRoleFilter(e.target.value); setPage(1) }}
-            >
-              <option value="">All Roles</option>
-              <option value="user">User</option>
-              <option value="curator">Curator</option>
-              <option value="finance">Finance</option>
-              <option value="distributor">Distributor</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
+  className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
+  value={roleFilter || (categoryFilter && `category:${categoryFilter}`) || ''}
+  onChange={(e) => {
+    const val = e.target.value
+    setPage(1)
+    if (val.startsWith('category:')) {
+      setCategoryFilter(val.replace('category:', ''))
+      setRoleFilter('')
+    } else {
+      setRoleFilter(val)
+      setCategoryFilter('')
+    }
+  }}
+>
+  <option value="">All Roles</option>
+  <option value="user">User</option>
+  <option value="curator">Curator</option>
+  <option value="finance">Finance</option>
+  <option value="distributor">Distributor</option>
+  <option value="admin">Admin</option>
+  <option value="super_admin">Super Admin</option>
+  <option value="category:anveshan_user">Anveshan User</option>
+</select>
           )}
         </div>
       </Card>

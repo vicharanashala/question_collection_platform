@@ -157,6 +157,10 @@ isUserCreatedBySuperAdmin: boolean;
 profileCreatedByAdminCompleted: boolean
 
 
+@Prop({ type: Boolean, default: false, index: true })
+isAnveshanUser: boolean;
+
+
 
   createdAt: Date;
   updatedAt: Date;

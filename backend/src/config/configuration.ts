@@ -140,3 +140,7 @@ export const reviwerConfig = registerAs("reviewSystem", ()=>({
   reviewerUri: process.env.REVIEWER_INGEST_URL,
   apiKey: process.env.REVIEW_SYSTEM_AUTH_KEY
 }))
+
+export const anveshanDbConfig = registerAs("anveshanDb", () => ({
+  mongoUri: process.env.ANVESHAN_DB_URL || "mongodb://localhost:27017/question_platform",
+}));

@@ -7,6 +7,7 @@ import { lazyRoute } from '@/components/LazyRoute'
 import { LockedAccountModal } from '@/components/LockedAccountModal'
 import type { UserRole } from '@/types'
 
+
 // ── Staff / admin pages (existing) ─────────────────────────────────────────
 const LoginPage       = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
 const DashboardRouter = lazyRoute(() => import('@/pages/dashboard/DashboardRouter').then(m => ({ default: m.DashboardRouter })))
@@ -42,6 +43,8 @@ const PublicTermsPage                = lazyRoute(() => import('@/pages/public/Pu
 const PublicPrivacyPage              = lazyRoute(() => import('@/pages/public/PublicPrivacyPage').then(m => ({ default: m.default })))
 const PublicNotificationsPage        = lazyRoute(() => import('@/pages/public/PublicNotificationsPage').then(m => ({ default: m.default })))
 const PublicLeaderboardPage          = lazyRoute(() => import('@/pages/public/PublicLeaderboardPage').then(m => ({ default: m.default })))
+
+const AnveshanPhaseGatePage              = lazyRoute(()=>import('@/pages/public/AnveshanPhaseGate').then(m => ({ default: m.AnveshanPhaseGatePage })))
 
 /** Pages visible per role (staff / admin side) */
 const PAGE_ROLES: Record<string, UserRole[]> = {
@@ -164,6 +167,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="/home/verification-pending" element={<PublicVerificationPendingPage />} />
+        <Route path="/home/anveshan-phase-gate" element={<AnveshanPhaseGatePage />} />
 
         {/* ── Root gate: home page for visitors, staff shell for staff ──── */}
         <Route

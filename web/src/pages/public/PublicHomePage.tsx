@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { REWARD_TIERS, categoryLabel } from "@/constants/public";
 import { EditPublicProfileDialog } from "@/components/profile/EditPublicProfileDialog";
+import { AnveshanWelcomeModal } from "@/components/profile/AnveshanProfileModal";
 interface Stats {
   dailyCount: number;
   remainingToday: number;
@@ -214,7 +215,7 @@ export function PublicHomePage() {
   const [loading, setLoading] = useState(true);
   const [dailyLimit, setDailyLimit] = useState<number>(20);
   const [editWindowSec, setEditWindowSec] = useState<number>(0);
-
+  const showAnveshanModal = !!user?.isAnveshanUser && user?.consentGiven === false;
   const locationState = location.state as { mobileNumber?: string } | null;
   const postOtpMobile = locationState?.mobileNumber
     ? locationState.mobileNumber.replace(/\D/g, "").slice(-10)
@@ -658,6 +659,12 @@ export function PublicHomePage() {
           onSaved={updateUser}
         />
       ) : null}
+
+      <AnveshanWelcomeModal
+        open={showAnveshanModal}
+        user={user}
+        onConsentGiven={(updatedUser) => updateUser(updatedUser.user)}
+      />
     </div>
   );
 }
