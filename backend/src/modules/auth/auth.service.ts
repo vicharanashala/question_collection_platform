@@ -44,9 +44,22 @@ export interface AuthTokens {
   expiresIn: number;
 }
 
+// export interface AuthResponse {
+//   tokens: AuthTokens;
+//   user: PublicUser;
+// }
+
+export interface AnveshanPhaseInfo {
+  isAnveshanUser: true;
+  currentPhase: string;
+  requiredPhase: string;
+  eligible: boolean;
+}
+
 export interface AuthResponse {
   tokens: AuthTokens;
   user: PublicUser;
+  anveshanPhaseInfo?: AnveshanPhaseInfo;
 }
 
 export interface PublicUser {
@@ -278,7 +291,12 @@ export class AuthService {
     dto: VerifyOtpDto,
   ): Promise<
     | AuthResponse
-    | { requiresRegistration: true; tempToken: string; role: UserRole }
+    | {
+      requiresRegistration: true;
+      tempToken: string;
+      role: UserRole;
+      anveshanPhaseInfo?: AnveshanPhaseInfo;
+    }
   > {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     // Opt-in local shortcut for developing without a live SMS gateway. main.ts refuses
@@ -359,67 +377,77 @@ export class AuthService {
       user.id,
     );
 
+    const REQUIRED_ANVESHAN_PHASE = "foundation";
 
     const anveshanCandidate = await this.anveshanRepo.findByPhone(mobileNumber);
-if (anveshanCandidate) {
-  this.logger.debug(`User ${mobileNumber} belongs to Anveshan platform`);
+let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
 
-  const updates: Partial<User> = {
+if (anveshanCandidate) {
+  const eligible = anveshanCandidate.current_phase === REQUIRED_ANVESHAN_PHASE;
+  anveshanPhaseInfo = {
     isAnveshanUser: true,
-    category: UserCategory.ANVESHAN_USER,
-    verificationStatus: VerificationStatus.VERIFIED,
+    currentPhase: anveshanCandidate.current_phase as string,
+    requiredPhase: REQUIRED_ANVESHAN_PHASE,
+    eligible,
   };
 
-  // Only backfill fields the user hasn't already set themselves
-  if (!user.name?.trim() && anveshanCandidate.full_name) {
-    updates.name = anveshanCandidate.full_name;
-  }
-  if (!user.state?.trim() && anveshanCandidate.state) {
-    updates.state = anveshanCandidate.state;
-  }
-  if (!user.district?.trim() && anveshanCandidate.district) {
-    updates.district = anveshanCandidate.district;
-  }
+  if (eligible) {
+    this.logger.debug(`User ${mobileNumber} belongs to Anveshan platform`);
 
-  await this.userRepo.update(user.id, updates);
-  user = { ...user, ...updates } as User; // keep in-memory copy in sync for the rest of this call
+    const updates: Partial<User> = {
+      isAnveshanUser: true,
+      category: UserCategory.ANVESHAN_USER,
+      verificationStatus: VerificationStatus.VERIFIED,
+    };
+
+    if (!user.name?.trim() && anveshanCandidate.full_name) {
+      updates.name = anveshanCandidate.full_name;
+    }
+    if (!user.state?.trim() && anveshanCandidate.state) {
+      updates.state = anveshanCandidate.state;
+    }
+    if (!user.district?.trim() && anveshanCandidate.district) {
+      updates.district = anveshanCandidate.district;
+    }
+
+    await this.userRepo.update(user.id, updates);
+    user = { ...user, ...updates } as User;
+  } else {
+    // Flag them as an Anveshan user for tracking, but withhold verification
+    // and profile backfill until they reach the required phase.
+    const updates: Partial<User> = {
+      isAnveshanUser: true,
+      category: UserCategory.ANVESHAN_USER,
+    };
+    await this.userRepo.update(user.id, updates);
+    user = { ...user, ...updates } as User;
+  }
 }
 
-    // Check if registration is complete (name is set)
-    const isRegistered = user.name && user.name.trim().length > 0;
+// Check if registration is complete (name is set)
+const isRegistered = user.name && user.name.trim().length > 0;
 
-    if (!isRegistered) {
-      // First-time user — issue a short-lived temp registration token.
-      // 1-hour expiry so users can take breaks during the multi-step wizard
-      // and resume where they left off (each Next click saves a draft to
-      // the user record; the frontend uses this token to authorize those saves).
-      const tempToken = this.jwtService.sign(
-        { sub: user.id, mobileNumber, type: "registration" },
-        { expiresIn: "1h" },
-      );
-      return { requiresRegistration: true, tempToken, role: user.role };
-    }
+if (!isRegistered) {
+  const tempToken = this.jwtService.sign(
+    { sub: user.id, mobileNumber, type: "registration" },
+    { expiresIn: "1h" },
+  );
+  return { requiresRegistration: true, tempToken, role: user.role, anveshanPhaseInfo };
+}
 
-    // Returning user — issue full auth tokens
-    user.lastLoginAt = new Date();
-    await this.userRepo.save(user);
+// Returning user — issue full auth tokens
+user.lastLoginAt = new Date();
+await this.userRepo.save(user);
 
-    // Ensure wallet exists (handles edge case of user created without wallet)
-    const walletExists = await this.walletRepo.count({
-      where: { userId: user.id },
-    });
-    if (walletExists === 0) {
-      await this.walletRepo.save(
-        await this.walletRepo.create({
-          userId: user.id,
-          balance: 0,
-          currency: "INR",
-        }),
-      );
-    }
+const walletExists = await this.walletRepo.count({ where: { userId: user.id } });
+if (walletExists === 0) {
+  await this.walletRepo.save(
+    await this.walletRepo.create({ userId: user.id, balance: 0, currency: "INR" }),
+  );
+}
 
-    const tokens = await this.issueTokens(user);
-    return { tokens, user: this.toPublicUser(user) };
+const tokens = await this.issueTokens(user);
+return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
   }
 
   // ─── Registration ───────────────────────────────────────────────────────────
