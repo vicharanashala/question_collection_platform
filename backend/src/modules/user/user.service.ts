@@ -59,19 +59,19 @@ export class UserService {
 
   // ─── Anveshan Progress ──────────────────────────────────────────────────────
 
-  async getAnveshanProgress(userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+  async getAnveshanProgress(mobileNumber: string) {
+    const user = await this.userRepo.findByMobile(mobileNumber);
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
+    const userId = user.id;
     const isAnveshanUser = user.isAnveshanUser === true;
 
     // If not an Anveshan user, short-circuit — nothing to check
     if (!isAnveshanUser) {
       return {
         isCompleted: false,
-        isAnveshanUser: false,
         requirements: {
           questions: { required: 25, submitted: 0, met: false },
           crop:      { required: 1,  submitted: 0, met: false },
@@ -102,7 +102,6 @@ export class UserService {
 
     return {
       isCompleted,
-      isAnveshanUser: true,
       requirements: {
         questions: { required: 25, submitted: questionCount, met: questionsMet },
         crop:      { required: 1,  submitted: cropCount,     met: cropMet },

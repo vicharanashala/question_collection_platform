@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
+import { ApiKeyAuth } from '../../shared/middleware/decorators/api-key-auth.decorator';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
@@ -68,14 +69,16 @@ export class UserController {
   }
 
   /**
-   * GET /users/:id/anveshan-progress
-   * Returns whether the given user has completed all Anveshan
+   * GET /users/:mobileNumber/anveshan/check-completion
+   * Returns whether the given user (identified by mobile number) has completed all Anveshan
    * submission requirements (25 questions + 1 crop + 1 pest + 1 weed + 1 disease).
+   * Authenticated via x-api-key header (no JWT required).
    */
-  @Get(':id/anveshan-progress')
+  @Get(':mobileNumber/anveshan/check-completion')
+  @ApiKeyAuth()
   @HttpCode(HttpStatus.OK)
-  async getAnveshanProgress(@Param('id') id: string) {
-    return this.userService.getAnveshanProgress(id);
+  async getAnveshanProgress(@Param('mobileNumber') mobileNumber: string) {
+    return this.userService.getAnveshanProgress(mobileNumber);
   }
 
   /**
