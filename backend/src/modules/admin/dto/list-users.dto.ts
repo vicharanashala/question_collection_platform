@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsIn, IsInt, Min, Max } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { VerificationStatus, UserCategory } from '../../../shared/classes/enums';
+import { VerificationStatus, UserCategory, UserRole } from '../../../shared/classes/enums';
 
 export class ListUsersDto {
   @IsOptional()
@@ -21,7 +21,11 @@ export class ListUsersDto {
   state?: string;
 
   @IsOptional()
-  @IsIn(['farmer', 'fpo', 'student', 'volunteer', 'ngo'])
+  @IsIn(Object.values(UserRole))
+  role?: UserRole;
+
+  @IsOptional()
+  @IsIn(['farmer', 'fpo', 'student', 'volunteer', 'ngo', 'anveshan_user'])
   category?: UserCategory;
 
   @IsOptional()

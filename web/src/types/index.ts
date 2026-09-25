@@ -164,6 +164,7 @@ export interface AuthUser {
   isUserCreatedBySuperAdmin?: boolean;
   profileCreatedByAdminCompleted?: boolean;
   organisationTypeOther?: string
+  isAnveshanUser?: boolean
 }
 
 export type TimeRange = '7d' | '30d' | '90d'

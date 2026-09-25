@@ -15,6 +15,7 @@ import { Notification, NotificationSchema } from './schemas/notification.schema'
 import { Report, ReportSchema } from './schemas/report.schema';
 import { ReportReply, ReportReplySchema } from './schemas/report-reply.schema';
 import { Faq, FaqSchema } from './schemas/faq.schema';
+import { Candidate, CandidateSchema } from './schemas/anveshan.schema';
 
 const SCHEMAS = [
   { name: User.name, schema: UserSchema },
@@ -31,6 +32,13 @@ const SCHEMAS = [
   { name: ReportReply.name, schema: ReportReplySchema },
   { name: Faq.name, schema: FaqSchema },
 ];
+
+const ANVESHAN_SCHEMAS = [
+  // { name: Interview.name, schema: InterviewSchema },
+  {name: Candidate.name, schema: CandidateSchema}
+];
+
+export const ANVESHAN_CONNECTION = 'anveshan';
 
 @Module({
   imports: [
@@ -87,7 +95,29 @@ const SCHEMAS = [
       },
     }),
 
+        MongooseModule.forRootAsync({
+      connectionName: ANVESHAN_CONNECTION,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const uri = configService.get<string>('anveshanDb.mongoUri');
+        if (!uri) {
+          throw new Error('Missing required env var: ANVESHAN_DB_URL');
+        }
+
+        return {
+          uri,
+          serverSelectionTimeoutMS: 8_000,
+          connectTimeoutMS: 8_000,
+          // +srv URIs already negotiate TLS themselves — no extra options needed
+        };
+      },
+    }),
+
+
     MongooseModule.forFeature(SCHEMAS),
+
+    MongooseModule.forFeature(ANVESHAN_SCHEMAS, ANVESHAN_CONNECTION),
   ],
   exports: [MongooseModule],
 })

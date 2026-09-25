@@ -43,6 +43,8 @@ import { ReportSchema } from './mongodb/schemas/report.schema';
 import { ReportReplySchema } from './mongodb/schemas/report-reply.schema';
 import { FaqSchema } from './mongodb/schemas/faq.schema';
 import { FinalQuestionSchema } from './mongodb/schemas/final-question.schema';
+import { CandidateSchema } from './mongodb/schemas/anveshan.schema';
+import { ANVESHAN_CONNECTION } from './mongodb/mongo.module';
 import { AgriEntitySchema } from './mongodb/schemas/agri-entity.schema';
 
 const MONGO_SCHEMA_ENTRIES = [
@@ -68,6 +70,10 @@ const MONGO_SCHEMA_ENTRIES = [
   imports: [
     // Register all Mongoose models so MongoRepository constructors can inject them
     MongooseModule.forFeature(MONGO_SCHEMA_ENTRIES),
+     MongooseModule.forFeature(
+      [{ name: 'Candidate', schema: CandidateSchema }],
+      ANVESHAN_CONNECTION,
+    ),
   ],
   providers: [
     ...buildRepositoryProviders(),

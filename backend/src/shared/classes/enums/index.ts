@@ -5,6 +5,7 @@ export enum UserCategory {
   STUDENT = 'student',
   VOLUNTEER = 'volunteer',
   NGO = 'ngo',
+  ANVESHAN_USER= 'anveshan_user'
 }
 
 export enum PaymentDetailVerificationStatus {
