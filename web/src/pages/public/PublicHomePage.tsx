@@ -660,11 +660,11 @@ export function PublicHomePage() {
         />
       ) : null}
 
-  <AnveshanWelcomeModal
-  open={showAnveshanModal}
-  name={user?.name}
-  onConsentGiven={(updatedUser) => updateUser(updatedUser.user)}
-/>
+      <AnveshanWelcomeModal
+        open={showAnveshanModal}
+        user={user}
+        onConsentGiven={(updatedUser) => updateUser(updatedUser.user)}
+      />
     </div>
   );
 }
