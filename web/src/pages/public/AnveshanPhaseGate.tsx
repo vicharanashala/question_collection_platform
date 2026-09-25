@@ -12,6 +12,7 @@ const PHASE_LABELS: Record<string, string> = {
   foundation: "Foundation",
   interview: "Interview",
   summary: "Summary",
+  module: "Module"
 };
 
 function phaseLabel(phase: string) {

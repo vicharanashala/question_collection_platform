@@ -22,6 +22,7 @@ import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
+import { UserService } from '../user/user.service';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -30,7 +31,7 @@ interface AuthenticatedRequest extends Request {
 @Controller('questions')
 @UseGuards(JwtAuthGuard)
 export class QuestionController {
-  constructor(private readonly questionService: QuestionService) {}
+  constructor(private readonly questionService: QuestionService, private readonly userService: UserService) {}
 
   // POST /questions — Submit a new question
   @Post()
@@ -85,22 +86,27 @@ export class QuestionController {
   }
 
   // GET /questions/stats/me — Daily submission count for current user
-  @Get('stats/me')
-  @Cacheable('question_stats', 60)
-  async getMyStats(@Req() req: AuthenticatedRequest) {
-    const [dailyCount, limits, totalApproved] = await Promise.all([
-      this.questionService.getDailyCount(req.user.id),
-      this.questionService.getLimits(),
-      this.questionService.getApprovedCount(req.user.id),
-    ]);
+@Get('stats/me')
+@Cacheable('question_stats', 60)
+async getMyStats(@Req() req: AuthenticatedRequest) {
+  const [user, dailyCount, limits, totalApproved] = await Promise.all([
+    this.userService.getProfile(req.user.id),
+    this.questionService.getDailyCount(req.user.id),
+    this.questionService.getLimits(),
+    this.questionService.getApprovedCount(req.user.id),
+  ]);
 
-    return {
-      dailyCount,
-      remainingToday: Math.max(0, limits.dailyLimit - dailyCount),
-      totalApproved,
-      ...limits,
-    };
-  }
+  const unlimited = !!user?.isAnveshanUser;
+
+  return {
+    ...limits,
+    dailyCount,
+    remainingToday: unlimited ? null : Math.max(0, limits.dailyLimit - dailyCount),
+    dailyLimit: unlimited ? null : limits.dailyLimit,
+    unlimited,
+    totalApproved,
+  };
+}
 
   // Admin routes (protected by roles guard)
   @Post(':id/approve')
