@@ -776,6 +776,10 @@ export class QuestionService {
       duplicate: gdbDup,
     };
   }
+
+  async getTotalSubmittedCount(userId: string): Promise<number> {
+  return this.questionRepo.count({ where: { userId } });
+}
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

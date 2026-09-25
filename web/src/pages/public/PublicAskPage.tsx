@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,6 +32,8 @@ import {
   saveQuestionDraft,
   clearQuestionDraft,
 } from '@/utils/questionDraft'
+import { AnveshanMilestoneData, AnveshanMilestoneModal } from './AnveshMileStone'
+import { Award } from "lucide-react";
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -62,13 +64,15 @@ interface AskHeaderProps {
   remainingToday?: number | null
   dailyLimit?: number | null
   atLimit: boolean
+  user?: unknown
+  setMilestoneModalOpen?: (open: boolean) => void
 }
 
 /**
  * Shared header for both steps of the ask flow: back action, daily-limit chip,
  * page title and a two-step progress indicator.
  */
-function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit }: AskHeaderProps) {
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen }: AskHeaderProps) {
   const { t } = useTranslation()
   const steps = [
     { n: 1 as const, label: t('question.yourQuestion') },
@@ -110,6 +114,19 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
                 : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
             </span>
           )}
+
+ {user?.isAnveshanUser && setMilestoneModalOpen && (
+  <Button
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={() => setMilestoneModalOpen(true)}
+    className="gap-1.5"
+  >
+    <Award className="h-4 w-4" />
+    {t("anveshan.myProgress", "My Progress")}
+  </Button>
+)}
         </div>
       </div>
 
@@ -189,6 +206,40 @@ export function PublicAskPage() {
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
+
+  const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
+const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
+const [milestoneJustCompleted, setMilestoneJustCompleted] = useState(false);
+
+const fetchMilestone = useCallback(() => {
+  if (!user?.isAnveshanUser) return;
+  questionApi.getMyAnveshanMilestone() // add this method to your api/client.ts
+    .then((data: AnveshanMilestoneData) => {
+      setMilestone((prev) => {
+        if (!prev?.completed && data.completed) {
+          setMilestoneJustCompleted(true);
+        }
+        return data;
+      });
+    })
+    .catch(() => undefined);
+}, [user?.isAnveshanUser]);
+
+useEffect(() => {
+  fetchMilestone();
+}, [fetchMilestone]);
+
+useEffect(() => {
+  if (milestoneJustCompleted) {
+    toast.success(
+      t("anveshan.milestoneCompleteToast", {
+        defaultValue: "🎉 Congratulations! You've completed your Anveshan milestone.",
+      }),
+      { duration: 6000 },
+    );
+    setMilestoneJustCompleted(false);
+  }
+}, [milestoneJustCompleted, t]);
 
   const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
@@ -690,6 +741,8 @@ if (activeTab !== 'question') {
         remainingToday={stats?.remainingToday}
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
+        user={user}
+        setMilestoneModalOpen={setMilestoneModalOpen}
       />
        {user?.isAnveshanUser && (
         <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
@@ -857,6 +910,11 @@ if (activeTab !== 'question') {
         </CardContent>
       </Card>
       {dialogs}
+      <AnveshanMilestoneModal
+  open={milestoneModalOpen}
+  onOpenChange={setMilestoneModalOpen}
+  data={milestone}
+/>
     </div>
   )
 }
