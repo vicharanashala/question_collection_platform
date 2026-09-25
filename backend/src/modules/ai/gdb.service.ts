@@ -48,6 +48,14 @@ export interface QuestionRejection {
   reason: string;
 }
 
+export interface ClassifyQueryResponse {
+  query: string;
+  is_safe: boolean;
+  safety_reason: string;
+  is_agriculture: boolean;
+  agriculture_reason: string;
+}
+
 export interface DuplicateCheckResult {
   /** true when GDB already has this question in its knowledge base */
   isDuplicate: boolean;
@@ -185,6 +193,80 @@ export class GdbService {
       rejection: null,
       rawResponse: raw,
     };
+  }
+
+  /**
+   * Calls the classification endpoint for Anveshan users.
+   */
+  async classifyQuery(payload: {
+    questionText: string;
+    languageCode?: string;
+  }): Promise<DuplicateCheckResult> {
+    if (isDevelopment()) {
+      this.logger.debug('[GDB] classifyQuery skipped — development environment');
+      return this.noDuplicate();
+    }
+
+    const baseUrl = this.configService.get<string>('gdb.baseUrl')!;
+    const apiKey = this.configService.get<string>('gdb.apiKey')!;
+
+    const url = `${baseUrl}/v1/classify-query`;
+    this.logger.debug(`[GDB] classify-query → ${url}`);
+
+    const queryText = await this.toEnglish(payload.questionText, payload.languageCode);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        },
+        body: JSON.stringify({ query: queryText }),
+      });
+    } catch (err) {
+      this.logger.error(`[GDB] classifyQuery network error: ${err}`);
+      return this.noDuplicate();
+    }
+
+    let raw: ClassifyQueryResponse;
+    let responseText = '';
+    try {
+      responseText = await response.text();
+      this.logger.debug(`[GDB] classifyQuery raw response (${response.status}): ${responseText.slice(0, 500)}`);
+      raw = JSON.parse(responseText) as ClassifyQueryResponse;
+    } catch {
+      this.logger.error(`[GDB] classifyQuery non-JSON response body: ${responseText?.slice(0, 200)}`);
+      return this.noDuplicate();
+    }
+
+    if (!response.ok) {
+      this.logger.warn(`[GDB] classifyQuery HTTP ${response.status}`);
+      return this.noDuplicate();
+    }
+
+    if (!raw.is_safe) {
+      return {
+        ...this.noDuplicate(),
+        rejection: {
+          category: QuestionRejectionCategory.ABUSIVE,
+          reason: raw.safety_reason ?? 'Flagged as unsafe',
+        },
+      };
+    }
+
+    if (!raw.is_agriculture) {
+      return {
+        ...this.noDuplicate(),
+        rejection: {
+          category: QuestionRejectionCategory.NOT_AGRICULTURE,
+          reason: raw.agriculture_reason ?? 'Not related to agriculture',
+        },
+      };
+    }
+
+    return this.noDuplicate();
   }
 
   /**
