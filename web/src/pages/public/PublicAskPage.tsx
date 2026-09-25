@@ -41,8 +41,8 @@ interface PreviewMeta {
   district: string
   block: string | null
   agroClimaticZone: string
-  remainingToday: number
-  dailyLimit: number
+  remainingToday: number | null
+  dailyLimit: number | null
 }
 
 // ─── Crop Type picker modal ────────────────────────────────────────────────────
@@ -54,14 +54,13 @@ interface PreviewMeta {
 
 
 interface AskHeaderProps {
-  /** Omit to hide the two-step progress indicator. */
   step?: 1 | 2
   title: string
   subtitle: string
   onBack: () => void
   onReport?: () => void
-  remainingToday?: number
-  dailyLimit?: number
+  remainingToday?: number | null
+  dailyLimit?: number | null
   atLimit: boolean
 }
 
@@ -148,6 +147,11 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
   )
 }
 
+interface StatsState {
+  remainingToday: number | null
+  dailyLimit: number | null
+}
+
 export function PublicAskPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -180,18 +184,23 @@ export function PublicAskPage() {
   const [cropPickerOpen, setCropPickerOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [stats, setStats] = useState<{ remainingToday: number; dailyLimit: number } | null>(null)
+  const [stats, setStats] = useState<StatsState | null>(null)
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null)
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
 
-  const atLimit = stats != null && stats.remainingToday <= 0
-
+  const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
 useEffect(() => {
   saveQuestionDraft(questionText)
 }, [questionText])
+
+useEffect(() => {
+  if (!user?.isAnveshanUser && activeTab !== 'question') {
+    setSearchParams({}, { replace: true })
+  }
+}, [user?.isAnveshanUser, activeTab, setSearchParams])
 
 
 
@@ -243,11 +252,14 @@ useEffect(() => {
     !bannerDismissed
 
   // ─── Stats (daily limit counter) ──────────────────────────────────────────
-  useEffect(() => {
-    questionApi.getMyStats()
-      .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-      .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
-  }, [])
+useEffect(() => {
+  questionApi.getMyStats()
+    .then((s) => setStats({
+      remainingToday: (s as any).remainingToday ?? null,
+      dailyLimit: (s as any).dailyLimit ?? null,
+    }))
+    .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
+}, [])
 
   function toggleDomain(d: string) {
     setDomains((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
@@ -293,18 +305,21 @@ useEffect(() => {
           matchedUserName: res.duplicate.matchedUserName,
         })
         questionApi.getMyStats()
-          .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-          .catch(() => undefined)
+  .then((s) => setStats({
+    remainingToday: (s as any).remainingToday ?? null,
+    dailyLimit: (s as any).dailyLimit ?? null,
+  }))
+  .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
         return
       }
       setPreviewMeta({
-        state: res.state ?? user.state,
-        district: res.district ?? user.district,
-        block: res.block ?? user.block ?? null,
-        agroClimaticZone: res.agroClimaticZone ?? '',
-        remainingToday: res.remainingToday ?? stats?.remainingToday ?? 0,
-        dailyLimit: res.dailyLimit ?? stats?.dailyLimit ?? 20,
-      })
+  state: res.state ?? user.state,
+  district: res.district ?? user.district,
+  block: res.block ?? user.block ?? null,
+  agroClimaticZone: res.agroClimaticZone ?? '',
+  remainingToday: res.remainingToday ?? stats?.remainingToday ?? null,
+  dailyLimit: res.dailyLimit ?? stats?.dailyLimit ?? null,
+})
       setDomains(res.domains ?? [])
       setSeason(res.season || '')
       setCropType(res.cropType ?? '')
@@ -352,10 +367,14 @@ useEffect(() => {
           matchedUserName: previewRes.duplicate.matchedUserName,
         })
         // Refresh stats — the duplicate rejection consumed one of today's slots.
-        questionApi.getMyStats()
-          .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-          .catch(() => undefined)
-        return
+      questionApi.getMyStats()
+    .then((s) => setStats({
+      remainingToday: (s as any).remainingToday ?? null,
+      dailyLimit: (s as any).dailyLimit ?? null,
+    }))
+    .catch(() => undefined)
+  return
+      
       }
 
       // ─── No duplicate → proceed with the actual submission ─────────────────
@@ -394,9 +413,13 @@ useEffect(() => {
         (res as any)?.id ?? (res as any)?.question?.id ?? undefined
       cacheQuestionForDuplicateDetection(questionText.trim(), newId)
       setSubmitted(true)
-      questionApi.getMyStats()
-        .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-        .catch(() => undefined)
+      setSubmitted(true)
+questionApi.getMyStats()
+  .then((s) => setStats({
+    remainingToday: (s as any).remainingToday ?? null,
+    dailyLimit: (s as any).dailyLimit ?? null,
+  }))
+  .catch(() => undefined)
     } catch (err) {
       const rejected = parseQuestionRejected(err)
       if (rejected) {
@@ -429,8 +452,8 @@ useEffect(() => {
         onOpenChange={(open) => { if (!open) { setSubmitted(false); resetAll() } }}
         onAskAnother={() => { setSubmitted(false); resetAll() }}
         onViewSubmissions={() => { setSubmitted(false); navigate('/home/questions') }}
-        remainingToday={stats?.remainingToday}
-        dailyLimit={stats?.dailyLimit}
+        remainingToday={stats?.remainingToday ?? 0}
+        dailyLimit={stats?.dailyLimit ?? 20}
       />
     </>
   )
@@ -445,8 +468,8 @@ useEffect(() => {
           subtitle={t('question.askSubtitle')}
           onBack={() => setStep('ask')}
           onReport={() => navigate('/home/reports')}
-          remainingToday={previewMeta.remainingToday}
-          dailyLimit={previewMeta.dailyLimit}
+          remainingToday={previewMeta.remainingToday ?? undefined}
+          dailyLimit={previewMeta.dailyLimit ?? null}
           atLimit={false}
         />
 
@@ -631,7 +654,11 @@ useEffect(() => {
   }
 
   // ─── Crop / Weed / Pest / Disease tabs ─────────────────────────────────────
-  if (activeTab !== 'question') {
+if (activeTab !== 'question') {
+    if (!user?.isAnveshanUser) {
+      // Guarded above via useEffect, but render nothing while the redirect settles
+      return null
+    }
     const typeLabel = t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')
     return (
       <div className="mx-auto max-w-4xl space-y-4">
@@ -642,7 +669,9 @@ useEffect(() => {
           onReport={() => navigate('/home/reports')}
           atLimit={false}
         />
-        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+        {user?.isAnveshanUser && (
+  <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+)}
         <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
       </div>
     )
@@ -650,6 +679,7 @@ useEffect(() => {
 
   // ─── Step 1 — free-text question entry ─────────────────────────────────────
   return (
+    
     <div className="mx-auto max-w-4xl space-y-4">
       <AskHeader
         step={1}
@@ -661,7 +691,9 @@ useEffect(() => {
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
       />
-      <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+       {user?.isAnveshanUser && (
+        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+      )}
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">
