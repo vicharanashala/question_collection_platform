@@ -377,7 +377,7 @@ export class AuthService {
       user.id,
     );
 
-    const REQUIRED_ANVESHAN_PHASE = "foundation";
+    const REQUIRED_ANVESHAN_PHASE = "module";
 
     const anveshanCandidate = await this.anveshanRepo.findByPhone(mobileNumber);
 let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
