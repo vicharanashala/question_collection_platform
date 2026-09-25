@@ -118,10 +118,26 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 
 // ─── Core request ──────────────────────────────────────────────────────────
 
+const DEFAULT_TIMEOUT_MS = 10_000
+// OTP requests can include a Cloud Run cold start plus BRPS token and SMS calls.
+const OTP_REQUEST_TIMEOUT_MS = 30_000
+
+// Converts a fetch timeout into a readable, non-retryable error instead of the raw abort message.
+function toTimeoutError(err: unknown): unknown {
+  if (err instanceof DOMException && err.name === 'TimeoutError') {
+    return Object.assign(
+      new Error('The server is taking longer than usual to respond. Please try again.'),
+      { status: 408 },
+    )
+  }
+  return err
+}
+
 export async function request<T>(
   path: string,
   options: RequestInit = {},
   useCache = true,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
   const token = getAccessToken()
   const headers: Record<string, string> = {
@@ -137,11 +153,10 @@ export async function request<T>(
 
   const doFetch = () => {
     const url = `${BASE}${path}`
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10_000)
+    // A fresh timeout signal per attempt so retries are not born already aborted.
     return withRetry(() =>
-      fetch(url, { ...options, headers, signal: controller.signal })
-        .finally(() => clearTimeout(timeoutId))
+      fetch(url, { ...options, headers, signal: AbortSignal.timeout(timeoutMs) })
+        .catch((err: unknown) => { throw toTimeoutError(err) })
         .then(async (res) => {
         if (res.status === 401) {
           const refresh = getRefreshToken()
@@ -221,7 +236,7 @@ export const authApi = {
     return request<{ message: string }>('/auth/request-otp', {
       method: 'POST',
       body: JSON.stringify({ mobileNumber, ...(isWeb ? { client: 'web' } : {}) }),
-    }, false)
+    }, false, OTP_REQUEST_TIMEOUT_MS)
   },
 
   verifyOtp: (mobileNumber: string, otp: string) =>
