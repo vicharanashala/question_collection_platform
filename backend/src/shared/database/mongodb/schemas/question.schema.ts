@@ -105,6 +105,9 @@ export class Question {
   @Prop({ name: 'submissionLocation', type: SubmissionLocation, default: null })
   submissionLocation: SubmissionLocation | null;
 
+  @Prop({name: 'is_Anveshan', type: Boolean, default: false})
+  isAnveshan: boolean;
+
   @Prop({ name: 'createdAt' })
   createdAt: Date;
 

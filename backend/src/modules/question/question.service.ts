@@ -446,6 +446,8 @@ export class QuestionService {
       ? { ...dto.submissionLocation, capturedAt: now }
       : undefined;
 
+      const isAnveshan = !!user.isAnveshanUser;
+
     // 2. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
     const cropType = dto.cropType?.trim() || inferred.crop;
@@ -492,6 +494,7 @@ export class QuestionService {
           rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
           submittedAt: now,
           embedding: [0],
+            isAnveshan,
           ...(submissionLocation ? { submissionLocation } : {}),
         });
         await this.auditRepo.save({
@@ -551,6 +554,7 @@ export class QuestionService {
         rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
         submittedAt: now,
         embedding: [0],
+          isAnveshan,
         ...(submissionLocation ? { submissionLocation } : {}),
       });
       await this.auditRepo.save({
@@ -615,6 +619,7 @@ export class QuestionService {
       status,
       submittedAt: now,
       embedding,
+        isAnveshan,
       ...(submissionLocation ? { submissionLocation } : {}),
     });
 
