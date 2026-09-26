@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
+import type { AuthUser } from '@/types'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -64,7 +65,7 @@ interface AskHeaderProps {
   remainingToday?: number | null
   dailyLimit?: number | null
   atLimit: boolean
-  user?: unknown
+  user?: AuthUser | null
   setMilestoneModalOpen?: (open: boolean) => void
 }
 
