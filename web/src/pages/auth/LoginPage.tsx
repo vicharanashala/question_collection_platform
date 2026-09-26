@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type KeyboardEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi, getErrorMessage } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -19,6 +19,9 @@ import {
   BookOpen,
   Sun,
   Moon,
+  Sprout,
+  Camera,
+  Award,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
@@ -80,11 +83,17 @@ function Orb({ className }: { className?: string }) {
 
 // ─── Branding panel features ───────────────────────────────────────────────
 
+const LANGUAGES_FEATURE = {
+  icon: Languages,
+  heading: "22 Indian Languages",
+  body: "Full support for Assamese, Bengali, Gujarati, Kannada, Malayalam, Marathi, Odia, Punjabi, Tamil, Telugu, and more.",
+};
+
 const FEATURES = [
   {
     icon: MicVocal,
     heading: "Voice & Text Questions",
-    body: "Ask in your own language — Hindi, Tamil, Telugu, and 16 more Indian languages.",
+    body: "Ask in your own language — Hindi, Tamil, Telugu, and 19 more Indian languages.",
   },
   {
     icon: Wallet,
@@ -96,11 +105,32 @@ const FEATURES = [
     heading: "Expert Answers",
     body: "Curated FAQ knowledge base built by agricultural experts and community moderators.",
   },
+  LANGUAGES_FEATURE,
+];
+
+// Shown instead of FEATURES when the page is opened with ?isAnveshan=true.
+const ANVESHAN_FEATURES = [
   {
-    icon: Languages,
-    heading: "19 Indian Languages",
-    body: "Full support for Assamese, Bengali, Gujarati, Kannada, Malayalam, Marathi, Odia, Punjabi, Tamil, Telugu, and more.",
+    icon: MicVocal,
+    heading: "Voice & Text Questions",
+    body: "Record the questions farmers raise during your visit, by voice or text, in their own language.",
   },
+  {
+    icon: Sprout,
+    heading: "Crop, Weed, Pest & Disease Records",
+    body: "Document local names alongside English and botanical names, with links to supporting sources.",
+  },
+  {
+    icon: Camera,
+    heading: "Field Photos",
+    body: "Capture photos directly in the field during your visit to support every record you submit.",
+  },
+  {
+    icon: Award,
+    heading: "Track Your Milestone",
+    body: "Follow your progress towards the Anveshan milestone as you submit questions and records.",
+  },
+  LANGUAGES_FEATURE,
 ];
 
 // ─── Step 1: Mobile number ─────────────────────────────────────────────────
@@ -302,6 +332,8 @@ function StepOtp({
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const brandFeatures = searchParams.get("isAnveshan") === "true" ? ANVESHAN_FEATURES : FEATURES;
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -491,7 +523,7 @@ export function LoginPage() {
         {/* Centre: 4 feature bullets, clean and well-spaced */}
         <div className="flex flex-col justify-center flex-1 py-10">
           <ul className="space-y-6">
-            {FEATURES.map(({ icon: Icon, heading, body }) => (
+            {brandFeatures.map(({ icon: Icon, heading, body }) => (
               <li key={heading} className="flex items-start gap-4">
                 <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
                   <Icon className="h-4 w-4 text-white" />
