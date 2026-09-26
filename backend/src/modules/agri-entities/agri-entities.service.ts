@@ -4,6 +4,7 @@ import { AgriEntityStatus, AgriEntityType } from '../../shared/classes/enums';
 import { isStorageUri } from '../storage/storage.service';
 import { getAgriEntityImageCategory } from './agri-entities.constants';
 import { ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AgriEntitiesService {
@@ -12,10 +13,50 @@ export class AgriEntitiesService {
     private readonly agriEntityRepo: IAgriEntityRepository,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
+    private readonly userService: UserService
   ) {}
 
   // Stores a user's crop, weed, pest or disease record for later review.
+  // async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
+  //     const now = new Date();
+  //       const submissionLocation = dto.submissionLocation
+  //     ? { ...dto.submissionLocation, capturedAt: now }
+  //     : undefined;
+  //   this.assertImagesOwnedByUser(dto.imageUrls, dto.type, userId);
+
+  //   const saved = await this.agriEntityRepo.create({
+  //     userId,
+  //     type: dto.type,
+  //     localName: dto.localName,
+  //     englishName: dto.englishName,
+  //     botanicalName: dto.botanicalName,
+  //     localNameSource: dto.localNameSource,
+  //     alternateNames: dto.alternateNames.map(({ name, source }) => ({ name, source })),
+  //     imageUrls: dto.imageUrls,
+  //     status: AgriEntityStatus.PENDING,
+  //     ...(submissionLocation ? { submissionLocation } : {}),
+      
+  //   });
+
+  //   return {
+  //     id: saved.id,
+  //     status: saved.status,
+  //     message: 'Submitted successfully',
+  //   };
+  // }
+
   async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
+    const user = await this.userService.getProfile(userId);
+    if (user?.isAnveshanUser && !dto.submissionLocation) {
+      throw new BadRequestException(
+        'Location is required for Anveshan users when submitting an entry.',
+      );
+    }
+
+    const now = new Date();
+    const submissionLocation = dto.submissionLocation
+      ? { ...dto.submissionLocation, capturedAt: now }
+      : undefined;
     this.assertImagesOwnedByUser(dto.imageUrls, dto.type, userId);
 
     const saved = await this.agriEntityRepo.create({
@@ -28,6 +69,7 @@ export class AgriEntitiesService {
       alternateNames: dto.alternateNames.map(({ name, source }) => ({ name, source })),
       imageUrls: dto.imageUrls,
       status: AgriEntityStatus.PENDING,
+      ...(submissionLocation ? { submissionLocation } : {}),
     });
 
     return {

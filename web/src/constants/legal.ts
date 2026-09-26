@@ -138,4 +138,10 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
       ? `For privacy-related questions, data access requests, or grievances, please contact us at ${SUPPORT_EMAIL}. We aim to respond to all legitimate requests within 30 days.`
       : 'For privacy-related questions, data access requests, or grievances, please contact us via the AnnaDatha App. We aim to respond to all legitimate requests within 30 days.',
   },
+
+  {
+  id: '13',
+  title: 'Location Information',
+  body: 'For users onboarded through the Anveshan platform, we collect your precise location (latitude and longitude) along with your State, District, Block, and Village each time you submit a question. This helps us provide location-specific agricultural guidance and verify submission context.',
+},
 ]

@@ -1,10 +1,35 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { QuestionStatus, MediaType } from '../../../classes/enums';
-
 export type QuestionDocument = Question & Document;
 
+
+
 @Schema({ collection: 'questions', timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } })
+
+export class SubmissionLocation {
+  @Prop({ required: true })
+  latitude: number;
+
+  @Prop({ required: true })
+  longitude: number;
+
+  @Prop({ required: true })
+  state: string;
+
+  @Prop({ required: true })
+  district: string;
+
+  @Prop({ required: true })
+  block: string;
+
+  @Prop({ required: true })
+  village: string;
+
+  @Prop({ required: true })
+  capturedAt: Date;
+}
+
 export class Question {
   _id: Types.ObjectId;
 
@@ -77,6 +102,9 @@ export class Question {
 
   @Prop({ name: 'approvalReason', type: String, default: null })
   approvalReason: string | null;
+
+  @Prop({ name: 'submissionLocation', type: SubmissionLocation, default: null })
+  submissionLocation: SubmissionLocation | null;
 
   @Prop({ name: 'createdAt' })
   createdAt: Date;

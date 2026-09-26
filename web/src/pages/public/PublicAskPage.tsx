@@ -32,6 +32,7 @@ import {
   saveQuestionDraft,
   clearQuestionDraft,
 } from '@/utils/questionDraft'
+import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -189,7 +190,8 @@ export function PublicAskPage() {
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
-
+  const [locationModalOpen, setLocationModalOpen] = useState(false)
+  const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
   const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
 useEffect(() => {
@@ -337,100 +339,195 @@ useEffect(() => {
   }
 
   // ─── Step 2: final submit ──────────────────────────────────────────────────
-  async function handleFinalSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!previewMeta) return
-    if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
-    if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
-    if (!season) { toast.error(t('question.errors.pickSeason')); return }
-    if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+//   async function handleFinalSubmit(e: React.FormEvent) {
+//     e.preventDefault()
+//     if (!previewMeta) return
+//     if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+//     if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+//     if (!season) { toast.error(t('question.errors.pickSeason')); return }
+//     if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
 
-    setSubmitting(true)
-    try {
-      // ─── Duplicate pre-check (mirrors the step-1 Continue button) ─────────
-      // Run `questionApi.preview` *before* actually submitting so the user sees
-      // the duplicate warning screen without us hitting `/questions` first.
-      // Behaviour is symmetric with `handleContinue`: if the backend flags a
-      // duplicate, the question is saved as REJECTED server-side (counts
-      // against the daily limit) and we show the duplicate screen instead
-      // of advancing to the success state.
-      const previewRes = await questionApi.preview({
-        questionText: questionText.trim(),
-        mediaType: 'none',
-        mediaUrls: [],
-      })
-      if (previewRes.duplicate?.isDuplicate) {
-        setDuplicate({
-          matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
-          matchedAnswer: previewRes.duplicate.matchedAnswer,
-          similarityScore: previewRes.duplicate.similarityScore,
-          matchedUserName: previewRes.duplicate.matchedUserName,
-        })
-        // Refresh stats — the duplicate rejection consumed one of today's slots.
-      questionApi.getMyStats()
-    .then((s) => setStats({
-      remainingToday: (s as any).remainingToday ?? null,
-      dailyLimit: (s as any).dailyLimit ?? null,
-    }))
-    .catch(() => undefined)
-  return
+//     setSubmitting(true)
+//     try {
+//       // ─── Duplicate pre-check (mirrors the step-1 Continue button) ─────────
+//       // Run `questionApi.preview` *before* actually submitting so the user sees
+//       // the duplicate warning screen without us hitting `/questions` first.
+//       // Behaviour is symmetric with `handleContinue`: if the backend flags a
+//       // duplicate, the question is saved as REJECTED server-side (counts
+//       // against the daily limit) and we show the duplicate screen instead
+//       // of advancing to the success state.
+//       const previewRes = await questionApi.preview({
+//         questionText: questionText.trim(),
+//         mediaType: 'none',
+//         mediaUrls: [],
+//       })
+//       if (previewRes.duplicate?.isDuplicate) {
+//         setDuplicate({
+//           matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+//           matchedAnswer: previewRes.duplicate.matchedAnswer,
+//           similarityScore: previewRes.duplicate.similarityScore,
+//           matchedUserName: previewRes.duplicate.matchedUserName,
+//         })
+//         // Refresh stats — the duplicate rejection consumed one of today's slots.
+//       questionApi.getMyStats()
+//     .then((s) => setStats({
+//       remainingToday: (s as any).remainingToday ?? null,
+//       dailyLimit: (s as any).dailyLimit ?? null,
+//     }))
+//     .catch(() => undefined)
+//   return
       
-      }
+//       }
 
-      // ─── No duplicate → proceed with the actual submission ─────────────────
-      const res = await questionApi.submitQuestion({
-        questionText: questionText.trim(),
-        domains,
-        season,
-        cropType: cropType.trim(),
-        state: previewMeta.state,
-        district: previewMeta.district,
-        block: previewMeta.block ?? undefined,
-        agroClimaticZone: previewMeta.agroClimaticZone || undefined,
-        mediaType: 'none',
-      })
-      if (res.duplicate?.isDuplicate) {
-        // Defensive: if the user edited the question text on step 2 (very
-        // unusual) and it now matches something the preview pass didn't see
-        // (e.g. a race against a freshly-approved question), surface the
-        // warning screen the same way.
-        setDuplicate({
-          matchedQuestion: res.duplicate.matchedQuestion ?? '',
-          matchedAnswer: res.duplicate.matchedAnswer,
-          similarityScore: res.duplicate.similarityScore,
-          matchedUserName: res.duplicate.matchedUserName,
-        })
-        return
-      }
-      toast.success(res.message || 'Question submitted!')
-      clearQuestionDraft()
-      // Cache the submitted question so future drafts are checked against it
-      // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
-      // endpoint returns either `{ id: string, status, message }` (current
-      // shape) or `{ id, question: { id }, ... }` (newer variants) — handle
-      // both without throwing.
-      const newId: string | undefined =
-        (res as any)?.id ?? (res as any)?.question?.id ?? undefined
-      cacheQuestionForDuplicateDetection(questionText.trim(), newId)
-      setSubmitted(true)
-      setSubmitted(true)
-questionApi.getMyStats()
-  .then((s) => setStats({
-    remainingToday: (s as any).remainingToday ?? null,
-    dailyLimit: (s as any).dailyLimit ?? null,
-  }))
-  .catch(() => undefined)
-    } catch (err) {
-      const rejected = parseQuestionRejected(err)
-      if (rejected) {
-        setRejection(rejected.category)
-        return
-      }
-      toast.error(getErrorMessage(err, t('question.submitFailed')))
-    } finally {
-      setSubmitting(false)
-    }
+//       // ─── No duplicate → proceed with the actual submission ─────────────────
+//       const res = await questionApi.submitQuestion({
+//         questionText: questionText.trim(),
+//         domains,
+//         season,
+//         cropType: cropType.trim(),
+//         state: previewMeta.state,
+//         district: previewMeta.district,
+//         block: previewMeta.block ?? undefined,
+//         agroClimaticZone: previewMeta.agroClimaticZone || undefined,
+//         mediaType: 'none',
+//       })
+//       if (res.duplicate?.isDuplicate) {
+//         // Defensive: if the user edited the question text on step 2 (very
+//         // unusual) and it now matches something the preview pass didn't see
+//         // (e.g. a race against a freshly-approved question), surface the
+//         // warning screen the same way.
+//         setDuplicate({
+//           matchedQuestion: res.duplicate.matchedQuestion ?? '',
+//           matchedAnswer: res.duplicate.matchedAnswer,
+//           similarityScore: res.duplicate.similarityScore,
+//           matchedUserName: res.duplicate.matchedUserName,
+//         })
+//         return
+//       }
+//       toast.success(res.message || 'Question submitted!')
+//       clearQuestionDraft()
+//       // Cache the submitted question so future drafts are checked against it
+//       // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
+//       // endpoint returns either `{ id: string, status, message }` (current
+//       // shape) or `{ id, question: { id }, ... }` (newer variants) — handle
+//       // both without throwing.
+//       const newId: string | undefined =
+//         (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+//       cacheQuestionForDuplicateDetection(questionText.trim(), newId)
+//       setSubmitted(true)
+//       setSubmitted(true)
+// questionApi.getMyStats()
+//   .then((s) => setStats({
+//     remainingToday: (s as any).remainingToday ?? null,
+//     dailyLimit: (s as any).dailyLimit ?? null,
+//   }))
+//   .catch(() => undefined)
+//     } catch (err) {
+//       const rejected = parseQuestionRejected(err)
+//       if (rejected) {
+//         setRejection(rejected.category)
+//         return
+//       }
+//       toast.error(getErrorMessage(err, t('question.submitFailed')))
+//     } finally {
+//       setSubmitting(false)
+//     }
+//   }
+
+async function handleFinalSubmit(e: React.FormEvent) {
+  console.log("Inside final submit...")
+  e.preventDefault()
+  if (!previewMeta) { toast.error("somethig wen wrong..."); return}
+  if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+  if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+  if (!season) { toast.error(t('question.errors.pickSeason')); return }
+  if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+
+  // Anveshan users must supply their current location on every submission.
+  // If we don't have it yet, open the capture modal and stop here — it will
+  // call performSubmit() itself once the user confirms.
+  if (user?.isAnveshanUser && !submissionLocation) {
+    console.log("inside this..")
+    setLocationModalOpen(true)
+    return
   }
+
+  await performSubmit()
+}
+
+async function performSubmit(locationOverride?: SubmissionLocation) {
+  if (!previewMeta) return
+  const location = locationOverride ?? submissionLocation
+  console.log("inside perform submit...")
+  setSubmitting(true)
+  try {
+    const previewRes = await questionApi.preview({
+      questionText: questionText.trim(),
+      mediaType: 'none',
+      mediaUrls: [],
+    })
+    if (previewRes.duplicate?.isDuplicate) {
+      setDuplicate({
+        matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+        matchedAnswer: previewRes.duplicate.matchedAnswer,
+        similarityScore: previewRes.duplicate.similarityScore,
+        matchedUserName: previewRes.duplicate.matchedUserName,
+      })
+      questionApi.getMyStats()
+        .then((s) => setStats({
+          remainingToday: (s as any).remainingToday ?? null,
+          dailyLimit: (s as any).dailyLimit ?? null,
+        }))
+        .catch(() => undefined)
+      return
+    }
+
+    const res = await questionApi.submitQuestion({
+      questionText: questionText.trim(),
+      domains,
+      season,
+      cropType: cropType.trim(),
+      state: previewMeta.state,
+      district: previewMeta.district,
+      block: previewMeta.block ?? undefined,
+      agroClimaticZone: previewMeta.agroClimaticZone || undefined,
+      mediaType: 'none',
+      submissionLocation: location ?? undefined,
+    })
+    if (res.duplicate?.isDuplicate) {
+      setDuplicate({
+        matchedQuestion: res.duplicate.matchedQuestion ?? '',
+        matchedAnswer: res.duplicate.matchedAnswer,
+        similarityScore: res.duplicate.similarityScore,
+        matchedUserName: res.duplicate.matchedUserName,
+      })
+      return
+    }
+    toast.success(res.message || 'Question submitted!')
+    clearQuestionDraft()
+    const newId: string | undefined =
+      (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+    cacheQuestionForDuplicateDetection(questionText.trim(), newId)
+    setSubmitted(true)
+    setSubmissionLocation(null) // reset — the next submission asks fresh, per requirement
+    questionApi.getMyStats()
+      .then((s) => setStats({
+        remainingToday: (s as any).remainingToday ?? null,
+        dailyLimit: (s as any).dailyLimit ?? null,
+      }))
+      .catch(() => undefined)
+  } catch (err) {
+    const rejected = parseQuestionRejected(err)
+    if (rejected) {
+      setRejection(rejected.category)
+      return
+    }
+    toast.error(getErrorMessage(err, t('question.submitFailed')))
+  } finally {
+    setSubmitting(false)
+  }
+}
+
 
   // Outcome dialogs render alongside every step so the user's form stays
   // visible behind them instead of being replaced by a full-page state.
@@ -452,8 +549,8 @@ questionApi.getMyStats()
         onOpenChange={(open) => { if (!open) { setSubmitted(false); resetAll() } }}
         onAskAnother={() => { setSubmitted(false); resetAll() }}
         onViewSubmissions={() => { setSubmitted(false); navigate('/home/questions') }}
-        remainingToday={stats?.remainingToday ?? 0}
-        dailyLimit={stats?.dailyLimit ?? 20}
+        remainingToday={stats?.remainingToday}
+        dailyLimit={stats?.dailyLimit}
       />
     </>
   )
@@ -649,6 +746,19 @@ questionApi.getMyStats()
           title={t('question.cropType')}
         />
         {dialogs}
+              <LocationCaptureModal
+  open={locationModalOpen}
+  onOpenChange={(open) => {
+    setLocationModalOpen(open)
+    // If the user cancels without confirming, the form stays on this step
+    // untouched — nothing has been submitted, so no cleanup is needed.
+  }}
+  onConfirm={(loc) => {
+    setSubmissionLocation(loc)
+    setLocationModalOpen(false)
+    performSubmit(loc) // pass directly — avoids waiting on the next render's state
+  }}
+/>
       </div>
     )
   }
