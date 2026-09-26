@@ -7,5 +7,6 @@ import { AgriEntitiesService } from './agri-entities.service';
   imports: [DbModule],
   controllers: [AgriEntitiesController],
   providers: [AgriEntitiesService],
+  exports: [AgriEntitiesService]
 })
 export class AgriEntitiesModule {}

@@ -54,6 +54,22 @@ export class AgriEntitiesService {
     };
   }
 
+  async getSubmittedCountsByType(userId: string): Promise<{
+  crop: number;
+  weed: number;
+  pest: number;
+  disease: number;
+}> {
+  const [crop, weed, pest, disease] = await Promise.all([
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.CROP } }),
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.WEED } }),
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.PEST } }),
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.DISEASE } }),
+  ]);
+
+  return { crop, weed, pest, disease };
+}
+
   private async findPage(scope: { userId?: string }, dto: ListAgriEntitiesDto) {
     const { type, status, page = 1, limit = 20 } = dto;
     const { data, total } = await this.agriEntityRepo.findAndCount(
