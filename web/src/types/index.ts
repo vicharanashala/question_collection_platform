@@ -103,6 +103,8 @@ export interface Question {
   userMobileNumber?: string | null;
   isAnveshan?: boolean;
   submissionLocation: {
+    latitude: number;
+    longitude: number;
     state: string;
     district: string;
     block: string;
