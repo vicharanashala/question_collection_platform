@@ -66,7 +66,7 @@ export class AgriEntitiesService {
       englishName: dto.englishName,
       botanicalName: dto.botanicalName,
       localNameSource: dto.localNameSource ?? '',
-      alternateNames: dto.alternateNames.map(({ name, source }) => ({ name, source: source ?? '' })),
+      alternateNames: (dto.alternateNames ?? []).map(({ name, source }) => ({ name, source: source ?? '' })),
       imageUrls: dto.imageUrls,
       status: AgriEntityStatus.PENDING,
       ...(submissionLocation ? { submissionLocation } : {}),

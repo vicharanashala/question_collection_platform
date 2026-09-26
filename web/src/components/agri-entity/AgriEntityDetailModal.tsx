@@ -61,19 +61,21 @@ export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModal
                 </Card>
               )}
 
-              <Card>
-                <CardContent className="space-y-2 p-4 sm:p-5">
-                  <SectionTitle icon={Tags}>{t('agriEntity.alternateNames', 'Alternate names with sources')}</SectionTitle>
-                  <ul className="divide-y divide-border-subtle">
-                    {entity.alternateNames.map((alt, i) => (
-                      <li key={`${alt.name}-${i}`} className="py-2 first:pt-0 last:pb-0">
-                        <p className="text-xs sm:text-sm font-medium text-foreground">{alt.name}</p>
-                        <SourceText value={alt.source} />
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              {entity.alternateNames?.length > 0 && (
+                <Card>
+                  <CardContent className="space-y-2 p-4 sm:p-5">
+                    <SectionTitle icon={Tags}>{t('agriEntity.alternateNames', 'Alternate names with sources')}</SectionTitle>
+                    <ul className="divide-y divide-border-subtle">
+                      {entity.alternateNames.map((alt, i) => (
+                        <li key={`${alt.name}-${i}`} className="py-2 first:pt-0 last:pb-0">
+                          <p className="text-xs sm:text-sm font-medium text-foreground">{alt.name}</p>
+                          <SourceText value={alt.source} />
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardContent className="space-y-2 p-4 sm:p-5">

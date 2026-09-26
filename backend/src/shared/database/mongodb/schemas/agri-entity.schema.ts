@@ -37,7 +37,7 @@ export class AgriEntity {
   @Prop({ default: '' })
   localNameSource: string;
 
-  @Prop({ type: [AgriEntityAlternateNameSchema], required: true })
+  @Prop({ type: [AgriEntityAlternateNameSchema], default: [] })
   alternateNames: AgriEntityAlternateName[];
 
   @Prop({ type: [String], required: true })

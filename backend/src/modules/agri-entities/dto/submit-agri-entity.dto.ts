@@ -72,12 +72,12 @@ export class SubmitAgriEntityDto {
   @IsUrl(SOURCE_URL_OPTIONS, { message: SOURCE_URL_MESSAGE })
   localNameSource?: string;
 
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
   @ArrayMaxSize(MAX_AGRI_ENTITY_ALTERNATE_NAMES)
   @ValidateNested({ each: true })
   @Type(() => AgriEntityAlternateNameDto)
-  alternateNames: AgriEntityAlternateNameDto[];
+  alternateNames?: AgriEntityAlternateNameDto[];
 
   @IsArray()
   @ArrayMinSize(1)

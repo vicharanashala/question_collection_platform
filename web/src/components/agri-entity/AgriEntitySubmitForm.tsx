@@ -56,6 +56,18 @@ function isValidSourceUrl(value: string): boolean {
   }
 }
 
+// An alternate row is optional, but a source entered without a name is incomplete.
+function alternateNameMissing(alt: AgriEntityAlternateName): boolean {
+  return !alt.name.trim() && alt.source.trim().length > 0
+}
+
+// Keeps only alternate rows that have a name, trimmed for submission.
+function toSubmittedAlternates(alternates: AgriEntityAlternateName[]): AgriEntityAlternateName[] {
+  return alternates
+    .filter((a) => a.name.trim())
+    .map((a) => ({ name: a.name.trim(), source: a.source.trim() }))
+}
+
 // Checks that required fields are filled and any provided sources are valid URLs.
 function isFormValid(values: FormValues, imageCount: number): boolean {
   const filled = (v: string) => v.trim().length > 0
@@ -64,8 +76,7 @@ function isFormValid(values: FormValues, imageCount: number): boolean {
     filled(values.englishName) &&
     filled(values.botanicalName) &&
     isValidSourceUrl(values.localNameSource) &&
-    values.alternateNames.length > 0 &&
-    values.alternateNames.every((a) => filled(a.name) && isValidSourceUrl(a.source)) &&
+    values.alternateNames.every((a) => !alternateNameMissing(a) && isValidSourceUrl(a.source)) &&
     imageCount > 0
   )
 }
@@ -205,7 +216,7 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
         englishName: values.englishName.trim(),
         botanicalName: values.botanicalName.trim(),
         localNameSource: values.localNameSource.trim(),
-        alternateNames: values.alternateNames.map((a) => ({ name: a.name.trim(), source: a.source.trim() })),
+        alternateNames: toSubmittedAlternates(values.alternateNames),
         imageUrls,
         submissionLocation: location ?? undefined,
       })
@@ -287,15 +298,18 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           <section className="space-y-3" aria-labelledby={`${fieldId}-alt`}>
             <div>
               <h2 id={`${fieldId}-alt`} className="text-sm font-semibold text-foreground">
-                {t('agriEntity.alternateNames', 'Alternate names with sources')} <span className="text-rose-600" aria-hidden="true">*</span>
+                {t('agriEntity.alternateNames', 'Alternate names with sources')}
               </h2>
-              <p className="text-[11px] text-text-tertiary sm:text-xs">{t('agriEntity.alternateNamesHint', 'Add at least one other name and where it is used or documented.')}</p>
+              <p className="text-[11px] text-text-tertiary sm:text-xs">{t('agriEntity.alternateNamesOptionalHint', 'Optional. Add other names and a link to where each is used or documented.')}</p>
             </div>
             <ul className="space-y-3">
               {values.alternateNames.map((alt, index) => {
                 const nameId = `${fieldId}-alt-name-${index}`
                 const sourceId = `${fieldId}-alt-source-${index}`
-                const nameError = errorFor(alt.name)
+                const nameError =
+                  showErrors && alternateNameMissing(alt)
+                    ? t('agriEntity.errors.alternateNameRequired', 'Enter the name this source refers to')
+                    : undefined
                 const altSourceError = sourceErrorFor(alt.source)
                 return (
                   <li key={index} className="rounded-xl border border-border-subtle bg-surface-variant/40 p-3">

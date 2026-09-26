@@ -444,8 +444,34 @@ export function PublicHomePage() {
         </div>
       </div>
 
+      {/* ── Anveshan submission counts ── */}
+      {isAnveshanUser && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {AGRI_COUNT_CARDS.map(({ type, icon: Icon, iconBg, labelKey, defaultLabel }) => (
+            <StatCard
+              key={type}
+              icon={<Icon className="h-4 w-4 text-white" />}
+              iconBg={iconBg}
+              label={t(labelKey, defaultLabel)}
+              value={
+                agriCountsLoading
+                  ? "..."
+                  : agriCounts
+                    ? `${agriCounts[type]}`
+                    : "—"
+              }
+            />
+          ))}
+        </div>
+      )}
+
       {/* ── Stats grid ── */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-3 sm:gap-4",
+          isAnveshanUser ? "sm:grid-cols-3" : "lg:grid-cols-4",
+        )}
+      >
         <StatCard
           icon={<Wallet className="h-4 w-4 text-white" />}
           iconBg="bg-emerald-500"
@@ -458,18 +484,21 @@ export function PublicHomePage() {
           label={t("home.today")}
           value={loading ? "..." : stats ? `${stats.dailyCount}` : "0"}
         />
-        <StatCard
-          icon={<Clock className="h-4 w-4 text-white" />}
-          iconBg="bg-amber-500"
-          label={t("home.remaining")}
-          value={
-            loading
-              ? "..."
-              : stats?.unlimited || stats?.remainingToday == null
-                ? t("home.unlimited", "Unlimited")
-                : `${stats.remainingToday}`
-          }
-        />
+        {/* Anveshan users have no daily limit, so the remaining count does not apply. */}
+        {!isAnveshanUser && (
+          <StatCard
+            icon={<Clock className="h-4 w-4 text-white" />}
+            iconBg="bg-amber-500"
+            label={t("home.remaining")}
+            value={
+              loading
+                ? "..."
+                : stats?.remainingToday != null
+                  ? `${stats.remainingToday}`
+                  : "0"
+            }
+          />
+        )}
         <StatCard
           icon={<Medal className="h-4 w-4 text-white" />}
           iconBg={
@@ -483,43 +512,6 @@ export function PublicHomePage() {
           value={loading ? "..." : t(`home.${currentTier.key}`)}
         />
       </div>
-
-      {isAnveshanUser && (
-        <section aria-labelledby="my-submissions-heading">
-          <div className="mb-3 flex items-center gap-2">
-            <h2
-              id="my-submissions-heading"
-              className="text-base font-bold text-foreground sm:text-lg"
-            >
-              {t("home.mySubmissions", "My Submissions")}
-            </h2>
-            <InfoTip
-              label={t("home.aboutMySubmissions", "About my submissions")}
-              description={t(
-                "home.mySubmissionsTip",
-                "Total crop, weed, pest and disease records you have submitted, including those pending review.",
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {AGRI_COUNT_CARDS.map(({ type, icon: Icon, iconBg, labelKey, defaultLabel }) => (
-              <StatCard
-                key={type}
-                icon={<Icon className="h-4 w-4 text-white" />}
-                iconBg={iconBg}
-                label={t(labelKey, defaultLabel)}
-                value={
-                  agriCountsLoading
-                    ? "..."
-                    : agriCounts
-                      ? `${agriCounts[type]}`
-                      : "—"
-                }
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* ── Video Section ── */}
       <VideoSection />
