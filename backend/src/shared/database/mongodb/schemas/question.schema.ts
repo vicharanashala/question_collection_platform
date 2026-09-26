@@ -3,10 +3,8 @@ import { Document, Types } from 'mongoose';
 import { QuestionStatus, MediaType } from '../../../classes/enums';
 export type QuestionDocument = Question & Document;
 
-
-
-@Schema({ collection: 'questions', timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } })
-
+// Embedded location captured at submission time; stored as a sub-document without its own _id.
+@Schema({ _id: false })
 export class SubmissionLocation {
   @Prop({ required: true })
   latitude: number;
@@ -30,6 +28,7 @@ export class SubmissionLocation {
   capturedAt: Date;
 }
 
+@Schema({ collection: 'questions', timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } })
 export class Question {
   _id: Types.ObjectId;
 
