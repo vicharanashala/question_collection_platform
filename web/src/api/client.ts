@@ -907,16 +907,24 @@ export const questionApi = {
    * the wizard does not have to call `/auth/me` first.
    */
   submitQuestion: (body: {
-    questionText: string;
-    domains: string[];
-    season: string;
-    cropType: string;
+  questionText: string;
+  domains: string[];
+  season: string;
+  cropType: string;
+  state: string;
+  district: string;
+  block?: string;
+  agroClimaticZone?: string;
+  mediaType?: "none" | "image" | "video" | "audio";
+  mediaUrls?: string[];
+  submissionLocation?: {
+    latitude: number;
+    longitude: number;
     state: string;
     district: string;
-    block?: string;
-    agroClimaticZone?: string;
-    mediaType?: "none" | "image" | "video" | "audio";
-    mediaUrls?: string[];
+    block: string;
+    village: string;
+  };
   }) =>
     request<{
       id: string;

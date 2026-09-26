@@ -4,6 +4,7 @@ import {
   IsArray,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   ValidateNested,
@@ -19,7 +20,7 @@ import {
 } from '../agri-entities.constants';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
-
+import { SubmissionLocationDto } from '@/modules/question/dto';
 export class AgriEntityAlternateNameDto {
   @Transform(trim)
   @IsString()
@@ -75,6 +76,11 @@ export class SubmitAgriEntityDto {
   @IsString({ each: true })
   @NormalizeMediaUrls()
   imageUrls: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SubmissionLocationDto)
+  submissionLocation?: SubmissionLocationDto;
 }
 
 export interface SubmitAgriEntityResponseDto {

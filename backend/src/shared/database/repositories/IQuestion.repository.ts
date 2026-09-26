@@ -1,6 +1,7 @@
 import { BaseRepository } from '../abstractions/base.repository';
 import { Question } from '../entities';
 import { QuestionStatus } from '../../classes/enums';
+import { MongoRepository } from '../abstractions/mongo.repository';
 
 export interface QuestionFilter {
   id?: string;
@@ -74,11 +75,11 @@ export interface QuestionAnalyticsResult {
   }>;
 }
 
-export interface IQuestionRepository extends BaseRepository<Question> {
+export interface IQuestionRepository extends MongoRepository<Question> {
   findByUserId(userId: string, status?: QuestionStatus, limit?: number): Promise<Question[]>;
   countByUserId(userId: string, status?: QuestionStatus): Promise<number>;
   searchByText(text: string, limit?: number): Promise<Question[]>;
-  findExactDuplicate(userId: string, questionText: string, state: string, district: string): Promise<Question | null>;
+  findExactDuplicate(userId: string, questionText: string, state?: string, district?: string): Promise<Question | null>;
 
   /**
    * Returns the top N users ranked by their count of APPROVED questions.

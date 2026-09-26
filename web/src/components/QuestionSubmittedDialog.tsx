@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button'
 interface QuestionSubmittedDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Reset the form and stay on the page */
   onAskAnother: () => void
-  /** Navigate to the user's submissions list */
   onViewSubmissions: () => void
-  /** Daily submission counters, hidden when unknown */
-  remainingToday?: number
-  dailyLimit?: number
+  /** Daily submission counters, hidden when unknown or unlimited (null) */
+  remainingToday?: number | null
+  dailyLimit?: number | null
 }
 
 /** Confirmation shown after a question is accepted for review. */

@@ -152,6 +152,246 @@ export class QuestionService {
     return 'other';
   }
 
+  // async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
+  //   // 0. User must be verified and location must be set in profile
+  //   const user = await this.userService.getProfile(userId);
+  //   if (!user) throw new NotFoundException('User not found');
+  //   if (!user.state || !user.district) {
+  //     throw new BadRequestException(
+  //       'Your profile is missing state or district. Please update your profile before submitting a question.',
+  //     );
+  //   }
+  //   if (user.verificationStatus !== VerificationStatus.VERIFIED) {
+  //     throw new ForbiddenException(
+  //       'Your account has not been verified by an admin yet. You can submit questions only after verification.',
+  //     );
+  //   }
+
+  //   // 1. Enforce daily_question_limit
+  //   if (!user.isAnveshanUser) {
+  //     const dailyLimit = await this.adminService.getConfigValue('daily_question_limit');
+  //     await this.checkDailyLimit(userId, dailyLimit);
+  //   }
+  //   // 2. Validate image submission: when mediaType is 'image' exactly 1 URL is required
+  //   if (dto.mediaType === 'image') {
+  //     if (!dto.mediaUrls || dto.mediaUrls.length === 0) {
+  //       throw new BadRequestException(
+  //         'An image URL is required when mediaType is "image". Upload the image via POST /storage/upload first.',
+  //       );
+  //     }
+  //     if (dto.mediaUrls.length > 1) {
+  //       throw new BadRequestException('At most 1 image is allowed per question');
+  //     }
+  //     const url = dto.mediaUrls[0];
+  //     // Uploads are normalised to gs:// storage URIs; http(s) is still accepted for
+  //     // records created before media moved into the bucket.
+  //     if (
+  //       !url.startsWith('gs://') &&
+  //       !url.startsWith('http://') &&
+  //       !url.startsWith('https://')
+  //     ) {
+  //       throw new BadRequestException('mediaUrls must be storage URIs or HTTP(S) URLs');
+  //     }
+  //   }
+
+  //   const now = new Date();
+
+  //   // 2. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
+  //   const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
+  //   const cropType = dto.cropType?.trim() || inferred.crop;
+  //   const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
+
+  //   // 4. Handle duplicates and query classification
+  //   const userIdNum = parseInt(userId, 10);
+  //   let duplicateResult;
+
+  //   if (user.isAnveshanUser) {
+  //     // 4a. For Anveshan users, bypass all duplicate checks and just check for safety/relevance.
+  //     duplicateResult = await this.gdbService.classifyQuery({
+  //       questionText: dto.questionText,
+  //       languageCode: dto.language ?? user.languagePreference,
+  //     });
+  //     // Abusive / non-agricultural queries are blocked here
+  //     this.assertNotRejected(duplicateResult.rejection);
+  //   } else {
+  //     // 4b. Fast exact-duplicate gate via Redis — throws ConflictException (HTTP 409) if exact dup found.
+  //     await this.duplicateDetectionService.checkDuplicate(
+  //       userIdNum,
+  //       user.state,
+  //       cropType,
+  //       dto.questionText,
+  //     );
+
+  //     // 4c. Check our own DB first — exact text match (case-insensitive, trimmed).
+  //     const dbDup = await this.findExactDuplicate(dto.questionText, userId);
+  //     if (dbDup) {
+  //       const dup = dbDup.matchedQuestion;
+  //       const duplicateQuestion = await this.questionRepo.create({
+  //         userId,
+  //         domains,
+  //         season: dto.season,
+  //         cropType,
+  //         agroClimaticZone: dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state),
+  //         questionText: dto.questionText,
+  //         state: user.state,
+  //         district: user.district,
+  //         block: user.block ?? null,
+  //         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+  //         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+  //         deviceInfo: dto.deviceInfo ?? null,
+  //         status: QuestionStatus.REJECTED,
+  //         rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
+  //         submittedAt: now,
+  //         embedding: [0],
+  //       });
+  //       await this.auditRepo.save({
+  //         actorType: ActorType.USER,
+  //         actorId: userId,
+  //         action: AuditAction.QUESTION_REJECTED,
+  //         entityType: 'question',
+  //         entityId: duplicateQuestion.id,
+  //         newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+  //         metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+  //       });
+  //       return {
+  //         id: duplicateQuestion.id,
+  //         status: 'DUPLICATE',
+  //         message: 'This question already exists in our database',
+  //         duplicate: {
+  //           isDuplicate: true,
+  //           matchedQuestionId: dup.id,
+  //           matchedQuestion: dup.questionText,
+  //           matchedAnswer: null,
+  //           similarityScore: null,
+  //           matchedUserName: dbDup.matchedUserName,
+  //         },
+  //       };
+  //     }
+
+  //     // 4d. GDB semantic duplicate check
+  //     duplicateResult = await this.gdbService.checkDuplicate({
+  //       questionText: dto.questionText,
+  //       languageCode: dto.language ?? user.languagePreference,
+  //     });
+
+  //     // Abusive / non-agricultural queries are blocked here
+  //     this.assertNotRejected(duplicateResult.rejection);
+  //   }
+
+  //   // Derive agro-climatic zone from user's profile state.
+  //   const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state);
+
+  //   // Fetch embedding upfront — needed regardless of which branch we take below.
+  //   const [embedding] = await Promise.all([
+  //     this.embedService.embed(dto.questionText),
+  //   ]);
+
+  //   if (duplicateResult.isDuplicate) {
+  //     // Save the question as REJECTED so it counts as a submission against the daily limit,
+  //     // then return the matched Q&A pair so the mobile can display DuplicateFoundModal.
+  //     const dup = duplicateResult as { isDuplicate: true; matchedQuestionId: string | null; matchedQuestion: string | null; matchedAnswer: string | null; similarityScore: number | null; matchedUserName: string | null };
+  //     const duplicateQuestion = await this.questionRepo.create({
+  //       userId,
+  //       domains,
+  //       season: dto.season,
+  //       cropType,
+  //       agroClimaticZone,
+  //       questionText: dto.questionText,
+  //       state: user.state,
+  //       district: user.district,
+  //       block: user.block ?? null,
+  //       mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+  //       mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+  //       deviceInfo: dto.deviceInfo ?? null,
+  //       status: QuestionStatus.REJECTED,
+  //       rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
+  //       submittedAt: now,
+  //       embedding: [0], // zero embedding — saved to satisfy FK, not for search
+  //     });
+  //     // Capture the saved entity so we have its ID for audit metadata.
+  //     await this.auditRepo.save({
+  //       actorType: ActorType.USER,
+  //       actorId: userId,
+  //       action: AuditAction.QUESTION_REJECTED,
+  //       entityType: 'question',
+  //       entityId: duplicateQuestion.id,
+  //       newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+  //       metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
+  //     });
+  //     return {
+  //       id: duplicateQuestion.id,
+  //       status: 'DUPLICATE',
+  //       message: 'Similar question found',
+  //       duplicate: {
+  //         isDuplicate: true,
+  //         matchedQuestionId: dup.matchedQuestionId,
+  //         matchedQuestion: dup.matchedQuestion,
+  //         matchedAnswer: dup.matchedAnswer,
+  //         similarityScore: dup.similarityScore,
+  //         matchedUserName: dup.matchedUserName ?? 'user name not available',
+  //       },
+  //     };
+  //   }
+
+  //   // 5. Record in Redis dup index (only after all duplicate checks pass).
+  //   if (!user.isAnveshanUser) {
+  //     await this.duplicateDetectionService.recordQuestion(
+  //       userIdNum,
+  //       user.state,
+  //       cropType,
+  //       dto.questionText,
+  //     );
+  //   }
+
+  //   // 6. Update real-time analytics counters
+  //   await this.analyticsCacheService.onQuestionSubmitted().catch(() => {/* best-effort */});
+
+  //   // All new submissions go to PENDING for curator review
+  //   const status: QuestionStatus = QuestionStatus.PENDING;
+
+  //   // 7. Validate domains against allowed list
+  //   const invalidDomains = dto.domains.filter((d) => !DOMAINS.includes(d as any));
+  //   if (invalidDomains.length > 0) {
+  //     throw new BadRequestException(`Invalid domains: ${invalidDomains.join(', ')}`);
+  //   }
+
+  //   // 8. Persist question in a transaction
+  //   const saved = await this.questionRepo.create({
+  //     userId,
+  //     domains,
+  //     season: dto.season,
+  //     cropType,
+  //     agroClimaticZone,
+  //     questionText: dto.questionText,
+  //     state: user.state,
+  //     district: user.district,
+  //     block: user.block ?? null,
+  //     mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
+  //     mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+  //     deviceInfo: dto.deviceInfo ?? null,
+  //     status,
+  //     submittedAt: now,
+  //     embedding,
+  //   });
+
+  //   // 10. Audit log
+  //   await this.auditRepo.save({
+  //     actorType: ActorType.USER,
+  //     actorId: userId,
+  //     action: AuditAction.QUESTION_SUBMITTED,
+  //     entityType: 'question',
+  //     entityId: saved.id,
+  //     newValue: { status: saved.status, domains: saved.domains },
+  //     metadata: { cropType: saved.cropType, season: saved.season },
+  //   });
+
+  //   return {
+  //     id: saved.id,
+  //     status: saved.status,
+  //     message: 'Question submitted successfully',
+  //   };
+  // }
+
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
     // 0. User must be verified and location must be set in profile
     const user = await this.userService.getProfile(userId);
@@ -164,6 +404,13 @@ export class QuestionService {
     if (user.verificationStatus !== VerificationStatus.VERIFIED) {
       throw new ForbiddenException(
         'Your account has not been verified by an admin yet. You can submit questions only after verification.',
+      );
+    }
+
+    // 0b. Anveshan users must supply their current location on every submission.
+    if (user.isAnveshanUser && !dto.submissionLocation) {
+      throw new BadRequestException(
+        'Location is required for Anveshan users when submitting a question.',
       );
     }
 
@@ -183,8 +430,6 @@ export class QuestionService {
         throw new BadRequestException('At most 1 image is allowed per question');
       }
       const url = dto.mediaUrls[0];
-      // Uploads are normalised to gs:// storage URIs; http(s) is still accepted for
-      // records created before media moved into the bucket.
       if (
         !url.startsWith('gs://') &&
         !url.startsWith('http://') &&
@@ -195,6 +440,11 @@ export class QuestionService {
     }
 
     const now = new Date();
+
+    // Build the submission-location subdocument once, reused across every create() call below.
+    const submissionLocation = dto.submissionLocation
+      ? { ...dto.submissionLocation, capturedAt: now }
+      : undefined;
 
     // 2. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
     const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
@@ -211,10 +461,9 @@ export class QuestionService {
         questionText: dto.questionText,
         languageCode: dto.language ?? user.languagePreference,
       });
-      // Abusive / non-agricultural queries are blocked here
       this.assertNotRejected(duplicateResult.rejection);
     } else {
-      // 4b. Fast exact-duplicate gate via Redis — throws ConflictException (HTTP 409) if exact dup found.
+      // 4b. Fast exact-duplicate gate via Redis
       await this.duplicateDetectionService.checkDuplicate(
         userIdNum,
         user.state,
@@ -222,7 +471,7 @@ export class QuestionService {
         dto.questionText,
       );
 
-      // 4c. Check our own DB first — exact text match (case-insensitive, trimmed).
+      // 4c. Check our own DB first — exact text match
       const dbDup = await this.findExactDuplicate(dto.questionText, userId);
       if (dbDup) {
         const dup = dbDup.matchedQuestion;
@@ -243,6 +492,7 @@ export class QuestionService {
           rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
           submittedAt: now,
           embedding: [0],
+          ...(submissionLocation ? { submissionLocation } : {}),
         });
         await this.auditRepo.save({
           actorType: ActorType.USER,
@@ -251,7 +501,7 @@ export class QuestionService {
           entityType: 'question',
           entityId: duplicateQuestion.id,
           newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
-          metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+          metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup?.id },
         });
         return {
           id: duplicateQuestion.id,
@@ -259,8 +509,8 @@ export class QuestionService {
           message: 'This question already exists in our database',
           duplicate: {
             isDuplicate: true,
-            matchedQuestionId: dup.id,
-            matchedQuestion: dup.questionText,
+            matchedQuestionId: dup?.id ?? null,
+            matchedQuestion: dup?.questionText ?? null,
             matchedAnswer: null,
             similarityScore: null,
             matchedUserName: dbDup.matchedUserName,
@@ -273,22 +523,16 @@ export class QuestionService {
         questionText: dto.questionText,
         languageCode: dto.language ?? user.languagePreference,
       });
-
-      // Abusive / non-agricultural queries are blocked here
       this.assertNotRejected(duplicateResult.rejection);
     }
 
-    // Derive agro-climatic zone from user's profile state.
     const agroClimaticZone = dto.agroClimaticZone ?? this.deriveAgroClimaticZone(user.state);
 
-    // Fetch embedding upfront — needed regardless of which branch we take below.
     const [embedding] = await Promise.all([
       this.embedService.embed(dto.questionText),
     ]);
 
     if (duplicateResult.isDuplicate) {
-      // Save the question as REJECTED so it counts as a submission against the daily limit,
-      // then return the matched Q&A pair so the mobile can display DuplicateFoundModal.
       const dup = duplicateResult as { isDuplicate: true; matchedQuestionId: string | null; matchedQuestion: string | null; matchedAnswer: string | null; similarityScore: number | null; matchedUserName: string | null };
       const duplicateQuestion = await this.questionRepo.create({
         userId,
@@ -306,9 +550,9 @@ export class QuestionService {
         status: QuestionStatus.REJECTED,
         rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
         submittedAt: now,
-        embedding: [0], // zero embedding — saved to satisfy FK, not for search
+        embedding: [0],
+        ...(submissionLocation ? { submissionLocation } : {}),
       });
-      // Capture the saved entity so we have its ID for audit metadata.
       await this.auditRepo.save({
         actorType: ActorType.USER,
         actorId: userId,
@@ -346,7 +590,6 @@ export class QuestionService {
     // 6. Update real-time analytics counters
     await this.analyticsCacheService.onQuestionSubmitted().catch(() => {/* best-effort */});
 
-    // All new submissions go to PENDING for curator review
     const status: QuestionStatus = QuestionStatus.PENDING;
 
     // 7. Validate domains against allowed list
@@ -372,6 +615,7 @@ export class QuestionService {
       status,
       submittedAt: now,
       embedding,
+      ...(submissionLocation ? { submissionLocation } : {}),
     });
 
     // 10. Audit log

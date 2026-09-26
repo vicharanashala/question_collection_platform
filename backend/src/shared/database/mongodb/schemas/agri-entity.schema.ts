@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { AgriEntityStatus, AgriEntityType } from '../../../classes/enums';
-
+import { SubmissionLocation } from './question.schema';
 export type AgriEntityDocument = AgriEntity & Document;
 
 @Schema({ _id: false })
@@ -45,6 +45,9 @@ export class AgriEntity {
 
   @Prop({ required: true, enum: AgriEntityStatus, default: AgriEntityStatus.PENDING, index: true })
   status: AgriEntityStatus;
+
+  @Prop({ name: 'submissionLocation', type: SubmissionLocation, default: null })
+  submissionLocation: SubmissionLocation | null;
 
   @Prop({ name: 'createdAt' })
   createdAt: Date;
