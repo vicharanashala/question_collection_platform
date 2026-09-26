@@ -92,7 +92,7 @@ export class UserService {
         this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
       ]);
 
-    const questionsMet = questionCount >= 25;
+    const questionsMet = questionCount >= 5;
     const cropMet      = cropCount >= 1;
     const pestMet      = pestCount >= 1;
     const weedMet      = weedCount >= 1;
@@ -103,7 +103,7 @@ export class UserService {
     return {
       isCompleted,
       requirements: {
-        questions: { required: 25, submitted: questionCount, met: questionsMet },
+        questions: { required: 5, submitted: questionCount, met: questionsMet },
         crop:      { required: 1,  submitted: cropCount,     met: cropMet },
         pest:      { required: 1,  submitted: pestCount,     met: pestMet },
         weed:      { required: 1,  submitted: weedCount,     met: weedMet },
