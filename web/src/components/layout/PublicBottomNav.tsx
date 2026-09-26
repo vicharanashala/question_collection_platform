@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Home, MessageSquarePlus, Wallet, User, ListChecks } from 'lucide-react'
+import { Home, MessageSquarePlus, Wallet, User, ListChecks, HelpCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { canAccessPayments, PAYMENT_ROUTES } from '@/utils/paymentAccess'
 import { cn } from '@/lib/utils'
@@ -22,6 +22,9 @@ const tabs: Tab[] = [
   { to: '/home/profile',   label: 'Profile',     icon: User },
 ]
 
+// Replaces the Wallet slot for users without payments, keeping five tabs so Submit stays centred.
+const helpTab: Tab = { to: '/home/faqs', label: 'Help', icon: HelpCircle }
+
 /**
  * Mobile bottom tab bar. Mirrors the mobile app's primary navigation
  * (Home / Submissions / Submit / Wallet / Profile) on small viewports.
@@ -31,7 +34,9 @@ export function PublicBottomNav() {
   const { pathname } = useLocation()
   const { t } = useTranslation()
   const { user } = useAuth()
-  const visibleTabs = canAccessPayments(user) ? tabs : tabs.filter((tab) => !PAYMENT_ROUTES.includes(tab.to))
+  const visibleTabs = canAccessPayments(user)
+    ? tabs
+    : tabs.map((tab) => (PAYMENT_ROUTES.includes(tab.to) ? helpTab : tab))
 
   return (
     <nav
