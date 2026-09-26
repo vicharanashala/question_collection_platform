@@ -106,6 +106,8 @@ interface ActionCardProps {
   description: string;
   cta: string;
   onClick: () => void;
+  disabled?: boolean;
+  badge?: string;
 }
 
 function ActionCard({
@@ -115,19 +117,37 @@ function ActionCard({
   description,
   cta,
   onClick,
+  disabled,
+  badge,
 }: ActionCardProps) {
   return (
     <button
-      onClick={onClick}
-      className="group relative w-full overflow-hidden rounded-2xl border border-border-subtle bg-card p-4 text-left transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 sm:p-5 lg:p-6"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={cn(
+        "group relative w-full overflow-hidden rounded-2xl border border-border-subtle bg-card p-4 text-left sm:p-5 lg:p-6",
+        disabled 
+          ? "cursor-not-allowed opacity-75" 
+          : "transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+      )}
     >
       {/* Background gradient on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      {!disabled && (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      )}
+      
+      {badge && (
+        <div className="absolute right-4 top-4 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:right-5 sm:top-5">
+          {badge}
+        </div>
+      )}
+
       <div className="relative">
         <div
           className={cn(
             "mb-3 flex h-12 w-12 items-center justify-center rounded-xl sm:mb-4 sm:h-14 sm:w-14",
             iconBg,
+            disabled && "grayscale"
           )}
         >
           {icon}
@@ -138,9 +158,16 @@ function ActionCard({
         <p className="mt-1 text-[11px] leading-relaxed text-text-secondary sm:text-xs lg:text-sm">
           {description}
         </p>
-        <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-primary sm:text-xs">
+        <div 
+          className={cn(
+            "mt-3 flex items-center gap-1 text-[11px] font-semibold sm:text-xs",
+            disabled ? "text-text-tertiary" : "text-primary"
+          )}
+        >
           {cta}
-          <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          {!disabled && (
+            <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          )}
         </div>
       </div>
     </button>
@@ -470,6 +497,8 @@ export function PublicHomePage() {
             description={t("home.myWalletSub")}
             cta={t("home.viewWallet")}
             onClick={() => navigate("/home/wallet")}
+            disabled={true}
+            badge={t("home.comingSoon", "Coming soon")}
           />
         </div>
       </section>
