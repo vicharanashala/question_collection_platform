@@ -175,7 +175,9 @@ export function PublicAskPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = parseSubmissionTab(searchParams.get('tab'))
+  const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
+  const requestedTab = parseSubmissionTab(searchParams.get('tab'))
+  const activeTab = showAgriTabs ? requestedTab : 'question'
 
   // Keeps the selected tab in the URL so it survives refresh and can be linked to.
   function handleTabChange(tab: SubmissionTab) {
@@ -794,15 +796,14 @@ if (activeTab !== 'question') {
                     {questionText.length}/{MAX_QUESTION_CHARS}
                   </span>
                 </div>
-                {/* Inline AI validation banner — same semantics as the mobile
-                    `AIValidationBanner`: warns on off-topic / duplicate, blocks
-                    on spam. Only rendered when there's something to surface. */}
+                {/* Inline AI validation banner disabled as requested.
+                    The validation logic still runs in the background.
                 {showBanner && aiValidation && (
                   <AIValidationBanner
                     result={aiValidation}
                     onDismiss={() => setBannerDismissed(true)}
                   />
-                )}
+                )} */}
               </div>
 
               <div className="flex flex-col gap-2 lg:col-span-2">
