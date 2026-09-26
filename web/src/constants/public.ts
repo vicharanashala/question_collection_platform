@@ -375,6 +375,8 @@ export const AGRI_ENTITY_TYPES: { value: AgriEntityType; label: string }[] = [
   { value: 'disease', label: 'Disease' },
 ]
 export const MAX_AGRI_ENTITY_IMAGES = 5
+// Must match MAX_AGRI_ENTITY_IMAGE_SIZE_MB in the backend agri-entities constants.
+export const MAX_AGRI_ENTITY_IMAGE_SIZE_MB = 5
 export const MAX_AGRI_ENTITY_NAME_LENGTH = 200
 export const MAX_AGRI_ENTITY_SOURCE_LENGTH = 500
 export const AGRI_ENTITY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']

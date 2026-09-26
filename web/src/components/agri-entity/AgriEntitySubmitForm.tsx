@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ImagePlus, Loader2, Plus, Send, Trash2, X } from 'lucide-react'
+import { Camera, ImagePlus, Loader2, Plus, Send, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/api/client'
 import { storageApi } from '@/api/storage'
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import {
   AGRI_ENTITY_IMAGE_MIME_TYPES,
   MAX_AGRI_ENTITY_IMAGES,
+  MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
   MAX_AGRI_ENTITY_NAME_LENGTH,
   MAX_AGRI_ENTITY_SOURCE_LENGTH,
 } from '@/constants/public'
@@ -140,9 +141,18 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
   function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? [])
     e.target.value = ''
-    const valid = picked.filter((f) => AGRI_ENTITY_IMAGE_MIME_TYPES.includes(f.type))
-    if (valid.length < picked.length) {
+    const typeValid = picked.filter((f) => AGRI_ENTITY_IMAGE_MIME_TYPES.includes(f.type))
+    if (typeValid.length < picked.length) {
       toast.error(t('agriEntity.errors.imageType', 'Only JPEG, PNG and WEBP images are supported'))
+    }
+    const valid = typeValid.filter((f) => f.size <= MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024)
+    if (valid.length < typeValid.length) {
+      toast.error(
+        t('agriEntity.errors.imageSize', {
+          max: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+          defaultValue: 'Each image must be {{max}} MB or smaller',
+        }),
+      )
     }
     const room = MAX_AGRI_ENTITY_IMAGES - images.length
     if (valid.length > room) {
@@ -363,13 +373,30 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           </section>
 
           {/* Images */}
-          <section className="space-y-3" aria-labelledby={`${fieldId}-images`}>
+          {/* relative keeps the absolutely positioned sr-only file input inside the scroll area, preventing page overflow. */}
+          <section className="relative space-y-3" aria-labelledby={`${fieldId}-images`}>
             <div>
               <h2 id={`${fieldId}-images`} className="text-sm font-semibold text-foreground">
                 {t('agriEntity.images', 'Images')} <span className="text-rose-600" aria-hidden="true">*</span>
               </h2>
               <p className="text-[11px] text-text-tertiary sm:text-xs">
-                {t('agriEntity.imagesHint', { max: MAX_AGRI_ENTITY_IMAGES, defaultValue: 'Add 1 to {{max}} clear photos (JPEG, PNG or WEBP).' })}
+                {t('agriEntity.imagesSizeHint', {
+                  max: MAX_AGRI_ENTITY_IMAGES,
+                  size: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+                  defaultValue: 'Add 1 to {{max}} clear photos (JPEG, PNG or WEBP), up to {{size}} MB each.',
+                })}
+              </p>
+            </div>
+            <div
+              role="note"
+              className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+            >
+              <Camera className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p>
+                {t(
+                  'agriEntity.fieldPhotoWarning',
+                  'Images must be taken directly in the field during your visit. Photos that are not taken in the field may lead to disqualification of the application.',
+                )}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

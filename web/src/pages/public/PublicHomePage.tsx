@@ -686,47 +686,49 @@ export function PublicHomePage() {
       )}
 
       {/* ── Submission Tips ── */}
-      <section aria-labelledby="submission-tips-heading">
-        <div className="mb-3 flex items-center gap-2">
-          <h2
-            id="submission-tips-heading"
-            className="text-base font-bold text-foreground sm:text-lg"
-          >
-            {t("home.submissionTips")}
-          </h2>
-          <InfoTip
-            label={t("home.aboutSubmissionTips")}
-            description={t("home.guidelinesTip")}
-          />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <TipCard
-            icon={<Calendar className="h-4 w-4 text-white" />}
-            iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-            title={t("home.dailyLimitTitle")}
-            description={t("home.dailyLimitTip", { count: dailyLimit })}
-          />
-          <TipCard
-            icon={<PenLine className="h-4 w-4 text-white" />}
-            iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
-            title={t("home.editWindowTitle")}
-            description={
-              editWindowSec === 0
-                ? t("home.editWindowClosed")
-                : t("home.editWindowTip").replace(
-                    "{seconds}",
-                    String(editWindowSec),
-                  )
-            }
-          />
-          <TipCard
-            icon={<Lightbulb className="h-4 w-4 text-white" />}
-            iconBg="bg-gradient-to-br from-violet-500 to-purple-600"
-            title={t("home.aiCheckTitle")}
-            description={t("home.aiCheckTip")}
-          />
-        </div>
-      </section>
+      {!isAnveshanUser && (
+        <section aria-labelledby="submission-tips-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <h2
+              id="submission-tips-heading"
+              className="text-base font-bold text-foreground sm:text-lg"
+            >
+              {t("home.submissionTips")}
+            </h2>
+            <InfoTip
+              label={t("home.aboutSubmissionTips")}
+              description={t("home.guidelinesTip")}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <TipCard
+              icon={<Calendar className="h-4 w-4 text-white" />}
+              iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
+              title={t("home.dailyLimitTitle")}
+              description={t("home.dailyLimitTip", { count: dailyLimit })}
+            />
+            <TipCard
+              icon={<PenLine className="h-4 w-4 text-white" />}
+              iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
+              title={t("home.editWindowTitle")}
+              description={
+                editWindowSec === 0
+                  ? t("home.editWindowClosed")
+                  : t("home.editWindowTip").replace(
+                      "{seconds}",
+                      String(editWindowSec),
+                    )
+              }
+            />
+            <TipCard
+              icon={<Lightbulb className="h-4 w-4 text-white" />}
+              iconBg="bg-gradient-to-br from-violet-500 to-purple-600"
+              title={t("home.aiCheckTitle")}
+              description={t("home.aiCheckTip")}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ── Footer ── */}
       <div className="flex items-center justify-center gap-2 pt-2">
