@@ -29,10 +29,10 @@ export class AgriEntityAlternateNameDto {
   name: string;
 
   @Transform(trim)
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(MAX_AGRI_ENTITY_SOURCE_LENGTH)
-  source: string;
+  source?: string;
 }
 
 export class SubmitAgriEntityDto {
@@ -58,10 +58,10 @@ export class SubmitAgriEntityDto {
   botanicalName: string;
 
   @Transform(trim)
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(MAX_AGRI_ENTITY_SOURCE_LENGTH)
-  localNameSource: string;
+  localNameSource?: string;
 
   @IsArray()
   @ArrayMinSize(1)

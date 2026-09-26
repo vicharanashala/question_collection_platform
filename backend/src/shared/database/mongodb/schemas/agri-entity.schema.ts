@@ -9,7 +9,7 @@ export class AgriEntityAlternateName {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   source: string;
 }
 
@@ -34,7 +34,7 @@ export class AgriEntity {
   @Prop({ required: true })
   botanicalName: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   localNameSource: string;
 
   @Prop({ type: [AgriEntityAlternateNameSchema], required: true })

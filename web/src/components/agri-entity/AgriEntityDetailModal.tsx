@@ -52,12 +52,14 @@ export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModal
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="space-y-2 p-4 sm:p-5">
-                  <SectionTitle icon={BookOpen}>{t('agriEntity.localNameSource', 'Source supporting the local name = standard name')}</SectionTitle>
-                  <SourceText value={entity.localNameSource} />
-                </CardContent>
-              </Card>
+              {entity.localNameSource?.trim() && (
+                <Card>
+                  <CardContent className="space-y-2 p-4 sm:p-5">
+                    <SectionTitle icon={BookOpen}>{t('agriEntity.localNameSource', 'Source supporting the local name = standard name')}</SectionTitle>
+                    <SourceText value={entity.localNameSource} />
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardContent className="space-y-2 p-4 sm:p-5">
@@ -112,7 +114,9 @@ function SectionTitle({ icon: Icon, children }: { icon: typeof ImageIcon; childr
 }
 
 // Sources are often links; show those as clickable, everything else as plain text.
-function SourceText({ value }: { value: string }) {
+// Renders a source reference as a link or plain text, or nothing when the optional source is empty.
+function SourceText({ value }: { value?: string }) {
+  if (!value?.trim()) return null
   const isLink = /^https?:\/\//i.test(value)
   return isLink ? (
     <a href={value} target="_blank" rel="noopener noreferrer" className="break-all text-[11px] sm:text-xs text-primary underline-offset-2 hover:underline">

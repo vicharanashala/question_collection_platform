@@ -50,9 +50,8 @@ function isFormComplete(values: FormValues, imageCount: number): boolean {
     filled(values.localName) &&
     filled(values.englishName) &&
     filled(values.botanicalName) &&
-    filled(values.localNameSource) &&
     values.alternateNames.length > 0 &&
-    values.alternateNames.every((a) => filled(a.name) && filled(a.source)) &&
+    values.alternateNames.every((a) => filled(a.name)) &&
     imageCount > 0
   )
 }
@@ -209,7 +208,6 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     { key: 'botanicalName', label: t('agriEntity.botanicalName', 'Botanical Name'), placeholder: t('agriEntity.botanicalNamePlaceholder', 'Scientific name') },
   ]
   const imagesError = showErrors && images.length === 0
-  const sourceError = errorFor(values.localNameSource)
 
   return (
     <Card>
@@ -248,22 +246,19 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           {/* Source for local name = standard name */}
           <section className="space-y-1.5">
             <Label htmlFor={`${fieldId}-source`}>
-              {t('agriEntity.localNameSource', 'Source supporting the local name = standard name')} <span className="text-rose-600" aria-hidden="true">*</span>
+              {t('agriEntity.localNameSource', 'Source supporting the local name = standard name')}
             </Label>
             <p id={`${fieldId}-source-hint`} className="text-[11px] text-text-tertiary sm:text-xs">
               {t('agriEntity.localNameSourceHint', 'A book, website, research paper or institution that confirms this local name refers to the standard name.')}
             </p>
             <Input
               id={`${fieldId}-source`}
-              required
               value={values.localNameSource}
               onChange={(e) => setField('localNameSource', e.target.value)}
               placeholder={t('agriEntity.sourcePlaceholder', 'e.g. TNAU Agritech Portal, or a URL')}
               maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
-              aria-invalid={Boolean(sourceError)}
-              aria-describedby={`${fieldId}-source-hint${sourceError ? ` ${fieldId}-source-error` : ''}`}
+              aria-describedby={`${fieldId}-source-hint`}
             />
-            {sourceError && <p id={`${fieldId}-source-error`} className="text-xs text-rose-600">{sourceError}</p>}
           </section>
 
           {/* Alternate names */}
@@ -279,7 +274,6 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
                 const nameId = `${fieldId}-alt-name-${index}`
                 const sourceId = `${fieldId}-alt-source-${index}`
                 const nameError = errorFor(alt.name)
-                const altSourceError = errorFor(alt.source)
                 return (
                   <li key={index} className="rounded-xl border border-border-subtle bg-surface-variant/40 p-3">
                     <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
@@ -301,9 +295,7 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
                           value={alt.source}
                           onChange={(e) => updateAlternate(index, 'source', e.target.value)}
                           maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
-                          aria-invalid={Boolean(altSourceError)}
                         />
-                        {altSourceError && <p className="text-xs text-rose-600">{altSourceError}</p>}
                       </div>
                       <Button
                         type="button"
