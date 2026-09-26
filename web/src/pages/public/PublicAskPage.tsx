@@ -18,7 +18,6 @@ import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/co
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
-import { AIValidationBanner } from '@/components/AIValidationBanner'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   runOnDeviceValidation,
@@ -275,7 +274,6 @@ useEffect(() => {
   // spam verdict.
   const debouncedQuestion = useDebouncedValue(questionText, 600)
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
   // Sequence counter prevents out-of-order results from clobbering the latest.
   const validationSeqRef = useRef(0)
 
@@ -293,17 +291,11 @@ useEffect(() => {
     runOnDeviceValidation(text).then((r) => {
       if (seq !== validationSeqRef.current) return // stale response
       setAiValidation(r)
-      // Reset dismiss when the verdict category changes
-      setBannerDismissed(false)
     })
   }, [debouncedQuestion])
 
   // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
   const blockedByAi = aiValidation?.verdict === 'fail'
-  const showBanner =
-    aiValidation &&
-    aiValidation.verdict !== 'pass' &&
-    !bannerDismissed
 
   // ─── Stats (daily limit counter) ──────────────────────────────────────────
 useEffect(() => {
@@ -796,14 +788,6 @@ if (activeTab !== 'question') {
                     {questionText.length}/{MAX_QUESTION_CHARS}
                   </span>
                 </div>
-                {/* Inline AI validation banner disabled as requested.
-                    The validation logic still runs in the background.
-                {showBanner && aiValidation && (
-                  <AIValidationBanner
-                    result={aiValidation}
-                    onDismiss={() => setBannerDismissed(true)}
-                  />
-                )} */}
               </div>
 
               <div className="flex flex-col gap-2 lg:col-span-2">
@@ -849,9 +833,6 @@ if (activeTab !== 'question') {
                     >
                       <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
                         <MicButton
-                          onRecordingStart={() => {
-                            setBannerDismissed(false)
-                          }}
                           onTranscribed={(text) => {
                             setQuestionText((prev) => {
                               const base = prev.trim()
