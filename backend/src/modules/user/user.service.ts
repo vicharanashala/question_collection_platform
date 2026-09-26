@@ -1,3 +1,4 @@
+import { isProduction } from "../../config/environment";
 import {
   Injectable,
   NotFoundException,
@@ -31,6 +32,11 @@ import {
   IAgriEntityRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
+
+// Anveshan question target: 25 in production, 5 in development and staging for easier testing.
+function getAnveshanRequiredQuestionCount(): number {
+  return isProduction() ? 25 : 5;
+}
 
 @Injectable()
 export class UserService {
@@ -67,13 +73,14 @@ export class UserService {
 
     const userId = user.id;
     const isAnveshanUser = user.isAnveshanUser === true;
+    const requiredQuestions = getAnveshanRequiredQuestionCount();
 
     // If not an Anveshan user, short-circuit — nothing to check
     if (!isAnveshanUser) {
       return {
         isCompleted: false,
         requirements: {
-          questions: { required: 25, submitted: 0, met: false },
+          questions: { required: requiredQuestions, submitted: 0, met: false },
           crop:      { required: 1,  submitted: 0, met: false },
           pest:      { required: 1,  submitted: 0, met: false },
           weed:      { required: 1,  submitted: 0, met: false },
@@ -92,7 +99,7 @@ export class UserService {
         this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
       ]);
 
-    const questionsMet = questionCount >= 5;
+    const questionsMet = questionCount >= requiredQuestions;
     const cropMet      = cropCount >= 1;
     const pestMet      = pestCount >= 1;
     const weedMet      = weedCount >= 1;
@@ -103,7 +110,7 @@ export class UserService {
     return {
       isCompleted,
       requirements: {
-        questions: { required: 5, submitted: questionCount, met: questionsMet },
+        questions: { required: requiredQuestions, submitted: questionCount, met: questionsMet },
         crop:      { required: 1,  submitted: cropCount,     met: cropMet },
         pest:      { required: 1,  submitted: pestCount,     met: pestMet },
         weed:      { required: 1,  submitted: weedCount,     met: weedMet },
