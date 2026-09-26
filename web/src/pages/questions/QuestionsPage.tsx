@@ -39,6 +39,7 @@ import {
   Search,
   Info,
   Mic,
+  Sprout,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Question } from "@/types";
@@ -477,29 +478,33 @@ export function QuestionsPage() {
             </DialogHeader>
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge
-                  className={cn(
-                    "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
-                    STATUS_COLORS[detailQuestion.status] ?? "bg-muted",
-                  )}
-                >
-                  {STATUS_LABELS[detailQuestion.status] ??
-                    detailQuestion.status}
-                </Badge>
-                {detailQuestion.domains?.length ? (
-                  <span className="text-[11px] sm:text-xs text-muted-foreground capitalize">
-                    {detailQuestion.domains.join(", ")}
-                  </span>
-                ) : null}
-                {detailQuestion.duplicateFlag && (
-                  <Badge
-                    variant="destructive"
-                    className="text-[11px] sm:text-[11px] sm:text-xs"
-                  >
-                    <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
-                  </Badge>
-                )}
-              </div>
+  <Badge
+    className={cn(
+      "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
+      STATUS_COLORS[detailQuestion.status] ?? "bg-muted",
+    )}
+  >
+    {STATUS_LABELS[detailQuestion.status] ?? detailQuestion.status}
+  </Badge>
+  {detailQuestion.domains?.length ? (
+    <span className="text-[11px] sm:text-xs text-muted-foreground capitalize">
+      {detailQuestion.domains.join(", ")}
+    </span>
+  ) : null}
+  {detailQuestion.isAnveshan && (
+    <Badge className="bg-emerald-600 text-white text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5">
+      <Sprout className="h-3 w-3 mr-1" /> Anveshan User
+    </Badge>
+  )}
+  {detailQuestion.duplicateFlag && (
+    <Badge
+      variant="destructive"
+      className="text-[11px] sm:text-[11px] sm:text-xs"
+    >
+      <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
+    </Badge>
+  )}
+</div>
               <div className="bg-muted/50 rounded-lg p-3">
                 <TranslatableText
                   text={detailQuestion.questionText}
@@ -555,24 +560,51 @@ export function QuestionsPage() {
                   />
 
                   <InfoRow
-                    icon={MapPin}
-                    label="State"
-                    value={detailQuestion.state}
-                  />
+  icon={MapPin}
+  label="State"
+  value={detailQuestion.isAnveshan
+    ? detailQuestion.submissionLocation?.state ?? detailQuestion.state
+    : detailQuestion.state}
+/>
 
-                  <InfoRow
-                    icon={MapPin}
-                    label="District"
-                    value={detailQuestion.district}
-                  />
+<InfoRow
+  icon={MapPin}
+  label="District"
+  value={detailQuestion.isAnveshan
+    ? detailQuestion.submissionLocation?.district ?? detailQuestion.district
+    : detailQuestion.district}
+/>
 
-                  {detailQuestion.block && (
-                    <InfoRow
-                      icon={MapPin}
-                      label="Block"
-                      value={detailQuestion.block}
-                    />
-                  )}
+{(detailQuestion.isAnveshan
+  ? detailQuestion.submissionLocation?.block
+  : detailQuestion.block) && (
+  <InfoRow
+    icon={MapPin}
+    label="Block"
+    value={detailQuestion.isAnveshan
+      ? detailQuestion.submissionLocation?.block
+      : detailQuestion.block}
+  />
+)}
+
+{detailQuestion.isAnveshan && detailQuestion.submissionLocation?.village && (
+  <InfoRow
+    icon={MapPin}
+    label="Village"
+    value={detailQuestion.submissionLocation.village}
+  />
+)}
+
+{detailQuestion.isAnveshan &&
+  detailQuestion.submissionLocation?.latitude != null &&
+  detailQuestion.submissionLocation?.longitude != null && (
+  <InfoRow
+    icon={MapPin}
+    label="Coordinates"
+    value={`${detailQuestion.submissionLocation.latitude.toFixed(5)}, ${detailQuestion.submissionLocation.longitude.toFixed(5)}`}
+  />
+)}
+
                 </div>
               </div>
 

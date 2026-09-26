@@ -111,6 +111,9 @@ export class Question {
   @Column({ name: 'approval_reason', type: 'varchar', length: 500, nullable: true })
   approvalReason: string | null;
 
+  @Column({name: "is_anveshan", type: 'boolean', default: false})
+  isAnveshan: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -124,4 +127,6 @@ export class Question {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'reviewer_id' })
   reviewer: User | null;
+
+  
 }

@@ -101,6 +101,13 @@ export interface Question {
   userName?: string | null;
   /** Alias for user.mobileNumber */
   userMobileNumber?: string | null;
+  isAnveshan?: boolean;
+  submissionLocation: {
+    state: string;
+    district: string;
+    block: string;
+    village: string;
+  }
 }
 
 export interface DashboardStats {
