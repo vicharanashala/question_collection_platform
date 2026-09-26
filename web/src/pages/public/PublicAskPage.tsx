@@ -710,15 +710,14 @@ useEffect(() => {
                     {questionText.length}/{MAX_QUESTION_CHARS}
                   </span>
                 </div>
-                {/* Inline AI validation banner — same semantics as the mobile
-                    `AIValidationBanner`: warns on off-topic / duplicate, blocks
-                    on spam. Only rendered when there's something to surface. */}
+                {/* Inline AI validation banner disabled as requested.
+                    The validation logic still runs in the background.
                 {showBanner && aiValidation && (
                   <AIValidationBanner
                     result={aiValidation}
                     onDismiss={() => setBannerDismissed(true)}
                   />
-                )}
+                )} */}
               </div>
 
               <div className="flex flex-col gap-2 lg:col-span-2">
