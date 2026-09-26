@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { AudioPlayer } from "@/components/AudioPlayer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -686,17 +687,27 @@ export function QuestionsPage() {
                 </div>
               )}
 
-            {detailQuestion.mediaUrls &&
-              detailQuestion.mediaUrls.filter((u) =>
-                u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
-              ).length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                    <Mic className="h-3 w-3" />
-                    Audio uploaded successfully
-                  </span>
+            {(() => {
+              const AUDIO_EXT = /\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i;
+              const isAudioUrl = (url: string) => AUDIO_EXT.test(url.split('?')[0]);
+              const mediaUrls = detailQuestion.mediaUrls ?? [];
+              const oldAudioUrls = mediaUrls.filter(isAudioUrl);
+              const newAudioUrls = detailQuestion.audioUrls ?? [];
+              const allAudioUrls = [...newAudioUrls, ...oldAudioUrls];
+
+              if (allAudioUrls.length === 0) return null;
+              return (
+                <div className="space-y-2 mt-4">
+                  <div className="flex items-center gap-1.5 mb-2 text-xs sm:text-xs sm:text-sm text-muted-foreground">
+                    <Mic className="h-4 w-4" />
+                    Audio Recordings
+                  </div>
+                  {allAudioUrls.map((url, i) => (
+                    <AudioPlayer key={i} src={url} className="max-w-sm w-full" />
+                  ))}
                 </div>
-              )}
+              );
+            })()}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setDetailOpen(false)}>

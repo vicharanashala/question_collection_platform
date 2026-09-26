@@ -638,7 +638,8 @@ export const questionApi = {
    * REJECTED (counts against the daily limit) and returns `duplicate` —
    * the caller should not proceed to the details step in that case.
    */
-  preview: (body: { questionText: string; mediaType?: 'none' | 'image' | 'video' | 'audio'; mediaUrls?: string[] }) =>
+  preview: (body: { questionText: string; mediaType?: 'none' | 'image' | 'video' | 'audio'; mediaUrls?: string[]
+    audioUrls?: string[] }) =>
     request<{
       state: string
       district: string
@@ -678,6 +679,7 @@ export const questionApi = {
     agroClimaticZone?: string
     mediaType?: 'none' | 'image' | 'video' | 'audio'
     mediaUrls?: string[]
+    audioUrls?: string[]
   }) =>
     request<{
       id: string

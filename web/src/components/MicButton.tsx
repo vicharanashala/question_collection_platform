@@ -4,7 +4,7 @@ import { Loader2, Mic, MicOff, Square, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { speechApi, toSarvamLang } from '@/api/speech'
-import { storageApi } from '@/api/storage'
+
 import { cn } from '@/lib/utils'
 
 type MicState = 'idle' | 'recording' | 'uploading' | 'done' | 'error'

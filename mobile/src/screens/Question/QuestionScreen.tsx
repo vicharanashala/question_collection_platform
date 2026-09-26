@@ -30,7 +30,7 @@ import { runOnDeviceValidation } from '../../utils/onDeviceAI';
 import { AIValidationResult } from '../../utils/onDeviceAI';
 import { AIValidationBanner } from '../../components/AIValidationBanner';
 import { SttMicButton } from '../../components/SttMicButton';
-import { AudioPlaybackCard } from '../../components/AudioPlaybackCard';
+
 import { useTranslation } from 'react-i18next';
 
 import { MAX_QUESTION_CHARS_FALLBACK } from '../../utils/constants';
@@ -437,28 +437,6 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
               { backgroundColor: c.background, borderTopColor: c.borderSubtle },
             ]}
           >
-            {/* Audio bar — shown when recording exists */}
-            {pendingAudioUris.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.audioBarWrap}>
-                {pendingAudioUris.map((uri, idx) => (
-                  <View key={idx} style={{ marginRight: 8, minWidth: 200 }}>
-                    <AudioPlaybackCard
-                      uri={uri}
-                      onDelete={() => {
-                        setPendingAudioUris(prev => prev.filter((_, i) => i !== idx));
-                        // If you delete an audio clip, you might want to adjust text, but we'll leave it as is or reset if all deleted
-                        if (pendingAudioUris.length === 1) {
-                          setQuestionText('');
-                          setErrors({});
-                          setAiValidation(null);
-                        }
-                      }}
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-            )}
-
             {/* Mic row */}
             <View style={styles.micRow}>
               <SttMicButton

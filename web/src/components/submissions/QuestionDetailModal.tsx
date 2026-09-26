@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  MessageSquareText, ImageIcon, Mic, MapPin, Wheat,
+  MessageSquareText, ImageIcon, MapPin, Wheat,
   CloudRain, Hash, Loader2, AlertCircle,
 } from 'lucide-react'
 import { cn, formatDateTime } from '@/lib/utils'
@@ -186,8 +186,8 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
   const { t } = useTranslation()
   const mediaUrls = question.mediaUrls ?? []
   const imageUrls = mediaUrls.filter((u) => !isAudioUrl(u))
-  const oldAudioUrls = mediaUrls.filter(isAudioUrl)
-  const audioUrls = question.audioUrls ? [...question.audioUrls, ...oldAudioUrls] : oldAudioUrls
+  
+  
 
   return (
     <>
@@ -240,7 +240,7 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
       </Card>
 
       {/* ── Media (images + audio) ─────────────────────────────────────── */}
-      {(imageUrls.length > 0 || audioUrls.length > 0) && (
+      {(imageUrls.length > 0) && (
         <Card>
           <CardContent className="space-y-3 p-4 sm:p-5">
             <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-text-secondary">
@@ -259,18 +259,6 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
                     />
                   </a>
                 ))}
-              </div>
-            )}
-
-            {audioUrls.length > 0 && (
-              <div className="space-y-2">
-                {audioUrls.map((url, i) => (
-                  <audio key={i} controls src={url} preload="metadata" className="h-10 w-full" />
-                ))}
-                <p className="flex items-center gap-1.5 text-[11px] text-text-tertiary">
-                  <Mic className="h-3 w-3" />
-                  {t('question.audioModelDisclaimer')}
-                </p>
               </div>
             )}
           </CardContent>

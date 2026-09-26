@@ -18,7 +18,7 @@ import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/co
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
-import { AIValidationBanner } from '@/components/AIValidationBanner'
+
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   runOnDeviceValidation,
