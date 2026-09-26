@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +40,6 @@ interface LocationCaptureModalProps {
 }
 
 export function LocationCaptureModal({ open, onOpenChange, onConfirm }: LocationCaptureModalProps) {
-  const { t } = useTranslation();
   const { getCurrentPosition } = useGeolocation();
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
