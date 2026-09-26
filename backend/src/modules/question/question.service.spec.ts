@@ -40,7 +40,6 @@ const mockAdminService = () => ({
       video_max_size_mb: 10,
       video_max_duration_seconds: 10,
       max_question_chars: 1000,
-      max_image_size_mb: 5,
     };
     return Promise.resolve(map[key] ?? 0);
   }),

@@ -118,16 +118,6 @@ export class StorageController {
       );
     }
 
-    const maxSizeMb =
-      await this.adminService.getConfigValue("max_image_size_mb");
-    const maxSizeBytes = maxSizeMb * 1024 * 1024;
-
-    if (file.size > maxSizeBytes) {
-      throw new PayloadTooLargeException(
-        `Image exceeds maximum allowed size of ${maxSizeMb} MB`,
-      );
-    }
-
     return file;
   }
 

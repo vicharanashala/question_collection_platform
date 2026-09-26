@@ -21,11 +21,6 @@ const DEFAULT_CONFIG = [
     description: 'Maximum questions a user can submit per day',
   },
   {
-    key: 'duplicate_similarity_threshold',
-    value: 0.9,
-    description: 'Semantic similarity threshold (0-1) for duplicate detection',
-  },
-  {
     key: 'video_max_duration_seconds',
     value: 10,
     description: 'Maximum allowed video duration in seconds',
@@ -39,11 +34,6 @@ const DEFAULT_CONFIG = [
     key: 'max_question_chars',
     value: 1000,
     description: 'Maximum allowed characters in a question text',
-  },
-  {
-    key: 'max_image_size_mb',
-    value: 5,
-    description: 'Maximum image file size per question (MB)',
   },
 ];
 
