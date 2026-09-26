@@ -44,14 +44,28 @@ const EMPTY_VALUES: FormValues = {
   alternateNames: [EMPTY_ALTERNATE],
 }
 
-function isFormComplete(values: FormValues, imageCount: number): boolean {
+// Returns true when an optional source is empty or a valid http(s) URL with a domain.
+function isValidSourceUrl(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return true
+  try {
+    const url = new URL(trimmed)
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.includes('.')
+  } catch {
+    return false
+  }
+}
+
+// Checks that required fields are filled and any provided sources are valid URLs.
+function isFormValid(values: FormValues, imageCount: number): boolean {
   const filled = (v: string) => v.trim().length > 0
   return (
     filled(values.localName) &&
     filled(values.englishName) &&
     filled(values.botanicalName) &&
+    isValidSourceUrl(values.localNameSource) &&
     values.alternateNames.length > 0 &&
-    values.alternateNames.every((a) => filled(a.name)) &&
+    values.alternateNames.every((a) => filled(a.name) && isValidSourceUrl(a.source)) &&
     imageCount > 0
   )
 }
@@ -90,6 +104,8 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
 
   const requiredError = t('agriEntity.errors.required', 'This field is required')
   const errorFor = (value: string) => (showErrors && !value.trim() ? requiredError : undefined)
+  const invalidUrlError = t('agriEntity.errors.invalidUrl', 'Enter a valid URL starting with http:// or https://')
+  const sourceErrorFor = (value: string) => (showErrors && !isValidSourceUrl(value) ? invalidUrlError : undefined)
 
   function setField(field: NameField | 'localNameSource', value: string) {
     setValues((prev) => ({ ...prev, [field]: value }))
@@ -163,9 +179,9 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (submitting) return
-    if (!isFormComplete(values, images.length)) {
+    if (!isFormValid(values, images.length)) {
       setShowErrors(true)
-      toast.error(t('agriEntity.errors.incomplete', 'Please fill in all fields and add at least one image'))
+      toast.error(t('agriEntity.errors.incomplete', 'Please fill in the required fields, fix any invalid URLs and add at least one image'))
       return
     }
 
@@ -208,6 +224,7 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     { key: 'botanicalName', label: t('agriEntity.botanicalName', 'Botanical Name'), placeholder: t('agriEntity.botanicalNamePlaceholder', 'Scientific name') },
   ]
   const imagesError = showErrors && images.length === 0
+  const localSourceError = sourceErrorFor(values.localNameSource)
 
   return (
     <Card>
@@ -249,16 +266,21 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
               {t('agriEntity.localNameSource', 'Source supporting the local name = standard name')}
             </Label>
             <p id={`${fieldId}-source-hint`} className="text-[11px] text-text-tertiary sm:text-xs">
-              {t('agriEntity.localNameSourceHint', 'A book, website, research paper or institution that confirms this local name refers to the standard name.')}
+              {t('agriEntity.localNameSourceHint', 'Link to a website, research paper or institution page that confirms this local name refers to the standard name.')}
             </p>
             <Input
               id={`${fieldId}-source`}
+              type="url"
+              inputMode="url"
+              autoComplete="url"
               value={values.localNameSource}
               onChange={(e) => setField('localNameSource', e.target.value)}
-              placeholder={t('agriEntity.sourcePlaceholder', 'e.g. TNAU Agritech Portal, or a URL')}
+              placeholder={t('agriEntity.sourceUrlPlaceholder', 'https://example.com/reference')}
               maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
-              aria-describedby={`${fieldId}-source-hint`}
+              aria-invalid={Boolean(localSourceError)}
+              aria-describedby={`${fieldId}-source-hint${localSourceError ? ` ${fieldId}-source-error` : ''}`}
             />
+            {localSourceError && <p id={`${fieldId}-source-error`} className="text-xs text-rose-600">{localSourceError}</p>}
           </section>
 
           {/* Alternate names */}
@@ -274,6 +296,7 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
                 const nameId = `${fieldId}-alt-name-${index}`
                 const sourceId = `${fieldId}-alt-source-${index}`
                 const nameError = errorFor(alt.name)
+                const altSourceError = sourceErrorFor(alt.source)
                 return (
                   <li key={index} className="rounded-xl border border-border-subtle bg-surface-variant/40 p-3">
                     <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
@@ -292,10 +315,16 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
                         <Label htmlFor={sourceId} className="text-xs">{t('agriEntity.source', 'Source')}</Label>
                         <Input
                           id={sourceId}
+                          type="url"
+                          inputMode="url"
                           value={alt.source}
                           onChange={(e) => updateAlternate(index, 'source', e.target.value)}
+                          placeholder={t('agriEntity.sourceUrlPlaceholder', 'https://example.com/reference')}
                           maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
+                          aria-invalid={Boolean(altSourceError)}
+                          aria-describedby={altSourceError ? `${sourceId}-error` : undefined}
                         />
+                        {altSourceError && <p id={`${sourceId}-error`} className="text-xs text-rose-600">{altSourceError}</p>}
                       </div>
                       <Button
                         type="button"
