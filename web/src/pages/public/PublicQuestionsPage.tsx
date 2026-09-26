@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -51,8 +52,11 @@ function statusLabelKey(s: string): string {
 export function PublicQuestionsPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = parseSubmissionTab(searchParams.get('tab'))
+  const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
+  const requestedTab = parseSubmissionTab(searchParams.get('tab'))
+  const activeTab = showAgriTabs ? requestedTab : 'question'
   const typeLabel = activeTab === 'question'
     ? ''
     : t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')

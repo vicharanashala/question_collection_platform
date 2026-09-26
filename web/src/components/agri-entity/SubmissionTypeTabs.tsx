@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import type { AgriEntityType } from '@/types'
+import { useAuth } from '@/context/AuthContext'
 
 export type SubmissionTab = 'question' | AgriEntityType
 
@@ -30,15 +31,31 @@ interface SubmissionTypeTabsProps {
 /** Tab strip switching between question and crop / weed / pest / disease. */
 export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: SubmissionTypeTabsProps) {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  
+  const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
+
   const tabs: { value: SubmissionTab; label: string }[] = [
     ...(showQuestion ? [{ value: 'question' as const, label: t('agriEntity.tabs.question', 'Question') }] : []),
-    ...AGRI_ENTITY_TYPES.map((type) => ({ value: type.value, label: t(`agriEntity.tabs.${type.value}`, type.label) })),
+    ...(showAgriTabs ? AGRI_ENTITY_TYPES.map((type) => ({ value: type.value, label: t(`agriEntity.tabs.${type.value}`, type.label) })) : []),
   ]
+
+  // If there's only 1 tab (or 0), there's nothing to switch between, so hide the tab bar completely
+  if (tabs.length <= 1) return null
+
+  const gridColsClass = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+    5: 'grid-cols-5',
+  }[tabs.length] || 'grid-cols-1'
+
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as SubmissionTab)}>
       {/* Equal columns so every tab stays visible without horizontal
           scrolling: icon stacked over the label on phones, inline from sm up. */}
-      <TabsList className={cn('grid h-auto w-full gap-1 p-1', showQuestion ? 'grid-cols-5' : 'grid-cols-4')}>
+      <TabsList className={cn('grid h-auto w-full gap-1 p-1', gridColsClass)}>
         {tabs.map((tab) => {
           const Icon = SUBMISSION_TAB_ICONS[tab.value]
           return (

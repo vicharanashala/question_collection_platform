@@ -153,7 +153,9 @@ export function PublicAskPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = parseSubmissionTab(searchParams.get('tab'))
+  const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
+  const requestedTab = parseSubmissionTab(searchParams.get('tab'))
+  const activeTab = showAgriTabs ? requestedTab : 'question'
 
   // Keeps the selected tab in the URL so it survives refresh and can be linked to.
   function handleTabChange(tab: SubmissionTab) {
