@@ -8,5 +8,6 @@ import { UserModule } from '../user/user.module';
   imports: [DbModule, UserModule],
   controllers: [AgriEntitiesController],
   providers: [AgriEntitiesService],
+  exports: [AgriEntitiesService]
 })
 export class AgriEntitiesModule {}

@@ -7,6 +7,7 @@ import { StorageModule } from '../storage/storage.module';
 import { AiModule } from '../ai/ai.module';
 import { GdbModule } from '../ai/gdb.module';
 import { DbModule } from '../../shared/database/db.module';
+import { AgriEntitiesModule } from '../agri-entities/agri-entities.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DbModule } from '../../shared/database/db.module';
     StorageModule,
     AiModule,
     GdbModule,
+    AgriEntitiesModule
   ],
   controllers: [QuestionController],
   providers: [QuestionService],

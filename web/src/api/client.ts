@@ -47,6 +47,24 @@ import {
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
+export interface AnveshanMilestoneResponse {
+  requirements: {
+    questions: number;
+    crop: number;
+    weed: number;
+    pest: number;
+    disease: number;
+  };
+  progress: {
+    questions: number;
+    crop: number;
+    weed: number;
+    pest: number;
+    disease: number;
+  };
+  completed: boolean;
+}
+
 // ─── Token helpers ─────────────────────────────────────────────────────────
 
 export function getAccessToken(): string | null {
@@ -929,14 +947,24 @@ export const questionApi = {
     ).finally(() => invalidateCache("/api/questions")),
 
   /** Daily / total submission stats for the current (public) user. */
+  // getMyStats: () =>
+  //   request<{
+  //     dailyCount: number;
+  //     remainingToday: number;
+  //     totalApproved: number;
+  //     dailyLimit: number;
+  //     [k: string]: unknown;
+  //   }>("/questions/stats/me", {}, false),
+
   getMyStats: () =>
-    request<{
-      dailyCount: number;
-      remainingToday: number;
-      totalApproved: number;
-      dailyLimit: number;
-      [k: string]: unknown;
-    }>("/questions/stats/me", {}, false),
+  request<{
+    dailyCount: number;
+    remainingToday: number | null;
+    totalApproved: number;
+    dailyLimit: number | null;
+    unlimited?: boolean;
+    [k: string]: unknown;
+  }>("/questions/stats/me", {}, false),
 
   /**
    * List the current (public) user's own questions.
@@ -961,6 +989,13 @@ export const questionApi = {
       false,
     );
   },
+
+   getMyAnveshanMilestone: () =>
+    request<AnveshanMilestoneResponse>(
+      "/questions/anveshan-milestone/me",
+      {},
+      false,
+    ),
 };
 
 // ─── Wallet API (public-user dashboard) ────────────────────────────────────

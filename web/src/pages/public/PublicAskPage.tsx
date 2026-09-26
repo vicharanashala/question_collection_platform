@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
+import type { AuthUser } from '@/types'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,7 +18,6 @@ import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/co
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
-import { AIValidationBanner } from '@/components/AIValidationBanner'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   runOnDeviceValidation,
@@ -33,6 +33,8 @@ import {
   clearQuestionDraft,
 } from '@/utils/questionDraft'
 import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
+import { AnveshanMilestoneData, AnveshanMilestoneModal } from './AnveshMileStone'
+import { Award } from "lucide-react";
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -63,13 +65,15 @@ interface AskHeaderProps {
   remainingToday?: number | null
   dailyLimit?: number | null
   atLimit: boolean
+  user?: AuthUser | null
+  setMilestoneModalOpen?: (open: boolean) => void
 }
 
 /**
  * Shared header for both steps of the ask flow: back action, daily-limit chip,
  * page title and a two-step progress indicator.
  */
-function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit }: AskHeaderProps) {
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen }: AskHeaderProps) {
   const { t } = useTranslation()
   const steps = [
     { n: 1 as const, label: t('question.yourQuestion') },
@@ -111,6 +115,19 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
                 : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
             </span>
           )}
+
+ {user?.isAnveshanUser && setMilestoneModalOpen && (
+  <Button
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={() => setMilestoneModalOpen(true)}
+    className="gap-1.5"
+  >
+    <Award className="h-4 w-4" />
+    {t("anveshan.myProgress", "My Progress")}
+  </Button>
+)}
         </div>
       </div>
 
@@ -158,7 +175,9 @@ export function PublicAskPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = parseSubmissionTab(searchParams.get('tab'))
+  const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
+  const requestedTab = parseSubmissionTab(searchParams.get('tab'))
+  const activeTab = showAgriTabs ? requestedTab : 'question'
 
   // Keeps the selected tab in the URL so it survives refresh and can be linked to.
   function handleTabChange(tab: SubmissionTab) {
@@ -192,6 +211,41 @@ export function PublicAskPage() {
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
   const [locationModalOpen, setLocationModalOpen] = useState(false)
   const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
+
+  const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
+const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
+const [milestoneJustCompleted, setMilestoneJustCompleted] = useState(false);
+
+const fetchMilestone = useCallback(() => {
+  if (!user?.isAnveshanUser) return;
+  questionApi.getMyAnveshanMilestone() // add this method to your api/client.ts
+    .then((data: AnveshanMilestoneData) => {
+      setMilestone((prev) => {
+        if (!prev?.completed && data.completed) {
+          setMilestoneJustCompleted(true);
+        }
+        return data;
+      });
+    })
+    .catch(() => undefined);
+}, [user?.isAnveshanUser]);
+
+useEffect(() => {
+  fetchMilestone();
+}, [fetchMilestone]);
+
+useEffect(() => {
+  if (milestoneJustCompleted) {
+    toast.success(
+      t("anveshan.milestoneCompleteToast", {
+        defaultValue: "🎉 Congratulations! You've completed your Anveshan milestone.",
+      }),
+      { duration: 6000 },
+    );
+    setMilestoneJustCompleted(false);
+  }
+}, [milestoneJustCompleted, t]);
+
   const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
 useEffect(() => {
@@ -223,7 +277,6 @@ useEffect(() => {
   // spam verdict.
   const debouncedQuestion = useDebouncedValue(questionText, 600)
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
   // Sequence counter prevents out-of-order results from clobbering the latest.
   const validationSeqRef = useRef(0)
 
@@ -241,17 +294,11 @@ useEffect(() => {
     runOnDeviceValidation(text).then((r) => {
       if (seq !== validationSeqRef.current) return // stale response
       setAiValidation(r)
-      // Reset dismiss when the verdict category changes
-      setBannerDismissed(false)
     })
   }, [debouncedQuestion])
 
   // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
   const blockedByAi = aiValidation?.verdict === 'fail'
-  const showBanner =
-    aiValidation &&
-    aiValidation.verdict !== 'pass' &&
-    !bannerDismissed
 
   // ─── Stats (daily limit counter) ──────────────────────────────────────────
 useEffect(() => {
@@ -800,6 +847,8 @@ if (activeTab !== 'question') {
         remainingToday={stats?.remainingToday}
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
+        user={user}
+        setMilestoneModalOpen={setMilestoneModalOpen}
       />
        {user?.isAnveshanUser && (
         <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
@@ -850,15 +899,6 @@ if (activeTab !== 'question') {
                     {questionText.length}/{MAX_QUESTION_CHARS}
                   </span>
                 </div>
-                {/* Inline AI validation banner — same semantics as the mobile
-                    `AIValidationBanner`: warns on off-topic / duplicate, blocks
-                    on spam. Only rendered when there's something to surface. */}
-                {showBanner && aiValidation && (
-                  <AIValidationBanner
-                    result={aiValidation}
-                    onDismiss={() => setBannerDismissed(true)}
-                  />
-                )}
               </div>
 
               <div className="flex flex-col gap-2 lg:col-span-2">
@@ -904,9 +944,6 @@ if (activeTab !== 'question') {
                     >
                       <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
                         <MicButton
-                          onRecordingStart={() => {
-                            setBannerDismissed(false)
-                          }}
                           onTranscribed={(text) => {
                             setQuestionText((prev) => {
                               const base = prev.trim()
@@ -967,6 +1004,11 @@ if (activeTab !== 'question') {
         </CardContent>
       </Card>
       {dialogs}
+      <AnveshanMilestoneModal
+  open={milestoneModalOpen}
+  onOpenChange={setMilestoneModalOpen}
+  data={milestone}
+/>
     </div>
   )
 }

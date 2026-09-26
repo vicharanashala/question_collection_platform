@@ -10,6 +10,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
@@ -23,6 +24,7 @@ import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
 import { UserService } from '../user/user.service';
+import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -31,7 +33,7 @@ interface AuthenticatedRequest extends Request {
 @Controller('questions')
 @UseGuards(JwtAuthGuard)
 export class QuestionController {
-  constructor(private readonly questionService: QuestionService, private readonly userService: UserService) {}
+  constructor(private readonly questionService: QuestionService, private readonly userService: UserService, private readonly agriEntityService: AgriEntitiesService) {}
 
   // POST /questions — Submit a new question
   @Post()
@@ -134,4 +136,37 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
   ) {
     return this.questionService.reject(id, req.user.id, reason ?? 'Not provided');
   }
+
+  @Get('anveshan-milestone/me')
+@Cacheable('anveshan_milestone', 60)
+async getMyAnveshanMilestone(@Req() req: AuthenticatedRequest) {
+  const user = await this.userService.getProfile(req.user.id);
+  if (!user?.isAnveshanUser) {
+    throw new ForbiddenException('This milestone is only available to Anveshan users.');
+  }
+
+  const [questionsSubmitted, agriCounts] = await Promise.all([
+    this.questionService.getTotalSubmittedCount(req.user.id),
+    this.agriEntityService.getSubmittedCountsByType(req.user.id), // { crop, weed, pest, disease }
+  ]);
+
+  const requirements = { questions: 25, crop: 1, weed: 1, pest: 1, disease: 1 };
+
+  const progress = {
+    questions: Math.min(questionsSubmitted, requirements.questions),
+    crop: Math.min(agriCounts.crop, requirements.crop),
+    weed: Math.min(agriCounts.weed, requirements.weed),
+    pest: Math.min(agriCounts.pest, requirements.pest),
+    disease: Math.min(agriCounts.disease, requirements.disease),
+  };
+
+  const completed =
+    questionsSubmitted >= requirements.questions &&
+    agriCounts.crop >= requirements.crop &&
+    agriCounts.weed >= requirements.weed &&
+    agriCounts.pest >= requirements.pest &&
+    agriCounts.disease >= requirements.disease;
+
+  return { requirements, progress, completed };
+}
 }
