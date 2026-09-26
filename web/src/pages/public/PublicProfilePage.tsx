@@ -25,7 +25,10 @@ import {
   ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
   CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
+  Languages, Moon, Sun, SlidersHorizontal,
 } from 'lucide-react'
+import { useTheme } from '@/context/ThemeContext'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { toast } from 'sonner'
 import { REWARD_TIERS, categoryLabel } from '@/constants/public'
 import { cn, getInitials, formatDate } from '@/lib/utils'
@@ -211,6 +214,8 @@ export function PublicProfilePage() {
   const [loadingStats, setLoadingStats] = useState(true)
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true)
@@ -534,6 +539,22 @@ export function PublicProfilePage() {
       </section>
 
       <EditPublicProfileDialog open={editOpen} onOpenChange={setEditOpen} user={user} onSaved={updateUser} />
+
+      {/* ── Preferences section ── */}
+      <section>
+        <SectionHeader icon={SlidersHorizontal} title={t('profile.preferences', 'Preferences')} />
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <ActionRow icon={Languages} label={t('auth.selectLanguage')} onClick={() => setLanguageOpen(true)} />
+            <ActionRow
+              icon={theme === 'dark' ? Moon : Sun}
+              label={`${t('profile.theme', 'Theme')}: ${theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight')}`}
+              onClick={toggleTheme}
+            />
+          </CardContent>
+        </Card>
+      </section>
+      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
 
       {/* ── 5. Actions section ── */}
       <section>

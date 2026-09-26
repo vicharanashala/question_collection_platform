@@ -35,7 +35,7 @@ interface AnveshanMilestoneModalProps {
   data: AnveshanMilestoneData | null;
 }
 
-const ITEMS: Array<{ key: MilestoneKey; icon: LucideIcon; label: (n: number) => string }> = [
+const ITEMS: { key: MilestoneKey; icon: LucideIcon; label: (n: number) => string }[] = [
   { key: "questions", icon: MessageSquareText, label: (n) => `${n} question${n === 1 ? "" : "s"} submitted` },
   { key: "crop", icon: Sprout, label: (n) => `${n} crop submission${n === 1 ? "" : "s"}` },
   { key: "weed", icon: Leaf, label: (n) => `${n} weed submission${n === 1 ? "" : "s"}` },

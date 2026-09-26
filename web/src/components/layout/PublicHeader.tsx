@@ -69,7 +69,7 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
 
   return (
     <header className="relative z-30 flex h-14 items-center justify-between border-b border-border-subtle bg-white/80 backdrop-blur px-4 sm:px-6 dark:border-border-subtle dark:bg-surface/80">
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
         {/* Hamburger — opens the mobile drawer. Hidden on `md` and above
             where the desktop sidebar is always visible. */}
         {onOpenMobileNav && (
@@ -85,14 +85,14 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
         )}
         <button
           onClick={() => navigate('/home')}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex min-w-0 items-center gap-1.5 hover:opacity-80 transition-opacity sm:gap-2"
           aria-label="AnnaDatha — go to home"
         >
-          <BrandLogo className="h-8 w-8 shrink-0" />
-          <span className="text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+          <BrandLogo className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
+          <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
         </button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('notifications.title')} title={t('notifications.title')}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
@@ -101,16 +101,17 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
             </span>
           )}
         </button>
-        <button onClick={toggleTheme} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
+        {/* Theme and language live on the profile page on small screens to keep the header uncluttered. */}
+        <button onClick={toggleTheme} className="hidden sm:flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
         <button onClick={() => navigate('/home/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
           <Trophy className="h-4 w-4" />
         </button>
-        <button onClick={() => setLanguageOpen(true)} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('auth.selectLanguage')} title={t('auth.selectLanguage')}>
+        <button onClick={() => setLanguageOpen(true)} className="hidden sm:flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('auth.selectLanguage')} title={t('auth.selectLanguage')}>
           <Languages className="h-4 w-4" />
         </button>
-        <div className="h-6 w-px bg-border-subtle" />
+        <div className="hidden h-6 w-px bg-border-subtle sm:block" />
         <div className="relative" ref={menuRef}>
           <button onClick={() => setProfileOpen((o) => !o)} className="flex items-center gap-2 rounded-md p-1.5 hover:bg-surface-variant transition-colors">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] sm:text-[11px] sm:text-xs font-bold text-primary-foreground">{initials}</div>
