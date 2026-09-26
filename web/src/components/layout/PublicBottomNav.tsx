@@ -1,5 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { Home, MessageSquarePlus, Wallet, User, ListChecks } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { canAccessPayments, PAYMENT_ROUTES } from '@/utils/paymentAccess'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 
@@ -28,6 +30,8 @@ const tabs: Tab[] = [
 export function PublicBottomNav() {
   const { pathname } = useLocation()
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const visibleTabs = canAccessPayments(user) ? tabs : tabs.filter((tab) => !PAYMENT_ROUTES.includes(tab.to))
 
   return (
     <nav
@@ -35,7 +39,7 @@ export function PublicBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-white/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur dark:border-border-subtle dark:bg-surface/95 md:hidden"
     >
       <div className="mx-auto flex max-w-2xl items-stretch justify-around pb-[env(safe-area-inset-bottom)]">
-        {tabs.map(({ to, label, icon: Icon, end, primary }) => {
+        {visibleTabs.map(({ to, label, icon: Icon, end, primary }) => {
           const isActive = end ? pathname === to : pathname.startsWith(to)
 
           if (primary) {

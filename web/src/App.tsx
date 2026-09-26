@@ -6,6 +6,7 @@ import { PrefetchProvider } from '@/context/PrefetchContext'
 import { lazyRoute } from '@/components/LazyRoute'
 import { LockedAccountModal } from '@/components/LockedAccountModal'
 import type { UserRole } from '@/types'
+import { canAccessPayments } from '@/utils/paymentAccess'
 
 
 // ── Staff / admin pages (existing) ─────────────────────────────────────────
@@ -127,6 +128,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Sends Anveshan users back to home when they open a wallet or payment page directly.
+function PaymentRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  if (!canAccessPayments(user)) return <Navigate to="/home" replace />
+  return <>{children}</>
+}
+
 /** Redirects to the first accessible page if current role has no access to the page */
 function RoleRoute({ pageKey }: { pageKey: string }) {
   const { user } = useAuth()
@@ -215,10 +223,10 @@ export default function App() {
           <Route path="questions"    element={<PublicQuestionsPage />} />
           <Route path="faqs"         element={<PublicFaqsPage />} />
           <Route path="profile"      element={<PublicProfilePage />} />
-          <Route path="wallet"             element={<PublicWalletPage />} />
+          <Route path="wallet"             element={<PaymentRoute><PublicWalletPage /></PaymentRoute>} />
           <Route path="reports"             element={<PublicReportsPage />} />
           <Route path="reports/:reportId"   element={<PublicReportDetailPage />} />
-          <Route path="payment-methods"    element={<PublicPaymentMethodsPage />} />
+          <Route path="payment-methods"    element={<PaymentRoute><PublicPaymentMethodsPage /></PaymentRoute>} />
           <Route path="terms"              element={<PublicTermsPage />} />
           <Route path="privacy"            element={<PublicPrivacyPage />} />
           <Route path="notifications"      element={<PublicNotificationsPage />} />

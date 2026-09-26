@@ -39,6 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { REWARD_TIERS, categoryLabel } from "@/constants/public";
 import type { AgriEntityType } from "@/types";
+import { canAccessPayments } from "@/utils/paymentAccess";
 import { EditPublicProfileDialog } from "@/components/profile/EditPublicProfileDialog";
 import { AnveshanWelcomeModal } from "@/components/profile/AnveshanProfileModal";
 interface Stats {
@@ -236,6 +237,7 @@ export function PublicHomePage() {
   const [agriCounts, setAgriCounts] = useState<Record<AgriEntityType, number> | null>(null);
   const [agriCountsLoading, setAgriCountsLoading] = useState(false);
   const isAnveshanUser = !!user?.isAnveshanUser;
+  const showPayments = canAccessPayments(user);
   const [editWindowSec, setEditWindowSec] = useState<number>(0);
   const showAnveshanModal = !!user?.isAnveshanUser && user?.consentGiven === false;
   const locationState = location.state as { mobileNumber?: string } | null;
@@ -251,7 +253,10 @@ export function PublicHomePage() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    Promise.allSettled([questionApi.getMyStats(), walletApi.getBalance()])
+    Promise.allSettled([
+      questionApi.getMyStats(),
+      showPayments ? walletApi.getBalance() : Promise.resolve({ balance: 0 }),
+    ])
       .then(([s, w]) => {
         if (!alive) return;
         if (s.status === "fulfilled") {
@@ -469,15 +474,17 @@ export function PublicHomePage() {
       <div
         className={cn(
           "grid grid-cols-2 gap-3 sm:gap-4",
-          isAnveshanUser ? "sm:grid-cols-3" : "lg:grid-cols-4",
+          !isAnveshanUser && "lg:grid-cols-4",
         )}
       >
-        <StatCard
-          icon={<Wallet className="h-4 w-4 text-white" />}
-          iconBg="bg-emerald-500"
-          label={t("home.walletBalance")}
-          value={loading ? "..." : `\u20B9${balance.toFixed(0)}`}
-        />
+        {showPayments && (
+          <StatCard
+            icon={<Wallet className="h-4 w-4 text-white" />}
+            iconBg="bg-emerald-500"
+            label={t("home.walletBalance")}
+            value={loading ? "..." : `\u20B9${balance.toFixed(0)}`}
+          />
+        )}
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-white" />}
           iconBg="bg-blue-500"
@@ -527,10 +534,14 @@ export function PublicHomePage() {
           </h2>
           <InfoTip
             label={t("home.aboutQuickActions")}
-            description={t("home.quickActionsTip")}
+            description={
+              showPayments
+                ? t("home.quickActionsTip")
+                : t("home.quickActionsTipNoWallet", "Jump straight to Submit a Question.")
+            }
           />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+        <div className={cn("grid gap-3 sm:gap-4", showPayments && "sm:grid-cols-2")}>
           <ActionCard
             icon={<PenSquare className="h-6 w-6 text-white" />}
             iconBg="bg-gradient-to-br from-emerald-500 to-emerald-700"
@@ -539,136 +550,140 @@ export function PublicHomePage() {
             cta={t("home.startAsking")}
             onClick={() => navigate("/home/ask")}
           />
-          <ActionCard
-            icon={<Wallet className="h-6 w-6 text-white" />}
-            iconBg="bg-gradient-to-br from-blue-500 to-blue-700"
-            title={t("home.myWallet")}
-            description={t("home.myWalletSub")}
-            cta={t("home.viewWallet")}
-            onClick={() => navigate("/home/wallet")}
-          />
+          {showPayments && (
+            <ActionCard
+              icon={<Wallet className="h-6 w-6 text-white" />}
+              iconBg="bg-gradient-to-br from-blue-500 to-blue-700"
+              title={t("home.myWallet")}
+              description={t("home.myWalletSub")}
+              cta={t("home.viewWallet")}
+              onClick={() => navigate("/home/wallet")}
+            />
+          )}
         </div>
       </section>
 
       {/* ── Earn Rewards ── */}
-      <section aria-labelledby="earn-rewards-heading">
-        <div className="mb-3 flex items-center gap-2">
-          <h2
-            id="earn-rewards-heading"
-            className="text-base font-bold text-foreground sm:text-lg"
-          >
-            {t("home.earnRewards")}
-          </h2>
-          <InfoTip
-            label={t("home.aboutRewards")}
-            description={t("home.rewardsTip")}
-          />
-        </div>
-        <Card className="overflow-hidden">
-          <CardContent className="p-4 sm:p-5 lg:p-6">
-            {/* Tier steps */}
-            <div className="flex items-start justify-between gap-2">
-              {TIER_DISPLAY.map((tier, i) => {
-                const range = REWARD_TIERS[i];
-                const isActive = i <= tierIdx;
-                const isCurrent = i === tierIdx;
-                return (
-                  <div
-                    key={tier.key}
-                    className="flex flex-1 flex-col items-center text-center"
-                  >
-                    {/* Connector line */}
-                    {i > 0 && (
-                      <div
-                        className="absolute inset-x-0 top-5 -z-10 h-0.5 bg-border-subtle"
-                        style={{ display: "none" }}
-                      />
-                    )}
-                    <div
-                      className={cn(
-                        "flex h-11 w-11 items-center justify-center rounded-full text-white sm:h-12 sm:w-12 lg:h-14 lg:w-14",
-                        tier.bg,
-                        isActive ? "opacity-100 shadow-md" : "opacity-40",
-                        isCurrent && "ring-4 ring-offset-2 ring-offset-card",
-                      )}
-                      style={
-                        isCurrent
-                          ? {
-                              boxShadow: `0 0 0 4px var(--tw-ring-color, hsl(var(--primary)/0.2))`,
-                            }
-                          : {}
-                      }
-                    >
-                      <Leaf className="h-5 w-5 lg:h-6 lg:w-6" />
-                    </div>
-                    <div className="mt-2 sm:mt-3">
-                      <p
-                        className={cn(
-                          "text-[11px] font-extrabold sm:text-xs lg:text-sm",
-                          isActive ? tier.text : "text-text-tertiary",
-                        )}
-                      >
-                        {t(`home.${tier.key}`)}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-text-tertiary sm:text-[11px]">
-                        {range.min}–{range.max}
-                        {t("home.questions")}
-                      </p>
-                      <p className="mt-1 text-sm font-extrabold text-foreground sm:text-base lg:text-lg">
-                        Rs.{range.reward}
-                        {t("home.perQuestion")}
-                      </p>
-                    </div>
-                    {isCurrent && (
-                      <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:text-xs">
-                        {t("home.youAreHere")}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Progress indicator */}
-            <div className="mt-4 sm:mt-5">
-              <div className="flex items-center justify-between text-[10px] text-text-tertiary sm:text-xs">
-                <span>{stats?.totalApproved ?? 0} approved</span>
-                <span>{t("home.reachGold")}</span>
-              </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-variant">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-700"
-                  style={{
-                    width: `${Math.min(100, ((stats?.totalApproved ?? 0) / (REWARD_TIERS[2].min || 1)) * 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* CTA */}
-            <button
-              type="button"
-              onClick={() => navigate("/home/ask")}
-              className="mt-4 flex w-full items-center justify-between rounded-xl border border-border-subtle bg-gradient-to-r from-emerald-50 to-green-50 p-3 text-left transition-all hover:border-emerald-300 hover:shadow-md dark:from-emerald-950/30 dark:to-green-950/30 dark:hover:border-emerald-800 sm:mt-5 sm:p-4"
+      {showPayments && (
+        <section aria-labelledby="earn-rewards-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <h2
+              id="earn-rewards-heading"
+              className="text-base font-bold text-foreground sm:text-lg"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
-                  <Trophy className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+              {t("home.earnRewards")}
+            </h2>
+            <InfoTip
+              label={t("home.aboutRewards")}
+              description={t("home.rewardsTip")}
+            />
+          </div>
+          <Card className="overflow-hidden">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
+              {/* Tier steps */}
+              <div className="flex items-start justify-between gap-2">
+                {TIER_DISPLAY.map((tier, i) => {
+                  const range = REWARD_TIERS[i];
+                  const isActive = i <= tierIdx;
+                  const isCurrent = i === tierIdx;
+                  return (
+                    <div
+                      key={tier.key}
+                      className="flex flex-1 flex-col items-center text-center"
+                    >
+                      {/* Connector line */}
+                      {i > 0 && (
+                        <div
+                          className="absolute inset-x-0 top-5 -z-10 h-0.5 bg-border-subtle"
+                          style={{ display: "none" }}
+                        />
+                      )}
+                      <div
+                        className={cn(
+                          "flex h-11 w-11 items-center justify-center rounded-full text-white sm:h-12 sm:w-12 lg:h-14 lg:w-14",
+                          tier.bg,
+                          isActive ? "opacity-100 shadow-md" : "opacity-40",
+                          isCurrent && "ring-4 ring-offset-2 ring-offset-card",
+                        )}
+                        style={
+                          isCurrent
+                            ? {
+                                boxShadow: `0 0 0 4px var(--tw-ring-color, hsl(var(--primary)/0.2))`,
+                              }
+                            : {}
+                        }
+                      >
+                        <Leaf className="h-5 w-5 lg:h-6 lg:w-6" />
+                      </div>
+                      <div className="mt-2 sm:mt-3">
+                        <p
+                          className={cn(
+                            "text-[11px] font-extrabold sm:text-xs lg:text-sm",
+                            isActive ? tier.text : "text-text-tertiary",
+                          )}
+                        >
+                          {t(`home.${tier.key}`)}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-text-tertiary sm:text-[11px]">
+                          {range.min}–{range.max}
+                          {t("home.questions")}
+                        </p>
+                        <p className="mt-1 text-sm font-extrabold text-foreground sm:text-base lg:text-lg">
+                          Rs.{range.reward}
+                          {t("home.perQuestion")}
+                        </p>
+                      </div>
+                      {isCurrent && (
+                        <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:text-xs">
+                          {t("home.youAreHere")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Progress indicator */}
+              <div className="mt-4 sm:mt-5">
+                <div className="flex items-center justify-between text-[10px] text-text-tertiary sm:text-xs">
+                  <span>{stats?.totalApproved ?? 0} approved</span>
+                  <span>{t("home.reachGold")}</span>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground sm:text-sm">
-                    {t("home.reachGold")}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-text-secondary sm:text-xs">
-                    {t("home.reachGoldSub")}
-                  </p>
+                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-variant">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-700"
+                    style={{
+                      width: `${Math.min(100, ((stats?.totalApproved ?? 0) / (REWARD_TIERS[2].min || 1)) * 100)}%`,
+                    }}
+                  />
                 </div>
               </div>
-              <ArrowRight className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            </button>
-          </CardContent>
-        </Card>
-      </section>
+
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={() => navigate("/home/ask")}
+                className="mt-4 flex w-full items-center justify-between rounded-xl border border-border-subtle bg-gradient-to-r from-emerald-50 to-green-50 p-3 text-left transition-all hover:border-emerald-300 hover:shadow-md dark:from-emerald-950/30 dark:to-green-950/30 dark:hover:border-emerald-800 sm:mt-5 sm:p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
+                    <Trophy className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground sm:text-sm">
+                      {t("home.reachGold")}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-text-secondary sm:text-xs">
+                      {t("home.reachGoldSub")}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              </button>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* ── Submission Tips ── */}
       <section aria-labelledby="submission-tips-heading">

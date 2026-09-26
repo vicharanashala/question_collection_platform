@@ -1,4 +1,5 @@
 import { X, Home, MessageSquarePlus, ListChecks, Wallet, User, LogOut } from 'lucide-react'
+import { canAccessPayments, PAYMENT_ROUTES } from '@/utils/paymentAccess'
 import { BrandLogo } from '@/components/BrandLogo'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -23,6 +24,7 @@ const items = [
 export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
+  const visibleItems = canAccessPayments(user) ? items : items.filter((item) => !PAYMENT_ROUTES.includes(item.to))
   const [logoutOpen, setLogoutOpen] = useState(false)
 
   return (
@@ -58,7 +60,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
           </div>
 
           <nav className="flex-1 space-y-1 p-3">
-            {items.map(({ to, labelKey, icon: Icon, end }) => (
+            {visibleItems.map(({ to, labelKey, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
