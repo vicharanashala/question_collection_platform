@@ -22,6 +22,12 @@ export class AgriEntitiesController {
     return this.agriEntitiesService.listMine(req.user.id, dto);
   }
 
+  // GET /agri-entities/counts/me — the caller's submission count per type.
+  @Get('counts/me')
+  async countsMine(@Req() req: AuthenticatedRequest) {
+    return this.agriEntitiesService.getSubmittedCountsByType(req.user.id);
+  }
+
   // GET /agri-entities/all — every user's submissions, for staff review.
   @Get('all')
   @UseGuards(RolesGuard)

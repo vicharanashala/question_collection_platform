@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   adminApi,
+  agriEntityApi,
   questionApi,
   walletApi,
   getErrorMessage,
@@ -32,18 +33,36 @@ import {
   PenSquare,
   Medal,
   ChevronRight,
+  Bug,
+  Microscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { REWARD_TIERS, categoryLabel } from "@/constants/public";
+import type { AgriEntityType } from "@/types";
 import { EditPublicProfileDialog } from "@/components/profile/EditPublicProfileDialog";
 import { AnveshanWelcomeModal } from "@/components/profile/AnveshanProfileModal";
 interface Stats {
   dailyCount: number;
-  remainingToday: number;
+  remainingToday: number | null;
   totalApproved: number;
-  dailyLimit?: number;
+  dailyLimit?: number | null;
+  unlimited?: boolean;
   [k: string]: unknown;
 }
+
+// Display config for the Anveshan crop, weed, pest and disease count cards.
+const AGRI_COUNT_CARDS: {
+  type: AgriEntityType;
+  icon: typeof Sprout;
+  iconBg: string;
+  labelKey: string;
+  defaultLabel: string;
+}[] = [
+  { type: "crop", icon: Sprout, iconBg: "bg-emerald-600", labelKey: "home.cropsSubmitted", defaultLabel: "Crops submitted" },
+  { type: "weed", icon: Leaf, iconBg: "bg-lime-600", labelKey: "home.weedsSubmitted", defaultLabel: "Weeds submitted" },
+  { type: "pest", icon: Bug, iconBg: "bg-rose-500", labelKey: "home.pestsSubmitted", defaultLabel: "Pests submitted" },
+  { type: "disease", icon: Microscope, iconBg: "bg-violet-500", labelKey: "home.diseasesSubmitted", defaultLabel: "Diseases submitted" },
+];
 
 interface InfoTipProps {
   label: string;
@@ -214,6 +233,9 @@ export function PublicHomePage() {
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [dailyLimit, setDailyLimit] = useState<number>(20);
+  const [agriCounts, setAgriCounts] = useState<Record<AgriEntityType, number> | null>(null);
+  const [agriCountsLoading, setAgriCountsLoading] = useState(false);
+  const isAnveshanUser = !!user?.isAnveshanUser;
   const [editWindowSec, setEditWindowSec] = useState<number>(0);
   const showAnveshanModal = !!user?.isAnveshanUser && user?.consentGiven === false;
   const locationState = location.state as { mobileNumber?: string } | null;
@@ -261,6 +283,25 @@ export function PublicHomePage() {
       alive = false;
     };
   }, []);
+
+  // Loads crop, weed, pest and disease submission counts for Anveshan users.
+  useEffect(() => {
+    if (!isAnveshanUser) return;
+    let alive = true;
+    setAgriCountsLoading(true);
+    agriEntityApi
+      .getMyCounts()
+      .then((counts) => {
+        if (alive) setAgriCounts(counts);
+      })
+      .catch((e) => console.warn(getErrorMessage(e, "agri counts")))
+      .finally(() => {
+        if (alive) setAgriCountsLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isAnveshanUser]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -421,7 +462,13 @@ export function PublicHomePage() {
           icon={<Clock className="h-4 w-4 text-white" />}
           iconBg="bg-amber-500"
           label={t("home.remaining")}
-          value={loading ? "..." : stats ? `${stats.remainingToday}` : "0"}
+          value={
+            loading
+              ? "..."
+              : stats?.unlimited || stats?.remainingToday == null
+                ? t("home.unlimited", "Unlimited")
+                : `${stats.remainingToday}`
+          }
         />
         <StatCard
           icon={<Medal className="h-4 w-4 text-white" />}
@@ -436,6 +483,43 @@ export function PublicHomePage() {
           value={loading ? "..." : t(`home.${currentTier.key}`)}
         />
       </div>
+
+      {isAnveshanUser && (
+        <section aria-labelledby="my-submissions-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <h2
+              id="my-submissions-heading"
+              className="text-base font-bold text-foreground sm:text-lg"
+            >
+              {t("home.mySubmissions", "My Submissions")}
+            </h2>
+            <InfoTip
+              label={t("home.aboutMySubmissions", "About my submissions")}
+              description={t(
+                "home.mySubmissionsTip",
+                "Total crop, weed, pest and disease records you have submitted, including those pending review.",
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {AGRI_COUNT_CARDS.map(({ type, icon: Icon, iconBg, labelKey, defaultLabel }) => (
+              <StatCard
+                key={type}
+                icon={<Icon className="h-4 w-4 text-white" />}
+                iconBg={iconBg}
+                label={t(labelKey, defaultLabel)}
+                value={
+                  agriCountsLoading
+                    ? "..."
+                    : agriCounts
+                      ? `${agriCounts[type]}`
+                      : "—"
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Video Section ── */}
       <VideoSection />

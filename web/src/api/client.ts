@@ -1435,6 +1435,10 @@ export const agriEntityApi = {
       false,
     ),
 
+  /** The signed-in user's submission count for each type. */
+  getMyCounts: () =>
+    request<Record<AgriEntityType, number>>("/agri-entities/counts/me", {}, false),
+
   /** The signed-in user's own submissions, newest first. */
   listMine: (
     params: {
