@@ -22,11 +22,15 @@ const CONFIG_META: Record<string, { label: string; suffix: string }> = {
   question_edit_window_seconds: { label: 'Edit Window', suffix: 's' },
   daily_question_limit: { label: 'Daily Question Limit', suffix: '/day' },
   ai_confidence_threshold: { label: 'AI Confidence Threshold', suffix: '%' },
-  duplicate_similarity_threshold: { label: 'Duplicate Similarity', suffix: '' },
 }
 
 // Config keys hidden from the UI (video features disabled)
-const HIDDEN_CONFIG_KEYS = new Set(['video_max_duration_seconds', 'video_max_size_mb'])
+const HIDDEN_CONFIG_KEYS = new Set([
+  'video_max_duration_seconds', 
+  'video_max_size_mb',
+  'duplicate_similarity_threshold',
+  'max_image_size_mb',
+])
 
 export function AdminConfigScreen() {
   const { theme } = useTheme();

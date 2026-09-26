@@ -546,14 +546,13 @@ export class QuestionService {
   }
 
   async getLimits() {
-    const [dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb] = await Promise.all([
+    const [dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars] = await Promise.all([
       this.adminService.getConfigValue('daily_question_limit'),
       this.adminService.getConfigValue('video_max_size_mb'),
       this.adminService.getConfigValue('video_max_duration_seconds'),
       this.adminService.getConfigValue('max_question_chars'),
-      this.adminService.getConfigValue('max_image_size_mb'),
     ]);
-    return { dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars, maxImageSizeMb };
+    return { dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars };
   }
 
   // ─── Preview ────────────────────────────────────────────────────────────────

@@ -92,10 +92,6 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
     value: 20,
     description: "Max questions per user per day",
   },
-  duplicate_similarity_threshold: {
-    value: 0.9,
-    description: "Semantic similarity threshold for duplicate detection",
-  },
   video_max_duration_seconds: {
     value: 10,
     description: "Maximum video duration (seconds)",
@@ -104,10 +100,6 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   max_question_chars: {
     value: 1000,
     description: "Maximum characters allowed in a question",
-  },
-  max_image_size_mb: {
-    value: 5,
-    description: "Maximum image file size per question (MB)",
   },
   // 0 = disabled, 1 = enabled. Withdrawals stay off until the payment integration
   // is signed off; flipping this is an admin action.

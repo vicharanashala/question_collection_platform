@@ -19,9 +19,7 @@ const CONFIG_META: Record<string, { label: string; suffix: string; description?:
   min_withdrawal_amount:          { label: 'Min Withdrawal Amount',     suffix: ' \u20b9' },
   question_edit_window_seconds:   { label: 'Edit Window',                suffix: 's' },
   daily_question_limit:           { label: 'Daily Question Limit',       suffix: '/day' },
-  duplicate_similarity_threshold: { label: 'Duplicate Similarity',       suffix: '' },
   max_question_chars:             { label: 'Max Question Characters',   suffix: '' },
-  max_image_size_mb:              { label: 'Max Image Size',             suffix: ' MB' },
   // The backend description still reads "(0 = off, 1 = on)", which no longer
   // applies now that this is rendered as a switch \u2014 override it here.
   payment_withdrawal_enabled: {
@@ -42,6 +40,8 @@ const HIDDEN_CONFIG_KEYS = new Set([
   'ai_confidence_threshold',
   'question_edit_window_seconds',
   'max_audio_size_mb',
+  'duplicate_similarity_threshold',
+  'max_image_size_mb',
 ])
 
 // Config keys that are conceptually on/off flags (stored as 0/1) — rendered
@@ -90,16 +90,9 @@ export function SettingsPage() {
   async function handleSave() {
     if (!editKey) return
     const val = parseFloat(editValue)
-    if (editKey === 'duplicate_similarity_threshold') {
-      if (isNaN(val) || val < 0 || val > 1) {
-        toast.error('Duplicate Similarity must be a number between 0 and 1.')
-        return
-      }
-    } else {
-      if (isNaN(val) || val < 0) {
-        toast.error('Invalid value. Enter a non-negative number.')
-        return
-      }
+    if (isNaN(val) || val < 0) {
+      toast.error('Invalid value. Enter a non-negative number.')
+      return
     }
     setSaving(true)
     try {
