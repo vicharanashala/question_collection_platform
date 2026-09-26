@@ -61,6 +61,9 @@ export class Question {
   @Column({ name: 'media_urls', type: 'jsonb', nullable: true })
   mediaUrls: string[] | null;
 
+  @Column({ name: 'audio_urls', type: 'jsonb', nullable: true })
+  audioUrls: string[] | null;
+
   @Column({ name: 'device_info', type: 'jsonb', nullable: true })
   deviceInfo: Record<string, unknown> | null;
 

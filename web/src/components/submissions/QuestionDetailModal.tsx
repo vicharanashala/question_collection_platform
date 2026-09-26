@@ -186,7 +186,8 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
   const { t } = useTranslation()
   const mediaUrls = question.mediaUrls ?? []
   const imageUrls = mediaUrls.filter((u) => !isAudioUrl(u))
-  const audioUrls = mediaUrls.filter(isAudioUrl)
+  const oldAudioUrls = mediaUrls.filter(isAudioUrl)
+  const audioUrls = question.audioUrls ? [...question.audioUrls, ...oldAudioUrls] : oldAudioUrls
 
   return (
     <>

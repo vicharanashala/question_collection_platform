@@ -35,7 +35,7 @@ interface MicButtonProps {
    * into its question textarea (typically with a leading space if the
    * textarea already has content).
    */
-  onTranscribed: (text: string) => void
+  onTranscribed: (text: string, blob?: Blob, filename?: string) => void
   /** Called when a new recording starts — use to clear any prior state. */
   onRecordingStart?: () => void
   /** Disable the button (e.g. when textbox is empty or daily limit reached). */
@@ -211,23 +211,6 @@ export function MicButton({
       try {
         const sarvamCode = languageCode === 'unknown' ? 'unknown' : toSarvamLang(languageCode)
 
-        // Step 1 — Archive the recording to GCS via /storage/upload/audio.
-        // This mirrors the mobile `storageApi.uploadAudio()` call so the
-        // backend `GcpStorageService` is invoked and the audio is persisted
-        // (Firebase Storage emulator in dev, real GCS in prod). Best-effort:
-        // a failure here is logged but does NOT block transcription — the
-        // user has already recorded the audio and still needs the transcript.
-        try {
-          const uploaded = await storageApi.uploadAudio(blob, filename)
-          // eslint-disable-next-line no-console
-          console.info('[MicButton] audio archived to GCS:', uploaded.url)
-        } catch (uploadErr) {
-          console.warn(
-            '[MicButton] audio archival failed (continuing with transcription):',
-            uploadErr,
-          )
-        }
-
         // Step 2 — Transcribe via /speech/stt.
         const result = await speechApi.speechToText(blob, sarvamCode, filename)
         const text = (result.text ?? '').trim()
@@ -237,7 +220,7 @@ export function MicButton({
           return
         }
         setState('done')
-        onTranscribedRef.current?.(text)
+        onTranscribedRef.current?.(text, blob, filename)
         toast.success(t('audio.voiceCaptured'), {
           description: text.length > 80 ? text.slice(0, 80) + '…' : text,
         })

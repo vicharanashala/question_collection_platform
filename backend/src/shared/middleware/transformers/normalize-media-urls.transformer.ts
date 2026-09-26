@@ -19,16 +19,23 @@ declare global {
  */
 export function NormalizeMediaUrls(): PropertyDecorator {
   return Transform(({ value }) => {
-    if (!Array.isArray(value)) return value;
+    if (!value) return value;
 
     const app = globalThis.nestApp;
     if (!app) return value;
 
     try {
       const storageService = app.get(StorageService, { strict: false });
-      return value.map((item) =>
-        typeof item === "string" ? storageService.toStorageUri(item) : item,
-      );
+      
+      if (Array.isArray(value)) {
+        return value.map((item) =>
+          typeof item === "string" ? storageService.toStorageUri(item) : item,
+        );
+      } else if (typeof value === "string") {
+        return storageService.toStorageUri(value);
+      }
+      
+      return value;
     } catch {
       // Storage not resolvable (e.g. during early bootstrap) — persist as provided.
       return value;

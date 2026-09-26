@@ -48,6 +48,9 @@ export class Question {
   @Prop({ name: 'mediaUrls', type: [String], default: null })
   mediaUrls: string[] | null;
 
+  @Prop({ name: 'audioUrls', type: [String], default: null })
+  audioUrls: string[] | null;
+
   @Prop({ name: 'deviceInfo', type: Object, default: null })
   deviceInfo: Record<string, unknown> | null;
 

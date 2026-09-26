@@ -80,6 +80,8 @@ export type RootStackParamList = {
     pendingImageUri: string | null;
     /** Whether pendingImageUri is already compressed */
     pendingImageCompressed: boolean;
+    /** Raw local audio URIs to upload only after user confirms submission */
+    pendingAudioUris?: string[];
     agroClimaticZone: string;
     suggestedDistricts: string[];
     suggestedBlocks: string[];

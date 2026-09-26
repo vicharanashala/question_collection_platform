@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
+import { storageApi } from '@/api/storage'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -187,6 +188,7 @@ export function PublicAskPage() {
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
+  const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
 
   const atLimit = stats != null && stats.remainingToday <= 0
 
@@ -263,6 +265,7 @@ useEffect(() => {
     setCropType('')
     setPreviewMeta(null)
     setRejection(null)
+    setAudioData([])
   }
 
   // ─── Step 1 → Step 2: classify the question text server-side ─────────────
@@ -360,6 +363,19 @@ useEffect(() => {
         return
       }
 
+      let finalAudioUrls: string[] | undefined
+      if (audioData.length > 0) {
+        try {
+          const uploads = await Promise.all(
+            audioData.map(data => storageApi.uploadAudio(data.blob, data.filename))
+          )
+          finalAudioUrls = uploads.map(u => u.url)
+        } catch (uploadErr) {
+          console.warn('[PublicAskPage] audio archival failed:', uploadErr)
+          // we can still proceed with submitting the question text
+        }
+      }
+
       // ─── No duplicate → proceed with the actual submission ─────────────────
       const res = await questionApi.submitQuestion({
         questionText: questionText.trim(),
@@ -371,6 +387,7 @@ useEffect(() => {
         block: previewMeta.block ?? undefined,
         agroClimaticZone: previewMeta.agroClimaticZone || undefined,
         mediaType: 'none',
+        audioUrls: finalAudioUrls,
       })
       if (res.duplicate?.isDuplicate) {
         // Defensive: if the user edited the question text on step 2 (very
@@ -766,7 +783,8 @@ useEffect(() => {
                           onRecordingStart={() => {
                             setBannerDismissed(false)
                           }}
-                          onTranscribed={(text) => {
+                          onTranscribed={(text, blob, filename) => {
+                            if (blob && filename) setAudioData(prev => [...prev, { blob, filename }])
                             setQuestionText((prev) => {
                               const base = prev.trim()
                               return base ? `${base} ${text}` : text

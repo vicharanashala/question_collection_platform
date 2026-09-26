@@ -79,6 +79,7 @@ export interface Question {
   language: string;
   mediaType: string;
   mediaUrls: string[] | null;
+  audioUrls?: string[] | null;
   duplicateFlag: boolean;
   submittedAt: string;
   reviewedAt: string | null;
@@ -670,6 +671,7 @@ export interface FinalQuestion {
   embedding: number[] | null;
   mediaType: string | null;
   mediaUrls: string[] | null;
+  audioUrls?: string[] | null;
   deviceInfo: Record<string, unknown> | null;
   /** Source question's status at the time of distribution. */
   status: string | null;

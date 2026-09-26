@@ -108,7 +108,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   useEffect(() => {
     if (isFocused && !isEditMode) {
       setQuestionText('');
-      setPendingAudioUri(null);
+      setPendingAudioUris([]);
       questionApi.getStats().then((res) => {
         const data = res.data as { remainingToday: number; maxQuestionChars?: number };
         setRemainingToday(data.remainingToday);
@@ -125,7 +125,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
   const [remainingToday, setRemainingToday] = useState(dailyLimit);
   const [maxChars, setMaxChars] = useState(MAX_QUESTION_CHARS_FALLBACK);
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null);
-  const [pendingAudioUri, setPendingAudioUri] = useState<string | null>(null);
+  const [pendingAudioUris, setPendingAudioUris] = useState<string[]>([])
 
   // GDB duplicate modal
   const [duplicateModal, setDuplicateModal] = useState({
@@ -238,7 +238,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         mediaUrls: [],
         pendingImageUri: null,
         pendingImageCompressed: false,
-        pendingAudioUri: null,
+        pendingAudioUris: pendingAudioUris,
         agroClimaticZone: res.data.agroClimaticZone ?? 'other',
         suggestedDistricts: res.data.suggestedDistricts ?? [],
         suggestedBlocks: res.data.suggestedBlocks ?? [],
@@ -438,18 +438,25 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
             ]}
           >
             {/* Audio bar — shown when recording exists */}
-            {pendingAudioUri && (
-              <View style={styles.audioBarWrap}>
-                <AudioPlaybackCard
-                  uri={pendingAudioUri}
-                  onDelete={() => {
-                    setPendingAudioUri(null);
-                    setQuestionText('');
-                    setErrors({});
-                    setAiValidation(null);
-                  }}
-                />
-              </View>
+            {pendingAudioUris.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.audioBarWrap}>
+                {pendingAudioUris.map((uri, idx) => (
+                  <View key={idx} style={{ marginRight: 8, minWidth: 200 }}>
+                    <AudioPlaybackCard
+                      uri={uri}
+                      onDelete={() => {
+                        setPendingAudioUris(prev => prev.filter((_, i) => i !== idx));
+                        // If you delete an audio clip, you might want to adjust text, but we'll leave it as is or reset if all deleted
+                        if (pendingAudioUris.length === 1) {
+                          setQuestionText('');
+                          setErrors({});
+                          setAiValidation(null);
+                        }
+                      }}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
             )}
 
             {/* Mic row */}
@@ -464,24 +471,13 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
                   });
                 }}
                 onRecordingStart={() => {
-                  setPendingAudioUri(null);
+                  setPendingAudioUris([]);
                   setErrors({});
                   setAiValidation(null);
                 }}
                 onRecordingComplete={async (uri, durationMs) => {
                   console.log('[QuestionScreen] onRecordingComplete called with uri:', uri, 'durationMs:', durationMs);
-                  setPendingAudioUri(null); // clear while uploading
-                  try {
-                    const filename = `question-audio-${Date.now()}.aac`;
-                    console.log('[QuestionScreen] uploading audio uri:', uri, 'filename:', filename);
-                    const { url } = await storageApi.uploadAudio(uri, filename);
-                    console.log('[QuestionScreen] upload success, url:', url);
-                    setPendingAudioUri(url + '?dur=' + Math.round(durationMs));
-                  } catch (err) {
-                    // upload failed — store local URI as fallback
-                    console.error('[QuestionScreen] upload failed, using local URI:', err);
-                    setPendingAudioUri(uri + '?dur=' + Math.round(durationMs));
-                  }
+                  setPendingAudioUris(prev => [...prev, uri + '?dur=' + Math.round(durationMs)]);
                 }}
                 disabled={remainingToday <= 0 && !isEditMode}
               />
@@ -508,7 +504,7 @@ export function QuestionScreen({ route }: QuestionScreenProps) {
         onDismiss={() => {
           setDuplicateModal((p) => ({ ...p, visible: false }));
           setQuestionText("");
-          setPendingAudioUri(null);
+          setPendingAudioUris([]);
           setAiValidation(null);
         }}
       />
