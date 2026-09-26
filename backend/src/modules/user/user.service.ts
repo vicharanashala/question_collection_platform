@@ -1,4 +1,4 @@
-import { isProduction } from "../../config/environment";
+import { getAnveshanRequiredQuestionCount } from "../../shared/constants/anveshan.constant";
 import {
   Injectable,
   NotFoundException,
@@ -32,11 +32,6 @@ import {
   IAgriEntityRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
-
-// Anveshan question target: 25 in production, 5 in development and staging for easier testing.
-function getAnveshanRequiredQuestionCount(): number {
-  return isProduction() ? 25 : 5;
-}
 
 @Injectable()
 export class UserService {

@@ -25,6 +25,7 @@ import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-in
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
 import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
+import { getAnveshanRequiredQuestionCount } from '../../shared/constants/anveshan.constant';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -150,7 +151,7 @@ async getMyAnveshanMilestone(@Req() req: AuthenticatedRequest) {
     this.agriEntityService.getSubmittedCountsByType(req.user.id), // { crop, weed, pest, disease }
   ]);
 
-  const requirements = { questions: 25, crop: 1, weed: 1, pest: 1, disease: 1 };
+  const requirements = { questions: getAnveshanRequiredQuestionCount(), crop: 1, weed: 1, pest: 1, disease: 1 };
 
   const progress = {
     questions: Math.min(questionsSubmitted, requirements.questions),
