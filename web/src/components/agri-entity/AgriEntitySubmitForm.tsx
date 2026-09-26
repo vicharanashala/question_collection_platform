@@ -15,6 +15,8 @@ import {
   MAX_AGRI_ENTITY_SOURCE_LENGTH,
 } from '@/constants/public'
 import type { AgriEntityAlternateName, AgriEntityType } from '@/types'
+import { useAuth } from '@/context/AuthContext'
+import { LocationCaptureModal, type SubmissionLocation } from '@/pages/public/LocationCapture'
 
 interface SelectedImage {
   id: string
@@ -42,7 +44,6 @@ const EMPTY_VALUES: FormValues = {
   alternateNames: [EMPTY_ALTERNATE],
 }
 
-// Returns true when every mandatory text field and at least one image are provided.
 function isFormComplete(values: FormValues, imageCount: number): boolean {
   const filled = (v: string) => v.trim().length > 0
   return (
@@ -56,7 +57,6 @@ function isFormComplete(values: FormValues, imageCount: number): boolean {
   )
 }
 
-// Builds a readable storage filename such as "tomato_2.jpg" from the English name.
 function buildImageFilename(englishName: string, index: number, file: File): string {
   const slug = englishName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'image'
   const ext = file.name.includes('.') ? file.name.split('.').pop() : file.type.split('/')[1]
@@ -68,12 +68,11 @@ interface AgriEntitySubmitFormProps {
   typeLabel: string
 }
 
-/** Form for submitting a crop, weed, pest or disease with names, sources and images. */
 export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormProps) {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const fieldId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  // Uploaded storage URLs keyed by image id, so a retry after a failed submit does not re-upload.
   const uploadedUrlsRef = useRef(new Map<string, string>())
 
   const [values, setValues] = useState<FormValues>(EMPTY_VALUES)
@@ -81,7 +80,9 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
   const [showErrors, setShowErrors] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Release preview object URLs when the form unmounts.
+  const [locationModalOpen, setLocationModalOpen] = useState(false)
+  const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
+
   const imagesRef = useRef(images)
   useEffect(() => {
     imagesRef.current = images
@@ -110,7 +111,6 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     setValues((prev) => ({ ...prev, alternateNames: prev.alternateNames.filter((_, i) => i !== index) }))
   }
 
-  // Adds picked files as previews, skipping unsupported types and anything over the image limit.
   function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? [])
     e.target.value = ''
@@ -145,9 +145,9 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     setImages([])
     setValues(EMPTY_VALUES)
     setShowErrors(false)
+    setSubmissionLocation(null) // ask fresh on the next submission, per requirement
   }
 
-  // Uploads any images not yet stored and returns their URLs in display order.
   async function uploadImages(): Promise<string[]> {
     return Promise.all(
       images.map(async (img, index) => {
@@ -170,6 +170,17 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
       return
     }
 
+    // Anveshan users must supply their current location on every submission.
+    if (user?.isAnveshanUser && !submissionLocation) {
+      setLocationModalOpen(true)
+      return
+    }
+
+    await performSubmit()
+  }
+
+  async function performSubmit(locationOverride?: SubmissionLocation) {
+    const location = locationOverride ?? submissionLocation
     setSubmitting(true)
     try {
       const imageUrls = await uploadImages()
@@ -181,6 +192,7 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
         localNameSource: values.localNameSource.trim(),
         alternateNames: values.alternateNames.map((a) => ({ name: a.name.trim(), source: a.source.trim() })),
         imageUrls,
+        submissionLocation: location ?? undefined,
       })
       toast.success(t('agriEntity.submitted', { type: typeLabel, defaultValue: '{{type}} submitted successfully' }))
       resetForm()
@@ -383,6 +395,16 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           </div>
         </form>
       </CardContent>
+
+      <LocationCaptureModal
+        open={locationModalOpen}
+        onOpenChange={setLocationModalOpen}
+        onConfirm={(loc) => {
+          setSubmissionLocation(loc)
+          setLocationModalOpen(false)
+          performSubmit(loc)
+        }}
+      />
     </Card>
   )
 }

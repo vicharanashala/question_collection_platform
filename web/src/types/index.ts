@@ -706,7 +706,7 @@ export interface SubmitAgriEntityPayload {
   localNameSource: string;
   alternateNames: AgriEntityAlternateName[];
   imageUrls: string[];
-    submissionLocation?: {
+  submissionLocation?: {
     latitude: number;
     longitude: number;
     state: string;
