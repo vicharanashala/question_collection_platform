@@ -33,7 +33,7 @@ import {
   clearQuestionDraft,
 } from '@/utils/questionDraft'
 import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
-import { AnveshanMilestoneData, AnveshanMilestoneModal } from './AnveshMileStone'
+import { AnveshanMilestoneData, AnveshanMilestoneModal, getAnveshanMilestonePercent } from './AnveshMileStone'
 import { Award } from "lucide-react";
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
@@ -67,13 +67,46 @@ interface AskHeaderProps {
   atLimit: boolean
   user?: AuthUser | null
   setMilestoneModalOpen?: (open: boolean) => void
+  milestonePercent?: number | null
+}
+
+interface MilestoneProgressButtonProps {
+  percent: number
+  onClick: () => void
+}
+
+// "My Progress" pill whose border fills clockwise with the overall milestone percentage.
+function MilestoneProgressButton({ percent, onClick }: MilestoneProgressButtonProps) {
+  const { t } = useTranslation()
+  const clamped = Math.min(100, Math.max(0, percent))
+  const fillColor = clamped >= 100 ? 'rgb(16 185 129)' : 'hsl(var(--primary))'
+
+  return (
+    <span
+      className="inline-flex rounded-full p-[2px] transition-[background] duration-500"
+      style={{ background: `conic-gradient(${fillColor} ${clamped}%, hsl(var(--border-subtle)) ${clamped}% 100%)` }}
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onClick}
+        aria-label={t('anveshan.myProgressWithPercent', { percent: clamped, defaultValue: 'My Progress, {{percent}}% complete' })}
+        className="gap-1.5 rounded-full bg-background hover:bg-surface-variant"
+      >
+        <Award className="h-4 w-4" aria-hidden="true" />
+        {t('anveshan.myProgress', 'My Progress')}
+        <span className="tabular-nums text-text-secondary">{clamped}%</span>
+      </Button>
+    </span>
+  )
 }
 
 /**
  * Shared header for both steps of the ask flow: back action, daily-limit chip,
  * page title and a two-step progress indicator.
  */
-function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen }: AskHeaderProps) {
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen, milestonePercent }: AskHeaderProps) {
   const { t } = useTranslation()
   const steps = [
     { n: 1 as const, label: t('question.yourQuestion') },
@@ -117,16 +150,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
           )}
 
  {user?.isAnveshanUser && setMilestoneModalOpen && (
-  <Button
-    type="button"
-    variant="ghost"
-    size="sm"
-    onClick={() => setMilestoneModalOpen(true)}
-    className="gap-1.5"
-  >
-    <Award className="h-4 w-4" />
-    {t("anveshan.myProgress", "My Progress")}
-  </Button>
+  <MilestoneProgressButton percent={milestonePercent ?? 0} onClick={() => setMilestoneModalOpen(true)} />
 )}
         </div>
       </div>
@@ -245,6 +269,23 @@ useEffect(() => {
     setMilestoneJustCompleted(false);
   }
 }, [milestoneJustCompleted, t]);
+
+  // Refreshes progress each time the modal opens, so new submissions from any tab are reflected.
+  const openMilestoneModal = useCallback((open: boolean) => {
+    if (open) fetchMilestone()
+    setMilestoneModalOpen(open)
+  }, [fetchMilestone])
+
+  // Progress button props shared by every header on this page (question steps and crop/weed/pest/disease tabs).
+  const milestoneHeaderProps = {
+    user,
+    setMilestoneModalOpen: openMilestoneModal,
+    milestonePercent: milestone ? getAnveshanMilestonePercent(milestone) : null,
+  }
+
+  const milestoneModal = (
+    <AnveshanMilestoneModal open={milestoneModalOpen} onOpenChange={setMilestoneModalOpen} data={milestone} />
+  )
 
   const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
@@ -615,6 +656,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
           remainingToday={previewMeta.remainingToday ?? undefined}
           dailyLimit={previewMeta.dailyLimit ?? null}
           atLimit={false}
+          {...milestoneHeaderProps}
         />
 
         {/* Warning banner */}
@@ -831,6 +873,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
     performSubmit(loc) // pass directly — avoids waiting on the next render's state
   }}
 />
+        {milestoneModal}
       </div>
     )
   }
@@ -850,11 +893,13 @@ if (activeTab !== 'question') {
           onBack={() => navigate(-1)}
           onReport={() => navigate('/home/reports')}
           atLimit={false}
+          {...milestoneHeaderProps}
         />
         {user?.isAnveshanUser && (
   <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
 )}
         <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+        {milestoneModal}
       </div>
     )
   }
@@ -872,8 +917,7 @@ if (activeTab !== 'question') {
         remainingToday={stats?.remainingToday}
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
-        user={user}
-        setMilestoneModalOpen={setMilestoneModalOpen}
+        {...milestoneHeaderProps}
       />
        {user?.isAnveshanUser && (
         <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
@@ -1029,11 +1073,7 @@ if (activeTab !== 'question') {
         </CardContent>
       </Card>
       {dialogs}
-      <AnveshanMilestoneModal
-  open={milestoneModalOpen}
-  onOpenChange={setMilestoneModalOpen}
-  data={milestone}
-/>
+      {milestoneModal}
     </div>
   )
 }

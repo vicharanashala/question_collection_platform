@@ -54,7 +54,7 @@ const ROW_STAGGER_SECONDS = 0.07;
 const RING_RADIUS = 34;
 
 // Returns the overall completion percentage: submissions weigh 80% and answers 20%, each requirement capped.
-function overallPercent(data: AnveshanMilestoneData): number {
+export function getAnveshanMilestonePercent(data: AnveshanMilestoneData): number {
   const totals = ITEMS.reduce(
     (acc, { key }) => {
       const req = data.requirements[key];
@@ -269,7 +269,7 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
   const { t } = useTranslation();
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
-  const percent = data ? overallPercent(data) : 0;
+  const percent = data ? getAnveshanMilestonePercent(data) : 0;
   const submissionGoalsMet = data ? ITEMS.filter(({ key }) => data.progress[key] >= data.requirements[key]).length : 0;
   const answerGoalMet = data?.submissionsCompleted && data.progress.answers >= data.requirements.answers ? 1 : 0;
   const goalsMet = submissionGoalsMet + answerGoalMet;

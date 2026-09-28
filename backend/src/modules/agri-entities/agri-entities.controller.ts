@@ -5,6 +5,7 @@ import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
 import { UserRole } from '../../shared/classes/enums';
 import { AgriEntitiesService } from './agri-entities.service';
+import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 
 interface AuthenticatedRequest extends Request {
@@ -39,6 +40,7 @@ export class AgriEntitiesController {
   // POST /agri-entities — submit a crop, weed, pest or disease record.
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @CacheInvalidate('anveshan_milestone*')
   async submit(
     @Body() dto: SubmitAgriEntityDto,
     @Req() req: AuthenticatedRequest,

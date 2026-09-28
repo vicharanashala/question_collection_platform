@@ -42,7 +42,7 @@ export class QuestionController {
   // POST /questions — Submit a new question
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @CacheInvalidate('questions:u*')
+  @CacheInvalidate('questions:u*', 'anveshan_milestone*')
   async submit(
     @Body() dto: SubmitQuestionDto,
     @Req() req: AuthenticatedRequest,
