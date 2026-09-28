@@ -414,6 +414,8 @@ export const authApi = {
       false,
     ),
 
+  getCrops: () => request('/auth/get-crops', {}, false),
+
   /** Suggest N available usernames based on a base string. */
   suggestUsernames: (base: string, limit = 5) =>
     request<{ suggestions: string[] }>(
@@ -421,6 +423,7 @@ export const authApi = {
       {},
       false,
     ),
+  
 };
 
 // ─── LGD / Location API ───────────────────────────────────────────────────

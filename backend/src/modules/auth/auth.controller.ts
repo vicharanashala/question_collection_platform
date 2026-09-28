@@ -18,7 +18,7 @@ import { RequestOtpDto, VerifyOtpDto, RegisterDto, UpdateMeDto } from './dto';
 import { Public } from '../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
-
+import axios from "axios";
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
 }
@@ -158,6 +158,25 @@ export class AuthController {
     const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 10);
     const suggestions = await this.authService.suggestUsernames(base, parsedLimit);
     return { suggestions };
+  }
+
+  @Public()
+  @Get('get-crops')
+  @HttpCode(HttpStatus.OK)
+  async getCrops(){
+    console.log("auth key", process.env.REVIEW_SYSTEM_AUTH_KEY)
+    try{
+          const resposne = await axios.get(`${process.env.REVIEWER_PROD}/crops/get-all-crops-client`, 
+      {
+        headers:{
+          'x-internal-api-key':process.env.REVIEW_SYSTEM_AUTH_KEY
+        },
+      }
+    )
+    return resposne.data
+    }catch(err){
+      console.error("Something went wrong", err);
+    }
   }
 }
 
