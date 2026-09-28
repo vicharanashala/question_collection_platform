@@ -136,7 +136,8 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
               <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
             </Button>
           )}
-          {remainingToday != null && dailyLimit != null && (
+          {/* Anveshan users have no daily limit, so the "N of M left today" chip is hidden for them. */}
+          {!user?.isAnveshanUser && remainingToday != null && dailyLimit != null && (
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
                 atLimit
