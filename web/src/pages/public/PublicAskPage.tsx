@@ -729,6 +729,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
                       <button
                         id="crop"
                         type="button"
+                        aria-describedby={cropType ? 'crop-check-notice' : undefined}
                         onClick={() => setCropPickerOpen(true)}
                         className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
                       >
@@ -741,6 +742,30 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
                       </button>
                     </div>
                   </div>
+
+                  {/* The crop is auto-detected from the question text, so ask the user to verify it. */}
+                  {cropType && (
+                    <div
+                      id="crop-check-notice"
+                      role="note"
+                      className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
+                    >
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+                      <p className="min-w-0 flex-1">
+                        {t('question.cropAutoSelectedNotice', {
+                          crop: cropType,
+                          defaultValue: 'The crop "{{crop}}" was selected automatically. Please cross-check it and change it if it is wrong.',
+                        })}{' '}
+                        <button
+                          type="button"
+                          onClick={() => setCropPickerOpen(true)}
+                          className="font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded-sm"
+                        >
+                          {t('question.changeCrop', 'Change crop')}
+                        </button>
+                      </p>
+                    </div>
+                  )}
 
                   {/* Question textarea */}
                   <div className="flex flex-col gap-1.5">
