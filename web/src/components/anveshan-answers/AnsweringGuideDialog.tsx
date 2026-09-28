@@ -62,7 +62,7 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
               <Rule>{t('anveshanGuide.ruleRemarks', { max: MAX_ANVESHAN_REMARKS_LENGTH, defaultValue: 'Remarks are optional, up to {{max}} characters.' })}</Rule>
               <Rule>{t('anveshanGuide.ruleSourceCount', { max: MAX_ANVESHAN_ANSWER_SOURCES, defaultValue: 'At least 1 source is required, and you can add up to {{max}}.' })}</Rule>
               <Rule>{t('anveshanGuide.ruleSourceFields', 'Every source needs a type (Hyper Local, State, Central or Other), a name and a link.')}</Rule>
-              <Rule>{t('anveshanGuide.ruleUrl', 'Links must be complete web addresses starting with http:// or https://.')}</Rule>
+              <Rule>{t('anveshanGuide.ruleUrl', 'Links must be complete public web addresses starting with http:// or https://, for example https://agritech.tnau.ac.in/…')}</Rule>
               <Rule>{t('anveshanGuide.rulePdf', 'For PDF links, page numbers are required so reviewers can find the exact lines.')}</Rule>
               <Rule>{t('anveshanGuide.rulePages', 'Page numbers must be whole numbers from 1, separated by commas, for example 4 or 12,13.')}</Rule>
               <Rule>{t('anveshanGuide.ruleDuplicate', 'The same link with the same type and pages cannot be added twice.')}</Rule>

@@ -47,7 +47,7 @@ export class AnveshanAnswerSourceDto {
   @MaxLength(MAX_SOURCE_URL_LENGTH)
   @IsUrl(
     { protocols: ['http', 'https'], require_protocol: true, require_tld: true },
-    { message: 'Source must be a valid URL starting with http:// or https://' },
+    { message: 'Each source must be a public web link starting with http:// or https:// (for example https://agritech.tnau.ac.in/…)' },
   )
   source: string;
 

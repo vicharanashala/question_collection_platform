@@ -22,11 +22,15 @@ const isPdfLink = (url: string) => /pdf/i.test(url)
 const isValidPageList = (input: string) =>
   input.split(',').map((p) => p.trim()).filter(Boolean).every((p) => /^[1-9]\d*$/.test(p))
 
-// Returns a parsed http(s) URL, or null when the text is not one.
+// A public domain ending such as .in, .com or .gov.in; matches the server rule that rejects localhost and bare hosts.
+const PUBLIC_HOSTNAME_PATTERN = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i
+
+// Returns a parsed public http(s) URL, or null when the text is not one.
 function parseHttpUrl(text: string): URL | null {
   try {
     const url = new URL(text)
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url : null
+    const isHttp = url.protocol === 'http:' || url.protocol === 'https:'
+    return isHttp && PUBLIC_HOSTNAME_PATTERN.test(url.hostname) ? url : null
   } catch {
     return null
   }
@@ -66,7 +70,10 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
     if (!trimmedUrl) {
       found.url = t('anveshanAnswers.errors.sourceUrl', 'Please enter the source URL.')
     } else if (!parseHttpUrl(trimmedUrl)) {
-      found.url = t('anveshanAnswers.errors.sourceUrlInvalid', 'Please enter a valid URL starting with http:// or https://.')
+      found.url = t(
+        'anveshanAnswers.errors.sourceUrlInvalid',
+        'Please enter a public web link starting with http:// or https://, for example https://agritech.tnau.ac.in/…',
+      )
     }
     if (trimmedUrl && isPdfLink(trimmedUrl) && !trimmedPage) {
       found.page = t('anveshanAnswers.errors.pdfPage', 'Page number is required for PDF links.')
