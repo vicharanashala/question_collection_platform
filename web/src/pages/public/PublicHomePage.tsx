@@ -525,8 +525,8 @@ export function PublicHomePage() {
         )}
       </div>
 
-      {/* ── Video Section ── */}
-      <VideoSection />
+      {/* ── Video Section (general how-to guide; not shown to Anveshan users) ── */}
+      {!isAnveshanUser && <VideoSection />}
 
       {/* ── Quick Actions ── */}
       <section aria-labelledby="quick-actions-heading">
