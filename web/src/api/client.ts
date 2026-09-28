@@ -39,6 +39,9 @@ import type {
   AgriEntitySubmission,
   AgriEntityStatus,
   AgriEntityType,
+  AnveshanAnswerQuestionsResponse,
+  SubmitAnveshanAnswerPayload,
+  SubmitAnveshanAnswerResponse,
 } from "@/types";
 import {
   accountLockedEmitter,
@@ -47,21 +50,21 @@ import {
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
+export interface AnveshanMilestoneCounts {
+  questions: number;
+  crop: number;
+  weed: number;
+  pest: number;
+  disease: number;
+  answers: number;
+}
+
 export interface AnveshanMilestoneResponse {
-  requirements: {
-    questions: number;
-    crop: number;
-    weed: number;
-    pest: number;
-    disease: number;
-  };
-  progress: {
-    questions: number;
-    crop: number;
-    weed: number;
-    pest: number;
-    disease: number;
-  };
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
+  /** Question and crop/weed/pest/disease goals are met, so answering is unlocked. */
+  submissionsCompleted: boolean;
+  /** Every goal, including answers, is met. */
   completed: boolean;
 }
 
@@ -994,6 +997,22 @@ export const questionApi = {
     request<AnveshanMilestoneResponse>(
       "/questions/anveshan-milestone/me",
       {},
+      false,
+    ),
+
+  /** The Anveshan user's own questions they can answer, with each answer if already given. */
+  getMyAnveshanAnswerQuestions: () =>
+    request<AnveshanAnswerQuestionsResponse>(
+      "/questions/anveshan-answers/me",
+      {},
+      false,
+    ),
+
+  /** Submit the Anveshan user's answer, with sources, for one of their own questions. */
+  submitAnveshanAnswer: (questionId: string, body: SubmitAnveshanAnswerPayload) =>
+    request<SubmitAnveshanAnswerResponse>(
+      `/questions/anveshan-answers/${encodeURIComponent(questionId)}`,
+      { method: "POST", body: JSON.stringify(body) },
       false,
     ),
 };

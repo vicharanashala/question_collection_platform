@@ -380,3 +380,11 @@ export const MAX_AGRI_ENTITY_IMAGE_SIZE_MB = 5
 export const MAX_AGRI_ENTITY_NAME_LENGTH = 200
 export const MAX_AGRI_ENTITY_SOURCE_LENGTH = 500
 export const AGRI_ENTITY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+// Page where Anveshan users answer their own submitted questions (final milestone step).
+export const ANVESHAN_ANSWERS_ROUTE = '/home/anveshan-answers'
+
+// Must match the limits in the backend anveshan-answer DTO.
+export const MAX_ANVESHAN_ANSWER_LENGTH = 5000
+export const MAX_ANVESHAN_REMARKS_LENGTH = 1000
+export const MAX_ANVESHAN_ANSWER_SOURCES = 10

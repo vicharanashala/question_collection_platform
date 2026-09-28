@@ -45,6 +45,7 @@ const PublicPrivacyPage              = lazyRoute(() => import('@/pages/public/Pu
 const PublicNotificationsPage        = lazyRoute(() => import('@/pages/public/PublicNotificationsPage').then(m => ({ default: m.default })))
 const PublicLeaderboardPage          = lazyRoute(() => import('@/pages/public/PublicLeaderboardPage').then(m => ({ default: m.default })))
 
+const AnveshanAnswersPage            = lazyRoute(() => import('@/pages/public/AnveshanAnswersPage').then(m => ({ default: m.AnveshanAnswersPage })))
 const AnveshanPhaseGatePage              = lazyRoute(()=>import('@/pages/public/AnveshanPhaseGate').then(m => ({ default: m.AnveshanPhaseGatePage })))
 
 /** Pages visible per role (staff / admin side) */
@@ -125,6 +126,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (user?.verificationStatus && user.verificationStatus !== 'verified') {
     return <Navigate to="/home/verification-pending" replace />
   }
+  return <>{children}</>
+}
+
+// Only Anveshan users can open the answer page; everyone else goes back to home.
+function AnveshanRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  if (!user?.isAnveshanUser) return <Navigate to="/home" replace />
   return <>{children}</>
 }
 
@@ -231,6 +239,7 @@ export default function App() {
           <Route path="privacy"            element={<PublicPrivacyPage />} />
           <Route path="notifications"      element={<PublicNotificationsPage />} />
           <Route path="leaderboard"        element={<PublicLeaderboardPage />} />
+          <Route path="anveshan-answers"   element={<AnveshanRoute><AnveshanAnswersPage /></AnveshanRoute>} />
         </Route>
 
         {/* ── Fallback ────────────────────────────────────────────────────── */}

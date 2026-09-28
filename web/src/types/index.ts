@@ -756,3 +756,54 @@ export interface SubmitAgriEntityResponse {
   status: string;
   message: string;
 }
+
+// ─── Anveshan answers ──────────────────────────────────────────────────────
+
+export type AnveshanAnswerSourceType = 'hyper_local' | 'state' | 'central' | 'other';
+
+export interface AnveshanAnswerSource {
+  sourceType: AnveshanAnswerSourceType;
+  sourceName: string;
+  source: string;
+  page?: string | null;
+}
+
+export interface AnveshanAnswer {
+  answer: string;
+  sources: AnveshanAnswerSource[];
+  remarks: string | null;
+  answeredAt: string;
+}
+
+export interface AnveshanAnswerQuestion {
+  id: string;
+  questionText: string;
+  cropType: string;
+  state: string;
+  district: string;
+  language: string;
+  status: QuestionStatus;
+  submittedAt: string;
+  answer: AnveshanAnswer | null;
+}
+
+export interface AnveshanAnswerQuestionsResponse {
+  items: AnveshanAnswerQuestion[];
+  requiredAnswers: number;
+  answeredCount: number;
+  unlocked: boolean;
+  completed: boolean;
+}
+
+export interface SubmitAnveshanAnswerPayload {
+  answer: string;
+  sources: AnveshanAnswerSource[];
+  remarks?: string;
+}
+
+export interface SubmitAnveshanAnswerResponse {
+  question: AnveshanAnswerQuestion;
+  answeredCount: number;
+  requiredAnswers: number;
+  completed: boolean;
+}

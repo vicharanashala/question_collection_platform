@@ -21,6 +21,23 @@ export interface SubmissionLocation {
   capturedAt: Date;
 }
 
+export type AnveshanAnswerSourceType = 'hyper_local' | 'state' | 'central' | 'other';
+
+export interface AnveshanAnswerSource {
+  sourceType: AnveshanAnswerSourceType;
+  sourceName: string;
+  source: string;
+  page: string | null;
+}
+
+/** Answer an Anveshan user writes for one of their own submitted questions. */
+export interface AnveshanAnswer {
+  answer: string;
+  sources: AnveshanAnswerSource[];
+  remarks: string | null;
+  answeredAt: Date;
+}
+
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn('uuid')
@@ -113,6 +130,9 @@ export class Question {
 
   @Column({name: "is_anveshan", type: 'boolean', default: false})
   isAnveshan: boolean;
+
+  @Column({ name: 'anveshan_answer', type: 'jsonb', nullable: true })
+  anveshanAnswer: AnveshanAnswer | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

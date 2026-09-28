@@ -28,6 +28,38 @@ export class SubmissionLocation {
   capturedAt: Date;
 }
 
+// One supporting reference for an Anveshan answer.
+@Schema({ _id: false })
+export class AnveshanAnswerSource {
+  @Prop({ required: true })
+  sourceType: string;
+
+  @Prop({ required: true })
+  sourceName: string;
+
+  @Prop({ required: true })
+  source: string;
+
+  @Prop({ type: String, default: null })
+  page: string | null;
+}
+
+// Answer an Anveshan user writes for one of their own submitted questions.
+@Schema({ _id: false })
+export class AnveshanAnswer {
+  @Prop({ required: true })
+  answer: string;
+
+  @Prop({ type: [AnveshanAnswerSource], default: [] })
+  sources: AnveshanAnswerSource[];
+
+  @Prop({ type: String, default: null })
+  remarks: string | null;
+
+  @Prop({ required: true })
+  answeredAt: Date;
+}
+
 @Schema({ collection: 'questions', timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } })
 export class Question {
   _id: Types.ObjectId;
@@ -107,6 +139,9 @@ export class Question {
 
   @Prop({name: 'is_Anveshan', type: Boolean, default: false})
   isAnveshan: boolean;
+
+  @Prop({ name: 'anveshanAnswer', type: AnveshanAnswer, default: null })
+  anveshanAnswer: AnveshanAnswer | null;
 
   @Prop({ name: 'createdAt' })
   createdAt: Date;
