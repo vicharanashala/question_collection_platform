@@ -5,12 +5,13 @@ import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, MessageSquarePlus, Image as ImageIcon, Flag } from 'lucide-react'
+import { Clock, Flag, Image as ImageIcon, MapPin, MessageCircleQuestion, MessageSquarePlus, Sprout } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { QuestionDetailModal } from '@/components/submissions/QuestionDetailModal'
 import { SubmissionStatusFilter } from '@/components/submissions/SubmissionStatusFilter'
 import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
+import { MetaChip, SubmissionCount, SubmissionEmptyState, SubmissionListSkeleton, SubmissionRow } from '@/components/submissions/SubmissionListParts'
 import { useRelativeTime } from '@/components/submissions/useRelativeTime'
 import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
 import { AgriEntitySubmissionsList } from '@/components/agri-entity/AgriEntitySubmissionsList'
@@ -158,53 +159,54 @@ function QuestionSubmissions() {
         />
       )}
 
-      <Card>
+      {!loading && total > 0 && (
+        <SubmissionCount total={total} label={t('submissions.questionsCount', { count: total, defaultValue: total === 1 ? 'question' : 'questions' })} />
+      )}
+
+      <Card className="overflow-hidden rounded-xl">
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-500" /></div>
+            <SubmissionListSkeleton />
           ) : items.length === 0 ? (
-            <div className="p-8 sm:p-10 text-center">
-              <p className="text-xs sm:text-sm font-medium text-text-secondary">{t('common.noQuestionsFound')}</p>
-              <Button onClick={() => navigate('/home/ask')} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
-                <MessageSquarePlus className="h-4 w-4" /> {t('common.askYourFirstQuestion')}
-              </Button>
-            </div>
+            <SubmissionEmptyState
+              icon={MessageCircleQuestion}
+              title={t('common.noQuestionsFound')}
+              description={t('submissions.emptyQuestionsHint', 'Questions you ask will appear here so you can revisit them anytime.')}
+              actionLabel={t('common.askYourFirstQuestion')}
+              onAction={() => navigate('/home/ask')}
+            />
           ) : (
             <ul className="divide-y divide-border-subtle">
-              {items.map((q) => (
-                <li
-                  key={q.id}
-                  className="p-4 sm:p-5 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer"
-                  onClick={() => q.id && setOpenQuestionId(q.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && q.id) {
-                      e.preventDefault()
-                      setOpenQuestionId(q.id)
+              {items.map((q, index) => {
+                const badge = hideStatus ? null : (
+                  <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>
+                    {t(statusLabelKey(q.status))}
+                  </span>
+                )
+                const hasImage = !!q.mediaUrls?.length
+                return (
+                  <SubmissionRow
+                    key={q.id}
+                    index={index}
+                    label={q.questionText}
+                    onOpen={() => q.id && setOpenQuestionId(q.id)}
+                    trailing={badge}
+                    leading={
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        {hasImage ? <ImageIcon className="h-5 w-5" aria-hidden="true" /> : <MessageCircleQuestion className="h-5 w-5" aria-hidden="true" />}
+                      </span>
                     }
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    {q.mediaUrls && q.mediaUrls.length > 0 && <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />}
-                    {/* Text + meta stack on mobile; side-by-side on desktop so a short
-                        question doesn't leave empty space on a wide row. */}
-                    <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-                      <p className="line-clamp-2 flex-1 text-xs sm:text-sm font-medium text-foreground lg:line-clamp-1 lg:text-sm">{q.questionText}</p>
-                      <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
-                        {!hideStatus && (
-                          <>
-                            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>{t(statusLabelKey(q.status))}</span>
-                            <span>·</span>
-                          </>
-                        )}
-                        <span>{formatDate(q.submittedAt)}</span>
-                        {q.cropType && <><span>·</span><span className="hidden sm:inline">{q.cropType}</span></>}
-                      </div>
+                  >
+                    <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{q.questionText}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-text-tertiary sm:text-xs">
+                      {badge && <span className="sm:hidden">{badge}</span>}
+                      {q.cropType && <MetaChip icon={Sprout}>{q.cropType}</MetaChip>}
+                      {q.district && <MetaChip icon={MapPin} className="hidden sm:inline-flex">{q.district}</MetaChip>}
+                      <MetaChip icon={Clock}>{formatDate(q.submittedAt)}</MetaChip>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </SubmissionRow>
+                )
+              })}
             </ul>
           )}
         </CardContent>

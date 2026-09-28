@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Loader2, Plus } from 'lucide-react'
+import { Clock, Image as ImageIcon, User as UserIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/api/client'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { SubmissionStatusFilter, type StatusOption } from '@/components/submissions/SubmissionStatusFilter'
 import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
 import { useRelativeTime } from '@/components/submissions/useRelativeTime'
+import { MetaChip, SubmissionCount, SubmissionEmptyState, SubmissionListSkeleton, SubmissionRow } from '@/components/submissions/SubmissionListParts'
+import { SUBMISSION_TAB_ICONS } from './SubmissionTypeTabs'
 import type { AgriEntityStatus, AgriEntitySubmission, AgriEntityType } from '@/types'
 import { AgriEntityDetailModal } from './AgriEntityDetailModal'
 import { agriEntityStatusBadge, agriEntityStatusLabel, submitterName } from './agriEntityStatus'
@@ -33,6 +34,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   const { user } = useAuth()
   // Anveshan users do not see review status on their own submissions.
   const hideStatus = scope === 'mine' && !!user?.isAnveshanUser
+  const TypeIcon = SUBMISSION_TAB_ICONS[type]
   const [items, setItems] = useState<AgriEntitySubmission[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -74,69 +76,72 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
         <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
       )}
 
-      <Card>
+      {!loading && total > 0 && (
+        <SubmissionCount
+          total={total}
+          label={t('agriEntity.count', { type: typeLabel.toLowerCase(), defaultValue: `${typeLabel.toLowerCase()} submission${total === 1 ? '' : 's'}` })}
+        />
+      )}
+
+      <Card className="overflow-hidden rounded-xl">
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-500" /></div>
+            <SubmissionListSkeleton />
           ) : items.length === 0 ? (
-            <div className="p-8 sm:p-10 text-center">
-              <p className="text-xs sm:text-sm font-medium text-text-secondary">
-                {t('agriEntity.noSubmissions', { type: typeLabel.toLowerCase(), defaultValue: 'No {{type}} submissions yet' })}
-              </p>
-              {scope === 'mine' && (
-                <Button onClick={() => navigate(`/home/ask?tab=${type}`)} className="mt-3 bg-emerald-500 hover:bg-emerald-600">
-                  <Plus className="h-4 w-4" /> {t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}
-                </Button>
-              )}
-            </div>
+            <SubmissionEmptyState
+              icon={TypeIcon}
+              title={t('agriEntity.noSubmissions', { type: typeLabel.toLowerCase(), defaultValue: 'No {{type}} submissions yet' })}
+              description={
+                scope === 'mine'
+                  ? t('agriEntity.emptyHint', { type: typeLabel.toLowerCase(), defaultValue: 'Share a {{type}} with its names, sources and photos. It will appear here.' })
+                  : undefined
+              }
+              actionLabel={scope === 'mine' ? t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' }) : undefined}
+              onAction={scope === 'mine' ? () => navigate(`/home/ask?tab=${type}`) : undefined}
+            />
           ) : (
             <ul className="divide-y divide-border-subtle">
-              {items.map((item) => (
-                <li
-                  key={item.id}
-                  className="p-4 sm:p-5 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 transition-colors cursor-pointer"
-                  onClick={() => setSelected(item)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      setSelected(item)
+              {items.map((item, index) => {
+                const badge = hideStatus ? null : (
+                  <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(item.status))}>
+                    {agriEntityStatusLabel(t, item.status)}
+                  </span>
+                )
+                return (
+                  <SubmissionRow
+                    key={item.id}
+                    index={index}
+                    label={`${item.englishName}, ${item.localName}`}
+                    onOpen={() => setSelected(item)}
+                    trailing={badge}
+                    leading={
+                      item.imageUrls[0] ? (
+                        <img
+                          src={item.imageUrls[0]}
+                          alt=""
+                          loading="lazy"
+                          className="h-14 w-14 shrink-0 rounded-lg border border-border-subtle object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          <TypeIcon className="h-6 w-6" aria-hidden="true" />
+                        </span>
+                      )
                     }
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    {item.imageUrls[0] && (
-                      <img src={item.imageUrls[0]} alt="" className="h-12 w-12 shrink-0 rounded-md border border-border-subtle object-cover" loading="lazy" />
-                    )}
-                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs sm:text-sm font-medium text-foreground">
-                          {item.englishName} <span className="text-text-secondary">· {item.localName}</span>
-                        </p>
-                        <p className="truncate text-[11px] sm:text-xs italic text-text-tertiary">{item.botanicalName}</p>
-                      </div>
-                      <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
-                        {!hideStatus && (
-                          <>
-                            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(item.status))}>
-                              {agriEntityStatusLabel(t, item.status)}
-                            </span>
-                            <span>·</span>
-                          </>
-                        )}
-                        <span>{formatDate(item.createdAt)}</span>
-                        {scope === 'all' && (
-                          <>
-                            <span>·</span>
-                            <span className="truncate">{submitterName(item)}</span>
-                          </>
-                        )}
-                      </div>
+                  >
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {item.englishName} <span className="font-normal text-text-secondary">· {item.localName}</span>
+                    </p>
+                    <p className="truncate text-xs italic text-text-tertiary">{item.botanicalName}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-text-tertiary sm:text-xs">
+                      {badge && <span className="sm:hidden">{badge}</span>}
+                      <MetaChip icon={Clock}>{formatDate(item.createdAt)}</MetaChip>
+                      {item.imageUrls.length > 1 && <MetaChip icon={ImageIcon}>{item.imageUrls.length}</MetaChip>}
+                      {scope === 'all' && <MetaChip icon={UserIcon}>{submitterName(item)}</MetaChip>}
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </SubmissionRow>
+                )
+              })}
             </ul>
           )}
         </CardContent>

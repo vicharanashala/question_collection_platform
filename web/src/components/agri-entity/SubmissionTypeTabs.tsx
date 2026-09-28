@@ -54,7 +54,7 @@ export function parseSubmissionTab(value: string | null): SubmissionTab {
   return AGRI_ENTITY_TYPES.some((type) => type.value === value) ? (value as AgriEntityType) : 'question'
 }
 
-const SUBMISSION_TAB_ICONS: Record<SubmissionTab, LucideIcon> = {
+export const SUBMISSION_TAB_ICONS: Record<SubmissionTab, LucideIcon> = {
   question: MessageCircleQuestion,
   crop: Sprout,
   weed: Leaf,
