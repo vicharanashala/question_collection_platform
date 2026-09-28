@@ -202,7 +202,7 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
             <DialogDescription>
               {t(
                 'anveshanAnswers.confirmDescription',
-                'Please cross-check your answer and sources carefully. You cannot edit an answer after submitting it.',
+                'Please cross-check your answer and sources carefully. The quality of your answer will be carefully reviewed during evaluation, and you cannot edit it after submitting.',
               )}
             </DialogDescription>
           </DialogHeader>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, MonitorPlay, PenLine, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, MonitorPlay, PenLine, ShieldCheck, Trophy } from 'lucide-react'
 import { ANVESHAN_PLATFORM_URL } from '@/constants/public'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -225,7 +225,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-lg font-bold text-foreground sm:text-xl">
-            {t('anveshanAnswers.title', 'Answer Your Questions')}
+            {t('anveshanAnswers.titleAdvice', "Give advice for farmer's query")}
           </h1>
           <p className="mt-0.5 max-w-2xl text-xs text-text-secondary sm:text-sm">
             {t('anveshanAnswers.subtitle', {
@@ -233,6 +233,13 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
               defaultValue:
                 'You know these questions best. Answer any {{count}} of them with at least one trusted source to complete your Anveshan milestone.',
             })}
+          </p>
+          <p className="mt-2 inline-flex max-w-2xl items-start gap-1.5 text-xs font-medium text-amber-700 sm:text-sm dark:text-amber-400">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            {t(
+              'anveshanAnswers.qualityNotice',
+              'The quality of every answer you submit will be carefully reviewed during evaluation, so make it accurate, clear and well sourced.',
+            )}
           </p>
         </div>
 
