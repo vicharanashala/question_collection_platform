@@ -3,6 +3,7 @@ import { CheckCircle2, Clock, Info, MapPin, RefreshCw, Sprout } from 'lucide-rea
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { InfoTip } from './InfoTip'
 import { useRelativeTime } from '@/components/submissions/useRelativeTime'
 import type { AnveshanAnswerQuestion } from '@/types'
 
@@ -23,9 +24,13 @@ export function AnswerQuestionList({ questions, selectedId, onSelect, onRefresh,
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-1.5">
           <CardTitle className="text-sm md:text-base">{t('anveshanAnswers.listTitle', 'Your Questions')}</CardTitle>
-          <span title={t('anveshanAnswers.listHint', 'These are the questions you submitted. Pick any of them to answer.')}>
-            <Info className="h-3.5 w-3.5 text-text-tertiary" aria-hidden="true" />
-          </span>
+          <InfoTip
+            label={t('anveshanAnswers.aboutList', 'About this list')}
+            className="p-0.5 text-text-tertiary hover:text-text"
+            content={t('anveshanAnswers.listHint', 'These are the questions you submitted. Pick any of them to answer.')}
+          >
+            <Info className="h-3.5 w-3.5" aria-hidden="true" />
+          </InfoTip>
         </div>
         <Button
           variant="outline"

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, MonitorPlay, PenLine, ShieldCheck, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, Info, MonitorPlay, PenLine, ShieldCheck, Trophy } from 'lucide-react'
+import { InfoTip } from '@/components/anveshan-answers/InfoTip'
 import { ANVESHAN_PLATFORM_URL } from '@/constants/public'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -223,24 +224,56 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-foreground sm:text-xl">
-            {t('anveshanAnswers.titleAdvice', "Give advice for farmer's query")}
-          </h1>
-          <p className="mt-0.5 max-w-2xl text-xs text-text-secondary sm:text-sm">
-            {t('anveshanAnswers.subtitle', {
-              count: required,
-              defaultValue:
-                'You know these questions best. Answer any {{count}} of them with at least one trusted source to complete your Anveshan milestone.',
-            })}
-          </p>
-          <p className="mt-2 inline-flex max-w-2xl items-start gap-1.5 text-xs font-medium text-amber-700 sm:text-sm dark:text-amber-400">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            {t(
-              'anveshanAnswers.qualityNotice',
-              'The quality of every answer you submit will be carefully reviewed during evaluation, so make it accurate, clear and well sourced.',
-            )}
-          </p>
+        <div className="min-w-0 space-y-2">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-lg font-bold text-foreground sm:text-xl">
+              {t('anveshanAnswers.titleAdvice', "Give advice for farmer's query")}
+            </h1>
+            <InfoTip
+              label={t('anveshanAnswers.aboutPage', 'About this page')}
+              className="p-1 text-text-tertiary hover:text-text"
+              content={t('anveshanAnswers.subtitle', {
+                count: required,
+                defaultValue:
+                  'You know these questions best. Answer any {{count}} of them with at least one trusted source to complete your Anveshan milestone.',
+              })}
+            >
+              <Info className="h-4 w-4" aria-hidden="true" />
+            </InfoTip>
+          </div>
+
+          {/* Short labels keep the header light; the full explanations live in their tooltips. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <InfoTip
+              className="gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-700 hover:bg-amber-500/15 sm:text-xs dark:text-amber-400"
+              content={t(
+                'anveshanAnswers.qualityNotice',
+                'The quality of every answer you submit will be carefully reviewed during evaluation, so make it accurate, clear and well sourced.',
+              )}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('anveshanAnswers.qualityChip', 'Quality is evaluated')}
+              <Info className="h-3 w-3 opacity-70" aria-hidden="true" />
+            </InfoTip>
+            <InfoTip
+              className="gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/15 sm:text-xs"
+              content={
+                <>
+                  <span className="block font-semibold">
+                    {t('anveshanAnswers.simulationTitle', 'This is a simulation of the Ajrasakha review system')}
+                  </span>
+                  {t(
+                    'anveshanAnswers.simulationBody',
+                    'The layout, steps and checks here mirror the answer creation screen experts use on Ajrasakha. Take your time: every clear, well-sourced answer you write builds the skills that help farmers get advice they can trust. You are almost there!',
+                  )}
+                </>
+              }
+            >
+              <MonitorPlay className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('anveshanAnswers.simulationChip', 'Ajrasakha simulation')}
+              <Info className="h-3 w-3 opacity-70" aria-hidden="true" />
+            </InfoTip>
+          </div>
         </div>
 
         <div className="w-full sm:w-56" aria-label={`${answered} of ${required}`}>
@@ -258,8 +291,6 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
           </div>
         </div>
       </div>
-
-      <SimulationNotice />
 
       {completed && (
         <div
@@ -284,32 +315,6 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
           </Button>
         </div>
       )}
-    </div>
-  )
-}
-
-// Explains that this page mirrors the Ajrasakha expert answer screen and encourages the user.
-function SimulationNotice() {
-  const { t } = useTranslation()
-  return (
-    <div
-      role="note"
-      className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3"
-    >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-        <MonitorPlay className="h-4 w-4 text-primary" aria-hidden="true" />
-      </span>
-      <div className="min-w-0 space-y-0.5 text-xs sm:text-sm">
-        <p className="font-semibold text-text">
-          {t('anveshanAnswers.simulationTitle', 'This is a simulation of the Ajrasakha review system')}
-        </p>
-        <p className="text-text-secondary">
-          {t(
-            'anveshanAnswers.simulationBody',
-            'The layout, steps and checks here mirror the answer creation screen experts use on Ajrasakha. Take your time: every clear, well-sourced answer you write builds the skills that help farmers get advice they can trust. You are almost there!',
-          )}
-        </p>
-      </div>
     </div>
   )
 }
