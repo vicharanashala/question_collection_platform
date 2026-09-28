@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, ExternalLink, PenLine, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, PenLine, Trophy } from 'lucide-react'
 import { ANVESHAN_PLATFORM_URL } from '@/constants/public'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -10,10 +10,31 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { getErrorMessage, questionApi } from '@/api/client'
 import { AnswerQuestionList } from '@/components/anveshan-answers/AnswerQuestionList'
 import { SubmissionCriteriaGate } from '@/components/anveshan-answers/SubmissionCriteriaGate'
+import { AnsweringGuideDialog } from '@/components/anveshan-answers/AnsweringGuideDialog'
+import { useAuth } from '@/context/AuthContext'
 import { AnswerResponsePanel, EMPTY_DRAFT, type AnswerDraft } from '@/components/anveshan-answers/AnswerResponsePanel'
 import type { AnveshanAnswerQuestionsResponse } from '@/types'
 
 type LoadState = 'loading' | 'ready' | 'error'
+
+const guideSeenKey = (userId: string) => `anveshan_answer_guide_seen_${userId}`
+
+// Storage can be unavailable (private mode, blocked site data); the guide then simply opens every visit.
+function readGuideSeen(userId: string): boolean {
+  try {
+    return localStorage.getItem(guideSeenKey(userId)) === '1'
+  } catch {
+    return false
+  }
+}
+
+function markGuideSeen(userId: string): void {
+  try {
+    localStorage.setItem(guideSeenKey(userId), '1')
+  } catch {
+    // Non-critical: the guide will show again next visit.
+  }
+}
 
 // Picks the first unanswered question, falling back to the first question.
 function pickDefaultQuestion(data: AnveshanAnswerQuestionsResponse): string | null {
@@ -30,7 +51,21 @@ export function AnveshanAnswersPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
   const responseRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
+  const userId = user?.id
+
+  // Shows the guide automatically on a user's first visit once answering is unlocked.
+  useEffect(() => {
+    if (!userId || !data?.unlocked) return
+    if (!readGuideSeen(userId)) setGuideOpen(true)
+  }, [userId, data?.unlocked])
+
+  const changeGuideOpen = (open: boolean) => {
+    setGuideOpen(open)
+    if (!open && userId) markGuideSeen(userId)
+  }
 
   // Fetches the eligible questions; keeps the current selection when it is still in the list.
   const load = useCallback(async (mode: 'initial' | 'refresh') => {
@@ -119,7 +154,9 @@ export function AnveshanAnswersPage() {
         required={data.requiredAnswers}
         completed={data.completed}
         onBack={() => navigate(-1)}
+        onOpenGuide={() => setGuideOpen(true)}
       />
+      <AnsweringGuideDialog open={guideOpen} onOpenChange={changeGuideOpen} requiredAnswers={data.requiredAnswers} />
 
       {data.items.length === 0 ? (
         <StatusCard
@@ -164,19 +201,26 @@ interface PageHeaderProps {
   required: number
   completed: boolean
   onBack: () => void
+  onOpenGuide: () => void
 }
 
 // Title, encouragement and answer progress for the page.
-function PageHeader({ answered, required, completed, onBack }: PageHeaderProps) {
+function PageHeader({ answered, required, completed, onBack, onOpenGuide }: PageHeaderProps) {
   const { t } = useTranslation()
   const percent = required === 0 ? 100 : Math.min(100, Math.round((answered / required) * 100))
 
   return (
     <div className="space-y-3">
-      <Button type="button" variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5">
-        <ArrowLeft className="h-4 w-4" />
-        {t('common.back', 'Back')}
-      </Button>
+      <div className="flex items-center justify-between gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5">
+          <ArrowLeft className="h-4 w-4" />
+          {t('common.back', 'Back')}
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onOpenGuide} className="gap-1.5">
+          <BookOpenCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+          {t('anveshanGuide.open', 'Answering guide')}
+        </Button>
+      </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
