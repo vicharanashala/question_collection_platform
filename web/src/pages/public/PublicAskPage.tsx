@@ -235,6 +235,7 @@ export function PublicAskPage() {
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
   const [locationModalOpen, setLocationModalOpen] = useState(false)
   const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
+  const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
 
   const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
 const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
@@ -570,6 +571,18 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
       return
     }
 
+    let finalAudioUrls: string[] | undefined
+    if (audioData.length > 0) {
+      try {
+        const uploads = await Promise.all(
+          audioData.map(data => storageApi.uploadAudio(data.blob, data.filename))
+        )
+        finalAudioUrls = uploads.map(u => u.url)
+      } catch (uploadErr) {
+        console.warn('[PublicAskPage] audio archival failed:', uploadErr)
+      }
+    }
+
     const res = await questionApi.submitQuestion({
       questionText: questionText.trim(),
       domains,
@@ -580,6 +593,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
       block: previewMeta.block ?? undefined,
       agroClimaticZone: previewMeta.agroClimaticZone || undefined,
       mediaType: 'none',
+      audioUrls: finalAudioUrls,
       submissionLocation: location ?? undefined,
     })
     if (res.duplicate?.isDuplicate) {
