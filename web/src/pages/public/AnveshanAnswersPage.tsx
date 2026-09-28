@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, PenLine, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, MonitorPlay, PenLine, Trophy } from 'lucide-react'
 import { ANVESHAN_PLATFORM_URL } from '@/constants/public'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -252,6 +252,8 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
         </div>
       </div>
 
+      <SimulationNotice />
+
       {completed && (
         <div
           role="status"
@@ -275,6 +277,32 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
           </Button>
         </div>
       )}
+    </div>
+  )
+}
+
+// Explains that this page mirrors the Ajrasakha expert answer screen and encourages the user.
+function SimulationNotice() {
+  const { t } = useTranslation()
+  return (
+    <div
+      role="note"
+      className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        <MonitorPlay className="h-4 w-4 text-primary" aria-hidden="true" />
+      </span>
+      <div className="min-w-0 space-y-0.5 text-xs sm:text-sm">
+        <p className="font-semibold text-text">
+          {t('anveshanAnswers.simulationTitle', 'This is a simulation of the Ajrasakha review system')}
+        </p>
+        <p className="text-text-secondary">
+          {t(
+            'anveshanAnswers.simulationBody',
+            'The layout, steps and checks here mirror the answer creation screen experts use on Ajrasakha. Take your time: every clear, well-sourced answer you write builds the skills that help farmers get advice they can trust. You are almost there!',
+          )}
+        </p>
+      </div>
     </div>
   )
 }
