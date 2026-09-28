@@ -161,8 +161,9 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
       </div>
 
       {/* Progress — current step is marked by weight and an aria-current, not
-          colour alone, and completed steps carry a check icon. */}
-      {step && <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
+          colour alone, and completed steps carry a check icon. Hidden on small
+          screens to save vertical space. */}
+      {step && <ol className="hidden items-center gap-3 sm:flex" aria-label={t('common.steps', 'Steps')}>
         {steps.map(({ n, label }) => {
           const done = n < step
           const current = n === step
