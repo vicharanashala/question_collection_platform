@@ -26,7 +26,7 @@ export { IFinalQuestionRepository } from './IFinalQuestion.repository';
 export { IAnveshanCandidateRepository } from './IAnveshCandidate.repository'
 export { IAgriEntityRepository, UserAgriEntityTypeCount } from './IAgriEntity.repository';
 export { IAnveshanAnswerRepository } from './IAnveshanAnswer.repository';
-export { IAppFeedbackRepository } from './IAppFeedback.repository';
+export { IAppFeedbackRepository, FeedbackRatingSummary } from './IAppFeedback.repository';
 
 // ─── Repository Tokens ────────────────────────────────────────────────────
 

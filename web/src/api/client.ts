@@ -41,6 +41,7 @@ import type {
   AgriEntityType,
   AnveshanAnswer,
   AnveshanAnswerQuestionsResponse,
+  AppFeedbackListResponse,
   AnveshanMilestoneCounts,
   SubmitAnveshanAnswerPayload,
   SubmitAnveshanAnswerResponse,
@@ -1447,6 +1448,14 @@ export const reportsApi = {
 // ─── Crop / Weed / Pest / Disease API ─────────────────────────────────────────
 
 export const feedbackApi = {
+  /** Admin only: Anveshan feedback, newest first, with an overall ratings summary. */
+  listAnveshanFeedback: (params: { page?: number; limit?: number; rating?: number; inputMethod?: 'text' | 'voice' } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])),
+    ).toString();
+    return request<AppFeedbackListResponse>(`/feedbacks/anveshan${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
   /** Anveshan users rate the app (1 to 5 stars) and optionally comment, once they reach 100%. */
   submitAnveshanFeedback: (body: { rating: number; comment?: string; inputMethod: 'text' | 'voice' }) =>
     request<{ id: string; message: string }>(

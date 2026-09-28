@@ -26,6 +26,7 @@ const ReportDetailPage = lazyRoute(() => import('@/pages/reports/ReportDetailPag
 const FaqListPage   = lazyRoute(() => import('@/pages/faqs/FaqListPage').then(m => ({ default: m.FaqListPage })))
 const FaqsPage      = lazyRoute(() => import('@/pages/faqs/FaqsPage').then(m => ({ default: m.FaqsPage })))
 const DistributionsPage = lazyRoute(() => import('@/pages/distributions/DistributionsPage').then(m => ({ default: m.DistributionsPage })))
+const FeedbacksPage = lazyRoute(() => import('@/pages/feedbacks/FeedbacksPage').then(m => ({ default: m.FeedbacksPage })))
 const AgriEntitiesPage = lazyRoute(() => import('@/pages/agri-entities/AgriEntitiesPage').then(m => ({ default: m.AgriEntitiesPage })))
 
 // ── Public-user pages (role="user") ────────────────────────────────────────
@@ -66,6 +67,7 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   faqAdmin:    ['admin', 'super_admin'],
   distributions: ['distributor', 'admin', 'super_admin'],
   agriEntities: ['curator', 'admin', 'super_admin'],
+  feedbacks:   ['admin', 'super_admin'],
 }
 
 /** If unauthenticated, send to /login. */
@@ -215,6 +217,7 @@ export default function App() {
           <Route path="admin/faqs"     element={<><RoleRoute pageKey="faqAdmin" /><FaqsPage     /></>} />
           <Route path="distributions"  element={<><RoleRoute pageKey="distributions" /><DistributionsPage /></>} />
           <Route path="agri-entities"  element={<><RoleRoute pageKey="agriEntities" /><AgriEntitiesPage /></>} />
+          <Route path="feedbacks"      element={<><RoleRoute pageKey="feedbacks" /><FeedbacksPage /></>} />
         </Route>
 
         {/* ── Public user shell (role="user" only) ───────────────────────── */}

@@ -835,3 +835,29 @@ export interface SubmitAnveshanAnswerResponse {
   requiredAnswers: number;
   completed: boolean;
 }
+
+// ─── App feedback (admin) ──────────────────────────────────────────────────
+
+export interface AppFeedbackItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  inputMethod: 'text' | 'voice';
+  createdAt: string;
+  user: { id: string; name: string; mobileNumber: string; state?: string; district?: string } | null;
+}
+
+export interface FeedbackRatingSummary {
+  total: number;
+  averageRating: number | null;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+}
+
+export interface AppFeedbackListResponse {
+  items: AppFeedbackItem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  summary: FeedbackRatingSummary;
+}
