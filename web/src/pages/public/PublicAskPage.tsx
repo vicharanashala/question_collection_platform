@@ -14,7 +14,7 @@ import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info,
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, AGRI_ENTITY_TYPES } from '@/constants/public'
 import { AgriEntitySubmitForm } from '@/components/agri-entity/AgriEntitySubmitForm'
-import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
+import { SubmissionTabPanel, SubmissionTypeTabs, parseSubmissionTab, useTabDirection, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
@@ -203,6 +203,7 @@ export function PublicAskPage() {
   const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
   const requestedTab = parseSubmissionTab(searchParams.get('tab'))
   const activeTab = showAgriTabs ? requestedTab : 'question'
+  const tabDirection = useTabDirection(activeTab)
 
   // Keeps the selected tab in the URL so it survives refresh and can be linked to.
   function handleTabChange(tab: SubmissionTab) {
@@ -913,7 +914,9 @@ if (activeTab !== 'question') {
         {user?.isAnveshanUser && (
   <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
 )}
-        <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+        <SubmissionTabPanel tab={activeTab} direction={tabDirection}>
+          <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+        </SubmissionTabPanel>
         {milestoneModal}
       </div>
     )
@@ -937,6 +940,7 @@ if (activeTab !== 'question') {
        {user?.isAnveshanUser && (
         <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
       )}
+      <SubmissionTabPanel tab="question" direction={tabDirection}>
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">
@@ -1087,6 +1091,7 @@ if (activeTab !== 'question') {
           </form>
         </CardContent>
       </Card>
+      </SubmissionTabPanel>
       {dialogs}
       {milestoneModal}
     </div>
