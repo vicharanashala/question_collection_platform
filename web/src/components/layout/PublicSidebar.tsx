@@ -24,6 +24,8 @@ import { BrandLogo } from "@/components/BrandLogo";
 
 import { SignOutDialog } from "@/components/SignOutDialog";
 
+import { ANVESHAN_TAGLINE } from "@/constants/public";
+
 import { useQuestionDraft } from "@/hooks/useQuestionDraft";
 import { canAccessPayments, PAYMENT_ROUTES } from "@/utils/paymentAccess";
 
@@ -59,7 +61,7 @@ export function PublicSidebar() {
             AnnaDatha
           </p>
           <p className="text-[11px] leading-tight text-text-tertiary">
-            Public Portal
+            {user?.isAnveshanUser ? ANVESHAN_TAGLINE : "Public Portal"}
           </p>
         </div>
       </div>

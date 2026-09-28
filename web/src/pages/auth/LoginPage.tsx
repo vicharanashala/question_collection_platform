@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type KeyboardEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { ANVESHAN_TAGLINE } from "@/constants/public";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi, getErrorMessage } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -520,7 +521,7 @@ export function LoginPage() {
             <h1 className="text-2xl font-extrabold text-white tracking-tight leading-tight">
               AnnaDatha
             </h1>
-            <p className="text-white/60 text-sm">Farming Questions Platform</p>
+            <p className="text-white/60 text-sm">{isAnveshanLogin ? ANVESHAN_TAGLINE : "Farming Questions Platform"}</p>
           </div>
         </div>
 
@@ -569,7 +570,7 @@ export function LoginPage() {
                 AnnaDatha
               </h1>
               <p className="mt-0.5 text-xs text-white/70">
-                Farming Questions Platform
+                {isAnveshanLogin ? ANVESHAN_TAGLINE : "Farming Questions Platform"}
               </p>
             </div>
 

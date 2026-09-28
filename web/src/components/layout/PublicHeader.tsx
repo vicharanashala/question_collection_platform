@@ -10,6 +10,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { notificationApi } from '@/api/client'
 import { SignOutDialog } from '@/components/SignOutDialog'
+import { ANVESHAN_TAGLINE } from '@/constants/public'
 
 interface PublicHeaderProps {
   /** Open the mobile drawer. Wired up by `PublicLayout`; only used on small screens. */
@@ -91,7 +92,12 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
           aria-label="AnnaDatha — go to home"
         >
           <BrandLogo className="h-6 w-6 shrink-0 sm:h-8 sm:w-8" />
-          <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+            {isAnveshanUser && (
+              <span className="truncate text-[10px] font-medium leading-tight text-text-tertiary sm:text-[11px]">{ANVESHAN_TAGLINE}</span>
+            )}
+          </span>
         </button>
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
