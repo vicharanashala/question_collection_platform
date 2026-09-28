@@ -1,4 +1,8 @@
-import { getAnveshanRequiredQuestionCount } from "../../shared/constants/anveshan.constant";
+import {
+  ANVESHAN_REQUIRED_ANSWER_COUNT,
+  getAnveshanRequiredQuestionCount,
+} from "../../shared/constants/anveshan.constant";
+import { countAnveshanAnswers, findAnveshanAnswerableQuestions } from "../../shared/utils/anveshan.util";
 import {
   Injectable,
   NotFoundException,
@@ -60,6 +64,7 @@ export class UserService {
 
   // ─── Anveshan Progress ──────────────────────────────────────────────────────
 
+  // Reports each Anveshan requirement, including answers to their own questions, for the given mobile number.
   async getAnveshanProgress(mobileNumber: string) {
     const user = await this.userRepo.findByMobile(mobileNumber);
     if (!user) {
@@ -80,27 +85,31 @@ export class UserService {
           pest:      { required: 1,  submitted: 0, met: false },
           weed:      { required: 1,  submitted: 0, met: false },
           disease:   { required: 1,  submitted: 0, met: false },
+          answerCreated: { required: ANVESHAN_REQUIRED_ANSWER_COUNT, submitted: 0, met: false },
         },
       };
     }
 
     // Run all counts in parallel for performance
-    const [questionCount, cropCount, pestCount, weedCount, diseaseCount] =
+    const [questionCount, cropCount, pestCount, weedCount, diseaseCount, answerableQuestions] =
       await Promise.all([
         this.questionRepo.countByUserId(userId),
         this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
         this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
         this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
         this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+        findAnveshanAnswerableQuestions(this.questionRepo, userId),
       ]);
+    const answerCount = countAnveshanAnswers(answerableQuestions);
 
     const questionsMet = questionCount >= requiredQuestions;
     const cropMet      = cropCount >= 1;
     const pestMet      = pestCount >= 1;
     const weedMet      = weedCount >= 1;
     const diseaseMet   = diseaseCount >= 1;
+    const answersMet   = answerCount >= ANVESHAN_REQUIRED_ANSWER_COUNT;
 
-    const isCompleted = questionsMet && cropMet && pestMet && weedMet && diseaseMet;
+    const isCompleted = questionsMet && cropMet && pestMet && weedMet && diseaseMet && answersMet;
 
     return {
       isCompleted,
@@ -110,6 +119,7 @@ export class UserService {
         pest:      { required: 1,  submitted: pestCount,     met: pestMet },
         weed:      { required: 1,  submitted: weedCount,     met: weedMet },
         disease:   { required: 1,  submitted: diseaseCount,  met: diseaseMet },
+        answerCreated: { required: ANVESHAN_REQUIRED_ANSWER_COUNT, submitted: answerCount, met: answersMet },
       },
     };
   }

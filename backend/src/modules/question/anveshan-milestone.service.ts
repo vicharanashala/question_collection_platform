@@ -9,6 +9,7 @@ import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 import { QuestionService } from './question.service';
 import { SubmitAnveshanAnswerDto } from './dto';
+import { countAnveshanAnswers, findAnveshanAnswerableQuestions } from '../../shared/utils/anveshan.util';
 
 type MilestoneCounts = { questions: number; crop: number; weed: number; pest: number; disease: number; answers: number };
 
@@ -117,9 +118,9 @@ export class AnveshanMilestoneService {
     const [questionsSubmitted, agriCounts, eligibleQuestions] = await Promise.all([
       this.questionService.getTotalSubmittedCount(userId),
       this.agriEntityService.getSubmittedCountsByType(userId),
-      this.findEligibleQuestions(userId, requiredQuestions),
+      findAnveshanAnswerableQuestions(this.questionRepo, userId),
     ]);
-    const answersGiven = eligibleQuestions.filter((q) => q.anveshanAnswer).length;
+    const answersGiven = countAnveshanAnswers(eligibleQuestions);
 
     const requirements: MilestoneCounts = {
       questions: requiredQuestions,
@@ -138,11 +139,6 @@ export class AnveshanMilestoneService {
     const completed = submissionsCompleted && actual.answers >= requirements.answers;
 
     return { milestone: { requirements, progress, submissionsCompleted, completed }, eligibleQuestions };
-  }
-
-  // The user's earliest submissions, up to the required question count, are the ones they answer.
-  private findEligibleQuestions(userId: string, limit: number): Promise<Question[]> {
-    return this.questionRepo.find({ userId }, { pagination: { page: 1, limit, sort: { submittedAt: 1 } } });
   }
 }
 
