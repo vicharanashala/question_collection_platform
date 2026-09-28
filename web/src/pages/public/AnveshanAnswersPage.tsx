@@ -129,14 +129,17 @@ export function AnveshanAnswersPage() {
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(320px,_1fr)_minmax(400px,_1.2fr)] lg:gap-6">
-          <AnswerQuestionList
-            questions={data.items}
-            selectedId={selectedId}
-            onSelect={selectQuestion}
-            onRefresh={() => void load('refresh')}
-            isRefreshing={isRefreshing}
-          />
-          <div ref={responseRef} className="scroll-mt-4">
+          {/* On large screens the list is positioned to fill this cell, so its height always matches the response panel. */}
+          <div className="lg:relative">
+            <AnswerQuestionList
+              questions={data.items}
+              selectedId={selectedId}
+              onSelect={selectQuestion}
+              onRefresh={() => void load('refresh')}
+              isRefreshing={isRefreshing}
+            />
+          </div>
+          <div ref={responseRef} className="scroll-mt-4 lg:min-h-[calc(100vh-14rem)]">
             {selectedQuestion ? (
               <AnswerResponsePanel
                 key={selectedQuestion.id}

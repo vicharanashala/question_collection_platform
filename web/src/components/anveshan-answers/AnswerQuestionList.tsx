@@ -19,7 +19,7 @@ export function AnswerQuestionList({ questions, selectedId, onSelect, onRefresh,
   const { t } = useTranslation()
 
   return (
-    <Card className="flex max-h-[80vh] flex-col lg:max-h-[calc(100vh-12rem)]">
+    <Card className="flex max-h-[80vh] flex-col lg:absolute lg:inset-0 lg:max-h-none">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-1.5">
           <CardTitle className="text-sm md:text-base">{t('anveshanAnswers.listTitle', 'Your Questions')}</CardTitle>

@@ -90,7 +90,7 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
           className="flex min-w-0 items-center gap-1.5 hover:opacity-80 transition-opacity sm:gap-2"
           aria-label="AnnaDatha — go to home"
         >
-          <BrandLogo className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
+          <BrandLogo className="h-6 w-6 shrink-0 sm:h-8 sm:w-8" />
           <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
         </button>
       </div>
