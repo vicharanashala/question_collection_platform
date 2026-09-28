@@ -361,11 +361,21 @@ const CATEGORY_I18N_KEYS: Record<string, string> = {
   ngo:       'cat.ngoPartner',
 }
 
+// Categories that are assigned rather than chosen at signup, so they are not in USER_CATEGORIES.
+const ASSIGNED_CATEGORY_LABELS: Record<string, string> = {
+  anveshan_user: 'Anveshan User',
+}
+
+// Turns an unknown stored value such as "some_category" into "Some Category" instead of showing it raw.
+const humanizeCategory = (value: string) =>
+  value.split(/[_-]+/).filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+
+// Display label for a user category, translated where a key exists.
 export function categoryLabel(t: (key: string) => string, c: UserCategory | string | null | undefined): string {
   if (!c) return '—'
   const key = CATEGORY_I18N_KEYS[c]
   if (key) return t(key)
-  return USER_CATEGORIES.find((x) => x.value === c)?.label ?? c
+  return USER_CATEGORIES.find((x) => x.value === c)?.label ?? ASSIGNED_CATEGORY_LABELS[c] ?? humanizeCategory(c)
 }
 // Crop / Weed / Pest / Disease submissions. Limits mirror the backend DTO.
 export const AGRI_ENTITY_TYPES: { value: AgriEntityType; label: string }[] = [
