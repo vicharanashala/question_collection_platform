@@ -7,6 +7,7 @@ import {
   MAX_ANVESHAN_ANSWER_LENGTH,
   MAX_ANVESHAN_ANSWER_SOURCES,
   MAX_ANVESHAN_REMARKS_LENGTH,
+  MIN_ANVESHAN_ANSWER_LENGTH,
 } from '@/constants/public'
 
 interface AnsweringGuideDialogProps {
@@ -43,7 +44,7 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
               <li>{t('anveshanGuide.step2', 'Read the query again and write your answer in "Draft Response".')}</li>
               <li>{t('anveshanGuide.step3', 'Add anything reviewers should know in "Remarks" (optional).')}</li>
               <li>{t('anveshanGuide.step4', 'Add at least one source: choose the type, enter the source name, paste the link and page numbers, then press + (or Enter).')}</li>
-              <li>{t('anveshanGuide.step5', 'Press Submit, cross-check everything in the confirmation, then confirm.')}</li>
+              <li>{t('anveshanGuide.step5', 'Press Submit. If anything is missing, a message appears under that field; fix it and press Submit again, then confirm.')}</li>
             </ol>
           </GuideSection>
 
@@ -51,7 +52,13 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
             <ul className="space-y-2.5 leading-relaxed text-text-secondary">
               <Rule>{t('anveshanGuide.ruleUnlock', 'Answering unlocks only after your question, crop, weed, pest and disease submissions are complete.')}</Rule>
               <Rule>{t('anveshanGuide.ruleEligible', 'Only the questions listed here (your earliest submissions) can be answered.')}</Rule>
-              <Rule>{t('anveshanGuide.ruleAnswer', { max: MAX_ANVESHAN_ANSWER_LENGTH, defaultValue: 'The answer is required and can be up to {{max}} characters.' })}</Rule>
+              <Rule>
+                {t('anveshanGuide.ruleAnswerLength', {
+                  min: MIN_ANVESHAN_ANSWER_LENGTH,
+                  max: MAX_ANVESHAN_ANSWER_LENGTH,
+                  defaultValue: 'The answer is required and must be between {{min}} and {{max}} characters. The counter above the answer box turns green once you pass {{min}}.',
+                })}
+              </Rule>
               <Rule>{t('anveshanGuide.ruleRemarks', { max: MAX_ANVESHAN_REMARKS_LENGTH, defaultValue: 'Remarks are optional, up to {{max}} characters.' })}</Rule>
               <Rule>{t('anveshanGuide.ruleSourceCount', { max: MAX_ANVESHAN_ANSWER_SOURCES, defaultValue: 'At least 1 source is required, and you can add up to {{max}}.' })}</Rule>
               <Rule>{t('anveshanGuide.ruleSourceFields', 'Every source needs a type (Hyper Local, State, Central or Other), a name and a link.')}</Rule>
@@ -69,6 +76,12 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
               <Tip>{t('anveshanGuide.good1', 'Answer the exact question asked: the crop, the problem and the stage the farmer describes.')}</Tip>
               <Tip>{t('anveshanGuide.good2', 'Start with the likely cause, then give clear steps the farmer can follow in order.')}</Tip>
               <Tip>{t('anveshanGuide.good3', 'Be specific: product or practice name, dose per litre or per acre, timing, interval and how many times.')}</Tip>
+              <Tip>
+                {t('anveshanGuide.goodLength', {
+                  min: MIN_ANVESHAN_ANSWER_LENGTH,
+                  defaultValue: 'Use the {{min}}+ characters to explain properly: the cause, step-by-step actions, doses and precautions. Do not pad with repeated text.',
+                })}
+              </Tip>
               <Tip>{t('anveshanGuide.good4', 'Prefer safe and low-cost options first (cultural, biological), then chemical control if needed, with safety precautions.')}</Tip>
               <Tip>{t('anveshanGuide.good5', 'Match the local context: state, season and variety. Mention when a local expert or KVK should be consulted.')}</Tip>
               <Tip>{t('anveshanGuide.good6', 'Use simple language, short sentences and the same language as the question where possible.')}</Tip>

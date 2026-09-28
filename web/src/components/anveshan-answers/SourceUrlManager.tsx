@@ -1,11 +1,12 @@
 import { useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import { PlusCircle, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { AnveshanAnswerSource, AnveshanAnswerSourceType } from '@/types'
 import { MAX_ANVESHAN_ANSWER_SOURCES } from '@/constants/public'
+import { cn } from '@/lib/utils'
+import { FieldError } from './FieldError'
 
 export const SOURCE_TYPE_LABELS: Record<AnveshanAnswerSourceType, string> = {
   hyper_local: 'Hyper Local',
@@ -35,43 +36,64 @@ interface SourceUrlManagerProps {
   sources: AnveshanAnswerSource[]
   onSourcesChange: (sources: AnveshanAnswerSource[]) => void
   disabled?: boolean
+  /** Id of an outside error (for example "at least one source") that describes this group. */
+  describedBy?: string
 }
 
-// Collects typed source references (type, name, URL and page numbers) for an answer.
-export function SourceUrlManager({ sources, onSourcesChange, disabled = false }: SourceUrlManagerProps) {
+type SourceField = 'type' | 'name' | 'url' | 'page' | 'list'
+type SourceErrors = Partial<Record<SourceField, string>>
+
+// Collects typed source references (type, name, URL and page numbers) for an answer, with inline errors per field.
+export function SourceUrlManager({ sources, onSourcesChange, disabled = false, describedBy }: SourceUrlManagerProps) {
   const { t } = useTranslation()
   const [selectedType, setSelectedType] = useState<AnveshanAnswerSourceType | ''>('')
   const [sourceName, setSourceName] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [pageInput, setPageInput] = useState('')
+  const [errors, setErrors] = useState<SourceErrors>({})
 
-  // Validates the inputs and appends the source, reporting the first problem found.
-  const addSource = () => {
-    const trimmedName = sourceName.trim()
+  // Clears one field's error as soon as the user edits that field.
+  const clearError = (field: SourceField) => setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
+
+  // Returns every problem with the current inputs, keyed by the field it belongs to.
+  const validateInputs = (): SourceErrors => {
+    const found: SourceErrors = {}
     const trimmedUrl = urlInput.trim()
     const trimmedPage = pageInput.trim()
 
-    if (!selectedType) return toast.error(t('anveshanAnswers.errors.sourceType', 'Please select a source type.'))
-    if (!trimmedName) return toast.error(t('anveshanAnswers.errors.sourceName', 'Please enter the source name.'))
-    if (!trimmedUrl) return toast.error(t('anveshanAnswers.errors.sourceUrl', 'Please enter the source URL.'))
-    if (!parseHttpUrl(trimmedUrl)) {
-      return toast.error(t('anveshanAnswers.errors.sourceUrlInvalid', 'Please enter a valid URL starting with http:// or https://.'))
+    if (!selectedType) found.type = t('anveshanAnswers.errors.sourceType', 'Please select a source type.')
+    if (!sourceName.trim()) found.name = t('anveshanAnswers.errors.sourceName', 'Please enter the source name.')
+    if (!trimmedUrl) {
+      found.url = t('anveshanAnswers.errors.sourceUrl', 'Please enter the source URL.')
+    } else if (!parseHttpUrl(trimmedUrl)) {
+      found.url = t('anveshanAnswers.errors.sourceUrlInvalid', 'Please enter a valid URL starting with http:// or https://.')
     }
-    if (isPdfLink(trimmedUrl) && !trimmedPage) {
-      return toast.error(t('anveshanAnswers.errors.pdfPage', 'Page number is required for PDF links.'))
-    }
-    if (trimmedPage && !isValidPageList(trimmedPage)) {
-      return toast.error(t('anveshanAnswers.errors.pageInvalid', 'Please enter valid page number(s) (e.g. 1 or 1,2,3).'))
+    if (trimmedUrl && isPdfLink(trimmedUrl) && !trimmedPage) {
+      found.page = t('anveshanAnswers.errors.pdfPage', 'Page number is required for PDF links.')
+    } else if (trimmedPage && !isValidPageList(trimmedPage)) {
+      found.page = t('anveshanAnswers.errors.pageInvalid', 'Please enter valid page number(s) (e.g. 1 or 1,2,3).')
     }
     if (sources.length >= MAX_ANVESHAN_ANSWER_SOURCES) {
-      return toast.error(t('anveshanAnswers.errors.sourceLimit', { max: MAX_ANVESHAN_ANSWER_SOURCES, defaultValue: 'You can add up to {{max}} sources.' }))
+      found.list = t('anveshanAnswers.errors.sourceLimit', { max: MAX_ANVESHAN_ANSWER_SOURCES, defaultValue: 'You can add up to {{max}} sources.' })
+    } else if (
+      selectedType &&
+      sources.some((s) => s.sourceType === selectedType && s.source === trimmedUrl && (s.page ?? null) === (trimmedPage || null))
+    ) {
+      found.list = t('anveshanAnswers.errors.sourceDuplicate', 'This source already exists.')
     }
+    return found
+  }
 
-    const page = trimmedPage || null
-    const exists = sources.some((s) => s.sourceType === selectedType && s.source === trimmedUrl && (s.page ?? null) === page)
-    if (exists) return toast.error(t('anveshanAnswers.errors.sourceDuplicate', 'This source already exists.'))
+  // Validates the inputs and appends the source when everything is valid.
+  const addSource = () => {
+    const found = validateInputs()
+    setErrors(found)
+    if (Object.values(found).some(Boolean) || !selectedType) return
 
-    onSourcesChange([...sources, { sourceType: selectedType, sourceName: trimmedName, source: trimmedUrl, page }])
+    onSourcesChange([
+      ...sources,
+      { sourceType: selectedType, sourceName: sourceName.trim(), source: urlInput.trim(), page: pageInput.trim() || null },
+    ])
     setSelectedType('')
     setSourceName('')
     setUrlInput('')
@@ -86,65 +108,105 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false }:
   }
 
   const typeLabel = selectedType ? SOURCE_TYPE_LABELS[selectedType] : ''
+  const invalidClass = 'border-destructive focus-visible:ring-destructive'
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3" role="group" aria-labelledby="source-references-label" aria-describedby={describedBy}>
       <p className="text-sm font-medium text-text" id="source-references-label">
         {t('anveshanAnswers.sourceReferences', 'Source References')} *
       </p>
 
-      <Select
-        value={selectedType}
-        onValueChange={(val) => setSelectedType(val as AnveshanAnswerSourceType)}
-        disabled={disabled}
-      >
-        <SelectTrigger className="w-full" aria-labelledby="source-references-label">
-          <SelectValue placeholder={t('anveshanAnswers.selectSourceType', 'Select Source Type')} />
-        </SelectTrigger>
-        <SelectContent>
-          {SOURCE_TYPES.map((type) => (
-            <SelectItem key={type} value={type}>
-              {SOURCE_TYPE_LABELS[type]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div>
+        <Select
+          value={selectedType}
+          onValueChange={(val) => {
+            setSelectedType(val as AnveshanAnswerSourceType)
+            clearError('type')
+          }}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            className={cn('w-full', errors.type && invalidClass)}
+            aria-label={t('anveshanAnswers.selectSourceType', 'Select Source Type')}
+            aria-invalid={!!errors.type}
+            aria-describedby={errors.type ? 'source-type-error' : undefined}
+          >
+            <SelectValue placeholder={t('anveshanAnswers.selectSourceType', 'Select Source Type')} />
+          </SelectTrigger>
+          <SelectContent>
+            {SOURCE_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {SOURCE_TYPE_LABELS[type]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldError id="source-type-error" message={errors.type} />
+      </div>
 
       {selectedType && (
         <div className="space-y-2">
-          <Input
-            type="text"
-            aria-label={t('anveshanAnswers.sourceNameLabel', 'Source name')}
-            placeholder={`${typeLabel} ${t('anveshanAnswers.sourceNamePlaceholder', 'Source Name')}`}
-            value={sourceName}
-            onChange={(e) => setSourceName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-          />
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div>
             <Input
-              type="url"
-              inputMode="url"
-              aria-label={t('anveshanAnswers.sourceUrlLabel', 'Source link URL')}
-              placeholder={`${typeLabel} ${t('anveshanAnswers.sourceUrlPlaceholder', 'Source Link URL')}`}
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
+              type="text"
+              aria-label={t('anveshanAnswers.sourceNameLabel', 'Source name')}
+              placeholder={`${typeLabel} ${t('anveshanAnswers.sourceNamePlaceholder', 'Source Name')}`}
+              value={sourceName}
+              onChange={(e) => {
+                setSourceName(e.target.value)
+                clearError('name')
+              }}
               onKeyDown={handleKeyDown}
               disabled={disabled}
-              className="flex-1"
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'source-name-error' : undefined}
+              className={cn(errors.name && invalidClass)}
             />
-            <div className="flex gap-2">
+            <FieldError id="source-name-error" message={errors.name} />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <div className="flex-1">
               <Input
-                type="text"
-                inputMode="numeric"
-                aria-label={t('anveshanAnswers.pageLabel', 'Page numbers')}
-                placeholder={t('anveshanAnswers.pagePlaceholder', 'Page(s) e.g. 1,2,3')}
-                value={pageInput}
-                onChange={(e) => setPageInput(e.target.value)}
+                type="url"
+                inputMode="url"
+                aria-label={t('anveshanAnswers.sourceUrlLabel', 'Source link URL')}
+                placeholder={`${typeLabel} ${t('anveshanAnswers.sourceUrlPlaceholder', 'Source Link URL')}`}
+                value={urlInput}
+                onChange={(e) => {
+                  setUrlInput(e.target.value)
+                  clearError('url')
+                  clearError('page')
+                  clearError('list')
+                }}
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
-                className="flex-1 sm:w-36"
+                aria-invalid={!!errors.url}
+                aria-describedby={errors.url ? 'source-url-error' : undefined}
+                className={cn(errors.url && invalidClass)}
               />
+              <FieldError id="source-url-error" message={errors.url} />
+            </div>
+            <div className="flex gap-2 sm:w-44">
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label={t('anveshanAnswers.pageLabel', 'Page numbers')}
+                  placeholder={t('anveshanAnswers.pagePlaceholder', 'Page(s) e.g. 1,2,3')}
+                  value={pageInput}
+                  onChange={(e) => {
+                    setPageInput(e.target.value)
+                    clearError('page')
+                    clearError('list')
+                  }}
+                  onKeyDown={handleKeyDown}
+                  disabled={disabled}
+                  aria-invalid={!!errors.page}
+                  aria-describedby={errors.page ? 'source-page-error' : undefined}
+                  className={cn(errors.page && invalidClass)}
+                />
+                <FieldError id="source-page-error" message={errors.page} />
+              </div>
               <button
                 type="button"
                 onClick={addSource}
@@ -156,6 +218,7 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false }:
               </button>
             </div>
           </div>
+          <FieldError id="source-list-error" message={errors.list} />
         </div>
       )}
 

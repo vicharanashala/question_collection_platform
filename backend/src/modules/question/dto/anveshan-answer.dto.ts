@@ -9,6 +9,7 @@ import {
   IsUrl,
   Matches,
   MaxLength,
+  MinLength,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
@@ -16,6 +17,7 @@ import { Transform, Type } from 'class-transformer';
 import type { AnveshanAnswerSourceType } from '../../../shared/database/entities';
 
 export const ANVESHAN_ANSWER_SOURCE_TYPES: AnveshanAnswerSourceType[] = ['hyper_local', 'state', 'central', 'other'];
+export const MIN_ANVESHAN_ANSWER_LENGTH = 500;
 export const MAX_ANVESHAN_ANSWER_LENGTH = 5000;
 export const MAX_ANVESHAN_REMARKS_LENGTH = 1000;
 export const MAX_ANVESHAN_ANSWER_SOURCES = 10;
@@ -60,6 +62,7 @@ export class SubmitAnveshanAnswerDto {
   @Transform(trim)
   @IsString()
   @IsNotEmpty({ message: 'Answer is required' })
+  @MinLength(MIN_ANVESHAN_ANSWER_LENGTH, { message: `Answer must be at least ${MIN_ANVESHAN_ANSWER_LENGTH} characters` })
   @MaxLength(MAX_ANVESHAN_ANSWER_LENGTH)
   answer: string;
 

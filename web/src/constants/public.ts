@@ -385,6 +385,7 @@ export const AGRI_ENTITY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/w
 export const ANVESHAN_ANSWERS_ROUTE = '/home/anveshan-answers'
 
 // Must match the limits in the backend anveshan-answer DTO.
+export const MIN_ANVESHAN_ANSWER_LENGTH = 500
 export const MAX_ANVESHAN_ANSWER_LENGTH = 5000
 export const MAX_ANVESHAN_REMARKS_LENGTH = 1000
 export const MAX_ANVESHAN_ANSWER_SOURCES = 10

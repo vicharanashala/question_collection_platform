@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import { CheckCircle2, FileText, Loader2, RotateCcw, Send } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { SourceList, SourceUrlManager } from './SourceUrlManager'
-import { MAX_ANVESHAN_ANSWER_LENGTH, MAX_ANVESHAN_REMARKS_LENGTH } from '@/constants/public'
+import { MAX_ANVESHAN_ANSWER_LENGTH, MAX_ANVESHAN_REMARKS_LENGTH, MIN_ANVESHAN_ANSWER_LENGTH } from '@/constants/public'
+import { cn } from '@/lib/utils'
+import { FieldError } from './FieldError'
 import type { AnveshanAnswerQuestion, AnveshanAnswerSource } from '@/types'
 
 export interface AnswerDraft {
@@ -103,19 +104,56 @@ interface AnswerFormProps {
 }
 
 // Draft response, remarks and sources, with the same checks the expert review screen applies before submitting.
+interface DraftErrors {
+  answer?: string
+  sources?: string
+}
+
+type Translate = ReturnType<typeof useTranslation>['t']
+
+// Checks the draft against the same rules the server enforces and returns a message per invalid field.
+function validateDraft(draft: AnswerDraft, t: Translate): DraftErrors {
+  const errors: DraftErrors = {}
+  const answerLength = draft.answer.trim().length
+  if (answerLength === 0) {
+    errors.answer = t('anveshanAnswers.errors.answerRequired', 'Please enter your answer.')
+  } else if (answerLength < MIN_ANVESHAN_ANSWER_LENGTH) {
+    errors.answer = t('anveshanAnswers.errors.answerTooShort', {
+      min: MIN_ANVESHAN_ANSWER_LENGTH,
+      count: answerLength,
+      defaultValue: 'Your answer must be at least {{min}} characters. It is {{count}} characters now.',
+    })
+  }
+  if (draft.sources.length === 0) {
+    errors.sources = t(
+      'anveshanAnswers.errors.sourceRequired',
+      'Add at least one source. Fill in the source details above and press + to add it.',
+    )
+  }
+  return errors
+}
+
+// Draft response, remarks and sources. Validation runs when Submit is pressed, then live as the user fixes errors.
 function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerFormProps) {
   const { t } = useTranslation()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const answerRef = useRef<HTMLTextAreaElement>(null)
+  const sourcesRef = useRef<HTMLDivElement>(null)
   const update = (patch: Partial<AnswerDraft>) => onDraftChange({ ...draft, ...patch })
+  const errors = submitAttempted ? validateDraft(draft, t) : {}
+  const answerLength = draft.answer.trim().length
 
-  // Validates the draft, then asks for confirmation before submitting.
+  // Validates on click; focuses the first invalid field, otherwise asks for confirmation.
   const requestSubmit = () => {
-    if (!draft.answer.trim()) {
-      toast.error(t('anveshanAnswers.errors.answerRequired', 'Please enter your answer.'))
+    setSubmitAttempted(true)
+    const found = validateDraft(draft, t)
+    if (found.answer) {
+      answerRef.current?.focus()
       return
     }
-    if (draft.sources.length === 0) {
-      toast.error(t('anveshanAnswers.errors.sourceRequired', 'At least one source is required!'))
+    if (found.sources) {
+      sourcesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
     setConfirmOpen(true)
@@ -126,27 +164,53 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
     setConfirmOpen(false)
   }
 
+  const resetDraft = () => {
+    setSubmitAttempted(false)
+    onDraftChange(EMPTY_DRAFT)
+  }
+
   return (
     <>
       <div className="space-y-4">
         <div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <Label htmlFor="anveshan-answer" className="text-sm font-medium">
               {t('anveshanAnswers.draftResponse', 'Draft Response:')} *
             </Label>
-            <span className="text-[11px] tabular-nums text-text-tertiary" aria-live="polite">
-              {draft.answer.length}/{MAX_ANVESHAN_ANSWER_LENGTH}
+            <span
+              id="anveshan-answer-count"
+              className={cn(
+                'text-[11px] tabular-nums',
+                answerLength >= MIN_ANVESHAN_ANSWER_LENGTH ? 'text-emerald-700 dark:text-emerald-400' : 'text-text-tertiary',
+              )}
+            >
+              {t('anveshanAnswers.answerCount', {
+                count: answerLength,
+                min: MIN_ANVESHAN_ANSWER_LENGTH,
+                max: MAX_ANVESHAN_ANSWER_LENGTH,
+                defaultValue: '{{count}}/{{max}} (min {{min}})',
+              })}
             </span>
           </div>
           <Textarea
+            ref={answerRef}
             id="anveshan-answer"
-            placeholder={t('anveshanAnswers.answerPlaceholder', 'Enter your answer here...')}
+            placeholder={t('anveshanAnswers.answerPlaceholder', {
+              min: MIN_ANVESHAN_ANSWER_LENGTH,
+              defaultValue: 'Enter your answer here (at least {{min}} characters)...',
+            })}
             value={draft.answer}
             maxLength={MAX_ANVESHAN_ANSWER_LENGTH}
             onChange={(e) => update({ answer: e.target.value })}
             disabled={isSubmitting}
-            className="mt-1 min-h-[180px] resize-y md:min-h-[210px]"
+            aria-invalid={!!errors.answer}
+            aria-describedby={errors.answer ? 'anveshan-answer-error anveshan-answer-count' : 'anveshan-answer-count'}
+            className={cn(
+              'mt-1 min-h-[180px] resize-y md:min-h-[210px]',
+              errors.answer && 'border-destructive focus-visible:ring-destructive',
+            )}
           />
+          <FieldError id="anveshan-answer-error" message={errors.answer} />
         </div>
 
         <div>
@@ -164,12 +228,20 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
           />
         </div>
 
-        <div className="rounded-xl border border-border-subtle bg-surface p-4 shadow-xs sm:p-6">
+        <div
+          ref={sourcesRef}
+          className={cn(
+            'rounded-xl border bg-surface p-4 shadow-xs sm:p-6',
+            errors.sources ? 'border-destructive' : 'border-border-subtle',
+          )}
+        >
           <SourceUrlManager
             sources={draft.sources}
             onSourcesChange={(sources) => update({ sources })}
             disabled={isSubmitting}
+            describedBy={errors.sources ? 'anveshan-sources-error' : undefined}
           />
+          <FieldError id="anveshan-sources-error" message={errors.sources} />
           {draft.sources.length > 0 && (
             <p className="mt-4 border-t border-border-subtle pt-4 text-sm text-text-secondary">
               {t('anveshanAnswers.sourcesAdded', { count: draft.sources.length, defaultValue: '{{count}} source(s) added' })}
@@ -179,14 +251,14 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
       </div>
 
       <div className="mt-auto flex items-center gap-3 pt-2">
-        <Button onClick={requestSubmit} disabled={!draft.answer.trim() || isSubmitting} className="gap-2">
+        <Button onClick={requestSubmit} disabled={isSubmitting} className="gap-2">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           {isSubmitting ? t('anveshanAnswers.submitting', 'Submitting…') : t('common.submit', 'Submit')}
         </Button>
         <Button
           variant="secondary"
           size="icon"
-          onClick={() => onDraftChange(EMPTY_DRAFT)}
+          onClick={resetDraft}
           disabled={isSubmitting}
           aria-label={t('anveshanAnswers.resetAnswer', 'Reset answer')}
           title={t('anveshanAnswers.resetAnswer', 'Reset answer')}
