@@ -26,6 +26,7 @@ export { IFinalQuestionRepository } from './IFinalQuestion.repository';
 export { IAnveshanCandidateRepository } from './IAnveshCandidate.repository'
 export { IAgriEntityRepository, UserAgriEntityTypeCount } from './IAgriEntity.repository';
 export { IAnveshanAnswerRepository } from './IAnveshanAnswer.repository';
+export { IAppFeedbackRepository } from './IAppFeedback.repository';
 
 // ─── Repository Tokens ────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ export const REPOSITORY_TOKENS = {
   Candidate: 'REPOSITORY_AnveshanCandidate',
   AgriEntity:        'REPOSITORY_AgriEntity',
   AnveshanAnswer:    'REPOSITORY_AnveshanAnswer',
+  AppFeedback:       'REPOSITORY_AppFeedback',
 } as const;
 
 // ─── Concrete implementations (MongoDB only) ──────────────────────────────
@@ -68,6 +70,7 @@ import { MongoFinalQuestionRepository } from './impl/mongo/MongoFinalQuestion.re
 import { MongoAnveshCandidateRepository } from './impl/mongo/MongoAnveshCandidate.repository';
 import { MongoAgriEntityRepository } from './impl/mongo/MongoAgriEntity.repository';
 import { MongoAnveshanAnswerRepository } from './impl/mongo/MongoAnveshanAnswer.repository';
+import { MongoAppFeedbackRepository } from './impl/mongo/MongoAppFeedback.repository';
 
 // ─── Build Repository Providers ───────────────────────────────────────────
 
@@ -96,5 +99,6 @@ export function buildRepositoryProviders(): Provider[] {
     {provide: REPOSITORY_TOKENS.Candidate,          useClass: MongoAnveshCandidateRepository},
     { provide: REPOSITORY_TOKENS.AgriEntity,        useClass: MongoAgriEntityRepository },
     { provide: REPOSITORY_TOKENS.AnveshanAnswer,    useClass: MongoAnveshanAnswerRepository },
+    { provide: REPOSITORY_TOKENS.AppFeedback,       useClass: MongoAppFeedbackRepository },
   ];
 }

@@ -33,6 +33,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { FaqsModule } from './modules/faqs/faqs.module';
 import { AgriEntitiesModule } from './modules/agri-entities/agri-entities.module';
+import { FeedbacksModule } from './modules/feedbacks/feedbacks.module';
 import { DistributorModule } from './modules/distributor/distributor.module';
 import { JwtAuthGuard } from './shared/middleware/guards/jwt-auth.guard';
 import { HealthController } from './modules/health/health.controller';
@@ -93,6 +94,7 @@ import { DbModule } from './shared/database/db.module';
     ReportsModule,
     FaqsModule,
     AgriEntitiesModule,
+    FeedbacksModule,
     DistributorModule,
   ],
   controllers: [HealthController],

@@ -68,7 +68,7 @@ export function PublicQuestionsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('submissions.title')}</h2>

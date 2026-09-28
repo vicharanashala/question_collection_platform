@@ -1,5 +1,10 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { IAnveshanAnswerRepository, IQuestionRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import {
+  IAnveshanAnswerRepository,
+  IAppFeedbackRepository,
+  IQuestionRepository,
+  REPOSITORY_TOKENS,
+} from '../../shared/database/repositories';
 import type { AnveshanAnswer, AnveshanAnswerSource, Question } from '../../shared/database/entities';
 import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
@@ -20,6 +25,8 @@ export interface AnveshanMilestone {
   submissionsCompleted: boolean;
   /** True once every goal, including answers, is met. */
   completed: boolean;
+  /** True once the user has shared their app feedback after reaching 100%. */
+  feedbackSubmitted: boolean;
 }
 
 /** Answer fields returned to the client. */
@@ -50,6 +57,8 @@ export class AnveshanMilestoneService {
     private readonly questionRepo: IQuestionRepository,
     @Inject(REPOSITORY_TOKENS.AnveshanAnswer)
     private readonly answerRepo: IAnveshanAnswerRepository,
+    @Inject(REPOSITORY_TOKENS.AppFeedback)
+    private readonly feedbackRepo: IAppFeedbackRepository,
     private readonly questionService: QuestionService,
     private readonly userService: UserService,
     private readonly agriEntityService: AgriEntitiesService,
@@ -58,7 +67,10 @@ export class AnveshanMilestoneService {
   // Returns the caller's milestone progress across submissions and answers.
   async getMilestone(userId: string): Promise<AnveshanMilestone> {
     const { milestone } = await this.buildMilestone(userId);
-    return milestone;
+    const feedbackSubmitted = milestone.completed
+      ? (await this.feedbackRepo.count({ userId, context: 'anveshan_completion' })) > 0
+      : false;
+    return { ...milestone, feedbackSubmitted };
   }
 
   // Lists the questions the caller may answer (their first required-count submissions) with answer status.

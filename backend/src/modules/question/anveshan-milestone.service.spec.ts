@@ -27,6 +27,7 @@ describe('AnveshanMilestoneService', () => {
   let service: AnveshanMilestoneService;
   const questionRepo = { find: jest.fn(), updateMany: jest.fn() };
   const answerRepo = { create: jest.fn(), find: jest.fn(), findOne: jest.fn() };
+  const feedbackRepo = { count: jest.fn() };
   const questionService = { getTotalSubmittedCount: jest.fn() };
   const userService = { getProfile: jest.fn() };
   const agriEntityService = { getSubmittedCountsByType: jest.fn() };
@@ -46,6 +47,7 @@ describe('AnveshanMilestoneService', () => {
         AnveshanMilestoneService,
         { provide: REPOSITORY_TOKENS.Question, useValue: questionRepo },
         { provide: REPOSITORY_TOKENS.AnveshanAnswer, useValue: answerRepo },
+        { provide: REPOSITORY_TOKENS.AppFeedback, useValue: feedbackRepo },
         { provide: QuestionService, useValue: questionService },
         { provide: UserService, useValue: userService },
         { provide: AgriEntitiesService, useValue: agriEntityService },
@@ -67,10 +69,22 @@ describe('AnveshanMilestoneService', () => {
 
   it('is complete once two of the eligible questions are answered', async () => {
     givenSubmissionsDone(2);
+    feedbackRepo.count.mockResolvedValue(0);
 
     const milestone = await service.getMilestone(USER_ID);
 
     expect(milestone.completed).toBe(true);
+    expect(milestone.feedbackSubmitted).toBe(false);
+  });
+
+  it('reports feedback as submitted once the user has shared it', async () => {
+    givenSubmissionsDone(2);
+    feedbackRepo.count.mockResolvedValue(1);
+
+    const milestone = await service.getMilestone(USER_ID);
+
+    expect(feedbackRepo.count).toHaveBeenCalledWith({ userId: USER_ID, context: 'anveshan_completion' });
+    expect(milestone.feedbackSubmitted).toBe(true);
   });
 
   it('rejects answers before the submission goals are met', async () => {

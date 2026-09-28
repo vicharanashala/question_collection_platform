@@ -10,6 +10,8 @@ import { PublicBottomNav } from './PublicBottomNav'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, type AnveshanMilestoneResponse } from '@/api/client'
 import { ANVESHAN_ANSWERS_ROUTE } from '@/constants/public'
+import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
+import { deferFeedback, isFeedbackDeferred } from '@/components/anveshan-answers/feedbackPrompt'
 
 /**
  * Shell for the public-user app (role="user"). Visually distinct from the
@@ -26,6 +28,7 @@ export function PublicLayout() {
   const [showMilestoneBanner, setShowMilestoneBanner] = useState(false)
   const [milestone, setMilestone] = useState<AnveshanMilestoneResponse | null>(null)
   const [answerTaskDismissed, setAnswerTaskDismissed] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const onAnswersPage = location.pathname === ANVESHAN_ANSWERS_ROUTE
@@ -39,6 +42,7 @@ export function PublicLayout() {
       .then((data) => {
         setMilestone(data)
         if (data.completed && !localStorage.getItem(dismissedKey)) setShowMilestoneBanner(true)
+        if (data.completed && !data.feedbackSubmitted && !isFeedbackDeferred(user.id)) setFeedbackOpen(true)
       })
       .catch(() => undefined)
   }, [user?.id, user?.isAnveshanUser, onAnswersPage])
@@ -85,6 +89,16 @@ export function PublicLayout() {
           </motion.div>
         </main>
       </div>
+
+      <AnveshanFeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={(open) => {
+          setFeedbackOpen(open)
+          // Closing without sending means "maybe later": ask again next session, not on every page.
+          if (!open && user?.id && !milestone?.feedbackSubmitted) deferFeedback(user.id)
+        }}
+        onSubmitted={() => setMilestone((prev) => (prev ? { ...prev, feedbackSubmitted: true } : prev))}
+      />
 
       {/* Mobile bottom tab bar (hidden on desktop) */}
       <PublicBottomNav />

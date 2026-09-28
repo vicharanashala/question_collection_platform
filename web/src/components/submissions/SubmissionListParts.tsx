@@ -12,7 +12,7 @@ export function SubmissionListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <ul className="divide-y divide-border-subtle" aria-busy="true" aria-label="Loading submissions">
       {Array.from({ length: rows }, (_, i) => (
-        <li key={i} className="flex items-center gap-3 p-4 sm:p-5">
+        <li key={i} className="flex items-center gap-3 px-3 py-4 sm:px-4 sm:py-5">
           <div className="h-11 w-11 shrink-0 animate-pulse rounded-lg bg-surface-variant" />
           <div className="flex-1 space-y-2">
             <div className="h-3.5 w-3/4 animate-pulse rounded bg-surface-variant" />
@@ -74,7 +74,7 @@ export function SubmissionRow({ index, onOpen, label, leading, children, trailin
         onClick={onOpen}
         aria-label={label}
         className={cn(
-          'group flex w-full items-center gap-3 p-4 text-left transition-colors sm:gap-4 sm:p-5',
+          'group flex w-full items-center gap-3 px-3 py-4 text-left transition-colors sm:gap-4 sm:px-4 sm:py-5',
           'hover:bg-emerald-50/50 dark:hover:bg-emerald-950/15',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus',
         )}

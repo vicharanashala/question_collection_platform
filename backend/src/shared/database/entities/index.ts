@@ -13,3 +13,4 @@ export * from './report-reply.entity';
 export * from './faq.entity';
 export * from './final-question.entity';export * from './agri-entity.entity';
 export * from './anveshan-answer.entity';
+export * from './app-feedback.entity';

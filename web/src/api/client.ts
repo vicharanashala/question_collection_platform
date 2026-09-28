@@ -59,6 +59,8 @@ export interface AnveshanMilestoneResponse {
   submissionsCompleted: boolean;
   /** Every goal, including answers, is met. */
   completed: boolean;
+  /** The user has already shared app feedback after reaching 100%. */
+  feedbackSubmitted?: boolean;
 }
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
@@ -1443,6 +1445,16 @@ export const reportsApi = {
 };
 
 // ─── Crop / Weed / Pest / Disease API ─────────────────────────────────────────
+
+export const feedbackApi = {
+  /** Anveshan users rate the app (1 to 5 stars) and optionally comment, once they reach 100%. */
+  submitAnveshanFeedback: (body: { rating: number; comment?: string; inputMethod: 'text' | 'voice' }) =>
+    request<{ id: string; message: string }>(
+      "/feedbacks/anveshan",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ),
+};
 
 export const agriEntityApi = {
   /** Submit a crop, weed, pest or disease record. Images must be uploaded first via storageApi. */

@@ -22,6 +22,6 @@ import { AgriEntitiesModule } from '../agri-entities/agri-entities.module';
   ],
   controllers: [QuestionController],
   providers: [QuestionService, AnveshanMilestoneService],
-  exports: [QuestionService],
+  exports: [QuestionService, AnveshanMilestoneService],
 })
 export class QuestionModule {}
