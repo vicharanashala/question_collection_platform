@@ -95,7 +95,8 @@ function MilestoneProgressButton({ percent, onClick }: MilestoneProgressButtonPr
         className="gap-1.5 rounded-full bg-background hover:bg-surface-variant"
       >
         <Award className="h-4 w-4" aria-hidden="true" />
-        {t('anveshan.myProgress', 'My Progress')}
+        {/* Label is hidden on phones to keep the header compact; the aria-label still names the button. */}
+        <span className="hidden sm:inline">{t('anveshan.myProgress', 'My Progress')}</span>
         <span className="tabular-nums text-text-secondary">{clamped}%</span>
       </Button>
     </span>
