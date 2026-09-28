@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -65,6 +66,9 @@ export function QuestionDetailModal({
   open, onOpenChange, questionId,
 }: QuestionDetailModalProps): ReactNode {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  // Anveshan users do not see review status, so the pill and reviewer feedback are hidden for them.
+  const hideStatus = !!user?.isAnveshanUser
 
   const [question, setQuestion] = useState<Question | null>(null)
   const [loading, setLoading] = useState(false)
@@ -138,7 +142,7 @@ export function QuestionDetailModal({
       </Card>
     )
   } else if (question) {
-    body = <QuestionBody question={question} />
+    body = <QuestionBody question={question} hideStatus={hideStatus} />
   } else {
     // Defensive fallback (shouldn't normally be reached).
     body = null
@@ -155,12 +159,14 @@ export function QuestionDetailModal({
               <DialogTitle className="text-base sm:text-lg font-extrabold leading-tight text-foreground">
                 {t('notifications.yourQuestion')}
               </DialogTitle>
-              <span className={cn(
-                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                statusBadge(question.status),
-              )}>
-                {t(statusLabelKey(question.status))}
-              </span>
+              {!hideStatus && (
+                <span className={cn(
+                  'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                  statusBadge(question.status),
+                )}>
+                  {t(statusLabelKey(question.status))}
+                </span>
+              )}
             </div>
             <p className="mt-0.5 text-[11px] sm:text-xs text-text-tertiary">
               {t('submissions.submitted')} {formatDateTime(question.submittedAt)}
@@ -182,7 +188,7 @@ export function QuestionDetailModal({
 
 // ─── QuestionBody (rendered when the question is loaded) ─────────────────────
 
-function QuestionBody({ question }: { question: Question }): ReactNode {
+function QuestionBody({ question, hideStatus }: { question: Question; hideStatus: boolean }): ReactNode {
   const { t } = useTranslation()
   const mediaUrls = question.mediaUrls ?? []
   const imageUrls = mediaUrls.filter((u) => !isAudioUrl(u))
@@ -266,7 +272,7 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
       )}
 
       {/* ── Reviewer feedback (status-specific, only when populated) ─────── */}
-      {(question.approvalReason || question.rejectionReason || question.heldReason) && (
+      {!hideStatus && (question.approvalReason || question.rejectionReason || question.heldReason) && (
         <Card>
           <CardContent className="space-y-3 p-4 sm:p-5">
             {question.rejectionReason && (

@@ -118,6 +118,9 @@ export function PublicQuestionsPage() {
 function QuestionSubmissions() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { user } = useAuth()
+  // Anveshan users do not see review status (pending, approved, …), so the filter and badges are hidden.
+  const hideStatus = !!user?.isAnveshanUser
   const formatDate = useRelativeTime()
   const [items, setItems] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,11 +150,13 @@ function QuestionSubmissions() {
 
   return (
     <>
-      <SubmissionStatusFilter
-        options={STATUS_TABS.map((s) => ({ key: s.key, label: t(s.labelKey) }))}
-        value={status}
-        onChange={(s) => { setStatus(s); setPage(1) }}
-      />
+      {!hideStatus && (
+        <SubmissionStatusFilter
+          options={STATUS_TABS.map((s) => ({ key: s.key, label: t(s.labelKey) }))}
+          value={status}
+          onChange={(s) => { setStatus(s); setPage(1) }}
+        />
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -187,8 +192,12 @@ function QuestionSubmissions() {
                     <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
                       <p className="line-clamp-2 flex-1 text-xs sm:text-sm font-medium text-foreground lg:line-clamp-1 lg:text-sm">{q.questionText}</p>
                       <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
-                        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>{t(statusLabelKey(q.status))}</span>
-                        <span>·</span>
+                        {!hideStatus && (
+                          <>
+                            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusBadge(q.status))}>{t(statusLabelKey(q.status))}</span>
+                            <span>·</span>
+                          </>
+                        )}
                         <span>{formatDate(q.submittedAt)}</span>
                         {q.cropType && <><span>·</span><span className="hidden sm:inline">{q.cropType}</span></>}
                       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Loader2, Plus } from 'lucide-react'
@@ -29,6 +30,9 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   const navigate = useNavigate()
   const { t } = useTranslation()
   const formatDate = useRelativeTime()
+  const { user } = useAuth()
+  // Anveshan users do not see review status on their own submissions.
+  const hideStatus = scope === 'mine' && !!user?.isAnveshanUser
   const [items, setItems] = useState<AgriEntitySubmission[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -66,7 +70,9 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
 
   return (
     <>
-      <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
+      {!hideStatus && (
+        <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -111,10 +117,14 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
                         <p className="truncate text-[11px] sm:text-xs italic text-text-tertiary">{item.botanicalName}</p>
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
-                        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(item.status))}>
-                          {agriEntityStatusLabel(t, item.status)}
-                        </span>
-                        <span>·</span>
+                        {!hideStatus && (
+                          <>
+                            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(item.status))}>
+                              {agriEntityStatusLabel(t, item.status)}
+                            </span>
+                            <span>·</span>
+                          </>
+                        )}
                         <span>{formatDate(item.createdAt)}</span>
                         {scope === 'all' && (
                           <>
