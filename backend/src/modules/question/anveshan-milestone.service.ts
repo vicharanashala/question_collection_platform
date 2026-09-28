@@ -58,6 +58,8 @@ export class AnveshanMilestoneService {
       answeredCount: milestone.progress.answers,
       unlocked: milestone.submissionsCompleted,
       completed: milestone.completed,
+      requirements: milestone.requirements,
+      progress: milestone.progress,
     };
   }
 

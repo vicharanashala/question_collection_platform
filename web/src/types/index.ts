@@ -787,12 +787,24 @@ export interface AnveshanAnswerQuestion {
   answer: AnveshanAnswer | null;
 }
 
+export interface AnveshanMilestoneCounts {
+  questions: number;
+  crop: number;
+  weed: number;
+  pest: number;
+  disease: number;
+  answers: number;
+}
+
 export interface AnveshanAnswerQuestionsResponse {
   items: AnveshanAnswerQuestion[];
   requiredAnswers: number;
   answeredCount: number;
   unlocked: boolean;
   completed: boolean;
+  /** Milestone targets and capped progress, used to show what is left before answering unlocks. */
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
 }
 
 export interface SubmitAnveshanAnswerPayload {

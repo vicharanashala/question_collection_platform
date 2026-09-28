@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, Lock, PenLine, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, PenLine, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getErrorMessage, questionApi } from '@/api/client'
 import { AnswerQuestionList } from '@/components/anveshan-answers/AnswerQuestionList'
+import { SubmissionCriteriaGate } from '@/components/anveshan-answers/SubmissionCriteriaGate'
 import { AnswerResponsePanel, EMPTY_DRAFT, type AnswerDraft } from '@/components/anveshan-answers/AnswerResponsePanel'
 import type { AnveshanAnswerQuestionsResponse } from '@/types'
 
@@ -105,21 +106,7 @@ export function AnveshanAnswersPage() {
   }
 
   if (!data.unlocked) {
-    return (
-      <StatusCard
-        icon={<Lock className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
-        title={t('anveshanAnswers.lockedTitle', 'Almost there!')}
-        description={t(
-          'anveshanAnswers.lockedDescription',
-          'Finish your question and crop, weed, pest and disease submissions first. Answering unlocks right after.',
-        )}
-        action={
-          <Button asChild>
-            <Link to="/home/ask">{t('anveshanAnswers.goSubmit', 'Continue submitting')}</Link>
-          </Button>
-        }
-      />
-    )
+    return <SubmissionCriteriaGate requirements={data.requirements} progress={data.progress} />
   }
 
   const selectedQuestion = data.items.find((q) => q.id === selectedId) ?? null

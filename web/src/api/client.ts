@@ -40,6 +40,7 @@ import type {
   AgriEntityStatus,
   AgriEntityType,
   AnveshanAnswerQuestionsResponse,
+  AnveshanMilestoneCounts,
   SubmitAnveshanAnswerPayload,
   SubmitAnveshanAnswerResponse,
 } from "@/types";
@@ -49,15 +50,6 @@ import {
 } from "@/events/accountLockedEvents";
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
-
-export interface AnveshanMilestoneCounts {
-  questions: number;
-  crop: number;
-  weed: number;
-  pest: number;
-  disease: number;
-  answers: number;
-}
 
 export interface AnveshanMilestoneResponse {
   requirements: AnveshanMilestoneCounts;
