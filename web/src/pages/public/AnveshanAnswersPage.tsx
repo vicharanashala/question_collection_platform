@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, Info, MonitorPlay, PenLine, ShieldCheck, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BookOpenCheck, ExternalLink, Info, MonitorPlay, MonitorSmartphone, PenLine, ShieldCheck, Trophy } from 'lucide-react'
 import { InfoTip } from '@/components/anveshan-answers/InfoTip'
-import { ANVESHAN_PLATFORM_URL } from '@/constants/public'
+import { ANVESHAN_ANSWERS_DESKTOP_QUERY, ANVESHAN_PLATFORM_URL } from '@/constants/public'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -53,15 +54,15 @@ export function AnveshanAnswersPage() {
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
-  const responseRef = useRef<HTMLDivElement>(null)
+  const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY)
   const { user } = useAuth()
   const userId = user?.id
 
   // Shows the guide automatically on a user's first visit once answering is unlocked.
   useEffect(() => {
-    if (!userId || !data?.unlocked) return
+    if (!userId || !data?.unlocked || !isDesktop) return
     if (!readGuideSeen(userId)) setGuideOpen(true)
-  }, [userId, data?.unlocked])
+  }, [userId, data?.unlocked, isDesktop])
 
   const changeGuideOpen = (open: boolean) => {
     setGuideOpen(open)
@@ -87,17 +88,12 @@ export function AnveshanAnswersPage() {
     }
   }, [t])
 
+  // Questions load only on desktop-sized screens; phones see the desktop-only notice instead.
   useEffect(() => {
+    if (!isDesktop) return
     void load('initial')
-  }, [load])
+  }, [load, isDesktop])
 
-  // Selects a question and, on small screens, brings the response panel into view.
-  const selectQuestion = (id: string) => {
-    setSelectedId(id)
-    if (window.matchMedia('(max-width: 1023px)').matches) {
-      requestAnimationFrame(() => responseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
-    }
-  }
 
   // Submits the answer, updates the list in place and moves on to the next unanswered question.
   const submitAnswer = async (draft: AnswerDraft) => {
@@ -128,6 +124,24 @@ export function AnveshanAnswersPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!isDesktop) {
+    return (
+      <StatusCard
+        icon={<MonitorSmartphone className="h-6 w-6 text-amber-600 dark:text-amber-400" aria-hidden="true" />}
+        title={t('anveshanAnswers.desktopOnlyTitle', 'Please open this on a desktop or laptop')}
+        description={t(
+          'anveshanAnswers.desktopOnlyDescription',
+          'Giving advice uses the full review layout, with your questions beside the answer form and sources, just like the Ajrasakha expert system. It is not available on mobile phones. Open AnnaDatha on a desktop or laptop to continue; your progress is saved.',
+        )}
+        action={
+          <Button asChild variant="outline">
+            <Link to="/home">{t('anveshanAnswers.backHome', 'Back to home')}</Link>
+          </Button>
+        }
+      />
+    )
   }
 
   if (loadState === 'loading') return <PageSkeleton />
@@ -172,12 +186,12 @@ export function AnveshanAnswersPage() {
             <AnswerQuestionList
               questions={data.items}
               selectedId={selectedId}
-              onSelect={selectQuestion}
+              onSelect={setSelectedId}
               onRefresh={() => void load('refresh')}
               isRefreshing={isRefreshing}
             />
           </div>
-          <div ref={responseRef} className="scroll-mt-4 lg:min-h-[calc(100vh-14rem)]">
+          <div className="lg:min-h-[calc(100vh-14rem)]">
             {selectedQuestion ? (
               <AnswerResponsePanel
                 key={selectedQuestion.id}

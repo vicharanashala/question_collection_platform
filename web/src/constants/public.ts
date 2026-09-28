@@ -391,3 +391,6 @@ export const MAX_ANVESHAN_ANSWER_SOURCES = 10
 
 // External Anveshan platform where users confirm their milestone completion.
 export const ANVESHAN_PLATFORM_URL = 'https://anveshan.annam.ai/'
+
+// The Anveshan answer page needs the two-column desktop layout (Tailwind `lg` breakpoint and up).
+export const ANVESHAN_ANSWERS_DESKTOP_QUERY = '(min-width: 1024px)'
