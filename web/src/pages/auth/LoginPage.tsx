@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type KeyboardEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi, getErrorMessage } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -339,7 +339,10 @@ export function LoginPage() {
   const { theme, toggleTheme } = useTheme();
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [mobile, setMobile] = useState("");
+  const location = useLocation();
+  // "Check again" on the Anveshan phase gate returns here with the number filled in.
+  const prefilledMobile = (location.state as { mobileNumber?: string } | null)?.mobileNumber ?? "";
+  const [mobile, setMobile] = useState(prefilledMobile);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const countdown = useCountdown();
@@ -424,7 +427,7 @@ export function LoginPage() {
     if ("requiresRegistration" in res && res.requiresRegistration) {
       if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
         navigate("/home/anveshan-phase-gate", {
-          state: res.anveshanPhaseInfo,
+          state: { ...res.anveshanPhaseInfo, mobileNumber: mobile },
           replace: true,
         });
         return;
@@ -448,7 +451,7 @@ export function LoginPage() {
 
     if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
       navigate("/home/anveshan-phase-gate", {
-        state: res.anveshanPhaseInfo,
+        state: { ...res.anveshanPhaseInfo, mobileNumber: mobile },
         replace: true,
       });
       return;
