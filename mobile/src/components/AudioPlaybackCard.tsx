@@ -11,7 +11,7 @@ type PlayState = 'idle' | 'loading' | 'playing' | 'paused';
 
 interface AudioPlaybackCardProps {
   uri: string;
-  onDelete: () => void;
+  onDelete?: () => void;
 }
 
 export function AudioPlaybackCard({ uri, onDelete }: AudioPlaybackCardProps) {
@@ -152,7 +152,9 @@ export function AudioPlaybackCard({ uri, onDelete }: AudioPlaybackCardProps) {
     playerRef.current?.pause();
     playerRef.current?.remove();
     playerRef.current = null;
-    onDelete();
+    if (onDelete) {
+      onDelete();
+    }
   }
 
   return (
@@ -183,13 +185,15 @@ export function AudioPlaybackCard({ uri, onDelete }: AudioPlaybackCardProps) {
           <Text style={[playStyles.timeTot, { color: c.textSecondary }]}>{fmt(totalSec)}</Text>
         </View>
 
-        <TouchableOpacity
-          style={playStyles.delBtn}
-          onPress={handleDelete}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="close-circle" size={22} color={c.error} />
-        </TouchableOpacity>
+        {onDelete && (
+          <TouchableOpacity
+            style={playStyles.delBtn}
+            onPress={handleDelete}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close-circle" size={22} color={c.error} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Waveform */}

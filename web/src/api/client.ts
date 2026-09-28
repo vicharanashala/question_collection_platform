@@ -876,6 +876,7 @@ export const questionApi = {
     questionText: string;
     mediaType?: "none" | "image" | "video" | "audio";
     mediaUrls?: string[];
+    audioUrls?: string[];
   }) =>
     request<{
       state: string;
@@ -920,6 +921,7 @@ export const questionApi = {
   agroClimaticZone?: string;
   mediaType?: "none" | "image" | "video" | "audio";
   mediaUrls?: string[];
+  audioUrls?: string[];
   submissionLocation?: {
     latitude: number;
     longitude: number;

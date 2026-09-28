@@ -132,6 +132,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
     try {
       let mediaType: 'none' | 'image' | 'audio' = 'none';
       let mediaUrls: string[] = [];
+      let audioUrls: string[] | undefined;
 
       if (preview.pendingImageUri) {
         // Upload image — only on final confirm
@@ -139,12 +140,14 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         const { url } = await storageApi.uploadImage(preview.pendingImageUri, filename);
         mediaType = 'image';
         mediaUrls = [url];
-      } else if (preview.pendingAudioUri) {
+      } else if (preview.pendingAudioUris && preview.pendingAudioUris.length > 0) {
         // Upload audio — only on final confirm (dev: in-memory/GCP, prod: GCP)
-        const filename = `question-audio-${Date.now()}.m4a`;
-        const { url } = await storageApi.uploadAudio(preview.pendingAudioUri, filename);
-        mediaType = 'audio';
-        mediaUrls = [url];
+        const uploads = await Promise.all(preview.pendingAudioUris.map(async (uri, idx) => {
+          const filename = `question-audio-${Date.now()}-${idx}.m4a`;
+          const { url } = await storageApi.uploadAudio(uri, filename);
+          return url;
+        }));
+        audioUrls = uploads;
       }
 
       const payload = {
@@ -159,6 +162,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
         agroClimaticZone: selectedAgroZone,
         mediaType,
         mediaUrls,
+        audioUrls,
       };
 
       const { data } = await questionApi.submit(payload);
@@ -385,7 +389,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
             </View>
 
             {/* Audio model disclaimer */}
-            {preview.pendingAudioUri ? (
+            {(preview.pendingAudioUris && preview.pendingAudioUris.length > 0) ? (
               <View style={[styles.statsRow, { backgroundColor: theme.colors.muted, marginTop: tokens.spacing2 }]}>
                 <Ionicons name="mic" size={16} color={theme.colors.textSecondary} />
                 <Text style={[styles.statsText, { color: theme.colors.textSecondary }]}>

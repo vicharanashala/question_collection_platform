@@ -9,6 +9,7 @@ import { ReasonModal } from '../../components/ReasonModal';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
+import { AudioPlaybackCard } from '../../components/AudioPlaybackCard';
 
 type Route = RouteProp<AdminStackParamList, 'AdminQuestionDetail'>;
 
@@ -98,6 +99,27 @@ export function AdminQuestionDetailScreen() {
           <Text style={[styles.label, { color: c.textSecondary }]}>Question</Text>
           <Text style={[styles.questionText, { color: c.text }]}>{String(q.questionText)}</Text>
         </View>
+
+        {(() => {
+          const AUDIO_EXT = /\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i;
+          const isAudioUrl = (url: string) => AUDIO_EXT.test(url.split('?')[0]);
+          const mediaUrls = (q.mediaUrls as string[]) ?? [];
+          const oldAudioUrls = mediaUrls.filter(isAudioUrl);
+          const newAudioUrls = (q.audioUrls as string[]) ?? [];
+          const allAudioUrls = [...newAudioUrls, ...oldAudioUrls];
+
+          if (allAudioUrls.length === 0) return null;
+          return (
+            <View style={[styles.section, { backgroundColor: c.surface }]}>
+              <Text style={[styles.label, { color: c.textSecondary }]}>Audio</Text>
+              {allAudioUrls.map((uri, idx) => (
+                <View key={idx} style={{ marginTop: 8 }}>
+                  <AudioPlaybackCard uri={uri} onDelete={undefined} />
+                </View>
+              ))}
+            </View>
+          );
+        })()}
 
         <View style={[styles.section, { backgroundColor: c.surface }]}>
           <Text style={[styles.label, { color: c.textSecondary }]}>Metadata</Text>
