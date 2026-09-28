@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AnveshanProgressService } from './anveshan-progress.service';
 import { AuditController } from './audit.controller';
 import { AuditService } from './audit.service';
 import { CuratorController } from './curator.controller';
@@ -22,7 +23,7 @@ import { GdbModule } from '../ai/gdb.module';
     forwardRef(() => GdbModule),
   ],
   controllers: [AdminController, AnalyticsController, ExportController, AuditController, CuratorController],
-  providers: [AdminService, AuditService, CuratorService],
+  providers: [AdminService, AuditService, CuratorService, AnveshanProgressService],
   exports: [AdminService],
 })
 export class AdminModule {}

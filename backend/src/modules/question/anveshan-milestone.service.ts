@@ -1,21 +1,21 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IAnveshanAnswerRepository, IQuestionRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import type { AnveshanAnswer, AnveshanAnswerSource, Question } from '../../shared/database/entities';
-import {
-  ANVESHAN_REQUIRED_ANSWER_COUNT,
-  getAnveshanRequiredQuestionCount,
-} from '../../shared/constants/anveshan.constant';
 import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 import { QuestionService } from './question.service';
 import { SubmitAnveshanAnswerDto } from './dto';
-import { countAnveshanAnswers, findAnveshanAnswerableQuestions } from '../../shared/utils/anveshan.util';
+import {
+  type AnveshanCounts,
+  countAnveshanAnswers,
+  evaluateAnveshanProgress,
+  findAnveshanAnswerableQuestions,
+} from '../../shared/utils/anveshan.util';
 
-type MilestoneCounts = { questions: number; crop: number; weed: number; pest: number; disease: number; answers: number };
 
 export interface AnveshanMilestone {
-  requirements: MilestoneCounts;
-  progress: MilestoneCounts;
+  requirements: AnveshanCounts;
+  progress: AnveshanCounts;
   /** True once the question and crop/weed/pest/disease goals are met, which unlocks answering. */
   submissionsCompleted: boolean;
   /** True once every goal, including answers, is met. */
@@ -140,29 +140,16 @@ export class AnveshanMilestoneService {
       throw new ForbiddenException('This milestone is only available to Anveshan users.');
     }
 
-    const requiredQuestions = getAnveshanRequiredQuestionCount();
     const [questionsSubmitted, agriCounts, eligibleQuestions] = await Promise.all([
       this.questionService.getTotalSubmittedCount(userId),
       this.agriEntityService.getSubmittedCountsByType(userId),
       findAnveshanAnswerableQuestions(this.questionRepo, userId),
     ]);
-    const answersGiven = countAnveshanAnswers(eligibleQuestions);
-
-    const requirements: MilestoneCounts = {
-      questions: requiredQuestions,
-      crop: 1,
-      weed: 1,
-      pest: 1,
-      disease: 1,
-      answers: ANVESHAN_REQUIRED_ANSWER_COUNT,
-    };
-    const actual: MilestoneCounts = { questions: questionsSubmitted, ...agriCounts, answers: answersGiven };
-    const progress = capCounts(actual, requirements);
-
-    const submissionsCompleted = (['questions', 'crop', 'weed', 'pest', 'disease'] as const).every(
-      (key) => actual[key] >= requirements[key],
-    );
-    const completed = submissionsCompleted && actual.answers >= requirements.answers;
+    const { requirements, progress, submissionsCompleted, completed } = evaluateAnveshanProgress({
+      questions: questionsSubmitted,
+      ...agriCounts,
+      answers: countAnveshanAnswers(eligibleQuestions),
+    });
 
     return { milestone: { requirements, progress, submissionsCompleted, completed }, eligibleQuestions };
   }
@@ -174,12 +161,6 @@ export class AnveshanMilestoneService {
     const answers = await this.answerRepo.find({ userId, questionId: { $in: answeredIds } });
     return new Map(answers.map((answer) => [answer.questionId, answer]));
   }
-}
-
-// Caps every count at its requirement so extra submissions do not over-count.
-function capCounts(actual: MilestoneCounts, requirements: MilestoneCounts): MilestoneCounts {
-  const keys = Object.keys(requirements) as (keyof MilestoneCounts)[];
-  return Object.fromEntries(keys.map((key) => [key, Math.min(actual[key], requirements[key])])) as MilestoneCounts;
 }
 
 function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null): AnveshanAnswerableQuestion {

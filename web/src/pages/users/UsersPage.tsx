@@ -15,6 +15,16 @@ import {
 import { toast } from 'sonner'
 import type { User as UserType } from '@/types'
 import { AddUserDialog } from './AddUserDialog'
+import { AnveshanProgressCell } from './AnveshanProgressCell'
+
+type AnveshanFilter = '' | 'all' | 'completed' | 'incomplete'
+
+const ANVESHAN_FILTER_OPTIONS: { value: AnveshanFilter; label: string }[] = [
+  { value: '', label: 'All users' },
+  { value: 'all', label: 'Anveshan users' },
+  { value: 'completed', label: 'Anveshan · 100% complete' },
+  { value: 'incomplete', label: 'Anveshan · In progress' },
+]
 
 const STATUS_COLORS: Record<string, string> = {
   verified: 'bg-success text-white',
@@ -48,6 +58,7 @@ export function UsersPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [anveshanFilter, setAnveshanFilter] = useState<AnveshanFilter>('')
   const [loading, setLoading] = useState(false)
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -69,15 +80,17 @@ export function UsersPage() {
     status: statusFilter || undefined,
     role: roleFilter || undefined,
     category: categoryFilter || undefined,   // ← add this
+    anveshan: anveshanFilter || undefined,
     excludeId: currentUser?.id,
   })
     .then((res) => { setUsers(res.items); setTotal(res.total) })
     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
     .finally(() => setLoading(false))
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, currentUser?.id])
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, anveshanFilter, currentUser?.id])
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
+  const canFilterAnveshan = isSuperAdmin || currentUser?.role === 'admin'
 
   const [createOpen, setCreateOpen] = useState(false)
 
@@ -159,6 +172,21 @@ export function UsersPage() {
   <option value="category:anveshan_user">Anveshan User</option>
 </select>
           )}
+          {canFilterAnveshan && (
+            <select
+              aria-label="Filter by Anveshan progress"
+              className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
+              value={anveshanFilter}
+              onChange={(e) => {
+                setAnveshanFilter(e.target.value as AnveshanFilter)
+                setPage(1)
+              }}
+            >
+              {ANVESHAN_FILTER_OPTIONS.map(({ value, label }) => (
+                <option key={value || 'none'} value={value}>{label}</option>
+              ))}
+            </select>
+          )}
         </div>
       </Card>
 
@@ -172,6 +200,7 @@ export function UsersPage() {
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Role</th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Status</th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Location</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Anveshan Progress</th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Joined</th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary">Last Login</th>
               </tr>
@@ -180,7 +209,7 @@ export function UsersPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-24 rounded bg-surface-variant animate-pulse" />
                       </td>
@@ -189,7 +218,7 @@ export function UsersPage() {
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-text-secondary">No users found</td>
+                  <td colSpan={7} className="py-12 text-center text-text-secondary">No users found</td>
                 </tr>
               ) : (
                 users.map((u) => {
@@ -250,6 +279,13 @@ export function UsersPage() {
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
                         {[u.district, u.state].filter(Boolean).join(', ') || '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {u.anveshanProgress ? (
+                          <AnveshanProgressCell progress={u.anveshanProgress} />
+                        ) : (
+                          <span className="text-text-tertiary" aria-label="Not an Anveshan user">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
                         {formatDate(u.createdAt) ?? '—'}

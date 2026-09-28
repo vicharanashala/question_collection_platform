@@ -61,6 +61,7 @@ import { NotificationsService } from "../notification/notifications.service";
 import { PinelabsService } from "../payment/pinelabs.service";
 import { RazorpayPayoutService } from "../payment/razorpay-payout.service";
 import { GdbService } from "../ai/gdb.service";
+import { AnveshanProgressService } from "./anveshan-progress.service";
 import { decrypt } from "../../shared/functions/utils/encryption.util";
 import {
   IUserRepository,
@@ -236,6 +237,7 @@ export class AdminService implements OnModuleInit {
     private readonly analyticsCacheService: AnalyticsCacheService,
     private readonly gdbService: GdbService,
     private readonly mongoTransactionService: MongoTransactionService,
+    private readonly anveshanProgressService: AnveshanProgressService,
   ) {}
 
   private readonly logger = new Logger(AdminService.name);
@@ -381,6 +383,7 @@ async listUsers(dto: ListUsersDto) {
     status,
     role,          // ← destructure it
     search,
+    anveshan,
     sortBy = "createdAt",
     sortOrder = "DESC",
   } = dto;
@@ -404,6 +407,18 @@ async listUsers(dto: ListUsersDto) {
     // hex string to ObjectId automatically during query execution, so a string is both
     // simpler and safe here.
     if (dto.excludeId) filter._id = { $ne: dto.excludeId };
+
+    // Anveshan filter: completion is computed from submissions, so 100% / in-progress become an id list.
+    if (anveshan) {
+      filter.isAnveshanUser = true;
+      if (anveshan !== "all") {
+        const completedIds = await this.anveshanProgressService.findCompletedUserIds();
+        filter._id =
+          anveshan === "completed"
+            ? { $in: completedIds.filter((id) => id !== dto.excludeId) }
+            : { $nin: dto.excludeId ? [...completedIds, dto.excludeId] : completedIds };
+      }
+    }
 
     const sortField =
       sortBy === "verificationStatus"
@@ -436,9 +451,18 @@ async listUsers(dto: ListUsersDto) {
       role: u.role,
       createdAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
+      isAnveshanUser: !!u.isAnveshanUser,
     }));
 
-    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+    // Attach milestone progress for the Anveshan users on this page only.
+    const anveshanIds = items.filter((u) => u.isAnveshanUser).map((u) => u.id);
+    const progressById = await this.anveshanProgressService.getProgressForUsers(anveshanIds);
+    const itemsWithProgress = items.map((u) => ({
+      ...u,
+      anveshanProgress: progressById.get(u.id) ?? null,
+    }));
+
+    return { items: itemsWithProgress, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
   async getUserDetail(userId: string) {

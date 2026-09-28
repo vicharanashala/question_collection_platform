@@ -5,9 +5,20 @@ export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'sus
 export type QuestionStatus = 'pending' | 'held' | 'approved' | 'rejected' | 'moved_to_final';
 export type UserCategory = 'farmer' | 'fpo' | 'student' | 'volunteer' | 'ngo';
 
+/** Anveshan milestone progress attached to Anveshan users in the admin user list. */
+export interface AnveshanUserProgress {
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
+  submissionsCompleted: boolean;
+  completed: boolean;
+  percent: number;
+}
+
 export interface User {
   id: string;
   mobileNumber: string;
+  isAnveshanUser?: boolean;
+  anveshanProgress?: AnveshanUserProgress | null;
   name: string;
   username: string | null;
   role: UserRole;
