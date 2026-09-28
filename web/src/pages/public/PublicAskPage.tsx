@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import type { AuthUser } from '@/types'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
+import { storageApi } from '@/api/storage'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -362,6 +363,7 @@ useEffect(() => {
   function resetAll() {
     setStep('ask')
     setQuestionText('')
+    setAudioData([])
     setDomains([])
     setSeason('')
     setCropType('')
@@ -1033,7 +1035,9 @@ if (activeTab !== 'question') {
                     >
                       <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
                         <MicButton
-                          onTranscribed={(text) => {
+                          onTranscribed={(text, blob, filename) => {
+                            // Keep the recording so it is archived with the question on submit.
+                            if (blob) setAudioData((prev) => [...prev, { blob, filename: filename ?? 'recording.webm' }])
                             setQuestionText((prev) => {
                               const base = prev.trim()
                               return base ? `${base} ${text}` : text

@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CropImage } from '@/components/CropImage'
-import { CROPS } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import { authApi } from '@/api/client'
 import placeholderImage from "../../assets/place-holder-image.jpg"
