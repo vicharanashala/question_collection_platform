@@ -333,7 +333,8 @@ function StepOtp({
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const brandFeatures = searchParams.get("isAnveshan") === "true" ? ANVESHAN_FEATURES : FEATURES;
+  const isAnveshanLogin = searchParams.get("isAnveshan") === "true";
+  const brandFeatures = isAnveshanLogin ? ANVESHAN_FEATURES : FEATURES;
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -543,7 +544,7 @@ export function LoginPage() {
 
         {/* Bottom: simple footer */}
         <p className="text-xs text-white/30">
-          &copy; {new Date().getFullYear()} AnnaDatha
+          &copy; {new Date().getFullYear()} {isAnveshanLogin ? "AnnaDatha × Anveshan" : "AnnaDatha"}
         </p>
       </div>
 
