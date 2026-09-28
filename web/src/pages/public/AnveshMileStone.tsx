@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Bug,
   CheckCircle2,
+  ExternalLink,
   Leaf,
   Lock,
   PenLine,
@@ -25,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { AnveshanMilestoneResponse } from "@/api/client";
-import { ANVESHAN_ANSWERS_ROUTE } from "@/constants/public";
+import { ANVESHAN_ANSWERS_ROUTE, ANVESHAN_PLATFORM_URL } from "@/constants/public";
 
 export type AnveshanMilestoneData = AnveshanMilestoneResponse;
 
@@ -350,7 +351,18 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
             className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
             role="status"
           >
-            {t("anveshan.milestoneComplete", { defaultValue: "🎉 Milestone complete! Great work." })}
+            <p>
+              {t("anveshan.milestoneComplete100", {
+                defaultValue: "🎉 Congratulations! You have reached 100%. Kindly go to the Anveshan platform and check your completion there.",
+              })}
+            </p>
+            <Button asChild size="sm" className="mt-3 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700">
+              <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
+                {t("anveshan.goToAnveshan", "Go to Anveshan")}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="sr-only">{t("common.opensInNewTab", "(opens in a new tab)")}</span>
+              </a>
+            </Button>
           </motion.div>
         )}
 

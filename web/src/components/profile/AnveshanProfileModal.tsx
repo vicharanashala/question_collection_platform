@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { ANVESHAN_PLATFORM_URL } from "@/constants/public";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -32,7 +33,6 @@ import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from "@/constants/legal";
 import { categoryLabel } from "@/constants/public";
 import type { AuthUser } from "@/types";
 
-const ANVESHAN_URL = "https://anveshan.annam.ai/";
 // Distance from the bottom (px) that still counts as having read to the end.
 const END_THRESHOLD_PX = 24;
 
@@ -283,7 +283,7 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                         defaultValue: "Your account is ready. We've brought over these details from your",
                       })}{" "}
                       <a
-                        href={ANVESHAN_URL}
+                        href={ANVESHAN_PLATFORM_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -388,3 +388,6 @@ export const ANVESHAN_ANSWERS_ROUTE = '/home/anveshan-answers'
 export const MAX_ANVESHAN_ANSWER_LENGTH = 5000
 export const MAX_ANVESHAN_REMARKS_LENGTH = 1000
 export const MAX_ANVESHAN_ANSWER_SOURCES = 10
+
+// External Anveshan platform where users confirm their milestone completion.
+export const ANVESHAN_PLATFORM_URL = 'https://anveshan.annam.ai/'

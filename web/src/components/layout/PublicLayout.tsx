@@ -32,7 +32,7 @@ export function PublicLayout() {
   // Loads milestone progress on mount and when leaving the answers page, so the banners reflect new answers.
   useEffect(() => {
     if (!user?.isAnveshanUser || !user.id || onAnswersPage) return
-    const dismissedKey = `anveshan_milestone_banner_dismissed_${user.id}`
+    const dismissedKey = `anveshan_milestone_100_banner_dismissed_${user.id}`
 
     questionApi.getMyAnveshanMilestone()
       .then((data) => {
@@ -47,7 +47,7 @@ export function PublicLayout() {
 
   function dismissMilestoneBanner() {
     if (user?.id) {
-      localStorage.setItem(`anveshan_milestone_banner_dismissed_${user.id}`, '1')
+      localStorage.setItem(`anveshan_milestone_100_banner_dismissed_${user.id}`, '1')
     }
     setShowMilestoneBanner(false)
   }

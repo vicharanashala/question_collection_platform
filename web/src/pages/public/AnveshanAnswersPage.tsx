@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowLeft, PenLine, Trophy } from 'lucide-react'
+import { AlertCircle, ArrowLeft, ExternalLink, PenLine, Trophy } from 'lucide-react'
+import { ANVESHAN_PLATFORM_URL } from '@/constants/public'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -83,7 +84,7 @@ export function AnveshanAnswersPage() {
       setSelectedId(pickDefaultQuestion(nextData))
       toast.success(
         result.completed
-          ? t('anveshanAnswers.completedToast', '🎉 Milestone complete! You have reached 100%.')
+          ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
           : t('anveshanAnswers.submittedToast', 'Your response has been submitted. Thank you!'),
       )
     } catch (err) {
@@ -207,10 +208,24 @@ function PageHeader({ answered, required, completed, onBack }: PageHeaderProps) 
       {completed && (
         <div
           role="status"
-          className="flex items-center gap-2.5 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+          className="flex flex-col gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 sm:flex-row sm:items-center dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
         >
-          <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {t('anveshanAnswers.completedBanner', 'Milestone complete! You have reached 100%. You can keep answering more if you like.')}
+          <div className="flex min-w-0 flex-1 items-start gap-2.5">
+            <Trophy className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              {t(
+                'anveshanAnswers.completedBanner100',
+                '🎉 Congratulations! You have reached 100%. Kindly go to the Anveshan platform and check your completion there.',
+              )}
+            </span>
+          </div>
+          <Button asChild size="sm" className="shrink-0 gap-1.5 self-start bg-emerald-600 text-white hover:bg-emerald-700 sm:self-auto">
+            <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
+              {t('anveshan.goToAnveshan', 'Go to Anveshan')}
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="sr-only">{t('common.opensInNewTab', '(opens in a new tab)')}</span>
+            </a>
+          </Button>
         </div>
       )}
     </div>
