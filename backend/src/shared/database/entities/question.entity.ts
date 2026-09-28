@@ -11,6 +11,16 @@ import {
 import { QuestionStatus, MediaType } from '../../classes/enums';
 import { User } from './user.entity';
 
+export interface SubmissionLocation {
+  latitude: number;
+  longitude: number;
+  state: string;
+  district: string;
+  block: string;
+  village: string;
+  capturedAt: Date;
+}
+
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn('uuid')
@@ -67,6 +77,13 @@ export class Question {
   @Column({ name: 'device_info', type: 'jsonb', nullable: true })
   deviceInfo: Record<string, unknown> | null;
 
+  /**
+   * Precise location captured at submission time — populated for Anveshan
+   * users (required on every submission), null/absent for everyone else.
+   */
+  @Column({ name: 'submission_location', type: 'jsonb', nullable: true })
+  submissionLocation: SubmissionLocation | null;
+
   @Column({ type: 'varchar', length: 20, default: QuestionStatus.PENDING })
   @Index('idx_questions_status')
   status: QuestionStatus;
@@ -97,6 +114,9 @@ export class Question {
   @Column({ name: 'approval_reason', type: 'varchar', length: 500, nullable: true })
   approvalReason: string | null;
 
+  @Column({name: "is_anveshan", type: 'boolean', default: false})
+  isAnveshan: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -110,4 +130,6 @@ export class Question {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'reviewer_id' })
   reviewer: User | null;
+
+  
 }

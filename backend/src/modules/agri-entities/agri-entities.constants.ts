@@ -1,6 +1,7 @@
 import { AgriEntityType } from '../../shared/classes/enums';
 
 export const MAX_AGRI_ENTITY_IMAGES = 5;
+export const MAX_AGRI_ENTITY_IMAGE_SIZE_MB = 5;
 export const MAX_AGRI_ENTITY_ALTERNATE_NAMES = 20;
 export const MAX_AGRI_ENTITY_NAME_LENGTH = 200;
 export const MAX_AGRI_ENTITY_SOURCE_LENGTH = 500;

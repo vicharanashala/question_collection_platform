@@ -102,6 +102,15 @@ export interface Question {
   userName?: string | null;
   /** Alias for user.mobileNumber */
   userMobileNumber?: string | null;
+  isAnveshan?: boolean;
+  submissionLocation: {
+    latitude: number;
+    longitude: number;
+    state: string;
+    district: string;
+    block: string;
+    village: string;
+  }
 }
 
 export interface DashboardStats {
@@ -708,6 +717,15 @@ export interface SubmitAgriEntityPayload {
   localNameSource: string;
   alternateNames: AgriEntityAlternateName[];
   imageUrls: string[];
+  submissionLocation?: {
+    latitude: number;
+    longitude: number;
+    state: string;
+    district: string;
+    block: string;
+    village: string;
+  };
+
 }
 
 export type AgriEntityStatus = 'pending' | 'approved' | 'rejected';

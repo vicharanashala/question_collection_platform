@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
+import type { AuthUser } from '@/types'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
-import { storageApi } from '@/api/storage'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,7 +18,6 @@ import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/co
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
-
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   runOnDeviceValidation,
@@ -33,6 +32,9 @@ import {
   saveQuestionDraft,
   clearQuestionDraft,
 } from '@/utils/questionDraft'
+import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
+import { AnveshanMilestoneData, AnveshanMilestoneModal } from './AnveshMileStone'
+import { Award } from "lucide-react";
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -42,8 +44,8 @@ interface PreviewMeta {
   district: string
   block: string | null
   agroClimaticZone: string
-  remainingToday: number
-  dailyLimit: number
+  remainingToday: number | null
+  dailyLimit: number | null
 }
 
 // ─── Crop Type picker modal ────────────────────────────────────────────────────
@@ -55,22 +57,23 @@ interface PreviewMeta {
 
 
 interface AskHeaderProps {
-  /** Omit to hide the two-step progress indicator. */
   step?: 1 | 2
   title: string
   subtitle: string
   onBack: () => void
   onReport?: () => void
-  remainingToday?: number
-  dailyLimit?: number
+  remainingToday?: number | null
+  dailyLimit?: number | null
   atLimit: boolean
+  user?: AuthUser | null
+  setMilestoneModalOpen?: (open: boolean) => void
 }
 
 /**
  * Shared header for both steps of the ask flow: back action, daily-limit chip,
  * page title and a two-step progress indicator.
  */
-function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit }: AskHeaderProps) {
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen }: AskHeaderProps) {
   const { t } = useTranslation()
   const steps = [
     { n: 1 as const, label: t('question.yourQuestion') },
@@ -112,6 +115,19 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
                 : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
             </span>
           )}
+
+ {user?.isAnveshanUser && setMilestoneModalOpen && (
+  <Button
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={() => setMilestoneModalOpen(true)}
+    className="gap-1.5"
+  >
+    <Award className="h-4 w-4" />
+    {t("anveshan.myProgress", "My Progress")}
+  </Button>
+)}
         </div>
       </div>
 
@@ -149,6 +165,11 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
   )
 }
 
+interface StatsState {
+  remainingToday: number | null
+  dailyLimit: number | null
+}
+
 export function PublicAskPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -183,19 +204,60 @@ export function PublicAskPage() {
   const [cropPickerOpen, setCropPickerOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [stats, setStats] = useState<{ remainingToday: number; dailyLimit: number } | null>(null)
+  const [stats, setStats] = useState<StatsState | null>(null)
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null)
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
+  const [locationModalOpen, setLocationModalOpen] = useState(false)
+  const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
   const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
 
-  const atLimit = stats != null && stats.remainingToday <= 0
+  const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
+const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
+const [milestoneJustCompleted, setMilestoneJustCompleted] = useState(false);
 
+const fetchMilestone = useCallback(() => {
+  if (!user?.isAnveshanUser) return;
+  questionApi.getMyAnveshanMilestone() // add this method to your api/client.ts
+    .then((data: AnveshanMilestoneData) => {
+      setMilestone((prev) => {
+        if (!prev?.completed && data.completed) {
+          setMilestoneJustCompleted(true);
+        }
+        return data;
+      });
+    })
+    .catch(() => undefined);
+}, [user?.isAnveshanUser]);
+
+useEffect(() => {
+  fetchMilestone();
+}, [fetchMilestone]);
+
+useEffect(() => {
+  if (milestoneJustCompleted) {
+    toast.success(
+      t("anveshan.milestoneCompleteToast", {
+        defaultValue: "🎉 Congratulations! You've completed your Anveshan milestone.",
+      }),
+      { duration: 6000 },
+    );
+    setMilestoneJustCompleted(false);
+  }
+}, [milestoneJustCompleted, t]);
+
+  const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
 useEffect(() => {
   saveQuestionDraft(questionText)
 }, [questionText])
+
+useEffect(() => {
+  if (!user?.isAnveshanUser && activeTab !== 'question') {
+    setSearchParams({}, { replace: true })
+  }
+}, [user?.isAnveshanUser, activeTab, setSearchParams])
 
 
 
@@ -216,7 +278,6 @@ useEffect(() => {
   // spam verdict.
   const debouncedQuestion = useDebouncedValue(questionText, 600)
   const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
   // Sequence counter prevents out-of-order results from clobbering the latest.
   const validationSeqRef = useRef(0)
 
@@ -234,24 +295,21 @@ useEffect(() => {
     runOnDeviceValidation(text).then((r) => {
       if (seq !== validationSeqRef.current) return // stale response
       setAiValidation(r)
-      // Reset dismiss when the verdict category changes
-      setBannerDismissed(false)
     })
   }, [debouncedQuestion])
 
   // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
   const blockedByAi = aiValidation?.verdict === 'fail'
-  const showBanner =
-    aiValidation &&
-    aiValidation.verdict !== 'pass' &&
-    !bannerDismissed
 
   // ─── Stats (daily limit counter) ──────────────────────────────────────────
-  useEffect(() => {
-    questionApi.getMyStats()
-      .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-      .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
-  }, [])
+useEffect(() => {
+  questionApi.getMyStats()
+    .then((s) => setStats({
+      remainingToday: (s as any).remainingToday ?? null,
+      dailyLimit: (s as any).dailyLimit ?? null,
+    }))
+    .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
+}, [])
 
   function toggleDomain(d: string) {
     setDomains((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
@@ -265,7 +323,6 @@ useEffect(() => {
     setCropType('')
     setPreviewMeta(null)
     setRejection(null)
-    setAudioData([])
   }
 
   // ─── Step 1 → Step 2: classify the question text server-side ─────────────
@@ -298,18 +355,21 @@ useEffect(() => {
           matchedUserName: res.duplicate.matchedUserName,
         })
         questionApi.getMyStats()
-          .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-          .catch(() => undefined)
+  .then((s) => setStats({
+    remainingToday: (s as any).remainingToday ?? null,
+    dailyLimit: (s as any).dailyLimit ?? null,
+  }))
+  .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
         return
       }
       setPreviewMeta({
-        state: res.state ?? user.state,
-        district: res.district ?? user.district,
-        block: res.block ?? user.block ?? null,
-        agroClimaticZone: res.agroClimaticZone ?? '',
-        remainingToday: res.remainingToday ?? stats?.remainingToday ?? 0,
-        dailyLimit: res.dailyLimit ?? stats?.dailyLimit ?? 20,
-      })
+  state: res.state ?? user.state,
+  district: res.district ?? user.district,
+  block: res.block ?? user.block ?? null,
+  agroClimaticZone: res.agroClimaticZone ?? '',
+  remainingToday: res.remainingToday ?? stats?.remainingToday ?? null,
+  dailyLimit: res.dailyLimit ?? stats?.dailyLimit ?? null,
+})
       setDomains(res.domains ?? [])
       setSeason(res.season || '')
       setCropType(res.cropType ?? '')
@@ -327,106 +387,208 @@ useEffect(() => {
   }
 
   // ─── Step 2: final submit ──────────────────────────────────────────────────
-  async function handleFinalSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!previewMeta) return
-    if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
-    if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
-    if (!season) { toast.error(t('question.errors.pickSeason')); return }
-    if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+//   async function handleFinalSubmit(e: React.FormEvent) {
+//     e.preventDefault()
+//     if (!previewMeta) return
+//     if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+//     if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+//     if (!season) { toast.error(t('question.errors.pickSeason')); return }
+//     if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
 
-    setSubmitting(true)
-    try {
-      // ─── Duplicate pre-check (mirrors the step-1 Continue button) ─────────
-      // Run `questionApi.preview` *before* actually submitting so the user sees
-      // the duplicate warning screen without us hitting `/questions` first.
-      // Behaviour is symmetric with `handleContinue`: if the backend flags a
-      // duplicate, the question is saved as REJECTED server-side (counts
-      // against the daily limit) and we show the duplicate screen instead
-      // of advancing to the success state.
-      const previewRes = await questionApi.preview({
-        questionText: questionText.trim(),
-        mediaType: 'none',
-        mediaUrls: [],
-      })
-      if (previewRes.duplicate?.isDuplicate) {
-        setDuplicate({
-          matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
-          matchedAnswer: previewRes.duplicate.matchedAnswer,
-          similarityScore: previewRes.duplicate.similarityScore,
-          matchedUserName: previewRes.duplicate.matchedUserName,
-        })
-        // Refresh stats — the duplicate rejection consumed one of today's slots.
-        questionApi.getMyStats()
-          .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-          .catch(() => undefined)
-        return
-      }
+//     setSubmitting(true)
+//     try {
+//       // ─── Duplicate pre-check (mirrors the step-1 Continue button) ─────────
+//       // Run `questionApi.preview` *before* actually submitting so the user sees
+//       // the duplicate warning screen without us hitting `/questions` first.
+//       // Behaviour is symmetric with `handleContinue`: if the backend flags a
+//       // duplicate, the question is saved as REJECTED server-side (counts
+//       // against the daily limit) and we show the duplicate screen instead
+//       // of advancing to the success state.
+//       const previewRes = await questionApi.preview({
+//         questionText: questionText.trim(),
+//         mediaType: 'none',
+//         mediaUrls: [],
+//       })
+//       if (previewRes.duplicate?.isDuplicate) {
+//         setDuplicate({
+//           matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+//           matchedAnswer: previewRes.duplicate.matchedAnswer,
+//           similarityScore: previewRes.duplicate.similarityScore,
+//           matchedUserName: previewRes.duplicate.matchedUserName,
+//         })
+//         // Refresh stats — the duplicate rejection consumed one of today's slots.
+//       questionApi.getMyStats()
+//     .then((s) => setStats({
+//       remainingToday: (s as any).remainingToday ?? null,
+//       dailyLimit: (s as any).dailyLimit ?? null,
+//     }))
+//     .catch(() => undefined)
+//   return
+      
+//       }
 
-      let finalAudioUrls: string[] | undefined
-      if (audioData.length > 0) {
-        try {
-          const uploads = await Promise.all(
-            audioData.map(data => storageApi.uploadAudio(data.blob, data.filename))
-          )
-          finalAudioUrls = uploads.map(u => u.url)
-        } catch (uploadErr) {
-          console.warn('[PublicAskPage] audio archival failed:', uploadErr)
-          // we can still proceed with submitting the question text
-        }
-      }
+//       // ─── No duplicate → proceed with the actual submission ─────────────────
+//       const res = await questionApi.submitQuestion({
+//         questionText: questionText.trim(),
+//         domains,
+//         season,
+//         cropType: cropType.trim(),
+//         state: previewMeta.state,
+//         district: previewMeta.district,
+//         block: previewMeta.block ?? undefined,
+//         agroClimaticZone: previewMeta.agroClimaticZone || undefined,
+//         mediaType: 'none',
+//       })
+//       if (res.duplicate?.isDuplicate) {
+//         // Defensive: if the user edited the question text on step 2 (very
+//         // unusual) and it now matches something the preview pass didn't see
+//         // (e.g. a race against a freshly-approved question), surface the
+//         // warning screen the same way.
+//         setDuplicate({
+//           matchedQuestion: res.duplicate.matchedQuestion ?? '',
+//           matchedAnswer: res.duplicate.matchedAnswer,
+//           similarityScore: res.duplicate.similarityScore,
+//           matchedUserName: res.duplicate.matchedUserName,
+//         })
+//         return
+//       }
+//       toast.success(res.message || 'Question submitted!')
+//       clearQuestionDraft()
+//       // Cache the submitted question so future drafts are checked against it
+//       // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
+//       // endpoint returns either `{ id: string, status, message }` (current
+//       // shape) or `{ id, question: { id }, ... }` (newer variants) — handle
+//       // both without throwing.
+//       const newId: string | undefined =
+//         (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+//       cacheQuestionForDuplicateDetection(questionText.trim(), newId)
+//       setSubmitted(true)
+//       setSubmitted(true)
+// questionApi.getMyStats()
+//   .then((s) => setStats({
+//     remainingToday: (s as any).remainingToday ?? null,
+//     dailyLimit: (s as any).dailyLimit ?? null,
+//   }))
+//   .catch(() => undefined)
+//     } catch (err) {
+//       const rejected = parseQuestionRejected(err)
+//       if (rejected) {
+//         setRejection(rejected.category)
+//         return
+//       }
+//       toast.error(getErrorMessage(err, t('question.submitFailed')))
+//     } finally {
+//       setSubmitting(false)
+//     }
+//   }
 
-      // ─── No duplicate → proceed with the actual submission ─────────────────
-      const res = await questionApi.submitQuestion({
-        questionText: questionText.trim(),
-        domains,
-        season,
-        cropType: cropType.trim(),
-        state: previewMeta.state,
-        district: previewMeta.district,
-        block: previewMeta.block ?? undefined,
-        agroClimaticZone: previewMeta.agroClimaticZone || undefined,
-        mediaType: 'none',
-        audioUrls: finalAudioUrls,
-      })
-      if (res.duplicate?.isDuplicate) {
-        // Defensive: if the user edited the question text on step 2 (very
-        // unusual) and it now matches something the preview pass didn't see
-        // (e.g. a race against a freshly-approved question), surface the
-        // warning screen the same way.
-        setDuplicate({
-          matchedQuestion: res.duplicate.matchedQuestion ?? '',
-          matchedAnswer: res.duplicate.matchedAnswer,
-          similarityScore: res.duplicate.similarityScore,
-          matchedUserName: res.duplicate.matchedUserName,
-        })
-        return
-      }
-      toast.success(res.message || 'Question submitted!')
-      clearQuestionDraft()
-      // Cache the submitted question so future drafts are checked against it
-      // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
-      // endpoint returns either `{ id: string, status, message }` (current
-      // shape) or `{ id, question: { id }, ... }` (newer variants) — handle
-      // both without throwing.
-      const newId: string | undefined =
-        (res as any)?.id ?? (res as any)?.question?.id ?? undefined
-      cacheQuestionForDuplicateDetection(questionText.trim(), newId)
-      setSubmitted(true)
-      questionApi.getMyStats()
-        .then((s) => setStats({ remainingToday: (s as any).remainingToday ?? 20, dailyLimit: (s as any).dailyLimit ?? 20 }))
-        .catch(() => undefined)
-    } catch (err) {
-      const rejected = parseQuestionRejected(err)
-      if (rejected) {
-        setRejection(rejected.category)
-        return
-      }
-      toast.error(getErrorMessage(err, t('question.submitFailed')))
-    } finally {
-      setSubmitting(false)
-    }
+async function handleFinalSubmit(e: React.FormEvent) {
+  console.log("Inside final submit...")
+  e.preventDefault()
+  if (!previewMeta) { toast.error("somethig wen wrong..."); return}
+  if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+  if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+  if (!season) { toast.error(t('question.errors.pickSeason')); return }
+  if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+
+  // Anveshan users must supply their current location on every submission.
+  // If we don't have it yet, open the capture modal and stop here — it will
+  // call performSubmit() itself once the user confirms.
+  if (user?.isAnveshanUser && !submissionLocation) {
+    console.log("inside this..")
+    setLocationModalOpen(true)
+    return
   }
+
+  await performSubmit()
+}
+
+async function performSubmit(locationOverride?: SubmissionLocation) {
+  if (!previewMeta) return
+  const location = locationOverride ?? submissionLocation
+  console.log("inside perform submit...")
+  setSubmitting(true)
+  try {
+    const previewRes = await questionApi.preview({
+      questionText: questionText.trim(),
+      mediaType: 'none',
+      mediaUrls: [],
+    })
+    if (previewRes.duplicate?.isDuplicate) {
+      setDuplicate({
+        matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+        matchedAnswer: previewRes.duplicate.matchedAnswer,
+        similarityScore: previewRes.duplicate.similarityScore,
+        matchedUserName: previewRes.duplicate.matchedUserName,
+      })
+      questionApi.getMyStats()
+        .then((s) => setStats({
+          remainingToday: (s as any).remainingToday ?? null,
+          dailyLimit: (s as any).dailyLimit ?? null,
+        }))
+        .catch(() => undefined)
+      return
+    }
+
+    let finalAudioUrls: string[] | undefined
+    if (audioData.length > 0) {
+      try {
+        const uploads = await Promise.all(
+          audioData.map(data => storageApi.uploadAudio(data.blob, data.filename))
+        )
+        finalAudioUrls = uploads.map(u => u.url)
+      } catch (uploadErr) {
+        console.warn('[PublicAskPage] audio archival failed:', uploadErr)
+      }
+    }
+
+    const res = await questionApi.submitQuestion({
+      questionText: questionText.trim(),
+      domains,
+      season,
+      cropType: cropType.trim(),
+      state: previewMeta.state,
+      district: previewMeta.district,
+      block: previewMeta.block ?? undefined,
+      agroClimaticZone: previewMeta.agroClimaticZone || undefined,
+      mediaType: 'none',
+      audioUrls: finalAudioUrls,
+      submissionLocation: location ?? undefined,
+    })
+    if (res.duplicate?.isDuplicate) {
+      setDuplicate({
+        matchedQuestion: res.duplicate.matchedQuestion ?? '',
+        matchedAnswer: res.duplicate.matchedAnswer,
+        similarityScore: res.duplicate.similarityScore,
+        matchedUserName: res.duplicate.matchedUserName,
+      })
+      return
+    }
+    toast.success(res.message || 'Question submitted!')
+    clearQuestionDraft()
+    const newId: string | undefined =
+      (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+    cacheQuestionForDuplicateDetection(questionText.trim(), newId)
+    setSubmitted(true)
+    setSubmissionLocation(null) // reset — the next submission asks fresh, per requirement
+    questionApi.getMyStats()
+      .then((s) => setStats({
+        remainingToday: (s as any).remainingToday ?? null,
+        dailyLimit: (s as any).dailyLimit ?? null,
+      }))
+      .catch(() => undefined)
+  } catch (err) {
+    const rejected = parseQuestionRejected(err)
+    if (rejected) {
+      setRejection(rejected.category)
+      return
+    }
+    toast.error(getErrorMessage(err, t('question.submitFailed')))
+  } finally {
+    setSubmitting(false)
+  }
+}
+
 
   // Outcome dialogs render alongside every step so the user's form stays
   // visible behind them instead of being replaced by a full-page state.
@@ -464,8 +626,8 @@ useEffect(() => {
           subtitle={t('question.askSubtitle')}
           onBack={() => setStep('ask')}
           onReport={() => navigate('/home/reports')}
-          remainingToday={previewMeta.remainingToday}
-          dailyLimit={previewMeta.dailyLimit}
+          remainingToday={previewMeta.remainingToday ?? undefined}
+          dailyLimit={previewMeta.dailyLimit ?? null}
           atLimit={false}
         />
 
@@ -645,12 +807,29 @@ useEffect(() => {
           title={t('question.cropType')}
         />
         {dialogs}
+              <LocationCaptureModal
+  open={locationModalOpen}
+  onOpenChange={(open) => {
+    setLocationModalOpen(open)
+    // If the user cancels without confirming, the form stays on this step
+    // untouched — nothing has been submitted, so no cleanup is needed.
+  }}
+  onConfirm={(loc) => {
+    setSubmissionLocation(loc)
+    setLocationModalOpen(false)
+    performSubmit(loc) // pass directly — avoids waiting on the next render's state
+  }}
+/>
       </div>
     )
   }
 
   // ─── Crop / Weed / Pest / Disease tabs ─────────────────────────────────────
-  if (activeTab !== 'question') {
+if (activeTab !== 'question') {
+    if (!user?.isAnveshanUser) {
+      // Guarded above via useEffect, but render nothing while the redirect settles
+      return null
+    }
     const typeLabel = t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')
     return (
       <div className="mx-auto max-w-4xl space-y-4">
@@ -661,7 +840,9 @@ useEffect(() => {
           onReport={() => navigate('/home/reports')}
           atLimit={false}
         />
-        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+        {user?.isAnveshanUser && (
+  <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+)}
         <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
       </div>
     )
@@ -669,6 +850,7 @@ useEffect(() => {
 
   // ─── Step 1 — free-text question entry ─────────────────────────────────────
   return (
+    
     <div className="mx-auto max-w-4xl space-y-4">
       <AskHeader
         step={1}
@@ -679,8 +861,12 @@ useEffect(() => {
         remainingToday={stats?.remainingToday}
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
+        user={user}
+        setMilestoneModalOpen={setMilestoneModalOpen}
       />
-      <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+       {user?.isAnveshanUser && (
+        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+      )}
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">
@@ -727,14 +913,6 @@ useEffect(() => {
                     {questionText.length}/{MAX_QUESTION_CHARS}
                   </span>
                 </div>
-                {/* Inline AI validation banner disabled as requested.
-                    The validation logic still runs in the background.
-                {showBanner && aiValidation && (
-                  <AIValidationBanner
-                    result={aiValidation}
-                    onDismiss={() => setBannerDismissed(true)}
-                  />
-                )} */}
               </div>
 
               <div className="flex flex-col gap-2 lg:col-span-2">
@@ -780,11 +958,7 @@ useEffect(() => {
                     >
                       <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
                         <MicButton
-                          onRecordingStart={() => {
-                            setBannerDismissed(false)
-                          }}
-                          onTranscribed={(text, blob, filename) => {
-                            if (blob && filename) setAudioData(prev => [...prev, { blob, filename }])
+                          onTranscribed={(text) => {
                             setQuestionText((prev) => {
                               const base = prev.trim()
                               return base ? `${base} ${text}` : text
@@ -844,6 +1018,11 @@ useEffect(() => {
         </CardContent>
       </Card>
       {dialogs}
+      <AnveshanMilestoneModal
+  open={milestoneModalOpen}
+  onOpenChange={setMilestoneModalOpen}
+  data={milestone}
+/>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { getAnveshanRequiredQuestionCount } from "../../shared/constants/anveshan.constant";
 import {
   Injectable,
   NotFoundException,
@@ -67,13 +68,14 @@ export class UserService {
 
     const userId = user.id;
     const isAnveshanUser = user.isAnveshanUser === true;
+    const requiredQuestions = getAnveshanRequiredQuestionCount();
 
     // If not an Anveshan user, short-circuit — nothing to check
     if (!isAnveshanUser) {
       return {
         isCompleted: false,
         requirements: {
-          questions: { required: 25, submitted: 0, met: false },
+          questions: { required: requiredQuestions, submitted: 0, met: false },
           crop:      { required: 1,  submitted: 0, met: false },
           pest:      { required: 1,  submitted: 0, met: false },
           weed:      { required: 1,  submitted: 0, met: false },
@@ -92,7 +94,7 @@ export class UserService {
         this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
       ]);
 
-    const questionsMet = questionCount >= 25;
+    const questionsMet = questionCount >= requiredQuestions;
     const cropMet      = cropCount >= 1;
     const pestMet      = pestCount >= 1;
     const weedMet      = weedCount >= 1;
@@ -103,7 +105,7 @@ export class UserService {
     return {
       isCompleted,
       requirements: {
-        questions: { required: 25, submitted: questionCount, met: questionsMet },
+        questions: { required: requiredQuestions, submitted: questionCount, met: questionsMet },
         crop:      { required: 1,  submitted: cropCount,     met: cropMet },
         pest:      { required: 1,  submitted: pestCount,     met: pestMet },
         weed:      { required: 1,  submitted: weedCount,     met: weedMet },

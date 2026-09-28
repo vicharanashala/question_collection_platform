@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, walletApi } from '@/api/client'
+import { canAccessPayments } from '@/utils/paymentAccess'
 import { EditPublicProfileDialog } from '@/components/profile/EditPublicProfileDialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,7 +25,10 @@ import {
   ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
   CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
+  Languages, Moon, Sun, SlidersHorizontal,
 } from 'lucide-react'
+import { useTheme } from '@/context/ThemeContext'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { toast } from 'sonner'
 import { REWARD_TIERS, categoryLabel } from '@/constants/public'
 import { cn, getInitials, formatDate } from '@/lib/utils'
@@ -204,16 +208,19 @@ export function PublicProfilePage() {
   const navigate = useNavigate()
 
   const [walletBalance, setWalletBalance] = useState<number>(0)
+  const showPayments = canAccessPayments(user)
   const [totalApproved, setTotalApproved] = useState<number>(0)
   const [totalQuestions, setTotalQuestions] = useState<number>(0)
   const [loadingStats, setLoadingStats] = useState(true)
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true)
     const results = await Promise.allSettled([
-      walletApi.getBalance(),
+      showPayments ? walletApi.getBalance() : Promise.resolve({ balance: 0 }),
       questionApi.getMyStats(),
       questionApi.listMyQuestions({ limit: 1 }),
     ])
@@ -222,7 +229,7 @@ export function PublicProfilePage() {
     setTotalApproved(statsRes.status === 'fulfilled' ? statsRes.value.totalApproved ?? 0 : 0)
     setTotalQuestions(listRes.status === 'fulfilled' ? listRes.value.total ?? 0 : 0)
     setLoadingStats(false)
-  }, [])
+  }, [showPayments])
 
   useEffect(() => { fetchStats() }, [fetchStats])
 
@@ -421,8 +428,10 @@ export function PublicProfilePage() {
       </Card>
 
       {/* ── 3. Stats row ── */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-        <StatTile icon={Wallet} value={`${rupee}${walletBalance}`} label={t('profile.wallet')} loading={loadingStats} />
+      <div className={cn('grid gap-2.5 sm:gap-3', showPayments ? 'grid-cols-3' : 'grid-cols-2')}>
+        {showPayments && (
+          <StatTile icon={Wallet} value={`${rupee}${walletBalance}`} label={t('profile.wallet')} loading={loadingStats} />
+        )}
         <StatTile icon={HelpCircle} value={String(totalQuestions)} label={t('profile.questions')} loading={loadingStats} />
         <StatTile icon={Calendar} value={memberSince} label={t('profile.memberSince')} />
       </div>
@@ -531,12 +540,30 @@ export function PublicProfilePage() {
 
       <EditPublicProfileDialog open={editOpen} onOpenChange={setEditOpen} user={user} onSaved={updateUser} />
 
+      {/* ── Preferences section ── */}
+      <section>
+        <SectionHeader icon={SlidersHorizontal} title={t('profile.preferences', 'Preferences')} />
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <ActionRow icon={Languages} label={t('auth.selectLanguage')} onClick={() => setLanguageOpen(true)} />
+            <ActionRow
+              icon={theme === 'dark' ? Moon : Sun}
+              label={`${t('profile.theme', 'Theme')}: ${theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight')}`}
+              onClick={toggleTheme}
+            />
+          </CardContent>
+        </Card>
+      </section>
+      <LanguageSwitcher open={languageOpen} onClose={() => setLanguageOpen(false)} />
+
       {/* ── 5. Actions section ── */}
       <section>
         <SectionHeader icon={Trophy} title={t('profile.actions')} />
         <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <ActionRow icon={Wallet} label={t('profile.paymentMethods')} onClick={() => navigate('/home/payment-methods')} disabled />
+            {showPayments && (
+              <ActionRow icon={Wallet} label={t('profile.paymentMethods')} onClick={() => navigate('/home/payment-methods')} disabled />
+            )}
             <ActionRow icon={Flag} label={t('report.title')} onClick={() => navigate('/home/reports')} />
             <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} />
             <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={() => navigate('/home/terms')} />

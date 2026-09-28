@@ -23,6 +23,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { SignOutDialog } from "@/components/SignOutDialog";
 
 import { useQuestionDraft } from "@/hooks/useQuestionDraft";
+import { canAccessPayments, PAYMENT_ROUTES } from "@/utils/paymentAccess";
 
 const navItems = [
   { to: "/home", labelKey: "nav.home", icon: Home, end: true },
@@ -36,6 +37,9 @@ export function PublicSidebar() {
   const { pathname } = useLocation()
   const { t } = useTranslation();
   const { user } = useAuth();
+  const visibleNavItems = canAccessPayments(user)
+    ? navItems
+    : navItems.filter((item) => !PAYMENT_ROUTES.includes(item.to));
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const { hasDraft } = useQuestionDraft()
@@ -60,7 +64,7 @@ export function PublicSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, labelKey, icon: Icon, end }) => {
+        {visibleNavItems.map(({ to, labelKey, icon: Icon, end }) => {
   const isSubmitTab = to === '/home/ask'
   const isOnSubmitPage =
     pathname === '/home/ask' || pathname.startsWith('/home/ask/')

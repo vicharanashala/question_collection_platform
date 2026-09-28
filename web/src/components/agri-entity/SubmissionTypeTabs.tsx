@@ -53,19 +53,29 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
 
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as SubmissionTab)}>
-      {/* Equal columns so every tab stays visible without horizontal
-          scrolling: icon stacked over the label on phones, inline from sm up. */}
-      <TabsList className={cn('grid h-auto w-full gap-1 p-1', gridColsClass)}>
+      {/* Equal columns keep every tab visible without horizontal scrolling. On phones
+          the icon sits over the label and the active tab uses a light tint rather than
+          a solid fill so the strip stays compact; from sm up it switches to inline pills. */}
+      <TabsList
+        className={cn(
+          'grid h-auto w-full gap-0.5 rounded-xl border border-border-subtle bg-surface p-1 sm:gap-1 sm:border-0 sm:bg-surface-variant',
+          gridColsClass,
+        )}
+      >
         {tabs.map((tab) => {
           const Icon = SUBMISSION_TAB_ICONS[tab.value]
           return (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-1.5 text-[11px] sm:flex-row sm:gap-2 sm:px-3 sm:text-sm"
+              className={cn(
+                'flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-0.5 py-1.5 text-[10.5px] font-medium text-text-tertiary',
+                'max-sm:data-[state=active]:bg-primary/15 max-sm:data-[state=active]:font-semibold max-sm:data-[state=active]:text-primary max-sm:data-[state=active]:shadow-none dark:max-sm:data-[state=active]:text-emerald-400',
+                'sm:min-h-[44px] sm:flex-row sm:gap-2 sm:rounded-md sm:px-3 sm:text-sm sm:font-semibold sm:data-[state=inactive]:text-text-secondary',
+              )}
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="max-w-full truncate">{tab.label}</span>
+              <Icon className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
+              <span className="max-w-full truncate leading-tight">{tab.label}</span>
             </TabsTrigger>
           )
         })}

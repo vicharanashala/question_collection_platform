@@ -4,6 +4,7 @@ import { AgriEntityStatus, AgriEntityType } from '../../shared/classes/enums';
 import { isStorageUri } from '../storage/storage.service';
 import { getAgriEntityImageCategory } from './agri-entities.constants';
 import { ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AgriEntitiesService {
@@ -12,10 +13,50 @@ export class AgriEntitiesService {
     private readonly agriEntityRepo: IAgriEntityRepository,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
+    private readonly userService: UserService
   ) {}
 
   // Stores a user's crop, weed, pest or disease record for later review.
+  // async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
+  //     const now = new Date();
+  //       const submissionLocation = dto.submissionLocation
+  //     ? { ...dto.submissionLocation, capturedAt: now }
+  //     : undefined;
+  //   this.assertImagesOwnedByUser(dto.imageUrls, dto.type, userId);
+
+  //   const saved = await this.agriEntityRepo.create({
+  //     userId,
+  //     type: dto.type,
+  //     localName: dto.localName,
+  //     englishName: dto.englishName,
+  //     botanicalName: dto.botanicalName,
+  //     localNameSource: dto.localNameSource,
+  //     alternateNames: dto.alternateNames.map(({ name, source }) => ({ name, source })),
+  //     imageUrls: dto.imageUrls,
+  //     status: AgriEntityStatus.PENDING,
+  //     ...(submissionLocation ? { submissionLocation } : {}),
+      
+  //   });
+
+  //   return {
+  //     id: saved.id,
+  //     status: saved.status,
+  //     message: 'Submitted successfully',
+  //   };
+  // }
+
   async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
+    const user = await this.userService.getProfile(userId);
+    if (user?.isAnveshanUser && !dto.submissionLocation) {
+      throw new BadRequestException(
+        'Location is required for Anveshan users when submitting an entry.',
+      );
+    }
+
+    const now = new Date();
+    const submissionLocation = dto.submissionLocation
+      ? { ...dto.submissionLocation, capturedAt: now }
+      : undefined;
     this.assertImagesOwnedByUser(dto.imageUrls, dto.type, userId);
 
     const saved = await this.agriEntityRepo.create({
@@ -24,10 +65,11 @@ export class AgriEntitiesService {
       localName: dto.localName,
       englishName: dto.englishName,
       botanicalName: dto.botanicalName,
-      localNameSource: dto.localNameSource,
-      alternateNames: dto.alternateNames.map(({ name, source }) => ({ name, source })),
+      localNameSource: dto.localNameSource ?? '',
+      alternateNames: (dto.alternateNames ?? []).map(({ name, source }) => ({ name, source: source ?? '' })),
       imageUrls: dto.imageUrls,
       status: AgriEntityStatus.PENDING,
+      ...(submissionLocation ? { submissionLocation } : {}),
     });
 
     return {
@@ -53,6 +95,22 @@ export class AgriEntitiesService {
       ...rest,
     };
   }
+
+  async getSubmittedCountsByType(userId: string): Promise<{
+  crop: number;
+  weed: number;
+  pest: number;
+  disease: number;
+}> {
+  const [crop, weed, pest, disease] = await Promise.all([
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.CROP } }),
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.WEED } }),
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.PEST } }),
+    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.DISEASE } }),
+  ]);
+
+  return { crop, weed, pest, disease };
+}
 
   private async findPage(scope: { userId?: string }, dto: ListAgriEntitiesDto) {
     const { type, status, page = 1, limit = 20 } = dto;

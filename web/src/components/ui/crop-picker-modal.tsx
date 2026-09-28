@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { CropImage } from '@/components/CropImage'
 import { CROPS } from '@/constants/public'
 import { cn } from '@/lib/utils'
+import { authApi } from '@/api/client'
+import placeholderImage from "../../assets/place-holder-image.jpg"
 
 interface CropPickerModalProps {
   open: boolean
@@ -21,6 +23,15 @@ interface CropPickerModalProps {
   title?: string
 }
 
+interface Crop {
+  _id: string
+  name: string
+  imageUrl?: string | null
+  scientificName?: string
+}
+
+
+
 export function CropPickerModal({
   open,
   onOpenChange,
@@ -33,11 +44,50 @@ export function CropPickerModal({
   const [query, setQuery] = useState('')
   const [showOther, setShowOther] = useState(false)
   const [otherText, setOtherText] = useState('')
+  const [crops, setCrops] = useState<Crop[]>([]);
 
-  const allOptions = useMemo(
-    () => CROPS.map((c) => ({ value: c, label: c })),
-    [],
-  )
+useEffect(() => {
+  async function getCrops() {
+    try {
+      const response = (await authApi.getCrops()) as {
+        crops: Crop[]
+        totalCount: number
+        totalPages: number
+      }
+      console.log('response', response)
+
+      setCrops(response.crops)
+    } catch (error) {
+      console.error('Failed to fetch crops:', error)
+    }
+  }
+
+  getCrops()
+}, [])
+
+  // const allOptions = useMemo(
+  //   () => CROPS.map((c) => ({ value: c, label: c })),
+  //   [],
+  // )
+
+const allOptions = useMemo(() => {
+  const excludedCrops = new Set([
+    'Agricultural Field',
+    'Agricultural Seasons',
+    'Alkaline pH Soil',
+    'All',
+    'All Crops',
+  ])
+
+  return crops
+    .slice(4)
+    .filter((crop) => !excludedCrops.has(crop.name))
+    .map((crop) => ({
+      value: crop.name,
+      label: crop.name,
+      imageUrl: crop.imageUrl || placeholderImage,
+    }))
+}, [crops])
 
   const filtered = useMemo(() => {
     if (!query.trim()) return allOptions

@@ -17,7 +17,10 @@ import { StorageService } from "./storage.service";
 import { AdminService } from "../admin/admin.service";
 import { Request } from "express";
 import { AgriEntityType } from "../../shared/classes/enums";
-import { getAgriEntityImageCategory } from "../agri-entities/agri-entities.constants";
+import {
+  getAgriEntityImageCategory,
+  MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+} from "../agri-entities/agri-entities.constants";
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -90,6 +93,11 @@ export class StorageController {
       );
     }
     const image = await this.assertValidImage(file);
+    if (image.size > MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024) {
+      throw new PayloadTooLargeException(
+        `Each image must be ${MAX_AGRI_ENTITY_IMAGE_SIZE_MB} MB or smaller`,
+      );
+    }
 
     const url = await this.storageService.upload(
       image.buffer,

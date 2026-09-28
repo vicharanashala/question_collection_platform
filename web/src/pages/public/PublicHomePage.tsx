@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   adminApi,
+  agriEntityApi,
   questionApi,
   walletApi,
   getErrorMessage,
@@ -32,18 +33,37 @@ import {
   PenSquare,
   Medal,
   ChevronRight,
+  Bug,
+  Microscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { REWARD_TIERS, categoryLabel } from "@/constants/public";
+import type { AgriEntityType } from "@/types";
+import { canAccessPayments } from "@/utils/paymentAccess";
 import { EditPublicProfileDialog } from "@/components/profile/EditPublicProfileDialog";
 import { AnveshanWelcomeModal } from "@/components/profile/AnveshanProfileModal";
 interface Stats {
   dailyCount: number;
-  remainingToday: number;
+  remainingToday: number | null;
   totalApproved: number;
-  dailyLimit?: number;
+  dailyLimit?: number | null;
+  unlimited?: boolean;
   [k: string]: unknown;
 }
+
+// Display config for the Anveshan crop, weed, pest and disease count cards.
+const AGRI_COUNT_CARDS: {
+  type: AgriEntityType;
+  icon: typeof Sprout;
+  iconBg: string;
+  labelKey: string;
+  defaultLabel: string;
+}[] = [
+  { type: "crop", icon: Sprout, iconBg: "bg-emerald-600", labelKey: "home.cropsSubmitted", defaultLabel: "Crops submitted" },
+  { type: "weed", icon: Leaf, iconBg: "bg-lime-600", labelKey: "home.weedsSubmitted", defaultLabel: "Weeds submitted" },
+  { type: "pest", icon: Bug, iconBg: "bg-rose-500", labelKey: "home.pestsSubmitted", defaultLabel: "Pests submitted" },
+  { type: "disease", icon: Microscope, iconBg: "bg-violet-500", labelKey: "home.diseasesSubmitted", defaultLabel: "Diseases submitted" },
+];
 
 interface InfoTipProps {
   label: string;
@@ -241,6 +261,10 @@ export function PublicHomePage() {
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [dailyLimit, setDailyLimit] = useState<number>(20);
+  const [agriCounts, setAgriCounts] = useState<Record<AgriEntityType, number> | null>(null);
+  const [agriCountsLoading, setAgriCountsLoading] = useState(false);
+  const isAnveshanUser = !!user?.isAnveshanUser;
+  const showPayments = canAccessPayments(user);
   const [editWindowSec, setEditWindowSec] = useState<number>(0);
   const showAnveshanModal = !!user?.isAnveshanUser && user?.consentGiven === false;
   const locationState = location.state as { mobileNumber?: string } | null;
@@ -256,7 +280,10 @@ export function PublicHomePage() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    Promise.allSettled([questionApi.getMyStats(), walletApi.getBalance()])
+    Promise.allSettled([
+      questionApi.getMyStats(),
+      showPayments ? walletApi.getBalance() : Promise.resolve({ balance: 0 }),
+    ])
       .then(([s, w]) => {
         if (!alive) return;
         if (s.status === "fulfilled") {
@@ -288,6 +315,25 @@ export function PublicHomePage() {
       alive = false;
     };
   }, []);
+
+  // Loads crop, weed, pest and disease submission counts for Anveshan users.
+  useEffect(() => {
+    if (!isAnveshanUser) return;
+    let alive = true;
+    setAgriCountsLoading(true);
+    agriEntityApi
+      .getMyCounts()
+      .then((counts) => {
+        if (alive) setAgriCounts(counts);
+      })
+      .catch((e) => console.warn(getErrorMessage(e, "agri counts")))
+      .finally(() => {
+        if (alive) setAgriCountsLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isAnveshanUser]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -430,26 +476,63 @@ export function PublicHomePage() {
         </div>
       </div>
 
+      {/* ── Anveshan submission counts ── */}
+      {isAnveshanUser && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {AGRI_COUNT_CARDS.map(({ type, icon: Icon, iconBg, labelKey, defaultLabel }) => (
+            <StatCard
+              key={type}
+              icon={<Icon className="h-4 w-4 text-white" />}
+              iconBg={iconBg}
+              label={t(labelKey, defaultLabel)}
+              value={
+                agriCountsLoading
+                  ? "..."
+                  : agriCounts
+                    ? `${agriCounts[type]}`
+                    : "—"
+              }
+            />
+          ))}
+        </div>
+      )}
+
       {/* ── Stats grid ── */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard
-          icon={<Wallet className="h-4 w-4 text-white" />}
-          iconBg="bg-emerald-500"
-          label={t("home.walletBalance")}
-          value={loading ? "..." : `\u20B9${balance.toFixed(0)}`}
-        />
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-3 sm:gap-4",
+          !isAnveshanUser && "lg:grid-cols-4",
+        )}
+      >
+        {showPayments && (
+          <StatCard
+            icon={<Wallet className="h-4 w-4 text-white" />}
+            iconBg="bg-emerald-500"
+            label={t("home.walletBalance")}
+            value={loading ? "..." : `\u20B9${balance.toFixed(0)}`}
+          />
+        )}
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-white" />}
           iconBg="bg-blue-500"
           label={t("home.today")}
           value={loading ? "..." : stats ? `${stats.dailyCount}` : "0"}
         />
-        <StatCard
-          icon={<Clock className="h-4 w-4 text-white" />}
-          iconBg="bg-amber-500"
-          label={t("home.remaining")}
-          value={loading ? "..." : stats ? `${stats.remainingToday}` : "0"}
-        />
+        {/* Anveshan users have no daily limit, so the remaining count does not apply. */}
+        {!isAnveshanUser && (
+          <StatCard
+            icon={<Clock className="h-4 w-4 text-white" />}
+            iconBg="bg-amber-500"
+            label={t("home.remaining")}
+            value={
+              loading
+                ? "..."
+                : stats?.remainingToday != null
+                  ? `${stats.remainingToday}`
+                  : "0"
+            }
+          />
+        )}
         <StatCard
           icon={<Medal className="h-4 w-4 text-white" />}
           iconBg={
@@ -478,10 +561,14 @@ export function PublicHomePage() {
           </h2>
           <InfoTip
             label={t("home.aboutQuickActions")}
-            description={t("home.quickActionsTip")}
+            description={
+              showPayments
+                ? t("home.quickActionsTip")
+                : t("home.quickActionsTipNoWallet", "Jump straight to Submit a Question.")
+            }
           />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+        <div className={cn("grid gap-3 sm:gap-4", showPayments && "sm:grid-cols-2")}>
           <ActionCard
             icon={<PenSquare className="h-6 w-6 text-white" />}
             iconBg="bg-gradient-to-br from-emerald-500 to-emerald-700"
@@ -490,181 +577,185 @@ export function PublicHomePage() {
             cta={t("home.startAsking")}
             onClick={() => navigate("/home/ask")}
           />
-          <ActionCard
-            icon={<Wallet className="h-6 w-6 text-white" />}
-            iconBg="bg-gradient-to-br from-blue-500 to-blue-700"
-            title={t("home.myWallet")}
-            description={t("home.myWalletSub")}
-            cta={t("home.viewWallet")}
-            onClick={() => navigate("/home/wallet")}
-            disabled={true}
-            badge={t("home.comingSoon", "Coming soon")}
-          />
+          {showPayments && (
+            <ActionCard
+              icon={<Wallet className="h-6 w-6 text-white" />}
+              iconBg="bg-gradient-to-br from-blue-500 to-blue-700"
+              title={t("home.myWallet")}
+              description={t("home.myWalletSub")}
+              cta={t("home.viewWallet")}
+              onClick={() => navigate("/home/wallet")}
+            />
+          )}
         </div>
       </section>
 
       {/* ── Earn Rewards ── */}
-      <section aria-labelledby="earn-rewards-heading">
-        <div className="mb-3 flex items-center gap-2">
-          <h2
-            id="earn-rewards-heading"
-            className="text-base font-bold text-foreground sm:text-lg"
-          >
-            {t("home.earnRewards")}
-          </h2>
-          <InfoTip
-            label={t("home.aboutRewards")}
-            description={t("home.rewardsTip")}
-          />
-        </div>
-        <Card className="overflow-hidden">
-          <CardContent className="p-4 sm:p-5 lg:p-6">
-            {/* Tier steps */}
-            <div className="flex items-start justify-between gap-2">
-              {TIER_DISPLAY.map((tier, i) => {
-                const range = REWARD_TIERS[i];
-                const isActive = i <= tierIdx;
-                const isCurrent = i === tierIdx;
-                return (
-                  <div
-                    key={tier.key}
-                    className="flex flex-1 flex-col items-center text-center"
-                  >
-                    {/* Connector line */}
-                    {i > 0 && (
-                      <div
-                        className="absolute inset-x-0 top-5 -z-10 h-0.5 bg-border-subtle"
-                        style={{ display: "none" }}
-                      />
-                    )}
-                    <div
-                      className={cn(
-                        "flex h-11 w-11 items-center justify-center rounded-full text-white sm:h-12 sm:w-12 lg:h-14 lg:w-14",
-                        tier.bg,
-                        isActive ? "opacity-100 shadow-md" : "opacity-40",
-                        isCurrent && "ring-4 ring-offset-2 ring-offset-card",
-                      )}
-                      style={
-                        isCurrent
-                          ? {
-                              boxShadow: `0 0 0 4px var(--tw-ring-color, hsl(var(--primary)/0.2))`,
-                            }
-                          : {}
-                      }
-                    >
-                      <Leaf className="h-5 w-5 lg:h-6 lg:w-6" />
-                    </div>
-                    <div className="mt-2 sm:mt-3">
-                      <p
-                        className={cn(
-                          "text-[11px] font-extrabold sm:text-xs lg:text-sm",
-                          isActive ? tier.text : "text-text-tertiary",
-                        )}
-                      >
-                        {t(`home.${tier.key}`)}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-text-tertiary sm:text-[11px]">
-                        {range.min}–{range.max}
-                        {t("home.questions")}
-                      </p>
-                      <p className="mt-1 text-sm font-extrabold text-foreground sm:text-base lg:text-lg">
-                        Rs.{range.reward}
-                        {t("home.perQuestion")}
-                      </p>
-                    </div>
-                    {isCurrent && (
-                      <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:text-xs">
-                        {t("home.youAreHere")}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Progress indicator */}
-            <div className="mt-4 sm:mt-5">
-              <div className="flex items-center justify-between text-[10px] text-text-tertiary sm:text-xs">
-                <span>{stats?.totalApproved ?? 0} approved</span>
-                <span>{t("home.reachGold")}</span>
-              </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-variant">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-700"
-                  style={{
-                    width: `${Math.min(100, ((stats?.totalApproved ?? 0) / (REWARD_TIERS[2].min || 1)) * 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* CTA */}
-            <button
-              type="button"
-              onClick={() => navigate("/home/ask")}
-              className="mt-4 flex w-full items-center justify-between rounded-xl border border-border-subtle bg-gradient-to-r from-emerald-50 to-green-50 p-3 text-left transition-all hover:border-emerald-300 hover:shadow-md dark:from-emerald-950/30 dark:to-green-950/30 dark:hover:border-emerald-800 sm:mt-5 sm:p-4"
+      {showPayments && (
+        <section aria-labelledby="earn-rewards-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <h2
+              id="earn-rewards-heading"
+              className="text-base font-bold text-foreground sm:text-lg"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
-                  <Trophy className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+              {t("home.earnRewards")}
+            </h2>
+            <InfoTip
+              label={t("home.aboutRewards")}
+              description={t("home.rewardsTip")}
+            />
+          </div>
+          <Card className="overflow-hidden">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
+              {/* Tier steps */}
+              <div className="flex items-start justify-between gap-2">
+                {TIER_DISPLAY.map((tier, i) => {
+                  const range = REWARD_TIERS[i];
+                  const isActive = i <= tierIdx;
+                  const isCurrent = i === tierIdx;
+                  return (
+                    <div
+                      key={tier.key}
+                      className="flex flex-1 flex-col items-center text-center"
+                    >
+                      {/* Connector line */}
+                      {i > 0 && (
+                        <div
+                          className="absolute inset-x-0 top-5 -z-10 h-0.5 bg-border-subtle"
+                          style={{ display: "none" }}
+                        />
+                      )}
+                      <div
+                        className={cn(
+                          "flex h-11 w-11 items-center justify-center rounded-full text-white sm:h-12 sm:w-12 lg:h-14 lg:w-14",
+                          tier.bg,
+                          isActive ? "opacity-100 shadow-md" : "opacity-40",
+                          isCurrent && "ring-4 ring-offset-2 ring-offset-card",
+                        )}
+                        style={
+                          isCurrent
+                            ? {
+                                boxShadow: `0 0 0 4px var(--tw-ring-color, hsl(var(--primary)/0.2))`,
+                              }
+                            : {}
+                        }
+                      >
+                        <Leaf className="h-5 w-5 lg:h-6 lg:w-6" />
+                      </div>
+                      <div className="mt-2 sm:mt-3">
+                        <p
+                          className={cn(
+                            "text-[11px] font-extrabold sm:text-xs lg:text-sm",
+                            isActive ? tier.text : "text-text-tertiary",
+                          )}
+                        >
+                          {t(`home.${tier.key}`)}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-text-tertiary sm:text-[11px]">
+                          {range.min}–{range.max}
+                          {t("home.questions")}
+                        </p>
+                        <p className="mt-1 text-sm font-extrabold text-foreground sm:text-base lg:text-lg">
+                          Rs.{range.reward}
+                          {t("home.perQuestion")}
+                        </p>
+                      </div>
+                      {isCurrent && (
+                        <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:text-xs">
+                          {t("home.youAreHere")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Progress indicator */}
+              <div className="mt-4 sm:mt-5">
+                <div className="flex items-center justify-between text-[10px] text-text-tertiary sm:text-xs">
+                  <span>{stats?.totalApproved ?? 0} approved</span>
+                  <span>{t("home.reachGold")}</span>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground sm:text-sm">
-                    {t("home.reachGold")}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-text-secondary sm:text-xs">
-                    {t("home.reachGoldSub")}
-                  </p>
+                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-variant">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 transition-all duration-700"
+                    style={{
+                      width: `${Math.min(100, ((stats?.totalApproved ?? 0) / (REWARD_TIERS[2].min || 1)) * 100)}%`,
+                    }}
+                  />
                 </div>
               </div>
-              <ArrowRight className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            </button>
-          </CardContent>
-        </Card>
-      </section>
+
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={() => navigate("/home/ask")}
+                className="mt-4 flex w-full items-center justify-between rounded-xl border border-border-subtle bg-gradient-to-r from-emerald-50 to-green-50 p-3 text-left transition-all hover:border-emerald-300 hover:shadow-md dark:from-emerald-950/30 dark:to-green-950/30 dark:hover:border-emerald-800 sm:mt-5 sm:p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
+                    <Trophy className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground sm:text-sm">
+                      {t("home.reachGold")}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-text-secondary sm:text-xs">
+                      {t("home.reachGoldSub")}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              </button>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* ── Submission Tips ── */}
-      <section aria-labelledby="submission-tips-heading">
-        <div className="mb-3 flex items-center gap-2">
-          <h2
-            id="submission-tips-heading"
-            className="text-base font-bold text-foreground sm:text-lg"
-          >
-            {t("home.submissionTips")}
-          </h2>
-          <InfoTip
-            label={t("home.aboutSubmissionTips")}
-            description={t("home.guidelinesTip")}
-          />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <TipCard
-            icon={<Calendar className="h-4 w-4 text-white" />}
-            iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-            title={t("home.dailyLimitTitle")}
-            description={t("home.dailyLimitTip", { count: dailyLimit })}
-          />
-          <TipCard
-            icon={<PenLine className="h-4 w-4 text-white" />}
-            iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
-            title={t("home.editWindowTitle")}
-            description={
-              editWindowSec === 0
-                ? t("home.editWindowClosed")
-                : t("home.editWindowTip").replace(
-                    "{seconds}",
-                    String(editWindowSec),
-                  )
-            }
-          />
-          <TipCard
-            icon={<Lightbulb className="h-4 w-4 text-white" />}
-            iconBg="bg-gradient-to-br from-violet-500 to-purple-600"
-            title={t("home.aiCheckTitle")}
-            description={t("home.aiCheckTip")}
-          />
-        </div>
-      </section>
+      {!isAnveshanUser && (
+        <section aria-labelledby="submission-tips-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <h2
+              id="submission-tips-heading"
+              className="text-base font-bold text-foreground sm:text-lg"
+            >
+              {t("home.submissionTips")}
+            </h2>
+            <InfoTip
+              label={t("home.aboutSubmissionTips")}
+              description={t("home.guidelinesTip")}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <TipCard
+              icon={<Calendar className="h-4 w-4 text-white" />}
+              iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
+              title={t("home.dailyLimitTitle")}
+              description={t("home.dailyLimitTip", { count: dailyLimit })}
+            />
+            <TipCard
+              icon={<PenLine className="h-4 w-4 text-white" />}
+              iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
+              title={t("home.editWindowTitle")}
+              description={
+                editWindowSec === 0
+                  ? t("home.editWindowClosed")
+                  : t("home.editWindowTip").replace(
+                      "{seconds}",
+                      String(editWindowSec),
+                    )
+              }
+            />
+            <TipCard
+              icon={<Lightbulb className="h-4 w-4 text-white" />}
+              iconBg="bg-gradient-to-br from-violet-500 to-purple-600"
+              title={t("home.aiCheckTitle")}
+              description={t("home.aiCheckTip")}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ── Footer ── */}
       <div className="flex items-center justify-center gap-2 pt-2">

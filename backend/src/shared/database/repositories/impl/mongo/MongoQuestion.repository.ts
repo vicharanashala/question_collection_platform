@@ -51,8 +51,8 @@ export class MongoQuestionRepository
   async findExactDuplicate(
     userId: string,
     questionText: string,
-    state: string,
-    district: string,
+    state?: string,
+    district?: string,
   ): Promise<Question | null> {
     return this._model
       .findOne({

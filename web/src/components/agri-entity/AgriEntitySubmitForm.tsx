@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ImagePlus, Loader2, Plus, Send, Trash2, X } from 'lucide-react'
+import { Camera, ImagePlus, Loader2, Plus, Send, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/api/client'
 import { storageApi } from '@/api/storage'
@@ -11,10 +11,13 @@ import { Label } from '@/components/ui/label'
 import {
   AGRI_ENTITY_IMAGE_MIME_TYPES,
   MAX_AGRI_ENTITY_IMAGES,
+  MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
   MAX_AGRI_ENTITY_NAME_LENGTH,
   MAX_AGRI_ENTITY_SOURCE_LENGTH,
 } from '@/constants/public'
 import type { AgriEntityAlternateName, AgriEntityType } from '@/types'
+import { useAuth } from '@/context/AuthContext'
+import { LocationCaptureModal, type SubmissionLocation } from '@/pages/public/LocationCapture'
 
 interface SelectedImage {
   id: string
@@ -42,21 +45,43 @@ const EMPTY_VALUES: FormValues = {
   alternateNames: [EMPTY_ALTERNATE],
 }
 
-// Returns true when every mandatory text field and at least one image are provided.
-function isFormComplete(values: FormValues, imageCount: number): boolean {
+// Returns true when an optional source is empty or a valid http(s) URL with a domain.
+function isValidSourceUrl(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return true
+  try {
+    const url = new URL(trimmed)
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.includes('.')
+  } catch {
+    return false
+  }
+}
+
+// An alternate row is optional, but a source entered without a name is incomplete.
+function alternateNameMissing(alt: AgriEntityAlternateName): boolean {
+  return !alt.name.trim() && alt.source.trim().length > 0
+}
+
+// Keeps only alternate rows that have a name, trimmed for submission.
+function toSubmittedAlternates(alternates: AgriEntityAlternateName[]): AgriEntityAlternateName[] {
+  return alternates
+    .filter((a) => a.name.trim())
+    .map((a) => ({ name: a.name.trim(), source: a.source.trim() }))
+}
+
+// Checks that required fields are filled and any provided sources are valid URLs.
+function isFormValid(values: FormValues, imageCount: number): boolean {
   const filled = (v: string) => v.trim().length > 0
   return (
     filled(values.localName) &&
     filled(values.englishName) &&
     filled(values.botanicalName) &&
-    filled(values.localNameSource) &&
-    values.alternateNames.length > 0 &&
-    values.alternateNames.every((a) => filled(a.name) && filled(a.source)) &&
+    isValidSourceUrl(values.localNameSource) &&
+    values.alternateNames.every((a) => !alternateNameMissing(a) && isValidSourceUrl(a.source)) &&
     imageCount > 0
   )
 }
 
-// Builds a readable storage filename such as "tomato_2.jpg" from the English name.
 function buildImageFilename(englishName: string, index: number, file: File): string {
   const slug = englishName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'image'
   const ext = file.name.includes('.') ? file.name.split('.').pop() : file.type.split('/')[1]
@@ -68,12 +93,11 @@ interface AgriEntitySubmitFormProps {
   typeLabel: string
 }
 
-/** Form for submitting a crop, weed, pest or disease with names, sources and images. */
 export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormProps) {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const fieldId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  // Uploaded storage URLs keyed by image id, so a retry after a failed submit does not re-upload.
   const uploadedUrlsRef = useRef(new Map<string, string>())
 
   const [values, setValues] = useState<FormValues>(EMPTY_VALUES)
@@ -81,7 +105,9 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
   const [showErrors, setShowErrors] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Release preview object URLs when the form unmounts.
+  const [locationModalOpen, setLocationModalOpen] = useState(false)
+  const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
+
   const imagesRef = useRef(images)
   useEffect(() => {
     imagesRef.current = images
@@ -90,6 +116,8 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
 
   const requiredError = t('agriEntity.errors.required', 'This field is required')
   const errorFor = (value: string) => (showErrors && !value.trim() ? requiredError : undefined)
+  const invalidUrlError = t('agriEntity.errors.invalidUrl', 'Enter a valid URL starting with http:// or https://')
+  const sourceErrorFor = (value: string) => (showErrors && !isValidSourceUrl(value) ? invalidUrlError : undefined)
 
   function setField(field: NameField | 'localNameSource', value: string) {
     setValues((prev) => ({ ...prev, [field]: value }))
@@ -110,13 +138,21 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     setValues((prev) => ({ ...prev, alternateNames: prev.alternateNames.filter((_, i) => i !== index) }))
   }
 
-  // Adds picked files as previews, skipping unsupported types and anything over the image limit.
   function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? [])
     e.target.value = ''
-    const valid = picked.filter((f) => AGRI_ENTITY_IMAGE_MIME_TYPES.includes(f.type))
-    if (valid.length < picked.length) {
+    const typeValid = picked.filter((f) => AGRI_ENTITY_IMAGE_MIME_TYPES.includes(f.type))
+    if (typeValid.length < picked.length) {
       toast.error(t('agriEntity.errors.imageType', 'Only JPEG, PNG and WEBP images are supported'))
+    }
+    const valid = typeValid.filter((f) => f.size <= MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024)
+    if (valid.length < typeValid.length) {
+      toast.error(
+        t('agriEntity.errors.imageSize', {
+          max: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+          defaultValue: 'Each image must be {{max}} MB or smaller',
+        }),
+      )
     }
     const room = MAX_AGRI_ENTITY_IMAGES - images.length
     if (valid.length > room) {
@@ -145,9 +181,9 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     setImages([])
     setValues(EMPTY_VALUES)
     setShowErrors(false)
+    setSubmissionLocation(null) // ask fresh on the next submission, per requirement
   }
 
-  // Uploads any images not yet stored and returns their URLs in display order.
   async function uploadImages(): Promise<string[]> {
     return Promise.all(
       images.map(async (img, index) => {
@@ -164,12 +200,23 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (submitting) return
-    if (!isFormComplete(values, images.length)) {
+    if (!isFormValid(values, images.length)) {
       setShowErrors(true)
-      toast.error(t('agriEntity.errors.incomplete', 'Please fill in all fields and add at least one image'))
+      toast.error(t('agriEntity.errors.incomplete', 'Please fill in the required fields, fix any invalid URLs and add at least one image'))
       return
     }
 
+    // Anveshan users must supply their current location on every submission.
+    if (user?.isAnveshanUser && !submissionLocation) {
+      setLocationModalOpen(true)
+      return
+    }
+
+    await performSubmit()
+  }
+
+  async function performSubmit(locationOverride?: SubmissionLocation) {
+    const location = locationOverride ?? submissionLocation
     setSubmitting(true)
     try {
       const imageUrls = await uploadImages()
@@ -179,8 +226,9 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
         englishName: values.englishName.trim(),
         botanicalName: values.botanicalName.trim(),
         localNameSource: values.localNameSource.trim(),
-        alternateNames: values.alternateNames.map((a) => ({ name: a.name.trim(), source: a.source.trim() })),
+        alternateNames: toSubmittedAlternates(values.alternateNames),
         imageUrls,
+        submissionLocation: location ?? undefined,
       })
       toast.success(t('agriEntity.submitted', { type: typeLabel, defaultValue: '{{type}} submitted successfully' }))
       resetForm()
@@ -197,7 +245,7 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
     { key: 'botanicalName', label: t('agriEntity.botanicalName', 'Botanical Name'), placeholder: t('agriEntity.botanicalNamePlaceholder', 'Scientific name') },
   ]
   const imagesError = showErrors && images.length === 0
-  const sourceError = errorFor(values.localNameSource)
+  const localSourceError = sourceErrorFor(values.localNameSource)
 
   return (
     <Card>
@@ -236,38 +284,43 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           {/* Source for local name = standard name */}
           <section className="space-y-1.5">
             <Label htmlFor={`${fieldId}-source`}>
-              {t('agriEntity.localNameSource', 'Source supporting the local name = standard name')} <span className="text-rose-600" aria-hidden="true">*</span>
+              {t('agriEntity.localNameSource', 'Source supporting the local name = standard name')}
             </Label>
             <p id={`${fieldId}-source-hint`} className="text-[11px] text-text-tertiary sm:text-xs">
-              {t('agriEntity.localNameSourceHint', 'A book, website, research paper or institution that confirms this local name refers to the standard name.')}
+              {t('agriEntity.localNameSourceHint', 'Link to a website, research paper or institution page that confirms this local name refers to the standard name.')}
             </p>
             <Input
               id={`${fieldId}-source`}
-              required
+              type="url"
+              inputMode="url"
+              autoComplete="url"
               value={values.localNameSource}
               onChange={(e) => setField('localNameSource', e.target.value)}
-              placeholder={t('agriEntity.sourcePlaceholder', 'e.g. TNAU Agritech Portal, or a URL')}
+              placeholder={t('agriEntity.sourceUrlPlaceholder', 'https://example.com/reference')}
               maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
-              aria-invalid={Boolean(sourceError)}
-              aria-describedby={`${fieldId}-source-hint${sourceError ? ` ${fieldId}-source-error` : ''}`}
+              aria-invalid={Boolean(localSourceError)}
+              aria-describedby={`${fieldId}-source-hint${localSourceError ? ` ${fieldId}-source-error` : ''}`}
             />
-            {sourceError && <p id={`${fieldId}-source-error`} className="text-xs text-rose-600">{sourceError}</p>}
+            {localSourceError && <p id={`${fieldId}-source-error`} className="text-xs text-rose-600">{localSourceError}</p>}
           </section>
 
           {/* Alternate names */}
           <section className="space-y-3" aria-labelledby={`${fieldId}-alt`}>
             <div>
               <h2 id={`${fieldId}-alt`} className="text-sm font-semibold text-foreground">
-                {t('agriEntity.alternateNames', 'Alternate names with sources')} <span className="text-rose-600" aria-hidden="true">*</span>
+                {t('agriEntity.alternateNames', 'Alternate names with sources')}
               </h2>
-              <p className="text-[11px] text-text-tertiary sm:text-xs">{t('agriEntity.alternateNamesHint', 'Add at least one other name and where it is used or documented.')}</p>
+              <p className="text-[11px] text-text-tertiary sm:text-xs">{t('agriEntity.alternateNamesOptionalHint', 'Optional. Add other names and a link to where each is used or documented.')}</p>
             </div>
             <ul className="space-y-3">
               {values.alternateNames.map((alt, index) => {
                 const nameId = `${fieldId}-alt-name-${index}`
                 const sourceId = `${fieldId}-alt-source-${index}`
-                const nameError = errorFor(alt.name)
-                const altSourceError = errorFor(alt.source)
+                const nameError =
+                  showErrors && alternateNameMissing(alt)
+                    ? t('agriEntity.errors.alternateNameRequired', 'Enter the name this source refers to')
+                    : undefined
+                const altSourceError = sourceErrorFor(alt.source)
                 return (
                   <li key={index} className="rounded-xl border border-border-subtle bg-surface-variant/40 p-3">
                     <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
@@ -286,12 +339,16 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
                         <Label htmlFor={sourceId} className="text-xs">{t('agriEntity.source', 'Source')}</Label>
                         <Input
                           id={sourceId}
+                          type="url"
+                          inputMode="url"
                           value={alt.source}
                           onChange={(e) => updateAlternate(index, 'source', e.target.value)}
+                          placeholder={t('agriEntity.sourceUrlPlaceholder', 'https://example.com/reference')}
                           maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
                           aria-invalid={Boolean(altSourceError)}
+                          aria-describedby={altSourceError ? `${sourceId}-error` : undefined}
                         />
-                        {altSourceError && <p className="text-xs text-rose-600">{altSourceError}</p>}
+                        {altSourceError && <p id={`${sourceId}-error`} className="text-xs text-rose-600">{altSourceError}</p>}
                       </div>
                       <Button
                         type="button"
@@ -316,13 +373,30 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           </section>
 
           {/* Images */}
-          <section className="space-y-3" aria-labelledby={`${fieldId}-images`}>
+          {/* relative keeps the absolutely positioned sr-only file input inside the scroll area, preventing page overflow. */}
+          <section className="relative space-y-3" aria-labelledby={`${fieldId}-images`}>
             <div>
               <h2 id={`${fieldId}-images`} className="text-sm font-semibold text-foreground">
                 {t('agriEntity.images', 'Images')} <span className="text-rose-600" aria-hidden="true">*</span>
               </h2>
               <p className="text-[11px] text-text-tertiary sm:text-xs">
-                {t('agriEntity.imagesHint', { max: MAX_AGRI_ENTITY_IMAGES, defaultValue: 'Add 1 to {{max}} clear photos (JPEG, PNG or WEBP).' })}
+                {t('agriEntity.imagesSizeHint', {
+                  max: MAX_AGRI_ENTITY_IMAGES,
+                  size: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+                  defaultValue: 'Add 1 to {{max}} clear photos (JPEG, PNG or WEBP), up to {{size}} MB each.',
+                })}
+              </p>
+            </div>
+            <div
+              role="note"
+              className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200"
+            >
+              <Camera className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p>
+                {t(
+                  'agriEntity.fieldPhotoWarning',
+                  'Images must be taken directly in the field during your visit. Photos that are not taken in the field may lead to disqualification of the application.',
+                )}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -383,6 +457,16 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
           </div>
         </form>
       </CardContent>
+
+      <LocationCaptureModal
+        open={locationModalOpen}
+        onOpenChange={setLocationModalOpen}
+        onConfirm={(loc) => {
+          setSubmissionLocation(loc)
+          setLocationModalOpen(false)
+          performSubmit(loc)
+        }}
+      />
     </Card>
   )
 }
