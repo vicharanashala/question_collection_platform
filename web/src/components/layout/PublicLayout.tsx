@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { motion, MotionConfig } from 'framer-motion'
 import { VerificationBanner } from '@/components/VerificationBanner'
 import { AnveshanAnswerTaskBanner, AnveshanMilestoneBanner } from '../AnveshanBanner'
 import { PublicSidebar } from './PublicSidebar'
@@ -53,6 +54,8 @@ export function PublicLayout() {
   }
 
   return (
+    // Framer Motion animations in the public app follow the user's reduced-motion setting.
+    <MotionConfig reducedMotion="user">
     <div className="flex h-screen w-screen overflow-hidden bg-background">
       {/* Desktop sidebar (hidden on mobile) */}
       <div className="hidden md:flex h-full shrink-0">
@@ -71,7 +74,15 @@ export function PublicLayout() {
           onDismiss={() => setAnswerTaskDismissed(true)}
         />
         <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 md:pb-6">
-          <Outlet />
+          {/* Keyed by path so each page fades and rises in on navigation; query-only changes (tabs) do not replay it. */}
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
 
@@ -84,5 +95,6 @@ export function PublicLayout() {
         onClose={() => setMobileNavOpen(false)}
       />
     </div>
+    </MotionConfig>
   )
 }
