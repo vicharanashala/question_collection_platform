@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, FileText, Loader2, RotateCcw, Send } from 'lucide-react'
+import { CheckCircle2, FileText, Loader2, RotateCcw, Send, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -268,23 +268,54 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={(open) => !isSubmitting && setConfirmOpen(open)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('anveshanAnswers.confirmTitle', 'Submit Response')}</DialogTitle>
-            <DialogDescription>
-              {t(
-                'anveshanAnswers.confirmDescription',
-                'Please cross-check your answer and sources carefully. The quality of your answer will be carefully reviewed during evaluation, and you cannot edit it after submitting.',
-              )}
+        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
+          <DialogHeader className="space-y-3 px-6 pb-4 pt-6 text-left">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <Send className="h-5 w-5 text-primary" aria-hidden="true" />
+            </span>
+            <DialogTitle className="text-lg">{t('anveshanAnswers.confirmTitle', 'Submit your response?')}</DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              {t('anveshanAnswers.confirmLead', 'Please cross-check your answer and sources carefully before submitting.')}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
+
+          <div className="space-y-3 px-6 pb-5">
+            {/* What is about to be submitted, so the user can spot a missing piece before confirming. */}
+            <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle text-sm">
+              <li className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="text-text-secondary">{t('anveshanAnswers.confirmAnswerLength', 'Answer length')}</span>
+                <span className="font-semibold tabular-nums text-text">
+                  {t('anveshanAnswers.characters', { count: answerLength, defaultValue: '{{count}} characters' })}
+                </span>
+              </li>
+              <li className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="text-text-secondary">{t('anveshanAnswers.confirmSources', 'Sources')}</span>
+                <span className="font-semibold tabular-nums text-text">{draft.sources.length}</span>
+              </li>
+              <li className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="text-text-secondary">{t('anveshanAnswers.remarks', 'Remarks')}</span>
+                <span className="font-semibold text-text">
+                  {draft.remarks.trim() ? t('common.added', 'Added') : t('common.none', 'None')}
+                </span>
+              </li>
+            </ul>
+
+            <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              {t(
+                'anveshanAnswers.confirmWarning',
+                'The quality of your answer will be carefully reviewed during evaluation, and you cannot edit it after submitting.',
+              )}
+            </p>
+          </div>
+
+          <DialogFooter className="flex-col-reverse gap-2 border-t border-border-subtle bg-surface-variant/40 px-6 py-4 sm:flex-row sm:justify-end sm:gap-2">
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={isSubmitting}>
-              {t('common.cancel', 'Cancel')}
+              {t('anveshanAnswers.keepEditing', 'Keep editing')}
             </Button>
             <Button onClick={confirmSubmit} disabled={isSubmitting} className="gap-2">
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {t('anveshanAnswers.confirmSubmit', 'Submit Response')}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
+              {isSubmitting ? t('anveshanAnswers.submitting', 'Submitting…') : t('anveshanAnswers.confirmSubmit', 'Submit response')}
             </Button>
           </DialogFooter>
         </DialogContent>
