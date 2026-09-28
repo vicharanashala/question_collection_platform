@@ -10,7 +10,7 @@ export function findAnveshanAnswerableQuestions(questionRepo: IQuestionRepositor
   );
 }
 
-// Number of answerable questions the user has already answered.
+// Number of answerable questions the user has already answered, read from the question flag.
 export function countAnveshanAnswers(questions: Question[]): number {
-  return questions.filter((question) => question.anveshanAnswer).length;
+  return questions.filter((question) => question.isAnswerSubmitted).length;
 }

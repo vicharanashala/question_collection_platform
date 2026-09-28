@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { IQuestionRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
-import type { AnveshanAnswer, Question } from '../../shared/database/entities';
+import { IAnveshanAnswerRepository, IQuestionRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import type { AnveshanAnswer, AnveshanAnswerSource, Question } from '../../shared/database/entities';
 import {
   ANVESHAN_REQUIRED_ANSWER_COUNT,
   getAnveshanRequiredQuestionCount,
@@ -22,6 +22,14 @@ export interface AnveshanMilestone {
   completed: boolean;
 }
 
+/** Answer fields returned to the client. */
+export interface AnveshanAnswerView {
+  answer: string;
+  sources: AnveshanAnswerSource[];
+  remarks: string | null;
+  answeredAt: Date;
+}
+
 export interface AnveshanAnswerableQuestion {
   id: string;
   questionText: string;
@@ -31,7 +39,8 @@ export interface AnveshanAnswerableQuestion {
   language: string;
   status: Question['status'];
   submittedAt: Date;
-  answer: AnveshanAnswer | null;
+  isAnswerSubmitted: boolean;
+  answer: AnveshanAnswerView | null;
 }
 
 @Injectable()
@@ -39,6 +48,8 @@ export class AnveshanMilestoneService {
   constructor(
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.AnveshanAnswer)
+    private readonly answerRepo: IAnveshanAnswerRepository,
     private readonly questionService: QuestionService,
     private readonly userService: UserService,
     private readonly agriEntityService: AgriEntitiesService,
@@ -53,8 +64,9 @@ export class AnveshanMilestoneService {
   // Lists the questions the caller may answer (their first required-count submissions) with answer status.
   async listAnswerableQuestions(userId: string) {
     const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
+    const answersByQuestion = await this.findAnswersByQuestion(userId, eligibleQuestions);
     return {
-      items: eligibleQuestions.map(toAnswerableQuestion),
+      items: eligibleQuestions.map((question) => toAnswerableQuestion(question, answersByQuestion.get(question.id) ?? null)),
       requiredAnswers: milestone.requirements.answers,
       answeredCount: milestone.progress.answers,
       unlocked: milestone.submissionsCompleted,
@@ -76,31 +88,40 @@ export class AnveshanMilestoneService {
       throw new NotFoundException('This question is not in your answer list.');
     }
 
-    const anveshanAnswer: AnveshanAnswer = {
-      answer: dto.answer,
-      sources: dto.sources.map(({ sourceType, sourceName, source, page }) => ({
-        sourceType,
-        sourceName,
-        source,
-        page: page || null,
-      })),
-      remarks: dto.remarks || null,
-      answeredAt: new Date(),
-    };
-
-    // Conditional write so a double submit cannot overwrite an existing answer.
+    // Claim the question first: this conditional flag update lets only one request through.
     const { affected } = await this.questionRepo.updateMany(
-      { id: questionId, userId, anveshanAnswer: null },
-      { anveshanAnswer },
+      { id: questionId, userId, isAnswerSubmitted: { $ne: true } },
+      { isAnswerSubmitted: true },
     );
     if (!affected) {
       throw new ConflictException('You have already answered this question.');
     }
 
+    let saved: AnveshanAnswer;
+    try {
+      saved = await this.answerRepo.create({
+        questionId,
+        userId,
+        answer: dto.answer,
+        sources: dto.sources.map(({ sourceType, sourceName, source, page }) => ({
+          sourceType,
+          sourceName,
+          source,
+          page: page || null,
+        })),
+        remarks: dto.remarks || null,
+        answeredAt: new Date(),
+      });
+    } catch (error) {
+      // Release the claim so the user can retry if the answer could not be stored.
+      await this.questionRepo.updateMany({ id: questionId, userId }, { isAnswerSubmitted: false });
+      throw error;
+    }
+
     const answeredCount = milestone.progress.answers + 1;
     const requiredAnswers = milestone.requirements.answers;
     return {
-      question: toAnswerableQuestion({ ...question, anveshanAnswer }),
+      question: toAnswerableQuestion({ ...question, isAnswerSubmitted: true }, saved),
       answeredCount: Math.min(answeredCount, requiredAnswers),
       requiredAnswers,
       completed: answeredCount >= requiredAnswers,
@@ -140,6 +161,14 @@ export class AnveshanMilestoneService {
 
     return { milestone: { requirements, progress, submissionsCompleted, completed }, eligibleQuestions };
   }
+
+  // Loads the stored answers for the answered questions only, keyed by question id.
+  private async findAnswersByQuestion(userId: string, questions: Question[]): Promise<Map<string, AnveshanAnswer>> {
+    const answeredIds = questions.filter((q) => q.isAnswerSubmitted).map((q) => q.id);
+    if (answeredIds.length === 0) return new Map();
+    const answers = await this.answerRepo.find({ userId, questionId: { $in: answeredIds } });
+    return new Map(answers.map((answer) => [answer.questionId, answer]));
+  }
 }
 
 // Caps every count at its requirement so extra submissions do not over-count.
@@ -148,7 +177,7 @@ function capCounts(actual: MilestoneCounts, requirements: MilestoneCounts): Mile
   return Object.fromEntries(keys.map((key) => [key, Math.min(actual[key], requirements[key])])) as MilestoneCounts;
 }
 
-function toAnswerableQuestion(question: Question): AnveshanAnswerableQuestion {
+function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null): AnveshanAnswerableQuestion {
   return {
     id: question.id,
     questionText: question.questionText,
@@ -158,6 +187,9 @@ function toAnswerableQuestion(question: Question): AnveshanAnswerableQuestion {
     language: question.language,
     status: question.status,
     submittedAt: question.submittedAt,
-    answer: question.anveshanAnswer ?? null,
+    isAnswerSubmitted: !!question.isAnswerSubmitted,
+    answer: answer
+      ? { answer: answer.answer, sources: answer.sources, remarks: answer.remarks, answeredAt: answer.answeredAt }
+      : null,
   };
 }

@@ -5,7 +5,6 @@ import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 // Staging and development need 5 questions; tests run outside production.
 const REQUIRED_QUESTIONS = 5;
 
-const answered = { answer: 'a', sources: [], remarks: null, answeredAt: new Date() };
 
 describe('UserService.getAnveshanProgress', () => {
   let service: UserService;
@@ -33,7 +32,7 @@ describe('UserService.getAnveshanProgress', () => {
   });
 
   it('is not complete when submissions are met but fewer than two answers exist', async () => {
-    questionRepo.find.mockResolvedValue([{ id: 'q-1', anveshanAnswer: answered }, { id: 'q-2', anveshanAnswer: null }]);
+    questionRepo.find.mockResolvedValue([{ id: 'q-1', isAnswerSubmitted: true }, { id: 'q-2', isAnswerSubmitted: false }]);
 
     const result = await service.getAnveshanProgress('9999999999');
 
@@ -43,7 +42,7 @@ describe('UserService.getAnveshanProgress', () => {
   });
 
   it('is complete once two answers exist', async () => {
-    questionRepo.find.mockResolvedValue([{ id: 'q-1', anveshanAnswer: answered }, { id: 'q-2', anveshanAnswer: answered }]);
+    questionRepo.find.mockResolvedValue([{ id: 'q-1', isAnswerSubmitted: true }, { id: 'q-2', isAnswerSubmitted: true }]);
 
     const result = await service.getAnveshanProgress('9999999999');
 

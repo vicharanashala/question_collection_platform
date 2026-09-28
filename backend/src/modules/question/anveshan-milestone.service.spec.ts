@@ -15,7 +15,7 @@ const buildQuestions = (answered = 0) =>
   Array.from({ length: REQUIRED_QUESTIONS }, (_, i) => ({
     id: `q-${i}`,
     questionText: `Question ${i}`,
-    anveshanAnswer: i < answered ? { answer: 'a', sources: [], remarks: null, answeredAt: new Date() } : null,
+    isAnswerSubmitted: i < answered,
   }));
 
 const answerDto: SubmitAnveshanAnswerDto = {
@@ -26,6 +26,7 @@ const answerDto: SubmitAnveshanAnswerDto = {
 describe('AnveshanMilestoneService', () => {
   let service: AnveshanMilestoneService;
   const questionRepo = { find: jest.fn(), updateMany: jest.fn() };
+  const answerRepo = { create: jest.fn(), find: jest.fn() };
   const questionService = { getTotalSubmittedCount: jest.fn() };
   const userService = { getProfile: jest.fn() };
   const agriEntityService = { getSubmittedCountsByType: jest.fn() };
@@ -44,6 +45,7 @@ describe('AnveshanMilestoneService', () => {
       providers: [
         AnveshanMilestoneService,
         { provide: REPOSITORY_TOKENS.Question, useValue: questionRepo },
+        { provide: REPOSITORY_TOKENS.AnveshanAnswer, useValue: answerRepo },
         { provide: QuestionService, useValue: questionService },
         { provide: UserService, useValue: userService },
         { provide: AgriEntitiesService, useValue: agriEntityService },
@@ -84,18 +86,43 @@ describe('AnveshanMilestoneService', () => {
     await expect(service.submitAnswer(USER_ID, 'someone-else', answerDto)).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('saves the answer only if the question has none yet', async () => {
+  it('flags the question and stores the answer in its own collection', async () => {
     givenSubmissionsDone();
     questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+    answerRepo.create.mockImplementation((data) => Promise.resolve({ id: 'a-1', ...data }));
 
     const result = await service.submitAnswer(USER_ID, 'q-0', answerDto);
 
     expect(questionRepo.updateMany).toHaveBeenCalledWith(
-      { id: 'q-0', userId: USER_ID, anveshanAnswer: null },
-      { anveshanAnswer: expect.objectContaining({ answer: answerDto.answer, remarks: null }) },
+      { id: 'q-0', userId: USER_ID, isAnswerSubmitted: { $ne: true } },
+      { isAnswerSubmitted: true },
     );
+    expect(answerRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ questionId: 'q-0', userId: USER_ID, answer: answerDto.answer, remarks: null }),
+    );
+    expect(result.question.isAnswerSubmitted).toBe(true);
     expect(result.answeredCount).toBe(1);
     expect(result.completed).toBe(false);
+  });
+
+  it('clears the flag again when the answer cannot be stored', async () => {
+    givenSubmissionsDone();
+    questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+    answerRepo.create.mockRejectedValue(new Error('write failed'));
+
+    await expect(service.submitAnswer(USER_ID, 'q-0', answerDto)).rejects.toThrow('write failed');
+    expect(questionRepo.updateMany).toHaveBeenLastCalledWith({ id: 'q-0', userId: USER_ID }, { isAnswerSubmitted: false });
+  });
+
+  it('attaches stored answers to answered questions when listing', async () => {
+    givenSubmissionsDone(1);
+    answerRepo.find.mockResolvedValue([{ questionId: 'q-0', answer: 'Neem oil', sources: [], remarks: null, answeredAt: new Date() }]);
+
+    const result = await service.listAnswerableQuestions(USER_ID);
+
+    expect(answerRepo.find).toHaveBeenCalledWith({ userId: USER_ID, questionId: { $in: ['q-0'] } });
+    expect(result.items[0].answer?.answer).toBe('Neem oil');
+    expect(result.items[1].answer).toBeNull();
   });
 
   it('reports a conflict when the question was already answered', async () => {

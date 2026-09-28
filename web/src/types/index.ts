@@ -784,6 +784,7 @@ export interface AnveshanAnswerQuestion {
   language: string;
   status: QuestionStatus;
   submittedAt: string;
+  isAnswerSubmitted: boolean;
   answer: AnveshanAnswer | null;
 }
 
