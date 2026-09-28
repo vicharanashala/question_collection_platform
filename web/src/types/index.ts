@@ -102,6 +102,8 @@ export interface Question {
   /** Alias for user.mobileNumber */
   userMobileNumber?: string | null;
   isAnveshan?: boolean;
+  /** True once the Anveshan user has answered their own question. */
+  isAnswerSubmitted?: boolean;
   submissionLocation: {
     latitude: number;
     longitude: number;

@@ -154,10 +154,18 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
     return this.anveshanMilestoneService.listAnswerableQuestions(req.user.id);
   }
 
+  // GET /questions/:id/anveshan-answer — staff view of the answer an Anveshan user wrote for this question.
+  @Get(':id/anveshan-answer')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  async getAnveshanAnswer(@Param('id') id: string) {
+    return { answer: await this.anveshanMilestoneService.getAnswerForQuestion(id) };
+  }
+
   // POST /questions/anveshan-answers/:questionId — answer one of the caller's own questions with sources.
   @Post('anveshan-answers/:questionId')
   @HttpCode(HttpStatus.CREATED)
-  @CacheInvalidate('anveshan_milestone*')
+  @CacheInvalidate('anveshan_milestone*', 'questions:*')
   async submitAnveshanAnswer(
     @Param('questionId') questionId: string,
     @Body() dto: SubmitAnveshanAnswerDto,

@@ -666,7 +666,7 @@ export class QuestionService {
   // ─── List ───────────────────────────────────────────────────────────────────
 
   async list(userId: string, dto: ListQuestionsDto, isAdmin = false) {
-    const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate } = dto;
+    const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate, answerStatus } = dto;
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -687,6 +687,11 @@ export class QuestionService {
     else if (cropType) where.cropType = Like(`%${cropType}%`);
     if (season) where.season = season;
     if (state) where.state = state;
+    if (answerStatus === 'answered') where.isAnswerSubmitted = true;
+    if (answerStatus === 'unanswered') {
+      where.isAnveshan = true;
+      where.isAnswerSubmitted = { $ne: true };
+    }
 
     if (fromDate && toDate) {
       where.submittedAt = Between(new Date(fromDate), new Date(toDate));

@@ -26,7 +26,7 @@ const answerDto: SubmitAnveshanAnswerDto = {
 describe('AnveshanMilestoneService', () => {
   let service: AnveshanMilestoneService;
   const questionRepo = { find: jest.fn(), updateMany: jest.fn() };
-  const answerRepo = { create: jest.fn(), find: jest.fn() };
+  const answerRepo = { create: jest.fn(), find: jest.fn(), findOne: jest.fn() };
   const questionService = { getTotalSubmittedCount: jest.fn() };
   const userService = { getProfile: jest.fn() };
   const agriEntityService = { getSubmittedCountsByType: jest.fn() };
@@ -130,6 +130,15 @@ describe('AnveshanMilestoneService', () => {
     questionRepo.updateMany.mockResolvedValue({ affected: 0 });
 
     await expect(service.submitAnswer(USER_ID, 'q-0', answerDto)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('looks up the answer for a question by its id for staff', async () => {
+    answerRepo.findOne.mockResolvedValue({ questionId: 'q-0', answer: 'Neem oil' });
+
+    const answer = await service.getAnswerForQuestion('q-0');
+
+    expect(answerRepo.findOne).toHaveBeenCalledWith({ questionId: 'q-0' });
+    expect(answer?.answer).toBe('Neem oil');
   });
 
   it('blocks non-Anveshan users', async () => {

@@ -76,6 +76,11 @@ export class AnveshanMilestoneService {
     };
   }
 
+  // Returns the stored Anveshan answer for a question, or null when none was submitted. Used by staff review screens.
+  async getAnswerForQuestion(questionId: string): Promise<AnveshanAnswer | null> {
+    return this.answerRepo.findOne({ questionId });
+  }
+
   // Saves the caller's answer for one of their eligible questions. Each question can be answered once.
   async submitAnswer(userId: string, questionId: string, dto: SubmitAnveshanAnswerDto) {
     const { milestone, eligibleQuestions } = await this.buildMilestone(userId);

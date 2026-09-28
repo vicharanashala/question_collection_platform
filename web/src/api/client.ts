@@ -39,6 +39,7 @@ import type {
   AgriEntitySubmission,
   AgriEntityStatus,
   AgriEntityType,
+  AnveshanAnswer,
   AnveshanAnswerQuestionsResponse,
   AnveshanMilestoneCounts,
   SubmitAnveshanAnswerPayload,
@@ -837,6 +838,10 @@ export const questionApi = {
   },
 
   getQuestion: (id: string) => request<Question>(`/questions/${id}`),
+
+  /** Staff only: the answer an Anveshan user submitted for this question, or null. */
+  getAnveshanAnswer: (id: string) =>
+    request<{ answer: AnveshanAnswer | null }>(`/questions/${encodeURIComponent(id)}/anveshan-answer`, {}, false),
 
   approveQuestion: (id: string) =>
     request<{ message: string }>(
