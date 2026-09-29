@@ -36,8 +36,17 @@ const STATUS_BADGE: Record<PhaseStatus, string> = {
   upcoming: "Soon",
 };
 
+interface JourneyStepProps {
+  phase: JourneyPhase;
+  status: PhaseStatus;
+  /** Replaces the default badge text for the status, e.g. "Pending". */
+  badgeLabel?: string;
+  /** Replaces the phase's default description. */
+  description?: string;
+}
+
 // One row of the journey list: status icon, label, description and status badge.
-export function JourneyStep({ phase, status }: { phase: JourneyPhase; status: PhaseStatus }) {
+export function JourneyStep({ phase, status, badgeLabel, description = phase.description }: JourneyStepProps) {
   const Icon = phase.icon;
   return (
     <li
@@ -67,8 +76,8 @@ export function JourneyStep({ phase, status }: { phase: JourneyPhase; status: Ph
         <p className={cn("text-sm font-semibold", status === "upcoming" ? "text-muted-foreground" : "text-foreground")}>
           {phase.label}
         </p>
-        <p className="truncate text-xs text-muted-foreground" title={phase.description}>
-          {phase.description}
+        <p className="truncate text-xs text-muted-foreground" title={description}>
+          {description}
         </p>
       </div>
 
@@ -80,7 +89,7 @@ export function JourneyStep({ phase, status }: { phase: JourneyPhase; status: Ph
           status === "upcoming" && "text-muted-foreground",
         )}
       >
-        {STATUS_BADGE[status]}
+        {badgeLabel ?? STATUS_BADGE[status]}
       </span>
     </li>
   );

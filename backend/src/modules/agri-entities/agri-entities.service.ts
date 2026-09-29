@@ -112,6 +112,25 @@ export class AgriEntitiesService {
   return { crop, weed, pest, disease };
 }
 
+  // Creation times of the user's earliest submissions of each type, up to `limit` per type, oldest first.
+  async getEarliestSubmissionDatesByType(
+    userId: string,
+    limit: number,
+  ): Promise<{ crop: Date[]; weed: Date[]; pest: Date[]; disease: Date[] }> {
+    const earliest = (type: AgriEntityType) =>
+      this.agriEntityRepo
+        .findAll({ userId, type }, { pagination: { page: 1, limit, sort: { createdAt: 1 } } })
+        .then((items) => items.map((item) => item.createdAt));
+
+    const [crop, weed, pest, disease] = await Promise.all([
+      earliest(AgriEntityType.CROP),
+      earliest(AgriEntityType.WEED),
+      earliest(AgriEntityType.PEST),
+      earliest(AgriEntityType.DISEASE),
+    ]);
+    return { crop, weed, pest, disease };
+  }
+
   private async findPage(scope: { userId?: string }, dto: ListAgriEntitiesDto) {
     const { type, status, page = 1, limit = 20 } = dto;
     const { data, total } = await this.agriEntityRepo.findAndCount(

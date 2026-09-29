@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Bug,
   CheckCircle2,
+  Clock,
   ExternalLink,
   Leaf,
   Lock,
@@ -26,7 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/hooks/useCountUp";
-import type { AnveshanMilestoneResponse } from "@/api/client";
+import type { AnveshanMilestoneResponse, AnveshanStepTimeline } from "@/api/client";
 import { ANVESHAN_ANSWERS_DESKTOP_QUERY, ANVESHAN_ANSWERS_ROUTE, ANVESHAN_PLATFORM_URL } from "@/constants/public";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
@@ -114,6 +115,45 @@ function ProgressRing({ percent, open }: ProgressRingProps) {
   );
 }
 
+// Compact date and time such as "02 Sep, 10:30 am", short enough for both ends of a timeline to fit on a phone.
+function formatStepTime(iso: string | null): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: true });
+}
+
+// Start and completion time of one goal, shown as "start – end", with a dash until the goal is met.
+function StepTimeline({ timeline }: { timeline?: AnveshanStepTimeline }) {
+  const { t } = useTranslation();
+  if (!timeline) return null;
+  const started = formatStepTime(timeline.startedAt);
+  const completed = formatStepTime(timeline.completedAt);
+
+  return (
+    <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[11px] leading-snug text-text-tertiary">
+      <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
+      {started ? (
+        <>
+          <time dateTime={timeline.startedAt ?? undefined} title={new Date(timeline.startedAt ?? "").toLocaleString("en-IN")}>
+            {started}
+          </time>
+          <span aria-hidden="true">–</span>
+          {completed ? (
+            <time dateTime={timeline.completedAt ?? undefined} title={new Date(timeline.completedAt ?? "").toLocaleString("en-IN")}>
+              {completed}
+            </time>
+          ) : (
+            <span>{t("anveshan.timelineInProgress", "—")}</span>
+          )}
+        </>
+      ) : (
+        <span>{t("anveshan.timelineNotStarted", "Not started yet")}</span>
+      )}
+    </p>
+  );
+}
+
 interface MilestoneRowProps {
   icon: LucideIcon;
   label: string;
@@ -121,10 +161,11 @@ interface MilestoneRowProps {
   required: number;
   index: number;
   open: boolean;
+  timeline?: AnveshanStepTimeline;
 }
 
-// One requirement row with a staggered entrance, counting progress and a filling bar.
-function MilestoneRow({ icon: Icon, label, progress, required, index, open }: MilestoneRowProps) {
+// One requirement row with a staggered entrance, counting progress, a filling bar and its start/end times.
+function MilestoneRow({ icon: Icon, label, progress, required, index, open, timeline }: MilestoneRowProps) {
   const reduceMotion = useReducedMotion();
   const delay = 0.2 + index * ROW_STAGGER_SECONDS;
   const shownProgress = useCountUp(progress, { active: open, duration: 0.8, delay });
@@ -175,6 +216,7 @@ function MilestoneRow({ icon: Icon, label, progress, required, index, open }: Mi
           transition={{ duration: reduceMotion ? 0 : 0.8, delay: reduceMotion ? 0 : delay, ease: "easeOut" }}
         />
       </div>
+      <StepTimeline timeline={timeline} />
     </motion.li>
   );
 }
@@ -257,6 +299,7 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
           {answered}/{required}
         </span>
       </div>
+      <StepTimeline timeline={data.timeline?.answers} />
       {!done && (
         <>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
@@ -354,6 +397,7 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
                   required={data.requirements[key]}
                   index={index}
                   open={open}
+                  timeline={data.timeline?.[key]}
                 />
               ))}
             </ul>

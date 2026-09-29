@@ -25,6 +25,10 @@ import type { AnveshanMilestoneResponse } from "@/api/client";
 
 type GoalKey = keyof AnveshanMilestoneResponse["requirements"];
 
+// Document upload happens on the Anveshan platform, so it stays pending here even after the milestone is complete.
+const PENDING_PHASE_ID = "documents";
+const COMPLETED_PHASES = JOURNEY.filter((phase) => phase.id !== PENDING_PHASE_ID).length;
+
 const GOALS: { key: GoalKey; icon: LucideIcon; label: string }[] = [
   { key: "questions", icon: MessageSquareText, label: "Questions" },
   { key: "crop", icon: Sprout, label: "Crop" },
@@ -49,7 +53,7 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
   const actions = (
     <div className="space-y-3">
       <p className="text-center text-sm text-muted-foreground">
-        {t("anveshanComplete.next", "Go to the Anveshan platform to check your completion and continue your journey.")}
+        {t("anveshanComplete.next", "Your last step is to upload your documents on the Anveshan platform.")}
       </p>
       <Button className="w-full gap-2" asChild>
         <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
@@ -145,7 +149,7 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
             <div className="mt-auto hidden border-t border-border-subtle bg-surface-variant/30 px-6 py-5 sm:px-8 lg:block">{actions}</div>
           </div>
 
-          {/* Anveshan journey: every phase, including Ground Truth Module and Upload Documents, is complete. */}
+          {/* Anveshan journey: everything up to Ground Truth Module is complete; documents are uploaded on Anveshan. */}
           <section
             aria-labelledby="anveshan-journey-heading"
             className="border-t border-border-subtle px-5 py-6 sm:px-6 lg:border-t-0 lg:bg-surface-variant/20 lg:py-8"
@@ -155,13 +159,27 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
                 {t("anveshanComplete.journeyHeading", "Your Anveshan journey")}
               </h2>
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary dark:text-emerald-400">
-                {t("anveshanComplete.journeyDone", { count: JOURNEY.length, defaultValue: "{{count}}/{{count}} done" })}
+                {t("anveshanComplete.journeyDone", {
+                  done: COMPLETED_PHASES,
+                  total: JOURNEY.length,
+                  defaultValue: "{{done}}/{{total}} done",
+                })}
               </span>
             </div>
             <ol className="space-y-2">
-              {JOURNEY.map((phase) => (
-                <JourneyStep key={phase.id} phase={phase} status="done" />
-              ))}
+              {JOURNEY.map((phase) =>
+                phase.id === PENDING_PHASE_ID ? (
+                  <JourneyStep
+                    key={phase.id}
+                    phase={phase}
+                    status="current"
+                    badgeLabel={t("anveshanComplete.pending", "Pending")}
+                    description={t("anveshanComplete.documentsPending", "Complete this on the Anveshan platform.")}
+                  />
+                ) : (
+                  <JourneyStep key={phase.id} phase={phase} status="done" />
+                ),
+              )}
             </ol>
           </section>
 

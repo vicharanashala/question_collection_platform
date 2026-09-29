@@ -12,9 +12,11 @@ import { QuestionService } from './question.service';
 import { SubmitAnveshanAnswerDto } from './dto';
 import {
   type AnveshanCounts,
+  type AnveshanTimeline,
   countAnveshanAnswers,
   evaluateAnveshanProgress,
   findAnveshanAnswerableQuestions,
+  toStepTimeline,
 } from '../../shared/utils/anveshan.util';
 
 
@@ -27,6 +29,8 @@ export interface AnveshanMilestone {
   completed: boolean;
   /** True once the user has shared their app feedback after reaching 100%. */
   feedbackSubmitted: boolean;
+  /** When each goal was started and completed. */
+  timeline: AnveshanTimeline;
 }
 
 /** Answer fields returned to the client. */
@@ -64,13 +68,16 @@ export class AnveshanMilestoneService {
     private readonly agriEntityService: AgriEntitiesService,
   ) {}
 
-  // Returns the caller's milestone progress across submissions and answers.
+  // Returns the caller's milestone progress across submissions and answers, with when each goal was started and met.
   async getMilestone(userId: string): Promise<AnveshanMilestone> {
-    const { milestone } = await this.buildMilestone(userId);
-    const feedbackSubmitted = milestone.completed
-      ? (await this.feedbackRepo.count({ userId, context: 'anveshan_completion' })) > 0
-      : false;
-    return { ...milestone, feedbackSubmitted };
+    const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
+    const [feedbackSubmitted, timeline] = await Promise.all([
+      milestone.completed
+        ? this.feedbackRepo.count({ userId, context: 'anveshan_completion' }).then((count) => count > 0)
+        : Promise.resolve(false),
+      this.buildTimeline(userId, milestone.requirements, eligibleQuestions),
+    ]);
+    return { ...milestone, feedbackSubmitted, timeline };
   }
 
   // Lists the questions the caller may answer (their first required-count submissions) with answer status.
@@ -176,6 +183,29 @@ export class AnveshanMilestoneService {
     });
 
     return { milestone: { requirements, progress, submissionsCompleted, completed }, eligibleQuestions };
+  }
+
+  // Start and completion times for every goal, from the submissions that count towards it.
+  private async buildTimeline(
+    userId: string,
+    requirements: AnveshanCounts,
+    eligibleQuestions: Question[],
+  ): Promise<AnveshanTimeline> {
+    const agriLimit = Math.max(requirements.crop, requirements.weed, requirements.pest, requirements.disease);
+    const [agriDates, answersByQuestion] = await Promise.all([
+      this.agriEntityService.getEarliestSubmissionDatesByType(userId, agriLimit),
+      this.findAnswersByQuestion(userId, eligibleQuestions),
+    ]);
+    const answerDates = [...answersByQuestion.values()].map((answer) => answer.answeredAt);
+
+    return {
+      questions: toStepTimeline(eligibleQuestions.map((q) => q.submittedAt), requirements.questions),
+      crop: toStepTimeline(agriDates.crop, requirements.crop),
+      weed: toStepTimeline(agriDates.weed, requirements.weed),
+      pest: toStepTimeline(agriDates.pest, requirements.pest),
+      disease: toStepTimeline(agriDates.disease, requirements.disease),
+      answers: toStepTimeline(answerDates, requirements.answers),
+    };
   }
 
   // Loads the stored answers for the answered questions only, keyed by question id.

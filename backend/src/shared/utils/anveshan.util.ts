@@ -36,6 +36,23 @@ export interface AnveshanProgress {
   percent: number;
 }
 
+/** When a goal was started (first submission) and completed (the submission that met the requirement). */
+export interface AnveshanStepTimeline {
+  startedAt: Date | null;
+  completedAt: Date | null;
+}
+
+export type AnveshanTimeline = Record<keyof AnveshanCounts, AnveshanStepTimeline>;
+
+// Start is the earliest submission; completion is the one that reached the required count, if it has.
+export function toStepTimeline(dates: Date[], required: number): AnveshanStepTimeline {
+  const sorted = dates.map((date) => new Date(date)).sort((a, b) => a.getTime() - b.getTime());
+  return {
+    startedAt: sorted[0] ?? null,
+    completedAt: required > 0 && sorted.length >= required ? sorted[required - 1] : null,
+  };
+}
+
 const SUBMISSION_KEYS = ['questions', 'crop', 'weed', 'pest', 'disease'] as const;
 const SUBMISSION_WEIGHT = 80;
 

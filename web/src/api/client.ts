@@ -53,6 +53,12 @@ import {
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
+/** When a milestone goal was started (first submission) and completed (the submission that met it), as ISO strings. */
+export interface AnveshanStepTimeline {
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
 export interface AnveshanMilestoneResponse {
   requirements: AnveshanMilestoneCounts;
   progress: AnveshanMilestoneCounts;
@@ -62,6 +68,8 @@ export interface AnveshanMilestoneResponse {
   completed: boolean;
   /** The user has already shared app feedback after reaching 100%. */
   feedbackSubmitted?: boolean;
+  /** Start and completion time of each goal. */
+  timeline?: Record<keyof AnveshanMilestoneCounts, AnveshanStepTimeline>;
 }
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
