@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CropPickerModal } from "@/components/ui/crop-picker-modal";
+import { useCrops } from "@/hooks/useCrops";
 import type { AuthUser } from "@/types";
 import { SignOutDialog } from "../SignOutDialog";
 import { useNavigate } from "react-router-dom";
@@ -313,6 +314,7 @@ export function EditPublicProfileDialog({
   const originalUsername = initialForm.username;
   const [saving, setSaving] = useState(false);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
+  const crops = useCrops();
   const [states, setStates] = useState<LgdState[]>([]);
   const [districts, setDistricts] = useState<LgdDistrict[]>([]);
   const [blocks, setBlocks] = useState<LgdSubDistrict[]>([]);
@@ -1544,6 +1546,7 @@ export function EditPublicProfileDialog({
             open={cropPickerOpen}
             onOpenChange={setCropPickerOpen}
             selected={form.crops}
+            crops={crops}
             onSelectionChange={(crops) => {
               setForm((current) => ({ ...current, crops }));
               setFieldError(

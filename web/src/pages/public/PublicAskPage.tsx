@@ -19,6 +19,7 @@ import { SubmissionTabPanel, SubmissionTypeTabs, parseSubmissionTab, useTabDirec
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
+import { useCrops } from '@/hooks/useCrops'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import {
   runOnDeviceValidation,
@@ -231,6 +232,7 @@ export function PublicAskPage() {
   const [season, setSeason] = useState<string>('')
   const [cropType, setCropType] = useState('')
   const [cropPickerOpen, setCropPickerOpen] = useState(false)
+  const crops = useCrops()
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [stats, setStats] = useState<StatsState | null>(null)
@@ -878,6 +880,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
           onSelectionChange={(crops) => setCropType(crops[0] ?? '')}
           mode="single"
           title={t('question.cropType')}
+          crops={crops}
         />
         {dialogs}
               <LocationCaptureModal

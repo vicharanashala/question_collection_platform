@@ -24,7 +24,7 @@ interface CropPickerModalProps {
   crops: Crop[]
 }
 
-interface Crop {
+export interface Crop {
   _id: string
   name: string
   imageUrl?: string | null
