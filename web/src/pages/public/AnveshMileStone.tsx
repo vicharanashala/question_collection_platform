@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Dialog,
@@ -9,9 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
+  ArrowRight,
   Bug,
   CheckCircle2,
+  ExternalLink,
   Leaf,
+  Lock,
+  MonitorSmartphone,
+  PenLine,
   MessageSquareText,
   Microscope,
   Sprout,
@@ -20,14 +26,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/hooks/useCountUp";
+import type { AnveshanMilestoneResponse } from "@/api/client";
+import { ANVESHAN_ANSWERS_DESKTOP_QUERY, ANVESHAN_ANSWERS_ROUTE, ANVESHAN_PLATFORM_URL } from "@/constants/public";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-export interface AnveshanMilestoneData {
-  requirements: { questions: number; crop: number; weed: number; pest: number; disease: number };
-  progress: { questions: number; crop: number; weed: number; pest: number; disease: number };
-  completed: boolean;
-}
+export type AnveshanMilestoneData = AnveshanMilestoneResponse;
 
-type MilestoneKey = keyof AnveshanMilestoneData["requirements"];
+type MilestoneKey = Exclude<keyof AnveshanMilestoneData["requirements"], "answers">;
+
+
+// Submissions make up the first 80% of the milestone; answering their own questions is the last 20%.
+const SUBMISSION_WEIGHT = 80;
+const ANSWER_WEIGHT = 100 - SUBMISSION_WEIGHT;
 
 interface AnveshanMilestoneModalProps {
   open: boolean;
@@ -46,8 +56,8 @@ const ITEMS: { key: MilestoneKey; icon: LucideIcon; label: (n: number) => string
 const ROW_STAGGER_SECONDS = 0.07;
 const RING_RADIUS = 34;
 
-// Returns the overall completion percentage, capping each requirement so extra submissions do not over-count.
-function overallPercent(data: AnveshanMilestoneData): number {
+// Returns the overall completion percentage: submissions weigh 80% and answers 20%, each requirement capped.
+export function getAnveshanMilestonePercent(data: AnveshanMilestoneData): number {
   const totals = ITEMS.reduce(
     (acc, { key }) => {
       const req = data.requirements[key];
@@ -55,7 +65,12 @@ function overallPercent(data: AnveshanMilestoneData): number {
     },
     { done: 0, required: 0 },
   );
-  return totals.required === 0 ? 0 : Math.round((totals.done / totals.required) * 100);
+  const submissionShare = totals.required === 0 ? 0 : totals.done / totals.required;
+  const answersRequired = data.requirements.answers;
+  const answerShare = answersRequired === 0 ? 1 : Math.min(data.progress.answers, answersRequired) / answersRequired;
+  // Answers only count once submissions are finished, matching the order users complete them in.
+  const answerPart = data.submissionsCompleted ? answerShare * ANSWER_WEIGHT : 0;
+  return Math.round(submissionShare * SUBMISSION_WEIGHT + answerPart);
 }
 
 interface ProgressRingProps {
@@ -157,11 +172,126 @@ function MilestoneRow({ icon: Icon, label, progress, required, index, open }: Mi
   );
 }
 
-export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMilestoneModalProps) {
+interface AnswerTaskCardProps {
+  data: AnveshanMilestoneData;
+  onStart: () => void;
+}
+
+// Final milestone step: locked until submissions are done, then invites the user to answer their questions.
+function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
-  const percent = data ? overallPercent(data) : 0;
-  const goalsMet = data ? ITEMS.filter(({ key }) => data.progress[key] >= data.requirements[key]).length : 0;
+  const required = data.requirements.answers;
+  const answered = data.progress.answers;
+  const done = answered >= required;
+  const unlocked = data.submissionsCompleted;
+  const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY);
+
+  if (!unlocked) {
+    return (
+      <div className="mt-3 flex items-center gap-3 rounded-xl border border-dashed border-border-subtle px-3 py-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-variant text-text-tertiary">
+          <Lock className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-text-secondary">
+            {t("anveshan.answerTaskLockedTitle", {
+              count: required,
+              defaultValue: "Final step: answer {{count}} of your questions",
+            })}
+          </p>
+          <p className="text-xs text-text-tertiary">
+            {t("anveshan.answerTaskLockedHint", { defaultValue: "Unlocks after the goals above are complete." })}
+          </p>
+        </div>
+        <span className="text-xs font-semibold tabular-nums text-text-tertiary" aria-label={`${answered} of ${required}`}>
+          {answered}/{required}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: reduceMotion ? 0 : 0.55, ease: "easeOut" }}
+      className={cn(
+        "mt-3 rounded-xl border px-3 py-3",
+        done
+          ? "border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/25"
+          : "border-primary/40 bg-primary/5",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white",
+            done ? "bg-emerald-500" : "bg-primary",
+          )}
+        >
+          {done ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <PenLine className="h-4 w-4" aria-hidden="true" />}
+        </span>
+        <p className="min-w-0 flex-1 text-sm font-semibold text-foreground">
+          {done
+            ? t("anveshan.answerTaskDoneTitle", { count: required, defaultValue: "{{count}} answers submitted" })
+            : t("anveshan.answerTaskTitle", {
+                count: required,
+                defaultValue: "Final step: answer {{count}} of your questions",
+              })}
+        </p>
+        <span
+          className={cn(
+            "text-xs font-semibold tabular-nums",
+            done ? "text-emerald-700 dark:text-emerald-400" : "text-primary",
+          )}
+          aria-label={`${answered} of ${required}`}
+        >
+          {answered}/{required}
+        </span>
+      </div>
+      {!done && (
+        <>
+          <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+            {t("anveshan.answerTaskMessage", {
+              count: required,
+              defaultValue:
+                "Amazing work reaching 80%! You know these questions best. Share your answer, backed by a trusted source, for any {{count}} of them to complete your milestone.",
+            })}
+          </p>
+          {isDesktop ? (
+            <Button className="mt-3 w-full gap-1.5" onClick={onStart}>
+              {t("anveshan.answerTaskCta", { defaultValue: "Start answering" })}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          ) : (
+            <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+              <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              {t("anveshan.answerTaskDesktopOnly", {
+                defaultValue: "Answering is available only on a desktop or laptop. Please open AnnaDatha there to finish this step.",
+              })}
+            </p>
+          )}
+        </>
+      )}
+    </motion.div>
+  );
+}
+
+export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMilestoneModalProps) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
+  const percent = data ? getAnveshanMilestonePercent(data) : 0;
+  const submissionGoalsMet = data ? ITEMS.filter(({ key }) => data.progress[key] >= data.requirements[key]).length : 0;
+  const answerGoalMet = data?.submissionsCompleted && data.progress.answers >= data.requirements.answers ? 1 : 0;
+  const goalsMet = submissionGoalsMet + answerGoalMet;
+
+  // Closes the modal and opens the page where users answer their own questions.
+  const startAnswering = () => {
+    onOpenChange(false);
+    navigate(ANVESHAN_ANSWERS_ROUTE);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -193,14 +323,16 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
                 <p className="text-sm font-semibold text-foreground">
                   {t("anveshan.goalsMet", {
                     met: goalsMet,
-                    total: ITEMS.length,
+                    total: ITEMS.length + 1,
                     defaultValue: "{{met}} of {{total}} goals complete",
                   })}
                 </p>
                 <p className="mt-0.5 text-xs text-text-tertiary">
                   {data.completed
                     ? t("anveshan.allGoalsDone", { defaultValue: "Every requirement is met." })
-                    : t("anveshan.keepGoing", { defaultValue: "Keep submitting to reach 100%." })}
+                    : data.submissionsCompleted
+                      ? t("anveshan.answerToFinish", { defaultValue: "Answer your questions to reach 100%." })
+                      : t("anveshan.keepGoing", { defaultValue: "Keep submitting to reach 80%, then answer to finish." })}
                 </p>
               </div>
             </div>
@@ -218,6 +350,8 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
                 />
               ))}
             </ul>
+
+            <AnswerTaskCard data={data} onStart={startAnswering} />
           </>
         )}
 
@@ -229,7 +363,18 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
             className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
             role="status"
           >
-            {t("anveshan.milestoneComplete", { defaultValue: "🎉 Milestone complete! Great work." })}
+            <p>
+              {t("anveshan.milestoneComplete100", {
+                defaultValue: "🎉 Congratulations! You have reached 100%. Kindly go to the Anveshan platform and check your completion there.",
+              })}
+            </p>
+            <Button asChild size="sm" className="mt-3 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700">
+              <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
+                {t("anveshan.goToAnveshan", "Go to Anveshan")}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="sr-only">{t("common.opensInNewTab", "(opens in a new tab)")}</span>
+              </a>
+            </Button>
           </motion.div>
         )}
 

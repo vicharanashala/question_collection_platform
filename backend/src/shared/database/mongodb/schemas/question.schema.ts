@@ -111,6 +111,10 @@ export class Question {
   @Prop({name: 'is_Anveshan', type: Boolean, default: false})
   isAnveshan: boolean;
 
+  /** True once the Anveshan user has answered this question; the answer lives in `anveshan_answers`. */
+  @Prop({ name: 'isAnswerSubmitted', type: Boolean, default: false })
+  isAnswerSubmitted: boolean;
+
   @Prop({ name: 'createdAt' })
   createdAt: Date;
 

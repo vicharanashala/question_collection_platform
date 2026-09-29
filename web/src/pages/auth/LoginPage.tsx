@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type KeyboardEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { ANVESHAN_TAGLINE } from "@/constants/public";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi, getErrorMessage } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -333,12 +334,16 @@ function StepOtp({
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const brandFeatures = searchParams.get("isAnveshan") === "true" ? ANVESHAN_FEATURES : FEATURES;
+  const isAnveshanLogin = searchParams.get("isAnveshan") === "true";
+  const brandFeatures = isAnveshanLogin ? ANVESHAN_FEATURES : FEATURES;
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [mobile, setMobile] = useState("");
+  const location = useLocation();
+  // "Check again" on the Anveshan phase gate returns here with the number filled in.
+  const prefilledMobile = (location.state as { mobileNumber?: string } | null)?.mobileNumber ?? "";
+  const [mobile, setMobile] = useState(prefilledMobile);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const countdown = useCountdown();
@@ -423,7 +428,7 @@ export function LoginPage() {
     if ("requiresRegistration" in res && res.requiresRegistration) {
       if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
         navigate("/home/anveshan-phase-gate", {
-          state: res.anveshanPhaseInfo,
+          state: { ...res.anveshanPhaseInfo, mobileNumber: mobile },
           replace: true,
         });
         return;
@@ -447,7 +452,7 @@ export function LoginPage() {
 
     if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
       navigate("/home/anveshan-phase-gate", {
-        state: res.anveshanPhaseInfo,
+        state: { ...res.anveshanPhaseInfo, mobileNumber: mobile },
         replace: true,
       });
       return;
@@ -516,7 +521,7 @@ export function LoginPage() {
             <h1 className="text-2xl font-extrabold text-white tracking-tight leading-tight">
               AnnaDatha
             </h1>
-            <p className="text-white/60 text-sm">Farming Questions Platform</p>
+            <p className="text-white/60 text-sm">{isAnveshanLogin ? ANVESHAN_TAGLINE : "Farming Questions Platform"}</p>
           </div>
         </div>
 
@@ -543,7 +548,7 @@ export function LoginPage() {
 
         {/* Bottom: simple footer */}
         <p className="text-xs text-white/30">
-          &copy; {new Date().getFullYear()} AnnaDatha
+          &copy; {new Date().getFullYear()} {isAnveshanLogin ? "AnnaDatha × Anveshan" : "AnnaDatha"}
         </p>
       </div>
 
@@ -565,7 +570,7 @@ export function LoginPage() {
                 AnnaDatha
               </h1>
               <p className="mt-0.5 text-xs text-white/70">
-                Farming Questions Platform
+                {isAnveshanLogin ? ANVESHAN_TAGLINE : "Farming Questions Platform"}
               </p>
             </div>
 

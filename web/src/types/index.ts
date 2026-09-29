@@ -5,9 +5,20 @@ export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'sus
 export type QuestionStatus = 'pending' | 'held' | 'approved' | 'rejected' | 'moved_to_final';
 export type UserCategory = 'farmer' | 'fpo' | 'student' | 'volunteer' | 'ngo';
 
+/** Anveshan milestone progress attached to Anveshan users in the admin user list. */
+export interface AnveshanUserProgress {
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
+  submissionsCompleted: boolean;
+  completed: boolean;
+  percent: number;
+}
+
 export interface User {
   id: string;
   mobileNumber: string;
+  isAnveshanUser?: boolean;
+  anveshanProgress?: AnveshanUserProgress | null;
   name: string;
   username: string | null;
   role: UserRole;
@@ -103,6 +114,8 @@ export interface Question {
   /** Alias for user.mobileNumber */
   userMobileNumber?: string | null;
   isAnveshan?: boolean;
+  /** True once the Anveshan user has answered their own question. */
+  isAnswerSubmitted?: boolean;
   submissionLocation: {
     latitude: number;
     longitude: number;
@@ -757,4 +770,94 @@ export interface SubmitAgriEntityResponse {
   id: string;
   status: string;
   message: string;
+}
+
+// ─── Anveshan answers ──────────────────────────────────────────────────────
+
+export type AnveshanAnswerSourceType = 'hyper_local' | 'state' | 'central' | 'other';
+
+export interface AnveshanAnswerSource {
+  sourceType: AnveshanAnswerSourceType;
+  sourceName: string;
+  source: string;
+  page?: string | null;
+}
+
+export interface AnveshanAnswer {
+  answer: string;
+  sources: AnveshanAnswerSource[];
+  remarks: string | null;
+  answeredAt: string;
+}
+
+export interface AnveshanAnswerQuestion {
+  id: string;
+  questionText: string;
+  cropType: string;
+  state: string;
+  district: string;
+  language: string;
+  status: QuestionStatus;
+  submittedAt: string;
+  isAnswerSubmitted: boolean;
+  answer: AnveshanAnswer | null;
+}
+
+export interface AnveshanMilestoneCounts {
+  questions: number;
+  crop: number;
+  weed: number;
+  pest: number;
+  disease: number;
+  answers: number;
+}
+
+export interface AnveshanAnswerQuestionsResponse {
+  items: AnveshanAnswerQuestion[];
+  requiredAnswers: number;
+  answeredCount: number;
+  unlocked: boolean;
+  completed: boolean;
+  /** Milestone targets and capped progress, used to show what is left before answering unlocks. */
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
+}
+
+export interface SubmitAnveshanAnswerPayload {
+  answer: string;
+  sources: AnveshanAnswerSource[];
+  remarks?: string;
+}
+
+export interface SubmitAnveshanAnswerResponse {
+  question: AnveshanAnswerQuestion;
+  answeredCount: number;
+  requiredAnswers: number;
+  completed: boolean;
+}
+
+// ─── App feedback (admin) ──────────────────────────────────────────────────
+
+export interface AppFeedbackItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  inputMethod: 'text' | 'voice';
+  createdAt: string;
+  user: { id: string; name: string; mobileNumber: string; state?: string; district?: string } | null;
+}
+
+export interface FeedbackRatingSummary {
+  total: number;
+  averageRating: number | null;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+}
+
+export interface AppFeedbackListResponse {
+  items: AppFeedbackItem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  summary: FeedbackRatingSummary;
 }

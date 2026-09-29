@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Send,
   Sprout,
+  Star,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { SignOutDialog } from '@/components/SignOutDialog'
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/questions',      labelKey: 'nav.questions',      icon: MessageSquare,   roles: ['user', 'curator', 'admin', 'super_admin'] },
   { to: '/reviews',        labelKey: 'nav.reviewQueue',    icon: CheckSquare,     roles: ['curator', 'super_admin'] },
   { to: '/agri-entities',  labelKey: 'nav.agriEntities',   icon: Sprout,          roles: ['curator', 'admin', 'super_admin'], defaultLabel: 'Agri Entities' },
+  { to: '/feedbacks',      labelKey: 'nav.feedbacks',      icon: Star,            roles: ['admin', 'super_admin'], defaultLabel: 'App Feedback' },
   { to: '/distributions',  labelKey: 'nav.distributions',  icon: Send,            roles: ['distributor', 'admin', 'super_admin'] },
   { to: '/withdrawals',    labelKey: 'nav.withdrawals',    icon: CreditCard,      roles: ['finance', 'admin', 'super_admin'] },
   { to: '/wallets',        labelKey: 'nav.wallets',        icon: Wallet,          roles: ['finance', 'admin', 'super_admin'] },

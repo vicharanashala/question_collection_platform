@@ -76,7 +76,20 @@ export interface QuestionAnalyticsResult {
   }>;
 }
 
+/** Per-user question totals used for Anveshan progress. */
+export interface UserQuestionCounts {
+  userId: string;
+  questions: number;
+  answers: number;
+}
+
 export interface IQuestionRepository extends MongoRepository<Question> {
+  /** Question and submitted-answer counts for each of the given users (users with no questions are omitted). */
+  countSubmissionsByUsers(userIds: string[]): Promise<UserQuestionCounts[]>;
+
+  /** Ids of users with at least `minAnswers` answered questions. */
+  findUserIdsWithAnswers(minAnswers: number): Promise<string[]>;
+
   findByUserId(userId: string, status?: QuestionStatus, limit?: number): Promise<Question[]>;
   countByUserId(userId: string, status?: QuestionStatus): Promise<number>;
   searchByText(text: string, limit?: number): Promise<Question[]>;

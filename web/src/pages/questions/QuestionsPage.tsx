@@ -41,8 +41,10 @@ import {
   Info,
   Mic,
   Sprout,
+  MessageSquareReply,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StaffAnveshanAnswerSection } from "@/components/anveshan-answers/StaffAnveshanAnswerSection";
 import type { Question } from "@/types";
 import { TranslatableText } from "@/components/TranslatableText";
 import {
@@ -114,6 +116,16 @@ function InfoRow({
   );
 }
 
+// ─── Anveshan answer filter ───────────────────────────────────────────────────
+
+type AnswerFilter = "" | "answered" | "unanswered";
+
+const ANSWER_FILTER_OPTIONS: { value: AnswerFilter; label: string }[] = [
+  { value: "", label: "All answers" },
+  { value: "answered", label: "Answered (Anveshan)" },
+  { value: "unanswered", label: "Awaiting answer (Anveshan)" },
+];
+
 // ─── Questions page ───────────────────────────────────────────────────────────
 
 export function QuestionsPage() {
@@ -123,6 +135,7 @@ export function QuestionsPage() {
   const [statusFilter, setStatusFilter] = useState<
     "held" | "approved" | "rejected" | "pending" | ""
   >("");
+  const [answerFilter, setAnswerFilter] = useState<AnswerFilter>("");
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"table" | "card">("table");
   const limit = 10;
@@ -149,7 +162,7 @@ export function QuestionsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, answerFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -160,6 +173,7 @@ export function QuestionsPage() {
         limit: activeLimit,
         search: debouncedSearch || undefined,
         status: statusFilter || undefined,
+        answerStatus: answerFilter || undefined,
       })
       .then((res) => {
         setQuestions(res.items as Question[]);
@@ -167,7 +181,7 @@ export function QuestionsPage() {
       })
       .catch((e) => toast.error(getErrorMessage(e, "Failed to load questions")))
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, view]);
+  }, [page, debouncedSearch, statusFilter, answerFilter, view]);
 
   const totalPages = Math.max(
     1,
@@ -191,6 +205,22 @@ export function QuestionsPage() {
           {STATUS_LABELS[q.status] ?? q.status}
         </Badge>
       ),
+    },
+    {
+      key: "isAnswerSubmitted",
+      header: "Answer",
+      width: "110px",
+      sortable: false,
+      render: (q) =>
+        q.isAnswerSubmitted ? (
+          <Badge className="whitespace-nowrap bg-emerald-600 px-2 py-0.5 text-[11px] text-white sm:text-xs">
+            <MessageSquareReply className="mr-1 h-3 w-3" aria-hidden="true" /> Answered
+          </Badge>
+        ) : q.isAnveshan ? (
+          <span className="whitespace-nowrap text-xs text-muted-foreground">Awaiting</span>
+        ) : (
+          <span className="text-xs text-muted-foreground" aria-label="Not applicable">—</span>
+        ),
     },
     {
       key: "questionText",
@@ -432,8 +462,24 @@ export function QuestionsPage() {
             </div>
           </div>
 
+          {/* Anveshan answer filter */}
+          <div className="sm:ml-auto sm:w-52">
+            <Select value={answerFilter || "all"} onValueChange={(v) => setAnswerFilter(v === "all" ? "" : (v as AnswerFilter))}>
+              <SelectTrigger className="w-full" aria-label="Filter by answer">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ANSWER_FILTER_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value || "all"} value={value || "all"}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Search */}
-          <div className="relative flex-1 sm:max-w-xs ml-auto">
+          <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search crop, keyword, location..."
@@ -466,7 +512,7 @@ export function QuestionsPage() {
             }
           }}
         >
-          <DialogContent className="!w-[80vw] !max-w-[80vw] !h-[80vh] !max-h-[80vh] overflow-hidden p-2.5">
+          <DialogContent className="!w-[80vw] !max-w-[80vw] !h-[80vh] !max-h-[80vh] overflow-y-auto p-2.5">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Eye className="h-4 w-4" /> Question Details
@@ -693,6 +739,8 @@ export function QuestionsPage() {
                   </div>
                 </div>
               )}
+
+              {detailQuestion.isAnveshan && <StaffAnveshanAnswerSection questionId={detailQuestion.id} />}
             </div>
             {detailQuestion.mediaUrls &&
               detailQuestion.mediaUrls.filter(

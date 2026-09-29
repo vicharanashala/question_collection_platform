@@ -15,7 +15,7 @@
  *   • `login(...)` so the public user is authenticated immediately
  *   • navigating to `/home/verification-pending` on success
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { authApi, lgdApi, getErrorMessage } from "@/api/client";
 import type {
@@ -28,14 +28,17 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SearchableSelect, MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
+import {
+  SearchableSelect,
+  MultiSearchableSelect,
+} from "@/components/ui/multi-searchable-select";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
@@ -75,7 +78,7 @@ import { LogOut } from "lucide-react";
 import { SignOutDialog } from "@/components/SignOutDialog";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { SupportedLanguageCode } from "@/i18n";
-
+import placeholderImage from "../../assets/place-holder-image.jpg";
 const TOTAL_STEPS = 4;
 const STEP_KEYS = [
   "Tell us about yourself",
@@ -213,6 +216,7 @@ interface WizardFormStateProps {
    * one — not just on form submit.
    */
   setLanguage: (code: SupportedLanguageCode) => Promise<void>;
+  crops: Crop[]
 }
 
 function Step1({ form, errors, setField }: WizardFormStateProps) {
@@ -243,11 +247,18 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
                   active ? c.iconColor : c.iconColor,
                 )}
               >
-                <CategoryIcon value={c.value} className="h-4 w-4 sm:h-5 sm:w-5" />
+                <CategoryIcon
+                  value={c.value}
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-tight">{c.label}</p>
-                <p className="hidden xs:block mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-snug">{c.description}</p>
+                <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-tight">
+                  {c.label}
+                </p>
+                <p className="hidden xs:block mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-snug">
+                  {c.description}
+                </p>
               </div>
               {active && (
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 shrink-0" />
@@ -257,7 +268,9 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
         })}
       </div>
       {errors.category && (
-        <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.category}</p>
+        <p className="text-xs sm:text-xs sm:text-sm text-destructive">
+          {errors.category}
+        </p>
       )}
     </div>
   );
@@ -300,20 +313,25 @@ function Step2({
           State <span className="text-destructive">*</span>
         </Label>
         <SearchableSelect
-          items={SUPPORTED_STATES.map((s) => ({ value: s.value, label: s.label }))}
+          items={SUPPORTED_STATES.map((s) => ({
+            value: s.value,
+            label: s.label,
+          }))}
           value={form.state}
           onValueChange={(v) => {
-            setField("state", v)
-            setField("district", "")
-            setField("districtCode", "")
-            loadDistricts(v)
+            setField("state", v);
+            setField("district", "");
+            setField("districtCode", "");
+            loadDistricts(v);
           }}
           placeholder="Search state…"
           disabled={loadingDistricts}
           loading={loadingDistricts}
         />
         {errors.state && (
-          <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.state}</p>
+          <p className="text-xs sm:text-xs sm:text-sm text-destructive">
+            {errors.state}
+          </p>
         )}
       </div>
 
@@ -326,20 +344,23 @@ function Step2({
           items={districts.map((d) => ({ value: d.name, label: d.name }))}
           value={form.district}
           onValueChange={(v) => {
-            const d = districts.find((x) => x.name === v)
-            setField("district", v)
-            setField("districtCode", d?.code ?? "")
-            loadBlocks(d?.code ?? "")
+            const d = districts.find((x) => x.name === v);
+            setField("district", v);
+            setField("districtCode", d?.code ?? "");
+            loadBlocks(d?.code ?? "");
           }}
-          placeholder={
-            !form.state ? "Choose state first" : "Search district…"
-          }
+          placeholder={!form.state ? "Choose state first" : "Search district…"}
           disabled={!form.state || loadingDistricts}
           loading={loadingDistricts}
-          allowFreeText={!districtFreeText && districts.length === 0 && !loadingDistricts && !!form.state}
+          allowFreeText={
+            !districtFreeText &&
+            districts.length === 0 &&
+            !loadingDistricts &&
+            !!form.state
+          }
           onFreeTextEntry={() => {
-            setDistrictFreeText(true)
-            setField("district", "")
+            setDistrictFreeText(true);
+            setField("district", "");
           }}
         />
         {/* Free-text input when backend returned no data */}
@@ -352,7 +373,9 @@ function Step2({
           />
         )}
         {errors.district && (
-          <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.district}</p>
+          <p className="text-xs sm:text-xs sm:text-sm text-destructive">
+            {errors.district}
+          </p>
         )}
       </div>
 
@@ -366,20 +389,25 @@ function Step2({
             items={blocks.map((b) => ({ value: b.name, label: b.name }))}
             value={form.block}
             onValueChange={(v) => {
-              const block = blocks.find((b) => b.name === v)
-              setField("block", v)
-              loadVillages(block?.code ?? "")
-              loadKvks(form.districtCode)
+              const block = blocks.find((b) => b.name === v);
+              setField("block", v);
+              loadVillages(block?.code ?? "");
+              loadKvks(form.districtCode);
             }}
             placeholder={
               !form.district ? "Choose district first" : "Search block…"
             }
             disabled={!form.district || loadingBlocks}
             loading={loadingBlocks}
-            allowFreeText={!blockFreeText && blocks.length === 0 && !loadingBlocks && !!form.district}
+            allowFreeText={
+              !blockFreeText &&
+              blocks.length === 0 &&
+              !loadingBlocks &&
+              !!form.district
+            }
             onFreeTextEntry={() => {
-              setBlockFreeText(true)
-              setField("block", "")
+              setBlockFreeText(true);
+              setField("block", "");
             }}
           />
           {/* Free-text input when backend returned no data */}
@@ -392,7 +420,9 @@ function Step2({
             />
           )}
           {errors.block && (
-            <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.block}</p>
+            <p className="text-xs sm:text-xs sm:text-sm text-destructive">
+              {errors.block}
+            </p>
           )}
         </div>
       )}
@@ -401,7 +431,9 @@ function Step2({
       {form.category === "farmer" && form.block && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Village <span className="text-destructive">*</span></Label>
+            <Label>
+              Village <span className="text-destructive">*</span>
+            </Label>
             <SearchableSelect
               items={villages.map((v) => ({ value: v.name, label: v.name }))}
               value={form.village}
@@ -409,10 +441,15 @@ function Step2({
               placeholder="Search village…"
               disabled={loadingVillages}
               loading={loadingVillages}
-              allowFreeText={!villageFreeText && villages.length === 0 && !loadingVillages && !!form.block}
+              allowFreeText={
+                !villageFreeText &&
+                villages.length === 0 &&
+                !loadingVillages &&
+                !!form.block
+              }
               onFreeTextEntry={() => {
-                setVillageFreeText(true)
-                setField("village", "")
+                setVillageFreeText(true);
+                setField("village", "");
               }}
             />
             {/* Free-text input when backend returned no data */}
@@ -425,11 +462,15 @@ function Step2({
               />
             )}
             {errors.village && (
-              <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.village}</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-destructive">
+                {errors.village}
+              </p>
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Nearest KVK <span className="text-destructive">*</span></Label>
+            <Label>
+              Nearest KVK <span className="text-destructive">*</span>
+            </Label>
             <SearchableSelect
               items={kvks.map((k) => ({ value: k.address, label: k.address }))}
               value={form.kvk}
@@ -437,10 +478,15 @@ function Step2({
               placeholder="Search KVK…"
               disabled={loadingKvks}
               loading={loadingKvks}
-              allowFreeText={!kvkFreeText && kvks.length === 0 && !loadingKvks && !!form.districtCode}
+              allowFreeText={
+                !kvkFreeText &&
+                kvks.length === 0 &&
+                !loadingKvks &&
+                !!form.districtCode
+              }
               onFreeTextEntry={() => {
-                setKvkFreeText(true)
-                setField("kvk", "")
+                setKvkFreeText(true);
+                setField("kvk", "");
               }}
             />
             {/* Free-text input when backend returned no data */}
@@ -453,13 +499,22 @@ function Step2({
               />
             )}
             {errors.kvk && (
-              <p className="text-xs sm:text-xs sm:text-sm text-destructive">{errors.kvk}</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-destructive">
+                {errors.kvk}
+              </p>
             )}
           </div>
         </div>
       )}
     </div>
   );
+}
+
+interface Crop {
+  _id: string;
+  name: string;
+  imageUrl?: string | null;
+  scientificName?: string;
 }
 
 function Step3({
@@ -472,7 +527,32 @@ function Step3({
   setCropPickerOpen,
   volunteerCropPickerOpen,
   setVolunteerCropPickerOpen,
+  crops
 }: WizardFormStateProps) {
+
+  
+
+  const visibleCrops = useMemo(() => {
+    const excludedCrops = new Set([
+      "Agricultural Field",
+      "Agricultural Seasons",
+      "Alkaline pH Soil",
+      "All",
+      "All Crops",
+    ]);
+
+    return crops
+      .slice(4)
+      .slice(0, 9)
+      .filter((crop) => !excludedCrops.has(crop.name))
+      .map((crop) => ({
+        value: crop.name,
+        label: crop.name,
+        imageUrl: crop.imageUrl || placeholderImage,
+        _id: crop._id,
+      }));
+  }, [crops]);
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -487,7 +567,9 @@ function Step3({
             placeholder="Your name"
           />
           {errors.name && (
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.name}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+              {errors.name}
+            </p>
           )}
         </div>
         <div className="space-y-1.5">
@@ -507,23 +589,34 @@ function Step3({
               placeholder="e.g. ram_kr"
               className={cn(
                 "pr-8",
-                usernameStatus === "available" && "border-emerald-400 bg-emerald-50/50",
+                usernameStatus === "available" &&
+                  "border-emerald-400 bg-emerald-50/50",
               )}
             />
             {usernameStatus === "available" && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
                 <svg className="h-4 w-4" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M2 6l3 3 5-5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </span>
             )}
           </div>
           {errors.username && (
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.username}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+              {errors.username}
+            </p>
           )}
           {usernameStatus === "taken" && (
             <div className="space-y-1">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">Taken. Try one of these:</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                Taken. Try one of these:
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {usernameSuggestions.map((s) => (
                   <button
@@ -561,7 +654,9 @@ function Step3({
             </SelectContent>
           </Select>
           {errors.gender && (
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.gender}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+              {errors.gender}
+            </p>
           )}
         </div>
         <div className="space-y-1.5">
@@ -576,24 +671,39 @@ function Step3({
             onChange={(e) => setField("age", e.target.value)}
             placeholder="e.g. 28"
           />
-          {errors.age && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.age}</p>}
+          {errors.age && (
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+              {errors.age}
+            </p>
+          )}
         </div>
       </div>
       {form.category === "farmer" && (
         <>
           <div className="space-y-1.5">
-            <Label>Farm size (acres) <span className="text-rose-600">*</span></Label>
+            <Label>
+              Farm size (acres) <span className="text-rose-600">*</span>
+            </Label>
             <Input
               inputMode="decimal"
               value={form.farmSize}
               onChange={(e) => {
-                const v = e.target.value.replace(/[^0-9.]/g, '')
-                const parts = v.split('.')
-                setField('farmSize', parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : v)
+                const v = e.target.value.replace(/[^0-9.]/g, "");
+                const parts = v.split(".");
+                setField(
+                  "farmSize",
+                  parts.length > 2
+                    ? `${parts[0]}.${parts.slice(1).join("")}`
+                    : v,
+                );
               }}
               placeholder="e.g. 2.5"
             />
-            {errors.farmSize && <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.farmSize}</p>}
+            {errors.farmSize && (
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.farmSize}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -609,18 +719,18 @@ function Step3({
 
             {/* Always-visible grid of 10 crop images */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {CROPS.slice(0, 9).map((crop) => {
-                const selected = form.cropType.includes(crop)
+              {visibleCrops.map((crop) => {
+                const selected = form.cropType.includes(crop.value);
                 return (
                   <button
-                    key={crop}
+                    key={crop._id}
                     type="button"
                     onClick={() =>
                       setField(
                         "cropType",
                         selected
-                          ? form.cropType.filter((x) => x !== crop)
-                          : [...form.cropType, crop],
+                          ? form.cropType.filter((x) => x !== crop.value)
+                          : [...form.cropType, crop.value],
                       )
                     }
                     className={cn(
@@ -633,7 +743,7 @@ function Step3({
                   >
                     <div className="relative h-14 w-14 overflow-hidden rounded-full">
                       <CropImage
-                        name={crop}
+                        name={crop.value}
                         className="h-full w-full rounded-full object-cover"
                       />
                       {selected && (
@@ -642,14 +752,18 @@ function Step3({
                         </div>
                       )}
                     </div>
-                    <span className={cn(
-                      "line-clamp-2 text-center text-[10px] leading-tight",
-                      selected ? "font-semibold text-emerald-700 dark:text-emerald-300" : "text-muted-foreground",
-                    )}>
-                      {crop}
+                    <span
+                      className={cn(
+                        "line-clamp-2 text-center text-[10px] leading-tight",
+                        selected
+                          ? "font-semibold text-emerald-700 dark:text-emerald-300"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {crop.value}
                     </span>
                   </button>
-                )
+                );
               })}
             </div>
 
@@ -664,7 +778,12 @@ function Step3({
                     {c}
                     <button
                       type="button"
-                      onClick={() => setField("cropType", form.cropType.filter((x) => x !== c))}
+                      onClick={() =>
+                        setField(
+                          "cropType",
+                          form.cropType.filter((x) => x !== c),
+                        )
+                      }
                       className="ml-0.5 leading-none hover:text-rose-500"
                       aria-label={`Remove ${c}`}
                     >
@@ -689,10 +808,13 @@ function Step3({
               onOpenChange={setCropPickerOpen}
               selected={form.cropType}
               onSelectionChange={(crops) => setField("cropType", crops)}
+              crops={crops}
             />
 
             {errors.cropType && (
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.cropType}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.cropType}
+              </p>
             )}
           </div>
         </>
@@ -720,7 +842,9 @@ function Step3({
               </SelectContent>
             </Select>
             {errors.courseName && (
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.courseName}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.courseName}
+              </p>
             )}
             {form.courseName === OTHER_VALUE && (
               <Input
@@ -731,7 +855,9 @@ function Step3({
               />
             )}
             {errors.courseNameOther && (
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.courseNameOther}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.courseNameOther}
+              </p>
             )}
           </div>
           <div className="space-y-1.5">
@@ -744,7 +870,9 @@ function Step3({
               placeholder="College / institution"
             />
             {errors.collegeName && (
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.collegeName}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.collegeName}
+              </p>
             )}
           </div>
           <div className="space-y-1.5">
@@ -755,7 +883,9 @@ function Step3({
               placeholder="Optional"
             />
             {errors.universityName && (
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.universityName}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.universityName}
+              </p>
             )}
           </div>
         </>
@@ -785,7 +915,9 @@ function Step3({
               </SelectContent>
             </Select>
             {errors.organisationType && (
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.organisationType}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+                {errors.organisationType}
+              </p>
             )}
             {form.organisationType === OTHER_VALUE && (
               <Input
@@ -860,7 +992,10 @@ function Step3({
               Operating state(s) <span className="text-rose-600">*</span>
             </Label>
             <MultiSearchableSelect
-              items={SUPPORTED_STATES.map((s) => ({ value: s.value, label: s.label }))}
+              items={SUPPORTED_STATES.map((s) => ({
+                value: s.value,
+                label: s.label,
+              }))}
               values={form.organizationState}
               onValuesChange={(v) => setField("organizationState", v)}
               placeholder="Search states…"
@@ -896,9 +1031,7 @@ function Step3({
 
               {/* Crop focus label sits BELOW Season (stacked layout) */}
               <div className="flex items-center justify-between">
-                <Label>
-                  Crop focus
-                </Label>
+                <Label>Crop focus</Label>
                 {form.volunteerCropType.length > 0 && (
                   <span className="text-[11px] sm:text-[11px] sm:text-xs font-normal text-emerald-600">
                     {form.volunteerCropType.length} selected
@@ -908,18 +1041,18 @@ function Step3({
 
               {/* Always-visible grid of crop images (matches Primary crops UX) */}
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {CROPS.slice(0, 9).map((crop) => {
-                  const selected = form.volunteerCropType.includes(crop)
+                {visibleCrops.map((crop) => {
+                  const selected = form.cropType.includes(crop.value);
                   return (
                     <button
-                      key={crop}
+                      key={crop._id}
                       type="button"
                       onClick={() =>
                         setField(
-                          "volunteerCropType",
+                          "cropType",
                           selected
-                            ? form.volunteerCropType.filter((x) => x !== crop)
-                            : [...form.volunteerCropType, crop],
+                            ? form.cropType.filter((x) => x !== crop.value)
+                            : [...form.cropType, crop.value],
                         )
                       }
                       className={cn(
@@ -932,7 +1065,7 @@ function Step3({
                     >
                       <div className="relative h-14 w-14 overflow-hidden rounded-full">
                         <CropImage
-                          name={crop}
+                          name={crop.value}
                           className="h-full w-full rounded-full object-cover"
                         />
                         {selected && (
@@ -949,10 +1082,10 @@ function Step3({
                             : "text-muted-foreground",
                         )}
                       >
-                        {crop}
+                        {crop.value}
                       </span>
                     </button>
-                  )
+                  );
                 })}
               </div>
 
@@ -989,7 +1122,7 @@ function Step3({
                 onClick={() => setVolunteerCropPickerOpen(true)}
                 className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
               >
-                See all {CROPS.length} crops
+                See all {crops.length} crops
               </button>
 
               <CropPickerModal
@@ -999,6 +1132,7 @@ function Step3({
                 onSelectionChange={(crops) =>
                   setField("volunteerCropType", crops)
                 }
+                crops={crops}
               />
             </div>
           )}
@@ -1008,7 +1142,13 @@ function Step3({
   );
 }
 
-function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFormStateProps) {
+function Step4({
+  form,
+  errors,
+  setField,
+  setLegalModal,
+  setLanguage,
+}: WizardFormStateProps) {
   // When the user picks a language, switch the whole app to that language
   // immediately (i18n.changeLanguage + localStorage persistence + <html dir/lang>
   // sync are all handled by `setLanguage`/the i18n config). This is the live
@@ -1029,7 +1169,9 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
           <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300">
             <Languages className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">Preferred language</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
+            Preferred language
+          </p>
         </div>
         <Select
           value={form.languagePreference}
@@ -1047,7 +1189,9 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
           </SelectContent>
         </Select>
         {errors.languagePreference && (
-          <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.languagePreference}</p>
+          <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+            {errors.languagePreference}
+          </p>
         )}
       </div>
 
@@ -1064,7 +1208,10 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
           {/* Custom checkbox */}
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setField("consentGiven", !form.consentGiven) }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setField("consentGiven", !form.consentGiven);
+            }}
             className={cn(
               "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all",
               form.consentGiven
@@ -1072,9 +1219,7 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
                 : "border-border-subtle bg-surface hover:border-emerald-400",
             )}
           >
-            {form.consentGiven && (
-              <Check className="h-3 w-3 text-white" />
-            )}
+            {form.consentGiven && <Check className="h-3 w-3 text-white" />}
           </button>
 
           <div className="flex-1 space-y-1.5 sm:space-y-2">
@@ -1082,7 +1227,10 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
               I have read and agree to the{" "}
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setLegalModal("terms") }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLegalModal("terms");
+                }}
                 className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
               >
                 Terms of Service
@@ -1090,7 +1238,10 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
               and{" "}
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setLegalModal("privacy") }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLegalModal("privacy");
+                }}
                 className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
               >
                 Privacy Policy
@@ -1104,7 +1255,9 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
           </div>
         </div>
         {errors.consentGiven && (
-          <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{errors.consentGiven}</p>
+          <p className="mt-1.5 text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
+            {errors.consentGiven}
+          </p>
         )}
       </div>
 
@@ -1114,7 +1267,9 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
           <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
             <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">What happens next?</p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
+            What happens next?
+          </p>
         </div>
         <ul className="space-y-2 sm:space-y-2.5">
           {[
@@ -1135,7 +1290,9 @@ function Step4({ form, errors, setField, setLegalModal, setLanguage }: WizardFor
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500 dark:bg-blue-950 dark:text-blue-400">
                 {item.icon}
               </span>
-              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{item.text}</span>
+              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+                {item.text}
+              </span>
             </li>
           ))}
         </ul>
@@ -1160,7 +1317,10 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 }) {
         const isDone = n < step;
         const isActive = n === step;
         return (
-          <div key={label} className="relative z-10 flex flex-1 flex-col items-center">
+          <div
+            key={label}
+            className="relative z-10 flex flex-1 flex-col items-center"
+          >
             <div
               className={cn(
                 "flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold ring-2 ring-transparent",
@@ -1210,7 +1370,9 @@ export function CompleteProfileWizard({
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
   const [volunteerCropPickerOpen, setVolunteerCropPickerOpen] = useState(false);
-  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
+  const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(
+    null,
+  );
   const directionRef = useRef<1 | -1>(1);
   const [loading, setLoading] = useState(false);
   // Seed the language preference from the currently active i18n language so a
@@ -1233,8 +1395,11 @@ export function CompleteProfileWizard({
   const [blocks, setBlocks] = useState<LgdSubDistrict[]>([]);
   const [villages, setVillages] = useState<LgdVillage[]>([]);
   const [kvks, setKvks] = useState<LgdKvk[]>([]);
-  const [organizationDistricts, setOrganizationDistricts] = useState<LgdDistrict[]>([]);
-  const [loadingOrganizationDistricts, setLoadingOrganizationDistricts] = useState(false);
+  const [organizationDistricts, setOrganizationDistricts] = useState<
+    LgdDistrict[]
+  >([]);
+  const [loadingOrganizationDistricts, setLoadingOrganizationDistricts] =
+    useState(false);
 
   // Loading flags for cascading LGD lookups — used by Step2 to disable
   // dependent dropdowns and render an inline spinner while data is in-flight.
@@ -1248,6 +1413,27 @@ export function CompleteProfileWizard({
   const [blockFreeText, setBlockFreeText] = useState(false);
   const [villageFreeText, setVillageFreeText] = useState(false);
   const [kvkFreeText, setKvkFreeText] = useState(false);
+  const [crops, setCrops] = useState<Crop[]>([])
+
+    useEffect(() => {
+    async function getCrops() {
+      try {
+        const response = (await authApi.getCrops()) as {
+          crops: Crop[];
+          totalCount: number;
+          totalPages: number;
+        };
+        console.log("response", response)
+        setCrops(response.crops);
+      } catch (error) {
+        console.error("Failed to fetch crops:", error);
+      }
+    }
+
+    getCrops();
+    console.log("Crops in Step3", crops);
+  }, []);
+
 
   useEffect(() => {
     const u = form.username.trim();
@@ -1294,7 +1480,7 @@ export function CompleteProfileWizard({
   }
 
   function handleLogout() {
-    setLogoutConfirmOpen(true)
+    setLogoutConfirmOpen(true);
   }
 
   function validateStep(s: 1 | 2 | 3 | 4): boolean {
@@ -1316,8 +1502,7 @@ export function CompleteProfileWizard({
         e.name = "Name must be at least 3 characters";
       else if (form.name.trim().length > 50)
         e.name = "Name must be less than 50 characters";
-      else if (/\d/.test(form.name))
-        e.name = "Name cannot contain numbers";
+      else if (/\d/.test(form.name)) e.name = "Name cannot contain numbers";
 
       if (!form.username.trim()) e.username = "Please choose a username";
       else if (form.username.trim().length < 3)
@@ -1325,26 +1510,33 @@ export function CompleteProfileWizard({
       else if (usernameStatus === "taken")
         e.username =
           "That username is taken. Pick or click a suggestion below.";
-      
+
       if (!form.gender) e.gender = "Please choose a gender";
-      
-      if (!form.age || form.age && (Number(form.age) < 16 || Number(form.age) > 99))
+
+      if (
+        !form.age ||
+        (form.age && (Number(form.age) < 16 || Number(form.age) > 99))
+      )
         e.age = "Age is required and must be between 16 and 99";
-      
+
       if (form.category === "farmer") {
         if (!form.farmSize.trim()) e.farmSize = "Farm size is required";
         if (form.cropType.length === 0) e.cropType = "Pick at least one crop";
       }
       if (form.category === "student") {
         if (!form.courseName) e.courseName = "Course is required";
-        if (form.courseName === OTHER_VALUE && (!form.courseNameOther.trim() || form.courseNameOther.trim().length < 3))
+        if (
+          form.courseName === OTHER_VALUE &&
+          (!form.courseNameOther.trim() ||
+            form.courseNameOther.trim().length < 3)
+        )
           e.courseNameOther = "Course name must be at least 3 characters";
-        
+
         if (!form.collegeName.trim() || form.collegeName.trim().length < 3)
           e.collegeName = "College name must be at least 3 characters";
         else if (/^\d/.test(form.collegeName.trim()))
           e.collegeName = "College name cannot start with a number";
-          
+
         if (form.universityName.trim()) {
           if (form.universityName.trim().length < 3)
             e.universityName = "University name must be at least 3 characters";
@@ -1509,7 +1701,7 @@ export function CompleteProfileWizard({
         gender: form.gender || undefined,
         languagePreference: form.languagePreference,
         consentGiven: true,
-        isUserCreatedBySuperAdmin: false
+        isUserCreatedBySuperAdmin: false,
       };
       if (form.category === "farmer") {
         payload.farmSize = form.farmSize.trim();
@@ -1550,7 +1742,7 @@ export function CompleteProfileWizard({
       }
       const res = await authApi.register(payload);
       login(res.tokens, res.user);
-      window.location.href = '/home/verification-pending';
+      window.location.href = "/home/verification-pending";
     } catch (err) {
       toast.error(
         getErrorMessage(err, "Registration failed. Please try again."),
@@ -1595,6 +1787,7 @@ export function CompleteProfileWizard({
     kvkFreeText,
     setKvkFreeText,
     setLanguage,
+    crops
   };
 
   return (
@@ -1607,7 +1800,9 @@ export function CompleteProfileWizard({
             <h1 className="text-sm sm:text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">
               AnnaDatha
             </h1>
-            <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Complete your profile</p>
+            <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
+              Complete your profile
+            </p>
           </div>
         </div>
         <Button
@@ -1701,6 +1896,7 @@ export function CompleteProfileWizard({
         onOpenChange={setCropPickerOpen}
         selected={form.cropType}
         onSelectionChange={(crops) => setField("cropType", crops)}
+        crops={crops}
       />
       <LegalDocumentModal
         type={legalModal ?? "terms"}

@@ -426,8 +426,8 @@ export function PublicHomePage() {
               </div>
             )}
 
-            {/* Tier progress chip */}
-            {tierIdx < 2 && (
+            {/* Tier progress chip (reward tiers do not apply to Anveshan users) */}
+            {!isAnveshanUser && tierIdx < 2 && (
               <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 sm:mt-3">
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
                   <div
@@ -443,7 +443,7 @@ export function PublicHomePage() {
                 </span>
               </div>
             )}
-            {tierIdx === 2 && (
+            {!isAnveshanUser && tierIdx === 2 && (
               <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-[10px] font-bold text-amber-300 sm:text-xs">
                 <Trophy className="h-3.5 w-3.5" />
                 {t("home.gold")} tier — highest rewards unlocked!
@@ -452,6 +452,7 @@ export function PublicHomePage() {
           </div>
 
           {/* Current tier badge */}
+          {!isAnveshanUser && (
           <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
             <div
               className={cn(
@@ -473,6 +474,7 @@ export function PublicHomePage() {
               {t("home.currentTier")}
             </p>
           </div>
+          )}
         </div>
       </div>
 
@@ -500,7 +502,8 @@ export function PublicHomePage() {
       {/* ── Stats grid ── */}
       <div
         className={cn(
-          "grid grid-cols-2 gap-3 sm:gap-4",
+          "grid gap-3 sm:gap-4",
+          isAnveshanUser && !showPayments ? "grid-cols-1" : "grid-cols-2",
           !isAnveshanUser && "lg:grid-cols-4",
         )}
       >
@@ -533,6 +536,7 @@ export function PublicHomePage() {
             }
           />
         )}
+        {!isAnveshanUser && (
         <StatCard
           icon={<Medal className="h-4 w-4 text-white" />}
           iconBg={
@@ -545,10 +549,11 @@ export function PublicHomePage() {
           label={t("home.currentTier")}
           value={loading ? "..." : t(`home.${currentTier.key}`)}
         />
+        )}
       </div>
 
-      {/* ── Video Section ── */}
-      <VideoSection />
+      {/* ── Video Section (general how-to guide; not shown to Anveshan users) ── */}
+      {!isAnveshanUser && <VideoSection />}
 
       {/* ── Quick Actions ── */}
       <section aria-labelledby="quick-actions-heading">

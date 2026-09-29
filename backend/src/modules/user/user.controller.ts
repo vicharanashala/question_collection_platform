@@ -71,7 +71,7 @@ export class UserController {
   /**
    * GET /users/:mobileNumber/anveshan/check-completion
    * Returns whether the given user (identified by mobile number) has completed all Anveshan
-   * submission requirements (25 questions + 1 crop + 1 pest + 1 weed + 1 disease).
+   * requirements (25 questions + 1 crop + 1 pest + 1 weed + 1 disease, then 2 answers to their own questions).
    * Authenticated via x-api-key header (no JWT required).
    */
   @Get(':mobileNumber/anveshan/check-completion')

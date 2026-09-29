@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Home, MessageSquarePlus, Wallet, User, ListChecks, HelpCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { canAccessPayments, PAYMENT_ROUTES } from '@/utils/paymentAccess'
@@ -55,7 +56,9 @@ export function PublicBottomNav() {
                 aria-label={label}
                 className="relative -mt-4 flex flex-col items-center justify-center px-2"
               >
-                <span
+                <motion.span
+                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
                   className={cn(
                     'flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-colors',
                     isActive
@@ -64,7 +67,7 @@ export function PublicBottomNav() {
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                </span>
+                </motion.span>
                 <span
                   className={cn(
                     'mt-0.5 text-[10px] font-semibold',
@@ -87,21 +90,29 @@ export function PublicBottomNav() {
                 if (to === '/home/wallet') e.preventDefault()
               }}
               className={cn(
-                'flex min-w-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors',
+                'relative flex min-w-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors',
                 isActive
                   ? 'text-primary'
                   : 'text-text-tertiary hover:text-primary',
                 to === '/home/wallet' && 'pointer-events-none opacity-50'
               )}
             >
-              <div className="relative">
+              {isActive && (
+                <motion.span
+                  layoutId="public-bottom-nav-active"
+                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                  className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-primary"
+                  aria-hidden="true"
+                />
+              )}
+              <motion.div className="relative" animate={{ scale: isActive ? 1.1 : 1 }} transition={{ duration: 0.2 }}>
                 <Icon className="h-5 w-5" />
                 {to === '/home/wallet' && (
                   <span className="absolute -right-4 -top-1.5 flex h-3.5 items-center justify-center rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground shadow-sm">
                     {t('common.soon', 'Soon')}
                   </span>
                 )}
-              </div>
+              </motion.div>
               <span>{label}</span>
             </NavLink>
           )

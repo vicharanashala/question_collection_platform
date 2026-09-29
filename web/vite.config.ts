@@ -13,6 +13,12 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'maskable-icon.svg'],
+        workbox: {
+          // The entry bundle carries every language's translations (src/i18n/resources.ts, ~2.2 MB),
+          // which exceeds Workbox's 2 MiB default and would fail the build. Raised so it is still
+          // precached for offline use; lazy-loading languages would let this come back down.
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        },
               manifest: {
         name: 'AnnaDatha',
         short_name: 'AnnaDatha',
