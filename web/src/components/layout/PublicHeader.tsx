@@ -10,6 +10,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { notificationApi } from '@/api/client'
 import { SignOutDialog } from '@/components/SignOutDialog'
+import { ANVESHAN_TAGLINE } from '@/constants/public'
 
 interface PublicHeaderProps {
   /** Open the mobile drawer. Wired up by `PublicLayout`; only used on small screens. */
@@ -44,6 +45,8 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
   }
   titles[pathname]
   const initials = user ? getInitials(user.name || '', user.mobileNumber) : '?'
+  // Anveshan users do not use notifications or the leaderboard, so the header shows the theme toggle instead.
+  const isAnveshanUser = !!user?.isAnveshanUser
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -56,11 +59,11 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
   // Refresh the unread badge on mount and whenever the user navigates away
   // from the notifications page (covers "just read some notifications").
   useEffect(() => {
-    if (pathname === '/home/notifications') return
+    if (isAnveshanUser || pathname === '/home/notifications') return
     notificationApi.getNotifications({ page: 1, limit: 1 })
       .then((res) => setUnreadCount(res.unread))
       .catch(() => {})
-  }, [pathname])
+  }, [pathname, isAnveshanUser])
 
   function handleLogout() {
     setProfileOpen(false)
@@ -88,11 +91,17 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
           className="flex min-w-0 items-center gap-1.5 hover:opacity-80 transition-opacity sm:gap-2"
           aria-label="AnnaDatha — go to home"
         >
-          <BrandLogo className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" />
-          <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+          <BrandLogo className="h-6 w-6 shrink-0 sm:h-8 sm:w-8" />
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+            {isAnveshanUser && (
+              <span className="truncate text-[10px] font-medium leading-tight text-text-tertiary sm:text-[11px]">{ANVESHAN_TAGLINE}</span>
+            )}
+          </span>
         </button>
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        {!isAnveshanUser && (
         <button onClick={() => navigate('/home/notifications')} className="relative flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('notifications.title')} title={t('notifications.title')}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
@@ -101,13 +110,17 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
             </span>
           )}
         </button>
-        {/* Theme and language live on the profile page on small screens to keep the header uncluttered. */}
-        <button onClick={toggleTheme} className="hidden sm:flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
+        )}
+        {/* Theme and language live on the profile page on small screens to keep the header uncluttered.
+            Anveshan users get the theme toggle on every screen size, in place of notifications and leaderboard. */}
+        <button onClick={toggleTheme} className={`${isAnveshanUser ? 'flex' : 'hidden sm:flex'} items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors`} aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')} title={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}>
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
-        <button onClick={() => navigate('/home/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
-          <Trophy className="h-4 w-4" />
-        </button>
+        {!isAnveshanUser && (
+          <button onClick={() => navigate('/home/leaderboard')} className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('leaderboard.title')} title={t('leaderboard.title')}>
+            <Trophy className="h-4 w-4" />
+          </button>
+        )}
         <button onClick={() => setLanguageOpen(true)} className="hidden sm:flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-surface-variant hover:text-foreground transition-colors" aria-label={t('auth.selectLanguage')} title={t('auth.selectLanguage')}>
           <Languages className="h-4 w-4" />
         </button>

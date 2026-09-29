@@ -126,6 +126,8 @@ interface ActionCardProps {
   description: string;
   cta: string;
   onClick: () => void;
+  disabled?: boolean;
+  badge?: string;
 }
 
 function ActionCard({
@@ -135,19 +137,37 @@ function ActionCard({
   description,
   cta,
   onClick,
+  disabled,
+  badge,
 }: ActionCardProps) {
   return (
     <button
-      onClick={onClick}
-      className="group relative w-full overflow-hidden rounded-2xl border border-border-subtle bg-card p-4 text-left transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 sm:p-5 lg:p-6"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={cn(
+        "group relative w-full overflow-hidden rounded-2xl border border-border-subtle bg-card p-4 text-left sm:p-5 lg:p-6",
+        disabled 
+          ? "cursor-not-allowed opacity-75" 
+          : "transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+      )}
     >
       {/* Background gradient on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      {!disabled && (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      )}
+      
+      {badge && (
+        <div className="absolute right-4 top-4 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:right-5 sm:top-5">
+          {badge}
+        </div>
+      )}
+
       <div className="relative">
         <div
           className={cn(
             "mb-3 flex h-12 w-12 items-center justify-center rounded-xl sm:mb-4 sm:h-14 sm:w-14",
             iconBg,
+            disabled && "grayscale"
           )}
         >
           {icon}
@@ -158,9 +178,16 @@ function ActionCard({
         <p className="mt-1 text-[11px] leading-relaxed text-text-secondary sm:text-xs lg:text-sm">
           {description}
         </p>
-        <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-primary sm:text-xs">
+        <div 
+          className={cn(
+            "mt-3 flex items-center gap-1 text-[11px] font-semibold sm:text-xs",
+            disabled ? "text-text-tertiary" : "text-primary"
+          )}
+        >
           {cta}
-          <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          {!disabled && (
+            <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          )}
         </div>
       </div>
     </button>
@@ -399,8 +426,8 @@ export function PublicHomePage() {
               </div>
             )}
 
-            {/* Tier progress chip */}
-            {tierIdx < 2 && (
+            {/* Tier progress chip (reward tiers do not apply to Anveshan users) */}
+            {!isAnveshanUser && tierIdx < 2 && (
               <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5 sm:mt-3">
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
                   <div
@@ -416,7 +443,7 @@ export function PublicHomePage() {
                 </span>
               </div>
             )}
-            {tierIdx === 2 && (
+            {!isAnveshanUser && tierIdx === 2 && (
               <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-[10px] font-bold text-amber-300 sm:text-xs">
                 <Trophy className="h-3.5 w-3.5" />
                 {t("home.gold")} tier — highest rewards unlocked!
@@ -425,6 +452,7 @@ export function PublicHomePage() {
           </div>
 
           {/* Current tier badge */}
+          {!isAnveshanUser && (
           <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
             <div
               className={cn(
@@ -446,6 +474,7 @@ export function PublicHomePage() {
               {t("home.currentTier")}
             </p>
           </div>
+          )}
         </div>
       </div>
 
@@ -473,7 +502,8 @@ export function PublicHomePage() {
       {/* ── Stats grid ── */}
       <div
         className={cn(
-          "grid grid-cols-2 gap-3 sm:gap-4",
+          "grid gap-3 sm:gap-4",
+          isAnveshanUser && !showPayments ? "grid-cols-1" : "grid-cols-2",
           !isAnveshanUser && "lg:grid-cols-4",
         )}
       >
@@ -506,6 +536,7 @@ export function PublicHomePage() {
             }
           />
         )}
+        {!isAnveshanUser && (
         <StatCard
           icon={<Medal className="h-4 w-4 text-white" />}
           iconBg={
@@ -518,10 +549,11 @@ export function PublicHomePage() {
           label={t("home.currentTier")}
           value={loading ? "..." : t(`home.${currentTier.key}`)}
         />
+        )}
       </div>
 
-      {/* ── Video Section ── */}
-      <VideoSection />
+      {/* ── Video Section (general how-to guide; not shown to Anveshan users) ── */}
+      {!isAnveshanUser && <VideoSection />}
 
       {/* ── Quick Actions ── */}
       <section aria-labelledby="quick-actions-heading">

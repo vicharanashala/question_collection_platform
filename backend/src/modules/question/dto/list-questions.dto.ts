@@ -46,4 +46,9 @@ export class ListQuestionsDto {
   @IsOptional()
   @IsDateString()
   toDate?: string;
+
+  /** Anveshan answer filter: questions with a submitted answer, or Anveshan questions still awaiting one. */
+  @IsOptional()
+  @IsIn(['answered', 'unanswered'])
+  answerStatus?: 'answered' | 'unanswered';
 }

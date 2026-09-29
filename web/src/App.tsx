@@ -26,6 +26,7 @@ const ReportDetailPage = lazyRoute(() => import('@/pages/reports/ReportDetailPag
 const FaqListPage   = lazyRoute(() => import('@/pages/faqs/FaqListPage').then(m => ({ default: m.FaqListPage })))
 const FaqsPage      = lazyRoute(() => import('@/pages/faqs/FaqsPage').then(m => ({ default: m.FaqsPage })))
 const DistributionsPage = lazyRoute(() => import('@/pages/distributions/DistributionsPage').then(m => ({ default: m.DistributionsPage })))
+const FeedbacksPage = lazyRoute(() => import('@/pages/feedbacks/FeedbacksPage').then(m => ({ default: m.FeedbacksPage })))
 const AgriEntitiesPage = lazyRoute(() => import('@/pages/agri-entities/AgriEntitiesPage').then(m => ({ default: m.AgriEntitiesPage })))
 
 // ── Public-user pages (role="user") ────────────────────────────────────────
@@ -45,6 +46,7 @@ const PublicPrivacyPage              = lazyRoute(() => import('@/pages/public/Pu
 const PublicNotificationsPage        = lazyRoute(() => import('@/pages/public/PublicNotificationsPage').then(m => ({ default: m.default })))
 const PublicLeaderboardPage          = lazyRoute(() => import('@/pages/public/PublicLeaderboardPage').then(m => ({ default: m.default })))
 
+const AnveshanAnswersPage            = lazyRoute(() => import('@/pages/public/AnveshanAnswersPage').then(m => ({ default: m.AnveshanAnswersPage })))
 const AnveshanPhaseGatePage              = lazyRoute(()=>import('@/pages/public/AnveshanPhaseGate').then(m => ({ default: m.AnveshanPhaseGatePage })))
 
 /** Pages visible per role (staff / admin side) */
@@ -65,6 +67,7 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   faqAdmin:    ['admin', 'super_admin'],
   distributions: ['distributor', 'admin', 'super_admin'],
   agriEntities: ['curator', 'admin', 'super_admin'],
+  feedbacks:   ['admin', 'super_admin'],
 }
 
 /** If unauthenticated, send to /login. */
@@ -125,6 +128,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (user?.verificationStatus && user.verificationStatus !== 'verified') {
     return <Navigate to="/home/verification-pending" replace />
   }
+  return <>{children}</>
+}
+
+// Only Anveshan users can open the answer page; everyone else goes back to home.
+function AnveshanRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  if (!user?.isAnveshanUser) return <Navigate to="/home" replace />
   return <>{children}</>
 }
 
@@ -207,6 +217,7 @@ export default function App() {
           <Route path="admin/faqs"     element={<><RoleRoute pageKey="faqAdmin" /><FaqsPage     /></>} />
           <Route path="distributions"  element={<><RoleRoute pageKey="distributions" /><DistributionsPage /></>} />
           <Route path="agri-entities"  element={<><RoleRoute pageKey="agriEntities" /><AgriEntitiesPage /></>} />
+          <Route path="feedbacks"      element={<><RoleRoute pageKey="feedbacks" /><FeedbacksPage /></>} />
         </Route>
 
         {/* ── Public user shell (role="user" only) ───────────────────────── */}
@@ -231,6 +242,7 @@ export default function App() {
           <Route path="privacy"            element={<PublicPrivacyPage />} />
           <Route path="notifications"      element={<PublicNotificationsPage />} />
           <Route path="leaderboard"        element={<PublicLeaderboardPage />} />
+          <Route path="anveshan-answers"   element={<AnveshanRoute><AnveshanAnswersPage /></AnveshanRoute>} />
         </Route>
 
         {/* ── Fallback ────────────────────────────────────────────────────── */}

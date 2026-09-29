@@ -4,6 +4,7 @@ import { BrandLogo } from '@/components/BrandLogo'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
+import { ANVESHAN_TAGLINE } from '@/constants/public'
 import { useState } from 'react'
 import { SignOutDialog } from '@/components/SignOutDialog'
 import { cn } from '@/lib/utils'
@@ -51,7 +52,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
               </div>
               <div>
                 <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
-                <p className="text-[11px] text-text-tertiary leading-tight">{t('app.publicPortal')}</p>
+                <p className="text-[11px] text-text-tertiary leading-tight">{user?.isAnveshanUser ? ANVESHAN_TAGLINE : t('app.publicPortal')}</p>
               </div>
             </div>
             <button onClick={onClose} className="rounded-md p-1.5 text-text-secondary hover:bg-accent">

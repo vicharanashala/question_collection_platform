@@ -6,8 +6,7 @@ import {
   DailyVolumeRow,
   IQuestionRepository,
   QuestionAnalyticsFilters,
-  QuestionAnalyticsResult,
-} from '../../IQuestion.repository';
+  QuestionAnalyticsResult, UserQuestionCounts } from '../../IQuestion.repository';
 import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
@@ -80,6 +79,34 @@ export class MongoQuestionRepository
   }
 
   // ─── Aggregations (native MongoDB pipelines) ─────────────────────────────
+
+  async countSubmissionsByUsers(userIds: string[]): Promise<UserQuestionCounts[]> {
+    if (userIds.length === 0) return [];
+    const rows = await this._model
+      .aggregate<{ _id: string; questions: number; answers: number }>([
+        { $match: { userId: { $in: userIds } } },
+        {
+          $group: {
+            _id: '$userId',
+            questions: { $sum: 1 },
+            answers: { $sum: { $cond: [{ $eq: ['$isAnswerSubmitted', true] }, 1, 0] } },
+          },
+        },
+      ])
+      .exec();
+    return rows.map((r) => ({ userId: r._id, questions: r.questions, answers: r.answers }));
+  }
+
+  async findUserIdsWithAnswers(minAnswers: number): Promise<string[]> {
+    const rows = await this._model
+      .aggregate<{ _id: string }>([
+        { $match: { isAnswerSubmitted: true } },
+        { $group: { _id: '$userId', answers: { $sum: 1 } } },
+        { $match: { answers: { $gte: minAnswers } } },
+      ])
+      .exec();
+    return rows.map((r) => r._id);
+  }
 
   async countByStatuses(
     statuses: QuestionStatus[],

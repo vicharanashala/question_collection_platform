@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { NavLink, useLocation } from "react-router-dom";
 
+import { motion } from "framer-motion";
+
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -21,6 +23,8 @@ import {
 import { BrandLogo } from "@/components/BrandLogo";
 
 import { SignOutDialog } from "@/components/SignOutDialog";
+
+import { ANVESHAN_TAGLINE } from "@/constants/public";
 
 import { useQuestionDraft } from "@/hooks/useQuestionDraft";
 import { canAccessPayments, PAYMENT_ROUTES } from "@/utils/paymentAccess";
@@ -57,7 +61,7 @@ export function PublicSidebar() {
             AnnaDatha
           </p>
           <p className="text-[11px] leading-tight text-text-tertiary">
-            Public Portal
+            {user?.isAnveshanUser ? ANVESHAN_TAGLINE : "Public Portal"}
           </p>
         </div>
       </div>
@@ -80,14 +84,24 @@ export function PublicSidebar() {
       }}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm',
+          'relative isolate flex items-center gap-3 rounded-md px-3 py-2 text-xs font-medium transition-colors sm:text-sm',
           isActive
-            ? 'bg-primary text-primary-foreground shadow-sm'
+            ? 'text-primary-foreground'
             : 'text-text-secondary hover:bg-surface-variant hover:text-foreground',
           to === '/home/wallet' && 'pointer-events-none opacity-50'
         )
       }
     >
+      {({ isActive }) => (
+      <>
+      {isActive && (
+        <motion.span
+          layoutId="public-sidebar-active"
+          transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+          className="absolute inset-0 -z-10 rounded-md bg-primary shadow-sm"
+          aria-hidden="true"
+        />
+      )}
       <Icon className="h-4 w-4 shrink-0" />
 
       <span className="flex-1 flex items-center justify-between">
@@ -106,6 +120,8 @@ export function PublicSidebar() {
           })}
           className="h-4 w-4 shrink-0 text-orange-500"
         />
+      )}
+      </>
       )}
     </NavLink>
   )

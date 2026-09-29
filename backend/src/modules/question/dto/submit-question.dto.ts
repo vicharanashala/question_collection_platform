@@ -162,6 +162,12 @@ export class SubmitQuestionDto {
   mediaUrls?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @NormalizeMediaUrls()
+  audioUrls?: string[];
+
+  @IsOptional()
   @IsObject()
   deviceInfo?: Record<string, unknown>;
 
@@ -203,6 +209,12 @@ export class PreviewQuestionDto {
   @IsString({ each: true })
   @NormalizeMediaUrls()
   mediaUrls?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @NormalizeMediaUrls()
+  audioUrls?: string[];
 }
 
 /**

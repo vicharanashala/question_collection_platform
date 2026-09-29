@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import type { AuthUser } from '@/types'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/api/client'
+import { storageApi } from '@/api/storage'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,7 +15,7 @@ import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info,
 import { toast } from 'sonner'
 import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, AGRI_ENTITY_TYPES } from '@/constants/public'
 import { AgriEntitySubmitForm } from '@/components/agri-entity/AgriEntitySubmitForm'
-import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
+import { SubmissionTabPanel, SubmissionTypeTabs, parseSubmissionTab, useTabDirection, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
 import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CropPickerModal } from '@/components/ui/crop-picker-modal'
@@ -33,7 +34,7 @@ import {
   clearQuestionDraft,
 } from '@/utils/questionDraft'
 import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
-import { AnveshanMilestoneData, AnveshanMilestoneModal } from './AnveshMileStone'
+import { AnveshanMilestoneData, AnveshanMilestoneModal, getAnveshanMilestonePercent } from './AnveshMileStone'
 import { Award } from "lucide-react";
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
@@ -67,13 +68,47 @@ interface AskHeaderProps {
   atLimit: boolean
   user?: AuthUser | null
   setMilestoneModalOpen?: (open: boolean) => void
+  milestonePercent?: number | null
+}
+
+interface MilestoneProgressButtonProps {
+  percent: number
+  onClick: () => void
+}
+
+// "My Progress" pill whose border fills clockwise with the overall milestone percentage.
+function MilestoneProgressButton({ percent, onClick }: MilestoneProgressButtonProps) {
+  const { t } = useTranslation()
+  const clamped = Math.min(100, Math.max(0, percent))
+  const fillColor = clamped >= 100 ? 'rgb(16 185 129)' : 'hsl(var(--primary))'
+
+  return (
+    <span
+      className="inline-flex rounded-full p-[2px] transition-[background] duration-500"
+      style={{ background: `conic-gradient(${fillColor} ${clamped}%, hsl(var(--border-subtle)) ${clamped}% 100%)` }}
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onClick}
+        aria-label={t('anveshan.myProgressWithPercent', { percent: clamped, defaultValue: 'My Progress, {{percent}}% complete' })}
+        className="gap-1.5 rounded-full bg-background hover:bg-surface-variant"
+      >
+        <Award className="h-4 w-4" aria-hidden="true" />
+        {/* Label is hidden on phones to keep the header compact; the aria-label still names the button. */}
+        <span className="hidden sm:inline">{t('anveshan.myProgress', 'My Progress')}</span>
+        <span className="tabular-nums text-text-secondary">{clamped}%</span>
+      </Button>
+    </span>
+  )
 }
 
 /**
  * Shared header for both steps of the ask flow: back action, daily-limit chip,
  * page title and a two-step progress indicator.
  */
-function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen }: AskHeaderProps) {
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen, milestonePercent }: AskHeaderProps) {
   const { t } = useTranslation()
   const steps = [
     { n: 1 as const, label: t('question.yourQuestion') },
@@ -101,7 +136,8 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
               <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
             </Button>
           )}
-          {remainingToday != null && dailyLimit != null && (
+          {/* Anveshan users have no daily limit, so the "N of M left today" chip is hidden for them. */}
+          {!user?.isAnveshanUser && remainingToday != null && dailyLimit != null && (
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
                 atLimit
@@ -117,16 +153,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
           )}
 
  {user?.isAnveshanUser && setMilestoneModalOpen && (
-  <Button
-    type="button"
-    variant="ghost"
-    size="sm"
-    onClick={() => setMilestoneModalOpen(true)}
-    className="gap-1.5"
-  >
-    <Award className="h-4 w-4" />
-    {t("anveshan.myProgress", "My Progress")}
-  </Button>
+  <MilestoneProgressButton percent={milestonePercent ?? 0} onClick={() => setMilestoneModalOpen(true)} />
 )}
         </div>
       </div>
@@ -137,8 +164,9 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
       </div>
 
       {/* Progress — current step is marked by weight and an aria-current, not
-          colour alone, and completed steps carry a check icon. */}
-      {step && <ol className="flex items-center gap-3" aria-label={t('common.steps', 'Steps')}>
+          colour alone, and completed steps carry a check icon. Hidden on small
+          screens to save vertical space. */}
+      {step && <ol className="hidden items-center gap-3 sm:flex" aria-label={t('common.steps', 'Steps')}>
         {steps.map(({ n, label }) => {
           const done = n < step
           const current = n === step
@@ -178,6 +206,7 @@ export function PublicAskPage() {
   const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
   const requestedTab = parseSubmissionTab(searchParams.get('tab'))
   const activeTab = showAgriTabs ? requestedTab : 'question'
+  const tabDirection = useTabDirection(activeTab)
 
   // Keeps the selected tab in the URL so it survives refresh and can be linked to.
   function handleTabChange(tab: SubmissionTab) {
@@ -211,6 +240,7 @@ export function PublicAskPage() {
   const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
   const [locationModalOpen, setLocationModalOpen] = useState(false)
   const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
+  const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
 
   const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
 const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
@@ -245,6 +275,23 @@ useEffect(() => {
     setMilestoneJustCompleted(false);
   }
 }, [milestoneJustCompleted, t]);
+
+  // Refreshes progress each time the modal opens, so new submissions from any tab are reflected.
+  const openMilestoneModal = useCallback((open: boolean) => {
+    if (open) fetchMilestone()
+    setMilestoneModalOpen(open)
+  }, [fetchMilestone])
+
+  // Progress button props shared by every header on this page (question steps and crop/weed/pest/disease tabs).
+  const milestoneHeaderProps = {
+    user,
+    setMilestoneModalOpen: openMilestoneModal,
+    milestonePercent: milestone ? getAnveshanMilestonePercent(milestone) : null,
+  }
+
+  const milestoneModal = (
+    <AnveshanMilestoneModal open={milestoneModalOpen} onOpenChange={setMilestoneModalOpen} data={milestone} />
+  )
 
   const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
 
@@ -317,6 +364,7 @@ useEffect(() => {
   function resetAll() {
     setStep('ask')
     setQuestionText('')
+    setAudioData([])
     setDomains([])
     setSeason('')
     setCropType('')
@@ -529,6 +577,18 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
       return
     }
 
+    let finalAudioUrls: string[] | undefined
+    if (audioData.length > 0) {
+      try {
+        const uploads = await Promise.all(
+          audioData.map(data => storageApi.uploadAudio(data.blob, data.filename))
+        )
+        finalAudioUrls = uploads.map(u => u.url)
+      } catch (uploadErr) {
+        console.warn('[PublicAskPage] audio archival failed:', uploadErr)
+      }
+    }
+
     const res = await questionApi.submitQuestion({
       questionText: questionText.trim(),
       domains,
@@ -539,6 +599,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
       block: previewMeta.block ?? undefined,
       agroClimaticZone: previewMeta.agroClimaticZone || undefined,
       mediaType: 'none',
+      audioUrls: finalAudioUrls,
       submissionLocation: location ?? undefined,
     })
     if (res.duplicate?.isDuplicate) {
@@ -615,6 +676,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
           remainingToday={previewMeta.remainingToday ?? undefined}
           dailyLimit={previewMeta.dailyLimit ?? null}
           atLimit={false}
+          {...milestoneHeaderProps}
         />
 
         {/* Warning banner */}
@@ -729,6 +791,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
                       <button
                         id="crop"
                         type="button"
+                        aria-describedby={cropType ? 'crop-check-notice' : undefined}
                         onClick={() => setCropPickerOpen(true)}
                         className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
                       >
@@ -741,6 +804,30 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
                       </button>
                     </div>
                   </div>
+
+                  {/* The crop is auto-detected from the question text, so ask the user to verify it. */}
+                  {cropType && (
+                    <div
+                      id="crop-check-notice"
+                      role="note"
+                      className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
+                    >
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+                      <p className="min-w-0 flex-1">
+                        {t('question.cropAutoSelectedNotice', {
+                          crop: cropType,
+                          defaultValue: 'The crop "{{crop}}" was selected automatically. Please cross-check it and change it if it is wrong.',
+                        })}{' '}
+                        <button
+                          type="button"
+                          onClick={() => setCropPickerOpen(true)}
+                          className="font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded-sm"
+                        >
+                          {t('question.changeCrop', 'Change crop')}
+                        </button>
+                      </p>
+                    </div>
+                  )}
 
                   {/* Question textarea */}
                   <div className="flex flex-col gap-1.5">
@@ -806,6 +893,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
     performSubmit(loc) // pass directly — avoids waiting on the next render's state
   }}
 />
+        {milestoneModal}
       </div>
     )
   }
@@ -825,11 +913,15 @@ if (activeTab !== 'question') {
           onBack={() => navigate(-1)}
           onReport={() => navigate('/home/reports')}
           atLimit={false}
+          {...milestoneHeaderProps}
         />
         {user?.isAnveshanUser && (
   <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
 )}
-        <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+        <SubmissionTabPanel tab={activeTab} direction={tabDirection}>
+          <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+        </SubmissionTabPanel>
+        {milestoneModal}
       </div>
     )
   }
@@ -847,12 +939,12 @@ if (activeTab !== 'question') {
         remainingToday={stats?.remainingToday}
         dailyLimit={stats?.dailyLimit}
         atLimit={atLimit}
-        user={user}
-        setMilestoneModalOpen={setMilestoneModalOpen}
+        {...milestoneHeaderProps}
       />
        {user?.isAnveshanUser && (
         <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
       )}
+      <SubmissionTabPanel tab="question" direction={tabDirection}>
       <Card>
         <CardContent className="p-5 lg:p-6">
           <form onSubmit={handleContinue} className="space-y-4">
@@ -944,7 +1036,9 @@ if (activeTab !== 'question') {
                     >
                       <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
                         <MicButton
-                          onTranscribed={(text) => {
+                          onTranscribed={(text, blob, filename) => {
+                            // Keep the recording so it is archived with the question on submit.
+                            if (blob) setAudioData((prev) => [...prev, { blob, filename: filename ?? 'recording.webm' }])
                             setQuestionText((prev) => {
                               const base = prev.trim()
                               return base ? `${base} ${text}` : text
@@ -1003,12 +1097,9 @@ if (activeTab !== 'question') {
           </form>
         </CardContent>
       </Card>
+      </SubmissionTabPanel>
       {dialogs}
-      <AnveshanMilestoneModal
-  open={milestoneModalOpen}
-  onOpenChange={setMilestoneModalOpen}
-  data={milestone}
-/>
+      {milestoneModal}
     </div>
   )
 }

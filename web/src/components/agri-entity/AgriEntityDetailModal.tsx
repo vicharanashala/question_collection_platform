@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/context/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ImageIcon, Tags, BookOpen } from 'lucide-react'
@@ -17,6 +18,9 @@ interface AgriEntityDetailModalProps {
 /** Read-only view of one crop / weed / pest / disease submission. */
 export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModalProps): ReactNode {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  // Anveshan users do not see review status; staff (never Anveshan users) still do.
+  const hideStatus = !!user?.isAnveshanUser
   const typeLabel = entity
     ? t(`agriEntity.tabs.${entity.type}`, AGRI_ENTITY_TYPES.find((type) => type.value === entity.type)?.label ?? '')
     : ''
@@ -33,9 +37,11 @@ export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModal
                     ? t('agriEntity.yourSubmission', { type: typeLabel, defaultValue: 'Your {{type}} submission' })
                     : t('agriEntity.submissionTitle', { type: typeLabel, defaultValue: '{{type}} submission' })}
                 </DialogTitle>
-                <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(entity.status))}>
-                  {agriEntityStatusLabel(t, entity.status)}
-                </span>
+                {!hideStatus && (
+                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(entity.status))}>
+                    {agriEntityStatusLabel(t, entity.status)}
+                  </span>
+                )}
               </div>
               <p className="mt-0.5 text-[11px] sm:text-xs text-text-tertiary">
                 {t('submissions.submitted')} {formatDateTime(entity.createdAt)}

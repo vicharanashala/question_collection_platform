@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { AnveshanProgressService } from './anveshan-progress.service';
 import { DataSource, Repository } from 'typeorm';
 import {
   NotFoundException,
@@ -211,6 +212,10 @@ describe('AdminService', () => {
         { provide: AnalyticsCacheService, useFactory: emptyMock },
         { provide: GdbService, useFactory: emptyMock },
         { provide: MongoTransactionService, useFactory: emptyMock },
+        {
+          provide: AnveshanProgressService,
+          useValue: { getProgressForUsers: jest.fn().mockResolvedValue(new Map()), findCompletedUserIds: jest.fn().mockResolvedValue([]) },
+        },
       ],
     }).compile();
 

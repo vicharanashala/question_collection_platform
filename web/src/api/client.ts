@@ -39,6 +39,12 @@ import type {
   AgriEntitySubmission,
   AgriEntityStatus,
   AgriEntityType,
+  AnveshanAnswer,
+  AnveshanAnswerQuestionsResponse,
+  AppFeedbackListResponse,
+  AnveshanMilestoneCounts,
+  SubmitAnveshanAnswerPayload,
+  SubmitAnveshanAnswerResponse,
 } from "@/types";
 import {
   accountLockedEmitter,
@@ -48,21 +54,14 @@ import {
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 export interface AnveshanMilestoneResponse {
-  requirements: {
-    questions: number;
-    crop: number;
-    weed: number;
-    pest: number;
-    disease: number;
-  };
-  progress: {
-    questions: number;
-    crop: number;
-    weed: number;
-    pest: number;
-    disease: number;
-  };
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
+  /** Question and crop/weed/pest/disease goals are met, so answering is unlocked. */
+  submissionsCompleted: boolean;
+  /** Every goal, including answers, is met. */
   completed: boolean;
+  /** The user has already shared app feedback after reaching 100%. */
+  feedbackSubmitted?: boolean;
 }
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
@@ -846,6 +845,10 @@ export const questionApi = {
 
   getQuestion: (id: string) => request<Question>(`/questions/${id}`),
 
+  /** Staff only: the answer an Anveshan user submitted for this question, or null. */
+  getAnveshanAnswer: (id: string) =>
+    request<{ answer: AnveshanAnswer | null }>(`/questions/${encodeURIComponent(id)}/anveshan-answer`, {}, false),
+
   approveQuestion: (id: string) =>
     request<{ message: string }>(
       `/questions/${id}/approve`,
@@ -876,6 +879,7 @@ export const questionApi = {
     questionText: string;
     mediaType?: "none" | "image" | "video" | "audio";
     mediaUrls?: string[];
+    audioUrls?: string[];
   }) =>
     request<{
       state: string;
@@ -920,6 +924,7 @@ export const questionApi = {
   agroClimaticZone?: string;
   mediaType?: "none" | "image" | "video" | "audio";
   mediaUrls?: string[];
+  audioUrls?: string[];
   submissionLocation?: {
     latitude: number;
     longitude: number;
@@ -997,6 +1002,22 @@ export const questionApi = {
     request<AnveshanMilestoneResponse>(
       "/questions/anveshan-milestone/me",
       {},
+      false,
+    ),
+
+  /** The Anveshan user's own questions they can answer, with each answer if already given. */
+  getMyAnveshanAnswerQuestions: () =>
+    request<AnveshanAnswerQuestionsResponse>(
+      "/questions/anveshan-answers/me",
+      {},
+      false,
+    ),
+
+  /** Submit the Anveshan user's answer, with sources, for one of their own questions. */
+  submitAnveshanAnswer: (questionId: string, body: SubmitAnveshanAnswerPayload) =>
+    request<SubmitAnveshanAnswerResponse>(
+      `/questions/anveshan-answers/${encodeURIComponent(questionId)}`,
+      { method: "POST", body: JSON.stringify(body) },
       false,
     ),
 };
@@ -1425,6 +1446,24 @@ export const reportsApi = {
 };
 
 // ─── Crop / Weed / Pest / Disease API ─────────────────────────────────────────
+
+export const feedbackApi = {
+  /** Admin only: Anveshan feedback, newest first, with an overall ratings summary. */
+  listAnveshanFeedback: (params: { page?: number; limit?: number; rating?: number; inputMethod?: 'text' | 'voice' } = {}) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])),
+    ).toString();
+    return request<AppFeedbackListResponse>(`/feedbacks/anveshan${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  /** Anveshan users rate the app (1 to 5 stars) and optionally comment, once they reach 100%. */
+  submitAnveshanFeedback: (body: { rating: number; comment?: string; inputMethod: 'text' | 'voice' }) =>
+    request<{ id: string; message: string }>(
+      "/feedbacks/anveshan",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ),
+};
 
 export const agriEntityApi = {
   /** Submit a crop, weed, pest or disease record. Images must be uploaded first via storageApi. */

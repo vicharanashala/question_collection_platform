@@ -489,6 +489,7 @@ export class QuestionService {
           block: user.block ?? null,
           mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
           mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+          audioUrls: dto.audioUrls ?? [],
           deviceInfo: dto.deviceInfo ?? null,
           status: QuestionStatus.REJECTED,
           rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
@@ -549,6 +550,7 @@ export class QuestionService {
         block: user.block ?? null,
         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+          audioUrls: dto.audioUrls ?? [],
         deviceInfo: dto.deviceInfo ?? null,
         status: QuestionStatus.REJECTED,
         rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
@@ -615,6 +617,7 @@ export class QuestionService {
       block: user.block ?? null,
       mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
       mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+          audioUrls: dto.audioUrls ?? [],
       deviceInfo: dto.deviceInfo ?? null,
       status,
       submittedAt: now,
@@ -666,7 +669,7 @@ export class QuestionService {
   // ─── List ───────────────────────────────────────────────────────────────────
 
   async list(userId: string, dto: ListQuestionsDto, isAdmin = false) {
-    const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate } = dto;
+    const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate, answerStatus } = dto;
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -687,6 +690,11 @@ export class QuestionService {
     else if (cropType) where.cropType = Like(`%${cropType}%`);
     if (season) where.season = season;
     if (state) where.state = state;
+    if (answerStatus === 'answered') where.isAnswerSubmitted = true;
+    if (answerStatus === 'unanswered') {
+      where.isAnveshan = true;
+      where.isAnswerSubmitted = { $ne: true };
+    }
 
     if (fromDate && toDate) {
       where.submittedAt = Between(new Date(fromDate), new Date(toDate));
@@ -887,6 +895,7 @@ export class QuestionService {
         block: block ?? null,
         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+          audioUrls: dto.audioUrls ?? [],
         status: QuestionStatus.REJECTED,
         rejectionReason: `Question already submitted by ${dbDup.matchedUserName ?? 'another user'} in our database`,
         submittedAt: now,
@@ -913,6 +922,7 @@ export class QuestionService {
         englishQuestionText,
         mediaType: dto.mediaType ?? 'none',
         mediaUrls: dto.mediaUrls ?? [],
+          audioUrls: dto.audioUrls ?? [],
         agroClimaticZone,
         suggestedDistricts: [],
         suggestedBlocks: [],
@@ -955,6 +965,7 @@ export class QuestionService {
         block: block ?? null,
         mediaType: (dto.mediaType as MediaType) ?? MediaType.NONE,
         mediaUrls: dto.mediaUrls?.length ? dto.mediaUrls : null,
+          audioUrls: dto.audioUrls ?? [],
         status: QuestionStatus.REJECTED,
         rejectionReason: `Question already answered by ${dup.matchedUserName ?? 'another user'} in our knowledge base`,
         submittedAt: now,
@@ -981,6 +992,7 @@ export class QuestionService {
         englishQuestionText,
         mediaType: dto.mediaType ?? 'none',
         mediaUrls: dto.mediaUrls ?? [],
+          audioUrls: dto.audioUrls ?? [],
         agroClimaticZone,
         suggestedDistricts: [],
         suggestedBlocks: [],
@@ -1012,6 +1024,7 @@ export class QuestionService {
       englishQuestionText,
       mediaType: dto.mediaType ?? 'none',
       mediaUrls: dto.mediaUrls ?? [],
+          audioUrls: dto.audioUrls ?? [],
 
       agroClimaticZone,
       suggestedDistricts: [],

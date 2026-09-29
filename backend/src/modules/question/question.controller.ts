@@ -10,7 +10,6 @@ import {
   Req,
   HttpCode,
   HttpStatus,
-  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
@@ -24,8 +23,8 @@ import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
 import { UserService } from '../user/user.service';
-import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
-import { getAnveshanRequiredQuestionCount } from '../../shared/constants/anveshan.constant';
+import { AnveshanMilestoneService } from './anveshan-milestone.service';
+import { SubmitAnveshanAnswerDto } from './dto/anveshan-answer.dto';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -34,12 +33,16 @@ interface AuthenticatedRequest extends Request {
 @Controller('questions')
 @UseGuards(JwtAuthGuard)
 export class QuestionController {
-  constructor(private readonly questionService: QuestionService, private readonly userService: UserService, private readonly agriEntityService: AgriEntitiesService) {}
+  constructor(
+    private readonly questionService: QuestionService,
+    private readonly userService: UserService,
+    private readonly anveshanMilestoneService: AnveshanMilestoneService,
+  ) {}
 
   // POST /questions — Submit a new question
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @CacheInvalidate('questions:u*')
+  @CacheInvalidate('questions:u*', 'anveshan_milestone*')
   async submit(
     @Body() dto: SubmitQuestionDto,
     @Req() req: AuthenticatedRequest,
@@ -138,36 +141,36 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
     return this.questionService.reject(id, req.user.id, reason ?? 'Not provided');
   }
 
+  // GET /questions/anveshan-milestone/me — the caller's submission and answer progress.
   @Get('anveshan-milestone/me')
-@Cacheable('anveshan_milestone', 60)
-async getMyAnveshanMilestone(@Req() req: AuthenticatedRequest) {
-  const user = await this.userService.getProfile(req.user.id);
-  if (!user?.isAnveshanUser) {
-    throw new ForbiddenException('This milestone is only available to Anveshan users.');
+  @Cacheable('anveshan_milestone', 60)
+  async getMyAnveshanMilestone(@Req() req: AuthenticatedRequest) {
+    return this.anveshanMilestoneService.getMilestone(req.user.id);
   }
 
-  const [questionsSubmitted, agriCounts] = await Promise.all([
-    this.questionService.getTotalSubmittedCount(req.user.id),
-    this.agriEntityService.getSubmittedCountsByType(req.user.id), // { crop, weed, pest, disease }
-  ]);
+  // GET /questions/anveshan-answers/me — the caller's own questions they can answer, with answer status.
+  @Get('anveshan-answers/me')
+  async listMyAnveshanAnswerQuestions(@Req() req: AuthenticatedRequest) {
+    return this.anveshanMilestoneService.listAnswerableQuestions(req.user.id);
+  }
 
-  const requirements = { questions: getAnveshanRequiredQuestionCount(), crop: 1, weed: 1, pest: 1, disease: 1 };
+  // GET /questions/:id/anveshan-answer — staff view of the answer an Anveshan user wrote for this question.
+  @Get(':id/anveshan-answer')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
+  async getAnveshanAnswer(@Param('id') id: string) {
+    return { answer: await this.anveshanMilestoneService.getAnswerForQuestion(id) };
+  }
 
-  const progress = {
-    questions: Math.min(questionsSubmitted, requirements.questions),
-    crop: Math.min(agriCounts.crop, requirements.crop),
-    weed: Math.min(agriCounts.weed, requirements.weed),
-    pest: Math.min(agriCounts.pest, requirements.pest),
-    disease: Math.min(agriCounts.disease, requirements.disease),
-  };
-
-  const completed =
-    questionsSubmitted >= requirements.questions &&
-    agriCounts.crop >= requirements.crop &&
-    agriCounts.weed >= requirements.weed &&
-    agriCounts.pest >= requirements.pest &&
-    agriCounts.disease >= requirements.disease;
-
-  return { requirements, progress, completed };
-}
+  // POST /questions/anveshan-answers/:questionId — answer one of the caller's own questions with sources.
+  @Post('anveshan-answers/:questionId')
+  @HttpCode(HttpStatus.CREATED)
+  @CacheInvalidate('anveshan_milestone*', 'questions:*')
+  async submitAnveshanAnswer(
+    @Param('questionId') questionId: string,
+    @Body() dto: SubmitAnveshanAnswerDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.anveshanMilestoneService.submitAnswer(req.user.id, questionId, dto);
+  }
 }

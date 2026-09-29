@@ -248,6 +248,8 @@ export function PublicProfilePage() {
   const status = user.verificationStatus
   const statusCfg = status ? VERIFICATION_CONFIG[status] : null
   const cat = user.category
+  // Reward tiers do not apply to Anveshan users, so their profile hides all tier UI.
+  const isAnveshanUser = !!user.isAnveshanUser
   const memberSince = formatDate(user.createdAt) || em
 
   const handleLogout = () => {
@@ -321,7 +323,7 @@ export function PublicProfilePage() {
             )}
 
             {/* Tier progress chip */}
-            {!nextTierIdx ? (
+            {isAnveshanUser ? null : !nextTierIdx ? (
               <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-[10px] font-bold text-amber-300 sm:text-xs">
                 <Trophy className="h-3.5 w-3.5" />
                 {t('home.gold')} — highest rewards unlocked!
@@ -342,6 +344,7 @@ export function PublicProfilePage() {
           </div>
 
           {/* Tier badge */}
+          {!isAnveshanUser && (
           <div className="hidden sm:flex shrink-0 flex-col items-center gap-1">
             <div className={cn('flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg', tierCfg.bgClass)}>
               <Leaf className="h-7 w-7 text-white" />
@@ -351,10 +354,12 @@ export function PublicProfilePage() {
             </p>
             <p className="text-[10px] text-emerald-400/60">{t('home.currentTier')}</p>
           </div>
+          )}
         </div>
       </div>
 
       {/* ── 2. Tier card ── */}
+      {!isAnveshanUser && (
       <Card className="overflow-hidden" style={{ borderTop: `3px solid ${tierCfg.color}` }}>
         <CardContent className="space-y-3 p-4 sm:p-5">
           {/* Header row */}
@@ -426,6 +431,7 @@ export function PublicProfilePage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* ── 3. Stats row ── */}
       <div className={cn('grid gap-2.5 sm:gap-3', showPayments ? 'grid-cols-3' : 'grid-cols-2')}>

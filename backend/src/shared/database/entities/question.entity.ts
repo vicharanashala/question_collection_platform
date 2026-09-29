@@ -71,6 +71,9 @@ export class Question {
   @Column({ name: 'media_urls', type: 'jsonb', nullable: true })
   mediaUrls: string[] | null;
 
+  @Column({ name: 'audio_urls', type: 'jsonb', nullable: true })
+  audioUrls: string[] | null;
+
   @Column({ name: 'device_info', type: 'jsonb', nullable: true })
   deviceInfo: Record<string, unknown> | null;
 
@@ -113,6 +116,10 @@ export class Question {
 
   @Column({name: "is_anveshan", type: 'boolean', default: false})
   isAnveshan: boolean;
+
+  /** True once the Anveshan user has answered this question; the answer lives in `anveshan_answers`. */
+  @Column({ name: 'is_answer_submitted', type: 'boolean', default: false })
+  isAnswerSubmitted: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

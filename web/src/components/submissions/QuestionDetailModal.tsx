@@ -7,13 +7,14 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/context/AuthContext'
 import { questionApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  MessageSquareText, ImageIcon, Mic, MapPin, Wheat,
+  MessageSquareText, ImageIcon, MapPin, Wheat,
   CloudRain, Hash, Loader2, AlertCircle,
 } from 'lucide-react'
 import { cn, formatDateTime } from '@/lib/utils'
@@ -65,6 +66,9 @@ export function QuestionDetailModal({
   open, onOpenChange, questionId,
 }: QuestionDetailModalProps): ReactNode {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  // Anveshan users do not see review status, so the pill and reviewer feedback are hidden for them.
+  const hideStatus = !!user?.isAnveshanUser
 
   const [question, setQuestion] = useState<Question | null>(null)
   const [loading, setLoading] = useState(false)
@@ -138,7 +142,7 @@ export function QuestionDetailModal({
       </Card>
     )
   } else if (question) {
-    body = <QuestionBody question={question} />
+    body = <QuestionBody question={question} hideStatus={hideStatus} />
   } else {
     // Defensive fallback (shouldn't normally be reached).
     body = null
@@ -155,12 +159,14 @@ export function QuestionDetailModal({
               <DialogTitle className="text-base sm:text-lg font-extrabold leading-tight text-foreground">
                 {t('notifications.yourQuestion')}
               </DialogTitle>
-              <span className={cn(
-                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                statusBadge(question.status),
-              )}>
-                {t(statusLabelKey(question.status))}
-              </span>
+              {!hideStatus && (
+                <span className={cn(
+                  'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                  statusBadge(question.status),
+                )}>
+                  {t(statusLabelKey(question.status))}
+                </span>
+              )}
             </div>
             <p className="mt-0.5 text-[11px] sm:text-xs text-text-tertiary">
               {t('submissions.submitted')} {formatDateTime(question.submittedAt)}
@@ -182,11 +188,12 @@ export function QuestionDetailModal({
 
 // ─── QuestionBody (rendered when the question is loaded) ─────────────────────
 
-function QuestionBody({ question }: { question: Question }): ReactNode {
+function QuestionBody({ question, hideStatus }: { question: Question; hideStatus: boolean }): ReactNode {
   const { t } = useTranslation()
   const mediaUrls = question.mediaUrls ?? []
   const imageUrls = mediaUrls.filter((u) => !isAudioUrl(u))
-  const audioUrls = mediaUrls.filter(isAudioUrl)
+  
+  
 
   return (
     <>
@@ -239,7 +246,7 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
       </Card>
 
       {/* ── Media (images + audio) ─────────────────────────────────────── */}
-      {(imageUrls.length > 0 || audioUrls.length > 0) && (
+      {(imageUrls.length > 0) && (
         <Card>
           <CardContent className="space-y-3 p-4 sm:p-5">
             <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wide text-text-secondary">
@@ -260,24 +267,12 @@ function QuestionBody({ question }: { question: Question }): ReactNode {
                 ))}
               </div>
             )}
-
-            {audioUrls.length > 0 && (
-              <div className="space-y-2">
-                {audioUrls.map((url, i) => (
-                  <audio key={i} controls src={url} preload="metadata" className="h-10 w-full" />
-                ))}
-                <p className="flex items-center gap-1.5 text-[11px] text-text-tertiary">
-                  <Mic className="h-3 w-3" />
-                  {t('question.audioModelDisclaimer')}
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}
 
       {/* ── Reviewer feedback (status-specific, only when populated) ─────── */}
-      {(question.approvalReason || question.rejectionReason || question.heldReason) && (
+      {!hideStatus && (question.approvalReason || question.rejectionReason || question.heldReason) && (
         <Card>
           <CardContent className="space-y-3 p-4 sm:p-5">
             {question.rejectionReason && (

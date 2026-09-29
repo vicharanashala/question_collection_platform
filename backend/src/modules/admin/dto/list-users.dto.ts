@@ -47,4 +47,9 @@ export class ListUsersDto {
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC';
+
+  /** Anveshan filter: every Anveshan user, only those at 100%, or only those still in progress. */
+  @IsOptional()
+  @IsIn(['all', 'completed', 'incomplete'])
+  anveshan?: 'all' | 'completed' | 'incomplete';
 }
