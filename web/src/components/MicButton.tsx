@@ -53,6 +53,8 @@ interface MicButtonProps {
    * Set to 0 to disable.
    */
   maxDurationMs?: number
+  /** 'large' is the round button with a hint used on the Ask page; 'compact' is a small pill for tight layouts. */
+  variant?: 'large' | 'compact'
 }
 
 /**
@@ -87,6 +89,7 @@ export function MicButton({
   disabled,
   languageCode = 'unknown',
   maxDurationMs = DEFAULT_MAX_RECORDING_MS,
+  variant = 'large',
 }: MicButtonProps) {
   const { t } = useTranslation()
   const [state, setState] = useState<MicState>('idle')
@@ -365,6 +368,53 @@ export function MicButton({
         : isRecording
           ? t('audio.tapToStopRecording')
           : t('question.tapMicHint')
+
+  if (variant === 'compact') {
+    const compactLabel = !supported
+      ? t('audio.notSupportedShort')
+      : isUploading
+        ? t('audio.transcribing')
+        : isFinal
+          ? t('audio.addedShort', 'Added')
+          : isRecording
+            ? `${fmtElapsed(elapsedMs)} · ${t('audio.tapToStopShort', 'Tap to stop')}`
+            : t('audio.speakShort', 'Speak')
+
+    return (
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={handleClick}
+        disabled={isDisabled}
+        aria-label={isRecording ? t('audio.stopRecordingAria') : t('audio.startRecordingAria')}
+        aria-pressed={isRecording}
+        className={cn(
+          'h-8 gap-1.5 rounded-full px-3 text-xs font-semibold',
+          isRecording && 'border-destructive/50 bg-destructive/10 text-destructive hover:bg-destructive/15 hover:text-destructive',
+          isFinal && 'border-success/40 bg-success/10 text-success hover:bg-success/15 hover:text-success',
+          !isRecording && !isFinal && supported &&
+            'border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300',
+        )}
+      >
+        {isUploading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        ) : isFinal ? (
+          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+        ) : isRecording ? (
+          <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive/60" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
+          </span>
+        ) : !supported ? (
+          <MicOff className="h-3.5 w-3.5" aria-hidden="true" />
+        ) : (
+          <Mic className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+        <span aria-live="polite">{compactLabel}</span>
+      </Button>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center gap-3">
