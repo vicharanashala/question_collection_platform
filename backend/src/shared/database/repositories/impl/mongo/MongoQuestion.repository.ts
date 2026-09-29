@@ -11,6 +11,7 @@ import {
 import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
+import { ListQuestionsDto } from '@/modules/question/dto';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
@@ -765,4 +766,272 @@ async getDailyStatsSince(
       ])
       .exec();
   }
+  async list(
+  userId: string,
+  dto: ListQuestionsDto,
+  isAdmin = false,
+) {
+  const {
+    page = 1,
+    limit = 20,
+    status,
+    domains,
+    cropType,
+    season,
+    state,
+    search,
+    fromDate,
+    toDate,
+  } = dto;
+
+  const skip = (page - 1) * limit;
+
+  // ----------------------------------------
+  // 1. Build $match
+  // ----------------------------------------
+
+  const match: Record<string, any> = {};
+
+  // Access control
+  if (!isAdmin) {
+    match.userId = userId;
+  }
+
+  // Status
+  if (status) {
+    match.status = status;
+  }
+
+  // Domain
+  if (domains) {
+    match.domains = domains;
+  }
+
+  // Search / crop type
+  if (search) {
+    match.cropType = {
+      $regex: search,
+      $options: "i",
+    };
+  } else if (cropType) {
+    match.cropType = {
+      $regex: cropType,
+      $options: "i",
+    };
+  }
+
+  // Season
+  if (season) {
+    match.season = season;
+  }
+
+  // State
+  if (state) {
+    match.state = state;
+  }
+
+  // Date filters
+  if (fromDate && toDate) {
+    match.submittedAt = {
+      $gte: new Date(fromDate),
+      $lte: new Date(toDate),
+    };
+  } else if (fromDate) {
+    match.submittedAt = {
+      $gte: new Date(fromDate),
+    };
+  } else if (toDate) {
+    match.submittedAt = {
+      $lte: new Date(toDate),
+    };
+  }
+
+  // ----------------------------------------
+  // 2. Aggregation
+  // ----------------------------------------
+
+  const result = await this._model.aggregate([
+    // Filter first
+    {
+      $match: match,
+    },
+
+    // Get paginated items + total count
+    {
+      $facet: {
+        // ==================================
+        // ITEMS
+        // ==================================
+        items: [
+          // Sort latest first
+          {
+            $sort: {
+              submittedAt: -1,
+            },
+          },
+
+          // Pagination
+          {
+            $skip: skip,
+          },
+
+          {
+            $limit: limit,
+          },
+
+          // ==================================
+          // USER LOOKUP
+          // ==================================
+          {
+            $lookup: {
+              from: "users",
+              let: {
+                userObjectId: {
+                  $convert: {
+                    input: "$userId",
+                    to: "objectId",
+                    onError: null,
+                    onNull: null,
+                  },
+                },
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$userObjectId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    name: 1,
+                    username: 1,
+                  },
+                },
+              ],
+              as: "user",
+            },
+          },
+
+          // Convert user array -> object
+          {
+            $unwind: {
+              path: "$user",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+
+          // ==================================
+          // REVIEWER LOOKUP
+          // ==================================
+          {
+            $lookup: {
+              from: "users",
+              let: {
+                reviewerObjectId: {
+                  $convert: {
+                    input: "$reviewer",
+                    to: "objectId",
+                    onError: null,
+                    onNull: null,
+                  },
+                },
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$reviewerObjectId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    name: 1,
+                  },
+                },
+              ],
+              as: "reviewerUser",
+            },
+          },
+
+          // Convert reviewer array -> object
+          {
+            $unwind: {
+              path: "$reviewerUser",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+
+          // ==================================
+          // FINAL OUTPUT
+          // ==================================
+          {
+            $project: {
+              // Keep all original question fields
+              _id: 1,
+              userId: 1,
+              question: 1,
+              questionText: 1,
+              status: 1,
+              domains: 1,
+              cropType: 1,
+              season: 1,
+              state: 1,
+              submittedAt: 1,
+
+              // User information
+              user: 1,
+
+              // Reviewer name
+              reviewedByName: {
+                $ifNull: ["$reviewerUser.name", null],
+              },
+
+              // Keep anything else you need:
+              answer: 1,
+              response: 1,
+              reviewedAt: 1,
+              rejectionReason: 1,
+              approvalReason:1,
+              heldReason: 1
+            },
+          },
+        ],
+
+        // ==================================
+        // TOTAL COUNT
+        // ==================================
+        total: [
+          {
+            $count: "count",
+          },
+        ],
+      },
+    },
+  ]);
+
+  // ----------------------------------------
+  // 3. Extract facet result
+  // ----------------------------------------
+
+  const items = result[0]?.items ?? [];
+
+  const total = result[0]?.total?.[0]?.count ?? 0;
+
+  // ----------------------------------------
+  // 4. Return same response structure
+  // ----------------------------------------
+
+  return {
+    items,
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
+  };
+}
 }
