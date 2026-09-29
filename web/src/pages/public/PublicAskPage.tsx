@@ -37,6 +37,7 @@ import {
 import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
 import { AnveshanMilestoneData, AnveshanMilestoneModal, getAnveshanMilestonePercent } from './AnveshMileStone'
 import { Award } from "lucide-react";
+import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
 // Server-derived fields from `questionApi.preview` — location/zone are locked
 // to the user's profile (not user-editable), domain/season/crop seed the
@@ -265,6 +266,9 @@ const fetchMilestone = useCallback(() => {
 useEffect(() => {
   fetchMilestone();
 }, [fetchMilestone]);
+
+// Reloads the progress button after each successful question or crop/weed/pest/disease submission.
+useEffect(() => anveshanProgressEmitter.on(fetchMilestone), [fetchMilestone]);
 
 useEffect(() => {
   if (milestoneJustCompleted) {

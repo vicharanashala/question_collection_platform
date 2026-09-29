@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { concatMap, tap } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
 import { RedisService } from '../redis.service';
 
@@ -24,9 +24,13 @@ export class CacheInvalidationInterceptor implements NestInterceptor {
     if (!patterns || patterns.length === 0) return next.handle();
 
     return next.handle().pipe(
+      // Only invalidate on success, and finish before the response is sent, so a read made right
+      // after this mutation never gets the stale cached value.
+      concatMap(async (data) => {
+        await this.invalidate(patterns);
+        return data;
+      }),
       tap({
-        // Only invalidate on success — don't touch cache if the mutation failed.
-        next: () => this.invalidate(patterns),
         // Surface unexpected errors without swallowing them.
         error: (err) =>
           this.logger.warn(

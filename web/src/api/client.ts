@@ -50,6 +50,13 @@ import {
   accountLockedEmitter,
   parseAccountLocked,
 } from "@/events/accountLockedEvents";
+import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
+
+// Passes a successful submission result through and tells progress screens to reload.
+function notifyProgressChanged<T>(data: T): T {
+  anveshanProgressEmitter.emit();
+  return data;
+}
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
@@ -960,7 +967,9 @@ export const questionApi = {
         body: JSON.stringify(body),
       },
       false,
-    ).finally(() => invalidateCache("/api/questions")),
+    )
+      .then(notifyProgressChanged)
+      .finally(() => invalidateCache("/api/questions")),
 
   /** Daily / total submission stats for the current (public) user. */
   // getMyStats: () =>
@@ -1027,7 +1036,7 @@ export const questionApi = {
       `/questions/anveshan-answers/${encodeURIComponent(questionId)}`,
       { method: "POST", body: JSON.stringify(body) },
       false,
-    ),
+    ).then(notifyProgressChanged),
 };
 
 // ─── Wallet API (public-user dashboard) ────────────────────────────────────
@@ -1483,7 +1492,7 @@ export const agriEntityApi = {
         body: JSON.stringify(body),
       },
       false,
-    ),
+    ).then(notifyProgressChanged),
 
   /** The signed-in user's submission count for each type. */
   getMyCounts: () =>
