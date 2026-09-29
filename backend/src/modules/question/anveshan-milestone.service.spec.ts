@@ -139,6 +139,27 @@ describe('AnveshanMilestoneService', () => {
     expect(result.items[1].answer).toBeNull();
   });
 
+  it('rejects a new answer once the required answers are submitted', async () => {
+    givenSubmissionsDone(2);
+
+    await expect(service.submitAnswer(USER_ID, 'q-2', answerDto)).rejects.toThrow(
+      'You have already submitted the required 2 answers. No more answers can be submitted.',
+    );
+    expect(questionRepo.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('releases the claim when a parallel request already reached the answer limit', async () => {
+    givenSubmissionsDone(1);
+    questionRepo.find
+      .mockResolvedValueOnce(buildQuestions(1))
+      .mockResolvedValueOnce(buildQuestions(3));
+    questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+
+    await expect(service.submitAnswer(USER_ID, 'q-2', answerDto)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(questionRepo.updateMany).toHaveBeenLastCalledWith({ id: 'q-2', userId: USER_ID }, { isAnswerSubmitted: false });
+    expect(answerRepo.create).not.toHaveBeenCalled();
+  });
+
   it('reports a conflict when the question was already answered', async () => {
     givenSubmissionsDone();
     questionRepo.updateMany.mockResolvedValue({ affected: 0 });

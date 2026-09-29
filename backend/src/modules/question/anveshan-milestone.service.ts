@@ -93,7 +93,8 @@ export class AnveshanMilestoneService {
     return this.answerRepo.findOne({ questionId });
   }
 
-  // Saves the caller's answer for one of their eligible questions. Each question can be answered once.
+  // Saves the caller's answer for one of their eligible questions. Each question can be answered once,
+  // and no more answers are accepted once the required number has been submitted.
   async submitAnswer(userId: string, questionId: string, dto: SubmitAnveshanAnswerDto) {
     const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
     if (!milestone.submissionsCompleted) {
@@ -105,6 +106,11 @@ export class AnveshanMilestoneService {
       throw new NotFoundException('This question is not in your answer list.');
     }
 
+    const requiredAnswers = milestone.requirements.answers;
+    if (!question.isAnswerSubmitted && countAnveshanAnswers(eligibleQuestions) >= requiredAnswers) {
+      throw new ForbiddenException(answerLimitMessage(requiredAnswers));
+    }
+
     // Claim the question first: this conditional flag update lets only one request through.
     const { affected } = await this.questionRepo.updateMany(
       { id: questionId, userId, isAnswerSubmitted: { $ne: true } },
@@ -112,6 +118,13 @@ export class AnveshanMilestoneService {
     );
     if (!affected) {
       throw new ConflictException('You have already answered this question.');
+    }
+
+    // Guards against parallel requests for different questions both passing the limit check above.
+    const answeredNow = countAnveshanAnswers(await findAnveshanAnswerableQuestions(this.questionRepo, userId));
+    if (answeredNow > requiredAnswers) {
+      await this.questionRepo.updateMany({ id: questionId, userId }, { isAnswerSubmitted: false });
+      throw new ForbiddenException(answerLimitMessage(requiredAnswers));
     }
 
     let saved: AnveshanAnswer;
@@ -136,7 +149,6 @@ export class AnveshanMilestoneService {
     }
 
     const answeredCount = milestone.progress.answers + 1;
-    const requiredAnswers = milestone.requirements.answers;
     return {
       question: toAnswerableQuestion({ ...question, isAnswerSubmitted: true }, saved),
       answeredCount: Math.min(answeredCount, requiredAnswers),
@@ -173,6 +185,11 @@ export class AnveshanMilestoneService {
     const answers = await this.answerRepo.find({ userId, questionId: { $in: answeredIds } });
     return new Map(answers.map((answer) => [answer.questionId, answer]));
   }
+}
+
+// Message returned when the user tries to answer beyond the required number of questions.
+function answerLimitMessage(requiredAnswers: number): string {
+  return `You have already submitted the required ${requiredAnswers} answers. No more answers can be submitted.`;
 }
 
 function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null): AnveshanAnswerableQuestion {

@@ -40,9 +40,15 @@ function markGuideSeen(userId: string): void {
   }
 }
 
-// Picks the first unanswered question, falling back to the first question.
+// True once the user has submitted every required answer; remaining questions can no longer be answered.
+function isAnswerLimitReached(data: AnveshanAnswerQuestionsResponse): boolean {
+  return data.answeredCount >= data.requiredAnswers
+}
+
+// Picks the first unanswered question, or the first answered one once no more answers are allowed.
 function pickDefaultQuestion(data: AnveshanAnswerQuestionsResponse): string | null {
-  return (data.items.find((q) => !q.answer) ?? data.items[0])?.id ?? null
+  const preferred = isAnswerLimitReached(data) ? data.items.find((q) => q.answer) : data.items.find((q) => !q.answer)
+  return (preferred ?? data.items[0])?.id ?? null
 }
 
 // Final Anveshan milestone step: users answer their own submitted questions with sources.
@@ -127,6 +133,8 @@ export function AnveshanAnswersPage() {
       )
     } catch (err) {
       toast.error(getErrorMessage(err, t('anveshanAnswers.errors.submitFailed', 'Could not submit your answer. Please try again.')))
+      // A 403 means the answer limit was reached elsewhere (for example another tab), so resync the list.
+      if ((err as { status?: number }).status === 403) void load('refresh')
     } finally {
       setIsSubmitting(false)
     }
@@ -167,6 +175,7 @@ export function AnveshanAnswersPage() {
   }
 
   const selectedQuestion = data.items.find((q) => q.id === selectedId) ?? null
+  const answerLimitReached = isAnswerLimitReached(data)
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
@@ -203,6 +212,7 @@ export function AnveshanAnswersPage() {
               onSelect={setSelectedId}
               onRefresh={() => void load('refresh')}
               isRefreshing={isRefreshing}
+              answeringClosed={answerLimitReached}
             />
           </div>
           <div className="lg:min-h-[calc(100vh-14rem)]">
@@ -214,6 +224,7 @@ export function AnveshanAnswersPage() {
                 onDraftChange={(draft) => setDrafts((prev) => ({ ...prev, [selectedQuestion.id]: draft }))}
                 onSubmit={submitAnswer}
                 isSubmitting={isSubmitting}
+                answerLimit={answerLimitReached ? data.requiredAnswers : null}
               />
             ) : (
               <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a question to write your answer.')} />
