@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, FileText, Loader2, RotateCcw, Send, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, FileText, Loader2, Lock, RotateCcw, Send, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -33,10 +33,12 @@ interface AnswerResponsePanelProps {
   onDraftChange: (draft: AnswerDraft) => void
   onSubmit: (draft: AnswerDraft) => Promise<void>
   isSubmitting: boolean
+  /** Required answer count once it has been reached; unanswered questions are then locked. */
+  answerLimit?: number | null
 }
 
-// Right panel: shows the selected question and either the answer form or the submitted answer.
-export function AnswerResponsePanel({ question, draft, onDraftChange, onSubmit, isSubmitting }: AnswerResponsePanelProps) {
+// Right panel: shows the selected question and the answer form, the submitted answer, or a locked notice.
+export function AnswerResponsePanel({ question, draft, onDraftChange, onSubmit, isSubmitting, answerLimit = null }: AnswerResponsePanelProps) {
   const { t } = useTranslation()
 
   return (
@@ -56,11 +58,41 @@ export function AnswerResponsePanel({ question, draft, onDraftChange, onSubmit, 
 
         {question.answer ? (
           <SubmittedAnswer question={question} />
+        ) : answerLimit !== null ? (
+          <AnswerLimitNotice requiredAnswers={answerLimit} />
         ) : (
           <AnswerForm draft={draft} onDraftChange={onDraftChange} onSubmit={onSubmit} isSubmitting={isSubmitting} />
         )}
       </CardContent>
     </Card>
+  )
+}
+
+// Explains that no more answers are accepted because the required number has already been submitted.
+function AnswerLimitNotice({ requiredAnswers }: { requiredAnswers: number }) {
+  const { t } = useTranslation()
+  return (
+    <div
+      role="status"
+      className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border-subtle bg-surface-variant/40 px-6 py-10 text-center"
+    >
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+        <Lock className="h-5 w-5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
+      </span>
+      <p className="text-base font-semibold text-text">
+        {t('anveshanAnswers.limitReachedTitle', {
+          count: requiredAnswers,
+          defaultValue: "You've submitted all {{count}} required answers",
+        })}
+      </p>
+      <p className="max-w-sm text-sm leading-relaxed text-text-secondary">
+        {t('anveshanAnswers.limitReachedDescription', {
+          count: requiredAnswers,
+          defaultValue:
+            'Only {{count}} answers are needed for your Anveshan milestone, so this question cannot be answered. You can still review the answers you submitted.',
+        })}
+      </p>
+    </div>
   )
 }
 

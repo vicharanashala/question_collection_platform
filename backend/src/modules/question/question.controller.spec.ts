@@ -3,6 +3,9 @@ import { QuestionController } from './question.controller';
 import { QuestionService } from './question.service';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
+import { UserService } from '../user/user.service';
+import { AnveshanMilestoneService } from './anveshan-milestone.service';
+import { AnveshanSubmissionsOpenGuard } from '../user/guards/anveshan-submissions-open.guard';
 import { UserRole, QuestionStatus, Season, MediaType } from '../../shared/classes/enums';
 
 const mockQuestionService = () => ({
@@ -38,8 +41,12 @@ describe('QuestionController', () => {
       controllers: [QuestionController],
       providers: [
         { provide: QuestionService, useFactory: mockQuestionService },
+        { provide: UserService, useValue: {} },
+        { provide: AnveshanMilestoneService, useValue: {} },
       ],
     })
+      .overrideGuard(AnveshanSubmissionsOpenGuard)
+      .useValue({ canActivate: () => true })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(RolesGuard)

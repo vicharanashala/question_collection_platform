@@ -2,7 +2,11 @@ import {
   ANVESHAN_REQUIRED_ANSWER_COUNT,
   getAnveshanRequiredQuestionCount,
 } from "../../shared/constants/anveshan.constant";
-import { countAnveshanAnswers, findAnveshanAnswerableQuestions } from "../../shared/utils/anveshan.util";
+import {
+  countAnveshanAnswers,
+  evaluateAnveshanProgress,
+  findAnveshanAnswerableQuestions,
+} from "../../shared/utils/anveshan.util";
 import {
   Injectable,
   NotFoundException,
@@ -63,6 +67,30 @@ export class UserService {
   }
 
   // ─── Anveshan Progress ──────────────────────────────────────────────────────
+
+  // True when an Anveshan user has met every milestone goal. Non-Anveshan users are never considered completed.
+  async isAnveshanMilestoneCompleted(userId: string): Promise<boolean> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user?.isAnveshanUser) return false;
+
+    const [questions, crop, weed, pest, disease, answerableQuestions] = await Promise.all([
+      this.questionRepo.countByUserId(userId),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+      findAnveshanAnswerableQuestions(this.questionRepo, userId),
+    ]);
+
+    return evaluateAnveshanProgress({
+      questions,
+      crop,
+      weed,
+      pest,
+      disease,
+      answers: countAnveshanAnswers(answerableQuestions),
+    }).completed;
+  }
 
   // Reports each Anveshan requirement, including answers to their own questions, for the given mobile number.
   async getAnveshanProgress(mobileNumber: string) {

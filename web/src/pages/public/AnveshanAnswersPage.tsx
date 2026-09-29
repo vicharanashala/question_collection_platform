@@ -13,8 +13,6 @@ import { getErrorMessage, questionApi } from '@/api/client'
 import { AnswerQuestionList } from '@/components/anveshan-answers/AnswerQuestionList'
 import { SubmissionCriteriaGate } from '@/components/anveshan-answers/SubmissionCriteriaGate'
 import { AnsweringGuideDialog } from '@/components/anveshan-answers/AnsweringGuideDialog'
-import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
-import { deferFeedback } from '@/components/anveshan-answers/feedbackPrompt'
 import { useAuth } from '@/context/AuthContext'
 import { AnswerResponsePanel, EMPTY_DRAFT, type AnswerDraft } from '@/components/anveshan-answers/AnswerResponsePanel'
 import type { AnveshanAnswerQuestionsResponse } from '@/types'
@@ -40,9 +38,15 @@ function markGuideSeen(userId: string): void {
   }
 }
 
-// Picks the first unanswered question, falling back to the first question.
+// True once the user has submitted every required answer; remaining questions can no longer be answered.
+function isAnswerLimitReached(data: AnveshanAnswerQuestionsResponse): boolean {
+  return data.answeredCount >= data.requiredAnswers
+}
+
+// Picks the first unanswered question, or the first answered one once no more answers are allowed.
 function pickDefaultQuestion(data: AnveshanAnswerQuestionsResponse): string | null {
-  return (data.items.find((q) => !q.answer) ?? data.items[0])?.id ?? null
+  const preferred = isAnswerLimitReached(data) ? data.items.find((q) => q.answer) : data.items.find((q) => !q.answer)
+  return (preferred ?? data.items[0])?.id ?? null
 }
 
 // Final Anveshan milestone step: users answer their own submitted questions with sources.
@@ -56,8 +60,6 @@ export function AnveshanAnswersPage() {
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [feedbackSent, setFeedbackSent] = useState(false)
   const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY)
   const { user } = useAuth()
   const userId = user?.id
@@ -118,8 +120,8 @@ export function AnveshanAnswersPage() {
       const nextData = { ...data, items, answeredCount: result.answeredCount, completed: result.completed }
       setData(nextData)
       setSelectedId(pickDefaultQuestion(nextData))
-      // The answer that completes the milestone opens the feedback prompt.
-      if (result.completed && !data.completed) setFeedbackOpen(true)
+      // The answer that completes the milestone moves the user to the completion screen, which also asks for feedback.
+      if (result.completed && !data.completed) navigate('/home', { replace: true })
       toast.success(
         result.completed
           ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
@@ -127,6 +129,8 @@ export function AnveshanAnswersPage() {
       )
     } catch (err) {
       toast.error(getErrorMessage(err, t('anveshanAnswers.errors.submitFailed', 'Could not submit your answer. Please try again.')))
+      // A 403 means the answer limit was reached elsewhere (for example another tab), so resync the list.
+      if ((err as { status?: number }).status === 403) void load('refresh')
     } finally {
       setIsSubmitting(false)
     }
@@ -167,6 +171,7 @@ export function AnveshanAnswersPage() {
   }
 
   const selectedQuestion = data.items.find((q) => q.id === selectedId) ?? null
+  const answerLimitReached = isAnswerLimitReached(data)
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
@@ -178,15 +183,6 @@ export function AnveshanAnswersPage() {
         onOpenGuide={() => setGuideOpen(true)}
       />
       <AnsweringGuideDialog open={guideOpen} onOpenChange={changeGuideOpen} requiredAnswers={data.requiredAnswers} />
-      <AnveshanFeedbackDialog
-        open={feedbackOpen}
-        onOpenChange={(open) => {
-          setFeedbackOpen(open)
-          if (!open && !feedbackSent && userId) deferFeedback(userId)
-        }}
-        onSubmitted={() => setFeedbackSent(true)}
-      />
-
       {data.items.length === 0 ? (
         <StatusCard
           icon={<PenLine className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
@@ -203,6 +199,7 @@ export function AnveshanAnswersPage() {
               onSelect={setSelectedId}
               onRefresh={() => void load('refresh')}
               isRefreshing={isRefreshing}
+              answeringClosed={answerLimitReached}
             />
           </div>
           <div className="lg:min-h-[calc(100vh-14rem)]">
@@ -214,6 +211,7 @@ export function AnveshanAnswersPage() {
                 onDraftChange={(draft) => setDrafts((prev) => ({ ...prev, [selectedQuestion.id]: draft }))}
                 onSubmit={submitAnswer}
                 isSubmitting={isSubmitting}
+                answerLimit={answerLimitReached ? data.requiredAnswers : null}
               />
             ) : (
               <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a question to write your answer.')} />

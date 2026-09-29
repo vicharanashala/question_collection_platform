@@ -12,9 +12,11 @@ import { QuestionService } from './question.service';
 import { SubmitAnveshanAnswerDto } from './dto';
 import {
   type AnveshanCounts,
+  type AnveshanTimeline,
   countAnveshanAnswers,
   evaluateAnveshanProgress,
   findAnveshanAnswerableQuestions,
+  toStepTimeline,
 } from '../../shared/utils/anveshan.util';
 
 
@@ -27,6 +29,8 @@ export interface AnveshanMilestone {
   completed: boolean;
   /** True once the user has shared their app feedback after reaching 100%. */
   feedbackSubmitted: boolean;
+  /** When each goal was started and completed. */
+  timeline: AnveshanTimeline;
 }
 
 /** Answer fields returned to the client. */
@@ -64,13 +68,16 @@ export class AnveshanMilestoneService {
     private readonly agriEntityService: AgriEntitiesService,
   ) {}
 
-  // Returns the caller's milestone progress across submissions and answers.
+  // Returns the caller's milestone progress across submissions and answers, with when each goal was started and met.
   async getMilestone(userId: string): Promise<AnveshanMilestone> {
-    const { milestone } = await this.buildMilestone(userId);
-    const feedbackSubmitted = milestone.completed
-      ? (await this.feedbackRepo.count({ userId, context: 'anveshan_completion' })) > 0
-      : false;
-    return { ...milestone, feedbackSubmitted };
+    const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
+    const [feedbackSubmitted, timeline] = await Promise.all([
+      milestone.completed
+        ? this.feedbackRepo.count({ userId, context: 'anveshan_completion' }).then((count) => count > 0)
+        : Promise.resolve(false),
+      this.buildTimeline(userId, milestone.requirements, eligibleQuestions),
+    ]);
+    return { ...milestone, feedbackSubmitted, timeline };
   }
 
   // Lists the questions the caller may answer (their first required-count submissions) with answer status.
@@ -93,7 +100,8 @@ export class AnveshanMilestoneService {
     return this.answerRepo.findOne({ questionId });
   }
 
-  // Saves the caller's answer for one of their eligible questions. Each question can be answered once.
+  // Saves the caller's answer for one of their eligible questions. Each question can be answered once,
+  // and no more answers are accepted once the required number has been submitted.
   async submitAnswer(userId: string, questionId: string, dto: SubmitAnveshanAnswerDto) {
     const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
     if (!milestone.submissionsCompleted) {
@@ -105,6 +113,11 @@ export class AnveshanMilestoneService {
       throw new NotFoundException('This question is not in your answer list.');
     }
 
+    const requiredAnswers = milestone.requirements.answers;
+    if (!question.isAnswerSubmitted && countAnveshanAnswers(eligibleQuestions) >= requiredAnswers) {
+      throw new ForbiddenException(answerLimitMessage(requiredAnswers));
+    }
+
     // Claim the question first: this conditional flag update lets only one request through.
     const { affected } = await this.questionRepo.updateMany(
       { id: questionId, userId, isAnswerSubmitted: { $ne: true } },
@@ -112,6 +125,13 @@ export class AnveshanMilestoneService {
     );
     if (!affected) {
       throw new ConflictException('You have already answered this question.');
+    }
+
+    // Guards against parallel requests for different questions both passing the limit check above.
+    const answeredNow = countAnveshanAnswers(await findAnveshanAnswerableQuestions(this.questionRepo, userId));
+    if (answeredNow > requiredAnswers) {
+      await this.questionRepo.updateMany({ id: questionId, userId }, { isAnswerSubmitted: false });
+      throw new ForbiddenException(answerLimitMessage(requiredAnswers));
     }
 
     let saved: AnveshanAnswer;
@@ -136,7 +156,6 @@ export class AnveshanMilestoneService {
     }
 
     const answeredCount = milestone.progress.answers + 1;
-    const requiredAnswers = milestone.requirements.answers;
     return {
       question: toAnswerableQuestion({ ...question, isAnswerSubmitted: true }, saved),
       answeredCount: Math.min(answeredCount, requiredAnswers),
@@ -166,6 +185,29 @@ export class AnveshanMilestoneService {
     return { milestone: { requirements, progress, submissionsCompleted, completed }, eligibleQuestions };
   }
 
+  // Start and completion times for every goal, from the submissions that count towards it.
+  private async buildTimeline(
+    userId: string,
+    requirements: AnveshanCounts,
+    eligibleQuestions: Question[],
+  ): Promise<AnveshanTimeline> {
+    const agriLimit = Math.max(requirements.crop, requirements.weed, requirements.pest, requirements.disease);
+    const [agriDates, answersByQuestion] = await Promise.all([
+      this.agriEntityService.getEarliestSubmissionDatesByType(userId, agriLimit),
+      this.findAnswersByQuestion(userId, eligibleQuestions),
+    ]);
+    const answerDates = [...answersByQuestion.values()].map((answer) => answer.answeredAt);
+
+    return {
+      questions: toStepTimeline(eligibleQuestions.map((q) => q.submittedAt), requirements.questions),
+      crop: toStepTimeline(agriDates.crop, requirements.crop),
+      weed: toStepTimeline(agriDates.weed, requirements.weed),
+      pest: toStepTimeline(agriDates.pest, requirements.pest),
+      disease: toStepTimeline(agriDates.disease, requirements.disease),
+      answers: toStepTimeline(answerDates, requirements.answers),
+    };
+  }
+
   // Loads the stored answers for the answered questions only, keyed by question id.
   private async findAnswersByQuestion(userId: string, questions: Question[]): Promise<Map<string, AnveshanAnswer>> {
     const answeredIds = questions.filter((q) => q.isAnswerSubmitted).map((q) => q.id);
@@ -173,6 +215,11 @@ export class AnveshanMilestoneService {
     const answers = await this.answerRepo.find({ userId, questionId: { $in: answeredIds } });
     return new Map(answers.map((answer) => [answer.questionId, answer]));
   }
+}
+
+// Message returned when the user tries to answer beyond the required number of questions.
+function answerLimitMessage(requiredAnswers: number): string {
+  return `You have already submitted the required ${requiredAnswers} answers. No more answers can be submitted.`;
 }
 
 function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null): AnveshanAnswerableQuestion {
