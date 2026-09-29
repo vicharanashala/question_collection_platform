@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
-import { ANVESHAN_PLATFORM_URL } from "@/constants/public";
+import { ANVESHAN_PLATFORM_URL, ANVESHAN_TAGLINE } from "@/constants/public";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -122,12 +122,13 @@ function StepIndicator({ current, t }: { current: 1 | 2; t: TranslateFn }) {
 interface LegalReaderProps {
   tab: LegalTab;
   label: string;
+  intro?: ReactNode;
   endContent: ReactNode;
   onProgress: (tab: LegalTab, ratio: number) => void;
 }
 
 // Renders a full legal document and reports how far the user has scrolled through it.
-function LegalReader({ tab, label, endContent, onProgress }: LegalReaderProps) {
+function LegalReader({ tab, label, intro, endContent, onProgress }: LegalReaderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sections = LEGAL_SECTIONS[tab];
 
@@ -153,23 +154,51 @@ function LegalReader({ tab, label, endContent, onProgress }: LegalReaderProps) {
       aria-label={label}
       className="min-h-0 flex-1 overflow-y-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
-      <div className="mx-auto max-w-2xl px-5 py-6 sm:px-10 sm:py-8">
-        <ol className="space-y-7">
+      <div className="mx-auto max-w-2xl px-4 py-5 sm:px-10 sm:py-8">
+        {intro}
+        <ol className="space-y-5 sm:space-y-7">
           {sections.map(({ id, title, body }) => (
-            <li key={id} className="flex gap-4">
-              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+            <li key={id} className="flex gap-3 sm:gap-4">
+              <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary sm:size-7 sm:text-xs">
                 {id}
               </span>
               <div className="min-w-0">
-                <h4 className="text-base font-semibold text-foreground">{title}</h4>
-                <p className="mt-1.5 text-sm leading-7 text-muted-foreground">{body}</p>
+                <h4 className="text-sm font-semibold text-foreground sm:text-base">{title}</h4>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground sm:mt-1.5 sm:leading-7">{body}</p>
               </div>
             </li>
           ))}
         </ol>
-        <div className="mt-10 flex flex-col items-center gap-3 border-t pt-8 text-center">{endContent}</div>
+        <div className="mt-8 flex flex-col items-center gap-3 border-t pt-6 text-center sm:mt-10 sm:pt-8">{endContent}</div>
       </div>
     </div>
+  );
+}
+
+// Welcome note for aspiring candidates, shown before the Terms of Service.
+function CandidateWelcomeNote({ t }: { t: TranslateFn }) {
+  return (
+    <section
+      aria-labelledby="anveshan-candidate-welcome"
+      className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-3.5 sm:mb-8 sm:p-5"
+    >
+      <div className="flex items-start gap-3">
+        <div className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:flex">
+          <Sparkles className="size-4" aria-hidden="true" />
+        </div>
+        <div className="min-w-0 space-y-1.5">
+          <h3 id="anveshan-candidate-welcome" className="text-sm font-semibold text-foreground sm:text-base">
+            {t("anveshan.candidateGreeting", { defaultValue: "Dear Aspiring Candidate," })}
+          </h3>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {t("anveshan.candidateWelcome", {
+              app: ANVESHAN_TAGLINE,
+              defaultValue: `We are delighted to welcome you to the ${ANVESHAN_TAGLINE} application by Annam.ai. Before you begin, please read the Terms of Service and Privacy Policy below.`,
+            })}
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -254,8 +283,10 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
       {/* Consent is mandatory, so the only way out is the flow's own buttons. */}
       <DialogContent
         className={cn(
-          "[&>button]:hidden flex w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0 shadow-2xl sm:max-w-2xl sm:rounded-2xl lg:max-w-3xl",
-          step === "legal" ? "h-[min(94dvh,860px)]" : "max-h-[94dvh]",
+          "[&>button]:hidden flex w-[calc(100vw-1rem)] focus:outline-none flex-col gap-0 overflow-hidden p-0 shadow-2xl sm:max-w-2xl sm:rounded-2xl lg:max-w-3xl",
+          step === "legal"
+            ? "h-[min(94dvh,860px)] max-sm:h-dvh max-sm:w-screen max-sm:max-w-none max-sm:rounded-none max-sm:border-0"
+            : "max-h-[94dvh]",
         )}
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
@@ -333,7 +364,7 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
             </motion.div>
           ) : (
             <motion.div key="legal" {...stepMotion} className="flex min-h-0 flex-1 flex-col">
-              <div className="shrink-0 px-5 pt-5 sm:px-10 sm:pt-7">
+              <div className="shrink-0 px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-10 sm:pt-7">
                 <div className="flex items-center justify-between gap-3">
                   <button
                     type="button"
@@ -346,24 +377,24 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                   </button>
                   <StepIndicator current={2} t={t} />
                 </div>
-                <DialogHeader className="mt-4 space-y-1 text-left">
-                  <DialogTitle className="text-xl font-semibold sm:text-2xl">
+                <DialogHeader className="mt-3 space-y-1 text-left sm:mt-4">
+                  <DialogTitle className="text-lg font-semibold sm:text-2xl">
                     {t("anveshan.legalTitle", { defaultValue: "Terms & Privacy" })}
                   </DialogTitle>
-                  <DialogDescription className="text-sm">
+                  <DialogDescription className="text-xs sm:text-sm">
                     {t("anveshan.legalDescription", {
                       defaultValue: "Read both documents to the end to accept them.",
                     })}
                   </DialogDescription>
                 </DialogHeader>
 
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LegalTab)} className="mt-5">
-                  <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent p-0">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LegalTab)} className="mt-3 sm:mt-5">
+                  <TabsList className="grid h-auto w-full grid-cols-2 gap-0 rounded-none sm:flex sm:justify-start sm:gap-6 border-b bg-transparent p-0">
                     {(["terms", "privacy"] as const).map((tab) => (
                       <TabsTrigger
                         key={tab}
                         value={tab}
-                        className="-mb-px gap-2 rounded-none border-b-2 border-transparent px-0.5 pb-3 pt-1 text-sm text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                        className="-mb-px gap-1.5 rounded-none border-b-2 border-transparent px-0.5 pb-2.5 pt-1 text-[13px] text-muted-foreground sm:gap-2 sm:pb-3 sm:text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                       >
                         {hasRead(tab) ? (
                           <CircleCheck className="size-4 text-primary" aria-hidden="true" />
@@ -399,6 +430,7 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                 key={activeTab}
                 tab={activeTab}
                 label={legalTitle(activeTab, t)}
+                intro={activeTab === "terms" ? <CandidateWelcomeNote t={t} /> : undefined}
                 onProgress={handleProgress}
                 endContent={
                   activeTab === "terms" && !hasRead("privacy") ? (
@@ -420,8 +452,8 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                 }
               />
 
-              <footer className="shrink-0 border-t bg-muted/30 px-5 py-4 sm:px-10 sm:py-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <footer className="shrink-0 border-t bg-muted/30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-10 sm:py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
                     {(["terms", "privacy"] as const).map((tab) => (
                       <ConsentCheckbox
