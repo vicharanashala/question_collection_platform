@@ -164,7 +164,6 @@ export class AuthController {
   @Get('get-crops')
   @HttpCode(HttpStatus.OK)
   async getCrops(){
-    console.log("auth key", process.env.REVIEW_SYSTEM_AUTH_KEY)
     try{
           const resposne = await axios.get(`${process.env.REVIEWER_PROD}/crops/get-all-crops-client`, 
       {

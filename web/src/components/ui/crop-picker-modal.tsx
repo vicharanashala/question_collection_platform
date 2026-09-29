@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import {useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CropImage } from '@/components/CropImage'
+// import { CROPS } from '@/constants/public'
 import { cn } from '@/lib/utils'
-import { authApi } from '@/api/client'
+
 import placeholderImage from "../../assets/place-holder-image.jpg"
 
 interface CropPickerModalProps {
@@ -20,6 +21,7 @@ interface CropPickerModalProps {
   /** 'multi' shows Done+count footer; 'single' auto-closes on pick */
   mode?: 'multi' | 'single'
   title?: string
+  crops: Crop[]
 }
 
 interface Crop {
@@ -39,30 +41,11 @@ export function CropPickerModal({
   max = 0,
   mode = 'multi',
   title = 'Select crops',
+  crops
 }: CropPickerModalProps) {
   const [query, setQuery] = useState('')
   const [showOther, setShowOther] = useState(false)
   const [otherText, setOtherText] = useState('')
-  const [crops, setCrops] = useState<Crop[]>([]);
-
-useEffect(() => {
-  async function getCrops() {
-    try {
-      const response = (await authApi.getCrops()) as {
-        crops: Crop[]
-        totalCount: number
-        totalPages: number
-      }
-      console.log('response', response)
-
-      setCrops(response.crops)
-    } catch (error) {
-      console.error('Failed to fetch crops:', error)
-    }
-  }
-
-  getCrops()
-}, [])
 
   // const allOptions = useMemo(
   //   () => CROPS.map((c) => ({ value: c, label: c })),
@@ -77,6 +60,8 @@ const allOptions = useMemo(() => {
     'All',
     'All Crops',
   ])
+
+  console.log("Crops", crops)
 
   return crops
     .slice(4)
