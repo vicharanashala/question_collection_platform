@@ -32,7 +32,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type AnveshanMilestoneData = AnveshanMilestoneResponse;
 
-type MilestoneKey = Exclude<keyof AnveshanMilestoneData["requirements"], "answers">;
+export type MilestoneKey = Exclude<keyof AnveshanMilestoneData["requirements"], "answers">;
 
 
 // Submissions make up the first 80% of the milestone; answering their own questions is the last 20%.
@@ -71,6 +71,13 @@ export function getAnveshanMilestonePercent(data: AnveshanMilestoneData): number
   // Answers only count once submissions are finished, matching the order users complete them in.
   const answerPart = data.submissionsCompleted ? answerShare * ANSWER_WEIGHT : 0;
   return Math.round(submissionShare * SUBMISSION_WEIGHT + answerPart);
+}
+
+// Lists the submission goals that are not met yet, with how many more of each are needed.
+export function getAnveshanRemainingSubmissions(data: AnveshanMilestoneData): { key: MilestoneKey; remaining: number }[] {
+  return ITEMS.map(({ key }) => ({ key, remaining: Math.max(data.requirements[key] - data.progress[key], 0) })).filter(
+    ({ remaining }) => remaining > 0,
+  );
 }
 
 interface ProgressRingProps {

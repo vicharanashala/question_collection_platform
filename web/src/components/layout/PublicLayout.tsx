@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, MotionConfig } from 'framer-motion'
 import { VerificationBanner } from '@/components/VerificationBanner'
-import { AnveshanAnswerTaskBanner, AnveshanMilestoneBanner } from '../AnveshanBanner'
+import { AnveshanAnswerTaskBanner, AnveshanMilestoneBanner, AnveshanProgressBanner } from '../AnveshanBanner'
+import {
+  AnveshanMilestoneModal,
+  getAnveshanMilestonePercent,
+  getAnveshanRemainingSubmissions,
+} from '@/pages/public/AnveshMileStone'
 import { PublicSidebar } from './PublicSidebar'
 import { PublicHeader } from './PublicHeader'
 import { PublicMobileNav } from './PublicMobileNav'
@@ -28,12 +33,14 @@ export function PublicLayout() {
   const [showMilestoneBanner, setShowMilestoneBanner] = useState(false)
   const [milestone, setMilestone] = useState<AnveshanMilestoneResponse | null>(null)
   const [answerTaskDismissed, setAnswerTaskDismissed] = useState(false)
+  const [progressBannerDismissed, setProgressBannerDismissed] = useState(false)
+  const [milestoneDetailsOpen, setMilestoneDetailsOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const onAnswersPage = location.pathname === ANVESHAN_ANSWERS_ROUTE
 
-  // Loads milestone progress on mount and when leaving the answers page, so the banners reflect new answers.
+  // Loads milestone progress on mount and on each page change, so the banners reflect new submissions and answers.
   useEffect(() => {
     if (!user?.isAnveshanUser || !user.id || onAnswersPage) return
     const dismissedKey = `anveshan_milestone_100_banner_dismissed_${user.id}`
@@ -45,7 +52,9 @@ export function PublicLayout() {
         if (data.completed && !data.feedbackSubmitted && !isFeedbackDeferred(user.id)) setFeedbackOpen(true)
       })
       .catch(() => undefined)
-  }, [user?.id, user?.isAnveshanUser, onAnswersPage])
+  }, [user?.id, user?.isAnveshanUser, onAnswersPage, location.pathname])
+
+  const showProgressBanner = !!milestone && !milestone.submissionsCompleted && !progressBannerDismissed && !onAnswersPage
 
   const showAnswerTaskBanner =
     !!milestone?.submissionsCompleted && !milestone.completed && !answerTaskDismissed && !onAnswersPage
@@ -70,6 +79,13 @@ export function PublicLayout() {
         <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <VerificationBanner />
         <AnveshanMilestoneBanner visible={showMilestoneBanner} onDismiss={dismissMilestoneBanner} />
+        <AnveshanProgressBanner
+          visible={showProgressBanner}
+          percent={milestone ? getAnveshanMilestonePercent(milestone) : 0}
+          remaining={milestone ? getAnveshanRemainingSubmissions(milestone) : []}
+          onViewDetails={() => setMilestoneDetailsOpen(true)}
+          onDismiss={() => setProgressBannerDismissed(true)}
+        />
         <AnveshanAnswerTaskBanner
           visible={showAnswerTaskBanner}
           answered={milestone?.progress.answers ?? 0}
@@ -89,6 +105,8 @@ export function PublicLayout() {
           </motion.div>
         </main>
       </div>
+
+      <AnveshanMilestoneModal open={milestoneDetailsOpen} onOpenChange={setMilestoneDetailsOpen} data={milestone} />
 
       <AnveshanFeedbackDialog
         open={feedbackOpen}
