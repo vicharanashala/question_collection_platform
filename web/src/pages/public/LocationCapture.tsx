@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, MapPin, CheckCircle2 } from "lucide-react";
+import { Loader2, MapPin, CheckCircle2, RotateCw } from "lucide-react";
 import { useGeolocation, type Coordinates } from "@/hooks/useGeolocation";
 import { lgdApi } from "@/api/client";
 import { toast } from "sonner";
@@ -85,7 +85,7 @@ export function LocationCaptureModal({
 
   // Latest request id per level. Changing a parent bumps its children, so a slow reply for a
   // previous selection is ignored instead of overwriting the current list or loading state.
-  const requestIds = useRef({ districts: 0, blocks: 0, villages: 0 });
+  const requestIds = useRef({ states: 0, districts: 0, blocks: 0, villages: 0 });
   const startRequest = (...levels: (keyof typeof requestIds.current)[]) => {
     levels.forEach((level) => (requestIds.current[level] += 1));
     return requestIds.current[levels[0]];
@@ -108,26 +108,35 @@ export function LocationCaptureModal({
       .finally(() => setCoordsLoading(false));
   }, [open, getCurrentPosition]);
 
-  // ─── Load states once when the modal opens ────────────────────────────────
-  useEffect(() => {
-    if (!open) return;
+  // Loads the state list; also used by "Try again" when the first attempt fails.
+  const loadStates = useCallback(() => {
+    const requestId = startRequest("states");
+    setStateApiFailed(false);
     setStatesLoading(true);
     lgdApi
       .getStates()
       .then((res) => {
+        if (!isCurrent("states", requestId)) return;
         if (!res.states?.length) {
           setStateApiFailed(true);
           return;
         }
-
         setStates(res.states);
       })
       .catch(() => {
+        if (!isCurrent("states", requestId)) return;
         setStateApiFailed(true);
-        toast.error("Could not load states.");
+        toast.error("Could not load states. Tap \"Try again\" below the State field.");
       })
-      .finally(() => setStatesLoading(false));
-  }, [open]);
+      .finally(() => {
+        if (isCurrent("states", requestId)) setStatesLoading(false);
+      });
+  }, []);
+
+  // ─── Load states when the modal opens ─────────────────────────────────────
+  useEffect(() => {
+    if (open) loadStates();
+  }, [open, loadStates]);
 
   // ─── Reset the whole form each time the modal is opened fresh ────────────
   useEffect(() => {
@@ -150,7 +159,6 @@ export function LocationCaptureModal({
     setManualBlockName("");
     setManualVillageName("");
 
-    setStateApiFailed(false);
     setDistrictApiFailed(false);
     setBlockApiFailed(false);
     setVillageApiFailed(false);
@@ -472,6 +480,10 @@ export function LocationCaptureModal({
               </SelectContent>
             </Select>
 
+            {stateApiFailed && !statesLoading && !manualState && (
+              <LoadErrorRetry label="states" onRetry={() => loadStates()} />
+            )}
+
             {manualState && (
               <Input
                 value={manualStateName}
@@ -530,6 +542,10 @@ export function LocationCaptureModal({
               </SelectContent>
             </Select>
 
+            {districtApiFailed && !districtsLoading && !manualDistrict && !!stateCode && (
+              <LoadErrorRetry label="districts" onRetry={() => handleStateChange(stateCode)} />
+            )}
+
             {manualDistrict && (
               <Input
                 value={manualDistrictName}
@@ -578,6 +594,10 @@ export function LocationCaptureModal({
                 )}
               </SelectContent>
             </Select>
+            {blockApiFailed && !blocksLoading && !manualBlock && !!districtCode && (
+              <LoadErrorRetry label="blocks" onRetry={() => handleDistrictChange(districtCode)} />
+            )}
+
             {manualBlock && (
               <Input
                 value={manualBlockName}
@@ -624,6 +644,10 @@ export function LocationCaptureModal({
               </SelectContent>
             </Select>
 
+            {villageApiFailed && !villagesLoading && !manualVillage && !!blockCode && (
+              <LoadErrorRetry label="villages" onRetry={() => handleBlockChange(blockCode)} />
+            )}
+
             {manualVillage && (
               <Input
                 value={manualVillageName}
@@ -652,5 +676,23 @@ export function LocationCaptureModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Inline message shown when a location list fails to load, with a way to try again without a page refresh.
+function LoadErrorRetry({ label, onRetry }: { label: string; onRetry: () => void }) {
+  return (
+    <p role="alert" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-destructive">
+      <span>Couldn't load {label}.</span>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex items-center gap-1 rounded-sm font-semibold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <RotateCw className="h-3 w-3" aria-hidden="true" />
+        Try again
+      </button>
+      <span className="text-muted-foreground">or choose "Enter manually" in the list.</span>
+    </p>
   );
 }
