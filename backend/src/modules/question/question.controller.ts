@@ -23,6 +23,7 @@ import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
 import { UserService } from '../user/user.service';
+import { AnveshanSubmissionsOpenGuard } from '../user/guards/anveshan-submissions-open.guard';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
 import { SubmitAnveshanAnswerDto } from './dto/anveshan-answer.dto';
 
@@ -41,6 +42,7 @@ export class QuestionController {
 
   // POST /questions — Submit a new question
   @Post()
+  @UseGuards(AnveshanSubmissionsOpenGuard)
   @HttpCode(HttpStatus.CREATED)
   @CacheInvalidate('questions:u*', 'anveshan_milestone*')
   async submit(
@@ -164,6 +166,7 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
 
   // POST /questions/anveshan-answers/:questionId — answer one of the caller's own questions with sources.
   @Post('anveshan-answers/:questionId')
+  @UseGuards(AnveshanSubmissionsOpenGuard)
   @HttpCode(HttpStatus.CREATED)
   @CacheInvalidate('anveshan_milestone*', 'questions:*')
   async submitAnveshanAnswer(

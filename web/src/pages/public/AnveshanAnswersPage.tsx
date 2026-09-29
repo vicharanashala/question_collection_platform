@@ -13,8 +13,6 @@ import { getErrorMessage, questionApi } from '@/api/client'
 import { AnswerQuestionList } from '@/components/anveshan-answers/AnswerQuestionList'
 import { SubmissionCriteriaGate } from '@/components/anveshan-answers/SubmissionCriteriaGate'
 import { AnsweringGuideDialog } from '@/components/anveshan-answers/AnsweringGuideDialog'
-import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
-import { deferFeedback } from '@/components/anveshan-answers/feedbackPrompt'
 import { useAuth } from '@/context/AuthContext'
 import { AnswerResponsePanel, EMPTY_DRAFT, type AnswerDraft } from '@/components/anveshan-answers/AnswerResponsePanel'
 import type { AnveshanAnswerQuestionsResponse } from '@/types'
@@ -62,8 +60,6 @@ export function AnveshanAnswersPage() {
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [feedbackSent, setFeedbackSent] = useState(false)
   const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY)
   const { user } = useAuth()
   const userId = user?.id
@@ -124,8 +120,8 @@ export function AnveshanAnswersPage() {
       const nextData = { ...data, items, answeredCount: result.answeredCount, completed: result.completed }
       setData(nextData)
       setSelectedId(pickDefaultQuestion(nextData))
-      // The answer that completes the milestone opens the feedback prompt.
-      if (result.completed && !data.completed) setFeedbackOpen(true)
+      // The answer that completes the milestone moves the user to the completion screen, which also asks for feedback.
+      if (result.completed && !data.completed) navigate('/home', { replace: true })
       toast.success(
         result.completed
           ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
@@ -187,15 +183,6 @@ export function AnveshanAnswersPage() {
         onOpenGuide={() => setGuideOpen(true)}
       />
       <AnsweringGuideDialog open={guideOpen} onOpenChange={changeGuideOpen} requiredAnswers={data.requiredAnswers} />
-      <AnveshanFeedbackDialog
-        open={feedbackOpen}
-        onOpenChange={(open) => {
-          setFeedbackOpen(open)
-          if (!open && !feedbackSent && userId) deferFeedback(userId)
-        }}
-        onSubmitted={() => setFeedbackSent(true)}
-      />
-
       {data.items.length === 0 ? (
         <StatusCard
           icon={<PenLine className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
