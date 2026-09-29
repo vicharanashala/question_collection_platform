@@ -35,7 +35,7 @@ const GOALS: { key: GoalKey; icon: LucideIcon; label: string }[] = [
   { key: "weed", icon: Leaf, label: "Weed" },
   { key: "pest", icon: Bug, label: "Pest" },
   { key: "disease", icon: Microscope, label: "Disease" },
-  { key: "answers", icon: PenLine, label: "Answers" },
+  { key: "answers", icon: PenLine, label: "Advisories" },
 ];
 
 interface AnveshanCompletionScreenProps {
@@ -119,7 +119,7 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {t(
                   "anveshanComplete.description",
-                  "You have completed your Anveshan milestone on AnnaDatha. Thank you for the questions, observations and answers you contributed.",
+                  "You have completed your Anveshan milestone on AnnaDatha. Thank you for the questions, observations and advisories you contributed.",
                 )}
               </p>
 

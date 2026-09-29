@@ -61,9 +61,9 @@ export class AnveshanAnswerSourceDto {
 export class SubmitAnveshanAnswerDto {
   @Transform(trim)
   @IsString()
-  @IsNotEmpty({ message: 'Answer is required' })
-  @MinLength(MIN_ANVESHAN_ANSWER_LENGTH, { message: `Answer must be at least ${MIN_ANVESHAN_ANSWER_LENGTH} characters` })
-  @MaxLength(MAX_ANVESHAN_ANSWER_LENGTH)
+  @IsNotEmpty({ message: 'Advisory is required' })
+  @MinLength(MIN_ANVESHAN_ANSWER_LENGTH, { message: `Advisory must be at least ${MIN_ANVESHAN_ANSWER_LENGTH} characters` })
+  @MaxLength(MAX_ANVESHAN_ANSWER_LENGTH, { message: `Advisory must be at most ${MAX_ANVESHAN_ANSWER_LENGTH} characters` })
   answer: string;
 
   @IsArray()

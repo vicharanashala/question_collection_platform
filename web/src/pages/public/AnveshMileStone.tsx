@@ -246,7 +246,7 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
           <p className="text-sm font-medium text-text-secondary">
             {t("anveshan.answerTaskLockedTitle", {
               count: required,
-              defaultValue: "Final step: answer {{count}} of your questions",
+              defaultValue: "Final step: write advisories for {{count}} farmer queries",
             })}
           </p>
           <p className="text-xs text-text-tertiary">
@@ -283,10 +283,10 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
         </span>
         <p className="min-w-0 flex-1 text-sm font-semibold text-foreground">
           {done
-            ? t("anveshan.answerTaskDoneTitle", { count: required, defaultValue: "{{count}} answers submitted" })
+            ? t("anveshan.answerTaskDoneTitle", { count: required, defaultValue: "{{count}} advisories submitted" })
             : t("anveshan.answerTaskTitle", {
                 count: required,
-                defaultValue: "Final step: answer {{count}} of your questions",
+                defaultValue: "Final step: write advisories for {{count}} farmer queries",
               })}
         </p>
         <span
@@ -306,19 +306,19 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
             {t("anveshan.answerTaskMessage", {
               count: required,
               defaultValue:
-                "Amazing work reaching 80%! You know these questions best. Share your answer, backed by a trusted source, for any {{count}} of them to complete your milestone.",
+                "Amazing work reaching 80%! You know these farmer queries best. Write an advisory, backed by a trusted source, for any {{count}} of them to complete your milestone.",
             })}
           </p>
           {isDesktop ? (
             <Button className="mt-3 w-full gap-1.5" onClick={onStart}>
-              {t("anveshan.answerTaskCta", { defaultValue: "Start answering" })}
+              {t("anveshan.answerTaskCta", { defaultValue: "Write advisories" })}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           ) : (
             <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-400">
               <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {t("anveshan.answerTaskDesktopOnly", {
-                defaultValue: "Answering is available only on a desktop or laptop. Please open AnnaDatha there to finish this step.",
+                defaultValue: "Writing advisories is available only on a desktop or laptop. Please open AnnaDatha there to finish this step.",
               })}
             </p>
           )}
@@ -381,8 +381,8 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
                   {data.completed
                     ? t("anveshan.allGoalsDone", { defaultValue: "Every requirement is met." })
                     : data.submissionsCompleted
-                      ? t("anveshan.answerToFinish", { defaultValue: "Answer your questions to reach 100%." })
-                      : t("anveshan.keepGoing", { defaultValue: "Keep submitting to reach 80%, then answer to finish." })}
+                      ? t("anveshan.answerToFinish", { defaultValue: "Write advisories for farmer queries to reach 100%." })
+                      : t("anveshan.keepGoing", { defaultValue: "Keep submitting to reach 80%, then write advisories to finish." })}
                 </p>
               </div>
             </div>

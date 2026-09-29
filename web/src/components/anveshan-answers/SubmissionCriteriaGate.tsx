@@ -38,7 +38,7 @@ export function SubmissionCriteriaGate({ requirements, progress }: SubmissionCri
         <p className="text-sm text-text-secondary">
           {t(
             'anveshanAnswers.gateDescription',
-            'You need to complete the submission criteria below before entering the answer phase. Once every item is done, you can come back here to answer your questions.',
+            "You need to complete the submission criteria below before entering the advisory phase. Once every item is done, you can come back here to write advisories for farmers' queries.",
           )}
         </p>
       </div>

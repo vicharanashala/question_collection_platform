@@ -25,11 +25,11 @@ export function AnswerQuestionList({ questions, selectedId, onSelect, onRefresh,
     <Card className="flex max-h-[80vh] flex-col lg:absolute lg:inset-0 lg:max-h-none">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-1.5">
-          <CardTitle className="text-sm md:text-base">{t('anveshanAnswers.listTitle', 'Your Questions')}</CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('anveshanAnswers.listTitle', "Farmers' Queries")}</CardTitle>
           <InfoTip
             label={t('anveshanAnswers.aboutList', 'About this list')}
             className="p-0.5 text-text-tertiary hover:text-text"
-            content={t('anveshanAnswers.listHint', 'These are the questions you submitted. Pick any of them to answer.')}
+            content={t('anveshanAnswers.listHint', 'These are the farmer queries you collected. Pick any of them to write an advisory.')}
           >
             <Info className="h-3.5 w-3.5" aria-hidden="true" />
           </InfoTip>
@@ -48,7 +48,7 @@ export function AnswerQuestionList({ questions, selectedId, onSelect, onRefresh,
 
       <div
         role="radiogroup"
-        aria-label={t('anveshanAnswers.listTitle', 'Your Questions')}
+        aria-label={t('anveshanAnswers.listTitle', "Farmers' Queries")}
         className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4"
       >
         {questions.map((question, index) => (
@@ -117,7 +117,7 @@ function QuestionItem({ question, index, selected, onSelect, locked }: QuestionI
             {answered ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
                 <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                {t('anveshanAnswers.answered', 'Answered')}
+                {t('anveshanAnswers.answered', 'Advisory given')}
               </span>
             ) : locked ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-variant px-2 py-0.5 text-[10px] font-semibold text-text-secondary">
@@ -126,7 +126,7 @@ function QuestionItem({ question, index, selected, onSelect, locked }: QuestionI
               </span>
             ) : (
               <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                {t('anveshanAnswers.awaitingAnswer', 'Awaiting answer')}
+                {t('anveshanAnswers.awaitingAnswer', 'Awaiting advisory')}
               </span>
             )}
           </div>

@@ -179,7 +179,7 @@ describe('AnveshanMilestoneService', () => {
     givenSubmissionsDone(2);
 
     await expect(service.submitAnswer(USER_ID, 'q-2', answerDto)).rejects.toThrow(
-      'You have already submitted the required 2 answers. No more answers can be submitted.',
+      'You have already submitted the required 2 advisories. No more advisories can be submitted.',
     );
     expect(questionRepo.updateMany).not.toHaveBeenCalled();
   });

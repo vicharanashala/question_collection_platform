@@ -26,37 +26,37 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
         <DialogHeader className="space-y-1 border-b border-border-subtle px-5 py-4 pr-12 text-left sm:px-6">
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <BookOpenCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-            {t('anveshanGuide.title', 'Answering guide')}
+            {t('anveshanGuide.title', 'Advisory guide')}
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             {t('anveshanGuide.intro', {
               count: requiredAnswers,
               defaultValue:
-                'Answer any {{count}} of your own questions with information you can back up. Here is how it works and what makes an answer useful to farmers.',
+                'Write an advisory for any {{count}} of your farmer queries with information you can back up. Here is how it works and what makes an advisory useful to farmers.',
             })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 divide-y divide-border-subtle overflow-y-auto px-5 text-sm sm:px-6">
-          <GuideSection icon={ListChecks} title={t('anveshanGuide.stepsTitle', 'How to answer')}>
+          <GuideSection icon={ListChecks} title={t('anveshanGuide.stepsTitle', 'How to write an advisory')}>
             <ol className="list-decimal space-y-2.5 pl-5 leading-relaxed text-text-secondary marker:font-semibold marker:text-primary">
-              <li>{t('anveshanGuide.step1', 'Pick a question from "Your Questions". Answered ones show a green "Answered" badge.')}</li>
-              <li>{t('anveshanGuide.step2', 'Read the query again and write your answer in "Draft Response".')}</li>
+              <li>{t('anveshanGuide.step1', 'Pick a query from "Farmers\' Queries". Queries with a submitted advisory show a green "Advisory given" badge.')}</li>
+              <li>{t('anveshanGuide.step2', 'Read the query again and write your advisory in "Draft Advisory".')}</li>
               <li>{t('anveshanGuide.step3', 'Add anything reviewers should know in "Remarks" (optional).')}</li>
               <li>{t('anveshanGuide.step4', 'Add at least one source: choose the type, enter the source name, paste the link and page numbers, then press + (or Enter).')}</li>
               <li>{t('anveshanGuide.step5', 'Press Submit. If anything is missing, a message appears under that field; fix it and press Submit again, then confirm.')}</li>
             </ol>
           </GuideSection>
 
-          <GuideSection icon={ShieldCheck} title={t('anveshanGuide.rulesTitle', 'Checks before your answer is accepted')}>
+          <GuideSection icon={ShieldCheck} title={t('anveshanGuide.rulesTitle', 'Checks before your advisory is accepted')}>
             <ul className="space-y-2.5 leading-relaxed text-text-secondary">
-              <Rule>{t('anveshanGuide.ruleUnlock', 'Answering unlocks only after your question, crop, weed, pest and disease submissions are complete.')}</Rule>
-              <Rule>{t('anveshanGuide.ruleEligible', 'Only the questions listed here (your earliest submissions) can be answered.')}</Rule>
+              <Rule>{t('anveshanGuide.ruleUnlock', 'Advisories unlock only after your question, crop, weed, pest and disease submissions are complete.')}</Rule>
+              <Rule>{t('anveshanGuide.ruleEligible', 'Only the queries listed here (your earliest submissions) can receive an advisory.')}</Rule>
               <Rule>
                 {t('anveshanGuide.ruleAnswerLength', {
                   min: MIN_ANVESHAN_ANSWER_LENGTH,
                   max: MAX_ANVESHAN_ANSWER_LENGTH,
-                  defaultValue: 'The answer is required and must be between {{min}} and {{max}} characters. The counter above the answer box turns green once you pass {{min}}.',
+                  defaultValue: 'The advisory is required and must be between {{min}} and {{max}} characters. The counter above the advisory box turns green once you pass {{min}}.',
                 })}
               </Rule>
               <Rule>{t('anveshanGuide.ruleRemarks', { max: MAX_ANVESHAN_REMARKS_LENGTH, defaultValue: 'Remarks are optional, up to {{max}} characters.' })}</Rule>
@@ -66,14 +66,14 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
               <Rule>{t('anveshanGuide.rulePdf', 'For PDF links, page numbers are required so reviewers can find the exact lines.')}</Rule>
               <Rule>{t('anveshanGuide.rulePages', 'Page numbers must be whole numbers from 1, separated by commas, for example 4 or 12,13.')}</Rule>
               <Rule>{t('anveshanGuide.ruleDuplicate', 'The same link with the same type and pages cannot be added twice.')}</Rule>
-              <Rule>{t('anveshanGuide.ruleOnce', 'Each question can be answered once. Answers cannot be edited after submitting.')}</Rule>
-              <Rule>{t('anveshanGuide.ruleEvaluation', 'The quality of every submitted answer is carefully reviewed during evaluation.')}</Rule>
+              <Rule>{t('anveshanGuide.ruleOnce', 'Each query can receive one advisory. Advisories cannot be edited after submitting.')}</Rule>
+              <Rule>{t('anveshanGuide.ruleEvaluation', 'The quality of every submitted advisory is carefully reviewed during evaluation.')}</Rule>
             </ul>
           </GuideSection>
 
-          <GuideSection icon={PenLine} title={t('anveshanGuide.goodAnswerTitle', 'Writing a good answer')}>
+          <GuideSection icon={PenLine} title={t('anveshanGuide.goodAnswerTitle', 'Writing a good advisory')}>
             <ul className="space-y-2.5 leading-relaxed text-text-secondary">
-              <Tip>{t('anveshanGuide.good1', 'Answer the exact question asked: the crop, the problem and the stage the farmer describes.')}</Tip>
+              <Tip>{t('anveshanGuide.good1', 'Address the exact query: the crop, the problem and the stage the farmer describes.')}</Tip>
               <Tip>{t('anveshanGuide.good2', 'Start with the likely cause, then give clear steps the farmer can follow in order.')}</Tip>
               <Tip>{t('anveshanGuide.good3', 'Be specific: product or practice name, dose per litre or per acre, timing, interval and how many times.')}</Tip>
               <Tip>
@@ -121,14 +121,14 @@ export function AnsweringGuideDialog({ open, onOpenChange, requiredAnswers }: An
               <Avoid>{t('anveshanGuide.avoid1', 'Social media posts, videos, forums, shopping sites or AI chat output as sources.')}</Avoid>
               <Avoid>{t('anveshanGuide.avoid2', 'Copying text without checking it fits the farmer’s crop and region.')}</Avoid>
               <Avoid>{t('anveshanGuide.avoid3', 'Banned or unapproved chemicals, or doses without units.')}</Avoid>
-              <Avoid>{t('anveshanGuide.avoid4', 'Personal details, phone numbers or advertising in the answer.')}</Avoid>
+              <Avoid>{t('anveshanGuide.avoid4', 'Personal details, phone numbers or advertising in the advisory.')}</Avoid>
             </ul>
           </GuideSection>
         </div>
 
         <div className="border-t border-border-subtle px-5 py-3 sm:px-6">
           <Button className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
-            {t('anveshanGuide.close', 'Got it, start answering')}
+            {t('anveshanGuide.close', 'Got it, start writing advisories')}
           </Button>
         </div>
       </DialogContent>

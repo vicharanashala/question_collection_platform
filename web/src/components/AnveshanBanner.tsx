@@ -30,7 +30,7 @@ export function AnveshanAnswerTaskBanner({ visible, answered, required, onStart,
           {t("anveshan.answerTaskBannerMobile", {
             answered,
             required,
-            defaultValue: "80% done! Open AnnaDatha on a desktop or laptop to answer {{required}} of your questions ({{answered}}/{{required}}).",
+            defaultValue: "80% done! Open AnnaDatha on a desktop or laptop to write advisories for {{required}} farmer queries ({{answered}}/{{required}}).",
           })}
         </span>
         <span className="hidden lg:inline">
@@ -38,12 +38,12 @@ export function AnveshanAnswerTaskBanner({ visible, answered, required, onStart,
             answered,
             required,
             defaultValue:
-              "You're 80% there! Answer {{required}} of your own questions to finish your milestone ({{answered}}/{{required}} done).",
+              "You're 80% there! Write advisories for {{required}} farmer queries to finish your milestone ({{answered}}/{{required}} done).",
           })}
         </span>
       </p>
       <Button size="sm" className="hidden h-8 shrink-0 gap-1 px-3 lg:inline-flex" onClick={onStart}>
-        {t("anveshan.answerTaskCta", { defaultValue: "Start answering" })}
+        {t("anveshan.answerTaskCta", { defaultValue: "Write advisories" })}
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
       <button
@@ -105,7 +105,7 @@ export function AnveshanProgressBanner({ visible, percent, remaining, onViewDeta
           <p className="line-clamp-2 text-[11px] leading-snug text-text-secondary sm:line-clamp-none sm:truncate sm:text-xs">
             {t("anveshan.progressBannerRemaining", {
               items: remainingText,
-              defaultValue: "Left to unlock answering: {{items}}",
+              defaultValue: "Left to unlock advisories: {{items}}",
             })}
           </p>
         )}

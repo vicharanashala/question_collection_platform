@@ -105,12 +105,12 @@ export class AnveshanMilestoneService {
   async submitAnswer(userId: string, questionId: string, dto: SubmitAnveshanAnswerDto) {
     const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
     if (!milestone.submissionsCompleted) {
-      throw new ForbiddenException('Complete your submission goals before answering questions.');
+      throw new ForbiddenException('Complete your submission goals before writing advisories.');
     }
 
     const question = eligibleQuestions.find((q) => q.id === questionId);
     if (!question) {
-      throw new NotFoundException('This question is not in your answer list.');
+      throw new NotFoundException('This query is not in your advisory list.');
     }
 
     const requiredAnswers = milestone.requirements.answers;
@@ -124,7 +124,7 @@ export class AnveshanMilestoneService {
       { isAnswerSubmitted: true },
     );
     if (!affected) {
-      throw new ConflictException('You have already answered this question.');
+      throw new ConflictException('You have already submitted an advisory for this query.');
     }
 
     // Guards against parallel requests for different questions both passing the limit check above.
@@ -219,7 +219,7 @@ export class AnveshanMilestoneService {
 
 // Message returned when the user tries to answer beyond the required number of questions.
 function answerLimitMessage(requiredAnswers: number): string {
-  return `You have already submitted the required ${requiredAnswers} answers. No more answers can be submitted.`;
+  return `You have already submitted the required ${requiredAnswers} advisories. No more advisories can be submitted.`;
 }
 
 function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null): AnveshanAnswerableQuestion {
