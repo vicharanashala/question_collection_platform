@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -83,6 +83,15 @@ export function LocationCaptureModal({
 
   const MANUAL_VALUE = "__manual__";
 
+  // Latest request id per level. Changing a parent bumps its children, so a slow reply for a
+  // previous selection is ignored instead of overwriting the current list or loading state.
+  const requestIds = useRef({ districts: 0, blocks: 0, villages: 0 });
+  const startRequest = (...levels: (keyof typeof requestIds.current)[]) => {
+    levels.forEach((level) => (requestIds.current[level] += 1));
+    return requestIds.current[levels[0]];
+  };
+  const isCurrent = (level: keyof typeof requestIds.current, id: number) => requestIds.current[level] === id;
+
   // ─── Auto-request geolocation once, right when the modal opens ───────────
   useEffect(() => {
     if (!open) return;
@@ -123,6 +132,7 @@ export function LocationCaptureModal({
   // ─── Reset the whole form each time the modal is opened fresh ────────────
   useEffect(() => {
     if (!open) return;
+    startRequest("districts", "blocks", "villages");
     setStateCode("");
     setDistrictCode("");
     setBlockCode("");
@@ -165,10 +175,14 @@ export function LocationCaptureModal({
     setDistricts([]);
     setBlocks([]);
     setVillages([]);
+    setBlocksLoading(false);
+    setVillagesLoading(false);
     setDistrictsLoading(true);
+    const requestId = startRequest("districts", "blocks", "villages");
     lgdApi
       .getDistricts(code)
       .then((res) => {
+        if (!isCurrent("districts", requestId)) return;
         if (!res.districts?.length) {
           setDistrictApiFailed(true);
 
@@ -182,6 +196,7 @@ export function LocationCaptureModal({
         setDistricts(res.districts);
       })
       .catch(() => {
+        if (!isCurrent("districts", requestId)) return;
         setDistrictApiFailed(true);
 
         // No district code => block/village must be manual
@@ -190,7 +205,9 @@ export function LocationCaptureModal({
 
         toast.error("Could not load districts.");
       })
-      .finally(() => setDistrictsLoading(false));
+      .finally(() => {
+        if (isCurrent("districts", requestId)) setDistrictsLoading(false);
+      });
   }
 
   function handleDistrictChange(code: string) {
@@ -209,10 +226,13 @@ export function LocationCaptureModal({
 
     setBlocks([]);
     setVillages([]);
+    setVillagesLoading(false);
     setBlocksLoading(true);
+    const requestId = startRequest("blocks", "villages");
     lgdApi
       .getSubDistricts(code)
       .then((res) => {
+        if (!isCurrent("blocks", requestId)) return;
         if (!res.subdistricts?.length) {
           setBlockApiFailed(true);
           setManualVillage(true);
@@ -222,11 +242,14 @@ export function LocationCaptureModal({
         setBlocks(res.subdistricts);
       })
       .catch(() => {
+        if (!isCurrent("blocks", requestId)) return;
         setBlockApiFailed(true);
         setManualVillage(true);
         toast.error("Could not load blocks.");
       })
-      .finally(() => setBlocksLoading(false));
+      .finally(() => {
+        if (isCurrent("blocks", requestId)) setBlocksLoading(false);
+      });
   }
 
   function handleBlockChange(code: string) {
@@ -240,9 +263,11 @@ export function LocationCaptureModal({
 
     setVillages([]);
     setVillagesLoading(true);
+    const requestId = startRequest("villages");
     lgdApi
       .getVillages(code)
       .then((res) => {
+        if (!isCurrent("villages", requestId)) return;
         if (!res.villages?.length) {
           setVillageApiFailed(true);
           return;
@@ -251,10 +276,13 @@ export function LocationCaptureModal({
         setVillages(res.villages);
       })
       .catch(() => {
+        if (!isCurrent("villages", requestId)) return;
         setVillageApiFailed(true);
-        toast.error("Could not load villages.");
+        toast.error("Could not load villages. Pick \"Enter village manually\" in the Village list, or try again.");
       })
-      .finally(() => setVillagesLoading(false));
+      .finally(() => {
+        if (isCurrent("villages", requestId)) setVillagesLoading(false);
+      });
   }
 
   // function handleConfirm() {
