@@ -959,7 +959,7 @@ async getDailyStatsSince(
               let: {
                 reviewerObjectId: {
                   $convert: {
-                    input: "$reviewer",
+                    input: "$reviewerId",
                     to: "objectId",
                     onError: null,
                     onNull: null,
