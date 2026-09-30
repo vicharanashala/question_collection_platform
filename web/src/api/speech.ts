@@ -90,7 +90,7 @@ export const speechApi = {
       body: JSON.stringify({
         text,
         targetLanguage: toSarvamLang(targetLanguage),
-        sourceLanguage: toSarvamLang(sourceLanguage),
+        sourceLanguage: sourceLanguage,
       }),
     })
   },

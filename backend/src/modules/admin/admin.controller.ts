@@ -79,7 +79,7 @@ export class AdminController {
   }
 
   @Get("users/:id")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.CURATOR, UserRole.DISTRIBUTOR)
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_user:${args[0]}`, 120)
   async getUserDetail(@Param("id") id: string) {

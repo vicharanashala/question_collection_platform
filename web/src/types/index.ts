@@ -124,6 +124,7 @@ export interface Question {
     block: string;
     village: string;
   }
+  id: string
 }
 
 export interface DashboardStats {
@@ -531,29 +532,56 @@ export interface QueueStatusCount {
   count: number
 }
 
+// export interface CuratorStats {
+//   queue: {
+//     total: number
+//     breakdown: QueueStatusCount[]
+//   }
+//   volume: {
+//     today: number
+//     thisWeek: number
+//     thisMonth: number
+//     last30Days: number
+//   }
+//   performance: {
+//     approved30Days: number
+//     rejected30Days: number
+//     approvalRate: number
+//     priorApprovalRate: number
+//     approvalRateChange: number
+//     avgReviewTurnaroundMinutes: number | null
+//   }
+//   growth: {
+//     last30Days: number
+//     prior30Days: number
+//     growthRate: number
+//   }
+//   dailyVolume: Array<{
+//     date: string
+//     submitted: number
+//     approved: number
+//     rejected: number
+//     held: number
+//   }>
+//   cropBreakdown: Array<{ cropType: string; count: number }>
+//   stateBreakdown: Array<{ state: string; count: number }>
+//   domainBreakdown: Array<{ domain: string; count: number }>
+// }
+
 export interface CuratorStats {
-  queue: {
-    total: number
-    breakdown: QueueStatusCount[]
-  }
-  volume: {
-    today: number
-    thisWeek: number
-    thisMonth: number
-    last30Days: number
-  }
-  performance: {
-    approved30Days: number
-    rejected30Days: number
+  summary: {
+    totalQuestions: number
+    approvedQuestions: number
+    rejectedQuestions: number
+    pendingQuestions: number
+    heldQuestions: number
+    queueTotal: number
     approvalRate: number
     priorApprovalRate: number
     approvalRateChange: number
-    avgReviewTurnaroundMinutes: number | null
-  }
-  growth: {
-    last30Days: number
-    prior30Days: number
     growthRate: number
+    priorTotalQuestions: number
+    avgReviewTurnaroundMinutes: number | null
   }
   dailyVolume: Array<{
     date: string

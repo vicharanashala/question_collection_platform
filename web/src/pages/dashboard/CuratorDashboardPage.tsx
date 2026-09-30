@@ -88,58 +88,118 @@ const TIME_RANGES: { value: string; labelKey: 'range30d' | 'range7d' | 'range90d
 ]
 
 export function CuratorDashboardPage() {
-  const { t } = useTranslation()
-  const [timeRange, setTimeRange] = useState('30d')
-  const [stats, setStats] = useState<CuratorStats | null>(null)
-  const [loading, setLoading] = useState(true)
+const { t } = useTranslation()
+const [timeRange, setTimeRange] = useState('30d')
+const [stats, setStats] = useState<CuratorStats | null>(null)
+const [loading, setLoading] = useState(true)        // first load only
+const [refreshing, setRefreshing] = useState(false) // when the range changes
 
-  // Load curator stats (backend computes all period breakdowns internally)
-  useEffect(() => {
-    curatorApi.getCuratorStats()
-      .then(setStats)
-      .catch((e) => toast.error(getErrorMessage(e, t('curatorDashboard.loadError'))))
-      .finally(() => setLoading(false))
-  }, [t])
+useEffect(() => {
+  const days = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
+
+  // Midnight of the first day, so the cache key stays stable within a day.
+  const from = new Date()
+  from.setHours(0, 0, 0, 0)
+  from.setDate(from.getDate() - (days - 1))
+
+  let cancelled = false // ignore stale responses if the user clicks quickly
+  setRefreshing(true)
+
+  curatorApi
+    .getCuratorStats({ fromDate: from.toISOString() }) // no toDate, the backend defaults to now
+    .then((data) => {
+      if (!cancelled) setStats(data)
+    })
+    .catch((e) => {
+      if (!cancelled) toast.error(getErrorMessage(e, t('curatorDashboard.loadError')))
+    })
+    .finally(() => {
+      if (!cancelled) {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    })
+
+  return () => {
+    cancelled = true
+  }
+}, [timeRange, t])
+
+function formatDuration(mins: number) {
+  if (mins < 60) return `${mins}m`
+  if (mins < 1440) return `${Math.round(mins / 60)}h`
+  return `${Math.round(mins / 1440)}d`
+}
+
+  // if (loading) return <DashboardSkeleton />
+  // if (!stats) return null
+
+  // const { queue, performance } = stats
+
+  // // Derive queue pending total (non-terminal statuses)
+  // const pendingTotal = queue.breakdown.reduce((sum, b) => {
+  //   if (b.status !== 'approved' && b.status !== 'rejected') return sum + b.count
+  //   return sum
+  // }, 0)
+
+  // // SLA breach: avg turnaround > 60 min
+  // const slaBreach = performance.avgReviewTurnaroundMinutes != null && performance.avgReviewTurnaroundMinutes > 60
+
+  // // Chart data — daily volume uses Submitted (all submitted) + Approved + Rejected
+  // const dailyVolume = (stats.dailyVolume ?? []).map((d) => ({
+  //   date: d.date,
+  //   Submitted: d.submitted,
+  //   Approved: d.approved,
+  //   Rejected: d.rejected,
+  // }))
+
+  // const stateBarData = (stats.stateBreakdown ?? []).slice(0, 8).map((s) => ({
+  //   name: s.state,
+  //   value: s.count,
+  // }))
+
+  // const cropBarData = (stats.cropBreakdown ?? []).slice(0, 7).map((c) => ({
+  //   name: c.cropType,
+  //   value: c.count,
+  // }))
+
+  // const queueBarData = queue.breakdown.map((b) => ({
+  //   name: b.label,
+  //   value: b.count,
+  // }))
 
   if (loading) return <DashboardSkeleton />
-  if (!stats) return null
+if (!stats) return null
 
-  const { queue, performance } = stats
+const { summary } = stats
 
-  // Derive queue pending total (non-terminal statuses)
-  const pendingTotal = queue.breakdown.reduce((sum, b) => {
-    if (b.status !== 'approved' && b.status !== 'rejected') return sum + b.count
-    return sum
-  }, 0)
+const slaBreach =
+  summary.avgReviewTurnaroundMinutes != null && summary.avgReviewTurnaroundMinutes > 60
 
-  // SLA breach: avg turnaround > 60 min
-  const slaBreach = performance.avgReviewTurnaroundMinutes != null && performance.avgReviewTurnaroundMinutes > 60
+const dailyVolume = (stats.dailyVolume ?? []).map((d) => ({
+  date: d.date,
+  Submitted: d.submitted,
+  Approved: d.approved,
+  Rejected: d.rejected,
+}))
 
-  // Chart data — daily volume uses Submitted (all submitted) + Approved + Rejected
-  const dailyVolume = (stats.dailyVolume ?? []).map((d) => ({
-    date: d.date,
-    Submitted: d.submitted,
-    Approved: d.approved,
-    Rejected: d.rejected,
-  }))
+const stateBarData = (stats.stateBreakdown ?? []).slice(0, 8).map((s) => ({
+  name: s.state,
+  value: s.count,
+}))
 
-  const stateBarData = (stats.stateBreakdown ?? []).slice(0, 8).map((s) => ({
-    name: s.state,
-    value: s.count,
-  }))
+const cropBarData = (stats.cropBreakdown ?? []).slice(0, 7).map((c) => ({
+  name: c.cropType,
+  value: c.count,
+}))
 
-  const cropBarData = (stats.cropBreakdown ?? []).slice(0, 7).map((c) => ({
-    name: c.cropType,
-    value: c.count,
-  }))
-
-  const queueBarData = queue.breakdown.map((b) => ({
-    name: b.label,
-    value: b.count,
-  }))
+const queueBarData = [
+  { name: 'Pending', value: summary.pendingQuestions },
+  { name: 'On Hold', value: summary.heldQuestions },
+]
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-6">
+    <div className={cn('mx-auto max-w-5xl px-4 sm:px-6 space-y-6 transition-opacity', refreshing && 'opacity-60')}>
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
@@ -151,12 +211,13 @@ export function CuratorDashboardPage() {
         <div className="flex items-center rounded-lg border border-border-subtle bg-surface p-1 shadow-xs">
           {TIME_RANGES.map((r) => (
             <Button
-              key={r.value}
-              variant={timeRange === r.value ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setTimeRange(r.value)}
-              className={cn('h-7 text-[11px] sm:text-[11px] sm:text-xs', timeRange !== r.value && 'text-text-tertiary')}
-            >
+  key={r.value}
+  variant={timeRange === r.value ? 'default' : 'ghost'}
+  size="sm"
+  disabled={refreshing}
+  onClick={() => setTimeRange(r.value)}
+  className={cn('h-7 text-[11px] sm:text-xs', timeRange !== r.value && 'text-text-tertiary')}
+>
               {t(`curatorDashboard.${r.labelKey}`)}
             </Button>
           ))}
@@ -165,7 +226,7 @@ export function CuratorDashboardPage() {
 
       {/* Primary stat cards */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <StatCard
+        {/* <StatCard
           icon={CheckSquare}
           label={t('curatorDashboard.statQueue')}
           value={formatNumber(queue.total)}
@@ -186,7 +247,30 @@ export function CuratorDashboardPage() {
           value={formatNumber(performance.rejected30Days)}
           sub={t('curatorDashboard.statRejectedSub', { count: stats.volume.last30Days })}
           variant="danger"
-        />
+        /> */}
+
+        <StatCard
+  icon={CheckSquare}
+  label={t('curatorDashboard.statQueue')}
+  value={summary.queueTotal}
+  sub={t('curatorDashboard.statQueueSub', { count: formatNumber(summary.pendingQuestions) })}
+  variant="warning"
+/>
+<StatCard
+  icon={CheckCircle}
+  label={t('curatorDashboard.statApproved')}
+  value={summary.approvedQuestions}
+  sub={t('curatorDashboard.statApprovedSub', { rate: summary.approvalRate })}
+  change={summary.approvalRateChange}
+  variant="success"
+/>
+<StatCard
+  icon={Ban}
+  label={t('curatorDashboard.statRejected')}
+  value={summary.rejectedQuestions}
+  sub={t('curatorDashboard.statRejectedSub', { count: summary.totalQuestions })}
+  variant="danger"
+/>
       </div>
 
       {/* SLA breach alert */}
@@ -201,13 +285,13 @@ export function CuratorDashboardPage() {
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary mt-0.5">
                 <Trans
                   i18nKey="curatorDashboard.slaMessage"
-                  values={{ minutes: performance.avgReviewTurnaroundMinutes }}
+                  values={{ minutes: formatDuration(summary.avgReviewTurnaroundMinutes) }}
                   components={{ bold: <span className="font-semibold" /> }}
                 />
-                {queue.total > 0 && (
+                {summary.queueTotal > 0 && (
                   <> {' '}<Trans
                     i18nKey="curatorDashboard.slaQueueNote"
-                    values={{ count: formatNumber(queue.total) }}
+                    values={{ count: formatNumber(summary.queueTotal) }}
                     components={{ bold: <span className="font-semibold" /> }}
                   /></>
                 )}
@@ -298,8 +382,8 @@ export function CuratorDashboardPage() {
               <CheckSquare className="h-4 w-4 text-primary" />
               {t('curatorDashboard.actionReviewQueue')}
             </span>
-            {queue.total > 0 ? (
-              <Badge variant="destructive">{formatNumber(queue.total)}</Badge>
+            {summary.queueTotal > 0 ? (
+             <Badge variant="destructive">{formatNumber(summary.queueTotal)}</Badge>
             ) : (
               <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             )}

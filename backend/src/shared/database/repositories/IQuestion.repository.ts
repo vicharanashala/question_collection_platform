@@ -150,9 +150,16 @@ export interface IQuestionRepository extends MongoRepository<Question> {
    * statuses that were reviewed on/after `from`. Returns null when there is
    * no reviewed data in the window.
    */
+  avgReviewTurnaroundMinutes(
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+  statuses: QuestionStatus[],
+  ): Promise<number | null>;
+
   avgReviewTurnaroundMinutesSince(
-    from: Date,
-    statuses: QuestionStatus[],
+  from: Date,
+  statuses: QuestionStatus[],
   ): Promise<number | null>;
 
 
@@ -195,4 +202,25 @@ getDailyStatsSince(from: Date): Promise<Array<{
     dto: ListQuestionsDto,
     isAdmin: boolean,
   ): Promise<any>
+
+  dailyVolume(
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+): Promise<DailyVolumeRow[]>
+
+topField(
+  field: 'cropType' | 'state',
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+  limit: number,
+): Promise<Array<{ key: string; count: number }>>
+
+topDomains(
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+  limit: number,
+): Promise<Array<{ domain: string; count: number }>>
 }

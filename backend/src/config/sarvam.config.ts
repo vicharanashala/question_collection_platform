@@ -4,6 +4,7 @@ export const sarvamConfig = registerAs('sarvam', () => ({
   apiKey: process.env.SARVAM_API_KEY || '',
   sttUrl: process.env.SARVAM_STT_URL || 'https://api.sarvam.ai/speech-to-text',
   translateUrl: process.env.SARVAM_TRANSLATE_URL || 'https://api.sarvam.ai/translate',
+  detectLangUrl: process.env.SARVAM_DETECT_LANG_API || 'https://api.sarvam.ai/text-lid',
   // Supported Indian language codes used by Sarvam
   supportedLanguages: [
     'as-IN', // Assamese

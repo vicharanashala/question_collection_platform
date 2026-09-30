@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
 import { UserRole } from '../../shared/classes/enums';
+import { AnalyticsQueryDto } from './dto';
 
 @Controller('curator')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,8 +29,8 @@ export class CuratorController {
    */
   @Get('stats')
   @HttpCode(HttpStatus.OK)
-  async getCuratorStats() {
-    return this.curatorService.getCuratorStats();
+  async getCuratorStats(@Query() dto: AnalyticsQueryDto) {
+    return this.curatorService.getCuratorStats(dto);
   }
 
   /**

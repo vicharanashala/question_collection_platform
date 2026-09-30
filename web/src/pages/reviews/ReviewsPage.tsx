@@ -112,7 +112,7 @@ function ReviewDetailModal({
               {STATUS_LABELS[q.status] ?? q.status}
             </Badge>
             <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">
-              {q.id.slice(0, 8)}…
+              {q.id}
             </span>
             <div className="flex items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               {q.mediaUrls && q.mediaUrls.length > 0 && (

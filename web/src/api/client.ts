@@ -45,6 +45,7 @@ import type {
   AnveshanMilestoneCounts,
   SubmitAnveshanAnswerPayload,
   SubmitAnveshanAnswerResponse,
+  CuratorStats,
 } from "@/types";
 import {
   accountLockedEmitter,
@@ -1219,8 +1220,22 @@ export const leaderboardApi = {
 // ─── Curator API ───────────────────────────────────────────────────────────
 
 export const curatorApi = {
-  getCuratorStats: () =>
-    request<import("@/types").CuratorStats>("/curator/stats"),
+  // getCuratorStats: () =>
+  //   request<import("@/types").CuratorStats>("/curator/stats"),
+
+getCuratorStats: (params?: {
+  fromDate?: string;
+  toDate?: string;
+  state?: string;
+  cropType?: string;
+}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params ?? {}).forEach(([k, v]) => {
+    if (v) qs.set(k, v);
+  });
+  const suffix = qs.toString() ? `?${qs}` : '';
+  return request<CuratorStats>(`/curator/stats${suffix}`);
+},
 
   getMyStats: (userId: string) =>
     request<import("@/types").CuratorReviewerStats>(
