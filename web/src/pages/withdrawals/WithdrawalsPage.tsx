@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
+import { ExportMenu } from '@/components/ExportMenu'
+import { exportDate, type ExportColumn } from '@/lib/exportData'
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
@@ -72,6 +74,27 @@ function buildParams(
   return params
 }
 
+function pendingFirst(a: Withdrawal, b: Withdrawal) {
+  if (a.status === 'pending' && b.status !== 'pending') return -1
+  if (a.status !== 'pending' && b.status === 'pending') return 1
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+}
+
+const WITHDRAWAL_EXPORT_COLUMNS: ExportColumn<Withdrawal>[] = [
+  { header: 'Requested', value: (w) => exportDate(w.createdAt, true) },
+  { header: 'Processed', value: (w) => exportDate(w.processedAt, true) },
+  { header: 'Name', value: (w) => w.user?.name },
+  { header: 'Mobile', value: (w) => w.user?.mobileNumber },
+  { header: 'State', value: (w) => w.user?.state },
+  { header: 'Method', value: (w) => w.payoutMethod },
+  { header: 'Amount (INR)', value: (w) => Number(w.amount) },
+  { header: 'Status', value: (w) => w.status },
+  { header: 'UTR', value: (w) => w.utrNumber },
+  { header: 'Rejection Reason', value: (w) => w.rejectionReason },
+  { header: 'Failure Reason', value: (w) => w.failureReason },
+  { header: 'Retries', value: (w) => w.retryCount },
+]
+
 export function WithdrawalsPage() {
   const { user: currentUser } = useAuth()
   const navigate = useNavigate()
@@ -119,11 +142,7 @@ export function WithdrawalsPage() {
 
       // Apply pending-first sort client-side when _default is active
       const sortedItems = filters.sortBy === '_default'
-        ? [...res.items].sort((a, b) => {
-            if (a.status === 'pending' && b.status !== 'pending') return -1
-            if (a.status !== 'pending' && b.status === 'pending') return 1
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          })
+        ? [...res.items].sort(pendingFirst)
         : res.items
 
       setItems(refresh ? sortedItems : (prev) => [...prev, ...sortedItems])
@@ -267,6 +286,13 @@ export function WithdrawalsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportMenu
+            name="withdrawals"
+            columns={WITHDRAWAL_EXPORT_COLUMNS}
+            disabled={total === 0}
+            sort={activeFilters.sortBy === '_default' ? pendingFirst : undefined}
+            fetchPage={(page, limit) => adminApi.listWithdrawals({ ...buildParams(page, activeFilters), limit })}
+          />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh

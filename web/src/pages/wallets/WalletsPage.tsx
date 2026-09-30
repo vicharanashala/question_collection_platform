@@ -13,6 +13,19 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { WalletSummary } from '@/types'
+import { ExportMenu } from '@/components/ExportMenu'
+import type { ExportColumn } from '@/lib/exportData'
+
+const WALLET_EXPORT_COLUMNS: ExportColumn<WalletSummary>[] = [
+  { header: 'Name', value: (w) => w.user.name },
+  { header: 'Mobile', value: (w) => w.user.mobileNumber },
+  { header: 'State', value: (w) => w.user.state },
+  { header: 'Category', value: (w) => w.user.category },
+  { header: 'Status', value: (w) => w.user.verificationStatus },
+  { header: 'Balance (INR)', value: (w) => Number(w.balance) },
+  { header: 'Total Earned (INR)', value: (w) => Number(w.totalEarned) },
+  { header: 'Total Withdrawn (INR)', value: (w) => Number(w.totalWithdrawn) },
+]
 
 // ─── Main Wallets Page ───────────────────────────────────────────────────────
 
@@ -119,6 +132,12 @@ export function WalletsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ExportMenu
+            name="wallets"
+            columns={WALLET_EXPORT_COLUMNS}
+            disabled={total === 0}
+            fetchPage={(page, limit) => adminApi.getWallets({ page, limit, search: searchQuery || undefined })}
+          />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh

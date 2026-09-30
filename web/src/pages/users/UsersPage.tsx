@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User as UserType } from '@/types'
+import { ExportMenu } from '@/components/ExportMenu'
+import { exportDate, type ExportColumn } from '@/lib/exportData'
 import { AddUserDialog } from './AddUserDialog'
 import { AnveshanProgressCell } from './AnveshanProgressCell'
 
@@ -35,6 +37,22 @@ const CATEGORY_OPTIONS: { value: string; label: string }[] = [
   { value: 'volunteer', label: 'Volunteer' },
   { value: 'ngo', label: 'NGO' },
   { value: 'anveshan_user', label: 'Anveshan User' },
+]
+
+const USER_EXPORT_COLUMNS: ExportColumn<UserType>[] = [
+  { header: 'Name', value: (u) => u.name },
+  { header: 'Username', value: (u) => u.username },
+  { header: 'Mobile', value: (u) => u.mobileNumber },
+  { header: 'Role', value: (u) => u.role },
+  { header: 'Category', value: (u) => u.category },
+  { header: 'Status', value: (u) => u.verificationStatus },
+  { header: 'State', value: (u) => u.state },
+  { header: 'District', value: (u) => u.district },
+  { header: 'Block', value: (u) => u.block },
+  { header: 'Village', value: (u) => u.village },
+  { header: 'Organisation Type', value: (u) => u.organisationType },
+  { header: 'Joined', value: (u) => exportDate(u.createdAt) },
+  { header: 'Last Login', value: (u) => exportDate(u.lastLoginAt, true) },
 ]
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
@@ -166,12 +184,29 @@ export function UsersPage() {
           <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">Users</h2>
           <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{total.toLocaleString()} total users</p>
         </div>
-        {isSuperAdmin && (
-          <Button onClick={() => setCreateOpen(true)} size="sm">
-            <Plus className="h-4 w-4" />
-            Add User
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportMenu
+            name="users"
+            columns={USER_EXPORT_COLUMNS}
+            disabled={total === 0}
+            fetchPage={(page, limit) => adminApi.getUsers({
+              page, limit,
+              search: debouncedSearch || undefined,
+              status: statusFilter || undefined,
+              role: roleFilter || undefined,
+              category: categoryFilter || undefined,
+              state: stateFilter || undefined,
+              anveshan: anveshanFilter || undefined,
+              excludeId: currentUser?.id,
+            })}
+          />
+          {isSuperAdmin && (
+            <Button onClick={() => setCreateOpen(true)} size="sm">
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
