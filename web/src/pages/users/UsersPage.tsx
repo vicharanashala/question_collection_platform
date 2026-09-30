@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi, getErrorMessage } from '@/api/client'
+import { adminApi, lgdApi, getErrorMessage, type LgdState } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
 import {
   Search, ChevronLeft, ChevronRight, Plus,
@@ -25,6 +26,53 @@ const ANVESHAN_FILTER_OPTIONS: { value: AnveshanFilter; label: string }[] = [
   { value: 'completed', label: 'Anveshan · 100% complete' },
   { value: 'incomplete', label: 'Anveshan · In progress' },
 ]
+
+const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'All Categories' },
+  { value: 'farmer', label: 'Farmer' },
+  { value: 'fpo', label: 'FPO' },
+  { value: 'student', label: 'Student' },
+  { value: 'volunteer', label: 'Volunteer' },
+  { value: 'ngo', label: 'NGO' },
+  { value: 'anveshan_user', label: 'Anveshan User' },
+]
+
+const ROLE_OPTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'All Roles' },
+  { value: 'user', label: 'User' },
+  { value: 'curator', label: 'Curator' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'distributor', label: 'Distributor' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'super_admin', label: 'Super Admin' },
+]
+
+// Radix SelectItem rejects an empty value, so "All" is mapped to a sentinel.
+const ALL_VALUE = '__all__'
+
+function FilterSelect({ value, onChange, options, ariaLabel, className }: {
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+  ariaLabel: string
+  className?: string
+}) {
+  return (
+    <Select value={value || ALL_VALUE} onValueChange={(v) => onChange(v === ALL_VALUE ? '' : v)}>
+      <SelectTrigger
+        aria-label={ariaLabel}
+        className={cn('shrink-0 !bg-surface-variant dark:!bg-surface-variant [&>span]:truncate', className)}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent collisionPadding={8} className="max-h-72 max-w-[calc(100vw-1rem)]">
+        {options.map((o) => (
+          <SelectItem key={o.value || ALL_VALUE} value={o.value || ALL_VALUE}>{o.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
 
 const STATUS_COLORS: Record<string, string> = {
   verified: 'bg-success text-white',
@@ -58,6 +106,8 @@ export function UsersPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [stateFilter, setStateFilter] = useState('')
+  const [states, setStates] = useState<LgdState[]>([])
   const [anveshanFilter, setAnveshanFilter] = useState<AnveshanFilter>('')
   const [loading, setLoading] = useState(false)
   const limit = 20
@@ -73,6 +123,12 @@ export function UsersPage() {
 
 
   useEffect(() => {
+    lgdApi.getStates()
+      .then(({ states }) => setStates(states))
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states')))
+  }, [])
+
+  useEffect(() => {
   setLoading(true)
   adminApi.getUsers({
     page, limit,
@@ -80,13 +136,14 @@ export function UsersPage() {
     status: statusFilter || undefined,
     role: roleFilter || undefined,
     category: categoryFilter || undefined,   // ← add this
+    state: stateFilter || undefined,
     anveshan: anveshanFilter || undefined,
     excludeId: currentUser?.id,
   })
     .then((res) => { setUsers(res.items); setTotal(res.total) })
     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
     .finally(() => setLoading(false))
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, anveshanFilter, currentUser?.id])
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, currentUser?.id])
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -120,7 +177,7 @@ export function UsersPage() {
       {/* Filters */}
       <Card className="p-4">
         <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-48">
+          <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
             <Input
               placeholder="Search by name or mobile..."
@@ -129,7 +186,7 @@ export function UsersPage() {
               className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
             />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             {STATUS_FILTER_CHIPS.map((chip) => (
               <button
                 key={chip.value}
@@ -147,45 +204,36 @@ export function UsersPage() {
             ))}
           </div>
           {isSuperAdmin && (
-            <select
-  className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-xs sm:text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
-  value={roleFilter || (categoryFilter && `category:${categoryFilter}`) || ''}
-  onChange={(e) => {
-    const val = e.target.value
-    setPage(1)
-    if (val.startsWith('category:')) {
-      setCategoryFilter(val.replace('category:', ''))
-      setRoleFilter('')
-    } else {
-      setRoleFilter(val)
-      setCategoryFilter('')
-    }
-  }}
->
-  <option value="">All Roles</option>
-  <option value="user">User</option>
-  <option value="curator">Curator</option>
-  <option value="finance">Finance</option>
-  <option value="distributor">Distributor</option>
-  <option value="admin">Admin</option>
-  <option value="super_admin">Super Admin</option>
-  <option value="category:anveshan_user">Anveshan User</option>
-</select>
+            <FilterSelect
+              ariaLabel="Filter by role"
+              value={roleFilter}
+              onChange={(v) => { setRoleFilter(v); setPage(1) }}
+              options={ROLE_OPTIONS}
+              className="w-[calc(50%-0.375rem)] sm:w-40"
+            />
           )}
+          <FilterSelect
+            ariaLabel="Filter by category"
+            value={categoryFilter}
+            onChange={(v) => { setCategoryFilter(v); setPage(1) }}
+            options={CATEGORY_OPTIONS}
+            className="w-[calc(50%-0.375rem)] sm:w-44"
+          />
+          <FilterSelect
+            ariaLabel="Filter by state"
+            value={stateFilter}
+            onChange={(v) => { setStateFilter(v); setPage(1) }}
+            options={[{ value: '', label: 'All States' }, ...states.map((s) => ({ value: s.name, label: s.name }))]}
+            className="w-[calc(50%-0.375rem)] sm:w-44"
+          />
           {canFilterAnveshan && (
-            <select
-              aria-label="Filter by Anveshan progress"
-              className="h-10 rounded-md border border-border-subtle bg-surface-variant px-3 text-xs sm:text-sm text-text !bg-surface-variant dark:!bg-surface-variant"
+            <FilterSelect
+              ariaLabel="Filter by Anveshan progress"
               value={anveshanFilter}
-              onChange={(e) => {
-                setAnveshanFilter(e.target.value as AnveshanFilter)
-                setPage(1)
-              }}
-            >
-              {ANVESHAN_FILTER_OPTIONS.map(({ value, label }) => (
-                <option key={value || 'none'} value={value}>{label}</option>
-              ))}
-            </select>
+              onChange={(v) => { setAnveshanFilter(v as AnveshanFilter); setPage(1) }}
+              options={ANVESHAN_FILTER_OPTIONS}
+              className="w-[calc(50%-0.375rem)] sm:w-56"
+            />
           )}
         </div>
       </Card>

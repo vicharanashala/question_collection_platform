@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminApi, getErrorMessage } from '@/api/client'
+import { adminApi, lgdApi, getErrorMessage, type LgdState } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,15 +43,6 @@ const SORT_OPTIONS = [
   { value: 'createdAt:ASC',    label: 'Oldest First' },
   { value: 'amount:DESC',      label: 'Highest Amount' },
   { value: 'amount:ASC',       label: 'Lowest Amount' },
-]
-
-const INDIAN_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
-  'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand',
-  'Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur',
-  'Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
-  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura',
-  'Uttar Pradesh','Uttarakhand','West Bengal',
 ]
 
 function buildParams(
@@ -106,6 +97,13 @@ export function WithdrawalsPage() {
 
   // Filters
   const [filterOpen, setFilterOpen] = useState(false)
+  const [states, setStates] = useState<LgdState[]>([])
+
+  useEffect(() => {
+    lgdApi.getStates()
+      .then(({ states }) => setStates(states))
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states')))
+  }, [])
   const [activeFilters, setActiveFilters] = useState({
     search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '',
   })
@@ -482,8 +480,8 @@ export function WithdrawalsPage() {
                   onChange={(e) => setDraftFilters((f) => ({ ...f, state: e.target.value }))}
                 >
                   <option value="">All States</option>
-                  {INDIAN_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                  {states.map((s) => (
+                    <option key={s.code} value={s.name}>{s.name}</option>
                   ))}
                 </select>
               </div>
