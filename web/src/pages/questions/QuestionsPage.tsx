@@ -95,13 +95,13 @@ const SEASON_LABEL: Record<string, string> = {
 function InfoRow({
   icon: Icon,
   label,
-  value
+  value,
 }: {
-  icon: React.ElementType
-  label: string
-  value: React.ReactNode
+  icon: React.ElementType;
+  label: string;
+  value: React.ReactNode;
 }) {
-  if (value == null || value === '') return null
+  if (value == null || value === "") return null;
 
   return (
     <div className="flex items-start gap-3">
@@ -111,11 +111,9 @@ function InfoRow({
         {label}
       </span>
 
-      <span className="text-sm text-foreground font-medium">
-        {value}
-      </span>
+      <span className="text-sm text-foreground font-medium">{value}</span>
     </div>
-  )
+  );
 }
 
 // ─── Anveshan answer filter ───────────────────────────────────────────────────
@@ -525,38 +523,34 @@ export function QuestionsPage() {
             </DialogHeader>
             <div className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-  <Badge
-    className={cn(
-      "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
-      STATUS_COLORS[detailQuestion.status] ?? "bg-muted",
-    )}
-  >
-    {STATUS_LABELS[detailQuestion.status] ?? detailQuestion.status}
-  </Badge>
-  {detailQuestion.domains?.length ? (
-    <span className="text-[11px] sm:text-xs text-muted-foreground capitalize">
-      {detailQuestion.domains.join(", ")}
-    </span>
-  ) : null}
-  {detailQuestion.isAnveshan && (
-    <Badge className="bg-emerald-600 text-white text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5">
-      <Sprout className="h-3 w-3 mr-1" /> Anveshan User
-    </Badge>
-  )}
-  {detailQuestion.isAnswerSubmitted && (
-    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-[11px] sm:text-xs px-2 py-0.5">
-      <MessageSquareReply className="h-3 w-3 mr-1" /> Answered
-    </Badge>
-  )}
-  {detailQuestion.duplicateFlag && (
-    <Badge
-      variant="destructive"
-      className="text-[11px] sm:text-[11px] sm:text-xs"
-    >
-      <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
-    </Badge>
-  )}
-</div>
+                <Badge
+                  className={cn(
+                    "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
+                    STATUS_COLORS[detailQuestion.status] ?? "bg-muted",
+                  )}
+                >
+                  {STATUS_LABELS[detailQuestion.status] ??
+                    detailQuestion.status}
+                </Badge>
+                {detailQuestion.domains?.length ? (
+                  <span className="text-[11px] sm:text-xs text-muted-foreground capitalize">
+                    {detailQuestion.domains.join(", ")}
+                  </span>
+                ) : null}
+                {detailQuestion.isAnveshan && (
+                  <Badge className="bg-emerald-600 text-white text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5">
+                    <Sprout className="h-3 w-3 mr-1" /> Anveshan User
+                  </Badge>
+                )}
+                {detailQuestion.duplicateFlag && (
+                  <Badge
+                    variant="destructive"
+                    className="text-[11px] sm:text-[11px] sm:text-xs"
+                  >
+                    <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
+                  </Badge>
+                )}
+              </div>
               <div className="bg-muted/50 rounded-lg p-3">
                 <TranslatableText
                   text={detailQuestion.questionText}
@@ -579,7 +573,7 @@ export function QuestionsPage() {
                     label="Question ID"
                     value={
                       <span className="font-mono text-xs">
-                        {detailQuestion.id.slice(0, 8)}…
+                        {detailQuestion._id}
                       </span>
                     }
                   />
@@ -612,51 +606,59 @@ export function QuestionsPage() {
                   />
 
                   <InfoRow
-  icon={MapPin}
-  label="State"
-  value={detailQuestion.isAnveshan
-    ? detailQuestion.submissionLocation?.state ?? detailQuestion.state
-    : detailQuestion.state}
-/>
+                    icon={MapPin}
+                    label="State"
+                    value={
+                      detailQuestion.isAnveshan
+                        ? (detailQuestion.submissionLocation?.state ??
+                          detailQuestion.state)
+                        : detailQuestion.state
+                    }
+                  />
 
-<InfoRow
-  icon={MapPin}
-  label="District"
-  value={detailQuestion.isAnveshan
-    ? detailQuestion.submissionLocation?.district ?? detailQuestion.district
-    : detailQuestion.district}
-/>
+                  <InfoRow
+                    icon={MapPin}
+                    label="District"
+                    value={
+                      detailQuestion.isAnveshan
+                        ? (detailQuestion.submissionLocation?.district ??
+                          detailQuestion.district)
+                        : detailQuestion.district
+                    }
+                  />
 
-{(detailQuestion.isAnveshan
-  ? detailQuestion.submissionLocation?.block
-  : detailQuestion.block) && (
-  <InfoRow
-    icon={MapPin}
-    label="Block"
-    value={detailQuestion.isAnveshan
-      ? detailQuestion.submissionLocation?.block
-      : detailQuestion.block}
-  />
-)}
+                  {(detailQuestion.isAnveshan
+                    ? detailQuestion.submissionLocation?.block
+                    : detailQuestion.block) && (
+                    <InfoRow
+                      icon={MapPin}
+                      label="Block"
+                      value={
+                        detailQuestion.isAnveshan
+                          ? detailQuestion.submissionLocation?.block
+                          : detailQuestion.block
+                      }
+                    />
+                  )}
 
-{detailQuestion.isAnveshan && detailQuestion.submissionLocation?.village && (
-  <InfoRow
-    icon={MapPin}
-    label="Village"
-    value={detailQuestion.submissionLocation.village}
-  />
-)}
+                  {detailQuestion.isAnveshan &&
+                    detailQuestion.submissionLocation?.village && (
+                      <InfoRow
+                        icon={MapPin}
+                        label="Village"
+                        value={detailQuestion.submissionLocation.village}
+                      />
+                    )}
 
-{detailQuestion.isAnveshan &&
-  detailQuestion.submissionLocation?.latitude != null &&
-  detailQuestion.submissionLocation?.longitude != null && (
-  <InfoRow
-    icon={MapPin}
-    label="Coordinates"
-    value={`${detailQuestion.submissionLocation.latitude.toFixed(5)}, ${detailQuestion.submissionLocation.longitude.toFixed(5)}`}
-  />
-)}
-
+                  {detailQuestion.isAnveshan &&
+                    detailQuestion.submissionLocation?.latitude != null &&
+                    detailQuestion.submissionLocation?.longitude != null && (
+                      <InfoRow
+                        icon={MapPin}
+                        label="Coordinates"
+                        value={`${detailQuestion.submissionLocation.latitude.toFixed(5)}, ${detailQuestion.submissionLocation.longitude.toFixed(5)}`}
+                      />
+                    )}
                 </div>
               </div>
 
@@ -774,7 +776,8 @@ export function QuestionsPage() {
 
             {(() => {
               const AUDIO_EXT = /\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i;
-              const isAudioUrl = (url: string) => AUDIO_EXT.test(url.split('?')[0]);
+              const isAudioUrl = (url: string) =>
+                AUDIO_EXT.test(url.split("?")[0]);
               const mediaUrls = detailQuestion.mediaUrls ?? [];
               const oldAudioUrls = mediaUrls.filter(isAudioUrl);
               const newAudioUrls = detailQuestion.audioUrls ?? [];
@@ -788,7 +791,11 @@ export function QuestionsPage() {
                     Audio Recordings
                   </div>
                   {allAudioUrls.map((url, i) => (
-                    <AudioPlayer key={i} src={url} className="max-w-sm w-full" />
+                    <AudioPlayer
+                      key={i}
+                      src={url}
+                      className="max-w-sm w-full"
+                    />
                   ))}
                 </div>
               );

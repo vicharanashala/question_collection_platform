@@ -2,6 +2,7 @@ import { BaseRepository } from '../abstractions/base.repository';
 import { Question } from '../entities';
 import { QuestionStatus } from '../../classes/enums';
 import { MongoRepository } from '../abstractions/mongo.repository';
+import { ListQuestionsDto } from '@/modules/question/dto';
 
 export interface QuestionFilter {
   id?: string;
@@ -188,4 +189,10 @@ getDailyStatsSince(from: Date): Promise<Array<{
 
 /** Flat rows (joined with submitter name/mobile) for CSV/Excel export. */
   findForExport(filters: { from: Date; to: Date; state?: string; cropType?: string }): Promise<Record<string, unknown>[]>;
+
+  list(  
+    userId: string,
+    dto: ListQuestionsDto,
+    isAdmin: boolean,
+  ): Promise<any>
 }

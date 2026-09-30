@@ -669,53 +669,51 @@ export class QuestionService {
   // ─── List ───────────────────────────────────────────────────────────────────
 
   async list(userId: string, dto: ListQuestionsDto, isAdmin = false) {
-    const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate, answerStatus } = dto;
-    const skip = (page - 1) * limit;
+    // const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate } = dto;
+    // const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    // const where: Record<string, unknown> = {};
 
-    if (isAdmin) {
-      // Admin can filter by any status
-      if (status) where.status = status;
-    } else {
-      // Users see only their own questions
-      where.userId = userId;
-      // If status filter given, apply it; otherwise default to own questions
-      if (status) where.status = status;
-    }
+    // if (isAdmin) {
+    //   // Admin can filter by any status
+    //   if (status) where.status = status;
+    // } else {
+    //   // Users see only their own questions
+    //   where.userId = userId;
+    //   // If status filter given, apply it; otherwise default to own questions
+    //   if (status) where.status = status;
+    // }
 
-    // Filter by a single domain string — matches any question that has that domain in its array
-    if (domains) where.domains = ArrayContains([domains]);
-    if (search) where.cropType = Like(`%${search}%`);
-    else if (cropType) where.cropType = Like(`%${cropType}%`);
-    if (season) where.season = season;
-    if (state) where.state = state;
-    if (answerStatus === 'answered') where.isAnswerSubmitted = true;
-    if (answerStatus === 'unanswered') {
-      where.isAnveshan = true;
-      where.isAnswerSubmitted = { $ne: true };
-    }
+    // // Filter by a single domain string — matches any question that has that domain in its array
+    // if (domains) where.domains = ArrayContains([domains]);
+    // if (search) where.cropType = Like(`%${search}%`);
+    // else if (cropType) where.cropType = Like(`%${cropType}%`);
+    // if (season) where.season = season;
+    // if (state) where.state = state;
 
-    if (fromDate && toDate) {
-      where.submittedAt = Between(new Date(fromDate), new Date(toDate));
-    } else if (fromDate) {
-      where.submittedAt = MoreThanOrEqual(new Date(fromDate));
-    } else if (toDate) {
-      where.submittedAt = LessThanOrEqual(new Date(toDate));
-    }
+    // if (fromDate && toDate) {
+    //   where.submittedAt = Between(new Date(fromDate), new Date(toDate));
+    // } else if (fromDate) {
+    //   where.submittedAt = MoreThanOrEqual(new Date(fromDate));
+    // } else if (toDate) {
+    //   where.submittedAt = LessThanOrEqual(new Date(toDate));
+    // }
 
-    const { data: items, total } = await this.questionRepo.findAndCount(
-      where,
-      { pagination: { page, limit, sort: { submittedAt: -1 } } },
-    );
+    // const { data: items, total } = await this.questionRepo.findAndCount(
+    //   where,
+    //   { pagination: { page, limit, sort: { submittedAt: -1 } } },
+    // );
 
-    return {
-      items: items.map((q) => ({
-        ...(q as unknown as Record<string, unknown>),
-        reviewedByName: ((q as unknown as Record<string, unknown>).reviewer as { name?: string } | null)?.name ?? null,
-      })),
-      total, page, limit, pages: Math.ceil(total / limit),
-    };
+    // return {
+    //   items: items.map((q) => ({
+    //     ...(q as unknown as Record<string, unknown>),
+    //     reviewedByName: ((q as unknown as Record<string, unknown>).reviewer as { name?: string } | null)?.name ?? null,
+    //   })),
+    //   total, page, limit, pages: Math.ceil(total / limit),
+    // };
+
+    const data =  await this.questionRepo.list(userId, dto, isAdmin);
+    return data
   }
 
   // ─── Admin: approve / reject ────────────────────────────────────────────────

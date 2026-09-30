@@ -409,10 +409,41 @@ function ReasonModal({
     ],
   };
 
-  function appendReason(suggestion: string) {
-    setReason((prev) => (prev ? `${prev}\n${suggestion}` : suggestion));
-    textareaRef.current?.focus();
-  }
+  // function appendReason(suggestion: string) {
+  //   setReason((prev) => (prev ? `${prev}\n${suggestion}` : suggestion));
+  //   textareaRef.current?.focus();
+  // }
+
+  function isReasonAdded(suggestion: string) {
+  return reason
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .includes(suggestion)
+}
+
+function toggleReason(suggestion: string) {
+  setReason((prev) => {
+    const lines = prev
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    const exists = lines.includes(suggestion)
+
+    if (exists) {
+      // Remove this reason
+      return lines
+        .filter((line) => line !== suggestion)
+        .join("\n")
+    }
+
+    // Add this reason only once
+    return [...lines, suggestion].join("\n")
+  })
+
+  textareaRef.current?.focus()
+}
 
   function selectOnly(suggestion: string) {
     setReason(suggestion);
@@ -503,16 +534,19 @@ function ReasonModal({
                   >
                     {suggestion}
                   </button>
-                  <button
-                    className={cn(
-                      "shrink-0 text-[11px] sm:text-[11px] sm:text-xs px-2 py-1.5 rounded border transition-all duration-150 cursor-pointer",
-                      "text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground",
-                    )}
-                    onClick={() => appendReason(suggestion)}
-                    title="Add as additional reason"
-                  >
-                    +Add
-                  </button>
+               <button
+  type="button"
+  className={cn(
+    "shrink-0 text-[11px] sm:text-xs px-2 py-1.5 rounded border transition-all duration-150 cursor-pointer",
+    isReasonAdded(suggestion)
+      ? "text-destructive border-destructive/30 hover:bg-destructive/10"
+      : "text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground",
+  )}
+  onClick={() => toggleReason(suggestion)}
+  title={isReasonAdded(suggestion) ? "Remove this reason" : "Add as additional reason"}
+>
+  {isReasonAdded(suggestion) ? "− Remove" : "+ Add"}
+</button>
                 </div>
               ))}
             </div>
