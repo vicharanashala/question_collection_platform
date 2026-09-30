@@ -13,8 +13,6 @@ import { getErrorMessage, questionApi } from '@/api/client'
 import { AnswerQuestionList } from '@/components/anveshan-answers/AnswerQuestionList'
 import { SubmissionCriteriaGate } from '@/components/anveshan-answers/SubmissionCriteriaGate'
 import { AnsweringGuideDialog } from '@/components/anveshan-answers/AnsweringGuideDialog'
-import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
-import { deferFeedback } from '@/components/anveshan-answers/feedbackPrompt'
 import { useAuth } from '@/context/AuthContext'
 import { AnswerResponsePanel, EMPTY_DRAFT, type AnswerDraft } from '@/components/anveshan-answers/AnswerResponsePanel'
 import type { AnveshanAnswerQuestionsResponse } from '@/types'
@@ -40,9 +38,15 @@ function markGuideSeen(userId: string): void {
   }
 }
 
-// Picks the first unanswered question, falling back to the first question.
+// True once the user has submitted every required answer; remaining questions can no longer be answered.
+function isAnswerLimitReached(data: AnveshanAnswerQuestionsResponse): boolean {
+  return data.answeredCount >= data.requiredAnswers
+}
+
+// Picks the first unanswered question, or the first answered one once no more answers are allowed.
 function pickDefaultQuestion(data: AnveshanAnswerQuestionsResponse): string | null {
-  return (data.items.find((q) => !q.answer) ?? data.items[0])?.id ?? null
+  const preferred = isAnswerLimitReached(data) ? data.items.find((q) => q.answer) : data.items.find((q) => !q.answer)
+  return (preferred ?? data.items[0])?.id ?? null
 }
 
 // Final Anveshan milestone step: users answer their own submitted questions with sources.
@@ -56,8 +60,6 @@ export function AnveshanAnswersPage() {
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [feedbackSent, setFeedbackSent] = useState(false)
   const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY)
   const { user } = useAuth()
   const userId = user?.id
@@ -86,7 +88,7 @@ export function AnveshanAnswersPage() {
       setLoadState('ready')
     } catch (err) {
       if (mode === 'initial') setLoadState('error')
-      else toast.error(getErrorMessage(err, t('anveshanAnswers.errors.loadFailed', 'Could not load your questions.')))
+      else toast.error(getErrorMessage(err, t('anveshanAnswers.errors.loadFailed', "Could not load farmers' queries.")))
     } finally {
       setIsRefreshing(false)
     }
@@ -118,15 +120,17 @@ export function AnveshanAnswersPage() {
       const nextData = { ...data, items, answeredCount: result.answeredCount, completed: result.completed }
       setData(nextData)
       setSelectedId(pickDefaultQuestion(nextData))
-      // The answer that completes the milestone opens the feedback prompt.
-      if (result.completed && !data.completed) setFeedbackOpen(true)
+      // The answer that completes the milestone moves the user to the completion screen, which also asks for feedback.
+      if (result.completed && !data.completed) navigate('/home', { replace: true })
       toast.success(
         result.completed
           ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
-          : t('anveshanAnswers.submittedToast', 'Your response has been submitted. Thank you!'),
+          : t('anveshanAnswers.submittedToast', 'Your advisory has been submitted. Thank you!'),
       )
     } catch (err) {
-      toast.error(getErrorMessage(err, t('anveshanAnswers.errors.submitFailed', 'Could not submit your answer. Please try again.')))
+      toast.error(getErrorMessage(err, t('anveshanAnswers.errors.submitFailed', 'Could not submit your advisory. Please try again.')))
+      // A 403 means the answer limit was reached elsewhere (for example another tab), so resync the list.
+      if ((err as { status?: number }).status === 403) void load('refresh')
     } finally {
       setIsSubmitting(false)
     }
@@ -139,7 +143,7 @@ export function AnveshanAnswersPage() {
         title={t('anveshanAnswers.desktopOnlyTitle', 'Please open this on a desktop or laptop')}
         description={t(
           'anveshanAnswers.desktopOnlyDescription',
-          'Giving advice uses the full review layout, with your questions beside the answer form and sources, just like the Ajrasakha expert system. It is not available on mobile phones. Open AnnaDatha on a desktop or laptop to continue; your progress is saved.',
+          "Writing advisories uses the full review layout, with farmers' queries beside the advisory form and sources, just like the Ajrasakha expert system. It is not available on mobile phones. Open AnnaDatha on a desktop or laptop to continue; your progress is saved.",
         )}
         action={
           <Button asChild variant="outline">
@@ -156,7 +160,7 @@ export function AnveshanAnswersPage() {
     return (
       <StatusCard
         icon={<AlertCircle className="h-6 w-6 text-destructive" aria-hidden="true" />}
-        title={t('anveshanAnswers.errors.loadFailed', 'Could not load your questions.')}
+        title={t('anveshanAnswers.errors.loadFailed', "Could not load farmers' queries.")}
         action={<Button onClick={() => void load('initial')}>{t('common.retry', 'Try again')}</Button>}
       />
     )
@@ -167,6 +171,7 @@ export function AnveshanAnswersPage() {
   }
 
   const selectedQuestion = data.items.find((q) => q.id === selectedId) ?? null
+  const answerLimitReached = isAnswerLimitReached(data)
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
@@ -178,20 +183,11 @@ export function AnveshanAnswersPage() {
         onOpenGuide={() => setGuideOpen(true)}
       />
       <AnsweringGuideDialog open={guideOpen} onOpenChange={changeGuideOpen} requiredAnswers={data.requiredAnswers} />
-      <AnveshanFeedbackDialog
-        open={feedbackOpen}
-        onOpenChange={(open) => {
-          setFeedbackOpen(open)
-          if (!open && !feedbackSent && userId) deferFeedback(userId)
-        }}
-        onSubmitted={() => setFeedbackSent(true)}
-      />
-
       {data.items.length === 0 ? (
         <StatusCard
           icon={<PenLine className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
-          title={t('anveshanAnswers.emptyTitle', 'No questions to answer yet')}
-          description={t('anveshanAnswers.emptyDescription', 'Questions you submit will appear here.')}
+          title={t('anveshanAnswers.emptyTitle', 'No farmer queries yet')}
+          description={t('anveshanAnswers.emptyDescription', 'Queries you submit will appear here.')}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(320px,_1fr)_minmax(400px,_1.2fr)] lg:gap-6">
@@ -203,6 +199,7 @@ export function AnveshanAnswersPage() {
               onSelect={setSelectedId}
               onRefresh={() => void load('refresh')}
               isRefreshing={isRefreshing}
+              answeringClosed={answerLimitReached}
             />
           </div>
           <div className="lg:min-h-[calc(100vh-14rem)]">
@@ -214,9 +211,10 @@ export function AnveshanAnswersPage() {
                 onDraftChange={(draft) => setDrafts((prev) => ({ ...prev, [selectedQuestion.id]: draft }))}
                 onSubmit={submitAnswer}
                 isSubmitting={isSubmitting}
+                answerLimit={answerLimitReached ? data.requiredAnswers : null}
               />
             ) : (
-              <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a question to write your answer.')} />
+              <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a farmer query to write your advisory.')} />
             )}
           </div>
         </div>
@@ -247,7 +245,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={onOpenGuide} className="gap-1.5">
           <BookOpenCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-          {t('anveshanGuide.open', 'Answering guide')}
+          {t('anveshanGuide.open', 'Advisory guide')}
         </Button>
       </div>
 
@@ -255,7 +253,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-1.5">
             <h1 className="text-lg font-bold text-foreground sm:text-xl">
-              {t('anveshanAnswers.titleAdvice', "Give advice for farmer's query")}
+              {t('anveshanAnswers.titleAdvice', "Advisories for farmers' queries")}
             </h1>
             <InfoTip
               label={t('anveshanAnswers.aboutPage', 'About this page')}
@@ -263,7 +261,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
               content={t('anveshanAnswers.subtitle', {
                 count: required,
                 defaultValue:
-                  'You know these questions best. Answer any {{count}} of them with at least one trusted source to complete your Anveshan milestone.',
+                  "You know these farmer queries best. Write an advisory for any {{count}} of them, backed by at least one trusted source, to complete your Anveshan milestone.",
               })}
             >
               <Info className="h-4 w-4" aria-hidden="true" />
@@ -276,7 +274,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
               className="gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-700 hover:bg-amber-500/15 sm:text-xs dark:text-amber-400"
               content={t(
                 'anveshanAnswers.qualityNotice',
-                'The quality of every answer you submit will be carefully reviewed during evaluation, so make it accurate, clear and well sourced.',
+                'The quality of every advisory you submit will be carefully reviewed during evaluation, so make it accurate, clear and well sourced.',
               )}
             >
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -292,7 +290,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
                   </span>
                   {t(
                     'anveshanAnswers.simulationBody',
-                    'The layout, steps and checks here mirror the answer creation screen experts use on Ajrasakha. Take your time: every clear, well-sourced answer you write builds the skills that help farmers get advice they can trust. You are almost there!',
+                    'The layout, steps and checks here mirror the advisory creation screen experts use on Ajrasakha. Take your time: every clear, well-sourced advisory you write builds the skills that help farmers get advice they can trust. You are almost there!',
                   )}
                 </>
               }
@@ -306,7 +304,7 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
 
         <div className="w-full sm:w-56" aria-label={`${answered} of ${required}`}>
           <div className="flex items-center justify-between text-xs font-semibold">
-            <span className="text-text-secondary">{t('anveshanAnswers.progressLabel', 'Answers')}</span>
+            <span className="text-text-secondary">{t('anveshanAnswers.progressLabel', 'Advisories')}</span>
             <span className={completed ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'}>
               {answered}/{required}
             </span>

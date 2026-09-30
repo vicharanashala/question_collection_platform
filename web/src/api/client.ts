@@ -50,8 +50,21 @@ import {
   accountLockedEmitter,
   parseAccountLocked,
 } from "@/events/accountLockedEvents";
+import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
+
+// Passes a successful submission result through and tells progress screens to reload.
+function notifyProgressChanged<T>(data: T): T {
+  anveshanProgressEmitter.emit();
+  return data;
+}
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+
+/** When a milestone goal was started (first submission) and completed (the submission that met it), as ISO strings. */
+export interface AnveshanStepTimeline {
+  startedAt: string | null;
+  completedAt: string | null;
+}
 
 export interface AnveshanMilestoneResponse {
   requirements: AnveshanMilestoneCounts;
@@ -62,6 +75,8 @@ export interface AnveshanMilestoneResponse {
   completed: boolean;
   /** The user has already shared app feedback after reaching 100%. */
   feedbackSubmitted?: boolean;
+  /** Start and completion time of each goal. */
+  timeline?: Record<keyof AnveshanMilestoneCounts, AnveshanStepTimeline>;
 }
 
 // ─── Token helpers ─────────────────────────────────────────────────────────
@@ -454,28 +469,50 @@ export interface LgdKvk {
   stateCode: string;
 }
 
+// The server may retry a slow upstream for up to 25 s, so location lookups get a longer timeout.
+const LGD_TIMEOUT_MS = 30_000;
+const lgdResponses = new Map<string, Promise<unknown>>();
+
+// Location lists rarely change: each list is fetched once per session and concurrent callers share
+// the request. Failed or empty responses are dropped so the next attempt asks the server again.
+function cachedLgdRequest<T>(path: string, isEmpty: (data: T) => boolean): Promise<T> {
+  const existing = lgdResponses.get(path) as Promise<T> | undefined;
+  if (existing) return existing;
+
+  const pending = request<T>(path, {}, false, LGD_TIMEOUT_MS).then(
+    (data) => {
+      if (isEmpty(data)) lgdResponses.delete(path);
+      return data;
+    },
+    (err: unknown) => {
+      lgdResponses.delete(path);
+      throw err;
+    },
+  );
+  lgdResponses.set(path, pending);
+  return pending;
+}
+
 export const lgdApi = {
-  getStates: () => request<{ states: LgdState[] }>("/lgd/states", {}, false),
+  getStates: () =>
+    cachedLgdRequest<{ states: LgdState[] }>("/lgd/states", (d) => !d.states?.length),
 
   getDistricts: (stateCode: string) =>
-    request<{ districts: LgdDistrict[] }>(
-      `/lgd/districts?stateCode=${stateCode}`,
-      {},
-      false,
+    cachedLgdRequest<{ districts: LgdDistrict[] }>(
+      `/lgd/districts?stateCode=${encodeURIComponent(stateCode)}`,
+      (d) => !d.districts?.length,
     ),
 
   getSubDistricts: (districtCode: string) =>
-    request<{ subdistricts: LgdSubDistrict[] }>(
-      `/lgd/subdistricts?districtCode=${districtCode}`,
-      {},
-      false,
+    cachedLgdRequest<{ subdistricts: LgdSubDistrict[] }>(
+      `/lgd/subdistricts?districtCode=${encodeURIComponent(districtCode)}`,
+      (d) => !d.subdistricts?.length,
     ),
 
   getVillages: (blockCode: string) =>
-    request<{ villages: LgdVillage[] }>(
-      `/lgd/villages?blockCode=${blockCode}`,
-      {},
-      false,
+    cachedLgdRequest<{ villages: LgdVillage[] }>(
+      `/lgd/villages?blockCode=${encodeURIComponent(blockCode)}`,
+      (d) => !d.villages?.length,
     ),
 
   getKvks: (districtCode: string) =>
@@ -952,7 +989,9 @@ export const questionApi = {
         body: JSON.stringify(body),
       },
       false,
-    ).finally(() => invalidateCache("/api/questions")),
+    )
+      .then(notifyProgressChanged)
+      .finally(() => invalidateCache("/api/questions")),
 
   /** Daily / total submission stats for the current (public) user. */
   // getMyStats: () =>
@@ -1019,7 +1058,7 @@ export const questionApi = {
       `/questions/anveshan-answers/${encodeURIComponent(questionId)}`,
       { method: "POST", body: JSON.stringify(body) },
       false,
-    ),
+    ).then(notifyProgressChanged),
 };
 
 // ─── Wallet API (public-user dashboard) ────────────────────────────────────
@@ -1475,7 +1514,7 @@ export const agriEntityApi = {
         body: JSON.stringify(body),
       },
       false,
-    ),
+    ).then(notifyProgressChanged),
 
   /** The signed-in user's submission count for each type. */
   getMyCounts: () =>

@@ -16,6 +16,7 @@ const buildQuestions = (answered = 0) =>
     id: `q-${i}`,
     questionText: `Question ${i}`,
     isAnswerSubmitted: i < answered,
+    submittedAt: new Date(Date.UTC(2026, 8, 1 + i)),
   }));
 
 const answerDto: SubmitAnveshanAnswerDto = {
@@ -30,13 +31,15 @@ describe('AnveshanMilestoneService', () => {
   const feedbackRepo = { count: jest.fn() };
   const questionService = { getTotalSubmittedCount: jest.fn() };
   const userService = { getProfile: jest.fn() };
-  const agriEntityService = { getSubmittedCountsByType: jest.fn() };
+  const agriEntityService = { getSubmittedCountsByType: jest.fn(), getEarliestSubmissionDatesByType: jest.fn() };
 
   // Sets up a user whose submission goals are met, with the given number of answers.
   const givenSubmissionsDone = (answered = 0) => {
     questionService.getTotalSubmittedCount.mockResolvedValue(REQUIRED_QUESTIONS);
     agriEntityService.getSubmittedCountsByType.mockResolvedValue({ crop: 1, weed: 1, pest: 1, disease: 1 });
     questionRepo.find.mockResolvedValue(buildQuestions(answered));
+    agriEntityService.getEarliestSubmissionDatesByType.mockResolvedValue({ crop: [], weed: [], pest: [], disease: [] });
+    answerRepo.find.mockResolvedValue([]);
   };
 
   beforeEach(async () => {
@@ -85,6 +88,39 @@ describe('AnveshanMilestoneService', () => {
 
     expect(feedbackRepo.count).toHaveBeenCalledWith({ userId: USER_ID, context: 'anveshan_completion' });
     expect(milestone.feedbackSubmitted).toBe(true);
+  });
+
+  it('reports when each goal was started and completed', async () => {
+    givenSubmissionsDone(2);
+    const cropAt = new Date(Date.UTC(2026, 8, 2, 10));
+    agriEntityService.getEarliestSubmissionDatesByType.mockResolvedValue({ crop: [cropAt], weed: [], pest: [], disease: [] });
+    answerRepo.find.mockResolvedValue([
+      { questionId: 'q-1', answeredAt: new Date(Date.UTC(2026, 8, 20)) },
+      { questionId: 'q-0', answeredAt: new Date(Date.UTC(2026, 8, 18)) },
+    ]);
+    feedbackRepo.count.mockResolvedValue(0);
+
+    const { timeline } = await service.getMilestone(USER_ID);
+
+    expect(timeline.questions).toEqual({
+      startedAt: new Date(Date.UTC(2026, 8, 1)),
+      completedAt: new Date(Date.UTC(2026, 8, 1 + REQUIRED_QUESTIONS - 1)),
+    });
+    expect(timeline.crop).toEqual({ startedAt: cropAt, completedAt: cropAt });
+    expect(timeline.weed).toEqual({ startedAt: null, completedAt: null });
+    expect(timeline.answers).toEqual({
+      startedAt: new Date(Date.UTC(2026, 8, 18)),
+      completedAt: new Date(Date.UTC(2026, 8, 20)),
+    });
+  });
+
+  it('leaves the completion time empty until a goal is met', async () => {
+    givenSubmissionsDone(1);
+    answerRepo.find.mockResolvedValue([{ questionId: 'q-0', answeredAt: new Date(Date.UTC(2026, 8, 18)) }]);
+
+    const { timeline } = await service.getMilestone(USER_ID);
+
+    expect(timeline.answers).toEqual({ startedAt: new Date(Date.UTC(2026, 8, 18)), completedAt: null });
   });
 
   it('rejects answers before the submission goals are met', async () => {
@@ -137,6 +173,27 @@ describe('AnveshanMilestoneService', () => {
     expect(answerRepo.find).toHaveBeenCalledWith({ userId: USER_ID, questionId: { $in: ['q-0'] } });
     expect(result.items[0].answer?.answer).toBe('Neem oil');
     expect(result.items[1].answer).toBeNull();
+  });
+
+  it('rejects a new answer once the required answers are submitted', async () => {
+    givenSubmissionsDone(2);
+
+    await expect(service.submitAnswer(USER_ID, 'q-2', answerDto)).rejects.toThrow(
+      'You have already submitted the required 2 advisories. No more advisories can be submitted.',
+    );
+    expect(questionRepo.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('releases the claim when a parallel request already reached the answer limit', async () => {
+    givenSubmissionsDone(1);
+    questionRepo.find
+      .mockResolvedValueOnce(buildQuestions(1))
+      .mockResolvedValueOnce(buildQuestions(3));
+    questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+
+    await expect(service.submitAnswer(USER_ID, 'q-2', answerDto)).rejects.toBeInstanceOf(ForbiddenException);
+    expect(questionRepo.updateMany).toHaveBeenLastCalledWith({ id: 'q-2', userId: USER_ID }, { isAnswerSubmitted: false });
+    expect(answerRepo.create).not.toHaveBeenCalled();
   });
 
   it('reports a conflict when the question was already answered', async () => {

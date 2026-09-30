@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { CheckCircle2, Loader2, Send, Star } from 'lucide-react'
+import { CheckCircle2, Loader2, MessageSquareHeart, Send, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -98,7 +98,11 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
 
   return (
     <Dialog open={open} onOpenChange={(next) => !submitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto p-5 sm:max-w-md sm:p-6">
+      {/* Opening without auto-focus avoids a focus ring on the first star; Tab still reaches every control. */}
+      <DialogContent
+        className="max-h-[90dvh] overflow-y-auto p-5 sm:max-w-md sm:p-7"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         {done ? (
           <div className="flex flex-col items-center py-4 text-center" role="status">
             <motion.span
@@ -119,20 +123,23 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
           </div>
         ) : (
           <>
-            <DialogHeader className="space-y-1.5 text-left">
-              <DialogTitle>{t('anveshanFeedback.title', 'How was your experience?')}</DialogTitle>
-              <DialogDescription>
-                {t(
-                  'anveshanFeedback.intro',
-                  'Congratulations on reaching 100%! Please rate AnnaDatha and tell us what worked well or what we can improve. You can type or use the microphone.',
-                )}
+            <DialogHeader className="items-center space-y-2 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <MessageSquareHeart className="h-6 w-6 text-primary dark:text-emerald-400" aria-hidden="true" />
+              </span>
+              <DialogTitle className="text-center text-lg sm:text-xl">
+                {t('anveshanFeedback.title', 'How was your experience?')}
+              </DialogTitle>
+              <DialogDescription className="text-center text-sm leading-relaxed">
+                {t('anveshanFeedback.introShort', 'You reached 100%! Rate AnnaDatha and tell us what worked well or what we can improve.')}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mt-4 space-y-5">
-              <div>
+            <div className="mt-5 space-y-5">
+              {/* Rating */}
+              <div className="rounded-xl border border-border-subtle bg-surface-variant/40 px-3 py-4 text-center">
                 <p id="feedback-rating-label" className="text-sm font-medium text-text">
-                  {t('anveshanFeedback.ratingLabel', 'Your rating')} *
+                  {t('anveshanFeedback.ratingLabel', 'Your rating')} <span className="text-destructive">*</span>
                 </p>
                 <div
                   role="radiogroup"
@@ -140,7 +147,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
                   aria-describedby={ratingError ? 'feedback-rating-error' : undefined}
                   onKeyDown={handleStarKeys}
                   onMouseLeave={() => setHovered(0)}
-                  className="mt-2 flex items-center gap-1"
+                  className="mt-2 flex items-center justify-center gap-1 sm:gap-1.5"
                 >
                   {STAR_VALUES.map((value) => {
                     const filled = value <= shownRating
@@ -157,57 +164,59 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
                         whileTap={{ scale: 0.85 }}
                         whileHover={{ scale: 1.12 }}
                         disabled={submitting}
-                        className="rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                        className="rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                       >
                         <Star
                           className={cn(
-                            'h-8 w-8 transition-colors sm:h-9 sm:w-9',
-                            filled ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-border',
+                            'h-9 w-9 transition-colors sm:h-10 sm:w-10',
+                            filled ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-text-tertiary/40',
                           )}
                           aria-hidden="true"
                         />
                       </motion.button>
                     )
                   })}
-                  <span className="ml-2 min-w-[5rem] text-sm font-medium text-text-secondary" aria-hidden="true">
-                    {shownRating ? ratingLabel(shownRating) : ''}
-                  </span>
                 </div>
+                <p className={cn('mt-1 h-5 text-sm font-semibold', shownRating ? 'text-amber-600 dark:text-amber-400' : 'text-text-tertiary')} aria-hidden="true">
+                  {shownRating ? ratingLabel(shownRating) : t('anveshanFeedback.tapToRate', 'Tap a star to rate')}
+                </p>
                 <FieldError id="feedback-rating-error" message={ratingError} />
               </div>
 
+              {/* Comment, typed or spoken */}
               <div>
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="feedback-comment" className="text-sm font-medium">
-                    {t('anveshanFeedback.commentLabel', 'Tell us more (optional)')}
-                  </Label>
-                  <span className="text-[11px] tabular-nums text-text-tertiary">
-                    {comment.length}/{MAX_FEEDBACK_COMMENT_LENGTH}
-                  </span>
-                </div>
-                <div className="mt-1.5 flex items-start gap-2">
+                <Label htmlFor="feedback-comment" className="text-sm font-medium">
+                  {t('anveshanFeedback.commentLabel', 'Tell us more (optional)')}
+                </Label>
+                <div className="mt-1.5 overflow-hidden rounded-lg border border-input bg-background focus-within:ring-2 focus-within:ring-focus">
                   <Textarea
                     id="feedback-comment"
                     value={comment}
                     maxLength={MAX_FEEDBACK_COMMENT_LENGTH}
                     onChange={(e) => setComment(e.target.value)}
                     disabled={submitting}
-                    placeholder={t('anveshanFeedback.commentPlaceholder', 'Type here, or tap the microphone and speak…')}
-                    className="min-h-[110px] flex-1 resize-y"
+                    aria-describedby="feedback-comment-hint"
+                    placeholder={t('anveshanFeedback.commentPlaceholderShort', 'What did you like? What can we do better?')}
+                    className="min-h-[110px] resize-none rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
-                  <MicButton onTranscribed={(text) => appendTranscript(text)} disabled={submitting} />
+                  <div className="flex items-center justify-between gap-2 border-t border-border-subtle bg-surface-variant/40 px-2 py-1.5">
+                    <MicButton variant="compact" onTranscribed={(text) => appendTranscript(text)} disabled={submitting} />
+                    <span className="pr-1 text-[11px] tabular-nums text-text-tertiary">
+                      {comment.length}/{MAX_FEEDBACK_COMMENT_LENGTH}
+                    </span>
+                  </div>
                 </div>
-                <p className="mt-1.5 text-xs text-text-tertiary">
-                  {t('anveshanFeedback.micHint', 'Speak in any language; your words will appear in the box so you can check them.')}
+                <p id="feedback-comment-hint" className="mt-1.5 text-xs text-text-tertiary">
+                  {t('anveshanFeedback.micHintShort', 'Tap Speak to talk in any language; your words appear in the box.')}
                 </p>
               </div>
             </div>
 
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
+              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting} className="w-full sm:w-auto">
                 {t('anveshanFeedback.later', 'Maybe later')}
               </Button>
-              <Button onClick={() => void submit()} disabled={submitting} className="gap-2">
+              <Button onClick={() => void submit()} disabled={submitting} className="w-full gap-2 sm:w-auto">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
                 {submitting ? t('anveshanFeedback.sending', 'Sending…') : t('anveshanFeedback.submit', 'Send feedback')}
               </Button>

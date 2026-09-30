@@ -91,6 +91,12 @@ export class LgdService {
   /** Retry configuration */
   private readonly maxRetries: number;
   private readonly initialBackoffMs: number;
+  /** Time budget for one lookup (all attempts) and for a single attempt */
+  private readonly totalTimeoutMs: number;
+  private readonly attemptTimeoutMs: number;
+
+  /** Lookups currently running, keyed by URL, so concurrent callers share one upstream request */
+  private readonly inFlight = new Map<string, Promise<unknown>>();
 
   /** Per-endpoint in-memory caches */
   private readonly statesCache = new Map<string, CachedData<LgdState[]>>();
@@ -119,6 +125,13 @@ export class LgdService {
     this.initialBackoffMs =
       this.configService.get<number>('lgd.initialBackoffMs') ??
       parseInt(process.env.LGD_INITIAL_BACKOFF_MS || '500', 10);
+
+    this.totalTimeoutMs =
+      this.configService.get<number>('lgd.totalTimeoutMs') ??
+      parseInt(process.env.LGD_TOTAL_TIMEOUT_MS || '25000', 10);
+    this.attemptTimeoutMs =
+      this.configService.get<number>('lgd.attemptTimeoutMs') ??
+      parseInt(process.env.LGD_ATTEMPT_TIMEOUT_MS || '8000', 10);
 
     this.logger.log(
       `LGD service initialised — reviewer: ${this.reviewerUri || '(not set)'}, cache TTL: ${ttlDays}d, retries: ${this.maxRetries}`,
@@ -149,29 +162,54 @@ export class LgdService {
       return cached!.data;
     }
 
-    let lastError: unknown;
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      try {
-        const response = await axios.get<T[]>(url, { timeout: 15_000 });
+    // Share one upstream request between callers asking for the same list at the same time.
+    const pending = this.inFlight.get(url) as Promise<R[]> | undefined;
+    if (pending) return pending;
 
-        if (!Array.isArray(response.data)) {
-          throw new InternalServerErrorException(
-            `LGD reviewer returned unexpected payload for ${url}`,
-          );
-        }
-
-        const sorted: R[] = [...response.data]
-          .sort((a, b) =>
-            String(a[sortOn]).localeCompare(String(b[sortOn])),
-          )
+    const lookup = this.fetchWithRetry<T>(url)
+      .then((items) => {
+        const sorted: R[] = [...items]
+          .sort((a, b) => String(a[sortOn]).localeCompare(String(b[sortOn])))
           .map(transform);
-
-        cache.set(cacheKey, { data: sorted, fetchedAt: Date.now() });
-        this.logger.log(
-          `LGD cached ${sorted.length} records for key "${cacheKey}" (${url})`,
-        );
-
+        // An empty list is often a transient upstream glitch; don't pin it in the cache for days.
+        if (sorted.length > 0) {
+          cache.set(cacheKey, { data: sorted, fetchedAt: Date.now() });
+          this.logger.log(`LGD cached ${sorted.length} records for key "${cacheKey}" (${url})`);
+        }
         return sorted;
+      })
+      .catch((err) => {
+        // Location lists rarely change, so an expired copy is better than an error.
+        if (cached) {
+          this.logger.warn(`LGD upstream failed for ${url}; serving cached data from ${new Date(cached.fetchedAt).toISOString()}`);
+          return cached.data;
+        }
+        throw err;
+      })
+      .finally(() => this.inFlight.delete(url));
+
+    this.inFlight.set(url, lookup);
+    return lookup;
+  }
+
+  /**
+   * GETs a JSON array from the reviewer service, retrying network failures with backoff
+   * while staying inside the total time budget so the caller gets an answer before it gives up.
+   */
+  private async fetchWithRetry<T>(url: string): Promise<T[]> {
+    const deadline = Date.now() + this.totalTimeoutMs;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) break;
+
+      try {
+        const response = await axios.get<T[]>(url, { timeout: Math.min(this.attemptTimeoutMs, remainingMs) });
+        if (!Array.isArray(response.data)) {
+          throw new InternalServerErrorException(`LGD reviewer returned unexpected payload for ${url}`);
+        }
+        return response.data;
       } catch (err) {
         lastError = err;
         const isRetryable =
@@ -180,24 +218,21 @@ export class LgdService {
             err.code === 'ETIMEDOUT' ||
             err.code === 'ECONNRESET' ||
             err.code === 'ENOTFOUND' ||
-            !err.response); // network error with no response
+            !err.response || // network error with no response
+            err.response.status >= 500);
+        const backoffMs = this.initialBackoffMs * Math.pow(2, attempt);
+        const hasTimeForAnother = deadline - Date.now() > backoffMs + 1_000;
 
-        if (isRetryable && attempt < this.maxRetries) {
-          const backoffMs =
-            this.initialBackoffMs * Math.pow(2, attempt);
-          this.logger.warn(
-            `LGD fetch attempt ${attempt + 1}/${this.maxRetries} failed for ${url}: ${err instanceof AxiosError ? err.code : err}. Retrying in ${backoffMs}ms...`,
-          );
-          await this.sleep(backoffMs);
-          continue;
-        }
+        if (!isRetryable || attempt === this.maxRetries || !hasTimeForAnother) break;
 
-        // Non-retryable error or all retries exhausted
-        throw lastError;
+        this.logger.warn(
+          `LGD fetch attempt ${attempt + 1}/${this.maxRetries + 1} failed for ${url}: ${err instanceof AxiosError ? err.code ?? err.response?.status : err}. Retrying in ${backoffMs}ms...`,
+        );
+        await this.sleep(backoffMs);
       }
     }
 
-    throw lastError;
+    throw lastError ?? new InternalServerErrorException(`LGD lookup timed out for ${url}`);
   }
 
   private sleep(ms: number): Promise<void> {

@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, MotionConfig } from 'framer-motion'
+import { Loader2 } from 'lucide-react'
 import { VerificationBanner } from '@/components/VerificationBanner'
-import { AnveshanAnswerTaskBanner, AnveshanMilestoneBanner } from '../AnveshanBanner'
+import { AnveshanAnswerTaskBanner, AnveshanProgressBanner } from '../AnveshanBanner'
+import { AnveshanCompletionScreen } from '../AnveshanCompletionScreen'
+import {
+  AnveshanMilestoneModal,
+  getAnveshanMilestonePercent,
+  getAnveshanRemainingSubmissions,
+} from '@/pages/public/AnveshMileStone'
 import { PublicSidebar } from './PublicSidebar'
 import { PublicHeader } from './PublicHeader'
 import { PublicMobileNav } from './PublicMobileNav'
 import { PublicBottomNav } from './PublicBottomNav'
 import { useAuth } from '@/context/AuthContext'
 import { questionApi, type AnveshanMilestoneResponse } from '@/api/client'
+import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
 import { ANVESHAN_ANSWERS_ROUTE } from '@/constants/public'
 import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
 import { deferFeedback, isFeedbackDeferred } from '@/components/anveshan-answers/feedbackPrompt'
@@ -25,36 +33,69 @@ import { deferFeedback, isFeedbackDeferred } from '@/components/anveshan-answers
 export function PublicLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user } = useAuth()
-  const [showMilestoneBanner, setShowMilestoneBanner] = useState(false)
   const [milestone, setMilestone] = useState<AnveshanMilestoneResponse | null>(null)
+  // Anveshan users wait for this first check so users who reached 100% never see the regular pages.
+  const [milestoneChecked, setMilestoneChecked] = useState(false)
+  // Bumped after each successful submission so progress reloads without a page refresh.
+  const [progressVersion, setProgressVersion] = useState(0)
   const [answerTaskDismissed, setAnswerTaskDismissed] = useState(false)
+  const [progressBannerDismissed, setProgressBannerDismissed] = useState(false)
+  const [milestoneDetailsOpen, setMilestoneDetailsOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const onAnswersPage = location.pathname === ANVESHAN_ANSWERS_ROUTE
 
-  // Loads milestone progress on mount and when leaving the answers page, so the banners reflect new answers.
+  useEffect(() => anveshanProgressEmitter.on(() => setProgressVersion((version) => version + 1)), [])
+
+  // Loads milestone progress on mount, on each page change and after each submission, so banners and the completion lock stay current.
+  // If the check fails the regular app is shown rather than locking the user out.
   useEffect(() => {
-    if (!user?.isAnveshanUser || !user.id || onAnswersPage) return
-    const dismissedKey = `anveshan_milestone_100_banner_dismissed_${user.id}`
+    if (!user?.isAnveshanUser || !user.id) return
 
     questionApi.getMyAnveshanMilestone()
       .then((data) => {
         setMilestone(data)
-        if (data.completed && !localStorage.getItem(dismissedKey)) setShowMilestoneBanner(true)
         if (data.completed && !data.feedbackSubmitted && !isFeedbackDeferred(user.id)) setFeedbackOpen(true)
       })
       .catch(() => undefined)
-  }, [user?.id, user?.isAnveshanUser, onAnswersPage])
+      .finally(() => setMilestoneChecked(true))
+  }, [user?.id, user?.isAnveshanUser, location.pathname, progressVersion])
+
+  const showProgressBanner = !!milestone && !milestone.submissionsCompleted && !progressBannerDismissed && !onAnswersPage
 
   const showAnswerTaskBanner =
     !!milestone?.submissionsCompleted && !milestone.completed && !answerTaskDismissed && !onAnswersPage
 
-  function dismissMilestoneBanner() {
-    if (user?.id) {
-      localStorage.setItem(`anveshan_milestone_100_banner_dismissed_${user.id}`, '1')
-    }
-    setShowMilestoneBanner(false)
+  const feedbackDialog = (
+    <AnveshanFeedbackDialog
+      open={feedbackOpen}
+      onOpenChange={(open) => {
+        setFeedbackOpen(open)
+        // Closing without sending means "maybe later": ask again next session, not on every page.
+        if (!open && user?.id && !milestone?.feedbackSubmitted) deferFeedback(user.id)
+      }}
+      onSubmitted={() => setMilestone((prev) => (prev ? { ...prev, feedbackSubmitted: true } : prev))}
+    />
+  )
+
+  if (user?.isAnveshanUser && !milestoneChecked) {
+    return (
+      <div className="flex h-dvh w-full items-center justify-center bg-background" role="status">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
+        <span className="sr-only">Loading…</span>
+      </div>
+    )
+  }
+
+  // Anveshan users who reached 100% only see the completion screen; every other page is closed to them.
+  if (user?.isAnveshanUser && milestone?.completed) {
+    return (
+      <MotionConfig reducedMotion="user">
+        <AnveshanCompletionScreen milestone={milestone} userName={user.name} onShareFeedback={() => setFeedbackOpen(true)} />
+        {feedbackDialog}
+      </MotionConfig>
+    )
   }
 
   return (
@@ -69,7 +110,13 @@ export function PublicLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <VerificationBanner />
-        <AnveshanMilestoneBanner visible={showMilestoneBanner} onDismiss={dismissMilestoneBanner} />
+        <AnveshanProgressBanner
+          visible={showProgressBanner}
+          percent={milestone ? getAnveshanMilestonePercent(milestone) : 0}
+          remaining={milestone ? getAnveshanRemainingSubmissions(milestone) : []}
+          onViewDetails={() => setMilestoneDetailsOpen(true)}
+          onDismiss={() => setProgressBannerDismissed(true)}
+        />
         <AnveshanAnswerTaskBanner
           visible={showAnswerTaskBanner}
           answered={milestone?.progress.answers ?? 0}
@@ -90,15 +137,9 @@ export function PublicLayout() {
         </main>
       </div>
 
-      <AnveshanFeedbackDialog
-        open={feedbackOpen}
-        onOpenChange={(open) => {
-          setFeedbackOpen(open)
-          // Closing without sending means "maybe later": ask again next session, not on every page.
-          if (!open && user?.id && !milestone?.feedbackSubmitted) deferFeedback(user.id)
-        }}
-        onSubmitted={() => setMilestone((prev) => (prev ? { ...prev, feedbackSubmitted: true } : prev))}
-      />
+      <AnveshanMilestoneModal open={milestoneDetailsOpen} onOpenChange={setMilestoneDetailsOpen} data={milestone} />
+
+      {feedbackDialog}
 
       {/* Mobile bottom tab bar (hidden on desktop) */}
       <PublicBottomNav />

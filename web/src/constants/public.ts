@@ -408,4 +408,4 @@ export const ANVESHAN_ANSWERS_DESKTOP_QUERY = '(min-width: 1024px)'
 export const MAX_FEEDBACK_COMMENT_LENGTH = 2000
 
 // Subtitle shown under the AnnaDatha name for Anveshan users and on the Anveshan login page.
-export const ANVESHAN_TAGLINE = 'Ground Source Truth'
+export const ANVESHAN_TAGLINE = 'Ground Truth Module'
