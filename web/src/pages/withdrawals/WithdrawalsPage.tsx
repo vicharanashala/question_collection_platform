@@ -448,7 +448,7 @@ export function WithdrawalsPage() {
 
       {/* Filter modal */}
       <Dialog open={filterOpen} onOpenChange={(o) => !o && setFilterOpen(false)}>
-        <DialogContent>
+        <DialogContent className="gap-5 p-6">
           <DialogHeader>
             <DialogTitle>Filter Withdrawals</DialogTitle>
           </DialogHeader>
