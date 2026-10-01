@@ -124,6 +124,15 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
     }
   }, [userId])
 
+  const fetchBalance = useCallback(async () => {
+    try {
+      const wallet = await adminApi.getUserWallet(userId)
+      setBalance(Number(wallet.balance))
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to load wallet balance'))
+    }
+  }, [userId])
+
   const fetchTransactions = useCallback(async (page = 1) => {
     setLoadingTx(true)
     try {
@@ -136,14 +145,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
       }
       setTxPage(page)
 
-      // On first load, extract user info from the first transaction's referenceId
-      // and set balance from balanceAfter of the most recent transaction
       if (page === 1 && res.items.length > 0) {
-        const latest = res.items.reduce(( newest, tx) =>
-          new Date(tx.createdAt) > new Date(newest.createdAt) ? tx : newest, res.items[0])
-        if (latest.balanceAfter != null) {
-          setBalance(latest.balanceAfter)
-        }
         // Estimate earned from totalCredits — totalDebits (net)
         setTotalEarned(res.summary.totalCredits)
         setTotalWithdrawn(res.summary.totalDebits)
@@ -190,16 +192,16 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
       // Fetch user details + wallet summary in parallel
       fetchWalletUser()
       fetchTransactions(1)
-      fetchWithdrawals(1).finally(() => setLoadingWallet(false))
+      Promise.all([fetchWithdrawals(1), fetchBalance()]).finally(() => setLoadingWallet(false))
     }
-  }, [open, userId, fetchWalletUser, fetchTransactions, fetchWithdrawals])
+  }, [open, userId, fetchWalletUser, fetchTransactions, fetchWithdrawals, fetchBalance])
 
   const displayBalance = balance
   const isLoading = loadingTx && transactions.length === 0
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-6xl p-0 gap-0 overflow-hidden" style={{ maxHeight: '90vh' }}>
+      <DialogContent className="max-w-[calc(100vw-24px)] lg:max-w-6xl max-h-[90dvh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b border-border-subtle shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-lg sm:text-lg sm:text-xl font-bold">
@@ -214,9 +216,9 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
           </div>
         </DialogHeader>
 
-        <div className="flex overflow-hidden" style={{ height: 'calc(90vh - 81px)' }}>
+        <div className="flex h-[calc(90dvh-81px)] flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
           {/* ── Left panel ─────────────────────────────── */}
-          <div className="w-72 shrink-0 border-r border-border-subtle overflow-y-auto p-5 space-y-4 bg-muted/20">
+          <div className="w-full shrink-0 border-b border-border-subtle p-4 space-y-4 bg-muted/20 lg:w-72 lg:border-b-0 lg:border-r lg:overflow-y-auto lg:p-5">
 
             {/* User card */}
             <div className="space-y-3">
@@ -271,7 +273,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
             {/* Balance card */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Balance</p>
-              {isLoading ? (
+              {isLoading || loadingWallet ? (
                 <Skeleton className="h-10 w-36" />
               ) : (
                 <p className={`${getBalanceTextClass(Number(displayBalance))} font-extrabold text-primary tabular-nums leading-none`}>
@@ -375,7 +377,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
           </div>
 
           {/* ── Right panel ────────────────────────────── */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden p-5">
+          <div className="min-h-[28rem] flex-1 min-w-0 flex flex-col overflow-hidden p-4 lg:min-h-0 lg:p-5">
             <Tabs
               value={txTab}
               onValueChange={(v) => setTxTab(v as 'transactions' | 'withdrawals')}
@@ -402,7 +404,8 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
 
               {/* ── Transactions tab ────────────────────── */}
               <TabsContent value="transactions" className="flex flex-col flex-1 min-h-0 mt-3">
-                <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1 min-h-0">
+                <div className="rounded-xl border border-border overflow-x-auto flex flex-col flex-1 min-h-0">
+                  <div className="flex flex-col flex-1 min-h-0 min-w-[560px]">
                   <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
                     <span className="w-8 text-center">#</span>
                     <span>Details</span>
@@ -487,6 +490,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                       ))
                     )}
                   </div>
+                  </div>
                 </div>
                 {loadingTx && transactions.length > 0 && (
                   <div className="flex justify-center py-2">
@@ -509,8 +513,9 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
 
               {/* ── Withdrawals tab ─────────────────────── */}
               <TabsContent value="withdrawals" className="flex flex-col flex-1 min-h-0 mt-3">
-                <div className="rounded-xl border border-border overflow-hidden flex flex-col flex-1">
-                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-2.5 bg-muted/60 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
+                <div className="rounded-xl border border-border overflow-x-auto flex flex-col flex-1 min-h-0">
+                  <div className="flex flex-col flex-1 min-h-0 min-w-[720px]">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto_auto] gap-3 px-4 py-2.5 bg-muted/60 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
                     <span>Request ID</span>
                     <span>Payout Method</span>
                     <span className="text-right">Amount</span>
@@ -538,7 +543,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                       withdrawals.map((wd) => (
                         <div
                           key={wd.id}
-                          className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
+                          className="grid grid-cols-[1fr_1fr_1fr_1fr_auto_auto] gap-3 px-4 py-3 border-t border-border-subtle items-center hover:bg-accent/40 transition-colors"
                         >
                           <div className="min-w-0">
                             <p className="text-[11px] sm:text-[11px] sm:text-xs font-mono text-muted-foreground truncate">{wd.id}</p>
@@ -605,6 +610,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                         </div>
                       ))
                     )}
+                  </div>
                   </div>
                 </div>
                 {wdTotal > withdrawals.length && !isLoading && (

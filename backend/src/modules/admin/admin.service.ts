@@ -3440,6 +3440,7 @@ async listUsers(dto: ListUsersDto) {
         "tx.type",
         "tx.source",
         "tx.description",
+        "tx.rejectionReason",
         "tx.status",
         "tx.referenceId",
         "tx.balanceAfter",

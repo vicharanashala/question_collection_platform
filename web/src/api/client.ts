@@ -715,6 +715,11 @@ export const adminApi = {
     );
   },
 
+  getUserWallet: (userId: string) =>
+    request<{ id: string; balance: number; totalEarned: number; totalWithdrawn: number }>(
+      `/admin/wallets/user/${userId}`,
+    ),
+
   getUserTransactions: (
     userId: string,
     params: Record<string, string | number | undefined> = {},
