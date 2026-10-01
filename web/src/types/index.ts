@@ -76,7 +76,7 @@ export interface PaymentDetail {
 }
 
 export interface Question {
-  _id: string;
+  id: string;
   userId: string;
   questionText: string;
   status: QuestionStatus;

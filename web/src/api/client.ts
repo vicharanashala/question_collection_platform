@@ -162,6 +162,8 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 const DEFAULT_TIMEOUT_MS = 10_000
 // OTP requests can include a Cloud Run cold start plus BRPS token and SMS calls.
 const OTP_REQUEST_TIMEOUT_MS = 30_000
+// Question preview and submit wait on LLM classification, which is slower for non-English text.
+const AI_REQUEST_TIMEOUT_MS = 60_000
 
 // Converts a fetch timeout into a readable, non-retryable error instead of the raw abort message.
 function toTimeoutError(err: unknown): unknown {
@@ -949,6 +951,7 @@ export const questionApi = {
         body: JSON.stringify(body),
       },
       false,
+      AI_REQUEST_TIMEOUT_MS,
     ).finally(() => invalidateCache("/api/questions")),
 
   /**
@@ -995,6 +998,7 @@ export const questionApi = {
         body: JSON.stringify(body),
       },
       false,
+      AI_REQUEST_TIMEOUT_MS,
     )
       .then(notifyProgressChanged)
       .finally(() => invalidateCache("/api/questions")),

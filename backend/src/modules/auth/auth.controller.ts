@@ -11,6 +11,7 @@ import {
   Req,
   UnauthorizedException,
   BadRequestException,
+  BadGatewayException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthResponse } from './auth.service';
@@ -19,6 +20,13 @@ import { Public } from '../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
 import axios from "axios";
+import { isProduction } from "../../config/environment";
+
+// Returns the reviewer backend base URL: production uses REVIEWER_URI, staging and development use STAGING_REVIEWER_URI.
+function getReviewerUri(): string | undefined {
+  return isProduction() ? process.env.REVIEWER_URI : process.env.STAGING_REVIEWER_URI;
+}
+
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
 }
@@ -165,7 +173,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getCrops(){
     try{
-          const resposne = await axios.get(`${process.env.REVIEWER_PROD}/crops/get-all-crops-client`, 
+          const resposne = await axios.get(`${getReviewerUri()}/crops/get-all-crops-client`, 
       {
         headers:{
           'x-internal-api-key':process.env.REVIEW_SYSTEM_AUTH_KEY
@@ -175,6 +183,8 @@ export class AuthController {
     return resposne.data
     }catch(err){
       console.error("Something went wrong", err);
+      // Surface upstream failures instead of replying 200 with an empty body.
+      throw new BadGatewayException('Unable to fetch crops');
     }
   }
 }
