@@ -755,7 +755,7 @@ export function ProfilePage() {
       </div>
 
       {/* Stats */}
-      <StatsStrip userId={user.id} />
+      {user.role !== 'distributor' && <StatsStrip userId={user.id} />}
 
       {/* Hero card */}
       <Card className="shadow-sm">
