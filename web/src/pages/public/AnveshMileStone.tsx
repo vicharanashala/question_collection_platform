@@ -124,7 +124,7 @@ function formatStepTime(iso: string | null): string | null {
 }
 
 // Start and completion time of one goal, shown as "start – end", with a dash until the goal is met.
-function StepTimeline({ timeline }: { timeline?: AnveshanStepTimeline }) {
+export function StepTimeline({ timeline }: { timeline?: AnveshanStepTimeline }) {
   const { t } = useTranslation();
   if (!timeline) return null;
   const started = formatStepTime(timeline.startedAt);
