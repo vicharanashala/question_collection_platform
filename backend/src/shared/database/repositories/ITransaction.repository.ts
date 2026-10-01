@@ -18,6 +18,16 @@ export interface RewardTransactionSummary {
   avgReward: number;
 }
 
+export interface WalletTransactionSummary {
+  totalCount: number;
+  totalCredits: number;
+  totalDebits: number;
+  completedCredits: number;
+  completedDebits: number;
+  /** Transactions whose source is 'withdrawal'. */
+  withdrawalCount: number;
+}
+
 export interface RewardAnalyticsResult extends RewardTransactionSummary {
   /** All-time completed reward total, ignoring the date window. */
   totalPool: number;
@@ -28,6 +38,8 @@ export interface ITransactionRepository extends BaseRepository<Transaction> {
   getRewardAnalytics(from: Date, to: Date, state?: string): Promise<RewardAnalyticsResult>;
   findByWalletId(walletId: string, limit?: number): Promise<Transaction[]>;
   findByReferenceId(referenceId: string): Promise<Transaction | null>;
+  /** Credit/debit totals across every transaction of one wallet. */
+  getWalletSummary(walletId: string): Promise<WalletTransactionSummary>;
   getRewardSummary(
   from: Date,
   to: Date,

@@ -735,6 +735,7 @@ export const adminApi = {
         totalTransactions: number;
         totalCredits: number;
         totalDebits: number;
+        withdrawalTransactions: number;
       };
     }>(`/admin/wallets/user/${userId}/transactions${qs ? `?${qs}` : ""}`);
   },

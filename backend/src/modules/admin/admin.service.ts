@@ -3467,19 +3467,7 @@ async listUsers(dto: ListUsersDto) {
     const [items, total] = await qb.getManyAndCount();
 
     // Compute summary
-    const summary = await this.transactionRepo
-      .createQueryBuilder("tx")
-      .where("tx.walletId = :walletId", { walletId: wallet.id })
-      .select(
-        `
-        COUNT(*) as "totalCount",
-        SUM(CASE WHEN tx.type = 'credit' THEN tx.amount ELSE 0 END) as "totalCredits",
-        SUM(CASE WHEN tx.type = 'debit' THEN tx.amount ELSE 0 END) as "totalDebits",
-        SUM(CASE WHEN tx.status = 'completed' AND tx.type = 'credit' THEN tx.amount ELSE 0 END) as "completedCredits",
-        SUM(CASE WHEN tx.status = 'completed' AND tx.type = 'debit' THEN tx.amount ELSE 0 END) as "completedDebits"
-      `,
-      )
-      .getRawOne();
+    const summary = await this.transactionRepo.getWalletSummary(String(wallet.id));
 
     return {
       items,
@@ -3488,11 +3476,12 @@ async listUsers(dto: ListUsersDto) {
       limit,
       pages: Math.ceil(total / limit),
       summary: {
-        totalTransactions: Number(summary?.totalCount ?? 0),
-        totalCredits: Number(summary?.totalCredits ?? 0),
-        totalDebits: Number(summary?.totalDebits ?? 0),
-        completedCredits: Number(summary?.completedCredits ?? 0),
-        completedDebits: Number(summary?.totalDebits ?? 0),
+        totalTransactions: summary.totalCount,
+        totalCredits: summary.totalCredits,
+        totalDebits: summary.totalDebits,
+        completedCredits: summary.completedCredits,
+        completedDebits: summary.completedDebits,
+        withdrawalTransactions: summary.withdrawalCount,
       },
     };
   }
