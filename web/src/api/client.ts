@@ -1694,6 +1694,8 @@ export interface ListDistributionsParams {
   /** Filter by the TARGET Indian state (was `state`, renamed to disambiguate
    * from the asker's home state that is now embedded on each row). */
   distributionState?: string;
+  /** 'original' = reference rows only; 'distributed' = state-specific rows only. */
+  questionType?: "original" | "distributed";
   search?: string;
 }
 

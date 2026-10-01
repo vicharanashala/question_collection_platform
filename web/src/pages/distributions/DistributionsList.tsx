@@ -18,6 +18,7 @@ export function DistributionsList() {
   // const [stats, setStats] = useState<DistributorStats | null>(null)
   const [indianStates, setIndianStates] = useState<string[]>([])
   const [distributionState, setDistributionState] = useState<string>('')
+  const [questionType, setQuestionType] = useState<'' | 'original' | 'distributed'>('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(20)
@@ -35,6 +36,7 @@ export function DistributionsList() {
         distributor.listDistributions({
           page, limit,
           ...(distributionState ? { distributionState } : {}),
+          ...(questionType ? { questionType } : {}),
           ...(search ? { search } : {}),
         }),
       ])
@@ -48,7 +50,7 @@ export function DistributionsList() {
     } finally {
       setLoading(false)
     }
-  }, [page, limit, distributionState, search])
+  }, [page, limit, distributionState, questionType, search])
 
   useEffect(() => { load() }, [load])
 
@@ -64,13 +66,31 @@ export function DistributionsList() {
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
-          <Select value={distributionState || 'all'} onValueChange={(v) => { setDistributionState(v === 'all' ? '' : v); setPage(1) }}>
+          <Select value={distributionState || 'all'} onValueChange={(v) => { setDistributionState(v === 'all' ? '' : v); setPage(1) }} disabled={questionType === 'original'}>
             <SelectTrigger className="w-56">
               <SelectValue placeholder="Filter by state" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All states</SelectItem>
               {indianStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select
+            value={questionType || 'all'}
+            onValueChange={(v) => {
+              const next = v === 'all' ? '' : (v as 'original' | 'distributed')
+              setQuestionType(next)
+              if (next === 'original') setDistributionState('')
+              setPage(1)
+            }}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All questions</SelectItem>
+              <SelectItem value="original">Original questions</SelectItem>
+              <SelectItem value="distributed">Distributed only</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={load} disabled={loading}>
