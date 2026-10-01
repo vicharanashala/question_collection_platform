@@ -11,6 +11,7 @@ import {
   Req,
   UnauthorizedException,
   BadRequestException,
+  BadGatewayException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthResponse } from './auth.service';
@@ -182,6 +183,8 @@ export class AuthController {
     return resposne.data
     }catch(err){
       console.error("Something went wrong", err);
+      // Surface upstream failures instead of replying 200 with an empty body.
+      throw new BadGatewayException('Unable to fetch crops');
     }
   }
 }
