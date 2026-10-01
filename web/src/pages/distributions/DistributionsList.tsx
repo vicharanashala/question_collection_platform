@@ -131,17 +131,22 @@ export function DistributionsList() {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {row.distributionState ? (
-                      <Badge variant="outline">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {row.distributionState}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" title="Canonical reference doc — the original question row">
-                        <Bookmark className="h-3 w-3 mr-1" />
-                        (Original question)
-                      </Badge>
-                    )}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(row.distributionState ?? row.state) ? (
+                        <Badge variant="outline">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {row.distributionState ?? row.state}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                      {!row.distributionState && (
+                        <Badge variant="secondary" title="Canonical reference doc — the original question row">
+                          <Bookmark className="h-3 w-3 mr-1" />
+                          Original
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-2 text-muted-foreground text-[11px] sm:text-[11px] sm:text-xs">
                     {row.distributor?.name
