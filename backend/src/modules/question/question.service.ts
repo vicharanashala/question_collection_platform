@@ -448,10 +448,16 @@ export class QuestionService {
 
       const isAnveshan = !!user.isAnveshanUser;
 
-    // 2. Infer crop + domains via Gemma (re-infer at submit time for the final question text)
-    const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
-    const cropType = dto.cropType?.trim() || inferred.crop;
-    const domains  = dto.domains?.length  ? dto.domains  : inferred.domains;
+    // 2. Infer crop + domains via Gemma only when the client did not supply them.
+    // The LLM call can take tens of seconds (notably for non-English text), and its
+    // result was previously discarded whenever both values were already provided.
+    let cropType = dto.cropType?.trim();
+    let domains = dto.domains?.length ? dto.domains : undefined;
+    if (!cropType || !domains) {
+      const inferred = await this.gemmaService.inferCropAndDomains(dto.questionText);
+      cropType = cropType || inferred.crop;
+      domains = domains ?? inferred.domains;
+    }
 
     // 4. Handle duplicates and query classification
     const userIdNum = parseInt(userId, 10);
