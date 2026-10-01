@@ -1045,7 +1045,10 @@ async getDailyStatsSince(
   // 3. Extract facet result
   // ----------------------------------------
 
-  const items = result[0]?.items ?? [];
+  // Expose _id as id so list items match every other question endpoint.
+  const items = (result[0]?.items ?? []).map(
+    ({ _id, ...rest }: { _id: unknown } & Record<string, unknown>) => ({ ...rest, id: String(_id) }),
+  );
 
   const total = result[0]?.total?.[0]?.count ?? 0;
 

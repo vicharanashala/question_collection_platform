@@ -573,7 +573,7 @@ export function QuestionsPage() {
                     label="Question ID"
                     value={
                       <span className="font-mono text-xs">
-                        {detailQuestion._id}
+                        {detailQuestion.id}
                       </span>
                     }
                   />

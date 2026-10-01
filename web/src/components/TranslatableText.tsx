@@ -75,7 +75,6 @@ export function TranslatableText({
   onLangChange,
   sourceLanguage = "en",
   className,
-  inline = false,
 }: TranslatableTextProps) {
   // translated: the currently displayed translated text (null = showing original)
   const [translated, setTranslated] = useState<string | null>(null);
@@ -86,7 +85,7 @@ export function TranslatableText({
   //   top: number;
   //   left: number;
   // } | null>(null);
-  const [portalEl, setPortalEl] = useState<HTMLDivElement | null>(null);
+  const [portalEl] = useState<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // displayedLang: the language code of the text currently shown in the card.
