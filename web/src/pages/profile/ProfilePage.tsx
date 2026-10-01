@@ -163,32 +163,38 @@ function EditProfileDialog({
   const [loadingVillages,     setLoadingVillages]     = useState(false)
   const [loadingKvks,         setLoadingKvks]         = useState(false)
 
-  // Load all states on dialog open
+  // On open: load states, then pre-load the children of the saved location.
+  // Saved values are names; older records may hold LGD codes, so match either.
   useEffect(() => {
     if (!open) return
-    lgdApi.getStates().then(({ states }) => setStates(states)).catch(() => {})
-  }, [open])
-
-  // When dialog opens with pre-filled state/district, pre-load their children
-  useEffect(() => {
-    if (!open) return
-    const s = form.state
-    const d = form.district
-    const b = form.block
-    if (s) {
-      lgdApi.getDistricts(s).then(({ districts }) => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { states } = await lgdApi.getStates()
+        if (cancelled) return
+        setStates(states)
+        const st = states.find((x) => x.name === user.state || x.code === user.state)
+        if (!st) return
+        const { districts } = await lgdApi.getDistricts(st.code)
+        if (cancelled) return
         setDistricts(districts)
-        if (d) {
-          lgdApi.getSubDistricts(d).then(({ subdistricts }) => {
-            setSubdistricts(subdistricts)
-            if (b) {
-              lgdApi.getVillages(b).then(({ villages }) => setVillages(villages)).catch(() => {})
-            }
-          }).catch(() => {})
-        }
-      }).catch(() => {})
-    }
-  }, [open])
+        const di = districts.find((x) => x.name === user.district || x.code === user.district)
+        setForm((f) => ({ ...f, state: st.name, district: di?.name ?? f.district }))
+        if (!di) return
+        const { subdistricts } = await lgdApi.getSubDistricts(di.code)
+        if (cancelled) return
+        setSubdistricts(subdistricts)
+        const bl = subdistricts.find((x) => x.name === user.block || x.code === user.block)
+        setForm((f) => ({ ...f, block: bl?.name ?? f.block }))
+        if (!bl) return
+        const { villages } = await lgdApi.getVillages(bl.code)
+        if (!cancelled) setVillages(villages)
+      } catch {
+        // dropdowns stay empty; user can re-select
+      }
+    })()
+    return () => { cancelled = true }
+  }, [open, user])
 
   const [form, setForm] = useState<EditForm>({
     name:               blank(user.name),
@@ -252,25 +258,28 @@ function EditProfileDialog({
   }
 
   // Cascade: reset children when a parent changes
-  function onStateChange(code: string) {
-    setForm((f) => ({ ...f, state: code, district: '', block: '', village: '', kvk: '' }))
+  function onStateChange(name: string) {
+    setForm((f) => ({ ...f, state: name, district: '', block: '', village: '', kvk: '' }))
     setDistricts([]); setSubdistricts([]); setVillages([]); setKvks([])
+    const code = states.find((x) => x.name === name)?.code
     if (!code) return
     setLoadingDistricts(true)
     lgdApi.getDistricts(code).then(({ districts }) => setDistricts(districts)).catch(() => {}).finally(() => setLoadingDistricts(false))
   }
 
-  function onDistrictChange(code: string) {
-    setForm((f) => ({ ...f, district: code, block: '', village: '', kvk: '' }))
+  function onDistrictChange(name: string) {
+    setForm((f) => ({ ...f, district: name, block: '', village: '', kvk: '' }))
     setSubdistricts([]); setVillages([]); setKvks([])
+    const code = districts.find((x) => x.name === name)?.code
     if (!code) return
     setLoadingSubdistricts(true)
     lgdApi.getSubDistricts(code).then(({ subdistricts }) => setSubdistricts(subdistricts)).catch(() => {}).finally(() => setLoadingSubdistricts(false))
   }
 
-  function onBlockChange(code: string) {
-    setForm((f) => ({ ...f, block: code, village: '', kvk: '' }))
+  function onBlockChange(name: string) {
+    setForm((f) => ({ ...f, block: name, village: '', kvk: '' }))
     setVillages([]); setKvks([])
+    const code = subdistricts.find((x) => x.name === name)?.code
     if (!code) return
     setLoadingVillages(true)
     lgdApi.getVillages(code).then(({ villages }) => setVillages(villages)).catch(() => {}).finally(() => setLoadingVillages(false))
@@ -281,7 +290,7 @@ function EditProfileDialog({
     setKvks([])
     if (!code) return
     // KVK is keyed by district, not village — find the district code from current form
-    const distCode = form.district
+    const distCode = districts.find((x) => x.name === form.district)?.code
     if (!distCode) return
     setLoadingKvks(true)
     lgdApi.getKvks(distCode).then(({ kvks }) => setKvks(kvks)).catch(() => {}).finally(() => setLoadingKvks(false))
@@ -443,7 +452,7 @@ function EditProfileDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {states.map((s) => (
-                        <SelectItem key={s.code} value={s.code}>
+                        <SelectItem key={s.code} value={s.name}>
                           {s.name}
                         </SelectItem>
                       ))}
@@ -462,7 +471,7 @@ function EditProfileDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {districts.map((d) => (
-                        <SelectItem key={d.code} value={d.code}>
+                        <SelectItem key={d.code} value={d.name}>
                           {d.name}
                         </SelectItem>
                       ))}
@@ -481,7 +490,7 @@ function EditProfileDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {subdistricts.map((b) => (
-                        <SelectItem key={b.code} value={b.code}>
+                        <SelectItem key={b.code} value={b.name}>
                           {b.name}
                         </SelectItem>
                       ))}
