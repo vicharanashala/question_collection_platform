@@ -47,6 +47,9 @@ jobs:
       - name: Build
         working-directory: web
         run: pnpm build
+        env:
+          VITE_APP_ENV: staging
+          VITE_ANVESHAN_URL_STAGING: ${{ vars.VITE_ANVESHAN_URL_STAGING }}
 
       - name: Upload web dist artifact
         uses: actions/upload-artifact@v4

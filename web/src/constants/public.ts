@@ -400,8 +400,15 @@ export const MAX_ANVESHAN_ANSWER_LENGTH = 5000
 export const MAX_ANVESHAN_REMARKS_LENGTH = 1000
 export const MAX_ANVESHAN_ANSWER_SOURCES = 10
 
+// Live Anveshan platform, used when no URL is configured for the current environment.
+const DEFAULT_ANVESHAN_URL = 'https://anveshan.annam.ai/'
+
 // External Anveshan platform where users confirm their milestone completion.
-export const ANVESHAN_PLATFORM_URL = 'https://anveshan.annam.ai/'
+// Production builds use VITE_ANVESHAN_URL; staging and local builds use VITE_ANVESHAN_URL_STAGING.
+export const ANVESHAN_PLATFORM_URL =
+  (import.meta.env.VITE_APP_ENV === 'production'
+    ? import.meta.env.VITE_ANVESHAN_URL
+    : import.meta.env.VITE_ANVESHAN_URL_STAGING) || DEFAULT_ANVESHAN_URL
 
 // The Anveshan answer page needs the two-column desktop layout (Tailwind `lg` breakpoint and up).
 export const ANVESHAN_ANSWERS_DESKTOP_QUERY = '(min-width: 1024px)'
