@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { BrandLogo } from "@/components/BrandLogo";
 import { SignOutDialog } from "@/components/SignOutDialog";
 import { JOURNEY, JourneyStep } from "@/components/AnveshanJourney";
+import { StepTimeline } from "@/pages/public/AnveshMileStone";
 import { ANVESHAN_PLATFORM_URL } from "@/constants/public";
 import type { AnveshanMilestoneResponse } from "@/api/client";
 
@@ -126,21 +127,24 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
               <p className="mt-6 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("anveshanComplete.milestoneHeading", "AnnaDatha milestone")}
               </p>
-              <ul className="mt-2 grid grid-cols-2 gap-2 text-left sm:grid-cols-3" aria-label={t("anveshanComplete.summary", "What you completed")}>
+              <ul className="mt-2 grid grid-cols-1 gap-2 text-left sm:grid-cols-2" aria-label={t("anveshanComplete.summary", "What you completed")}>
                 {GOALS.map(({ key, icon: Icon, label }) => (
-                  <li key={key} className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-variant/40 px-2.5 py-2">
+                  <li key={key} className="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-variant/40 px-2.5 py-2">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary dark:text-emerald-400">
                       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-medium text-foreground">
-                        {t(`anveshanComplete.goal.${key}`, label)}
-                      </span>
-                      <span className="flex items-center gap-1 text-[11px] font-semibold tabular-nums text-primary dark:text-emerald-400">
-                        <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
-                        {milestone.requirements[key]}/{milestone.requirements[key]}
-                      </span>
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-xs font-medium text-foreground">
+                          {t(`anveshanComplete.goal.${key}`, label)}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-primary dark:text-emerald-400">
+                          <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
+                          {milestone.requirements[key]}/{milestone.requirements[key]}
+                        </span>
+                      </div>
+                      <StepTimeline timeline={milestone.timeline?.[key]} />
+                    </div>
                   </li>
                 ))}
               </ul>
