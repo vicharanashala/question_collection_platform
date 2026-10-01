@@ -19,6 +19,13 @@ import { Public } from '../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
 import axios from "axios";
+import { isProduction } from "../../config/environment";
+
+// Returns the reviewer backend base URL: production uses REVIEWER_URI, staging and development use STAGING_REVIEWER_URI.
+function getReviewerUri(): string | undefined {
+  return isProduction() ? process.env.REVIEWER_URI : process.env.STAGING_REVIEWER_URI;
+}
+
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
 }
@@ -165,7 +172,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getCrops(){
     try{
-          const resposne = await axios.get(`${process.env.REVIEWER_PROD}/crops/get-all-crops-client`, 
+          const resposne = await axios.get(`${getReviewerUri()}/crops/get-all-crops-client`, 
       {
         headers:{
           'x-internal-api-key':process.env.REVIEW_SYSTEM_AUTH_KEY
