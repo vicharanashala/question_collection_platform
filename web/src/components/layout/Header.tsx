@@ -77,7 +77,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
 
       <div className="flex items-center gap-2">
         {/* Theme toggle */}
-        <button
+        {/* <button
           onClick={toggleTheme}
           className="flex items-center justify-center rounded-md p-1.5 text-text-secondary hover:bg-accent hover:text-text transition-colors"
           aria-label={theme === 'dark' ? t('profile.themeLight') : t('profile.themeDark')}
@@ -88,7 +88,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
           ) : (
             <Moon className="h-4 w-4" />
           )}
-        </button>
+        </button> */}
 
         {/* Language switcher — only visible to end users. Staff roles
             (admin, curator, finance, super_admin, distributor) are locked
