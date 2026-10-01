@@ -5,14 +5,16 @@ import { useLanguage } from '@/hooks/useLanguage'
 import type { SupportedLanguageCode } from '@/i18n'
 import { authApi, adminApi, lgdApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { cn, getInitials, formatDate } from '@/lib/utils'
 import { isEndUser } from '@/lib/roles'
@@ -146,7 +148,6 @@ function EditProfileDialog({
   onSaved: (u: AuthUser) => void
 }) {
   const { setLanguage } = useLanguage()
-  const [tab, setTab] = useState('personal')
   const [saving, setSaving] = useState(false)
 
   // LGD location dropdown options
@@ -243,7 +244,6 @@ function EditProfileDialog({
         season:             blank(user.season),
         languagePreference: blank(user.languagePreference),
       })
-      setTab('personal')
     }
   }, [open, user])
 
@@ -337,213 +337,199 @@ function EditProfileDialog({
     }
   }
 
-  const rowCls = 'grid grid-cols-[140px_1fr] items-center gap-3'
-  const labelCls = 'text-xs sm:text-xs sm:text-sm text-text-secondary'
-  const inputCls = 'h-8 text-xs sm:text-sm'
+  const labelCls = 'text-[11px] sm:text-xs font-medium uppercase tracking-wide text-text-secondary'
+  const inputCls = 'h-10 text-xs sm:text-sm'
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="h-[85vh] !max-h-[85vh] w-[85vw] !max-w-[85vw] overflow-y-auto p-2">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-24px)] max-w-3xl lg:max-w-4xl flex-col gap-0 p-0">
+        <DialogHeader className="px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle className="flex items-center gap-2">
             <Edit2 className="h-4 w-4" />
             Edit Profile
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={setTab} className="mt-2">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="personal">Personal</TabsTrigger>
-            <TabsTrigger value="location">Location</TabsTrigger>
-            <TabsTrigger value="farming">Farming</TabsTrigger>
-            <TabsTrigger value="org">Org</TabsTrigger>
-          </TabsList>
+        <ScrollArea viewportClassName="max-h-[calc(90dvh-10rem)]">
+          <div className="space-y-4 px-4 pb-4 sm:space-y-6 sm:px-6">
+            <section className="rounded-xl border border-border-subtle p-4 sm:p-6">
+              <div className="mb-4 flex items-center gap-2 border-b border-border-subtle pb-3">
+                <User className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-text sm:text-base">Personal Details</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6">
+                <div className="space-y-2">
+                  <Label className={labelCls}>Full Name *</Label>
+                  <Input
+                    className={inputCls}
+                    value={form.name}
+                    onChange={(e) => set("name", e.target.value)}
+                    maxLength={100}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>Age</Label>
+                  <Input
+                    className={inputCls}
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={form.age}
+                    onChange={(e) => set("age", e.target.value)}
+                    placeholder="e.g. 35"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>Gender</Label>
+                  <Select value={form.gender} onValueChange={(v) => set("gender", v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GENDERS.map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {g}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>Language</Label>
+                  {/* End users may pick any of the 22 supported languages. Staff
+                      roles (admin, curator, finance, super_admin, distributor)
+                      are locked to English — the UI selector is hidden and the
+                      submitted value is forced to 'en' on save. */}
+                  {isEndUser(user) ? (
+                    <Select
+                      value={form.languagePreference}
+                      onValueChange={(v) => {
+                        set("languagePreference", v)
+                        // Live preview — switch the whole app's i18n language so the
+                        // page re-renders in the chosen language immediately. The
+                        // choice is also sent to the backend on Save.
+                        void setLanguage(v as SupportedLanguageCode)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map((l) => (
+                          <SelectItem key={l.value} value={l.value}>
+                            {l.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="flex h-10 items-center text-xs text-text-secondary sm:text-sm">English</p>
+                  )}
+                </div>
+              </div>
+            </section>
 
-          {/* ── Personal ── */}
-          <TabsContent value="personal" className="space-y-4 mt-4">
-            <div className={rowCls}>
-              <Label className={labelCls}>Full Name *</Label>
-              <Input
-                className={inputCls}
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-                maxLength={100}
-              />
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>Age</Label>
-              <Input
-                className={inputCls}
-                type="number"
-                min={1}
-                max={120}
-                value={form.age}
-                onChange={(e) => set("age", e.target.value)}
-                placeholder="e.g. 35"
-              />
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>Gender</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
-                value={form.gender}
-                onChange={(e) => set("gender", e.target.value)}
-              >
-                <option value="">Select…</option>
-                {GENDERS.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>Language</Label>
-              {/* End users may pick any of the 22 supported languages. Staff
-                  roles (admin, curator, finance, super_admin, distributor)
-                  are locked to English — the UI selector is hidden and the
-                  submitted value is forced to 'en' on save. */}
-              {isEndUser(user) ? (
-                <select
-                  className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
-                  value={form.languagePreference}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    set("languagePreference", v)
-                    // Live preview — switch the whole app's i18n language so the
-                    // page re-renders in the chosen language immediately. The
-                    // choice is also sent to the backend on Save.
-                    void setLanguage(v as SupportedLanguageCode)
-                  }}
-                >
-                  {LANGUAGES.map((l) => (
-                    <option key={l.value} value={l.value}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className="text-xs sm:text-xs sm:text-sm text-text-secondary">English</span>
-              )}
-            </div>
-            {/* Student fields shown in personal tab */}
-            <Separator />
-            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text-tertiary uppercase tracking-wide">
-              Education (Student)
-            </p>
-            <div className={rowCls}>
-              <Label className={labelCls}>Course</Label>
-              <Input
-                className={inputCls}
-                value={form.courseName}
-                onChange={(e) => set("courseName", e.target.value)}
-                placeholder="B.Sc Agriculture"
-              />
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>College</Label>
-              <Input
-                className={inputCls}
-                value={form.collegeName}
-                onChange={(e) => set("collegeName", e.target.value)}
-                placeholder="ABC College"
-              />
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>University</Label>
-              <Input
-                className={inputCls}
-                value={form.universityName}
-                onChange={(e) => set("universityName", e.target.value)}
-                placeholder="XYZ University"
-              />
-            </div>
-          </TabsContent>
+            <section className="rounded-xl border border-border-subtle p-4 sm:p-6">
+              <div className="mb-4 flex items-center gap-2 border-b border-border-subtle pb-3">
+                <MapPin className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-text sm:text-base">Location Details</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6">
+                <div className="space-y-2">
+                  <Label className={labelCls}>State</Label>
+                  <Select value={form.state} onValueChange={onStateChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select State…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.map((s) => (
+                        <SelectItem key={s.code} value={s.code}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>District</Label>
+                  <Select
+                    value={form.district}
+                    onValueChange={onDistrictChange}
+                    disabled={!form.state || loadingDistricts}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select District…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {districts.map((d) => (
+                        <SelectItem key={d.code} value={d.code}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>Block</Label>
+                  <Select
+                    value={form.block}
+                    onValueChange={onBlockChange}
+                    disabled={!form.district || loadingSubdistricts}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Block…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subdistricts.map((b) => (
+                        <SelectItem key={b.code} value={b.code}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>Village</Label>
+                  <Select
+                    value={form.village}
+                    onValueChange={onVillageChange}
+                    disabled={!form.block || loadingVillages}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Village…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {villages.map((v) => (
+                        <SelectItem key={v.code} value={v.name}>
+                          {v.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className={labelCls}>KVK</Label>
+                  <Select
+                    value={form.kvk}
+                    onValueChange={onKvkChange}
+                    disabled={!form.district || loadingKvks}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select KVK…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {kvks.map((k) => (
+                        <SelectItem key={k.code} value={k.address}>
+                          {k.address}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
 
-          {/* ── Location ── */}
-          <TabsContent value="location" className="space-y-4 mt-4">
-            <div className={rowCls}>
-              <Label className={labelCls}>State</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
-                value={form.state}
-                onChange={(e) => onStateChange(e.target.value)}
-              >
-                <option value="">Select State…</option>
-                {states.map((s) => (
-                  <option key={s.code} value={s.code}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>District</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
-                value={form.district}
-                onChange={(e) => onDistrictChange(e.target.value)}
-                disabled={!form.state || loadingDistricts}
-              >
-                <option value="">Select District…</option>
-                {districts.map((d) => (
-                  <option key={d.code} value={d.code}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>Block</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
-                value={form.block}
-                onChange={(e) => onBlockChange(e.target.value)}
-                disabled={!form.district || loadingSubdistricts}
-              >
-                <option value="">Select Block…</option>
-                {subdistricts.map((b) => (
-                  <option key={b.code} value={b.code}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>Village</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
-                value={form.village}
-                onChange={(e) => onVillageChange(e.target.value)}
-                disabled={!form.block || loadingVillages}
-              >
-                <option value="">Select Village…</option>
-                {villages.map((v) => (
-                  <option key={v.code} value={v.name}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={rowCls}>
-              <Label className={labelCls}>KVK</Label>
-              <select
-                className="h-8 rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
-                value={form.kvk}
-                onChange={(e) => onKvkChange(e.target.value)}
-                disabled={!form.district || loadingKvks}
-              >
-                <option value="">Select KVK…</option>
-                {kvks.map((k) => (
-                  <option key={k.code} value={k.address}>
-                    {k.address}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </TabsContent>
-
-          {/* ── Farming ── */}
+          {/* Farming and Org tabs hidden for now
           <TabsContent value="farming" className="space-y-4 mt-4">
             <div className={rowCls}>
               <Label className={labelCls}>Farm Size</Label>
@@ -574,7 +560,6 @@ function EditProfileDialog({
             </div>
           </TabsContent>
 
-          {/* ── Organisation ── */}
           <TabsContent value="org" className="space-y-4 mt-4">
             <div className={rowCls}>
               <Label className={labelCls}>Org. Type</Label>
@@ -652,9 +637,11 @@ function EditProfileDialog({
               />
             </div>
           </TabsContent>
-        </Tabs>
+          */}
+          </div>
+        </ScrollArea>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="gap-2 border-t border-border-subtle px-4 py-3 sm:gap-0 sm:px-6 sm:py-4">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
