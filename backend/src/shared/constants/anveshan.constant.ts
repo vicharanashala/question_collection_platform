@@ -10,3 +10,6 @@ export const ANVESHAN_REQUIRED_ANSWER_COUNT = 2;
 
 // A scoring job still processing after this long is treated as lost and started again. Jobs normally take about 4 minutes.
 export const ANVESHAN_SCORE_JOB_STALE_AFTER_MS = 15 * 60 * 1000;
+
+// How often the backend checks scoring jobs that are still processing.
+export const ANVESHAN_SCORE_POLL_INTERVAL_MS = 60 * 1000;

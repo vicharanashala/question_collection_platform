@@ -181,15 +181,28 @@ export class AnveshanMilestoneService {
     return toScoreView(await this.refreshAnswerScore(userId, questionId));
   }
 
-  // Loads the stored score. While the job is processing this asks the scoring service for the latest state
-  // and stores the full result once it completes. A failed job, or one the scoring service lost or has
-  // kept processing for too long, is started again.
+  // Loads the caller's answer and brings its score up to date.
   private async refreshAnswerScore(userId: string, questionId: string): Promise<AnveshanAnswerScore> {
     const answer = await this.answerRepo.findOne({ userId, questionId });
     if (!answer) {
       throw new NotFoundException('No advisory found for this query.');
     }
+    return this.syncAnswerScore(answer);
+  }
 
+  // Answers whose scoring job is still processing, oldest first. Used by the background score check.
+  async findAnswersAwaitingScore(limit: number): Promise<AnveshanAnswer[]> {
+    return this.answerRepo.findAll(
+      { 'score.status': 'processing' },
+      { pagination: { page: 1, limit, sort: { 'score.requestedAt': 1 } } },
+    );
+  }
+
+  // Brings an answer's score up to date. While the job is processing this asks the scoring service for the
+  // latest state and stores the full result once it completes. A failed job, or one the scoring service lost
+  // or has kept processing for too long, is started again.
+  async syncAnswerScore(answer: AnveshanAnswer): Promise<AnveshanAnswerScore> {
+    const userId = answer.userId;
     const score = answer.score;
     if (score?.status === 'completed') return score;
     if (!score?.jobId || score.status === 'failed') return this.restartScore(answer, userId);

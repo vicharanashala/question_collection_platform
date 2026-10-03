@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { QuestionController } from './question.controller';
 import { QuestionService } from './question.service';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
+import { AnveshanScorePollerService } from './anveshan-score-poller.service';
 import { UserModule } from '../user/user.module';
 import { AdminModule } from '../admin/admin.module';
 import { StorageModule } from '../storage/storage.module';
@@ -21,7 +22,7 @@ import { AgriEntitiesModule } from '../agri-entities/agri-entities.module';
     AgriEntitiesModule
   ],
   controllers: [QuestionController],
-  providers: [QuestionService, AnveshanMilestoneService],
+  providers: [QuestionService, AnveshanMilestoneService, AnveshanScorePollerService],
   exports: [QuestionService, AnveshanMilestoneService],
 })
 export class QuestionModule {}

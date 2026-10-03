@@ -122,3 +122,5 @@ export class AnveshanAnswer {
 
 export const AnveshanAnswerSchema = SchemaFactory.createForClass(AnveshanAnswer);
 AnveshanAnswerSchema.index({ userId: 1, answeredAt: -1 });
+// Lets the background score check find processing jobs without scanning every answer.
+AnveshanAnswerSchema.index({ 'score.status': 1, 'score.requestedAt': 1 });

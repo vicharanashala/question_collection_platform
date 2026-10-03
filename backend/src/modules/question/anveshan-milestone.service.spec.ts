@@ -28,7 +28,7 @@ const answerDto: SubmitAnveshanAnswerDto = {
 describe('AnveshanMilestoneService', () => {
   let service: AnveshanMilestoneService;
   const questionRepo = { find: jest.fn(), findOne: jest.fn(), updateMany: jest.fn() };
-  const answerRepo = { create: jest.fn(), find: jest.fn(), findOne: jest.fn(), update: jest.fn() };
+  const answerRepo = { create: jest.fn(), find: jest.fn(), findAll: jest.fn(), findOne: jest.fn(), update: jest.fn() };
   const scoringService = { startJob: jest.fn(), getJob: jest.fn() };
   const feedbackRepo = { count: jest.fn() };
   const questionService = { getTotalSubmittedCount: jest.fn() };
@@ -230,7 +230,14 @@ describe('AnveshanMilestoneService', () => {
   });
 
   it('restarts scoring when the earlier job could not be started', async () => {
-    answerRepo.findOne.mockResolvedValue({ id: 'a-1', answer: 'Neem oil', sources: [], score: { jobId: null, status: 'failed' } });
+    answerRepo.findOne.mockResolvedValue({
+      id: 'a-1',
+      questionId: 'q-0',
+      userId: USER_ID,
+      answer: 'Neem oil',
+      sources: [],
+      score: { jobId: null, status: 'failed' },
+    });
     questionRepo.findOne.mockResolvedValue({ id: 'q-0', questionText: 'Question 0', cropType: 'Rice', state: 'Kerala' });
     scoringService.startJob.mockResolvedValue('job-2');
 
@@ -246,6 +253,7 @@ describe('AnveshanMilestoneService', () => {
       answerRepo.findOne.mockResolvedValue({
         id: 'a-1',
         questionId: 'q-0',
+        userId: USER_ID,
         answer: 'Neem oil',
         sources: [],
         score: { jobId: 'job-1', status: 'processing', requestedAt: minutesAgo(minutes) },
@@ -302,6 +310,32 @@ describe('AnveshanMilestoneService', () => {
       expect(scoringService.startJob).not.toHaveBeenCalled();
       expect(score.jobId).toBe('job-1');
     });
+  });
+
+  it('lists processing scores oldest first for the background check', async () => {
+    answerRepo.findAll.mockResolvedValue([]);
+
+    await service.findAnswersAwaitingScore(50);
+
+    expect(answerRepo.findAll).toHaveBeenCalledWith(
+      { 'score.status': 'processing' },
+      { pagination: { page: 1, limit: 50, sort: { 'score.requestedAt': 1 } } },
+    );
+  });
+
+  it('saves a finished job for an answer passed in directly by the background check', async () => {
+    const requestedAt = new Date();
+    scoringService.getJob.mockResolvedValue({ status: 'failed', score: { status: 'failed', systemScore: 11 } });
+
+    const score = await service.syncAnswerScore({
+      id: 'a-1',
+      questionId: 'q-0',
+      userId: USER_ID,
+      score: { jobId: 'job-1', status: 'processing', requestedAt },
+    } as never);
+
+    expect(score.status).toBe('failed');
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ systemScore: 11, jobId: 'job-1' }) });
   });
 
   it('rejects score requests for questions the caller has not answered', async () => {
