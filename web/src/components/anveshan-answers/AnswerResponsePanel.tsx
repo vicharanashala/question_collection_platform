@@ -17,7 +17,8 @@ import { SourceList, SourceUrlManager } from './SourceUrlManager'
 import { MAX_ANVESHAN_ANSWER_LENGTH, MAX_ANVESHAN_REMARKS_LENGTH, MIN_ANVESHAN_ANSWER_LENGTH } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import { FieldError } from './FieldError'
-import type { AnveshanAnswerQuestion, AnveshanAnswerSource } from '@/types'
+import { AnswerScoreCard } from './AnswerScoreCard'
+import type { AnveshanAnswerQuestion, AnveshanAnswerScore, AnveshanAnswerSource } from '@/types'
 
 export interface AnswerDraft {
   answer: string
@@ -35,10 +36,20 @@ interface AnswerResponsePanelProps {
   isSubmitting: boolean
   /** Required answer count once it has been reached; unanswered questions are then locked. */
   answerLimit?: number | null
+  /** Called when a submitted advisory's score changes, so the page keeps the latest score. */
+  onScoreChange?: (questionId: string, score: AnveshanAnswerScore) => void
 }
 
 // Right panel: shows the selected question and the answer form, the submitted answer, or a locked notice.
-export function AnswerResponsePanel({ question, draft, onDraftChange, onSubmit, isSubmitting, answerLimit = null }: AnswerResponsePanelProps) {
+export function AnswerResponsePanel({
+  question,
+  draft,
+  onDraftChange,
+  onSubmit,
+  isSubmitting,
+  answerLimit = null,
+  onScoreChange,
+}: AnswerResponsePanelProps) {
   const { t } = useTranslation()
 
   return (
@@ -57,7 +68,7 @@ export function AnswerResponsePanel({ question, draft, onDraftChange, onSubmit, 
         </div>
 
         {question.answer ? (
-          <SubmittedAnswer question={question} />
+          <SubmittedAnswer question={question} onScoreChange={onScoreChange} />
         ) : answerLimit !== null ? (
           <AnswerLimitNotice requiredAnswers={answerLimit} />
         ) : (
@@ -96,8 +107,13 @@ function AnswerLimitNotice({ requiredAnswers }: { requiredAnswers: number }) {
   )
 }
 
-// Read-only view of an answer the user already submitted.
-function SubmittedAnswer({ question }: { question: AnveshanAnswerQuestion }) {
+interface SubmittedAnswerProps {
+  question: AnveshanAnswerQuestion
+  onScoreChange?: (questionId: string, score: AnveshanAnswerScore) => void
+}
+
+// Read-only view of an answer the user already submitted, with its system score.
+function SubmittedAnswer({ question, onScoreChange }: SubmittedAnswerProps) {
   const { t } = useTranslation()
   const answer = question.answer
   if (!answer) return null
@@ -108,6 +124,11 @@ function SubmittedAnswer({ question }: { question: AnveshanAnswerQuestion }) {
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         {t('anveshanAnswers.alreadyAnswered', 'You have submitted an advisory for this query. Thank you!')}
       </p>
+      <AnswerScoreCard
+        questionId={question.id}
+        initialScore={answer.score ?? null}
+        onScoreChange={(score) => onScoreChange?.(question.id, score)}
+      />
       <div>
         <p className="text-sm font-medium text-text">{t('anveshanAnswers.yourAnswer', 'Your Advisory')}</p>
         <p className="mt-1 whitespace-pre-wrap break-words rounded-md border border-border-subtle bg-surface-variant p-3 text-sm text-text">

@@ -783,11 +783,40 @@ export interface AnveshanAnswerSource {
   page?: string | null;
 }
 
+export type AnveshanAnswerScoreStatus = 'processing' | 'completed' | 'failed';
+
+export interface AnveshanAnswerScoreCheck {
+  parameter: string;
+  category: string;
+  /** For example PASS or FAIL. */
+  result: string;
+  mark: number;
+  reason: string;
+}
+
+/** System score for an advisory; the score fields stay null until status is completed. */
+export interface AnveshanAnswerScore {
+  jobId: string | null;
+  status: AnveshanAnswerScoreStatus;
+  systemScore: number | null;
+  maxScore: number | null;
+  percentage: number | null;
+  needsHumanReview: boolean | null;
+  reviewReasons: string[];
+  checks: AnveshanAnswerScoreCheck[];
+  notApplicable: string[];
+  notEvaluated: string[];
+  checkedAt: string | null;
+  requestedAt: string;
+}
+
 export interface AnveshanAnswer {
   answer: string;
   sources: AnveshanAnswerSource[];
   remarks: string | null;
   answeredAt: string;
+  /** Null for advisories submitted before scoring was available. */
+  score?: AnveshanAnswerScore | null;
 }
 
 export interface AnveshanAnswerQuestion {

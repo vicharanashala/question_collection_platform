@@ -1,14 +1,15 @@
-import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   IAnveshanAnswerRepository,
   IAppFeedbackRepository,
   IQuestionRepository,
   REPOSITORY_TOKENS,
 } from '../../shared/database/repositories';
-import type { AnveshanAnswer, AnveshanAnswerSource, Question } from '../../shared/database/entities';
+import type { AnveshanAnswer, AnveshanAnswerScore, AnveshanAnswerSource, Question } from '../../shared/database/entities';
 import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 import { QuestionService } from './question.service';
+import { AnveshanScoringService } from '../ai/anveshan-scoring.service';
 import { SubmitAnveshanAnswerDto } from './dto';
 import {
   type AnveshanCounts,
@@ -39,7 +40,11 @@ export interface AnveshanAnswerView {
   sources: AnveshanAnswerSource[];
   remarks: string | null;
   answeredAt: Date;
+  score: AnveshanAnswerScoreView | null;
 }
+
+/** Score fields returned to the client; the raw scoring service response stays server side. */
+export type AnveshanAnswerScoreView = Omit<AnveshanAnswerScore, 'response'>;
 
 export interface AnveshanAnswerableQuestion {
   id: string;
@@ -56,6 +61,8 @@ export interface AnveshanAnswerableQuestion {
 
 @Injectable()
 export class AnveshanMilestoneService {
+  private readonly logger = new Logger(AnveshanMilestoneService.name);
+
   constructor(
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
@@ -66,6 +73,7 @@ export class AnveshanMilestoneService {
     private readonly questionService: QuestionService,
     private readonly userService: UserService,
     private readonly agriEntityService: AgriEntitiesService,
+    private readonly scoringService: AnveshanScoringService,
   ) {}
 
   // Returns the caller's milestone progress across submissions and answers, with when each goal was started and met.
@@ -155,6 +163,9 @@ export class AnveshanMilestoneService {
       throw error;
     }
 
+    // The answer is already stored, so a scoring failure is recorded on it rather than failing the request.
+    saved = { ...saved, score: await this.requestScore(saved, question) };
+
     const answeredCount = milestone.progress.answers + 1;
     return {
       question: toAnswerableQuestion({ ...question, isAnswerSubmitted: true }, saved),
@@ -162,6 +173,71 @@ export class AnveshanMilestoneService {
       requiredAnswers,
       completed: answeredCount >= requiredAnswers,
     };
+  }
+
+  // Returns the caller's score for an answered question, without the raw scoring service response.
+  async getAnswerScore(userId: string, questionId: string): Promise<AnveshanAnswerScoreView> {
+    return toScoreView(await this.refreshAnswerScore(userId, questionId));
+  }
+
+  // Loads the stored score. While the job is processing this asks the scoring service for the latest state
+  // and stores the full result once it completes; a failed job is restarted.
+  private async refreshAnswerScore(userId: string, questionId: string): Promise<AnveshanAnswerScore> {
+    const answer = await this.answerRepo.findOne({ userId, questionId });
+    if (!answer) {
+      throw new NotFoundException('No advisory found for this query.');
+    }
+
+    const score = answer.score;
+    if (score?.status === 'completed') return score;
+    if (!score?.jobId || score.status === 'failed') {
+      const question = await this.questionRepo.findOne({ id: questionId, userId });
+      if (!question) throw new NotFoundException('This query is not in your advisory list.');
+      return this.requestScore(answer, question);
+    }
+
+    try {
+      const job = await this.scoringService.getJob(score.jobId);
+      if (job.status === 'processing') return score;
+      const next: AnveshanAnswerScore =
+        job.status === 'completed'
+          ? { ...job.score, jobId: score.jobId, requestedAt: score.requestedAt }
+          : { ...score, status: 'failed', response: job.response };
+      await this.answerRepo.update(answer.id, { score: next });
+      return next;
+    } catch (error) {
+      // A temporary outage keeps the job as processing so the client can keep polling.
+      this.logger.warn(`[Scoring] could not read job ${score.jobId}: ${error}`);
+      return score;
+    }
+  }
+
+  // Starts a scoring job for the answer and stores its state. Never throws, so a scoring outage
+  // does not affect the saved answer; the job is marked failed and started again on the next score request.
+  private async requestScore(answer: AnveshanAnswer, question: Question): Promise<AnveshanAnswerScore> {
+    const requestedAt = new Date();
+    let score: AnveshanAnswerScore;
+    try {
+      const jobId = await this.scoringService.startJob({
+        answerId: answer.id,
+        question: question.questionText,
+        answer: answer.answer,
+        crop: question.cropType,
+        state: question.state,
+        sources: answer.sources,
+      });
+      score = emptyScore(jobId, 'processing', requestedAt);
+    } catch (error) {
+      this.logger.error(`[Scoring] could not start job for answer ${answer.id}: ${error}`);
+      score = emptyScore(null, 'failed', requestedAt);
+    }
+
+    try {
+      await this.answerRepo.update(answer.id, { score });
+    } catch (error) {
+      this.logger.error(`[Scoring] could not store score state for answer ${answer.id}: ${error}`);
+    }
+    return score;
   }
 
   // Loads counts and eligible questions once, so callers share a single consistent snapshot.
@@ -217,6 +293,32 @@ export class AnveshanMilestoneService {
   }
 }
 
+// Score placeholder used until the scoring job completes.
+function emptyScore(jobId: string | null, status: AnveshanAnswerScore['status'], requestedAt: Date): AnveshanAnswerScore {
+  return {
+    jobId,
+    status,
+    systemScore: null,
+    maxScore: null,
+    percentage: null,
+    needsHumanReview: null,
+    reviewReasons: [],
+    checks: [],
+    notApplicable: [],
+    notEvaluated: [],
+    checkedAt: null,
+    requestedAt,
+    response: null,
+  };
+}
+
+// Removes the raw scoring service response before a score is sent to the client.
+function toScoreView(score: AnveshanAnswerScore): AnveshanAnswerScoreView {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { response, ...view } = score;
+  return view;
+}
+
 // Message returned when the user tries to answer beyond the required number of questions.
 function answerLimitMessage(requiredAnswers: number): string {
   return `You have already submitted the required ${requiredAnswers} advisories. No more advisories can be submitted.`;
@@ -234,7 +336,13 @@ function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null)
     submittedAt: question.submittedAt,
     isAnswerSubmitted: !!question.isAnswerSubmitted,
     answer: answer
-      ? { answer: answer.answer, sources: answer.sources, remarks: answer.remarks, answeredAt: answer.answeredAt }
+      ? {
+          answer: answer.answer,
+          sources: answer.sources,
+          remarks: answer.remarks,
+          answeredAt: answer.answeredAt,
+          score: answer.score ? toScoreView(answer.score) : null,
+        }
       : null,
   };
 }

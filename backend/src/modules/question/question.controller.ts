@@ -164,6 +164,12 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
     return { answer: await this.anveshanMilestoneService.getAnswerForQuestion(id) };
   }
 
+  // GET /questions/anveshan-answers/:questionId/score — the caller's system score for an answer; poll while status is processing.
+  @Get('anveshan-answers/:questionId/score')
+  async getAnveshanAnswerScore(@Param('questionId') questionId: string, @Req() req: AuthenticatedRequest) {
+    return this.anveshanMilestoneService.getAnswerScore(req.user.id, questionId);
+  }
+
   // POST /questions/anveshan-answers/:questionId — answer one of the caller's own questions with sources.
   @Post('anveshan-answers/:questionId')
   @UseGuards(AnveshanSubmissionsOpenGuard)
