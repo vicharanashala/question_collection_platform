@@ -79,6 +79,11 @@ import { SignOutDialog } from "@/components/SignOutDialog";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { SupportedLanguageCode } from "@/i18n";
 import placeholderImage from "../../assets/place-holder-image.jpg";
+import {
+  clearProfileDraft,
+  getProfileDraft,
+  saveProfileDraft,
+} from "@/utils/profileDraft";
 const TOTAL_STEPS = 4;
 const STEP_KEYS = [
   "Tell us about yourself",
@@ -153,7 +158,22 @@ const INITIAL_FORM: WizardFormState = {
   consentGiven: false,
 };
 
-type SetField = <K extends keyof WizardFormState>(
+interface WizardDraft {
+  mobileNumber: string;
+  step: 1 | 2 | 3 | 4;
+  form: WizardFormState;
+  districtFreeText: boolean;
+  blockFreeText: boolean;
+  villageFreeText: boolean;
+  kvkFreeText: boolean;
+}
+
+function readDraft(mobileNumber: string): WizardDraft | null {
+  const draft = getProfileDraft<WizardDraft>();
+  return draft && draft.mobileNumber === mobileNumber ? draft : null;
+}
+
+type SetField =<K extends keyof WizardFormState>(
   k: K,
   v: WizardFormState[K],
 ) => void;
@@ -1367,7 +1387,8 @@ export function CompleteProfileWizard({
   const { login } = useAuth();
   const { language: activeLanguage, setLanguage } = useLanguage();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [initialDraft] = useState(() => readDraft(mobileNumber));
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(initialDraft?.step ?? 1);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
   const [volunteerCropPickerOpen, setVolunteerCropPickerOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(
@@ -1382,6 +1403,7 @@ export function CompleteProfileWizard({
   const [form, setForm] = useState<WizardFormState>(() => ({
     ...INITIAL_FORM,
     languagePreference: activeLanguage || INITIAL_FORM.languagePreference,
+    ...initialDraft?.form,
   }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -1409,10 +1431,18 @@ export function CompleteProfileWizard({
   const [loadingKvks, setLoadingKvks] = useState(false);
 
   // Free-text mode — true when LGD backend returned no data for that field
-  const [districtFreeText, setDistrictFreeText] = useState(false);
-  const [blockFreeText, setBlockFreeText] = useState(false);
-  const [villageFreeText, setVillageFreeText] = useState(false);
-  const [kvkFreeText, setKvkFreeText] = useState(false);
+  const [districtFreeText, setDistrictFreeText] = useState(
+    initialDraft?.districtFreeText ?? false,
+  );
+  const [blockFreeText, setBlockFreeText] = useState(
+    initialDraft?.blockFreeText ?? false,
+  );
+  const [villageFreeText, setVillageFreeText] = useState(
+    initialDraft?.villageFreeText ?? false,
+  );
+  const [kvkFreeText, setKvkFreeText] = useState(
+    initialDraft?.kvkFreeText ?? false,
+  );
   const [crops, setCrops] = useState<Crop[]>([])
 
     useEffect(() => {
@@ -1434,6 +1464,49 @@ export function CompleteProfileWizard({
     console.log("Crops in Step3", crops);
   }, []);
 
+
+  // Rebuild the cascading LGD option lists for a restored draft.
+  useEffect(() => {
+    if (!initialDraft) return;
+    const f = initialDraft.form;
+    void (async () => {
+      if (f.state && !initialDraft.districtFreeText) await loadDistricts(f.state);
+      if (!f.districtCode) return;
+      loadKvks(f.districtCode);
+      if (initialDraft.blockFreeText) return;
+      try {
+        setLoadingBlocks(true);
+        const d = await lgdApi.getSubDistricts(f.districtCode);
+        setBlocks(d.subdistricts);
+        const block = d.subdistricts.find((b) => b.name === f.block);
+        if (block) await loadVillages(block.code);
+      } catch {
+        /* ignore */
+      } finally {
+        setLoadingBlocks(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    saveProfileDraft({
+      mobileNumber,
+      step,
+      form,
+      districtFreeText,
+      blockFreeText,
+      villageFreeText,
+      kvkFreeText,
+    } satisfies WizardDraft);
+  }, [
+    mobileNumber,
+    step,
+    form,
+    districtFreeText,
+    blockFreeText,
+    villageFreeText,
+    kvkFreeText,
+  ]);
 
   useEffect(() => {
     const u = form.username.trim();
@@ -1741,6 +1814,7 @@ export function CompleteProfileWizard({
           : undefined;
       }
       const res = await authApi.register(payload);
+      clearProfileDraft();
       login(res.tokens, res.user);
       window.location.href = "/home/verification-pending";
     } catch (err) {
