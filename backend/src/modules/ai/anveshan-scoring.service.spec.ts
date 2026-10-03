@@ -57,7 +57,7 @@ describe('AnveshanScoringService', () => {
     const job = await service.getJob('job-1');
 
     expect(job.status).toBe('failed');
-    if (job.status === 'processing') throw new Error('unexpected');
+    if (job.status !== 'failed') throw new Error('unexpected');
     expect(job.score).toEqual(
       expect.objectContaining({ status: 'failed', systemScore: 10, maxScore: 11, percentage: 90.9, needsHumanReview: true }),
     );
@@ -69,6 +69,12 @@ describe('AnveshanScoringService', () => {
     respondWith({ jobId: 'job-1', status: 'processing' });
 
     await expect(service.getJob('job-1')).resolves.toEqual({ status: 'processing' });
+  });
+
+  it('reports a job the scoring service does not know as missing', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('Job not found') });
+
+    await expect(service.getJob('job-1')).resolves.toEqual({ status: 'missing' });
   });
 
   it('throws when the scoring service returns an error status', async () => {

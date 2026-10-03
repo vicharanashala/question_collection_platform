@@ -7,3 +7,6 @@ export function getAnveshanRequiredQuestionCount(): number {
 
 // Number of their own submitted questions an Anveshan user must answer after the submission goals are met.
 export const ANVESHAN_REQUIRED_ANSWER_COUNT = 2;
+
+// A scoring job still processing after this long is treated as lost and started again. Jobs normally take about 4 minutes.
+export const ANVESHAN_SCORE_JOB_STALE_AFTER_MS = 15 * 60 * 1000;

@@ -239,6 +239,71 @@ describe('AnveshanMilestoneService', () => {
     expect(score).toEqual(expect.objectContaining({ jobId: 'job-2', status: 'processing' }));
   });
 
+  describe('lost or stuck scoring jobs', () => {
+    const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60 * 1000);
+    // Stores a processing job that was requested the given number of minutes ago.
+    const givenProcessingJob = (minutes: number) => {
+      answerRepo.findOne.mockResolvedValue({
+        id: 'a-1',
+        questionId: 'q-0',
+        answer: 'Neem oil',
+        sources: [],
+        score: { jobId: 'job-1', status: 'processing', requestedAt: minutesAgo(minutes) },
+      });
+      questionRepo.findOne.mockResolvedValue({ id: 'q-0', questionText: 'Question 0', cropType: 'Rice', state: 'Kerala' });
+      scoringService.startJob.mockResolvedValue('job-2');
+    };
+
+    it('starts a new job when the scoring service no longer knows the job id', async () => {
+      givenProcessingJob(2);
+      scoringService.getJob.mockResolvedValue({ status: 'missing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(questionRepo.findOne).toHaveBeenCalledWith({ id: 'q-0', userId: USER_ID });
+      expect(score).toEqual(expect.objectContaining({ jobId: 'job-2', status: 'processing' }));
+    });
+
+    it('starts a new job when the old one has been processing for over 15 minutes', async () => {
+      givenProcessingJob(16);
+      scoringService.getJob.mockResolvedValue({ status: 'processing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).toHaveBeenCalledTimes(1);
+      expect(score.jobId).toBe('job-2');
+    });
+
+    it('keeps waiting on a job that is still within the time limit', async () => {
+      givenProcessingJob(5);
+      scoringService.getJob.mockResolvedValue({ status: 'processing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).not.toHaveBeenCalled();
+      expect(score.jobId).toBe('job-1');
+    });
+
+    it('starts a new job when the scoring service stays unreachable past the time limit', async () => {
+      givenProcessingJob(20);
+      scoringService.getJob.mockRejectedValue(new Error('connection refused'));
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(score.jobId).toBe('job-2');
+    });
+
+    it('keeps the job during a short outage', async () => {
+      givenProcessingJob(3);
+      scoringService.getJob.mockRejectedValue(new Error('connection refused'));
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).not.toHaveBeenCalled();
+      expect(score.jobId).toBe('job-1');
+    });
+  });
+
   it('rejects score requests for questions the caller has not answered', async () => {
     answerRepo.findOne.mockResolvedValue(null);
 

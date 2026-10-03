@@ -19,6 +19,7 @@ import {
   findAnveshanAnswerableQuestions,
   toStepTimeline,
 } from '../../shared/utils/anveshan.util';
+import { ANVESHAN_SCORE_JOB_STALE_AFTER_MS } from '../../shared/constants/anveshan.constant';
 
 
 export interface AnveshanMilestone {
@@ -181,7 +182,8 @@ export class AnveshanMilestoneService {
   }
 
   // Loads the stored score. While the job is processing this asks the scoring service for the latest state
-  // and stores the full result once it completes; a failed job is restarted.
+  // and stores the full result once it completes. A failed job, or one the scoring service lost or has
+  // kept processing for too long, is started again.
   private async refreshAnswerScore(userId: string, questionId: string): Promise<AnveshanAnswerScore> {
     const answer = await this.answerRepo.findOne({ userId, questionId });
     if (!answer) {
@@ -190,24 +192,39 @@ export class AnveshanMilestoneService {
 
     const score = answer.score;
     if (score?.status === 'completed') return score;
-    if (!score?.jobId || score.status === 'failed') {
-      const question = await this.questionRepo.findOne({ id: questionId, userId });
-      if (!question) throw new NotFoundException('This query is not in your advisory list.');
-      return this.requestScore(answer, question);
-    }
+    if (!score?.jobId || score.status === 'failed') return this.restartScore(answer, userId);
 
     try {
       const job = await this.scoringService.getJob(score.jobId);
-      if (job.status === 'processing') return score;
+      if (job.status === 'missing') {
+        this.logger.warn(`[Scoring] job ${score.jobId} is unknown to the scoring service; starting a new one`);
+        return this.restartScore(answer, userId);
+      }
+      if (job.status === 'processing') {
+        return isStaleJob(score) ? this.restartStaleJob(answer, userId, score) : score;
+      }
       // A failed job keeps whatever partial score it returned; the next score request starts a new job.
       const next: AnveshanAnswerScore = { ...job.score, jobId: score.jobId, requestedAt: score.requestedAt };
       await this.answerRepo.update(answer.id, { score: next });
       return next;
     } catch (error) {
-      // A temporary outage keeps the job as processing so the client can keep polling.
+      // A temporary outage keeps the job as processing so the client can keep polling, until it goes stale.
       this.logger.warn(`[Scoring] could not read job ${score.jobId}: ${error}`);
-      return score;
+      return isStaleJob(score) ? this.restartStaleJob(answer, userId, score) : score;
     }
+  }
+
+  // Starts a new scoring job for an answer whose previous job failed or was lost.
+  private async restartScore(answer: AnveshanAnswer, userId: string): Promise<AnveshanAnswerScore> {
+    const question = await this.questionRepo.findOne({ id: answer.questionId, userId });
+    if (!question) throw new NotFoundException('This query is not in your advisory list.');
+    return this.requestScore(answer, question);
+  }
+
+  // Replaces a job that has been processing longer than the stale limit.
+  private restartStaleJob(answer: AnveshanAnswer, userId: string, score: AnveshanAnswerScore): Promise<AnveshanAnswerScore> {
+    this.logger.warn(`[Scoring] job ${score.jobId} still processing after the time limit; starting a new one`);
+    return this.restartScore(answer, userId);
   }
 
   // Starts a scoring job for the answer and stores its state. Never throws, so a scoring outage
@@ -289,6 +306,12 @@ export class AnveshanMilestoneService {
     const answers = await this.answerRepo.find({ userId, questionId: { $in: answeredIds } });
     return new Map(answers.map((answer) => [answer.questionId, answer]));
   }
+}
+
+// True when a processing job was requested longer ago than the stale limit. A missing date is never stale.
+function isStaleJob(score: AnveshanAnswerScore, now = Date.now()): boolean {
+  const requestedAt = new Date(score.requestedAt).getTime();
+  return Number.isFinite(requestedAt) && now - requestedAt > ANVESHAN_SCORE_JOB_STALE_AFTER_MS;
 }
 
 // Score placeholder used until the scoring job completes.

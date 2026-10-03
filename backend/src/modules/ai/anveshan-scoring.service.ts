@@ -18,6 +18,13 @@ import type {
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
+/** Non 2xx reply from the scoring service, with its HTTP status so callers can react to specific codes. */
+export class ScoringServiceError extends Error {
+  constructor(readonly status: number) {
+    super(`Scoring service responded with ${status}`);
+  }
+}
+
 export interface ScoreAnswerPayload {
   answerId: string;
   question: string;
@@ -51,6 +58,8 @@ type ScoreFields = Omit<AnveshanAnswerScore, 'jobId' | 'requestedAt'>;
  */
 export type ScoringJobResult =
   | { status: 'processing' }
+  /** The scoring service no longer knows this job id, for example after it restarted. */
+  | { status: 'missing' }
   | { status: 'completed' | 'failed'; score: ScoreFields };
 
 @Injectable()
@@ -77,7 +86,13 @@ export class AnveshanScoringService {
 
   // Reads the current state of a scoring job.
   async getJob(jobId: string): Promise<ScoringJobResult> {
-    const response = await this.request(`/score/${encodeURIComponent(jobId)}`, { method: 'GET' });
+    let response: ScoringJobResponse;
+    try {
+      response = await this.request(`/score/${encodeURIComponent(jobId)}`, { method: 'GET' });
+    } catch (error) {
+      if (error instanceof ScoringServiceError && error.status === 404) return { status: 'missing' };
+      throw error;
+    }
     const status = response.status?.toLowerCase();
     if (status === 'completed') return { status: 'completed', score: toScoreFields(response, 'completed') };
     if (status === 'failed' || status === 'error') return { status: 'failed', score: toScoreFields(response, 'failed') };
@@ -96,7 +111,7 @@ export class AnveshanScoringService {
       // The body is logged for diagnosis only and never returned to the client.
       const text = await response.text().catch(() => '');
       this.logger.warn(`[Scoring] ${init.method} ${path} returned ${response.status}: ${text.slice(0, 500)}`);
-      throw new Error(`Scoring service responded with ${response.status}`);
+      throw new ScoringServiceError(response.status);
     }
     return (await response.json()) as ScoringJobResponse;
   }
