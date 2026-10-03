@@ -18,6 +18,7 @@ import { UserRole } from '../../shared/classes/enums';
 import { QuestionService } from './question.service';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { AttachQuestionAudioDto } from './dto/attach-question-audio.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
@@ -91,6 +92,18 @@ export class QuestionController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.questionService.update(req.user.id, id, dto);
+  }
+
+  // POST /questions/:id/audio — Attach recordings to a rejected duplicate saved by preview
+  @Post(':id/audio')
+  @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('questions:u*')
+  async attachAudio(
+    @Param('id') id: string,
+    @Body() dto: AttachQuestionAudioDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.questionService.attachAudio(req.user.id, id, dto);
   }
 
   // GET /questions/stats/me — Daily submission count for current user
@@ -176,4 +189,4 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
   ) {
     return this.anveshanMilestoneService.submitAnswer(req.user.id, questionId, dto);
   }
-}
+}
