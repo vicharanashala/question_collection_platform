@@ -32,8 +32,8 @@ export class AnveshanAnswerScoreCheck {
   @Prop({ type: String, default: '' })
   result: string;
 
-  @Prop({ type: Number, default: 0 })
-  mark: number;
+  @Prop({ type: Number, default: null })
+  mark: number | null;
 
   @Prop({ type: String, default: '' })
   reason: string;

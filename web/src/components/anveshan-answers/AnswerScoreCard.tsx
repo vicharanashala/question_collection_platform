@@ -18,6 +18,10 @@ export function AnswerScoreCard({ questionId, initialScore, onScoreChange }: Ans
   const { score, isPolling, timedOut, checkAgain } = useAnveshanAnswerScore(questionId, initialScore, onScoreChange)
 
   if (score?.status === 'completed') return <CompletedScore score={score} />
+  // A failed job can still return a partial score; show it with a way to score again.
+  if (score?.status === 'failed' && hasScore(score) && !isPolling) {
+    return <CompletedScore score={score} onCheckAgain={checkAgain} />
+  }
 
   if (isPolling) {
     return (
@@ -25,7 +29,7 @@ export function AnswerScoreCard({ questionId, initialScore, onScoreChange }: Ans
         <div role="status" className="flex items-center gap-3 text-sm text-text-secondary">
           <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" aria-hidden="true" />
           <span>
-            {t('anveshanAnswers.score.processing', 'Scoring your advisory. This usually takes less than a minute.')}
+            {t('anveshanAnswers.score.processing', 'Scoring your advisory. This can take a few minutes; you can close this and come back later.')}
           </span>
         </div>
       </ScoreShell>
@@ -65,8 +69,14 @@ function ScoreShell({ children }: { children: ReactNode }) {
   )
 }
 
+interface CompletedScoreProps {
+  score: AnveshanAnswerScore
+  /** Set for a partial score from a failed job, to offer scoring again. */
+  onCheckAgain?: () => void
+}
+
 // Score summary, review flag and the individual checks once scoring has finished.
-function CompletedScore({ score }: { score: AnveshanAnswerScore }) {
+function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
   const { t } = useTranslation()
   const percentage = Math.max(0, Math.min(100, Math.round(score.percentage ?? 0)))
   const tone = scoreTone(percentage)
@@ -95,6 +105,21 @@ function CompletedScore({ score }: { score: AnveshanAnswerScore }) {
       >
         <div className={cn('h-full rounded-full transition-all duration-500', tone.bar)} style={{ width: `${percentage}%` }} />
       </div>
+
+      {onCheckAgain && (
+        <div className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-text-secondary">
+            {t(
+              'anveshanAnswers.score.partial',
+              'Some checks could not run this time, so this score is incomplete. Your advisory is saved.',
+            )}
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={onCheckAgain} className="shrink-0 gap-1.5 self-start sm:self-auto">
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('anveshanAnswers.score.scoreAgain', 'Score again')}
+          </Button>
+        </div>
+      )}
 
       {(score.needsHumanReview || score.reviewReasons.length > 0) && (
         <div className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-300">
@@ -141,7 +166,16 @@ function CompletedScore({ score }: { score: AnveshanAnswerScore }) {
 
 // One check with an icon and a text result, so the outcome does not depend on colour alone.
 function ScoreCheckRow({ check }: { check: AnveshanAnswerScoreCheck }) {
+  const { t } = useTranslation()
   const result = check.result.toUpperCase()
+  const resultLabel =
+    result === 'PASS'
+      ? t('anveshanAnswers.score.pass', 'Pass')
+      : result === 'FAIL'
+        ? t('anveshanAnswers.score.fail', 'Fail')
+        : result === 'NOT_EVALUATED'
+          ? t('anveshanAnswers.score.notEvaluated', 'Not evaluated')
+          : humanizeParameter(check.result.toLowerCase())
   const Icon = result === 'PASS' ? CheckCircle2 : result === 'FAIL' ? XCircle : MinusCircle
   const iconClass =
     result === 'PASS'
@@ -157,13 +191,18 @@ function ScoreCheckRow({ check }: { check: AnveshanAnswerScoreCheck }) {
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-text">{humanizeParameter(check.parameter)}</p>
           <span className="shrink-0 text-xs font-semibold text-text-secondary">
-            {result} · {check.mark}
+            {check.mark === null ? resultLabel : `${resultLabel} · ${check.mark}`}
           </span>
         </div>
         {check.reason && <p className="mt-0.5 break-words text-sm text-text-secondary">{check.reason}</p>}
       </div>
     </li>
   )
+}
+
+// True when the scoring service returned at least a score or some checks.
+function hasScore(score: AnveshanAnswerScore): boolean {
+  return score.percentage !== null || score.checks.length > 0
 }
 
 // Colour band for the score: 80% and above is good, 50% and above is fair, otherwise low.

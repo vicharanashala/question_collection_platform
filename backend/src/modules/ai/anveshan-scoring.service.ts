@@ -37,17 +37,21 @@ interface ScoringJobResponse {
   percentage?: number;
   needsHumanReview?: boolean;
   reviewReasons?: unknown[];
-  checks?: Partial<AnveshanAnswerScoreCheck>[];
+  checks?: { parameter?: unknown; category?: unknown; result?: unknown; mark?: unknown; reason?: unknown }[];
   notApplicable?: unknown[];
   notEvaluated?: unknown[];
   checkedAt?: string;
 }
 
-/** Job state as the rest of the app needs it: still running, finished with a score, or failed. */
+type ScoreFields = Omit<AnveshanAnswerScore, 'jobId' | 'requestedAt'>;
+
+/**
+ * Job state as the rest of the app needs it. A failed job can still carry a partial score,
+ * for example when the deterministic checks ran but the model based checks did not.
+ */
 export type ScoringJobResult =
   | { status: 'processing' }
-  | { status: 'failed'; response: Record<string, unknown> }
-  | { status: 'completed'; score: Omit<AnveshanAnswerScore, 'jobId' | 'requestedAt'> };
+  | { status: 'completed' | 'failed'; score: ScoreFields };
 
 @Injectable()
 export class AnveshanScoringService {
@@ -75,8 +79,8 @@ export class AnveshanScoringService {
   async getJob(jobId: string): Promise<ScoringJobResult> {
     const response = await this.request(`/score/${encodeURIComponent(jobId)}`, { method: 'GET' });
     const status = response.status?.toLowerCase();
-    if (status === 'completed') return { status: 'completed', score: toCompletedScore(response) };
-    if (status === 'failed' || status === 'error') return { status: 'failed', response: { ...response } };
+    if (status === 'completed') return { status: 'completed', score: toScoreFields(response, 'completed') };
+    if (status === 'failed' || status === 'error') return { status: 'failed', score: toScoreFields(response, 'failed') };
     return { status: 'processing' };
   }
 
@@ -98,11 +102,11 @@ export class AnveshanScoringService {
   }
 }
 
-// Maps a completed job into the stored score shape, tolerating missing or loosely typed fields.
-function toCompletedScore(response: ScoringJobResponse): Omit<AnveshanAnswerScore, 'jobId' | 'requestedAt'> {
+// Maps a finished job into the stored score shape, tolerating missing or loosely typed fields.
+function toScoreFields(response: ScoringJobResponse, status: 'completed' | 'failed'): ScoreFields {
   const checkedAt = response.checkedAt ? new Date(response.checkedAt) : null;
   return {
-    status: 'completed',
+    status,
     systemScore: toNumberOrNull(response.systemScore),
     maxScore: toNumberOrNull(response.maxScore),
     percentage: toNumberOrNull(response.percentage),
@@ -112,12 +116,12 @@ function toCompletedScore(response: ScoringJobResponse): Omit<AnveshanAnswerScor
       parameter: String(check.parameter ?? ''),
       category: String(check.category ?? ''),
       result: String(check.result ?? ''),
-      mark: toNumberOrNull(check.mark) ?? 0,
+      mark: toNumberOrNull(check.mark),
       reason: String(check.reason ?? ''),
     })),
     notApplicable: toStringList(response.notApplicable),
     notEvaluated: toStringList(response.notEvaluated),
-    checkedAt: checkedAt && !Number.isNaN(checkedAt.getTime()) ? checkedAt : new Date(),
+    checkedAt: checkedAt && !Number.isNaN(checkedAt.getTime()) ? checkedAt : null,
     response: { ...response },
   };
 }

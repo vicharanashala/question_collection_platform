@@ -788,9 +788,10 @@ export type AnveshanAnswerScoreStatus = 'processing' | 'completed' | 'failed';
 export interface AnveshanAnswerScoreCheck {
   parameter: string;
   category: string;
-  /** For example PASS or FAIL. */
+  /** PASS, FAIL or NOT_EVALUATED. */
   result: string;
-  mark: number;
+  /** Null when the check was not evaluated. */
+  mark: number | null;
   reason: string;
 }
 

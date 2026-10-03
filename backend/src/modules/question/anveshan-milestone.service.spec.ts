@@ -209,6 +209,17 @@ describe('AnveshanMilestoneService', () => {
     expect(score.systemScore).toBe(10);
   });
 
+  it('stores the partial score of a failed job so the user still sees it', async () => {
+    const requestedAt = new Date();
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: { jobId: 'job-1', status: 'processing', requestedAt } });
+    scoringService.getJob.mockResolvedValue({ status: 'failed', score: { status: 'failed', systemScore: 10, maxScore: 11 } });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(score).toEqual(expect.objectContaining({ jobId: 'job-1', status: 'failed', systemScore: 10, requestedAt }));
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ status: 'failed', systemScore: 10 }) });
+  });
+
   it('returns a completed score without calling the scoring service again', async () => {
     answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: { jobId: 'job-1', status: 'completed', systemScore: 9 } });
 

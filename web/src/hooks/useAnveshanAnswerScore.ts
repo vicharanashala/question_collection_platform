@@ -3,8 +3,8 @@ import { questionApi } from '@/api/client'
 import type { AnveshanAnswerScore } from '@/types'
 
 const POLL_INTERVAL_MS = 3000
-// About two minutes of polling before asking the user to check again.
-const MAX_POLL_ATTEMPTS = 40
+// About five minutes of polling before asking the user to check again; real jobs have taken around four.
+const MAX_POLL_ATTEMPTS = 100
 
 // Polls the advisory score while the scoring job is processing and reports each update.
 export function useAnveshanAnswerScore(

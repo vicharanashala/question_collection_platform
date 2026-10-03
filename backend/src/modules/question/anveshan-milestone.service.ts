@@ -199,10 +199,8 @@ export class AnveshanMilestoneService {
     try {
       const job = await this.scoringService.getJob(score.jobId);
       if (job.status === 'processing') return score;
-      const next: AnveshanAnswerScore =
-        job.status === 'completed'
-          ? { ...job.score, jobId: score.jobId, requestedAt: score.requestedAt }
-          : { ...score, status: 'failed', response: job.response };
+      // A failed job keeps whatever partial score it returned; the next score request starts a new job.
+      const next: AnveshanAnswerScore = { ...job.score, jobId: score.jobId, requestedAt: score.requestedAt };
       await this.answerRepo.update(answer.id, { score: next });
       return next;
     } catch (error) {
