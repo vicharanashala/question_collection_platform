@@ -167,8 +167,39 @@ export class MongoQueryBuilder<T> {
     return null;
   }
 
+  /** Apply a parsed TypeORM-style condition to the filter. */
+  private applyParsed(parsed: {
+    field: string; op: string; value: unknown; flags?: string; composite?: Record<string, unknown>;
+  }): void {
+    if (parsed.op === '$eq') {
+      this._filter[parsed.field] = parsed.value;
+    } else if (parsed.op === '$in') {
+      this._filter[parsed.field] = { $in: parsed.value };
+    } else if (parsed.op === '$regex') {
+      this._filter[parsed.field] = parsed.flags
+        ? { $regex: parsed.value, $options: parsed.flags }
+        : { $regex: parsed.value };
+    } else if (parsed.op === '$composite' && parsed.composite) {
+      const existing = this._filter[parsed.field];
+      if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
+        // Merge with existing filter on the same field (e.g., two calls with $gte and $lte)
+        this._filter[parsed.field] = { ...existing as object, ...parsed.composite };
+      } else {
+        this._filter[parsed.field] = parsed.composite;
+      }
+    }
+  }
+
   where(key: string, val?: unknown): this {
     if (val !== undefined) {
+      // "alias.field = :param" style condition with a params object
+      if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date) && /:\.{0,3}\w+/.test(key)) {
+        const parsed = this.parseCondition(key, val as Record<string, unknown>);
+        if (parsed) {
+          this.applyParsed(parsed);
+          return this;
+        }
+      }
       // Translate TypeORM operators (Between, LessThanOrEqual, Like, In, etc.)
       this._filter[this.stripAlias(key)] = translateValue(val);
     } else {
@@ -191,23 +222,7 @@ export class MongoQueryBuilder<T> {
     if (params && typeof params === 'object' && !Array.isArray(params)) {
       const parsed = this.parseCondition(key, params as Record<string, unknown>);
       if (parsed) {
-        if (parsed.op === '$eq') {
-          this._filter[parsed.field] = parsed.value;
-        } else if (parsed.op === '$in') {
-          this._filter[parsed.field] = { $in: parsed.value };
-        } else if (parsed.op === '$regex') {
-          this._filter[parsed.field] = parsed.flags
-            ? { $regex: parsed.value, $options: parsed.flags }
-            : { $regex: parsed.value };
-        } else if (parsed.op === '$composite' && parsed.composite) {
-          const existing = this._filter[parsed.field];
-          if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
-            // Merge with existing filter on the same field (e.g., two calls with $gte and $lte)
-            this._filter[parsed.field] = { ...existing as object, ...parsed.composite };
-          } else {
-            this._filter[parsed.field] = parsed.composite;
-          }
-        }
+        this.applyParsed(parsed);
         return this;
       }
     }

@@ -58,7 +58,7 @@ export class UpdateMeDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MaxLength(200)
   kvk?: string;
 
   // ── Farmer ──────────────────────────────────────────────────────────────────
