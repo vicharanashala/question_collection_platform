@@ -278,8 +278,18 @@ describe('AnveshanMilestoneService', () => {
       scoringService.startJob.mockResolvedValue('job-2');
     };
 
+    it('waits before replacing a job the scoring service does not know yet', async () => {
+      givenProcessingJob(1);
+      scoringService.getJob.mockResolvedValue({ status: 'missing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).not.toHaveBeenCalled();
+      expect(score.jobId).toBe('job-1');
+    });
+
     it('starts a new job when the scoring service no longer knows the job id', async () => {
-      givenProcessingJob(2);
+      givenProcessingJob(3);
       scoringService.getJob.mockResolvedValue({ status: 'missing' });
 
       const score = await service.getAnswerScore(USER_ID, 'q-0');

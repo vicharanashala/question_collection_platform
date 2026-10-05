@@ -19,7 +19,10 @@ import {
   findAnveshanAnswerableQuestions,
   toStepTimeline,
 } from '../../shared/utils/anveshan.util';
-import { ANVESHAN_SCORE_JOB_STALE_AFTER_MS } from '../../shared/constants/anveshan.constant';
+import {
+  ANVESHAN_SCORE_JOB_STALE_AFTER_MS,
+  ANVESHAN_SCORE_MISSING_GRACE_MS,
+} from '../../shared/constants/anveshan.constant';
 
 
 export interface AnveshanMilestone {
@@ -210,6 +213,7 @@ export class AnveshanMilestoneService {
     try {
       const job = await this.scoringService.getJob(score.jobId);
       if (job.status === 'missing') {
+        if (!isJobOlderThan(score, ANVESHAN_SCORE_MISSING_GRACE_MS)) return score;
         this.logger.warn(`[Scoring] job ${score.jobId} is unknown to the scoring service; starting a new one`);
         return this.restartScore(answer, userId);
       }
@@ -321,10 +325,15 @@ export class AnveshanMilestoneService {
   }
 }
 
-// True when a processing job was requested longer ago than the stale limit. A missing date is never stale.
-function isStaleJob(score: AnveshanAnswerScore, now = Date.now()): boolean {
+// True when a processing job was requested longer ago than the stale limit.
+function isStaleJob(score: AnveshanAnswerScore): boolean {
+  return isJobOlderThan(score, ANVESHAN_SCORE_JOB_STALE_AFTER_MS);
+}
+
+// True when the job was requested more than ageMs ago. A missing or invalid date never counts as old.
+function isJobOlderThan(score: AnveshanAnswerScore, ageMs: number, now = Date.now()): boolean {
   const requestedAt = new Date(score.requestedAt).getTime();
-  return Number.isFinite(requestedAt) && now - requestedAt > ANVESHAN_SCORE_JOB_STALE_AFTER_MS;
+  return Number.isFinite(requestedAt) && now - requestedAt > ageMs;
 }
 
 // Score placeholder used until the scoring job completes.
