@@ -21,7 +21,7 @@ export const SILENCE_TIMEOUT_MS = 60_000
 const SPEECH_RMS_THRESHOLD = 0.015
 
 // Returns the RMS level of the analyser's current audio frame.
-function readInputLevel(analyser: AnalyserNode, samples: Float32Array): number {
+function readInputLevel(analyser: AnalyserNode, samples: Float32Array<ArrayBuffer>): number {
   analyser.getFloatTimeDomainData(samples)
   let sumOfSquares = 0
   for (const sample of samples) sumOfSquares += sample * sample
@@ -110,7 +110,7 @@ export function MicButton({
   const startTimeRef = useRef<number | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
-  const levelSamplesRef = useRef<Float32Array | null>(null)
+  const levelSamplesRef = useRef<Float32Array<ArrayBuffer> | null>(null)
   const lastSpeechAtRef = useRef<number>(0)
   // Keep callback refs up to date without re-creating listeners.
   const onTranscribedRef = useRef(onTranscribed)
