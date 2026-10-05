@@ -26,6 +26,9 @@ importers:
       '@radix-ui/react-progress':
         specifier: ^1.1.1
         version: 1.1.16(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-scroll-area':
+        specifier: ^1.2.2
+        version: 1.2.18(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-select':
         specifier: ^2.1.4
         version: 2.3.7(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -61,7 +64,7 @@ importers:
         version: 13.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       i18next:
         specifier: ^26.3.6
-        version: 26.3.6(typescript@5.6.3)
+        version: 26.3.6(typescript@5.9.3)
       i18next-browser-languagedetector:
         specifier: ^8.2.1
         version: 8.2.1
@@ -76,7 +79,7 @@ importers:
         version: 18.3.1(react@18.3.1)
       react-i18next:
         specifier: ^17.0.11
-        version: 17.0.11(i18next@26.3.6(typescript@5.6.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+        version: 17.0.11(i18next@26.3.6(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
       react-is:
         specifier: ^19.2.7
         version: 19.2.8
@@ -133,11 +136,11 @@ importers:
         specifier: ^3.4.17
         version: 3.4.19
       typescript:
-        specifier: ~5.6.2
-        version: 5.6.3
+        specifier: ^5.9.3
+        version: 5.9.3
       typescript-eslint:
         specifier: ^8.61.1
-        version: 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
+        version: 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
       vite:
         specifier: ^6.0.5
         version: 6.4.3(@types/node@25.9.5)(jiti@1.21.7)(terser@5.51.1)
@@ -1194,6 +1197,19 @@ packages:
 
   '@radix-ui/react-roving-focus@1.1.19':
     resolution: {integrity: sha512-V9jI6hDjT7l3jsCQD9bLNvDLM3tH/gdbOTp7Tefp3hbbgCGQoK7tUvrWiRlcoBHIZ809ElXwNQwVo0B98LuTXQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@radix-ui/react-scroll-area@1.2.18':
+    resolution: {integrity: sha512-Zn5Cd171wxsO3Dfg8HaW6RifTb9CYTKQJHs/G4+LN1GfmJpaQMZQyQxMprVPHpaz7QY4l9BxK2JwQuzHsXC8nA==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -3296,8 +3312,8 @@ packages:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
-  typescript@5.6.3:
-    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4673,6 +4689,23 @@ snapshots:
       '@types/react': 18.3.31
       '@types/react-dom': 18.3.7(@types/react@18.3.31)
 
+  '@radix-ui/react-scroll-area@1.2.18(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@radix-ui/number': 1.1.3
+      '@radix-ui/primitive': 1.1.7
+      '@radix-ui/react-compose-refs': 1.1.5(@types/react@18.3.31)(react@18.3.1)
+      '@radix-ui/react-context': 1.2.2(@types/react@18.3.31)(react@18.3.1)
+      '@radix-ui/react-direction': 1.1.4(@types/react@18.3.31)(react@18.3.1)
+      '@radix-ui/react-presence': 1.1.10(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-primitive': 2.1.10(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-use-callback-ref': 1.1.4(@types/react@18.3.31)(react@18.3.1)
+      '@radix-ui/react-use-layout-effect': 1.1.4(@types/react@18.3.31)(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 18.3.31
+      '@types/react-dom': 18.3.7(@types/react@18.3.31)
+
   '@radix-ui/react-select@2.3.7(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@radix-ui/number': 1.1.3
@@ -5055,40 +5088,40 @@ snapshots:
 
   '@types/use-sync-external-store@0.0.6': {}
 
-  '@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3))(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)':
+  '@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
+      '@typescript-eslint/parser': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
       '@typescript-eslint/scope-manager': 8.67.0
-      '@typescript-eslint/type-utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
-      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
+      '@typescript-eslint/type-utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.67.0
       eslint: 9.39.5(jiti@1.21.7)
       ignore: 7.0.6
       natural-compare: 1.4.0
-      ts-api-utils: 2.5.0(typescript@5.6.3)
-      typescript: 5.6.3
+      ts-api-utils: 2.5.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)':
+  '@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.67.0
       '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.6.3)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.67.0
       debug: 4.4.3
       eslint: 9.39.5(jiti@1.21.7)
-      typescript: 5.6.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.67.0(typescript@5.6.3)':
+  '@typescript-eslint/project-service@8.67.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.67.0(typescript@5.6.3)
+      '@typescript-eslint/tsconfig-utils': 8.67.0(typescript@5.9.3)
       '@typescript-eslint/types': 8.67.0
       debug: 4.4.3
-      typescript: 5.6.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -5097,47 +5130,47 @@ snapshots:
       '@typescript-eslint/types': 8.67.0
       '@typescript-eslint/visitor-keys': 8.67.0
 
-  '@typescript-eslint/tsconfig-utils@8.67.0(typescript@5.6.3)':
+  '@typescript-eslint/tsconfig-utils@8.67.0(typescript@5.9.3)':
     dependencies:
-      typescript: 5.6.3
+      typescript: 5.9.3
 
-  '@typescript-eslint/type-utils@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)':
+  '@typescript-eslint/type-utils@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.6.3)
-      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
       debug: 4.4.3
       eslint: 9.39.5(jiti@1.21.7)
-      ts-api-utils: 2.5.0(typescript@5.6.3)
-      typescript: 5.6.3
+      ts-api-utils: 2.5.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
   '@typescript-eslint/types@8.67.0': {}
 
-  '@typescript-eslint/typescript-estree@8.67.0(typescript@5.6.3)':
+  '@typescript-eslint/typescript-estree@8.67.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.67.0(typescript@5.6.3)
-      '@typescript-eslint/tsconfig-utils': 8.67.0(typescript@5.6.3)
+      '@typescript-eslint/project-service': 8.67.0(typescript@5.9.3)
+      '@typescript-eslint/tsconfig-utils': 8.67.0(typescript@5.9.3)
       '@typescript-eslint/types': 8.67.0
       '@typescript-eslint/visitor-keys': 8.67.0
       debug: 4.4.3
       minimatch: 10.2.6
       semver: 7.8.5
       tinyglobby: 0.2.17
-      ts-api-utils: 2.5.0(typescript@5.6.3)
-      typescript: 5.6.3
+      ts-api-utils: 2.5.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)':
+  '@typescript-eslint/utils@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.10.1(eslint@9.39.5(jiti@1.21.7))
       '@typescript-eslint/scope-manager': 8.67.0
       '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.6.3)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.9.3)
       eslint: 9.39.5(jiti@1.21.7)
-      typescript: 5.6.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -5982,9 +6015,9 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.29.7
 
-  i18next@26.3.6(typescript@5.6.3):
+  i18next@26.3.6(typescript@5.9.3):
     optionalDependencies:
-      typescript: 5.6.3
+      typescript: 5.9.3
 
   idb@7.1.1: {}
 
@@ -6434,16 +6467,16 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
-  react-i18next@17.0.11(i18next@26.3.6(typescript@5.6.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3):
+  react-i18next@17.0.11(i18next@26.3.6(typescript@5.9.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       html-parse-stringify: 4.0.1
-      i18next: 26.3.6(typescript@5.6.3)
+      i18next: 26.3.6(typescript@5.9.3)
       react: 18.3.1
       use-sync-external-store: 1.6.0(react@18.3.1)
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
-      typescript: 5.6.3
+      typescript: 5.9.3
 
   react-is@16.13.1: {}
 
@@ -6915,9 +6948,9 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
-  ts-api-utils@2.5.0(typescript@5.6.3):
+  ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:
-      typescript: 5.6.3
+      typescript: 5.9.3
 
   ts-interface-checker@0.1.13: {}
 
@@ -6962,18 +6995,18 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typescript-eslint@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3):
+  typescript-eslint@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3))(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
-      '@typescript-eslint/parser': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
-      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.6.3)
-      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.6.3)
+      '@typescript-eslint/eslint-plugin': 8.67.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
+      '@typescript-eslint/parser': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
       eslint: 9.39.5(jiti@1.21.7)
-      typescript: 5.6.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  typescript@5.6.3: {}
+  typescript@5.9.3: {}
 
   unbox-primitive@1.1.0:
     dependencies:
