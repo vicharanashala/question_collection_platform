@@ -7,9 +7,10 @@ import {
   ITransactionRepository,
   RewardAnalyticsResult,
   RewardTransactionSummary,
+  WalletTransactionSummary,
 } from '../../ITransaction.repository';
 import { Transaction } from '../../../entities';
-import { TransactionSource, TransactionStatus } from '@/shared/classes/enums';
+import { TransactionSource, TransactionStatus, TransactionType } from '@/shared/classes/enums';
 
 @Injectable()
 export class MongoTransactionRepository
@@ -30,6 +31,62 @@ export class MongoTransactionRepository
     return this._model
       .findOne({ referenceId } as Record<string, unknown>)
       .exec() as Promise<Transaction | null>;
+  }
+
+  async getWalletSummary(walletId: string): Promise<WalletTransactionSummary> {
+    // Amounts may be stored as numbers, strings or Decimal128, and type/status
+    // casing can vary, so normalise both before summing.
+    const amount = { $convert: { input: '$amount', to: 'double', onError: 0, onNull: 0 } };
+    const sumOf = (type: TransactionType, completedOnly = false) => ({
+      $sum: {
+        $cond: [
+          {
+            $and: [
+              { $eq: [{ $toLower: { $ifNull: ['$type', ''] } }, type] },
+              ...(completedOnly
+                ? [{ $eq: [{ $toLower: { $ifNull: ['$status', ''] } }, TransactionStatus.COMPLETED] }]
+                : []),
+            ],
+          },
+          amount,
+          0,
+        ],
+      },
+    });
+
+    const [r] = await this._model
+      .aggregate([
+        { $match: { walletId } },
+        {
+          $group: {
+            _id: null,
+            totalCount: { $sum: 1 },
+            totalCredits: sumOf(TransactionType.CREDIT),
+            totalDebits: sumOf(TransactionType.DEBIT),
+            completedCredits: sumOf(TransactionType.CREDIT, true),
+            completedDebits: sumOf(TransactionType.DEBIT, true),
+            withdrawalCount: {
+              $sum: {
+                $cond: [
+                  { $eq: [{ $toLower: { $ifNull: ['$source', ''] } }, TransactionSource.WITHDRAWAL] },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ])
+      .exec();
+
+    return {
+      totalCount: Number(r?.totalCount ?? 0),
+      totalCredits: Number(r?.totalCredits ?? 0),
+      totalDebits: Number(r?.totalDebits ?? 0),
+      completedCredits: Number(r?.completedCredits ?? 0),
+      completedDebits: Number(r?.completedDebits ?? 0),
+      withdrawalCount: Number(r?.withdrawalCount ?? 0),
+    };
   }
 
   async getRewardAnalytics(

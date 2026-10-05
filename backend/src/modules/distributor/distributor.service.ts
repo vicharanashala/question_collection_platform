@@ -521,7 +521,9 @@ export class DistributorService {
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;
     const filter: Record<string, unknown> = {};
-    if (dto.distributionState) filter.distributionState = dto.distributionState;
+    if (dto.questionType === 'original') filter.distributionState = null;
+    else if (dto.distributionState) filter.distributionState = dto.distributionState;
+    else if (dto.questionType === 'distributed') filter.distributionState = { $ne: null };
     if (dto.search) filter.questionText = mongoLike(dto.search);
 
     const result = await this.finalQuestionRepo.findAndCount(filter, {

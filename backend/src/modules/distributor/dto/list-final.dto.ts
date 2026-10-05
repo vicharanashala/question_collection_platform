@@ -28,6 +28,11 @@ export class ListDistributionsDto {
   @IsIn(INDIAN_STATES as unknown as string[], { message: 'Invalid Indian state.' })
   distributionState?: string;
 
+  /** 'original' = reference rows (no target state); 'distributed' = state-specific rows. */
+  @IsOptional()
+  @IsIn(['original', 'distributed'])
+  questionType?: 'original' | 'distributed';
+
   /**
    * Case-insensitive substring search over the snapshot of
    * `Question.questionText` that is embedded on each final_question row.
