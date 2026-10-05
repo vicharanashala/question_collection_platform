@@ -349,8 +349,15 @@ function emptyScore(jobId: string | null, status: AnveshanAnswerScore['status'],
 // Removes the raw scoring service response before a score is sent to the client.
 function toScoreView(score: AnveshanAnswerScore): AnveshanAnswerScoreView {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { response, ...view } = score;
+  const { response, ...view } = toPlainScore(score);
   return view;
+}
+
+// A score loaded from the database is a Mongoose subdocument whose fields are getters, so spreading it
+// copies Mongoose internals instead of the score. Converting it first keeps the fields and drops the internals.
+function toPlainScore(score: AnveshanAnswerScore): AnveshanAnswerScore {
+  const subdocument = score as AnveshanAnswerScore & { toObject?: () => AnveshanAnswerScore };
+  return typeof subdocument.toObject === 'function' ? subdocument.toObject() : score;
 }
 
 // Message returned when the user tries to answer beyond the required number of questions.

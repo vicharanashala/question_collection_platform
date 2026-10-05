@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Schema, model } from 'mongoose';
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
 import { QuestionService } from './question.service';
@@ -218,6 +219,21 @@ describe('AnveshanMilestoneService', () => {
 
     expect(score).toEqual(expect.objectContaining({ jobId: 'job-1', status: 'failed', systemScore: 10, requestedAt }));
     expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ status: 'failed', systemScore: 10 }) });
+  });
+
+  it('returns the score fields when the stored score is a Mongoose subdocument', async () => {
+    const scoreSchema = new Schema(
+      { jobId: String, status: String, systemScore: Number, response: Schema.Types.Mixed },
+      { _id: false },
+    );
+    const AnswerModel = model('ScoreViewTestAnswer', new Schema({ score: { type: scoreSchema, default: null } }));
+    const stored = AnswerModel.hydrate({ score: { jobId: 'job-1', status: 'completed', systemScore: 9, response: { raw: true } } });
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: stored.get('score') });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(score).toEqual({ jobId: 'job-1', status: 'completed', systemScore: 9 });
+    expect(JSON.stringify(score)).not.toContain('$__');
   });
 
   it('returns a completed score without calling the scoring service again', async () => {
