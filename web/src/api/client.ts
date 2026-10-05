@@ -41,6 +41,7 @@ import type {
   AgriEntityType,
   AnveshanAnswer,
   AnveshanAnswerQuestionsResponse,
+  AnveshanAnswerScore,
   AppFeedbackListResponse,
   AnveshanMilestoneCounts,
   SubmitAnveshanAnswerPayload,
@@ -1081,6 +1082,14 @@ export const questionApi = {
       { method: "POST", body: JSON.stringify(body) },
       false,
     ).then(notifyProgressChanged),
+
+  /** System score for the caller's advisory on a question; poll while status is processing. */
+  getAnveshanAnswerScore: (questionId: string) =>
+    request<AnveshanAnswerScore>(
+      `/questions/anveshan-answers/${encodeURIComponent(questionId)}/score`,
+      {},
+      false,
+    ),
 };
 
 // ─── Wallet API (public-user dashboard) ────────────────────────────────────

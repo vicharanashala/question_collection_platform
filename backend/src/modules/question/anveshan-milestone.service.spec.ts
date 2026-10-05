@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Schema, model } from 'mongoose';
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
 import { QuestionService } from './question.service';
@@ -6,6 +7,7 @@ import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { SubmitAnveshanAnswerDto } from './dto';
+import { AnveshanScoringService } from '../ai/anveshan-scoring.service';
 
 // Staging and development need 5 questions; tests run outside production.
 const REQUIRED_QUESTIONS = 5;
@@ -26,8 +28,9 @@ const answerDto: SubmitAnveshanAnswerDto = {
 
 describe('AnveshanMilestoneService', () => {
   let service: AnveshanMilestoneService;
-  const questionRepo = { find: jest.fn(), updateMany: jest.fn() };
-  const answerRepo = { create: jest.fn(), find: jest.fn(), findOne: jest.fn() };
+  const questionRepo = { find: jest.fn(), findOne: jest.fn(), updateMany: jest.fn() };
+  const answerRepo = { create: jest.fn(), find: jest.fn(), findAll: jest.fn(), findOne: jest.fn(), update: jest.fn() };
+  const scoringService = { startJob: jest.fn(), getJob: jest.fn() };
   const feedbackRepo = { count: jest.fn() };
   const questionService = { getTotalSubmittedCount: jest.fn() };
   const userService = { getProfile: jest.fn() };
@@ -54,6 +57,7 @@ describe('AnveshanMilestoneService', () => {
         { provide: QuestionService, useValue: questionService },
         { provide: UserService, useValue: userService },
         { provide: AgriEntitiesService, useValue: agriEntityService },
+        { provide: AnveshanScoringService, useValue: scoringService },
       ],
     }).compile();
     service = module.get(AnveshanMilestoneService);
@@ -153,6 +157,207 @@ describe('AnveshanMilestoneService', () => {
     expect(result.question.isAnswerSubmitted).toBe(true);
     expect(result.answeredCount).toBe(1);
     expect(result.completed).toBe(false);
+  });
+
+  it('starts a scoring job for the new answer and stores it as processing', async () => {
+    givenSubmissionsDone();
+    questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+    answerRepo.create.mockImplementation((data) => Promise.resolve({ id: 'a-1', ...data }));
+    scoringService.startJob.mockResolvedValue('job-1');
+
+    const result = await service.submitAnswer(USER_ID, 'q-0', answerDto);
+
+    expect(scoringService.startJob).toHaveBeenCalledWith(
+      expect.objectContaining({ answerId: 'a-1', question: 'Question 0', answer: answerDto.answer }),
+    );
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ jobId: 'job-1', status: 'processing' }) });
+    expect(result.question.answer?.score?.status).toBe('processing');
+  });
+
+  it('keeps the answer and marks scoring failed when the scoring service is down', async () => {
+    givenSubmissionsDone();
+    questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+    answerRepo.create.mockImplementation((data) => Promise.resolve({ id: 'a-1', ...data }));
+    scoringService.startJob.mockRejectedValue(new Error('connection refused'));
+
+    const result = await service.submitAnswer(USER_ID, 'q-0', answerDto);
+
+    expect(result.question.answer?.score).toEqual(expect.objectContaining({ jobId: null, status: 'failed' }));
+    expect(questionRepo.updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('stores the score once the scoring job completes', async () => {
+    const requestedAt = new Date();
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', questionId: 'q-0', score: { jobId: 'job-1', status: 'processing', requestedAt } });
+    scoringService.getJob.mockResolvedValue({ status: 'completed', score: { status: 'completed', systemScore: 11, maxScore: 11, percentage: 100 } });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(answerRepo.findOne).toHaveBeenCalledWith({ userId: USER_ID, questionId: 'q-0' });
+    expect(score).toEqual(expect.objectContaining({ jobId: 'job-1', status: 'completed', systemScore: 11, requestedAt }));
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score });
+  });
+
+  it('stores the full scoring response but does not return it to the client', async () => {
+    const response = { jobId: 'job-1', status: 'completed', systemScore: 10, maxScore: 11, extraField: 'kept' };
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: { jobId: 'job-1', status: 'processing', requestedAt: new Date() } });
+    scoringService.getJob.mockResolvedValue({ status: 'completed', score: { status: 'completed', systemScore: 10, response } });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ response }) });
+    expect(score).not.toHaveProperty('response');
+    expect(score.systemScore).toBe(10);
+  });
+
+  it('stores the partial score of a failed job so the user still sees it', async () => {
+    const requestedAt = new Date();
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: { jobId: 'job-1', status: 'processing', requestedAt } });
+    scoringService.getJob.mockResolvedValue({ status: 'failed', score: { status: 'failed', systemScore: 10, maxScore: 11 } });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(score).toEqual(expect.objectContaining({ jobId: 'job-1', status: 'failed', systemScore: 10, requestedAt }));
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ status: 'failed', systemScore: 10 }) });
+  });
+
+  it('returns the score fields when the stored score is a Mongoose subdocument', async () => {
+    const scoreSchema = new Schema(
+      { jobId: String, status: String, systemScore: Number, response: Schema.Types.Mixed },
+      { _id: false },
+    );
+    const AnswerModel = model('ScoreViewTestAnswer', new Schema({ score: { type: scoreSchema, default: null } }));
+    const stored = AnswerModel.hydrate({ score: { jobId: 'job-1', status: 'completed', systemScore: 9, response: { raw: true } } });
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: stored.get('score') });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(score).toEqual({ jobId: 'job-1', status: 'completed', systemScore: 9 });
+    expect(JSON.stringify(score)).not.toContain('$__');
+  });
+
+  it('returns a completed score without calling the scoring service again', async () => {
+    answerRepo.findOne.mockResolvedValue({ id: 'a-1', score: { jobId: 'job-1', status: 'completed', systemScore: 9 } });
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(score.systemScore).toBe(9);
+    expect(scoringService.getJob).not.toHaveBeenCalled();
+  });
+
+  it('restarts scoring when the earlier job could not be started', async () => {
+    answerRepo.findOne.mockResolvedValue({
+      id: 'a-1',
+      questionId: 'q-0',
+      userId: USER_ID,
+      answer: 'Neem oil',
+      sources: [],
+      score: { jobId: null, status: 'failed' },
+    });
+    questionRepo.findOne.mockResolvedValue({ id: 'q-0', questionText: 'Question 0', cropType: 'Rice', state: 'Kerala' });
+    scoringService.startJob.mockResolvedValue('job-2');
+
+    const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+    expect(score).toEqual(expect.objectContaining({ jobId: 'job-2', status: 'processing' }));
+  });
+
+  describe('lost or stuck scoring jobs', () => {
+    const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60 * 1000);
+    // Stores a processing job that was requested the given number of minutes ago.
+    const givenProcessingJob = (minutes: number) => {
+      answerRepo.findOne.mockResolvedValue({
+        id: 'a-1',
+        questionId: 'q-0',
+        userId: USER_ID,
+        answer: 'Neem oil',
+        sources: [],
+        score: { jobId: 'job-1', status: 'processing', requestedAt: minutesAgo(minutes) },
+      });
+      questionRepo.findOne.mockResolvedValue({ id: 'q-0', questionText: 'Question 0', cropType: 'Rice', state: 'Kerala' });
+      scoringService.startJob.mockResolvedValue('job-2');
+    };
+
+    it('starts a new job when the scoring service no longer knows the job id', async () => {
+      givenProcessingJob(2);
+      scoringService.getJob.mockResolvedValue({ status: 'missing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(questionRepo.findOne).toHaveBeenCalledWith({ id: 'q-0', userId: USER_ID });
+      expect(score).toEqual(expect.objectContaining({ jobId: 'job-2', status: 'processing' }));
+    });
+
+    it('starts a new job when the old one has been processing for over 15 minutes', async () => {
+      givenProcessingJob(16);
+      scoringService.getJob.mockResolvedValue({ status: 'processing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).toHaveBeenCalledTimes(1);
+      expect(score.jobId).toBe('job-2');
+    });
+
+    it('keeps waiting on a job that is still within the time limit', async () => {
+      givenProcessingJob(5);
+      scoringService.getJob.mockResolvedValue({ status: 'processing' });
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).not.toHaveBeenCalled();
+      expect(score.jobId).toBe('job-1');
+    });
+
+    it('starts a new job when the scoring service stays unreachable past the time limit', async () => {
+      givenProcessingJob(20);
+      scoringService.getJob.mockRejectedValue(new Error('connection refused'));
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(score.jobId).toBe('job-2');
+    });
+
+    it('keeps the job during a short outage', async () => {
+      givenProcessingJob(3);
+      scoringService.getJob.mockRejectedValue(new Error('connection refused'));
+
+      const score = await service.getAnswerScore(USER_ID, 'q-0');
+
+      expect(scoringService.startJob).not.toHaveBeenCalled();
+      expect(score.jobId).toBe('job-1');
+    });
+  });
+
+  it('lists processing scores oldest first for the background check', async () => {
+    answerRepo.findAll.mockResolvedValue([]);
+
+    await service.findAnswersAwaitingScore(50);
+
+    expect(answerRepo.findAll).toHaveBeenCalledWith(
+      { 'score.status': 'processing' },
+      { pagination: { page: 1, limit: 50, sort: { 'score.requestedAt': 1 } } },
+    );
+  });
+
+  it('saves a finished job for an answer passed in directly by the background check', async () => {
+    const requestedAt = new Date();
+    scoringService.getJob.mockResolvedValue({ status: 'failed', score: { status: 'failed', systemScore: 11 } });
+
+    const score = await service.syncAnswerScore({
+      id: 'a-1',
+      questionId: 'q-0',
+      userId: USER_ID,
+      score: { jobId: 'job-1', status: 'processing', requestedAt },
+    } as never);
+
+    expect(score.status).toBe('failed');
+    expect(answerRepo.update).toHaveBeenCalledWith('a-1', { score: expect.objectContaining({ systemScore: 11, jobId: 'job-1' }) });
+  });
+
+  it('rejects score requests for questions the caller has not answered', async () => {
+    answerRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.getAnswerScore(USER_ID, 'q-0')).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('clears the flag again when the answer cannot be stored', async () => {

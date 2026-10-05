@@ -163,6 +163,12 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
     return this.anveshanMilestoneService.getMilestone(req.user.id);
   }
 
+    // GET /questions/anveshan-answers/:questionId/score — the caller's system score for an answer; poll while status is processing.
+  @Get('anveshan-answers/:questionId/score')
+  async getAnveshanAnswerScore(@Param('questionId') questionId: string, @Req() req: AuthenticatedRequest) {
+    return this.anveshanMilestoneService.getAnswerScore(req.user.id, questionId);
+  } 
+  
   // GET /questions/anveshan-answers/me — the caller's own questions they can answer, with answer status.
   @Get('anveshan-answers/me')
   async listMyAnveshanAnswerQuestions(@Req() req: AuthenticatedRequest) {
@@ -189,4 +195,4 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
   ) {
     return this.anveshanMilestoneService.submitAnswer(req.user.id, questionId, dto);
   }
-}
+}

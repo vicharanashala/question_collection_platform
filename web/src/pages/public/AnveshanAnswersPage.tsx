@@ -15,7 +15,8 @@ import { SubmissionCriteriaGate } from '@/components/anveshan-answers/Submission
 import { AnsweringGuideDialog } from '@/components/anveshan-answers/AnsweringGuideDialog'
 import { useAuth } from '@/context/AuthContext'
 import { AnswerResponsePanel, EMPTY_DRAFT, type AnswerDraft } from '@/components/anveshan-answers/AnswerResponsePanel'
-import type { AnveshanAnswerQuestionsResponse } from '@/types'
+import { AnswerScoreDialog, type ScoreDialogTarget } from '@/components/anveshan-answers/AnswerScoreDialog'
+import type { AnveshanAnswerQuestionsResponse, AnveshanAnswerScore } from '@/types'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -60,6 +61,7 @@ export function AnveshanAnswersPage() {
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
+  const [scoreTarget, setScoreTarget] = useState<ScoreDialogTarget | null>(null)
   const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY)
   const { user } = useAuth()
   const userId = user?.id
@@ -120,8 +122,12 @@ export function AnveshanAnswersPage() {
       const nextData = { ...data, items, answeredCount: result.answeredCount, completed: result.completed }
       setData(nextData)
       setSelectedId(pickDefaultQuestion(nextData))
-      // The answer that completes the milestone moves the user to the completion screen, which also asks for feedback.
-      if (result.completed && !data.completed) navigate('/home', { replace: true })
+      // Every submission shows its score first; the one that completes the milestone then moves on to the completion screen.
+      setScoreTarget({
+        questionId: result.question.id,
+        initialScore: result.question.answer?.score ?? null,
+        completesMilestone: result.completed && !data.completed,
+      })
       toast.success(
         result.completed
           ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
@@ -134,6 +140,22 @@ export function AnveshanAnswersPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Keeps the latest score on the list item, so reopening the advisory shows it without polling again.
+  const updateScore = useCallback((questionId: string, score: AnveshanAnswerScore) => {
+    setData((prev) =>
+      prev && {
+        ...prev,
+        items: prev.items.map((q) => (q.id === questionId && q.answer ? { ...q, answer: { ...q.answer, score } } : q)),
+      },
+    )
+  }, [])
+
+  // The completion screen also asks for feedback, so it opens only after the user has seen the final score.
+  const closeScoreDialog = (target: ScoreDialogTarget) => {
+    setScoreTarget(null)
+    if (target.completesMilestone) navigate('/home', { replace: true })
   }
 
   if (!isDesktop) {
@@ -183,6 +205,7 @@ export function AnveshanAnswersPage() {
         onOpenGuide={() => setGuideOpen(true)}
       />
       <AnsweringGuideDialog open={guideOpen} onOpenChange={changeGuideOpen} requiredAnswers={data.requiredAnswers} />
+      <AnswerScoreDialog target={scoreTarget} onScoreChange={updateScore} onClose={closeScoreDialog} />
       {data.items.length === 0 ? (
         <StatusCard
           icon={<PenLine className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
@@ -212,6 +235,7 @@ export function AnveshanAnswersPage() {
                 onSubmit={submitAnswer}
                 isSubmitting={isSubmitting}
                 answerLimit={answerLimitReached ? data.requiredAnswers : null}
+                onScoreChange={updateScore}
               />
             ) : (
               <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a farmer query to write your advisory.')} />

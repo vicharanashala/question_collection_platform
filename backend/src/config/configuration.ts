@@ -136,6 +136,11 @@ export const embedConfig = registerAs("embed", () => ({
   baseUrl: `${required("VM_SERVER_URL")}:${required("EMBED_PORT")}`,
 }));
 
+// Anveshan answer scoring service on the VM (POST /score, GET /score/:jobId).
+export const answerScoringConfig = registerAs("answerScoring", () => ({
+  baseUrl: `${required("VM_SERVER_URL")}:${process.env.ANSWER_SCORING_PORT || "8011"}`,
+}));
+
 export const reviwerConfig = registerAs("reviewSystem", ()=>({
   reviewerUri: process.env.REVIEWER_INGEST_URL,
   apiKey: process.env.REVIEW_SYSTEM_AUTH_KEY
