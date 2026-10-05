@@ -62,6 +62,11 @@ function alternateNameMissing(alt: AgriEntityAlternateName): boolean {
   return !alt.name.trim() && alt.source.trim().length > 0
 }
 
+// An alternate name is only accepted together with the source that documents it.
+function alternateSourceMissing(alt: AgriEntityAlternateName): boolean {
+  return alt.name.trim().length > 0 && !alt.source.trim()
+}
+
 // Keeps only alternate rows that have a name, trimmed for submission.
 function toSubmittedAlternates(alternates: AgriEntityAlternateName[]): AgriEntityAlternateName[] {
   return alternates
@@ -77,7 +82,7 @@ function isFormValid(values: FormValues, imageCount: number): boolean {
     filled(values.englishName) &&
     filled(values.botanicalName) &&
     isValidSourceUrl(values.localNameSource) &&
-    values.alternateNames.every((a) => !alternateNameMissing(a) && isValidSourceUrl(a.source)) &&
+    values.alternateNames.every((a) => !alternateNameMissing(a) && !alternateSourceMissing(a) && isValidSourceUrl(a.source)) &&
     imageCount > 0
   )
 }
@@ -320,7 +325,8 @@ export function AgriEntitySubmitForm({ type, typeLabel }: AgriEntitySubmitFormPr
                   showErrors && alternateNameMissing(alt)
                     ? t('agriEntity.errors.alternateNameRequired', 'Enter the name this source refers to')
                     : undefined
-                const altSourceError = sourceErrorFor(alt.source)
+                const altSourceError =
+                  showErrors && alternateSourceMissing(alt) ? requiredError : sourceErrorFor(alt.source)
                 return (
                   <li key={index} className="rounded-xl border border-border-subtle bg-surface-variant/40 p-3">
                     <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-start">

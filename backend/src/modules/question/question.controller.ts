@@ -18,6 +18,7 @@ import { UserRole } from '../../shared/classes/enums';
 import { QuestionService } from './question.service';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { AttachQuestionAudioDto } from './dto/attach-question-audio.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
@@ -93,6 +94,18 @@ export class QuestionController {
     return this.questionService.update(req.user.id, id, dto);
   }
 
+  // POST /questions/:id/audio — Attach recordings to a rejected duplicate saved by preview
+  @Post(':id/audio')
+  @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('questions:u*')
+  async attachAudio(
+    @Param('id') id: string,
+    @Body() dto: AttachQuestionAudioDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.questionService.attachAudio(req.user.id, id, dto);
+  }
+
   // GET /questions/stats/me — Daily submission count for current user
 @Get('stats/me')
 @Cacheable('question_stats', 60)
@@ -150,6 +163,12 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
     return this.anveshanMilestoneService.getMilestone(req.user.id);
   }
 
+    // GET /questions/anveshan-answers/:questionId/score — the caller's system score for an answer; poll while status is processing.
+  @Get('anveshan-answers/:questionId/score')
+  async getAnveshanAnswerScore(@Param('questionId') questionId: string, @Req() req: AuthenticatedRequest) {
+    return this.anveshanMilestoneService.getAnswerScore(req.user.id, questionId);
+  } 
+  
   // GET /questions/anveshan-answers/me — the caller's own questions they can answer, with answer status.
   @Get('anveshan-answers/me')
   async listMyAnveshanAnswerQuestions(@Req() req: AuthenticatedRequest) {
@@ -162,12 +181,6 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   async getAnveshanAnswer(@Param('id') id: string) {
     return { answer: await this.anveshanMilestoneService.getAnswerForQuestion(id) };
-  }
-
-  // GET /questions/anveshan-answers/:questionId/score — the caller's system score for an answer; poll while status is processing.
-  @Get('anveshan-answers/:questionId/score')
-  async getAnveshanAnswerScore(@Param('questionId') questionId: string, @Req() req: AuthenticatedRequest) {
-    return this.anveshanMilestoneService.getAnswerScore(req.user.id, questionId);
   }
 
   // POST /questions/anveshan-answers/:questionId — answer one of the caller's own questions with sources.

@@ -5,6 +5,11 @@ import { UserService } from '../user/user.service';
 import { AdminService } from '../admin/admin.service';
 import { StorageService } from '../storage/storage.service';
 import { GemmaService } from '../ai/gemma.service';
+import { GdbService } from '../ai/gdb.service';
+import { EmbedService } from '../ai/embed.service';
+import { DuplicateDetectionService } from '../../shared/database/cache/duplicate-detection.service';
+import { AnalyticsCacheService } from '../../shared/database/cache/analytics-cache.service';
+import { HotDataService } from '../../shared/database/cache/hot-data.service';
 import { Question, AuditLog, Notification } from '../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { QuestionStatus, MediaType, Season, VerificationStatus } from '../../shared/classes/enums';
@@ -102,6 +107,11 @@ describe('QuestionService', () => {
         { provide: UserService, useFactory: mockUserService },
         { provide: StorageService, useFactory: mockStorageService },
         { provide: GemmaService, useFactory: mockGemmaService },
+        { provide: GdbService, useValue: {} },
+        { provide: EmbedService, useValue: {} },
+        { provide: DuplicateDetectionService, useValue: {} },
+        { provide: AnalyticsCacheService, useValue: {} },
+        { provide: HotDataService, useValue: {} },
       ],
     }).compile();
 
@@ -217,6 +227,55 @@ describe('QuestionService', () => {
 
       const result = await service.update(userId, questionId, { questionText: 'Updated' });
       expect(result.questionText).toBe('Updated');
+    });
+  });
+
+  // ─── attachAudio ───────────────────────────────────────────────────────────
+
+  describe('attachAudio', () => {
+    const ownAudio = `gs://bucket/development/audios/${userId}/2026-10/a_recording.webm`;
+    const rejectedQuestion = () => ({ id: questionId, userId, status: QuestionStatus.REJECTED, audioUrls: [] });
+
+    it('should save the recordings on a rejected duplicate', async () => {
+      questionRepo.findOne.mockResolvedValue(rejectedQuestion());
+      questionRepo.save.mockImplementation((q) => Promise.resolve(q));
+
+      const result = await service.attachAudio(userId, questionId, { audioUrls: [ownAudio] });
+
+      expect(result.audioUrls).toEqual([ownAudio]);
+      expect(questionRepo.save).toHaveBeenCalledWith(expect.objectContaining({ audioUrls: [ownAudio] }));
+    });
+
+    it('should throw NotFoundException when the question does not exist', async () => {
+      questionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.attachAudio(userId, questionId, { audioUrls: [ownAudio] })).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException for another user\'s question', async () => {
+      questionRepo.findOne.mockResolvedValue({ ...rejectedQuestion(), userId: 'someone-else' });
+
+      await expect(service.attachAudio(userId, questionId, { audioUrls: [ownAudio] })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException when the question is not a rejected duplicate', async () => {
+      questionRepo.findOne.mockResolvedValue({ ...rejectedQuestion(), status: QuestionStatus.PENDING });
+
+      await expect(service.attachAudio(userId, questionId, { audioUrls: [ownAudio] })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException when audio is already attached', async () => {
+      questionRepo.findOne.mockResolvedValue({ ...rejectedQuestion(), audioUrls: [ownAudio] });
+
+      await expect(service.attachAudio(userId, questionId, { audioUrls: [ownAudio] })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException for audio uploaded by someone else', async () => {
+      questionRepo.findOne.mockResolvedValue(rejectedQuestion());
+      const foreignAudio = 'gs://bucket/development/audios/other-user/2026-10/a_recording.webm';
+
+      await expect(service.attachAudio(userId, questionId, { audioUrls: [foreignAudio] })).rejects.toThrow(BadRequestException);
+      expect(questionRepo.save).not.toHaveBeenCalled();
     });
   });
 
@@ -368,4 +427,4 @@ describe('QuestionService', () => {
       expect(limits.videoMaxDurationSec).toBe(10);
     });
   });
-});
+});

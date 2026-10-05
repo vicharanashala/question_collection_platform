@@ -13,6 +13,7 @@ import { QuestionStatus, MediaType, AuditAction, ActorType, Season, Verification
 import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { AttachQuestionAudioDto } from './dto/attach-question-audio.dto';
 import { ListQuestionsDto } from './dto/list-questions.dto';
 import { DOMAINS } from './constants/domains';
 import { UserService } from '../user/user.service';
@@ -660,6 +661,29 @@ export class QuestionService {
     throw new ForbiddenException('Question editing is no longer available');
   }
 
+  /**
+   * Attaches uploaded recordings to a question that preview() saved as a REJECTED duplicate.
+   * Preview runs before any audio is uploaded, so those records are created without it.
+   */
+  async attachAudio(userId: string, questionId: string, dto: AttachQuestionAudioDto): Promise<{ id: string; audioUrls: string[] }> {
+    const question = await this.questionRepo.findOne({ where: { id: questionId } });
+
+    if (!question) throw new NotFoundException('Question not found');
+    if (question.userId !== userId) throw new ForbiddenException('Not your question');
+    if (question.status !== QuestionStatus.REJECTED || question.audioUrls?.length) {
+      throw new ForbiddenException('Audio can only be attached to a rejected duplicate without audio');
+    }
+
+    const ownAudioPath = `/audios/${userId}/`;
+    if (!dto.audioUrls.every((url) => url.includes(ownAudioPath))) {
+      throw new BadRequestException('Audio must be uploaded by the question owner');
+    }
+
+    question.audioUrls = dto.audioUrls;
+    const saved = await this.questionRepo.save(question);
+    return { id: saved.id, audioUrls: saved.audioUrls ?? [] };
+  }
+
   // ─── Get single ─────────────────────────────────────────────────────────────
 
   async findOne(id: string, userId?: string): Promise<Question> {
@@ -939,6 +963,7 @@ export class QuestionService {
           matchedAnswer: null,
           similarityScore: null,
           matchedUserName: dbDup.matchedUserName,
+          questionId: duplicateQuestion.id,
           submissionStatus: 'rejected' as const,
         },
       };
@@ -1009,6 +1034,7 @@ export class QuestionService {
           matchedAnswer: dup.matchedAnswer,
           similarityScore: dup.similarityScore,
           matchedUserName: dup.matchedUserName ?? 'user name not available',
+          questionId: duplicateQuestion.id,
           submissionStatus: 'rejected' as const,
         },
       };

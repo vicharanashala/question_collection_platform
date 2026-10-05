@@ -944,6 +944,7 @@ export const questionApi = {
         matchedAnswer: string | null;
         similarityScore: number | null;
         matchedUserName: string | null;
+        questionId?: string;
       };
     }>(
       "/questions/preview",
@@ -953,6 +954,17 @@ export const questionApi = {
       },
       false,
       AI_REQUEST_TIMEOUT_MS,
+    ).finally(() => invalidateCache("/api/questions")),
+
+  /** Attaches uploaded recordings to a question that preview saved as a rejected duplicate. */
+  attachAudio: (questionId: string, audioUrls: string[]) =>
+    request<{ id: string; audioUrls: string[] }>(
+      `/questions/${questionId}/audio`,
+      {
+        method: "POST",
+        body: JSON.stringify({ audioUrls }),
+      },
+      false,
     ).finally(() => invalidateCache("/api/questions")),
 
   /**

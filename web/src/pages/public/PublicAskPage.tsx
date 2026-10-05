@@ -245,6 +245,21 @@ export function PublicAskPage() {
   const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
   const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
 
+  // Preview saves a rejected duplicate before any audio is uploaded, so the recordings are
+  // uploaded afterwards and attached to that record. Never blocks the duplicate screen.
+  async function attachAudioToDuplicate(questionId: string | undefined) {
+    if (!questionId || audioData.length === 0) return
+    const recordings = audioData
+    try {
+      const uploads = await Promise.all(
+        recordings.map(data => storageApi.uploadAudio(data.blob, data.filename))
+      )
+      await questionApi.attachAudio(questionId, uploads.map(u => u.url))
+    } catch (err) {
+      console.warn('[PublicAskPage] could not attach audio to duplicate question:', err)
+    }
+  }
+
   const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
 const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
 const [milestoneJustCompleted, setMilestoneJustCompleted] = useState(false);
@@ -401,6 +416,7 @@ useEffect(() => {
         mediaUrls: [],
       })
       if (res.duplicate?.isDuplicate) {
+        void attachAudioToDuplicate(res.duplicate.questionId)
         setDuplicate({
           matchedQuestion: res.duplicate.matchedQuestion ?? '',
           matchedAnswer: res.duplicate.matchedAnswer,
@@ -568,6 +584,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
       mediaUrls: [],
     })
     if (previewRes.duplicate?.isDuplicate) {
+      void attachAudioToDuplicate(previewRes.duplicate.questionId)
       setDuplicate({
         matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
         matchedAnswer: previewRes.duplicate.matchedAnswer,
@@ -1109,4 +1126,4 @@ if (activeTab !== 'question') {
       {milestoneModal}
     </div>
   )
-}
+}
