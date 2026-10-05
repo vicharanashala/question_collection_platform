@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authApi } from '@/api/client'
 import { accountLockedEmitter } from '@/events/accountLockedEvents'
+import { clearProfileDraft } from '@/utils/profileDraft'
 import type { AuthUser } from '@/types'
 
 interface AuthContextValue {
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('auth_user')
+    clearProfileDraft()
     setToken(null)
     setUser(null)
   }, [])
@@ -104,4 +106,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
-}
+}

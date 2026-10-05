@@ -1,12 +1,15 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, MotionConfig } from 'framer-motion'
-import { MessageCircleQuestion, Sprout, Leaf, Bug, Microscope, type LucideIcon } from 'lucide-react'
+import { CheckCircle2, MessageCircleQuestion, Sprout, Leaf, Bug, Microscope, type LucideIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import type { AgriEntityType } from '@/types'
 import { useAuth } from '@/context/AuthContext'
+import { questionApi } from '@/api/client'
+import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
+import type { AnveshanMilestoneData } from '@/pages/public/AnveshMileStone'
 
 export type SubmissionTab = 'question' | AgriEntityType
 
@@ -62,6 +65,13 @@ export const SUBMISSION_TAB_ICONS: Record<SubmissionTab, LucideIcon> = {
   disease: Microscope,
 }
 
+// The question tab is done once its milestone goal is met; crop, weed, pest and disease need just one submission.
+function isTabCompleted(tab: SubmissionTab, milestone: AnveshanMilestoneData | null | undefined): boolean {
+  if (!milestone) return false
+  if (tab === 'question') return milestone.progress.questions >= milestone.requirements.questions
+  return milestone.progress[tab] >= 1
+}
+
 interface SubmissionTypeTabsProps {
   value: SubmissionTab
   onChange: (tab: SubmissionTab) => void
@@ -74,6 +84,18 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
   const { t } = useTranslation()
   const { user } = useAuth()
   
+  const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null)
+
+  const loadMilestone = useCallback(() => {
+    if (!user?.isAnveshanUser) return
+    questionApi.getMyAnveshanMilestone().then(setMilestone).catch(() => undefined)
+  }, [user?.isAnveshanUser])
+
+  useEffect(() => {
+    loadMilestone()
+    return anveshanProgressEmitter.on(loadMilestone)
+  }, [loadMilestone])
+
   const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
 
   const tabs: { value: SubmissionTab; label: string }[] = [
@@ -106,6 +128,7 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
       >
         {tabs.map((tab) => {
           const Icon = SUBMISSION_TAB_ICONS[tab.value]
+          const completed = isTabCompleted(tab.value, milestone)
           return (
             <TabsTrigger
               key={tab.value}
@@ -128,6 +151,15 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
               )}
               <Icon className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
               <span className="max-w-full truncate leading-tight">{tab.label}</span>
+              {completed && (
+                <>
+                  <CheckCircle2
+                    className="absolute right-1 top-1 h-3.5 w-3.5 text-emerald-500 sm:static sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">{t('agriEntity.tabs.completed', 'Completed')}</span>
+                </>
+              )}
             </TabsTrigger>
           )
         })}
