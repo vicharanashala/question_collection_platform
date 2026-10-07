@@ -478,7 +478,7 @@ export function LoginPage() {
     setOtp("");
     setLoading(true);
     try {
-      await authApi.requestOtp(mobile, true);
+      await authApi.requestOtp(mobile, false);
       countdown.start();
       toast.success("New OTP sent");
     } catch (err) {
