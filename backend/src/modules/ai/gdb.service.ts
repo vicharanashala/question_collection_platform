@@ -24,7 +24,16 @@ import { QuestionRejectionCategory } from '../../shared/classes/enums';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { SarvamService } from '../speech/sarvam.service';
-import { isDevelopment } from '../../config/environment';
+import { isDevelopment, isProduction } from '../../config/environment';
+
+// GDB checks (duplicate search and safety/relevance classification) run when GDB_DUPLICATE_CHECK_ENABLED
+// is true. When it is not set they run only in production. When off, questions are treated as new and allowed.
+export function isGdbDuplicateCheckEnabled(): boolean {
+  const flag = process.env.GDB_DUPLICATE_CHECK_ENABLED?.trim().toLowerCase();
+  if (flag === 'true') return true;
+  if (flag === 'false') return false;
+  return isProduction();
+}
 
 export interface SimilarQuestionResponse {
   query: string;
@@ -97,16 +106,15 @@ export class GdbService {
    * Returns `rejection` when the query is abusive or off-topic (the caller must
    * block the submission), or `isDuplicate` when the question already exists.
    * Network and parse failures fail open so a GDB outage never blocks a farmer.
-   * Skipped entirely in local development — GDB only runs on the deployed VM.
+   * Skipped when GDB_DUPLICATE_CHECK_ENABLED is off (the default outside production).
    */
   async checkDuplicate(payload: {
     questionText: string;
     languageCode?: string;
   }): Promise<DuplicateCheckResult> {
-    // GDB is reachable only from the deployed environments (staging/production),
-    // so local development skips the call and treats the question as new.
-    if (isDevelopment()) {
-      this.logger.debug('[GDB] skipped — development environment');
+    // With the check turned off the question is treated as new.
+    if (!isGdbDuplicateCheckEnabled()) {
+      this.logger.debug('[GDB] find-similar-questions skipped — GDB_DUPLICATE_CHECK_ENABLED is off');
       return this.noDuplicate();
     }
 
@@ -202,8 +210,9 @@ export class GdbService {
     questionText: string;
     languageCode?: string;
   }): Promise<DuplicateCheckResult> {
-    if (isDevelopment()) {
-      this.logger.debug('[GDB] classifyQuery skipped — development environment');
+    // With the check turned off the query is allowed without classification.
+    if (!isGdbDuplicateCheckEnabled()) {
+      this.logger.debug('[GDB] classifyQuery skipped — GDB_DUPLICATE_CHECK_ENABLED is off');
       return this.noDuplicate();
     }
 
