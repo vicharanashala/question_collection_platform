@@ -38,6 +38,8 @@ interface AnswerResponsePanelProps {
   answerLimit?: number | null
   /** Called when a submitted advisory's score changes, so the page keeps the latest score. */
   onScoreChange?: (questionId: string, score: AnveshanAnswerScore) => void
+  /** Shows the system score of submitted advisories; false when AI scoring is turned off. */
+  scoringEnabled?: boolean
 }
 
 // Right panel: shows the selected question and the answer form, the submitted answer, or a locked notice.
@@ -49,6 +51,7 @@ export function AnswerResponsePanel({
   isSubmitting,
   answerLimit = null,
   onScoreChange,
+  scoringEnabled = false,
 }: AnswerResponsePanelProps) {
   const { t } = useTranslation()
 
@@ -68,7 +71,7 @@ export function AnswerResponsePanel({
         </div>
 
         {question.answer ? (
-          <SubmittedAnswer question={question} onScoreChange={onScoreChange} />
+          <SubmittedAnswer question={question} onScoreChange={onScoreChange} scoringEnabled={scoringEnabled} />
         ) : answerLimit !== null ? (
           <AnswerLimitNotice requiredAnswers={answerLimit} />
         ) : (
@@ -110,10 +113,11 @@ function AnswerLimitNotice({ requiredAnswers }: { requiredAnswers: number }) {
 interface SubmittedAnswerProps {
   question: AnveshanAnswerQuestion
   onScoreChange?: (questionId: string, score: AnveshanAnswerScore) => void
+  scoringEnabled: boolean
 }
 
-// Read-only view of an answer the user already submitted, with its system score.
-function SubmittedAnswer({ question, onScoreChange }: SubmittedAnswerProps) {
+// Read-only view of an answer the user already submitted, with its system score when scoring is on.
+function SubmittedAnswer({ question, onScoreChange, scoringEnabled }: SubmittedAnswerProps) {
   const { t } = useTranslation()
   const answer = question.answer
   if (!answer) return null
@@ -124,11 +128,13 @@ function SubmittedAnswer({ question, onScoreChange }: SubmittedAnswerProps) {
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         {t('anveshanAnswers.alreadyAnswered', 'You have submitted an advisory for this query. Thank you!')}
       </p>
-      <AnswerScoreCard
-        questionId={question.id}
-        initialScore={answer.score ?? null}
-        onScoreChange={(score) => onScoreChange?.(question.id, score)}
-      />
+      {scoringEnabled && (
+        <AnswerScoreCard
+          questionId={question.id}
+          initialScore={answer.score ?? null}
+          onScoreChange={(score) => onScoreChange?.(question.id, score)}
+        />
+      )}
       <div>
         <p className="text-sm font-medium text-text">{t('anveshanAnswers.yourAnswer', 'Your Advisory')}</p>
         <p className="mt-1 whitespace-pre-wrap break-words rounded-md border border-border-subtle bg-surface-variant p-3 text-sm text-text">

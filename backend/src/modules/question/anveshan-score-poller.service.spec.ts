@@ -1,5 +1,12 @@
 import { AnveshanScorePollerService } from './anveshan-score-poller.service';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
+import { isAnswerScoringEnabled } from '../../shared/constants/anveshan.constant';
+
+jest.mock('../../shared/constants/anveshan.constant', () => ({
+  ...jest.requireActual('../../shared/constants/anveshan.constant'),
+  isAnswerScoringEnabled: jest.fn(),
+}));
+const scoringEnabledMock = isAnswerScoringEnabled as jest.MockedFunction<typeof isAnswerScoringEnabled>;
 
 describe('AnveshanScorePollerService', () => {
   const milestoneService = { findAnswersAwaitingScore: jest.fn(), syncAnswerScore: jest.fn() };
@@ -7,6 +14,7 @@ describe('AnveshanScorePollerService', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    scoringEnabledMock.mockReturnValue(true);
     poller = new AnveshanScorePollerService(milestoneService as unknown as AnveshanMilestoneService);
   });
 
@@ -40,6 +48,17 @@ describe('AnveshanScorePollerService', () => {
     await firstRun;
 
     expect(milestoneService.findAnswersAwaitingScore).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not start when answer scoring is turned off', () => {
+    jest.useFakeTimers();
+    scoringEnabledMock.mockReturnValue(false);
+
+    poller.onModuleInit();
+    jest.advanceTimersByTime(120_000);
+
+    expect(milestoneService.findAnswersAwaitingScore).not.toHaveBeenCalled();
+    jest.useRealTimers();
   });
 
   it('runs once a minute', () => {

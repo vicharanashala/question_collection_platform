@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
-import { ANVESHAN_SCORE_POLL_INTERVAL_MS } from '../../shared/constants/anveshan.constant';
+import { ANVESHAN_SCORE_POLL_INTERVAL_MS, isAnswerScoringEnabled } from '../../shared/constants/anveshan.constant';
 
 // Answers checked per run. Each check is one request to the scoring service, so this bounds a run's length.
 const ANSWERS_PER_RUN = 50;
@@ -19,8 +19,12 @@ export class AnveshanScorePollerService implements OnModuleInit, OnModuleDestroy
 
   constructor(private readonly milestoneService: AnveshanMilestoneService) {}
 
-  // Starts the periodic check.
+  // Starts the periodic check, unless answer scoring is turned off.
   onModuleInit(): void {
+    if (!isAnswerScoringEnabled()) {
+      this.logger.log('Answer scoring is off; background score check not started');
+      return;
+    }
     this.timer = setInterval(() => void this.checkProcessingScores(), ANVESHAN_SCORE_POLL_INTERVAL_MS);
     // Does not keep the process alive on its own, so shutdown and tests are not held up.
     this.timer.unref();

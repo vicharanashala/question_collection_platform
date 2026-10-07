@@ -122,12 +122,18 @@ export function AnveshanAnswersPage() {
       const nextData = { ...data, items, answeredCount: result.answeredCount, completed: result.completed }
       setData(nextData)
       setSelectedId(pickDefaultQuestion(nextData))
-      // Every submission shows its score first; the one that completes the milestone then moves on to the completion screen.
-      setScoreTarget({
-        questionId: result.question.id,
-        initialScore: result.question.answer?.score ?? null,
-        completesMilestone: result.completed && !data.completed,
-      })
+      const completesMilestone = result.completed && !data.completed
+      if (data.scoringEnabled) {
+        // Every submission shows its score first; the one that completes the milestone then moves on to the completion screen.
+        setScoreTarget({
+          questionId: result.question.id,
+          initialScore: result.question.answer?.score ?? null,
+          completesMilestone,
+        })
+      } else if (completesMilestone) {
+        // Without scoring, the completing answer goes straight to the completion screen, which also asks for feedback.
+        navigate('/home', { replace: true })
+      }
       toast.success(
         result.completed
           ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
@@ -205,7 +211,9 @@ export function AnveshanAnswersPage() {
         onOpenGuide={() => setGuideOpen(true)}
       />
       <AnsweringGuideDialog open={guideOpen} onOpenChange={changeGuideOpen} requiredAnswers={data.requiredAnswers} />
-      <AnswerScoreDialog target={scoreTarget} onScoreChange={updateScore} onClose={closeScoreDialog} />
+      {data.scoringEnabled && (
+        <AnswerScoreDialog target={scoreTarget} onScoreChange={updateScore} onClose={closeScoreDialog} />
+      )}
       {data.items.length === 0 ? (
         <StatusCard
           icon={<PenLine className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
@@ -236,6 +244,7 @@ export function AnveshanAnswersPage() {
                 isSubmitting={isSubmitting}
                 answerLimit={answerLimitReached ? data.requiredAnswers : null}
                 onScoreChange={updateScore}
+                scoringEnabled={data.scoringEnabled === true}
               />
             ) : (
               <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a farmer query to write your advisory.')} />

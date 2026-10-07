@@ -125,6 +125,7 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           env_vars: |
             NODE_ENV=staging
+            ANSWER_SCORING_ENABLED=${{ vars.ANSWER_SCORING_ENABLED_STAGING || 'false' }}
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             ANVESHAN_DB_URL=${{ secrets.ANVESHAN_DB_URL }}
             ANVESHAN_ANNADATHA_AUTH_KEY=${{ secrets.ANVESHAN_ANNADATHA_AUTH_KEY }}

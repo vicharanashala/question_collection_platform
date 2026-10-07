@@ -848,6 +848,8 @@ export interface AnveshanAnswerQuestionsResponse {
   answeredCount: number;
   unlocked: boolean;
   completed: boolean;
+  /** False when AI scoring is turned off: no score dialog, no score card and no score requests. */
+  scoringEnabled?: boolean;
   /** Milestone targets and capped progress, used to show what is left before answering unlocks. */
   requirements: AnveshanMilestoneCounts;
   progress: AnveshanMilestoneCounts;

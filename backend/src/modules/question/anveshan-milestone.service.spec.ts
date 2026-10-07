@@ -8,6 +8,14 @@ import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { SubmitAnveshanAnswerDto } from './dto';
 import { AnveshanScoringService } from '../ai/anveshan-scoring.service';
+import { isAnswerScoringEnabled } from '../../shared/constants/anveshan.constant';
+
+// Scoring is on by default in these tests; individual tests turn it off.
+jest.mock('../../shared/constants/anveshan.constant', () => ({
+  ...jest.requireActual('../../shared/constants/anveshan.constant'),
+  isAnswerScoringEnabled: jest.fn(),
+}));
+const scoringEnabledMock = isAnswerScoringEnabled as jest.MockedFunction<typeof isAnswerScoringEnabled>;
 
 // Staging and development need 5 questions; tests run outside production.
 const REQUIRED_QUESTIONS = 5;
@@ -47,6 +55,7 @@ describe('AnveshanMilestoneService', () => {
 
   beforeEach(async () => {
     jest.resetAllMocks();
+    scoringEnabledMock.mockReturnValue(true);
     userService.getProfile.mockResolvedValue({ id: USER_ID, isAnveshanUser: true });
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -368,6 +377,40 @@ describe('AnveshanMilestoneService', () => {
     answerRepo.findOne.mockResolvedValue(null);
 
     await expect(service.getAnswerScore(USER_ID, 'q-0')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  describe('with answer scoring turned off', () => {
+    beforeEach(() => scoringEnabledMock.mockReturnValue(false));
+
+    it('stores the answer without calling the scoring service', async () => {
+      givenSubmissionsDone();
+      questionRepo.updateMany.mockResolvedValue({ affected: 1 });
+      answerRepo.create.mockImplementation((data) => Promise.resolve({ id: 'a-1', score: null, ...data }));
+
+      const result = await service.submitAnswer(USER_ID, 'q-0', answerDto);
+
+      expect(answerRepo.create).toHaveBeenCalled();
+      expect(scoringService.startJob).not.toHaveBeenCalled();
+      expect(answerRepo.update).not.toHaveBeenCalled();
+      expect(result.question.answer?.score).toBeNull();
+    });
+
+    it('reports scoring as off and leaves stored scores out of the list', async () => {
+      givenSubmissionsDone(1);
+      answerRepo.find.mockResolvedValue([
+        { questionId: 'q-0', answer: 'Neem oil', sources: [], remarks: null, answeredAt: new Date(), score: { status: 'completed' } },
+      ]);
+
+      const result = await service.listAnswerableQuestions(USER_ID);
+
+      expect(result.scoringEnabled).toBe(false);
+      expect(result.items[0].answer?.score).toBeNull();
+    });
+
+    it('refuses score requests', async () => {
+      await expect(service.getAnswerScore(USER_ID, 'q-0')).rejects.toBeInstanceOf(NotFoundException);
+      expect(answerRepo.findOne).not.toHaveBeenCalled();
+    });
   });
 
   it('clears the flag again when the answer cannot be stored', async () => {

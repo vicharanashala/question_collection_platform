@@ -22,6 +22,7 @@ import {
 import {
   ANVESHAN_SCORE_JOB_STALE_AFTER_MS,
   ANVESHAN_SCORE_MISSING_GRACE_MS,
+  isAnswerScoringEnabled,
 } from '../../shared/constants/anveshan.constant';
 
 
@@ -96,8 +97,13 @@ export class AnveshanMilestoneService {
   async listAnswerableQuestions(userId: string) {
     const { milestone, eligibleQuestions } = await this.buildMilestone(userId);
     const answersByQuestion = await this.findAnswersByQuestion(userId, eligibleQuestions);
+    const scoringEnabled = isAnswerScoringEnabled();
     return {
-      items: eligibleQuestions.map((question) => toAnswerableQuestion(question, answersByQuestion.get(question.id) ?? null)),
+      items: eligibleQuestions.map((question) =>
+        toAnswerableQuestion(question, answersByQuestion.get(question.id) ?? null, scoringEnabled),
+      ),
+      /** False when AI scoring is turned off; the web app then shows no scores. */
+      scoringEnabled,
       requiredAnswers: milestone.requirements.answers,
       answeredCount: milestone.progress.answers,
       unlocked: milestone.submissionsCompleted,
@@ -168,11 +174,15 @@ export class AnveshanMilestoneService {
     }
 
     // The answer is already stored, so a scoring failure is recorded on it rather than failing the request.
-    saved = { ...saved, score: await this.requestScore(saved, question) };
+    // With scoring turned off the answer is only stored, without any call to the scoring service.
+    const scoringEnabled = isAnswerScoringEnabled();
+    if (scoringEnabled) {
+      saved = { ...saved, score: await this.requestScore(saved, question) };
+    }
 
     const answeredCount = milestone.progress.answers + 1;
     return {
-      question: toAnswerableQuestion({ ...question, isAnswerSubmitted: true }, saved),
+      question: toAnswerableQuestion({ ...question, isAnswerSubmitted: true }, saved, scoringEnabled),
       answeredCount: Math.min(answeredCount, requiredAnswers),
       requiredAnswers,
       completed: answeredCount >= requiredAnswers,
@@ -181,6 +191,9 @@ export class AnveshanMilestoneService {
 
   // Returns the caller's score for an answered question, without the raw scoring service response.
   async getAnswerScore(userId: string, questionId: string): Promise<AnveshanAnswerScoreView> {
+    if (!isAnswerScoringEnabled()) {
+      throw new NotFoundException('Advisory scoring is not available.');
+    }
     return toScoreView(await this.refreshAnswerScore(userId, questionId));
   }
 
@@ -374,7 +387,12 @@ function answerLimitMessage(requiredAnswers: number): string {
   return `You have already submitted the required ${requiredAnswers} advisories. No more advisories can be submitted.`;
 }
 
-function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null): AnveshanAnswerableQuestion {
+// Maps a question and its answer for the client. The score is left out when scoring is turned off.
+function toAnswerableQuestion(
+  question: Question,
+  answer: AnveshanAnswer | null,
+  includeScore: boolean,
+): AnveshanAnswerableQuestion {
   return {
     id: question.id,
     questionText: question.questionText,
@@ -391,7 +409,7 @@ function toAnswerableQuestion(question: Question, answer: AnveshanAnswer | null)
           sources: answer.sources,
           remarks: answer.remarks,
           answeredAt: answer.answeredAt,
-          score: answer.score ? toScoreView(answer.score) : null,
+          score: includeScore && answer.score ? toScoreView(answer.score) : null,
         }
       : null,
   };
