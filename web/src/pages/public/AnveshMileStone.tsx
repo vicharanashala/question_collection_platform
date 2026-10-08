@@ -28,7 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { AnveshanMilestoneResponse, AnveshanStepTimeline } from "@/api/client";
-import { ANVESHAN_ANSWERS_DESKTOP_QUERY, ANVESHAN_ANSWERS_ROUTE, ANVESHAN_PLATFORM_URL } from "@/constants/public";
+import { ANVESHAN_ANSWERS_DESKTOP_QUERY, ANVESHAN_ANSWERS_ROUTE, ANVESHAN_PLATFORM_URL, ANVESHAN_SUBMIT_ROUTE } from "@/constants/public";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export type AnveshanMilestoneData = AnveshanMilestoneResponse;
@@ -162,10 +162,11 @@ interface MilestoneRowProps {
   index: number;
   open: boolean;
   timeline?: AnveshanStepTimeline;
+  onSelect: () => void;
 }
 
 // One requirement row with a staggered entrance, counting progress, a filling bar and its start/end times.
-function MilestoneRow({ icon: Icon, label, progress, required, index, open, timeline }: MilestoneRowProps) {
+function MilestoneRow({ icon: Icon, label, progress, required, index, open, timeline, onSelect }: MilestoneRowProps) {
   const reduceMotion = useReducedMotion();
   const delay = 0.2 + index * ROW_STAGGER_SECONDS;
   const shownProgress = useCountUp(progress, { active: open, duration: 0.8, delay });
@@ -178,12 +179,18 @@ function MilestoneRow({ icon: Icon, label, progress, required, index, open, time
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: reduceMotion ? 0 : delay, ease: "easeOut" }}
       className={cn(
-        "rounded-xl border px-3 py-2.5 transition-colors",
+        "relative rounded-xl border px-3 py-2.5 transition-colors hover:border-primary/50",
         done
           ? "border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/25"
           : "border-border-subtle bg-surface",
       )}
     >
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-label={label}
+        className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      />
       <div className="flex items-center gap-3">
         <span
           className={cn(
@@ -337,6 +344,12 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
   const answerGoalMet = data?.submissionsCompleted && data.progress.answers >= data.requirements.answers ? 1 : 0;
   const goalsMet = submissionGoalsMet + answerGoalMet;
 
+  // Closes the modal and opens the submit page on the tab matching the chosen goal.
+  const startSubmitting = (key: MilestoneKey) => {
+    onOpenChange(false);
+    navigate(key === "questions" ? ANVESHAN_SUBMIT_ROUTE : `${ANVESHAN_SUBMIT_ROUTE}?tab=${key}`);
+  };
+
   // Closes the modal and opens the page where users answer their own questions.
   const startAnswering = () => {
     onOpenChange(false);
@@ -398,6 +411,7 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
                   index={index}
                   open={open}
                   timeline={data.timeline?.[key]}
+                  onSelect={() => startSubmitting(key)}
                 />
               ))}
             </ul>

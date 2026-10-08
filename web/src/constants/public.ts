@@ -393,6 +393,7 @@ export const AGRI_ENTITY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/w
 
 // Page where Anveshan users answer their own submitted questions (final milestone step).
 export const ANVESHAN_ANSWERS_ROUTE = '/home/anveshan-answers'
+export const ANVESHAN_SUBMIT_ROUTE = '/home/ask'
 
 // Must match the limits in the backend anveshan-answer DTO.
 export const MIN_ANVESHAN_ANSWER_LENGTH = 500
