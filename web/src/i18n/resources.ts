@@ -1065,7 +1065,9 @@ const resources = {
         "loadingReport": "Loading report…",
         "reportNotFound": "Report not found",
         "reportNotFoundHint": "It may have been removed or you no longer have access.",
-        "backToReports": "Back to reports"
+        "backToReports": "Back to reports",
+        "raiseSupportTicket": "Raise Support Ticket",
+        "raiseSupportTicketHint": "Need help from our support team? Raise a ticket and we will reply to you by email."
       },
       "faq": {
         "title": "Help & FAQ",
