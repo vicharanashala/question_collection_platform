@@ -25,12 +25,12 @@ import {
   ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
   CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
-  Languages, Moon, Sun, SlidersHorizontal,
+  Languages, Moon, Sun, SlidersHorizontal, LifeBuoy,
 } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { toast } from 'sonner'
-import { REWARD_TIERS, categoryLabel } from '@/constants/public'
+import { REWARD_TIERS, RAISE_TICKET_URL, categoryLabel } from '@/constants/public'
 import { cn, getInitials, formatDate } from '@/lib/utils'
 import type { VerificationStatus } from '@/types'
 
@@ -571,6 +571,11 @@ export function PublicProfilePage() {
               <ActionRow icon={Wallet} label={t('profile.paymentMethods')} onClick={() => navigate('/home/payment-methods')} disabled />
             )}
             <ActionRow icon={Flag} label={t('report.title')} onClick={() => navigate('/home/reports')} />
+            <ActionRow
+              icon={LifeBuoy}
+              label={t('report.raiseSupportTicket', 'Raise Support Ticket')}
+              onClick={() => window.open(RAISE_TICKET_URL, '_blank', 'noopener,noreferrer')}
+            />
             <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} />
             <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={() => navigate('/home/terms')} />
             <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={() => navigate('/home/privacy')} />
