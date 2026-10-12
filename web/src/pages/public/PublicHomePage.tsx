@@ -504,7 +504,7 @@ export function PublicHomePage() {
         className={cn(
           "grid gap-3 sm:gap-4",
           isAnveshanUser && !showPayments ? "grid-cols-1" : "grid-cols-2",
-          !isAnveshanUser && "lg:grid-cols-4",
+          !isAnveshanUser && (showPayments ? "lg:grid-cols-4" : "lg:grid-cols-3"),
         )}
       >
         {showPayments && (
