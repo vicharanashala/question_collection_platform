@@ -157,7 +157,7 @@ function ActionCard({
       )}
       
       {badge && (
-        <div className="absolute right-4 top-4 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:right-5 sm:top-5">
+        <div className="absolute right-4 top-4 rounded-full bg-warning/10 px-2.5 py-1 text-[10px] font-semibold text-warning sm:right-5 sm:top-5">
           {badge}
         </div>
       )}

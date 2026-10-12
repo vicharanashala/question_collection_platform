@@ -131,7 +131,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Only Anveshan users can open the answer and support ticket pages; everyone else goes back to home.
+// Only Anveshan users can open the answer page; everyone else goes back to home.
 function AnveshanRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   if (!user?.isAnveshanUser) return <Navigate to="/home" replace />
@@ -235,7 +235,7 @@ export default function App() {
           <Route path="faqs"         element={<PublicFaqsPage />} />
           <Route path="profile"      element={<PublicProfilePage />} />
           <Route path="wallet"             element={<PaymentRoute><PublicWalletPage /></PaymentRoute>} />
-          <Route path="reports"             element={<AnveshanRoute><PublicReportsPage /></AnveshanRoute>} />
+          <Route path="reports"             element={<PublicReportsPage />} />
           <Route path="reports/:reportId"   element={<PublicReportDetailPage />} />
           <Route path="payment-methods"    element={<PaymentRoute><PublicPaymentMethodsPage /></PaymentRoute>} />
           <Route path="terms"              element={<PublicTermsPage />} />
