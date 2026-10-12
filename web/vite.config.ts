@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
           // which exceeds Workbox's 2 MiB default and would fail the build. Raised so it is still
           // precached for offline use; lazy-loading languages would let this come back down.
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+          // The Zoho support-ticket page is a standalone static HTML file, not a React route —
+          // never answer its navigations with the SPA shell.
+          navigateFallbackDenylist: [/^\/raise-ticket\.html/],
         },
               manifest: {
         name: 'AnnaDatha',
