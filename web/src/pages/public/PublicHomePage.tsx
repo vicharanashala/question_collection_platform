@@ -590,6 +590,8 @@ export function PublicHomePage() {
               description={t("home.myWalletSub")}
               cta={t("home.viewWallet")}
               onClick={() => navigate("/home/wallet")}
+              disabled
+              badge={t("common.comingSoon", "Coming Soon")}
             />
           )}
         </div>
