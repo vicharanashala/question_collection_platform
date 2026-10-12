@@ -160,7 +160,8 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 
 // ─── Core request ──────────────────────────────────────────────────────────
 
-const DEFAULT_TIMEOUT_MS = 10_000
+// Slow mobile networks and backend cold starts often need more than 10 s for ordinary requests.
+const DEFAULT_TIMEOUT_MS = 20_000
 // OTP requests can include a Cloud Run cold start plus BRPS token and SMS calls.
 const OTP_REQUEST_TIMEOUT_MS = 30_000
 // Question preview and submit wait on LLM classification, which is slower for non-English text.
