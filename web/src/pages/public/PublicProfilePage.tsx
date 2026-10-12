@@ -570,12 +570,16 @@ export function PublicProfilePage() {
             {showPayments && (
               <ActionRow icon={Wallet} label={t('profile.paymentMethods')} onClick={() => navigate('/home/payment-methods')} disabled />
             )}
-            <ActionRow icon={Flag} label={t('report.title')} onClick={() => navigate('/home/reports')} />
-            <ActionRow
-              icon={LifeBuoy}
-              label={t('report.raiseSupportTicket', 'Raise Support Ticket')}
-              onClick={() => window.open(RAISE_TICKET_URL, '_blank', 'noopener,noreferrer')}
-            />
+            {isAnveshanUser && (
+              <>
+                <ActionRow icon={Flag} label={t('report.title')} onClick={() => navigate('/home/reports')} />
+                <ActionRow
+                  icon={LifeBuoy}
+                  label={t('report.raiseSupportTicket', 'Raise Support Ticket')}
+                  onClick={() => window.open(RAISE_TICKET_URL, '_blank', 'noopener,noreferrer')}
+                />
+              </>
+            )}
             <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} />
             <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={() => navigate('/home/terms')} />
             <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={() => navigate('/home/privacy')} />
