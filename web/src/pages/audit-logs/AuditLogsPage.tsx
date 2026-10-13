@@ -419,11 +419,11 @@ export function AuditLogsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All roles</SelectItem>
-                    <SelectItem value="super_admin">Super admin</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="curator">Curator</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="distributor">Distributor</SelectItem>
+                    {roleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
