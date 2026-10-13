@@ -204,9 +204,8 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:production-${{ needs.build.outputs.sha }}
           project_id: ${{ env.PROJECT_ID }}
-          # Dedicated runtime identity. It needs storage.objectAdmin on the media bucket
-          # and iam.serviceAccountTokenCreator on itself so V4 URL signing works without
-          # a private key on disk.
+          # Dedicated runtime identity. It needs storage.objectAdmin on the media bucket.
+          # Media links are signed by the app itself, so no Token Creator role is needed.
           flags: --allow-unauthenticated --service-account=${{ secrets.GCP_RUNTIME_SA_PROD || vars.GCP_RUNTIME_SA_PROD }}
           env_vars: |
             NODE_ENV=production
