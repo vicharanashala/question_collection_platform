@@ -556,7 +556,6 @@ export function QuestionsPage() {
                   text={detailQuestion.questionText}
                   selectedLang={getLang(detailQuestion.id)}
                   onLangChange={(lang) => setLang(detailQuestion.id, lang)}
-                  sourceLanguage={detailQuestion.language ?? "en"}
                   inline
                 />
               </div>
