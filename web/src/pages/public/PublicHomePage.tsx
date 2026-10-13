@@ -157,7 +157,7 @@ function ActionCard({
       )}
       
       {badge && (
-        <div className="absolute right-4 top-4 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary sm:right-5 sm:top-5">
+        <div className="absolute right-4 top-4 rounded-full bg-warning/10 px-2.5 py-1 text-[10px] font-semibold text-warning sm:right-5 sm:top-5">
           {badge}
         </div>
       )}
@@ -504,7 +504,7 @@ export function PublicHomePage() {
         className={cn(
           "grid gap-3 sm:gap-4",
           isAnveshanUser && !showPayments ? "grid-cols-1" : "grid-cols-2",
-          !isAnveshanUser && "lg:grid-cols-4",
+          !isAnveshanUser && (showPayments ? "lg:grid-cols-4" : "lg:grid-cols-3"),
         )}
       >
         {showPayments && (
@@ -590,6 +590,8 @@ export function PublicHomePage() {
               description={t("home.myWalletSub")}
               cta={t("home.viewWallet")}
               onClick={() => navigate("/home/wallet")}
+              disabled
+              badge={t("common.comingSoon", "Coming Soon")}
             />
           )}
         </div>
