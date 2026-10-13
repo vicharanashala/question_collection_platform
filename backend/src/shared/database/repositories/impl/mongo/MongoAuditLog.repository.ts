@@ -1,10 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, PipelineStage } from 'mongoose';
+import { Model, PipelineStage, QueryFilter } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { IAuditLogRepository } from '../../IAuditLog.repository';
-import { AuditLog } from '../../../entities';
 import { ActorType } from '../../../../classes/enums';
+import { AuditLog } from '@/shared/database/mongodb/schemas/audit-log.schema';
+import { QueryAuditLogsDto } from '@/modules/audit-logs/dto/query-audit-log-dto';
+
+const SORT_FIELDS = {
+  createdAt: 'createdAt',
+  actionType: 'actionType',
+  actorId: 'actor.id',
+} as const;
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 @Injectable()
 export class MongoAuditLogRepository
@@ -15,17 +24,35 @@ export class MongoAuditLogRepository
     super(_model);
   }
 
-  async findByActorId(actorId: string, actorType: ActorType, limit = 50): Promise<AuditLog[]> {
-    return this._model
-      .find({ actorId, actorType }, undefined, { limit, sort: { createdAt: -1 } })
-      .exec() as Promise<AuditLog[]>;
+  private buildAuditFilter(q: QueryAuditLogsDto): QueryFilter<AuditLog>{
+     const filter: QueryFilter<AuditLog> = { resource: { $exists: true } };
+
+  if (q.role) filter['actor.actorType'] = q.role;
+  if (q.actorId) filter['actor.id'] = q.actorId;
+
+  const types = [...(q.actionTypes ?? []), ...(q.actionType ? [q.actionType] : [])];
+  if (types.length) filter.actionType = { $in: types };
+
+  if (q.fromDate || q.toDate) {
+    const range: Record<string, Date> = {};
+    if (q.fromDate) range.$gte = new Date(q.fromDate);
+    if (q.toDate) {
+      const end = new Date(q.toDate);
+      if (DATE_ONLY.test(q.toDate)) {
+        end.setUTCDate(end.getUTCDate() + 1); // date-only: include the whole day
+        range.$lt = end;
+      } else {
+        range.$lte = end; // full timestamp: use as given
+      }
+    }
+    filter.createdAt = range;
   }
 
-  async findByEntity(entityType: string, entityId: string): Promise<AuditLog[]> {
-    return this._model
-      .find({ entityType, entityId })
-      .sort({ createdAt: -1 })
-      .exec() as Promise<AuditLog[]>;
+  if (q.search) {
+    const rx = new RegExp(q.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    filter.$or = [{ 'actor.name': rx }, { 'actor.email': rx }];
+  }
+  return filter;
   }
 
   /**
@@ -78,71 +105,17 @@ export class MongoAuditLogRepository
     return this._model.aggregate(pipeline).exec() as Promise<Array<{ date: string; action: string; count: number }>>;
   }
 
+async findPage(q: QueryAuditLogsDto) {
+  const page = q.page ?? 1;
+  const limit = q.limit ?? 50;
 
-  async getRecentWithActorName(
-  limit = 20,
-): Promise<Array<AuditLog & { actorName?: string }>> {
-  return this._model.aggregate([
-    {
-      $sort: {
-        createdAt: -1,
-      },
-    },
+  const [data, total] = await this.createQueryBuilder('a')
+    .whereRaw(this.buildAuditFilter(q))
+    .orderBy(SORT_FIELDS[q.sortBy ?? 'createdAt'], q.sortOrder ?? 'DESC')
+    .skip((page - 1) * limit)
+    .take(limit)
+    .getManyAndCount();
 
-    {
-      $limit: limit,
-    },
-
-    {
-      $lookup: {
-        from: 'users',
-        let: {
-          actorId: '$actorId',
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: [
-                  {
-                    $toString: '$_id',
-                  },
-                  '$$actorId',
-                ],
-              },
-            },
-          },
-          {
-            $project: {
-              _id: 0,
-              name: 1,
-            },
-          },
-        ],
-        as: 'actor',
-      },
-    },
-
-    {
-      $unwind: {
-        path: '$actor',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-
-    {
-      $addFields: {
-        actorName: '$actor.name',
-      },
-    },
-
-    {
-      $project: {
-        actor: 0,
-      },
-    },
-  ]).exec() as Promise<Array<AuditLog & {
-    actorName?: string;
-  }>>;
+  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
 }
-}
+ }

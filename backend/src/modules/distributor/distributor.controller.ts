@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Param,
   Patch,
   Post,
@@ -15,7 +16,7 @@ import {
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
-import { UserRole } from '../../shared/classes/enums';
+import { ActorType, AuditAction, OutcomeStatus, UserRole } from '../../shared/classes/enums';
 import { INDIAN_STATES } from '../../shared/constants/indian-states.constant';
 
 import { DistributorService } from './distributor.service';
@@ -24,16 +25,19 @@ import {
   ListApprovedQuestionsDto,
   ListDistributionsDto,
 } from './dto';
+import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
+import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
+import { AuditService } from '../audit-logs/audit.service';
 
 interface AuthedRequest extends Express.Request {
-  user: { id: string; role: UserRole };
+  user: { id: string; role: UserRole, name: string };
 }
 
 @Controller('distributor')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.DISTRIBUTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class DistributorController {
-  constructor(private readonly distributorService: DistributorService) {}
+  constructor(private readonly distributorService: DistributorService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(DistributorController.name),) {}
 
   // ── Reference data ───────────────────────────────────────────────────────
 
@@ -80,12 +84,70 @@ export class DistributorController {
   // browse and monitor distributions but must not perform the
   // promote-to-final action.
   @Roles(UserRole.DISTRIBUTOR)
-  assignStates(
+  async assignStates(
     @Req() req: AuthedRequest,
     @Param('id') id: string,
     @Body() dto: AssignStatesDto,
+    @ReqMeta() meta: RequestMeta
   ) {
-    return this.distributorService.assignStates(req.user.id, req.user.role, id, dto);
+    const base: AuditLogDto = {
+          actionType: AuditAction.QUESTION_DISTRIBUTED,
+          actor: {
+            id: req.user.id,
+            actorType: ActorType.DISTRIBUTOR,
+            name: req.user.name,
+          },
+          resource: {
+            requestId: meta.requestId,
+            ipAddress: meta.ipAddress,
+          },
+          context: {
+            questionId: id,
+          }
+        };
+    let result
+    try {
+      result =  await this.distributorService.assignStates(req.user.id, req.user.role, id, dto);
+    } catch (err) {
+            await this.safeAudit({
+              ...base,
+              changes: {
+                before: {},
+                after: {},
+              },
+              outcome: {
+                status: OutcomeStatus.FAILURE,
+                errorMessage: err instanceof Error ? err.message : String(err),
+              },
+            });
+            throw err;
+    }
+        await this.safeAudit({
+      ...base,
+      changes: {
+        before: {},
+        after: {stateAssigned: dto.states, note: dto.notes},
+      },
+      outcome: { status: OutcomeStatus.SUCCESS },
+    });
+
+    return result;
+  }
+
+  private async safeAudit(payload: AuditLogDto) {
+    try {
+      await this.auditService.createAuditLog({
+        ...payload,
+        changes: payload.changes ?? undefined,
+        context: payload.context ?? undefined,
+        outcome: payload.outcome ?? undefined,
+      });
+    } catch (e) {
+      this.logger.error(
+        "Failed to write audit log",
+        e instanceof Error ? e.stack : String(e),
+      );
+    }
   }
 
   @Get('distributions')

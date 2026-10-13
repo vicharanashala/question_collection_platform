@@ -1,866 +1,139 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/context/AuthContext'
+import { useCallback, useEffect, useState } from 'react'
 import { auditApi, getErrorMessage } from '@/api/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { DateRangeFilter } from '@/components/DateRange-Filter'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import {
-  Tabs, TabsList, TabsTrigger, TabsContent,
-} from '@/components/ui/tabs'
-import {
-  ChevronLeft, ChevronRight, Download, X,
-  ScrollText, BarChart3, Activity as ActivityIcon,
-  Users,
-} from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Grid3X3, List, ScrollText, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { format, parseISO } from 'date-fns'
 import { formatDateTime } from '@/lib/utils'
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend,
-} from 'recharts'
-import type {
-  AuditLogEntry,
-  AuditLogsResponse,
-  AuditStatsResponse,
-  AuditSummaryResponse,
-  AuditLogQuery,
-  AuditUserSummary,
-} from '@/types'
+import type { DateRange } from '@daypicker/react'
+import type { AuditLogEntry, AuditLogQuery, AuditLogsResponse } from '@/types'
 
-// ─── Action badge color ───────────────────────────────────────────────────────
+const PAGE_SIZE = 50
+type ViewMode = 'list' | 'grid'
 
-function actionColor(action: string): string {
-  if (action.includes('approved') || action.includes('completed') || action.includes('verified') || action.includes('unsuspended') || action.includes('unbanned')) return 'success'
-  if (action.includes('rejected') || action.includes('suspended') || action.includes('banned')) return 'destructive'
-  if (action.includes('held')) return 'warning'
-  if (action.includes('config') || action.includes('updated')) return 'secondary'
-  return 'outline'
+const AUDIT_ACTIONS = [
+  'user_suspended', 'user_banned', 'user_unsuspended', 'user_unbanned', 'user_verified', 'user_created',
+  'config_updated', 'question_approved', 'question_rejected', 'question_distributed', 'hold_question',
+  'request_info', 'report_replied', 'update_report', 'report_status_changed', 'create_faq', 'update_faq',
+  'delete_faq', 'translate_question',
+] as const
+
+const POSITIVE_ACTIONS = new Set(['user_unsuspended', 'user_unbanned', 'user_verified', 'user_created', 'question_approved', 'create_faq'])
+const DESTRUCTIVE_ACTIONS = new Set(['user_suspended', 'user_banned', 'question_rejected', 'delete_faq'])
+
+function prettify(value: string) {
+  return value.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
-// ─── Entity Type badge ────────────────────────────────────────────────────────
-
-function entityTypeColor(et: string | null): string {
-  switch (et) {
-    case 'withdrawal_request': return 'bg-blue-100 text-blue-800'
-    case 'user': return 'bg-purple-100 text-purple-800'
-    case 'question': return 'bg-green-100 text-green-800'
-    case 'admin_config': return 'bg-orange-100 text-orange-800'
-    default: return 'bg-gray-100 text-gray-800'
-  }
+function actionVariant(action: string): 'success' | 'destructive' | 'warning' {
+  if (POSITIVE_ACTIONS.has(action)) return 'success'
+  if (DESTRUCTIVE_ACTIONS.has(action)) return 'destructive'
+  return 'warning'
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <Card className="shadow-xs">
-      <CardContent className="p-5">
-        <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{label}</p>
-        <p className="mt-1 text-2xl sm:text-3xl font-extrabold text-text tabular-nums">
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </p>
-        {sub && <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{sub}</p>}
-      </CardContent>
-    </Card>
-  )
+function valueLabel(value: unknown): string {
+  if (value === null || value === undefined) return 'Not provided'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (typeof value === 'object') return Array.isArray(value) ? value.join(', ') : 'View details'
+  return String(value)
 }
 
-// ─── Value Diff ───────────────────────────────────────────────────────────────
-
-function ValueDiff({ old: oldVal, next: nextVal }: { old: Record<string, unknown> | null; next: Record<string, unknown> | null }) {
-  if (!oldVal && !nextVal) return <span className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">—</span>
-  const allKeys = new Set([...Object.keys(oldVal ?? {}), ...Object.keys(nextVal ?? {})])
-  const changes = Array.from(allKeys).filter((k) => {
-    const ov = oldVal?.[k]; const nv = nextVal?.[k]
-    return JSON.stringify(ov) !== JSON.stringify(nv)
-  })
-  if (!changes.length) return <span className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">—</span>
-  return (
-    <div className="flex flex-col gap-0.5">
-      {changes.slice(0, 3).map((k) => (
-        <span key={k} className="text-[11px] sm:text-[11px] sm:text-xs">
-          <span className="text-destructive font-medium">{String(oldVal?.[k] ?? '∅')}</span>
-          {' → '}
-          <span className="text-success font-medium">{String(nextVal?.[k] ?? '∅')}</span>
-        </span>
-      ))}
-      {changes.length > 3 && <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">+{changes.length - 3} more</span>}
-    </div>
-  )
-}
-
-// ─── Log Detail Slide-over ────────────────────────────────────────────────────
-
-interface LogDetailProps {
-  entry: AuditLogEntry | null
-  onClose: () => void
-}
-
-function LogDetail({ entry, onClose }: LogDetailProps) {
-  if (!entry) return null
-  return (
-    <Dialog open={!!entry} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg p-2.5">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ScrollText className="h-4 w-4" />
-            Audit Entry Detail
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-xs sm:text-xs sm:text-sm">
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Timestamp</p>
-              <p className="font-medium">{formatDateTime(entry.createdAt) ?? entry.createdAt}</p>
-            </div>
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Actor</p>
-              <p className="font-medium">
-                {entry.actorName ?? entry.actorId ?? 'System'}
-                {entry.actorRole && <span className="ml-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">({entry.actorRole})</span>}
-              </p>
-            </div>
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Actor Type</p>
-              <p className="font-medium capitalize">{entry.actorType}</p>
-            </div>
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Action</p>
-              <Badge variant={actionColor(entry.action) as 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'}>{entry.action}</Badge>
-            </div>
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Entity Type</p>
-              <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] sm:text-xs font-medium ${entityTypeColor(entry.entityType)}`}>
-                {entry.entityType ?? '—'}
-              </span>
-            </div>
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">Entity ID</p>
-              <p className="font-mono text-[11px] sm:text-[11px] sm:text-xs break-all">{entry.entityId ?? '—'}</p>
-            </div>
-          </div>
-
-          {(entry.oldValue || entry.newValue) && (
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">Changes</p>
-              <div className="rounded border border-border-subtle bg-surface-variant p-3 text-[11px] sm:text-[11px] sm:text-xs font-mono space-y-1">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">Old Value</p>
-                    <pre className="text-destructive whitespace-pre-wrap">{entry.oldValue ? JSON.stringify(entry.oldValue, null, 2) : '∅'}</pre>
-                  </div>
-                  <div>
-                    <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">New Value</p>
-                    <pre className="text-success whitespace-pre-wrap">{entry.newValue ? JSON.stringify(entry.newValue, null, 2) : '∅'}</pre>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {entry.metadata && (
-            <div>
-              <p className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs mb-1">Metadata</p>
-              <pre className="rounded border border-border-subtle bg-surface-variant p-3 text-[11px] sm:text-[11px] sm:text-xs font-mono text-text-secondary overflow-auto max-h-40">
-                {JSON.stringify(entry.metadata, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-// ─── Overview Tab ─────────────────────────────────────────────────────────────
-
-interface OverviewTabProps {
-  stats: AuditStatsResponse | null
-  summary: AuditSummaryResponse | null
-  loading: boolean
-  dateFilter: { fromDate: string; toDate: string }
-  onDateFilterChange: (f: { fromDate: string; toDate: string }) => void
-  onActorClick: (actorId: string) => void
-}
-
-function OverviewTab({ stats, summary, loading, dateFilter, onDateFilterChange, onActorClick }: OverviewTabProps) {
-  const chartData = summary?.series.map((s) => ({
-    date: s.date,
-    Withdrawals: s.withdrawals,
-    'User Actions': s.userActions,
-    'Question Reviews': s.questionReviews,
-    'Config Changes': s.configChanges,
-  })) ?? []
-
-  return (
-    <div className="space-y-6">
-      {/* Date filter */}
-      <div className="flex items-end gap-3 flex-wrap">
-        <div>
-          <Label className="text-[11px] sm:text-[11px] sm:text-xs">From</Label>
-          <Input type="date" value={dateFilter.fromDate} onChange={(e) => onDateFilterChange({ ...dateFilter, fromDate: e.target.value })} className="mt-1 w-40" />
-        </div>
-        <div>
-          <Label className="text-[11px] sm:text-[11px] sm:text-xs">To</Label>
-          <Input type="date" value={dateFilter.toDate} onChange={(e) => onDateFilterChange({ ...dateFilter, toDate: e.target.value })} className="mt-1 w-40" />
-        </div>
+function KeyValueFields({ value, compact = false }: { value: Record<string, unknown> | null | undefined; compact?: boolean }) {
+  const entries = Object.entries(value ?? {})
+  if (!entries.length) return <p className="text-xs text-text-tertiary">No details recorded.</p>
+  return <dl className={compact ? 'grid gap-x-4 gap-y-2 sm:grid-cols-2' : 'grid gap-x-5 gap-y-3 sm:grid-cols-2'}>
+    {entries.map(([key, fieldValue]) => (
+      <div key={key} className="min-w-0">
+        <dt className="text-[11px] font-medium uppercase tracking-wide text-text-tertiary">{prettify(key)}</dt>
+        {fieldValue && typeof fieldValue === 'object' && !Array.isArray(fieldValue) ? (
+          <dd className="mt-1 rounded-md border border-border-subtle bg-surface-variant p-2"><KeyValueFields value={fieldValue as Record<string, unknown>} compact /></dd>
+        ) : <dd className="mt-0.5 break-words text-sm text-text-secondary">{valueLabel(fieldValue)}</dd>}
       </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Total Actions"
-          value={stats?.summary.totalActions ?? '—'}
-          sub={stats?.fromDate && stats?.toDate ? `${stats.fromDate} — ${stats.toDate}` : undefined}
-        />
-        <StatCard
-          label="Unique Actors"
-          value={stats?.summary.uniqueActors ?? '—'}
-          sub="Admins & curators"
-        />
-        <StatCard
-          label="Top Performer"
-          value={stats?.summary.mostActiveActorName ?? '—'}
-          sub={stats?.summary.mostActiveActor ? `ID: ${stats.summary.mostActiveActor.slice(0, 8)}...` : undefined}
-        />
-      </div>
-
-      {/* Time-series chart */}
-      {chartData.length > 0 && (
-        <Card className="shadow-xs">
-          <CardHeader>
-            <CardTitle className="text-sm sm:text-sm sm:text-base flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Activity Over Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="Withdrawals" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="User Actions" fill="#a855f7" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Question Reviews" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Config Changes" fill="#f97316" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Leaderboard */}
-      <Card className="shadow-xs">
-        <CardHeader>
-          <CardTitle className="text-sm sm:text-sm sm:text-base flex items-center gap-2">
-            <ActivityIcon className="h-4 w-4" />
-            Moderator Activity Leaderboard
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 rounded bg-surface-variant animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <table className="w-full text-xs sm:text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b border-border-subtle text-left">
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">#</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Actor</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Role</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Withdrawal Approved</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Withdrawal Rejected</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Questions Approved</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Questions Rejected</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Users Suspended</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Config Changed</th>
-                  <th className="pb-2 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs text-center">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats?.actors.map((actor, i) => (
-                  <tr
-                    key={actor.actorId}
-                    className="border-b border-border-subtle hover:bg-surface-variant cursor-pointer transition-colors"
-                    onClick={() => onActorClick(actor.actorId)}
-                  >
-                    <td className="py-2.5 text-text-tertiary">{i + 1}</td>
-                    <td className="py-2.5 font-medium">{actor.actorName}</td>
-                    <td className="py-2.5">
-                      <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs">{actor.actorRole}</Badge>
-                    </td>
-                    <td className="py-2.5 text-center">{actor.withdrawalApproved}</td>
-                    <td className="py-2.5 text-center">{actor.withdrawalRejected}</td>
-                    <td className="py-2.5 text-center text-success font-medium">{actor.questionApproved}</td>
-                    <td className="py-2.5 text-center text-destructive font-medium">{actor.questionRejected}</td>
-                    <td className="py-2.5 text-center">{actor.userSuspended + actor.userBanned}</td>
-                    <td className="py-2.5 text-center">{actor.configUpdated}</td>
-                    <td className="py-2.5 text-center font-bold">{actor.totalActions}</td>
-                  </tr>
-                ))}
-                {(!stats?.actors || stats.actors.length === 0) && (
-                  <tr>
-                    <td colSpan={10} className="py-8 text-center text-text-tertiary">No activity found</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
+    ))}
+  </dl>
 }
 
-// ─── Activity Tab ─────────────────────────────────────────────────────────────
-
-interface ActivityTabProps {
-  logs: AuditLogEntry[]
-  total: number
-  page: number
-  pages: number
-  loading: boolean
-  filters: AuditLogQuery
-  onFiltersChange: (f: AuditLogQuery) => void
-  onPageChange: (p: number) => void
-  onExport: () => void
-  onRowClick: (entry: AuditLogEntry) => void
+function DetailBlock({ title, value, className = '' }: { title: string; value: Record<string, unknown> | null | undefined; className?: string }) {
+  return <section className={className}><h3 className="mb-3 text-sm font-semibold text-text">{title}</h3><KeyValueFields value={value} /></section>
 }
 
-const ACTION_OPTIONS = [
-  { group: 'Withdrawals', actions: ['withdrawal_approved', 'withdrawal_rejected', 'withdrawal_retry', 'withdrawal_completed'] },
-  { group: 'Users', actions: ['user_suspended', 'user_banned', 'user_unsuspended', 'user_unbanned', 'user_verified'] },
-  { group: 'Questions', actions: ['question_approved', 'question_rejected', 'question_held'] },
-  { group: 'Config', actions: ['admin_config_updated'] },
-  { group: 'Auth', actions: ['otp_requested', 'otp_verified', 'otp_expired'] },
-]
-
-function ActivityTab({
-  logs, total, page, pages, loading,
-  filters, onFiltersChange, onPageChange, onExport, onRowClick,
-}: ActivityTabProps) {
-  const selectedActions = new Set(filters.actions ?? [])
-
-  function toggleAction(action: string) {
-    const next = new Set(selectedActions)
-    if (next.has(action)) next.delete(action); else next.add(action)
-    onFiltersChange({ ...filters, actions: next.size ? Array.from(next) : undefined, page: 1 })
+function EntryDetails({ entry }: { entry: AuditLogEntry }) {
+  const actorDetails = {
+    actor: entry.actor?.name ?? entry.actor?.id ?? 'System',
+    role: entry.actor?.actorType ? prettify(entry.actor.actorType) : null,
+    actorId: entry.actor?.id,
+    requestId: entry.resource?.requestId,
+    ipAddress: entry.resource?.ipAddress,
   }
-
-  function clearFilters() {
-    onFiltersChange({ page: 1, limit: 50 })
-  }
-
-  const hasFilters = !!(filters.actorType || filters.actions?.length || filters.entityType || filters.search || filters.fromDate || filters.toDate)
-
-  return (
-    <div className="space-y-4">
-      {/* Filters bar */}
-      <Card className="shadow-xs">
-        <CardContent className="p-4 space-y-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-1 min-w-48">
-              <Input
-                placeholder="Search actions, entity types..."
-                value={filters.search ?? ''}
-                onChange={(e) => onFiltersChange({ ...filters, search: e.target.value || undefined, page: 1 })}
-              />
-            </div>
-            <select
-              className="rounded border border-border-subtle bg-surface px-3 py-2 text-xs sm:text-xs sm:text-sm"
-              value={filters.actorType ?? ''}
-              onChange={(e) => onFiltersChange({ ...filters, actorType: e.target.value || undefined, page: 1 })}
-            >
-              <option value="">All Actor Types</option>
-              <option value="admin">Admin</option>
-              <option value="curator">Curator</option>
-              <option value="user">User</option>
-              <option value="system">System</option>
-            </select>
-            <select
-              className="rounded border border-border-subtle bg-surface px-3 py-2 text-xs sm:text-xs sm:text-sm"
-              value={filters.entityType ?? ''}
-              onChange={(e) => onFiltersChange({ ...filters, entityType: e.target.value || undefined, page: 1 })}
-            >
-              <option value="">All Entity Types</option>
-              <option value="withdrawal_request">Withdrawal</option>
-              <option value="user">User</option>
-              <option value="question">Question</option>
-              <option value="admin_config">Config</option>
-            </select>
-            <Input
-              type="date"
-              className="w-36"
-              value={filters.fromDate ?? ''}
-              onChange={(e) => onFiltersChange({ ...filters, fromDate: e.target.value || undefined, page: 1 })}
-            />
-            <Input
-              type="date"
-              className="w-36"
-              value={filters.toDate ?? ''}
-              onChange={(e) => onFiltersChange({ ...filters, toDate: e.target.value || undefined, page: 1 })}
-            />
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-destructive">
-                <X className="h-3 w-3" /> Clear
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={onExport} className="gap-1 ml-auto">
-              <Download className="h-3 w-3" /> Export CSV
-            </Button>
-          </div>
-
-          {/* Action type checkboxes */}
-          <div className="flex flex-wrap gap-3">
-            {ACTION_OPTIONS.map(({ group, actions }) => (
-              <div key={group} className="flex flex-col gap-1">
-                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-text-tertiary">{group}</p>
-                <div className="flex flex-wrap gap-1">
-                  {actions.map((action) => {
-                    const active = selectedActions.has(action)
-                    return (
-                      <button
-                        key={action}
-                        onClick={() => toggleAction(action)}
-                        className={`rounded px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs border transition-colors ${
-                          active
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-surface text-text-secondary border-border-subtle hover:bg-surface-variant'
-                        }`}
-                      >
-                        {action}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Results table */}
-      <Card className="shadow-xs">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b border-border-subtle text-left bg-surface-variant">
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Timestamp</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Actor</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Action</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Entity Type</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Entity ID</th>
-                  <th className="px-4 py-3 font-semibold text-text-secondary text-[11px] sm:text-[11px] sm:text-xs">Changes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  Array.from({ length: 10 }).map((_, i) => (
-                    <tr key={i} className="border-b border-border-subtle">
-                      <td className="px-4 py-3"><div className="h-4 w-28 rounded bg-surface-variant animate-pulse" /></td>
-                      <td className="px-4 py-3"><div className="h-4 w-24 rounded bg-surface-variant animate-pulse" /></td>
-                      <td className="px-4 py-3"><div className="h-4 w-32 rounded bg-surface-variant animate-pulse" /></td>
-                      <td className="px-4 py-3"><div className="h-4 w-20 rounded bg-surface-variant animate-pulse" /></td>
-                      <td className="px-4 py-3"><div className="h-4 w-24 rounded bg-surface-variant animate-pulse" /></td>
-                      <td className="px-4 py-3"><div className="h-4 w-40 rounded bg-surface-variant animate-pulse" /></td>
-                    </tr>
-                  ))
-                ) : logs.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-text-tertiary">No audit logs found</td>
-                  </tr>
-                ) : (
-                  logs.map((entry) => (
-                    <tr
-                      key={entry.id}
-                      className="border-b border-border-subtle hover:bg-surface-variant cursor-pointer transition-colors"
-                      onClick={() => onRowClick(entry)}
-                    >
-                      <td className="px-4 py-3 text-text-secondary text-[11px] sm:text-[11px] sm:text-xs whitespace-nowrap">
-                        {formatDateTime(entry.createdAt) ?? entry.createdAt}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-[11px] sm:text-[11px] sm:text-xs">{entry.actorName ?? entry.actorId ?? 'System'}</span>
-                          {entry.actorRole && (
-                            <span className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{entry.actorRole}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant={actionColor(entry.action) as 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'}
-                          className="text-[11px] sm:text-[11px] sm:text-xs whitespace-nowrap"
-                        >
-                          {entry.action}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block rounded px-1.5 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-medium ${entityTypeColor(entry.entityType)}`}>
-                          {entry.entityType ?? '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="font-mono text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{entry.entityId ? `${entry.entityId.slice(0, 8)}...` : '—'}</span>
-                      </td>
-                      <td className="px-4 py-3 max-w-48">
-                        <ValueDiff old={entry.oldValue} next={entry.newValue} />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {pages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border-subtle">
-              <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">
-                Page {page} of {pages} — {total.toLocaleString()} entries
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => onPageChange(page - 1)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {Array.from({ length: Math.min(pages, 7) }, (_, i) => {
-                  const p = i + 1
-                  return (
-                    <Button
-                      key={p}
-                      variant={p === page ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => onPageChange(p)}
-                    >
-                      {p}
-                    </Button>
-                  )
-                })}
-                {pages > 7 && page < pages && (
-                  <>
-                    <span className="text-text-tertiary">...</span>
-                    <Button variant="outline" size="sm" onClick={() => onPageChange(pages)}>{pages}</Button>
-                  </>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= pages}
-                  onClick={() => onPageChange(page + 1)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return <div className="space-y-5 border-t border-border-subtle pt-4">
+    <DetailBlock title="Audit information" value={actorDetails} />
+    <DetailBlock title="Context" value={entry.context} />
+    <section><h3 className="mb-3 text-sm font-semibold text-text">Changes</h3><div className="grid gap-4 md:grid-cols-2"><div className="rounded-lg border border-border-subtle p-3"><p className="mb-3 text-xs font-medium text-text-tertiary">Before</p><KeyValueFields value={entry.changes?.before} compact /></div><div className="rounded-lg border border-border-subtle p-3"><p className="mb-3 text-xs font-medium text-text-tertiary">After</p><KeyValueFields value={entry.changes?.after} compact /></div></div></section>
+    {entry.outcome && <DetailBlock title="Outcome details" value={entry.outcome as Record<string, unknown>} />}
+  </div>
 }
 
-// ─── Role options helpers ─────────────────────────────────────────────────────
+function EntryHeading({ entry }: { entry: AuditLogEntry }) {
+  return <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Badge variant={actionVariant(entry.actionType)}>{prettify(entry.actionType)}</Badge><span className="font-medium text-text">{entry.actor?.name ?? entry.actor?.id ?? 'System'}</span>{entry.actor?.actorType && <span className="text-xs text-text-tertiary">{prettify(entry.actor.actorType)}</span>}</div></div><div className="shrink-0 text-left sm:text-right"><p className="text-xs text-text-secondary">{formatDateTime(entry.createdAt) ?? entry.createdAt}</p><p className="mt-1 text-xs text-text-tertiary">{prettify(entry.outcome?.status ?? 'unknown outcome')}</p></div></div>
+}
 
-const ALL_ROLE_OPTIONS = [
-  { value: 'curator', label: 'Curator' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'distributor', label: 'Distributor' },
-]
+function ListEntry({ entry, expanded, onToggle }: { entry: AuditLogEntry; expanded: boolean; onToggle: () => void }) {
+  return <article className="px-5 py-4"><button type="button" onClick={onToggle} aria-expanded={expanded} className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/40"><EntryHeading entry={entry} /><div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary">{expanded ? 'Hide details' : 'View details'}{expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</div></button>{expanded && <EntryDetails entry={entry} />}</article>
+}
 
-const ADMIN_ROLE_OPTIONS = [
-  { value: 'curator', label: 'Curator' },
-  { value: 'finance', label: 'Finance' },
-]
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
+function GridEntry({ entry, expanded, onToggle }: { entry: AuditLogEntry; expanded: boolean; onToggle: () => void }) {
+  return <Card className="shadow-xs"><CardContent className="p-4"><EntryHeading entry={entry} /><div className="mt-4"><Button variant="outline" size="sm" onClick={onToggle} aria-expanded={expanded}>{expanded ? 'Hide details' : 'View details'}{expanded ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}</Button></div>{expanded && <div className="mt-4"><EntryDetails entry={entry} /></div>}</CardContent></Card>
+}
 
 export function AuditLogsPage() {
-  const { user } = useAuth()
-  const isSuperAdmin = user?.role === 'super_admin'
-  const roleOptions = isSuperAdmin ? ALL_ROLE_OPTIONS : ADMIN_ROLE_OPTIONS
-
-  const [activeTab, setActiveTab] = useState<'overview' | 'activity'>('overview')
-
-  // Overview state
-  const [stats, setStats] = useState<AuditStatsResponse | null>(null)
-  const [summary, setSummary] = useState<AuditSummaryResponse | null>(null)
-  const [overviewLoading, setOverviewLoading] = useState(false)
-  const [dateFilter, setDateFilter] = useState({ fromDate: '', toDate: '' })
-
-  // Activity state
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [total, setTotal] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pages, setPages] = useState(1)
-  const [activityLoading, setActivityLoading] = useState(false)
-  const [filters, setFilters] = useState<AuditLogQuery>({ page: 1, limit: 50 })
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [view, setView] = useState<ViewMode>('list')
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [filters, setFilters] = useState<AuditLogQuery>({ page: 1, limit: PAGE_SIZE, sortBy: 'createdAt', sortOrder: 'DESC' })
 
-  // Role + user cascaded filter state
-  const [selectedRole, setSelectedRole] = useState<string>('')
-  const [selectedUserId, setSelectedUserId] = useState<string>('')
-  const [roleUsers, setRoleUsers] = useState<AuditUserSummary[]>([])
-  const [roleUsersLoading, setRoleUsersLoading] = useState(false)
-
-  // Detail modal
-  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
-
-  // Fetch users when role changes
-  useEffect(() => {
-    if (!selectedRole) {
-      setRoleUsers([])
-      setSelectedUserId('')
-      return
-    }
-    setRoleUsersLoading(true)
-    auditApi.getAuditUsersByRole(selectedRole)
-      .then((res) => setRoleUsers(res.users))
-      .catch(() => setRoleUsers([]))
-      .finally(() => setRoleUsersLoading(false))
-  }, [selectedRole])
-
-  // Build effective filters: role + user selection cascade into filters
-  const effectiveFilters = useCallback((): AuditLogQuery => {
-    const base: AuditLogQuery = { ...filters }
-    if (selectedRole) base.role = selectedRole as 'admin' | 'curator' | 'finance'
-    if (selectedUserId) base.actorId = selectedUserId
-    return base
-  }, [filters, selectedRole, selectedUserId])
-
-  const fetchOverview = useCallback(async () => {
-    setOverviewLoading(true)
+  const fetchLogs = useCallback(async () => {
+    setLoading(true)
     try {
-      const [s, sum] = await Promise.all([
-        auditApi.getAuditStats({
-          fromDate: dateFilter.fromDate || undefined,
-          toDate: dateFilter.toDate || undefined,
-          role: selectedRole || undefined,
-        }),
-        auditApi.getAuditSummary({
-          fromDate: dateFilter.fromDate || undefined,
-          toDate: dateFilter.toDate || undefined,
-          granularity: 'day',
-          role: selectedRole || undefined,
-        }),
-      ])
-      setStats(s)
-      setSummary(sum)
-    } catch (e) {
-      toast.error('Failed to load audit stats: ' + getErrorMessage(e, 'Unknown error'))
-    } finally {
-      setOverviewLoading(false)
-    }
-  }, [dateFilter, selectedRole])
+      const response: AuditLogsResponse = await auditApi.getAuditLogs(filters)
+      setLogs(response.data); setTotal(response.total); setPage(response.page); setTotalPages(response.totalPages); setExpandedIds(new Set())
+    } catch (error) { toast.error(`Failed to load audit logs: ${getErrorMessage(error, 'Unknown error')}`) } finally { setLoading(false) }
+  }, [filters])
 
-  const fetchActivity = useCallback(async () => {
-    setActivityLoading(true)
-    try {
-      const res: AuditLogsResponse = await auditApi.getAuditLogs(effectiveFilters())
-      setLogs(res.items)
-      setTotal(res.total)
-      setCurrentPage(res.page)
-      setPages(res.pages)
-    } catch (e) {
-      toast.error('Failed to load audit logs: ' + getErrorMessage(e, 'Unknown error'))
-    } finally {
-      setActivityLoading(false)
-    }
-  }, [effectiveFilters])
-
-  useEffect(() => { fetchOverview() }, [fetchOverview])
-  useEffect(() => { fetchActivity() }, [fetchActivity])
-
-  function handleActorClick(actorId: string) {
-    // Clear role/user cascade when clicking an actor from overview leaderboard
-    setSelectedRole('')
-    setSelectedUserId('')
-    setFilters((f) => ({ ...f, actorId, page: 1 }))
-    setActiveTab('activity')
-  }
-
-  function handleRoleChange(role: string) {
-    setSelectedRole(role)
-    setSelectedUserId('')
-    setFilters((f) => ({ ...f, role: role as 'admin' | 'curator' | 'finance' | undefined, actorId: undefined, page: 1 }))
-  }
-
-  function handleUserChange(userId: string) {
-    setSelectedUserId(userId)
-    setFilters((f) => ({ ...f, actorId: userId, page: 1 }))
-  }
-
-  function handleClearFilters() {
-    setSelectedRole('')
-    setSelectedUserId('')
-    setRoleUsers([])
-    setFilters({ page: 1, limit: 50 })
-  }
-
-  const hasRoleFilter = !!(selectedRole || selectedUserId)
-
-  function handleExport() {
-    toast.promise(auditApi.exportCSV(effectiveFilters() as unknown as Record<string, string | number | undefined | string[]>), {
-      loading: 'Exporting...',
-      success: 'Audit logs exported successfully',
-      error: 'Export failed',
+  useEffect(() => { void fetchLogs() }, [fetchLogs])
+  function updateFilters(update: Partial<AuditLogQuery>) { setFilters((current) => ({ ...current, ...update, page: 1 })) }
+  function handleDateRangeChange(range: DateRange | undefined) {
+    updateFilters({
+      fromDate: range?.from ? format(range.from, 'yyyy-MM-dd') : undefined,
+      toDate: range?.to ? format(range.to, 'yyyy-MM-dd') : undefined,
     })
   }
+  function toggleEntry(id: string) { setExpandedIds((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next }) }
+  const hasFilters = Boolean(filters.search || filters.role || filters.actionType || filters.fromDate || filters.toDate)
+  const visibleFrom = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const visibleTo = Math.min(page * PAGE_SIZE, total)
 
-  return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-text flex items-center gap-2">
-            <ScrollText className="h-6 w-6" />
-            Audit Logs
-          </h1>
-          <p className="text-xs sm:text-xs sm:text-sm text-text-secondary mt-0.5">
-            Complete record of all admin and curator actions
-          </p>
-        </div>
-      </div>
-
-      {/* Role + User cascaded filter */}
-      <Card className="shadow-xs">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs sm:text-xs sm:text-sm text-text-secondary whitespace-nowrap">Filter by Role</Label>
-              <Select value={selectedRole} onValueChange={handleRoleChange}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="All Roles" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedRole && (
-              <div className="flex items-center gap-2">
-                <Label className="text-xs sm:text-xs sm:text-sm text-text-secondary whitespace-nowrap">
-                  {roleUsersLoading ? 'Loading users...' : 'Filter by User'}
-                </Label>
-                <Select value={selectedUserId} onValueChange={handleUserChange} disabled={roleUsersLoading}>
-                  <SelectTrigger className="w-56">
-                    <SelectValue placeholder="All users in role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All users in role</SelectItem>
-                    {roleUsers.map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        <span className="flex items-center gap-2">
-                          <Users className="h-3 w-3" />
-                          <span>{u.name}</span>
-                          <span className="text-text-tertiary text-[11px] sm:text-[11px] sm:text-xs">{u.mobileNumber}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {hasRoleFilter && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="gap-1 text-destructive hover:text-destructive"
-              >
-                <X className="h-3 w-3" /> Clear filters
-              </Button>
-            )}
-
-            {selectedRole && (
-              <span className="ml-auto text-xs sm:text-xs sm:text-sm text-text-tertiary">
-                {selectedUserId
-                  ? `Showing logs for: ${roleUsers.find(u => u.id === selectedUserId)?.name ?? selectedUserId}`
-                  : `Showing consolidated logs for all ${selectedRole} users`}
-              </span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'overview' | 'activity')}>
-        <TabsList>
-          <TabsTrigger value="overview" className="gap-1.5">
-            <BarChart3 className="h-3.5 w-3.5" /> Overview
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-1.5">
-            <ActivityIcon className="h-3.5 w-3.5" /> Activity
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <OverviewTab
-            stats={stats}
-            summary={summary}
-            loading={overviewLoading}
-            dateFilter={dateFilter}
-            onDateFilterChange={setDateFilter}
-            onActorClick={handleActorClick}
-          />
-        </TabsContent>
-
-        <TabsContent value="activity">
-          <ActivityTab
-            logs={logs}
-            total={total}
-            page={currentPage}
-            pages={pages}
-            loading={activityLoading}
-            filters={filters}
-            onFiltersChange={(f) => { setFilters(f); setCurrentPage(f.page ?? 1) }}
-            onPageChange={(p) => setFilters((f) => ({ ...f, page: p }))}
-            onExport={handleExport}
-            onRowClick={setSelectedEntry}
-          />
-        </TabsContent>
-      </Tabs>
-
-      {/* Detail slide-over */}
-      <LogDetail entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
-    </div>
-  )
+  return <div className="space-y-6">
+    <header><h1 className="flex items-center gap-2 text-xl font-bold text-text sm:text-2xl"><ScrollText className="h-6 w-6" />Audit Logs</h1><p className="mt-0.5 text-sm text-text-secondary">A chronological record of administrative and curator actions.</p></header>
+    <Card className="shadow-xs"><CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="xl:col-span-2"><Label htmlFor="audit-search" className="text-xs">Search actor name or email</Label><div className="relative mt-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-text-tertiary" /><Input id="audit-search" className="pl-9" placeholder="Search audit logs" value={filters.search ?? ''} onChange={(event) => updateFilters({ search: event.target.value || undefined })} /></div></div>
+      <div><Label className="text-xs">Actor role</Label><Select value={filters.role ?? 'all'} onValueChange={(role) => updateFilters({ role: role === 'all' ? undefined : role })}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All roles</SelectItem><SelectItem value="super_admin">Super admin</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="curator">Curator</SelectItem><SelectItem value="finance">Finance</SelectItem><SelectItem value="distributor">Distributor</SelectItem></SelectContent></Select></div>
+      <div><Label className="text-xs">Action type</Label><Select value={filters.actionType ?? 'all'} onValueChange={(actionType) => updateFilters({ actionType: actionType === 'all' ? undefined : actionType })}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All actions</SelectItem>{AUDIT_ACTIONS.map((action) => <SelectItem key={action} value={action}>{prettify(action)}</SelectItem>)}</SelectContent></Select></div>
+      <DateRangeFilter value={{ from: filters.fromDate ? parseISO(filters.fromDate) : undefined, to: filters.toDate ? parseISO(filters.toDate) : undefined }} onChange={handleDateRangeChange} />
+      {hasFilters && <div className="md:col-span-2 xl:col-span-5"><Button variant="ghost" size="sm" onClick={() => setFilters({ page: 1, limit: PAGE_SIZE, sortBy: 'createdAt', sortOrder: 'DESC' })}><X className="mr-1 h-4 w-4" />Clear filters</Button></div>}
+    </CardContent></Card>
+    <section aria-label="Audit log entries"><div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-sm font-medium">{loading ? 'Loading entries…' : `${total.toLocaleString()} ${total === 1 ? 'entry' : 'entries'}`}</p><p className="mt-0.5 text-xs text-text-tertiary">Newest first</p></div><div className="flex rounded-md border border-border-subtle p-1" aria-label="View mode"><Button type="button" size="sm" variant={view === 'list' ? 'secondary' : 'ghost'} onClick={() => setView('list')} aria-pressed={view === 'list'}><List className="mr-1 h-4 w-4" />List</Button><Button type="button" size="sm" variant={view === 'grid' ? 'secondary' : 'ghost'} onClick={() => setView('grid')} aria-pressed={view === 'grid'}><Grid3X3 className="mr-1 h-4 w-4" />Grid</Button></div></div>
+      {loading ? <Card className="shadow-xs"><CardContent className="space-y-3 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-md bg-surface-variant" />)}</CardContent></Card> : logs.length === 0 ? <Card className="shadow-xs"><CardContent className="py-16 text-center text-sm text-text-tertiary">No audit entries match these filters.</CardContent></Card> : view === 'list' ? <Card className="divide-y divide-border-subtle shadow-xs">{logs.map((entry) => <ListEntry key={entry.id} entry={entry} expanded={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} />)}</Card> : <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">{logs.map((entry) => <GridEntry key={entry.id} entry={entry} expanded={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} />)}</div>}
+      {!loading && totalPages > 1 && <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-text-tertiary">Showing {visibleFrom}–{visibleTo} of {total.toLocaleString()}</p><div className="flex gap-2"><Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setFilters((current) => ({ ...current, page: current.page! - 1 }))}><ChevronLeft className="mr-1 h-4 w-4" />Previous</Button><Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setFilters((current) => ({ ...current, page: current.page! + 1 }))}>Next<ChevronRight className="ml-1 h-4 w-4" /></Button></div></div>}
+    </section>
+  </div>
 }

@@ -12,9 +12,10 @@ import {
   Req,
   Res,
   BadRequestException,
-} from '@nestjs/common';
-import { Response, Request } from 'express';
-import { AdminService } from './admin.service';
+  Logger,
+} from "@nestjs/common";
+import { Response, Request } from "express";
+import { AdminService } from "./admin.service";
 import {
   ListUsersDto,
   ListReviewQueueDto,
@@ -33,23 +34,47 @@ import {
   ListUserTransactionsDto,
   ListUserWithdrawalsDto,
   AdjustWalletDto,
-} from './dto';
-import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
-import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
-import { Roles } from '../../shared/middleware/decorators/roles.decorator';
-import { UserRole } from '../../shared/classes/enums';
-import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
-import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
+} from "./dto";
+import { JwtAuthGuard } from "../../shared/middleware/guards/jwt-auth.guard";
+import { RolesGuard } from "../../shared/middleware/guards/roles.guard";
+import { Roles } from "../../shared/middleware/decorators/roles.decorator";
+import {
+  ActorType,
+  AuditAction,
+  OutcomeStatus,
+  UserRole,
+} from "../../shared/classes/enums";
+import { CacheInvalidate } from "../../shared/database/cache/decorators/cache-invalidate.decorator";
+import { Cacheable } from "../../shared/database/cache/decorators/cacheable.decorator";
+import { AuditService } from "../audit-logs/audit.service";
+import {
+  ReqMeta,
+  RequestMeta,
+} from "@/shared/middleware/decorators/request-meta.decorator";
+import { AuditLogDto } from "../audit-logs/dto/audit_log-dto";
+import { UserService } from "../user/user.service";
+
+type AuditLogPayload = Parameters<AuditService["createAuditLog"]>[0];
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string; mobileNumber: string; role: string };
+  user: {
+    id: string;
+    mobileNumber: string;
+    role: string;
+    name: string;
+  };
 }
 
 @Controller("admin")
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly auditService: AuditService,
+    private readonly logger: Logger = new Logger(AdminController.name),
+    private readonly userService: UserService,
+  ) {}
 
   // ─────────────────────────────────────────────────────────────
   // Section 1: User Management — curator blocked
@@ -58,22 +83,67 @@ export class AdminController {
   @Post("users")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.CREATED)
-  @CacheInvalidate('analytics:*', 'hot:*')
+  @CacheInvalidate("analytics:*", "hot:*")
   async createUser(
     @Body() dto: CreateUserDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.createUser(
-      req.user.id,
-      req.user.role as UserRole,
-      dto,
-    );
+    const base: AuditLogDto = {
+      actionType: AuditAction.USER_CREATED,
+      actor: {
+        id: req.user.id,
+        actorType: ActorType.SUPER_ADMIN,
+        name: req.user.name,
+      },
+      resource: {
+        requestId: meta.requestId,
+        ipAddress: meta.ipAddress,
+      },
+      context: {
+        name: dto.name,
+        role: dto.role,
+        mobilePhone: dto.mobileNumber,
+        category: dto.category ? dto.category : null,
+      },
+    };
+    let result;
+    try {
+      result = await this.adminService.createUser(
+        req.user.id,
+        req.user.role as UserRole,
+        dto,
+      );
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: {
+          before: {},
+          after: {},
+        },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+    await this.safeAudit({
+      ...base,
+      changes: {
+        before: {},
+        after: { id: result?.user.id },
+      },
+      outcome: { status: OutcomeStatus.SUCCESS },
+    });
+
+    return result;
   }
 
   @Get("users")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('admin_users', 60)
+  @Cacheable("admin_users", 60)
   async listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
   }
@@ -89,38 +159,225 @@ export class AdminController {
   @Post("users/:id/suspend")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('user:*')
+  @CacheInvalidate("user:*")
   async suspendUser(
     @Param("id") id: string,
     @Body() body: SuspendUserDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.suspendOrBanUser(
-      req.user.id,
-      id,
-      body.action,
-      body.reason,
-      body.suspendedUntil,
-    );
+    const role = req.user.role as UserRole;
+    const base: AuditLogDto = {
+      actionType:
+        body.action === "ban"
+          ? AuditAction.USER_BANNED
+          : AuditAction.USER_SUSPENDED,
+      actor: {
+        id: req.user.id,
+        actorType:
+          role === UserRole.SUPER_ADMIN
+            ? ActorType.SUPER_ADMIN
+            : role === UserRole.ADMIN
+              ? ActorType.ADMIN
+              : ActorType.FINANCE,
+        name: req.user.name,
+      },
+      resource: {
+        requestId: meta.requestId,
+        ipAddress: meta.ipAddress,
+      },
+      context: {
+        userId: id,
+        reason: body.reason,
+        timePeriod: body.suspendedUntil,
+      },
+    };
+    let result;
+    try {
+      result = this.adminService.suspendOrBanUser(
+        req.user.id,
+        id,
+        body.action,
+        body.reason,
+        body.suspendedUntil,
+      );
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: {
+          before: {
+            status: body.action === "suspend" ? "unsuspended" : "unbanned",
+          },
+          after: {
+            status: body.action === "suspend" ? "unsuspended" : "unbanned",
+          },
+        },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+
+    await this.safeAudit({
+      ...base,
+      changes: {
+        before: {
+          status: body.action === "suspend" ? "unsuspended" : "unbanned",
+        },
+        after: { status: body.action === "suspend" ? "suspended" : "banned" },
+      },
+      outcome: { status: OutcomeStatus.SUCCESS },
+    });
+
+    return result;
   }
 
   @Post("users/:id/unsuspend")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('user:*')
+  @CacheInvalidate("user:*")
   async unsuspendUser(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.unsuspendOrUnbanUser(req.user.id, id);
+    const role = req.user.role as UserRole;
+    const user = await this.userService.getProfile(id);
+    const base: AuditLogDto = {
+      actionType:
+        user.verificationStatus === "suspended"
+          ? AuditAction.USER_SUSPENDED
+          : AuditAction.USER_UNBANNED,
+      actor: {
+        id: req.user.id,
+        actorType:
+          role === UserRole.SUPER_ADMIN
+            ? ActorType.SUPER_ADMIN
+            : role === UserRole.ADMIN
+              ? ActorType.ADMIN
+              : ActorType.FINANCE,
+        name: req.user.name,
+      },
+      resource: {
+        requestId: meta.requestId,
+        ipAddress: meta.ipAddress,
+      },
+      context: {
+        userId: id,
+      },
+    };
+    let result;
+    try {
+      result = await this.adminService.unsuspendOrUnbanUser(req.user.id, id);
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: {
+          before: {
+            status:
+              user.verificationStatus === "suspended" ? "suspended" : "banned",
+          },
+          after: {
+            status:
+              user.verificationStatus === "suspended" ? "suspended" : "banned",
+          },
+        },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+    await this.safeAudit({
+      ...base,
+      changes: {
+        before: {
+          status:
+            user.verificationStatus === "suspended" ? "suspended" : "banned",
+        },
+        after: {
+          status:
+            user.verificationStatus === "suspended"
+              ? "unsuspended"
+              : "unbanned",
+        },
+      },
+      outcome: { status: OutcomeStatus.SUCCESS },
+    });
+
+    return result;
   }
 
   @Post("users/:id/verify")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('user:*')
-  async verifyUser(@Param("id") id: string, @Req() req: AuthenticatedRequest) {
-    return this.adminService.verifyUser(req.user.id, id);
+  @CacheInvalidate("user:*")
+  async verifyUser(
+    @Param("id") id: string,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    const role = req.user.role;
+    const base: AuditLogDto = {
+      actionType: AuditAction.USER_VERIFIED,
+      actor: {
+        id: req.user.id,
+        actorType:
+          role === UserRole.SUPER_ADMIN
+            ? ActorType.SUPER_ADMIN
+            : role === UserRole.ADMIN
+              ? ActorType.ADMIN
+              : ActorType.FINANCE,
+        name: req.user.name,
+      },
+      resource: {
+        requestId: meta.requestId,
+        ipAddress: meta.ipAddress,
+      },
+      context: {
+        userId: id,
+      },
+    };
+
+    let result;
+    try {
+      result = await this.adminService.verifyUser(req.user.id, id);
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: {
+          before: {
+            status: "unverified",
+          },
+          after: {
+            status: "unverified",
+          },
+        },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+    await this.safeAudit({
+      ...base,
+      changes: {
+        before: {
+          status: "unverified",
+        },
+        after: {
+          status: "verified",
+        },
+      },
+      outcome: {
+        status: OutcomeStatus.SUCCESS,
+      },
+    });
+    return result;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -129,7 +386,7 @@ export class AdminController {
 
   @Get("questions/queue")
   @HttpCode(HttpStatus.OK)
-  @Cacheable('review_queue', 60)
+  @Cacheable("review_queue", 60)
   async listReviewQueue(@Query() dto: ListReviewQueueDto) {
     return this.adminService.listReviewQueue(dto);
   }
@@ -137,7 +394,7 @@ export class AdminController {
   /** Question quality and volume metrics — curator read-only */
   @Get("questions/metrics")
   @HttpCode(HttpStatus.OK)
-  @Cacheable('question_metrics', 120)
+  @Cacheable("question_metrics", 120)
   async getQuestionMetrics(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getQuestionMetrics(dto);
   }
@@ -165,14 +422,91 @@ export class AdminController {
   @Post("questions/:id/review")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('leaderboard:top_users', 'hot:*', 'analytics:*')
+  @CacheInvalidate("leaderboard:top_users", "hot:*", "analytics:*")
   async reviewQuestion(
     @Param("id") id: string,
     @Body() dto: ReviewActionDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
     const role = req.user.role as UserRole;
-    return this.adminService.reviewQuestion(req.user.id, id, dto, role);
+
+    const base: AuditLogDto = {
+      actionType:
+        dto.action === "approve"
+          ? AuditAction.QUESTION_APPROVED
+          : dto.action === "hold"
+            ? AuditAction.HOLD_QUESTION
+            : dto.action === "reject"
+              ? AuditAction.QUESTION_REJECTED
+              : AuditAction.REQUEST_INFO,
+      actor: {
+        id: req.user.id,
+        actorType:
+          role === UserRole.SUPER_ADMIN
+            ? ActorType.SUPER_ADMIN
+            : role === UserRole.ADMIN
+              ? ActorType.ADMIN
+              : ActorType.CURATOR,
+        name: req.user.name,
+      },
+      resource: {
+        requestId: meta.requestId,
+        ipAddress: meta.ipAddress,
+      },
+    };
+
+    let result;
+    try {
+      result = await this.adminService.reviewQuestion(
+        req.user.id,
+        id,
+        dto,
+        role,
+      );
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        context: { questionId: id, reason: dto.reason },
+        changes: {
+          before: { status: "pending" },
+          after: { status: "pending" },
+        },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err; // keep the real HTTP error
+    }
+
+    await this.safeAudit({
+      ...base,
+      context: { questionId: id, reason: dto.reason },
+      changes: {
+        before: { status: "pending" },
+        after: { status: dto.action === "approve" ? "approved" : "rejected" },
+      },
+      outcome: { status: OutcomeStatus.SUCCESS },
+    });
+
+    return result;
+  }
+
+  private async safeAudit(payload: AuditLogDto) {
+    try {
+      await this.auditService.createAuditLog({
+        ...payload,
+        changes: payload.changes ?? undefined,
+        context: payload.context ?? undefined,
+        outcome: payload.outcome ?? undefined,
+      });
+    } catch (e) {
+      this.logger.error(
+        "Failed to write audit log",
+        e instanceof Error ? e.stack : String(e),
+      );
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -182,32 +516,72 @@ export class AdminController {
   @Get("config")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('config', 300)
+  @Cacheable("config", 300)
   async listConfig() {
     return this.adminService.listConfig();
   }
 
-  @Post("config")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-  @HttpCode(HttpStatus.CREATED)
-  @CacheInvalidate('meta:*')
-  async createConfig(
-    @Body() dto: CreateConfigDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.adminService.createConfig(req.user.id, dto);
+  // @Post("config")
+  // @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  // @HttpCode(HttpStatus.CREATED)
+  // @CacheInvalidate("meta:*")
+  // async createConfig(
+  //   @Body() dto: CreateConfigDto,
+  //   @Req() req: AuthenticatedRequest,
+  // ) {
+  //   let result;
+  //   result=  this.adminService.createConfig(req.user.id, dto);
+  //   return result;
+  // }
+
+  @Patch('config')
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+@HttpCode(HttpStatus.OK)
+@CacheInvalidate('meta:*', 'hot:reward_tiers')
+async updateConfig(
+  @Body() dto: UpdateConfigDto,
+  @Req() req: AuthenticatedRequest,
+  @ReqMeta() meta: RequestMeta,
+) {
+  const base: AuditLogDto = {
+    actionType: AuditAction.CONFIG_UPDATED,
+    actor: {
+      id: req.user.id,
+      actorType: ActorType.SUPER_ADMIN,
+      name: req.user.name,
+     
+    },
+    resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+    context: { key: dto.key, description: dto.description },
+  };
+
+  let before: unknown = null;
+  let result;
+  try {
+    const { items } = await this.adminService.listConfig();
+    before = items.find((c) => c.key === dto.key)?.value ?? null;
+
+    result = await this.adminService.updateConfig(req.user.id, dto);
+  } catch (err) {
+    await this.safeAudit({
+      ...base,
+      changes: { before: { value: before }, after: { value: before } }, // unchanged
+      outcome: {
+        status: OutcomeStatus.FAILURE,
+        errorMessage: err instanceof Error ? err.message : String(err),
+      },
+    });
+    throw err;
   }
 
-  @Patch("config")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-  @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('meta:*', 'hot:reward_tiers')
-  async updateConfig(
-    @Body() dto: UpdateConfigDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.adminService.updateConfig(req.user.id, dto);
-  }
+  await this.safeAudit({
+    ...base,
+    changes: { before: { value: before }, after: { value: dto.value } },
+    outcome: { status: OutcomeStatus.SUCCESS },
+  });
+
+  return result;
+}
 
   // ─────────────────────────────────────────────────────────────
   // Section 4: Analytics Dashboard
@@ -215,9 +589,14 @@ export class AdminController {
 
   /** Curator-only dashboard: question volume, approval rates, daily trends, and queue depth. */
   @Get("analytics/curator-dashboard")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.CURATOR,
+    UserRole.FINANCE,
+  )
   @HttpCode(HttpStatus.OK)
-  @Cacheable('curator_dashboard', 60)
+  @Cacheable("curator_dashboard", 60)
   async getCuratorDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getCuratorDashboard(dto);
   }
@@ -225,7 +604,7 @@ export class AdminController {
   @Get("analytics/dashboard")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('dashboard', 60)
+  @Cacheable("dashboard", 60)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getDashboardStats(dto);
   }
@@ -234,16 +613,16 @@ export class AdminController {
   @Get("stats")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('admin_stats', 60)
+  @Cacheable("admin_stats", 60)
   async getStats(@Query() dto: AnalyticsQueryDto) {
-    const data =  await this.adminService.getStats(dto);
+    const data = await this.adminService.getStats(dto);
     return data;
   }
 
   @Get("analytics/rewards")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('reward_summary', 120)
+  @Cacheable("reward_summary", 120)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getRewardSummary(dto);
   }
@@ -251,7 +630,7 @@ export class AdminController {
   @Get("analytics/reward-logs")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('reward_logs', 60)
+  @Cacheable("reward_logs", 60)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.listRewardLogs(dto);
   }
@@ -263,7 +642,7 @@ export class AdminController {
   @Get("fraud")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('fraud_stats', 60)
+  @Cacheable("fraud_stats", 60)
   async getFraudStats(
     @Query() dto: { page?: number; limit?: number; state?: string },
   ) {
@@ -278,7 +657,7 @@ export class AdminController {
   @Get("wallets")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('admin_wallets', 60)
+  @Cacheable("admin_wallets", 60)
   async listAllWallets(@Query() dto: ListAllWalletsDto) {
     return this.adminService.listAllWallets(dto);
   }
@@ -320,7 +699,7 @@ export class AdminController {
   @Post("wallets/adjust")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('wallet:*')
+  @CacheInvalidate("wallet:*")
   async adjustWalletBalance(
     @Body() dto: AdjustWalletDto,
     @Req() req: AuthenticatedRequest,
@@ -332,7 +711,7 @@ export class AdminController {
   @Get("analytics/financial-summary")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('financial_summary', 60)
+  @Cacheable("financial_summary", 60)
   async getFinancialSummary(@Query() dto: AnalyticsQueryDto) {
     return this.adminService.getFinancialSummary(dto);
   }
@@ -344,7 +723,7 @@ export class AdminController {
   @Get("withdrawals")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('withdrawals_list', 60)
+  @Cacheable("withdrawals_list", 60)
   async listWithdrawals(@Query() dto: ListWithdrawalsDto) {
     return this.adminService.listWithdrawals(dto);
   }
@@ -360,7 +739,7 @@ export class AdminController {
   @Post("withdrawals/:id/process")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('wallet:*')
+  @CacheInvalidate("wallet:*")
   async processWithdrawal(
     @Param("id") id: string,
     @Body() dto: ProcessWithdrawalDto,
@@ -378,7 +757,7 @@ export class AdminController {
   @Post("withdrawals/:id/retry")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('wallet:*')
+  @CacheInvalidate("wallet:*")
   async retryWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -394,7 +773,7 @@ export class AdminController {
   @Post("withdrawals/:id/retry-refund")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('wallet:*')
+  @CacheInvalidate("wallet:*")
   async retryFailedWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -406,7 +785,7 @@ export class AdminController {
   @Post("withdrawals/:id/fail")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('wallet:*')
+  @CacheInvalidate("wallet:*")
   async markWithdrawalFailed(
     @Param("id") id: string,
     @Body() dto: MarkWithdrawalFailedDto,
@@ -419,7 +798,7 @@ export class AdminController {
   @Patch("withdrawals/:id/failure-reason")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('wallet:*')
+  @CacheInvalidate("wallet:*")
   async updateWithdrawalFailureReason(
     @Param("id") id: string,
     @Body() dto: UpdateWithdrawalFailureReasonDto,
@@ -433,7 +812,7 @@ export class AdminController {
   }
 
   /** Super admin only: flush cache keys matching a pattern. */
-  @Post('cache/flush')
+  @Post("cache/flush")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async flushCache(
@@ -441,7 +820,7 @@ export class AdminController {
     @Req() req: AuthenticatedRequest,
   ) {
     if (!body.keyPattern || !body.keyPattern.trim()) {
-      throw new BadRequestException('keyPattern is required');
+      throw new BadRequestException("keyPattern is required");
     }
     return this.adminService.flushCache(body.keyPattern.trim());
   }

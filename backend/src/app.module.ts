@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -44,6 +44,8 @@ import { CacheInvalidationInterceptor } from './shared/database/cache/intercepto
 import { EndpointLoggerModule } from './shared/services/endpoint-logger/endpoint-logger.module';
 import { MongoDbModule } from './shared/database/mongodb/mongo.module';
 import { DbModule } from './shared/database/db.module';
+import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
 
 
 @Module({
@@ -97,6 +99,7 @@ import { DbModule } from './shared/database/db.module';
     AgriEntitiesModule,
     FeedbacksModule,
     DistributorModule,
+    AuditLogsModule,
   ],
   controllers: [HealthController],
   providers: [
@@ -119,4 +122,8 @@ import { DbModule } from './shared/database/db.module';
     { provide: APP_INTERCEPTOR, useClass: CacheInvalidationInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer){
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

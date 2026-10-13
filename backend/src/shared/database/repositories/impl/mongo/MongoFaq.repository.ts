@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { IFaqRepository } from '../../IFaq.repository';
-import { Faq } from '../../../entities';
+import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 import { FaqCategory } from '../../../../classes/enums';
 
 @Injectable()

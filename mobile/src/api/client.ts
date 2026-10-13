@@ -559,7 +559,7 @@ export const adminApi = {
 export const auditApi = {
   /** Fetch paginated audit log entries */
   getAuditLogs: (params?: Record<string, string | number>) =>
-    api.get('/admin/audit-logs', { params }),
+    api.get('/audit-logs', { params }),
 
   /** Actor statistics */
   getActorStats: (params?: Record<string, string | number>) =>

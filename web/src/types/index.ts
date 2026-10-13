@@ -421,25 +421,47 @@ export interface ExportParams {
 
 export interface AuditLogEntry {
   id: string
-  actorType: 'admin' | 'curator' | 'user' | 'system'
-  actorId: string | null
-  actorName: string | null
-  actorRole: string | null
-  action: string
-  entityType: string | null
-  entityId: string | null
-  oldValue: Record<string, unknown> | null
-  newValue: Record<string, unknown> | null
-  metadata: Record<string, unknown> | null
+  actionType: string
+  actor: {
+    id: string
+    actorType: string
+    name?: string
+  }
+  context?: Record<string, unknown> | null
+  changes?: {
+    before?: Record<string, unknown> | null
+    after?: Record<string, unknown> | null
+  } | null
+  outcome?: {
+    status: string
+    errorMessage?: string
+    errorStack?: string
+    errorCode?: string
+  } | null
+  resource?: {
+    ipAddress?: string
+    requestId?: string
+  } | null
   createdAt: string
+  /** @deprecated Legacy entity-history fields. New audit-log responses use nested fields above. */
+  actorType?: string
+  actorId?: string | null
+  actorName?: string | null
+  actorRole?: string | null
+  action?: string
+  entityType?: string | null
+  entityId?: string | null
+  oldValue?: Record<string, unknown> | null
+  newValue?: Record<string, unknown> | null
+  metadata?: Record<string, unknown> | null
 }
 
 export interface AuditLogsResponse {
-  items: AuditLogEntry[]
+  data: AuditLogEntry[]
   total: number
   page: number
   limit: number
-  pages: number
+  totalPages: number
 }
 
 export interface ActorStats {
@@ -498,17 +520,13 @@ export interface AuditLogQuery {
   page?: number
   limit?: number
   actorId?: string
-  actorType?: string
-  /** Filter actors by role: admin | curator | finance — super_admin can see any role */
-  role?: 'admin' | 'curator' | 'finance'
-  action?: string
-  actions?: string[]
-  entityType?: string
-  entityId?: string
+  role?: string
+  actionType?: string
+  actionTypes?: string[]
   fromDate?: string
   toDate?: string
   search?: string
-  sortBy?: 'createdAt' | 'action' | 'actorId'
+  sortBy?: 'createdAt' | 'actionType' | 'actorId'
   sortOrder?: 'ASC' | 'DESC'
 }
 

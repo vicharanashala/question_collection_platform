@@ -177,15 +177,15 @@ export class UserService {
 
     const savedUser = await this.userRepo.save(user);
 
-    await this.logAudit(
-      actorType,
-      actorId ?? userId,
-      AuditAction.USER_PROFILE_UPDATED,
-      "User",
-      userId,
-      oldValue,
-      newValue,
-    );
+    // await this.logAudit(
+    //   actorType,
+    //   actorId ?? userId,
+    //   AuditAction.USER_PROFILE_UPDATED,
+    //   "User",
+    //   userId,
+    //   oldValue,
+    //   newValue,
+    // );
 
     return savedUser;
   }
@@ -323,23 +323,23 @@ export class UserService {
     });
   }
 
-  private async logAudit(
-    actorType: ActorType,
-    actorId: string | null,
-    action: string,
-    entityType: string,
-    entityId: string,
-    oldValue?: Record<string, unknown> | null,
-    newValue?: Record<string, unknown> | null,
-  ): Promise<void> {
-    const log = await this.auditRepo.create({
-      actorType,
-      actorId,
-      action,
-      entityType,
-      entityId,
-      oldValue: oldValue ?? null,
-      newValue: newValue ?? null,
-    });
-  }
+  // private async logAudit(
+  //   actorType: ActorType,
+  //   actorId: string | null,
+  //   action: string,
+  //   entityType: string,
+  //   entityId: string,
+  //   oldValue?: Record<string, unknown> | null,
+  //   newValue?: Record<string, unknown> | null,
+  // ): Promise<void> {
+  //   const log = await this.auditRepo.create({
+  //     actorType,
+  //     actorId,
+  //     action,
+  //     entityType,
+  //     entityId,
+  //     oldValue: oldValue ?? null,
+  //     newValue: newValue ?? null,
+  //   });
+  // }
 }

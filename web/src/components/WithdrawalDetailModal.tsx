@@ -20,8 +20,7 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Withdrawal, AuditLogEntry, AuditEntityHistoryResponse, PaymentLogEntry } from '@/types'
-import { auditApi } from '@/api/client'
+import type { Withdrawal, AuditLogEntry, PaymentLogEntry } from '@/types'
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
@@ -142,21 +141,8 @@ export function WithdrawalDetailModal({
   }, [open, initial.id])
 
   async function loadAuditHistory() {
-    if (auditEntries.length > 0) {
-      setAuditCollapsed((c) => !c)
-      return
-    }
-    setAuditLoading(true)
-    try {
-      const res = await auditApi.getEntityHistory('withdrawal_request', initial.id)
-      setAuditEntries((res as AuditEntityHistoryResponse).entries)
-      setAuditCollapsed(false)
-      setAuditPage(1)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load audit history'))
-    } finally {
-      setAuditLoading(false)
-    }
+    setAuditCollapsed(false)
+    toast.info('Entity-specific audit history is now available from the Audit Logs page.')
   }
 
   async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {

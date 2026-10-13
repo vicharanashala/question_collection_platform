@@ -26,10 +26,6 @@ import type {
   RewardAnalytics,
   ExportParams,
   AuditLogsResponse,
-  AuditStatsResponse,
-  AuditSummaryResponse,
-  AuditEntityHistoryResponse,
-  AuditUsersByRoleResponse,
   Report,
   FinalQuestion,
   DistributorStats,
@@ -1340,89 +1336,12 @@ export const auditApi = {
   getAuditLogs: (params: AuditLogQuery = {}) => {
     const qs = buildAuditQS(params);
     return request<AuditLogsResponse>(
-      `/admin/audit-logs${qs ? `?${qs}` : ""}`,
+      `/audit-logs${qs ? `?${qs}` : ""}`,
       {},
       false,
     );
   },
 
-  getAuditStats: (
-    params: {
-      fromDate?: string;
-      toDate?: string;
-      actorType?: string;
-      role?: string;
-    } = {},
-  ) => {
-    const p = Object.fromEntries(
-      Object.entries(params).filter(([, v]) => v !== undefined),
-    ) as Record<string, string>;
-    const qs = new URLSearchParams(p).toString();
-    return request<AuditStatsResponse>(
-      `/admin/audit-logs/stats${qs ? `?${qs}` : ""}`,
-      {},
-      false,
-    );
-  },
-
-  getAuditSummary: (
-    params: {
-      fromDate?: string;
-      toDate?: string;
-      granularity?: string;
-      role?: string;
-    } = {},
-  ) => {
-    const p = Object.fromEntries(
-      Object.entries(params).filter(([, v]) => v !== undefined),
-    ) as Record<string, string>;
-    const qs = new URLSearchParams(p).toString();
-    return request<AuditSummaryResponse>(
-      `/admin/audit-logs/summary${qs ? `?${qs}` : ""}`,
-      {},
-      false,
-    );
-  },
-
-  /** List users belonging to a given role (for the filter dropdown) */
-  getAuditUsersByRole: (role: string) =>
-    request<AuditUsersByRoleResponse>(
-      `/admin/audit-logs/users-by-role?role=${encodeURIComponent(role)}`,
-      {},
-      false,
-    ),
-
-  getEntityHistory: (entityType: string, entityId: string) =>
-    request<AuditEntityHistoryResponse>(
-      `/admin/audit-logs/entity/${entityType}/${entityId}`,
-      {},
-      false,
-    ),
-
-  exportCSV: (
-    params: Record<string, string | number | undefined | string[]> = {},
-  ) => {
-    const qs = buildAuditQS(
-      params as Record<string, string | number | undefined | string[]>,
-    );
-    const filename = `audit_logs_${Date.now()}.csv`;
-    const token = getAccessToken();
-    return fetch(`${BASE}/admin/audit-logs?${qs}&format=csv`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(async (res) => {
-      if (!res.ok) throw new Error(`Export failed: ${res.status}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-  },
 };
 
 // ─── Reports API ────────────────────────────────────────────────────────────────

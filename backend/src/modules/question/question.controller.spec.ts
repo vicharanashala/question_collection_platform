@@ -20,6 +20,8 @@ const mockQuestionService = () => ({
   reject: jest.fn(),
 });
 
+const meta = { requestId: 'req-1', ipAddress: '127.0.0.1' };
+
 describe('QuestionController', () => {
   let controller: QuestionController;
   let service: ReturnType<typeof mockQuestionService>;
@@ -192,7 +194,7 @@ describe('QuestionController', () => {
       const approved = { id: 'q-1', status: QuestionStatus.APPROVED };
       service.approve.mockResolvedValue(approved);
 
-      const result = await controller.approve('q-1', 'Looks good', adminReq as any);
+      const result = await controller.approve('q-1', 'Looks good', adminReq as any, meta);
 
       expect(result).toEqual(approved);
       expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1', 'Looks good');
@@ -202,7 +204,7 @@ describe('QuestionController', () => {
       const approved = { id: 'q-1', status: QuestionStatus.APPROVED };
       service.approve.mockResolvedValue(approved);
 
-      const result = await controller.approve('q-1', undefined, adminReq as any);
+      const result = await controller.approve('q-1', undefined, adminReq as any, meta);
 
       expect(result).toEqual(approved);
       expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1', undefined);
