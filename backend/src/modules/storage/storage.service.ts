@@ -10,6 +10,15 @@
  * URL is minted on demand via getSignedUrl(), so a leaked URL stops working once it
  * expires.
  */
+export interface StoredObjectStream {
+  stream: NodeJS.ReadableStream;
+  contentType: string;
+  /** Total object size in bytes. */
+  size: number;
+  /** Inclusive byte range being served; set only for partial responses. */
+  range?: { start: number; end: number };
+}
+
 export abstract class StorageService {
   /**
    * Upload a file buffer and return its `gs://bucket/object` URI.
@@ -40,6 +49,18 @@ export abstract class StorageService {
    * Returns the input unchanged if it is not a URI this service owns.
    */
   abstract getSignedUrl(uri: string): Promise<string>;
+
+  /**
+   * Open a stored object for streaming after validating a URL minted by getSignedUrl().
+   * Throws ForbiddenException for a bad or expired signature and NotFoundException when
+   * the object is missing. `range` is an optional HTTP Range header value.
+   */
+  abstract openSignedObject(
+    objectName: string,
+    expires: number,
+    signature: string,
+    range?: string,
+  ): Promise<StoredObjectStream>;
 
   /**
    * Normalise a readable URL that points at this bucket back into its `gs://` URI so it
