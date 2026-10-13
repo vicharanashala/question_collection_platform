@@ -23,7 +23,7 @@ export interface IAuditLogRepository extends BaseRepository<AuditLog> {
     granularity?: 'day' | 'week' | 'month',
   ): Promise<Array<{ date: string; action: string; count: number }>>;
 
-  findPage(q:QueryAuditLogsDto): any;
+  findPage(q:QueryAuditLogsDto, scope: Record<string, unknown> | null): any;
 
 //   getRecentWithActorName(
 //   limit: number,

@@ -60,7 +60,7 @@ const PAGE_ROLES: Record<string, UserRole[]> = {
   settings:    ['super_admin'],
   withdrawals: ['finance', 'admin', 'super_admin'],
   wallets:     ['finance', 'admin', 'super_admin'],
-  auditLogs:   ['super_admin', 'admin'],
+  auditLogs:   ['super_admin', 'admin', 'finance', 'curator', 'distributor'],
   reports:     ['admin', 'super_admin', 'curator'],
   reportDetail: ['admin', 'super_admin', 'curator'],
   faqs:        ['user', 'curator', 'admin', 'super_admin', 'finance'],

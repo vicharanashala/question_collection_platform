@@ -105,12 +105,15 @@ export class MongoAuditLogRepository
     return this._model.aggregate(pipeline).exec() as Promise<Array<{ date: string; action: string; count: number }>>;
   }
 
-async findPage(q: QueryAuditLogsDto) {
+  async findPage(q: QueryAuditLogsDto, scope: Record<string, unknown> | null = null) {
   const page = q.page ?? 1;
   const limit = q.limit ?? 50;
 
+  const base = this.buildAuditFilter(q);
+  const filter = scope ? { $and: [base, scope] } : base;
+
   const [data, total] = await this.createQueryBuilder('a')
-    .whereRaw(this.buildAuditFilter(q))
+    .whereRaw(filter)
     .orderBy(SORT_FIELDS[q.sortBy ?? 'createdAt'], q.sortOrder ?? 'DESC')
     .skip((page - 1) * limit)
     .take(limit)
@@ -118,4 +121,5 @@ async findPage(q: QueryAuditLogsDto) {
 
   return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
 }
+
  }

@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join, relative, sep } from 'path';
 import { existsSync } from 'fs';
-import * as dns from 'dns';
+
 import { AppModule } from './app.module';
 import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoint-logger.service';
 import { installVmProxy } from './bootstrap/tailnetProxy.js';
@@ -14,7 +14,7 @@ import { spaFallback } from './shared/middleware/spa-fallback.middleware';
 import { SignedUrlInterceptor } from './shared/middleware/interceptors/signed-url.interceptor';
 import { StorageService } from './modules/storage/storage.service';
 import { getAppEnvironment, isDevelopment, isProduction } from './config/environment';
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 // Validate required env vars before attempting to start.
 // These are eagerly evaluated during ConfigModule.forRoot() and would throw
 // opaque errors if missing. Surface a clear message instead.
