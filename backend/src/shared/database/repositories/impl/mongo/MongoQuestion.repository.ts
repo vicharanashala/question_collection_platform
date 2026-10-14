@@ -897,6 +897,18 @@ async getDailyStatsSince(
             lookupUserByStringId('$reviewerId', 'reviewerUser', { _id: 0, name: 1 }),
             { $unwind: { path: '$reviewerUser', preserveNullAndEmptyArrays: true } },
             {
+              $lookup: {
+                from: 'anveshan_answers',
+                let: { questionId: { $toString: '$_id' } },
+                pipeline: [
+                  { $match: { $expr: { $eq: ['$questionId', '$$questionId'] } } },
+                  { $limit: 1 },
+                  { $project: { _id: 1 } },
+                ],
+                as: 'answerRecord',
+              },
+            },
+            {
               $project: {
                 _id: 1,
                 userId: 1,
@@ -916,7 +928,8 @@ async getDailyStatsSince(
                 duplicateFlag: 1,
                 submissionLocation: 1,
                 isAnveshan: 1,
-                isAnswerSubmitted: 1,
+                // True when an answer record exists in anveshan_answers.
+                isAnswerSubmitted: { $gt: [{ $size: '$answerRecord' }, 0] },
                 submittedAt: 1,
                 createdAt: 1,
                 updatedAt: 1,

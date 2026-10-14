@@ -1,5 +1,5 @@
 import { getStatusLabel } from "@/components/questions/QuestionStatusBadge";
-import { exportIsoDate, type ExportColumn } from "@/lib/exportData";
+import { exportDateTime, type ExportColumn } from "@/lib/exportData";
 import type { Question } from "@/types";
 
 const MEDIA_TYPE_LABELS: Record<string, string> = {
@@ -20,10 +20,9 @@ export const QUESTION_EXPORT_COLUMNS: ExportColumn<Question>[] = [
   { header: "Question ID", value: (q) => q.id },
   { header: "Question", value: (q) => q.questionText },
   { header: "Status", value: (q) => getStatusLabel(q) },
-  { header: "Category", value: (q) => (q.domains ?? []).join(", ") },
+  { header: "Domains", value: (q) => (q.domains ?? []).join(", ") },
   { header: "Crop", value: (q) => q.cropType },
   { header: "Season", value: (q) => q.season },
-  { header: "Language", value: (q) => q.language?.toUpperCase() },
   { header: "Question Source", value: (q) => MEDIA_TYPE_LABELS[q.mediaType] ?? q.mediaType },
   { header: "User Name", value: (q) => q.user?.name ?? q.userName },
   { header: "User Type", value: (q) => (q.isAnveshan ? "Anveshan" : "Regular User") },
@@ -32,9 +31,10 @@ export const QUESTION_EXPORT_COLUMNS: ExportColumn<Question>[] = [
   { header: "District", value: (q) => getLocationPart(q, "district") },
   { header: "Block", value: (q) => getLocationPart(q, "block") },
   { header: "Village", value: (q) => getLocationPart(q, "village") },
+  { header: "Answer Submitted", value: (q) => (q.isAnswerSubmitted ? "TRUE" : "FALSE") },
   { header: "Reviewed By", value: (q) => q.reviewedByName },
-  { header: "Submitted At", value: (q) => exportIsoDate(q.submittedAt) },
-  { header: "Reviewed At", value: (q) => exportIsoDate(q.reviewedAt) },
-  { header: "Created At", value: (q) => exportIsoDate(q.createdAt) },
-  { header: "Updated At", value: (q) => exportIsoDate(q.updatedAt) },
+  { header: "Submitted At", value: (q) => exportDateTime(q.submittedAt) },
+  { header: "Reviewed At", value: (q) => exportDateTime(q.reviewedAt) },
+  { header: "Created At", value: (q) => exportDateTime(q.createdAt) },
+  { header: "Updated At", value: (q) => exportDateTime(q.updatedAt) },
 ];

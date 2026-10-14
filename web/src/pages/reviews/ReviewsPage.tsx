@@ -714,23 +714,6 @@ function buildColumns(
       ),
     },
     {
-      key: "media",
-      header: "Media",
-      width: "60px",
-      textAlign: "center",
-      render: (q) =>
-        q.mediaUrls && q.mediaUrls.length > 0 ? (
-          <span className="flex items-center justify-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-            <Film className="h-3 w-3" />
-            {q.mediaUrls.length}
-          </span>
-        ) : (
-          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-            —
-          </span>
-        ),
-    },
-    {
       key: "_actions",
       header: "Actions",
       width: "120px",

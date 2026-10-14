@@ -17,7 +17,7 @@ import { StaffQuestionDetailDialog } from "@/components/questions/StaffQuestionD
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 import { cn, formatDate } from "@/lib/utils";
-import { Film, ListFilter, Search, MessageSquareReply } from "lucide-react";
+import { ListFilter, Search, MessageSquareReply } from "lucide-react";
 import { toast } from "sonner";
 import type { Question } from "@/types";
 import {
@@ -230,23 +230,6 @@ export function QuestionsPage() {
         </span>
       ),
     },
-    {
-      key: "mediaCount",
-      header: "Media",
-      width: "70px",
-      sortable: false,
-      render: (q) =>
-        q.mediaUrls && q.mediaUrls.length > 0 ? (
-          <span className="flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-            <Film className="h-3 w-3" />
-            {q.mediaUrls.length}
-          </span>
-        ) : (
-          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-            —
-          </span>
-        ),
-    },
   ];
 
   const emptyMessage =
@@ -303,7 +286,7 @@ export function QuestionsPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 space-y-5">
+    <div className="space-y-5">
       {/* ─── Page header ─── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
