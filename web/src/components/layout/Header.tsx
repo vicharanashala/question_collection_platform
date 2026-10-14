@@ -3,10 +3,11 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Languages, Menu, Sprout } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Languages, Menu, Sprout, FlaskConical } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Switch } from '@/components/ui/switch'
 import { setAnveshanMode, useAnveshanMode } from '@/lib/anveshanMode'
+import { setTesterMode, useTesterMode } from '@/lib/testerMode'
 import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -28,6 +29,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
   const anveshanMode = useAnveshanMode()
+  const testerMode = useTesterMode()
   useLanguage()
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -109,7 +111,27 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
               checked={anveshanMode}
               onCheckedChange={setAnveshanMode}
               aria-label="Anveshan mode"
-              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4 [&>span]:translate-x-0 aria-checked:[&>span]:translate-x-4"
+              className="aria-checked:bg-emerald-500"
+            />
+          </motion.label>
+        )}
+
+        {/* Tester mode: staff only. Shows tester account data instead of real user data. */}
+        {!isEndUser(user) && (
+          <motion.label
+            animate={{ backgroundColor: testerMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0)' }}
+            transition={{ duration: 0.25 }}
+            className="flex cursor-pointer items-center gap-2 rounded-full border border-border-subtle px-2.5 py-1 text-xs font-semibold text-text-secondary"
+          >
+            <motion.span animate={{ rotate: testerMode ? 0 : -25, scale: testerMode ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
+              <FlaskConical className={testerMode ? 'h-4 w-4 text-amber-500' : 'h-4 w-4'} aria-hidden="true" />
+            </motion.span>
+            <span className="hidden sm:inline">Tester mode</span>
+            <Switch
+              checked={testerMode}
+              onCheckedChange={setTesterMode}
+              aria-label="Tester mode"
+              className="aria-checked:bg-amber-500"
             />
           </motion.label>
         )}

@@ -391,6 +391,7 @@ async getUserStats(dto: ListUserStatsDto) {
   const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
   if (joinedRange) base.createdAt = joinedRange;
   if (dto.anveshanOnly) base.isAnveshanUser = true;
+  Object.assign(base, isTesterCondition(dto.tester));
 
   const [total, testers, anveshan] = await Promise.all([
     this.userRepo.countByFilter(base),

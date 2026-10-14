@@ -54,6 +54,7 @@ import {
 import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
 import { isAnveshanMode } from '@/lib/anveshanMode';
+import { isTesterMode } from '@/lib/testerMode';
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -191,15 +192,18 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   '/reports',
   '/distributor/questions',
   '/distributor/distributions',
+  '/feedbacks/anveshan',
 ]);
 
-// Adds anveshanOnly=true to supported staff list requests while Anveshan mode is on.
+// Adds the staff mode flags to supported list requests: anveshanOnly while Anveshan mode is on, tester=only while Tester mode is on.
 function withAnveshanScope(path: string, method?: string): string {
-  if (!isAnveshanMode() || (method && method !== 'GET')) return path;
+  if ((!isAnveshanMode() && !isTesterMode()) || (method && method !== 'GET')) return path;
   const [pathname, query = ''] = path.split('?');
   if (!ANVESHAN_SCOPED_PATHS.has(pathname)) return path;
   const params = new URLSearchParams(query);
-  params.set('anveshanOnly', 'true');
+  // Feedback is already Anveshan-only, so it takes just the tester flag.
+  if (isAnveshanMode() && pathname !== '/feedbacks/anveshan') params.set('anveshanOnly', 'true');
+  if (isTesterMode()) params.set('tester', 'only');
   return `${pathname}?${params.toString()}`;
 }
 

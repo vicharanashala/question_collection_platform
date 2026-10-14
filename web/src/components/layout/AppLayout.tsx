@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
-import { Sprout } from 'lucide-react'
+import { FlaskConical, Sprout } from 'lucide-react'
 import { useAnveshanMode } from '@/lib/anveshanMode'
+import { useTesterMode } from '@/lib/testerMode'
 import { VerificationBanner } from '@/components/VerificationBanner'
 import { Header } from './Header'
 import { MobileNav } from './MobileNav'
@@ -13,19 +14,25 @@ export function AppLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
   const anveshanMode = useAnveshanMode()
-  const [glaze, setGlaze] = useState<{ id: number; on: boolean } | null>(null)
+  const testerMode = useTesterMode()
+  const [glaze, setGlaze] = useState<{ id: number; on: boolean; tester: boolean } | null>(null)
   const isFirstRender = useRef(true)
 
-  // Plays the glaze sweep each time the mode is toggled, but not on the first load.
+  const previousAnveshan = useRef(anveshanMode)
+
+  // Plays the glaze sweep each time a mode is toggled, but not on the first load.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
     }
-    setGlaze((previous) => ({ id: (previous?.id ?? 0) + 1, on: anveshanMode }))
+    const anveshanChanged = previousAnveshan.current !== anveshanMode
+    previousAnveshan.current = anveshanMode
+    const on = anveshanChanged ? anveshanMode : testerMode
+    setGlaze((previous) => ({ id: (previous?.id ?? 0) + 1, on, tester: !anveshanChanged }))
     const timer = window.setTimeout(() => setGlaze(null), 1100)
     return () => window.clearTimeout(timer)
-  }, [anveshanMode])
+  }, [anveshanMode, testerMode])
 
   const openMobileNav = () => setMobileNavOpen(true)
 
@@ -58,6 +65,23 @@ export function AppLayout() {
             </motion.div>
           )}
         </AnimatePresence>
+        <AnimatePresence initial={false}>
+          {testerMode && (
+            <motion.div
+              key="tester-mode-banner"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300 sm:px-6">
+                <FlaskConical className="h-4 w-4 shrink-0" aria-hidden="true" />
+                Tester mode is on. Showing data from tester accounts only.
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/*
           Extra bottom padding (`pb-20`) on small screens so page content
           isn't hidden under the fixed bottom tab bar. Reverts to default
@@ -66,7 +90,7 @@ export function AppLayout() {
         <main className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6">
           {/* Keyed by path and Anveshan mode: pages fade in on navigation and reload their data when the mode changes. Query-only changes (tabs) do not replay it. */}
           <motion.div
-            key={`${location.pathname}:${anveshanMode ? 'anveshan' : 'all'}`}
+            key={`${location.pathname}:${anveshanMode ? 'anveshan' : 'all'}:${testerMode ? 'tester' : 'real'}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
@@ -92,7 +116,9 @@ export function AppLayout() {
               className="absolute inset-0"
               style={{
                 background: glaze.on
-                  ? 'radial-gradient(circle at 50% 0%, rgba(16,185,129,0.35), transparent 60%)'
+                  ? glaze.tester
+                    ? 'radial-gradient(circle at 50% 0%, rgba(245,158,11,0.35), transparent 60%)'
+                    : 'radial-gradient(circle at 50% 0%, rgba(16,185,129,0.35), transparent 60%)'
                   : 'radial-gradient(circle at 50% 0%, rgba(148,163,184,0.25), transparent 60%)',
               }}
               initial={{ opacity: 0 }}
@@ -103,7 +129,9 @@ export function AppLayout() {
               className="absolute -inset-y-10 w-1/3 -skew-x-12"
               style={{
                 background: glaze.on
-                  ? 'linear-gradient(90deg, transparent, rgba(110,231,183,0.35), transparent)'
+                  ? glaze.tester
+                    ? 'linear-gradient(90deg, transparent, rgba(252,211,77,0.35), transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(110,231,183,0.35), transparent)'
                   : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)',
               }}
               initial={{ left: '-40%' }}

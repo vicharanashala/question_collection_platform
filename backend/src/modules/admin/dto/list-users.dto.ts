@@ -81,6 +81,10 @@ export class ListUserStatsDto {
   anveshanOnly?: boolean;
 
   @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
+
+  @IsOptional()
   @IsDateString()
   fromDate?: string;
 
