@@ -1143,15 +1143,14 @@ export function ReviewsPage() {
             name="review_queue"
             columns={QUESTION_EXPORT_COLUMNS}
             disabled={total === 0}
-            testerFilter={testerFilter}
-            fetchPage={(exportPage, exportLimit, tester) =>
+            fetchPage={(exportPage, exportLimit) =>
               curatorApi.getReviewQueue({
                 page: exportPage,
                 limit: exportLimit,
                 status: statusFilter || undefined,
                 search: debouncedSearch || undefined,
                 userType: userTypeFilter || undefined,
-                tester: tester ?? (testerFilter || undefined),
+                tester: testerFilter || undefined,
               })
             }
           />

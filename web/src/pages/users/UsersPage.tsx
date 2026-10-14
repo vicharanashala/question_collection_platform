@@ -227,8 +227,7 @@ export function UsersPage() {
             name="users"
             columns={USER_EXPORT_COLUMNS}
             disabled={total === 0}
-            testerFilter={testerFilter}
-            fetchPage={(page, limit, tester) => adminApi.getUsers({
+            fetchPage={(page, limit) => adminApi.getUsers({
               page, limit,
               search: debouncedSearch || undefined,
               status: statusFilter || undefined,
@@ -236,7 +235,7 @@ export function UsersPage() {
               category: categoryFilter || undefined,
               state: stateFilter || undefined,
               anveshan: anveshanFilter || undefined,
-              tester: tester ?? (testerFilter || undefined),
+              tester: testerFilter || undefined,
               fromDate: fromDate || undefined,
               toDate: toDate || undefined,
               excludeId: currentUser?.id,

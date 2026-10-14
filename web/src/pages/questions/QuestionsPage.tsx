@@ -360,8 +360,7 @@ export function QuestionsPage() {
             name="questions"
             columns={QUESTION_EXPORT_COLUMNS}
             disabled={apiTotal === 0}
-            testerFilter={testerFilter}
-            fetchPage={(exportPage, exportLimit, tester) =>
+            fetchPage={(exportPage, exportLimit) =>
               questionApi.getQuestions({
                 page: exportPage,
                 limit: exportLimit,
@@ -369,7 +368,7 @@ export function QuestionsPage() {
                 status: statusFilter || undefined,
                 answerStatus: answerFilter || undefined,
                 userType: userTypeFilter || undefined,
-                tester: tester ?? (testerFilter || undefined),
+                tester: testerFilter || undefined,
               })
             }
           />
