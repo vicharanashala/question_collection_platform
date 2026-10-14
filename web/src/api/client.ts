@@ -53,8 +53,8 @@ import {
 } from "@/events/accountLockedEvents";
 import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
-import { isAnveshanMode } from '@/lib/anveshanMode';
-import { isTesterMode } from '@/lib/testerMode';
+import { getAnveshanScope } from '@/lib/anveshanMode';
+import { getTesterScope } from '@/lib/testerMode';
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -195,15 +195,17 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   '/feedbacks/anveshan',
 ]);
 
-// Adds the staff mode flags to supported list requests: anveshanOnly while Anveshan mode is on, tester=only while Tester mode is on.
+// Adds the staff mode scopes to supported list requests: anveshanScope and tester, when they are not "all".
 function withAnveshanScope(path: string, method?: string): string {
-  if ((!isAnveshanMode() && !isTesterMode()) || (method && method !== 'GET')) return path;
+  const anveshan = getAnveshanScope();
+  const tester = getTesterScope();
+  if ((anveshan === 'all' && tester === 'all') || (method && method !== 'GET')) return path;
   const [pathname, query = ''] = path.split('?');
   if (!ANVESHAN_SCOPED_PATHS.has(pathname)) return path;
   const params = new URLSearchParams(query);
-  // Feedback is already Anveshan-only, so it takes just the tester flag.
-  if (isAnveshanMode() && pathname !== '/feedbacks/anveshan') params.set('anveshanOnly', 'true');
-  if (isTesterMode()) params.set('tester', 'only');
+  // Feedback is already Anveshan-only, so it takes just the tester scope.
+  if (anveshan !== 'all' && pathname !== '/feedbacks/anveshan') params.set('anveshanScope', anveshan);
+  if (tester !== 'all') params.set('tester', tester);
   return `${pathname}?${params.toString()}`;
 }
 

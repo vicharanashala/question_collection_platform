@@ -356,7 +356,7 @@ async listWithdrawals(
     toDate,
     filterStatus,
     tester,
-    anveshanOnly,
+    anveshanScope,
   } = options;
 
   const skip = (page - 1) * limit;
@@ -414,8 +414,8 @@ async listWithdrawals(
     });
   }
 
-  if (anveshanOnly) {
-    pipeline.push({ $match: { 'user.isAnveshanUser': true } });
+  if (anveshanScope) {
+    pipeline.push({ $match: { 'user.isAnveshanUser': anveshanScope === 'only' ? true : { $ne: true } } });
   }
 
   // State filter

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion'
 import { FlaskConical, Sprout } from 'lucide-react'
-import { useAnveshanMode } from '@/lib/anveshanMode'
-import { useTesterMode } from '@/lib/testerMode'
+import { useAnveshanScope } from '@/lib/anveshanMode'
+import { useTesterScope } from '@/lib/testerMode'
 import { VerificationBanner } from '@/components/VerificationBanner'
 import { Header } from './Header'
 import { MobileNav } from './MobileNav'
@@ -13,12 +13,12 @@ import { StaffBottomNav } from './StaffBottomNav'
 export function AppLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
-  const anveshanMode = useAnveshanMode()
-  const testerMode = useTesterMode()
+  const anveshanScope = useAnveshanScope()
+  const testerScope = useTesterScope()
   const [glaze, setGlaze] = useState<{ id: number; on: boolean; tester: boolean } | null>(null)
   const isFirstRender = useRef(true)
 
-  const previousAnveshan = useRef(anveshanMode)
+  const previousAnveshan = useRef(anveshanScope)
 
   // Plays the glaze sweep each time a mode is toggled, but not on the first load.
   useEffect(() => {
@@ -26,13 +26,13 @@ export function AppLayout() {
       isFirstRender.current = false
       return
     }
-    const anveshanChanged = previousAnveshan.current !== anveshanMode
-    previousAnveshan.current = anveshanMode
-    const on = anveshanChanged ? anveshanMode : testerMode
+    const anveshanChanged = previousAnveshan.current !== anveshanScope
+    previousAnveshan.current = anveshanScope
+    const on = (anveshanChanged ? anveshanScope : testerScope) !== 'all'
     setGlaze((previous) => ({ id: (previous?.id ?? 0) + 1, on, tester: !anveshanChanged }))
     const timer = window.setTimeout(() => setGlaze(null), 1100)
     return () => window.clearTimeout(timer)
-  }, [anveshanMode, testerMode])
+  }, [anveshanScope, testerScope])
 
   const openMobileNav = () => setMobileNavOpen(true)
 
@@ -49,7 +49,7 @@ export function AppLayout() {
         <Header onOpenMobileNav={openMobileNav} />
         <VerificationBanner />
         <AnimatePresence initial={false}>
-          {anveshanMode && (
+          {anveshanScope !== 'all' && (
             <motion.div
               key="anveshan-mode-banner"
               initial={{ height: 0, opacity: 0 }}
@@ -60,13 +60,13 @@ export function AppLayout() {
             >
               <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300 sm:px-6">
                 <Sprout className="h-4 w-4 shrink-0" aria-hidden="true" />
-                Anveshan mode is on. Showing data from Anveshan users only.
+                {anveshanScope === 'only' ? 'Showing data from Anveshan users only.' : 'Showing data from non-Anveshan users only.'}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         <AnimatePresence initial={false}>
-          {testerMode && (
+          {testerScope !== 'all' && (
             <motion.div
               key="tester-mode-banner"
               initial={{ height: 0, opacity: 0 }}
@@ -77,7 +77,7 @@ export function AppLayout() {
             >
               <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300 sm:px-6">
                 <FlaskConical className="h-4 w-4 shrink-0" aria-hidden="true" />
-                Tester mode is on. Showing data from tester accounts only.
+                {testerScope === 'only' ? 'Showing data from tester accounts only.' : 'Showing data from non-tester accounts only.'}
               </div>
             </motion.div>
           )}
@@ -88,9 +88,9 @@ export function AppLayout() {
           `pb-6` (Tailwind's `p-6`) on `md` where the bottom bar is hidden.
         */}
         <main className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6">
-          {/* Keyed by path and Anveshan mode: pages fade in on navigation and reload their data when the mode changes. Query-only changes (tabs) do not replay it. */}
+          {/* Keyed by path and the staff modes: pages fade in on navigation and reload their data when the mode changes. Query-only changes (tabs) do not replay it. */}
           <motion.div
-            key={`${location.pathname}:${anveshanMode ? 'anveshan' : 'all'}:${testerMode ? 'tester' : 'real'}`}
+            key={`${location.pathname}:${anveshanScope}:${testerScope}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}

@@ -1,12 +1,12 @@
 import { createModeStore } from './modeStore'
 
-const store = createModeStore('tester_mode')
+const store = createModeStore('tester_scope')
 
-/** Whether staff Tester mode is on (only tester account data is shown instead of real user data). */
-export const isTesterMode = store.get
+/** Staff Tester mode: all accounts, only tester accounts, or everyone except testers. */
+export const getTesterScope = store.get
 
-/** Turns Tester mode on or off and notifies subscribed components. */
-export const setTesterMode = store.set
+/** Changes the Tester mode and notifies subscribed components. */
+export const setTesterScope = store.set
 
 /** React hook returning the current Tester mode. */
-export const useTesterMode = store.useMode
+export const useTesterScope = store.useScope

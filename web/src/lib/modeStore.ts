@@ -1,33 +1,36 @@
 import { useSyncExternalStore } from 'react'
 
+export type ModeScope = 'all' | 'only' | 'exclude'
+
 export interface ModeStore {
-  get: () => boolean
-  set: (on: boolean) => void
-  useMode: () => boolean
+  get: () => ModeScope
+  set: (scope: ModeScope) => void
+  useScope: () => ModeScope
 }
 
-// Creates an on/off staff mode that is off by default and remembered for the browser tab.
+// Creates a staff scope (all, only, exclude) that defaults to all and is remembered for the browser tab.
 export function createModeStore(storageKey: string): ModeStore {
   const listeners = new Set<() => void>()
 
-  const read = (): boolean => {
+  const read = (): ModeScope => {
     try {
-      return sessionStorage.getItem(storageKey) === 'on'
+      const saved = sessionStorage.getItem(storageKey)
+      return saved === 'only' || saved === 'exclude' ? saved : 'all'
     } catch {
-      return false
+      return 'all'
     }
   }
 
   let current = read()
   const get = () => current
 
-  const set = (on: boolean) => {
-    current = on
+  const set = (scope: ModeScope) => {
+    current = scope
     try {
-      if (on) sessionStorage.setItem(storageKey, 'on')
-      else sessionStorage.removeItem(storageKey)
+      if (scope === 'all') sessionStorage.removeItem(storageKey)
+      else sessionStorage.setItem(storageKey, scope)
     } catch {
-      // Storage is optional; the mode still works for this page load.
+      // Storage is optional; the scope still works for this page load.
     }
     listeners.forEach((listener) => listener())
   }
@@ -37,5 +40,5 @@ export function createModeStore(storageKey: string): ModeStore {
     return () => listeners.delete(listener)
   }
 
-  return { get, set, useMode: () => useSyncExternalStore(subscribe, get, get) }
+  return { get, set, useScope: () => useSyncExternalStore(subscribe, get, get) }
 }

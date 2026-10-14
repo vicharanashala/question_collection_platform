@@ -1,12 +1,12 @@
 import { createModeStore } from './modeStore'
 
-const store = createModeStore('anveshan_mode')
+const store = createModeStore('anveshan_scope')
 
-/** Whether staff Anveshan mode is on (only Anveshan user data is shown). */
-export const isAnveshanMode = store.get
+/** Staff Anveshan mode: all users, only Anveshan users, or everyone except them. */
+export const getAnveshanScope = store.get
 
-/** Turns Anveshan mode on or off and notifies subscribed components. */
-export const setAnveshanMode = store.set
+/** Changes the Anveshan mode and notifies subscribed components. */
+export const setAnveshanScope = store.set
 
 /** React hook returning the current Anveshan mode. */
-export const useAnveshanMode = store.useMode
+export const useAnveshanScope = store.useScope

@@ -835,7 +835,7 @@ async getDailyStatsSince(
     const searchCondition = buildSearchCondition(search);
     if (searchCondition) match.$or = searchCondition;
 
-    const staffConditions = buildStaffConditions(dto.anveshanOnly ? 'anveshan' : userType, answerStatus);
+    const staffConditions = buildStaffConditions(scopeToUserType(dto.anveshanScope) ?? userType, answerStatus);
     if (staffConditions.length > 0) match.$and = staffConditions;
 
     return this.paginateWithUsers(match, { submittedAt: -1 }, page, limit, canViewContact);
@@ -868,7 +868,7 @@ async getDailyStatsSince(
     const searchCondition = buildSearchCondition(search);
     if (searchCondition) match.$or = searchCondition;
 
-    const staffConditions = buildStaffConditions(dto.anveshanOnly ? 'anveshan' : userType);
+    const staffConditions = buildStaffConditions(scopeToUserType(dto.anveshanScope) ?? userType);
     if (staffConditions.length > 0) match.$and = staffConditions;
 
     const direction = sortOrder === 'ASC' ? 1 : -1;
@@ -1005,6 +1005,12 @@ function buildSearchCondition(search?: string): Record<string, unknown>[] | unde
 }
 
 // Maps the user-type and answer-status filters to question conditions. Anveshan is read from the question flag.
+// Maps the staff Anveshan mode to the existing user type filter.
+function scopeToUserType(scope?: 'only' | 'exclude'): 'anveshan' | 'regular' | undefined {
+  if (!scope) return undefined;
+  return scope === 'only' ? 'anveshan' : 'regular';
+}
+
 function buildStaffConditions(
   userType?: 'anveshan' | 'regular',
   answerStatus?: 'answered' | 'unanswered',

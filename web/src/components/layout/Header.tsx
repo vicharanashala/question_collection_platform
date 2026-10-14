@@ -4,10 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { LogOut, User, Sun, Moon, Languages, Menu, Sprout, FlaskConical } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { Switch } from '@/components/ui/switch'
-import { setAnveshanMode, useAnveshanMode } from '@/lib/anveshanMode'
-import { setTesterMode, useTesterMode } from '@/lib/testerMode'
+import { setAnveshanScope, useAnveshanScope } from '@/lib/anveshanMode'
+import { setTesterScope, useTesterScope } from '@/lib/testerMode'
+import { ModeSelect } from './ModeSelect'
 import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -28,8 +27,8 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
-  const anveshanMode = useAnveshanMode()
-  const testerMode = useTesterMode()
+  const anveshanScope = useAnveshanScope()
+  const testerScope = useTesterScope()
   useLanguage()
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -96,44 +95,28 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
           )}
         </button> */}
 
-        {/* Anveshan mode: staff only. Limits every supported page to Anveshan user data. */}
+        {/* Staff data scopes: Anveshan users and tester accounts. Each limits every supported page. */}
         {!isEndUser(user) && (
-          <motion.label
-            animate={{ backgroundColor: anveshanMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0)' }}
-            transition={{ duration: 0.25 }}
-            className="flex cursor-pointer items-center gap-2 rounded-full border border-border-subtle px-2.5 py-1 text-xs font-semibold text-text-secondary"
-          >
-            <motion.span animate={{ rotate: anveshanMode ? 0 : -25, scale: anveshanMode ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
-              <Sprout className={anveshanMode ? 'h-4 w-4 text-emerald-500' : 'h-4 w-4'} aria-hidden="true" />
-            </motion.span>
-            <span className="hidden sm:inline">Anveshan mode</span>
-            <Switch
-              checked={anveshanMode}
-              onCheckedChange={setAnveshanMode}
-              aria-label="Anveshan mode"
-              className="aria-checked:bg-emerald-500"
+          <>
+            <ModeSelect
+              ariaLabel="Anveshan mode"
+              icon={Sprout}
+              value={anveshanScope}
+              onChange={setAnveshanScope}
+              labels={{ all: 'All users', only: 'Anveshan users', exclude: 'Non-Anveshan users' }}
+              activeClass="text-emerald-500"
+              activeTint="rgba(16, 185, 129, 0.15)"
             />
-          </motion.label>
-        )}
-
-        {/* Tester mode: staff only. Shows tester account data instead of real user data. */}
-        {!isEndUser(user) && (
-          <motion.label
-            animate={{ backgroundColor: testerMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0)' }}
-            transition={{ duration: 0.25 }}
-            className="flex cursor-pointer items-center gap-2 rounded-full border border-border-subtle px-2.5 py-1 text-xs font-semibold text-text-secondary"
-          >
-            <motion.span animate={{ rotate: testerMode ? 0 : -25, scale: testerMode ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
-              <FlaskConical className={testerMode ? 'h-4 w-4 text-amber-500' : 'h-4 w-4'} aria-hidden="true" />
-            </motion.span>
-            <span className="hidden sm:inline">Tester mode</span>
-            <Switch
-              checked={testerMode}
-              onCheckedChange={setTesterMode}
-              aria-label="Tester mode"
-              className="aria-checked:bg-amber-500"
+            <ModeSelect
+              ariaLabel="Tester mode"
+              icon={FlaskConical}
+              value={testerScope}
+              onChange={setTesterScope}
+              labels={{ all: 'All accounts', only: 'Testers', exclude: 'Non-testers' }}
+              activeClass="text-amber-500"
+              activeTint="rgba(245, 158, 11, 0.15)"
             />
-          </motion.label>
+          </>
         )}
 
         {/* Language switcher — only visible to end users. Staff roles

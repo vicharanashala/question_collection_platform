@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsIn, IsInt, Min, Max, IsDateString } from 'class-validator';
-import { AnveshanOnly } from '../../../shared/utils/anveshan-mode.util';
+import { AnveshanScope } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 import { VerificationStatus, UserCategory, UserRole } from '../../../shared/classes/enums';
@@ -60,9 +60,9 @@ export class ListUsersDto {
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
 
-  /** Staff Anveshan mode: only data from Anveshan users. */
-  @AnveshanOnly()
-  anveshanOnly?: boolean;
+  /** Staff Anveshan mode: only Anveshan users or everyone except them. */
+  @AnveshanScope()
+  anveshanScope?: AnveshanScope;
 
   /** Only users who joined on or after this date (YYYY-MM-DD). */
   @IsOptional()
@@ -77,8 +77,8 @@ export class ListUsersDto {
 
 /** Date range for the user count summary shown above the users list. */
 export class ListUserStatsDto {
-  @AnveshanOnly()
-  anveshanOnly?: boolean;
+  @AnveshanScope()
+  anveshanScope?: AnveshanScope;
 
   @IsOptional()
   @IsIn(TESTER_FILTER_VALUES)

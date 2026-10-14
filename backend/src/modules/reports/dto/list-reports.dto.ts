@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsInt, Min, Max, IsIn } from 'class-validator';
-import { AnveshanOnly } from '../../../shared/utils/anveshan-mode.util';
+import { AnveshanScope } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 import { ReportCategory, ReportPriority, ReportStatus } from '../../../shared/classes/enums';
@@ -35,7 +35,7 @@ export class ListReportsDto {
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
 
-  /** Staff Anveshan mode: only data from Anveshan users. */
-  @AnveshanOnly()
-  anveshanOnly?: boolean;
+  /** Staff Anveshan mode: only Anveshan users or everyone except them. */
+  @AnveshanScope()
+  anveshanScope?: AnveshanScope;
 }
