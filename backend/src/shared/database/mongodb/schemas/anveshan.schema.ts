@@ -14,7 +14,7 @@ export class Candidate {
   user_id: string;
 
   @Prop({ type: Boolean, default: false })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Prop({ type: String, default: null })
   current_phase: string | null;

@@ -15,7 +15,7 @@ export class MongoAnveshCandidateRepository extends MongoRepository<Candidate> i
     // Finds the candidate by phone, ignoring soft deleted records.
     async findByPhone(phone: string): Promise<Candidate | null> {
         const user =  await this._model
-        .findOne({ phone, isDeleted: { $ne: true } } as Record<string, unknown>)
+        .findOne({ phone, is_deleted: { $ne: true } } as Record<string, unknown>)
         .exec()
         return user
     }
