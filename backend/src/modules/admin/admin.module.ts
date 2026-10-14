@@ -26,7 +26,6 @@ import { UserService } from '../user/user.service';
     AdminController,
     AnalyticsController,
     ExportController,
-    AuditController,
     CuratorController,
   ],
   providers: [
