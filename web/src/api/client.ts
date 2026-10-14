@@ -302,6 +302,7 @@ export const authApi = {
         currentPhase: string;
         requiredPhase: string;
         eligible: boolean;
+        questionProgressPercent?: number;
       };
       tokens?: { accessToken: string; refreshToken: string; expiresIn: number };
       user?: AuthUser;

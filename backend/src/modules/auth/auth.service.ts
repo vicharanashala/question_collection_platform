@@ -27,6 +27,7 @@ import { SmsService } from "./sms.service";
 import { RedisService } from "../../shared/database/cache/redis.service";
 import { RateLimitCounterService } from "../../shared/database/cache/rate-limit-counter.service";
 import { AdminService } from "../admin/admin.service";
+import { AnveshanProgressService } from "../admin/anveshan-progress.service";
 import { usernameKey } from "../../shared/database/cache/cache.keys";
 import { CacheTTL } from "../../config/cache-ttl.constants";
 import { isDevelopment } from "../../config/environment";
@@ -54,6 +55,8 @@ export interface AnveshanPhaseInfo {
   currentPhase: string;
   requiredPhase: string;
   eligible: boolean;
+  /** Question collection progress (0-100), used to tell whether the module phase is really complete. */
+  questionProgressPercent: number;
 }
 
 export interface AuthResponse {
@@ -122,6 +125,7 @@ export class AuthService {
     private readonly redisService: RedisService,
     private readonly rateLimitCounter: RateLimitCounterService,
     private readonly adminService: AdminService,
+    private readonly anveshanProgressService: AnveshanProgressService,
   ) {}
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -384,11 +388,13 @@ let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
 
 if (anveshanCandidate) {
   const eligible = anveshanCandidate.current_phase === REQUIRED_ANVESHAN_PHASE;
+  const progressByUser = await this.anveshanProgressService.getProgressForUsers([user.id]);
   anveshanPhaseInfo = {
     isAnveshanUser: true,
     currentPhase: anveshanCandidate.current_phase as string,
     requiredPhase: REQUIRED_ANVESHAN_PHASE,
     eligible,
+    questionProgressPercent: progressByUser.get(user.id)?.percent ?? 0,
   };
 
   if (eligible) {

@@ -24,6 +24,6 @@ import { GdbModule } from '../ai/gdb.module';
   ],
   controllers: [AdminController, AnalyticsController, ExportController, AuditController, CuratorController],
   providers: [AdminService, AuditService, CuratorService, AnveshanProgressService],
-  exports: [AdminService],
+  exports: [AdminService, AnveshanProgressService],
 })
 export class AdminModule {}
