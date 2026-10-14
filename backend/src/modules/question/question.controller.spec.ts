@@ -4,6 +4,8 @@ import { QuestionService } from './question.service';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { UserService } from '../user/user.service';
+import { Logger } from '@nestjs/common';
+import { AuditService } from '../audit-logs/audit.service';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
 import { AnveshanSubmissionsOpenGuard } from '../user/guards/anveshan-submissions-open.guard';
 import { UserRole, QuestionStatus, Season, MediaType } from '../../shared/classes/enums';
@@ -15,10 +17,13 @@ const mockQuestionService = () => ({
   findOne: jest.fn(),
   update: jest.fn(),
   getDailyCount: jest.fn(),
+  getApprovedCount: jest.fn().mockResolvedValue(0),
   getLimits: jest.fn(),
   approve: jest.fn(),
   reject: jest.fn(),
 });
+
+const meta = { requestId: 'req-1', ipAddress: '127.0.0.1' };
 
 describe('QuestionController', () => {
   let controller: QuestionController;
@@ -41,8 +46,10 @@ describe('QuestionController', () => {
       controllers: [QuestionController],
       providers: [
         { provide: QuestionService, useFactory: mockQuestionService },
-        { provide: UserService, useValue: {} },
+        { provide: UserService, useValue: { getProfile: jest.fn().mockResolvedValue({}) } },
         { provide: AnveshanMilestoneService, useValue: {} },
+        { provide: Logger, useValue: { error: jest.fn() } },
+        { provide: AuditService, useValue: { createAuditLog: jest.fn() } },
       ],
     })
       .overrideGuard(AnveshanSubmissionsOpenGuard)
@@ -192,7 +199,7 @@ describe('QuestionController', () => {
       const approved = { id: 'q-1', status: QuestionStatus.APPROVED };
       service.approve.mockResolvedValue(approved);
 
-      const result = await controller.approve('q-1', 'Looks good', adminReq as any);
+      const result = await controller.approve('q-1', 'Looks good', adminReq as any, meta);
 
       expect(result).toEqual(approved);
       expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1', 'Looks good');
@@ -202,7 +209,7 @@ describe('QuestionController', () => {
       const approved = { id: 'q-1', status: QuestionStatus.APPROVED };
       service.approve.mockResolvedValue(approved);
 
-      const result = await controller.approve('q-1', undefined, adminReq as any);
+      const result = await controller.approve('q-1', undefined, adminReq as any, meta);
 
       expect(result).toEqual(approved);
       expect(service.approve).toHaveBeenCalledWith('q-1', 'admin-1', undefined);
@@ -212,11 +219,12 @@ describe('QuestionController', () => {
   // ─── POST /questions/:id/reject ─────────────────────────────────────────────
 
   describe('POST /questions/:id/reject', () => {
+    const meta = { requestId: 'req-1', ipAddress: '127.0.0.1' };
     it('should call reject with id, adminId, and reason', async () => {
       const rejected = { id: 'q-1', status: QuestionStatus.REJECTED, rejectionReason: 'Off-topic' };
       service.reject.mockResolvedValue(rejected);
 
-      const result = await controller.reject('q-1', 'Off-topic' as any, adminReq as any);
+      const result = await controller.reject('q-1', 'Off-topic' as any, adminReq as any, meta);
 
       expect(result).toEqual(rejected);
       expect(service.reject).toHaveBeenCalledWith('q-1', 'admin-1', 'Off-topic');
@@ -225,7 +233,7 @@ describe('QuestionController', () => {
     it('should default reason to "Not provided" when omitted', async () => {
       service.reject.mockResolvedValue({ id: 'q-1', status: QuestionStatus.REJECTED });
 
-      await controller.reject('q-1', undefined as any, adminReq as any);
+      await controller.reject('q-1', undefined as any, adminReq as any, meta);
 
       expect(service.reject).toHaveBeenCalledWith('q-1', 'admin-1', 'Not provided');
     });

@@ -80,6 +80,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       suspendedUntil: user.suspendedUntil,
       bannedReason: user.bannedReason,
       bannedAt: user.bannedAt,
+      name: user.name,
     };
   }
 }

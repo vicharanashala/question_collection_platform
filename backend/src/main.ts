@@ -90,6 +90,7 @@ async function bootstrap() {
     // Raw body needed for some webhooks
     rawBody: true,
   });
+  app.set('trust proxy', 1);
   console.log('[Bootstrap] NestFactory.create() returned');
 
   // ─── Optional: serve the built Vite frontend (React admin dashboard) ─────────
@@ -213,6 +214,7 @@ async function bootstrap() {
       origin: corsOrigins,
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
+      exposedHeaders: ['x-request-id'],
     });
   } else if (isProduction()) {
     logger.warn('CORS_ORIGINS is not set — allowing same-origin requests only.');

@@ -505,15 +505,15 @@ export class QuestionService {
             isAnveshan,
           ...(submissionLocation ? { submissionLocation } : {}),
         });
-        await this.auditRepo.save({
-          actorType: ActorType.USER,
-          actorId: userId,
-          action: AuditAction.QUESTION_REJECTED,
-          entityType: 'question',
-          entityId: duplicateQuestion.id,
-          newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
-          metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup?.id },
-        });
+        // await this.auditRepo.save({
+        //   actorType: ActorType.USER,
+        //   actorId: userId,
+        //   action: AuditAction.QUESTION_REJECTED,
+        //   entityType: 'question',
+        //   entityId: duplicateQuestion.id,
+        //   newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+        //   metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup?.id },
+        // });
         return {
           id: duplicateQuestion.id,
           status: 'DUPLICATE',
@@ -566,15 +566,15 @@ export class QuestionService {
           isAnveshan,
         ...(submissionLocation ? { submissionLocation } : {}),
       });
-      await this.auditRepo.save({
-        actorType: ActorType.USER,
-        actorId: userId,
-        action: AuditAction.QUESTION_REJECTED,
-        entityType: 'question',
-        entityId: duplicateQuestion.id,
-        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
-        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
-      });
+      // await this.auditRepo.save({
+      //   actorType: ActorType.USER,
+      //   actorId: userId,
+      //   action: AuditAction.QUESTION_REJECTED,
+      //   entityType: 'question',
+      //   entityId: duplicateQuestion.id,
+      //   newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+      //   metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
+      // });
       return {
         id: duplicateQuestion.id,
         status: 'DUPLICATE',
@@ -634,15 +634,15 @@ export class QuestionService {
     });
 
     // 10. Audit log
-    await this.auditRepo.save({
-      actorType: ActorType.USER,
-      actorId: userId,
-      action: AuditAction.QUESTION_SUBMITTED,
-      entityType: 'question',
-      entityId: saved.id,
-      newValue: { status: saved.status, domains: saved.domains },
-      metadata: { cropType: saved.cropType, season: saved.season },
-    });
+    // await this.auditRepo.save({
+    //   actorType: ActorType.USER,
+    //   actorId: userId,
+    //   action: AuditAction.QUESTION_SUBMITTED,
+    //   entityType: 'question',
+    //   entityId: saved.id,
+    //   newValue: { status: saved.status, domains: saved.domains },
+    //   metadata: { cropType: saved.cropType, season: saved.season },
+    // });
 
     return {
       id: saved.id,
@@ -759,15 +759,15 @@ export class QuestionService {
 
     const saved = await this.questionRepo.save(question);
 
-    await this.auditRepo.save({
-      actorType: ActorType.ADMIN,
-      actorId: reviewerId,
-      action: AuditAction.QUESTION_APPROVED,
-      entityType: 'question',
-      entityId: questionId,
-      oldValue: { status: question.status },
-      newValue: { status: saved.status },
-    });
+    // await this.auditRepo.save({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: reviewerId,
+    //   action: AuditAction.QUESTION_APPROVED,
+    //   entityType: 'question',
+    //   entityId: questionId,
+    //   oldValue: { status: question.status },
+    //   newValue: { status: saved.status },
+    // });
 
     return saved;
   }
@@ -783,15 +783,15 @@ export class QuestionService {
 
     const saved = await this.questionRepo.save(question);
 
-    await this.auditRepo.save({
-      actorType: ActorType.ADMIN,
-      actorId: reviewerId,
-      action: AuditAction.QUESTION_REJECTED,
-      entityType: 'question',
-      entityId: questionId,
-      oldValue: { status: question.status },
-      newValue: { status: saved.status, rejectionReason: reason },
-    });
+    // await this.auditRepo.save({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: reviewerId,
+    //   action: AuditAction.QUESTION_REJECTED,
+    //   entityType: 'question',
+    //   entityId: questionId,
+    //   oldValue: { status: question.status },
+    //   newValue: { status: saved.status, rejectionReason: reason },
+    // });
 
     return saved;
   }
@@ -929,15 +929,15 @@ export class QuestionService {
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
-      await this.auditRepo.save({
-        actorType: ActorType.USER,
-        actorId: userId,
-        action: AuditAction.QUESTION_REJECTED,
-        entityType: 'question',
-        entityId: duplicateQuestion.id,
-        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
-        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
-      });
+      // await this.auditRepo.save({
+      //   actorType: ActorType.USER,
+      //   actorId: userId,
+      //   action: AuditAction.QUESTION_REJECTED,
+      //   entityType: 'question',
+      //   entityId: duplicateQuestion.id,
+      //   newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+      //   metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.id },
+      // });
 
       return {
         state,
@@ -1000,15 +1000,15 @@ export class QuestionService {
         submittedAt: now,
         embedding: [0], // zero embedding — saved to satisfy FK, not for search
       });
-      await this.auditRepo.save({
-        actorType: ActorType.USER,
-        actorId: userId,
-        action: AuditAction.QUESTION_REJECTED,
-        entityType: 'question',
-        entityId: duplicateQuestion.id,
-        newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
-        metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
-      });
+      // await this.auditRepo.save({
+      //   actorType: ActorType.USER,
+      //   actorId: userId,
+      //   action: AuditAction.QUESTION_REJECTED,
+      //   entityType: 'question',
+      //   entityId: duplicateQuestion.id,
+      //   newValue: { status: QuestionStatus.REJECTED, reason: 'DUPLICATE' },
+      //   metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
+      // });
 
       return {
         state,

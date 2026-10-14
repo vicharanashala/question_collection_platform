@@ -1,6 +1,7 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { AuditLog } from '../entities';
+import { AuditLog } from '../mongodb/schemas/audit-log.schema';
 import { AuditAction, ActorType } from '../../classes/enums';
+import { QueryAuditLogsDto } from '@/modules/audit-logs/dto/query-audit-log-dto';
 
 export interface AuditLogFilter {
   id?: string;
@@ -13,8 +14,8 @@ export interface AuditLogFilter {
 }
 
 export interface IAuditLogRepository extends BaseRepository<AuditLog> {
-  findByActorId(actorId: string, actorType: ActorType, limit?: number): Promise<AuditLog[]>;
-  findByEntity(entityType: string, entityId: string): Promise<AuditLog[]>;
+  // findByActorId(actorId: string, actorType: ActorType, limit?: number): Promise<AuditLog[]>;
+  // findByEntity(entityType: string, entityId: string): Promise<AuditLog[]>;
   aggregateByAction(
     fromDate: Date,
     toDate: Date,
@@ -22,9 +23,11 @@ export interface IAuditLogRepository extends BaseRepository<AuditLog> {
     granularity?: 'day' | 'week' | 'month',
   ): Promise<Array<{ date: string; action: string; count: number }>>;
 
-  getRecentWithActorName(
-  limit: number,
-): Promise<Array<AuditLog & {
-  actorName?: string;
-}>>;
+  findPage(q:QueryAuditLogsDto, scope: Record<string, unknown> | null): any;
+
+//   getRecentWithActorName(
+//   limit: number,
+// ): Promise<Array<AuditLog & {
+//   actorName?: string;
+// }>>;
 }

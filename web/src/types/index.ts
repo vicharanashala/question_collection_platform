@@ -124,6 +124,7 @@ export interface Question {
     block: string;
     village: string;
   }
+  id: string
 }
 
 export interface DashboardStats {
@@ -421,25 +422,47 @@ export interface ExportParams {
 
 export interface AuditLogEntry {
   id: string
-  actorType: 'admin' | 'curator' | 'user' | 'system'
-  actorId: string | null
-  actorName: string | null
-  actorRole: string | null
-  action: string
-  entityType: string | null
-  entityId: string | null
-  oldValue: Record<string, unknown> | null
-  newValue: Record<string, unknown> | null
-  metadata: Record<string, unknown> | null
+  actionType: string
+  actor: {
+    id: string
+    actorType: string
+    name?: string
+  }
+  context?: Record<string, unknown> | null
+  changes?: {
+    before?: Record<string, unknown> | null
+    after?: Record<string, unknown> | null
+  } | null
+  outcome?: {
+    status: string
+    errorMessage?: string
+    errorStack?: string
+    errorCode?: string
+  } | null
+  resource?: {
+    ipAddress?: string
+    requestId?: string
+  } | null
   createdAt: string
+  /** @deprecated Legacy entity-history fields. New audit-log responses use nested fields above. */
+  actorType?: string
+  actorId?: string | null
+  actorName?: string | null
+  actorRole?: string | null
+  action?: string
+  entityType?: string | null
+  entityId?: string | null
+  oldValue?: Record<string, unknown> | null
+  newValue?: Record<string, unknown> | null
+  metadata?: Record<string, unknown> | null
 }
 
 export interface AuditLogsResponse {
-  items: AuditLogEntry[]
+  data: AuditLogEntry[]
   total: number
   page: number
   limit: number
-  pages: number
+  totalPages: number
 }
 
 export interface ActorStats {
@@ -498,17 +521,13 @@ export interface AuditLogQuery {
   page?: number
   limit?: number
   actorId?: string
-  actorType?: string
-  /** Filter actors by role: admin | curator | finance — super_admin can see any role */
-  role?: 'admin' | 'curator' | 'finance'
-  action?: string
-  actions?: string[]
-  entityType?: string
-  entityId?: string
+  role?: string
+  actionType?: string
+  actionTypes?: string[]
   fromDate?: string
   toDate?: string
   search?: string
-  sortBy?: 'createdAt' | 'action' | 'actorId'
+  sortBy?: 'createdAt' | 'actionType' | 'actorId'
   sortOrder?: 'ASC' | 'DESC'
 }
 
@@ -531,29 +550,56 @@ export interface QueueStatusCount {
   count: number
 }
 
+// export interface CuratorStats {
+//   queue: {
+//     total: number
+//     breakdown: QueueStatusCount[]
+//   }
+//   volume: {
+//     today: number
+//     thisWeek: number
+//     thisMonth: number
+//     last30Days: number
+//   }
+//   performance: {
+//     approved30Days: number
+//     rejected30Days: number
+//     approvalRate: number
+//     priorApprovalRate: number
+//     approvalRateChange: number
+//     avgReviewTurnaroundMinutes: number | null
+//   }
+//   growth: {
+//     last30Days: number
+//     prior30Days: number
+//     growthRate: number
+//   }
+//   dailyVolume: Array<{
+//     date: string
+//     submitted: number
+//     approved: number
+//     rejected: number
+//     held: number
+//   }>
+//   cropBreakdown: Array<{ cropType: string; count: number }>
+//   stateBreakdown: Array<{ state: string; count: number }>
+//   domainBreakdown: Array<{ domain: string; count: number }>
+// }
+
 export interface CuratorStats {
-  queue: {
-    total: number
-    breakdown: QueueStatusCount[]
-  }
-  volume: {
-    today: number
-    thisWeek: number
-    thisMonth: number
-    last30Days: number
-  }
-  performance: {
-    approved30Days: number
-    rejected30Days: number
+  summary: {
+    totalQuestions: number
+    approvedQuestions: number
+    rejectedQuestions: number
+    pendingQuestions: number
+    heldQuestions: number
+    queueTotal: number
     approvalRate: number
     priorApprovalRate: number
     approvalRateChange: number
-    avgReviewTurnaroundMinutes: number | null
-  }
-  growth: {
-    last30Days: number
-    prior30Days: number
     growthRate: number
+    priorTotalQuestions: number
+    avgReviewTurnaroundMinutes: number | null
   }
   dailyVolume: Array<{
     date: string

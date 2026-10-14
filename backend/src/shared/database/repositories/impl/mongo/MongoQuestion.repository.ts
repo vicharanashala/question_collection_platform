@@ -161,6 +161,60 @@ export class MongoQuestionRepository
     }));
   }
 
+  async dailyVolume(
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+): Promise<DailyVolumeRow[]> {
+  const rows = await this._model
+    .aggregate<{
+      _id: string;
+      submitted: number;
+      approved: number;
+      rejected: number;
+      held: number;
+    }>([
+      {
+        $match: {
+          ...filter, // state / cropType
+          submittedAt: { $gte: from, $lte: to },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$submittedAt',
+              timezone: 'Asia/Kolkata',
+            },
+          },
+          submitted: { $sum: 1 },
+          approved: {
+            $sum: { $cond: [{ $eq: ['$status', QuestionStatus.APPROVED] }, 1, 0] },
+          },
+          rejected: {
+            $sum: { $cond: [{ $eq: ['$status', QuestionStatus.REJECTED] }, 1, 0] },
+          },
+          held: {
+            $sum: { $cond: [{ $eq: ['$status', QuestionStatus.HELD] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
+    .exec();
+
+  return rows.map((r) => ({
+    date: r._id,
+    submitted: r.submitted,
+    approved: r.approved,
+    rejected: r.rejected,
+    held: r.held,
+  }));
+}
+
+
   async topFieldSince(
     field: 'cropType' | 'state',
     from: Date,
@@ -179,6 +233,33 @@ export class MongoQuestionRepository
       .map((r) => ({ key: String(r._id), count: r.count }));
   }
 
+  async topField(
+  field: 'cropType' | 'state',
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+  limit: number,
+): Promise<Array<{ key: string; count: number }>> {
+  const rows = await this._model
+    .aggregate<{ _id: string; count: number }>([
+      {
+        $match: {
+          ...filter, // state / cropType
+          submittedAt: { $gte: from, $lte: to },
+          // Drop empty values in the DB so they don't eat into $limit.
+          [field]: { $nin: [null, ''] },
+        },
+      },
+      { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: limit },
+    ])
+    .exec();
+
+  return rows.map((r) => ({ key: String(r._id), count: r.count }));
+}
+
+
   async topDomainsSince(
     from: Date,
     limit: number,
@@ -196,6 +277,31 @@ export class MongoQuestionRepository
       .filter((r) => r._id != null && r._id !== '')
       .map((r) => ({ domain: String(r._id), count: r.count }));
   }
+
+  async topDomains(
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+  limit: number,
+): Promise<Array<{ domain: string; count: number }>> {
+  const rows = await this._model
+    .aggregate<{ _id: string; count: number }>([
+      {
+        $match: {
+          $and: [filter, { submittedAt: { $gte: from, $lte: to } }],
+        },
+      },
+      { $unwind: '$domains' },
+      // Drop empty values here so they don't eat into $limit.
+      { $match: { domains: { $nin: [null, ''] } } },
+      { $group: { _id: '$domains', count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: limit },
+    ])
+    .exec();
+
+  return rows.map((r) => ({ domain: String(r._id), count: r.count }));
+}
 
   async countDistinctStates(
     from: Date,
@@ -242,6 +348,44 @@ export class MongoQuestionRepository
     if (avgMs == null) return null;
     return Math.round(avgMs / 60000);
   }
+
+
+  async avgReviewTurnaroundMinutes(
+  from: Date,
+  to: Date,
+  filter: Record<string, unknown>,
+  statuses: QuestionStatus[],
+): Promise<number | null> {
+  if (statuses.length === 0) return null;
+
+  const row = await this._model
+    .aggregate<{ avgMs: number | null }>([
+      {
+        $match: {
+          ...filter, // state / cropType, plain equality
+          reviewedAt: { $ne: null, $gte: from, $lte: to },
+          submittedAt: { $ne: null },
+          status: { $in: statuses },
+        },
+      },
+      {
+        $project: {
+          turnaroundMs: { $subtract: ['$reviewedAt', '$submittedAt'] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          avgMs: { $avg: '$turnaroundMs' },
+        },
+      },
+    ])
+    .exec();
+
+  const avgMs = row[0]?.avgMs;
+  if (avgMs == null) return null;
+  return Math.round(avgMs / 60000);
+}
 
   async getQuestionAnalytics(
   filters: QuestionAnalyticsFilters,

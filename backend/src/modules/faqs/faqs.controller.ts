@@ -13,6 +13,8 @@ import {
   Res,
   NotFoundException,
   StreamableFile,
+  Req,
+  Logger,
 } from '@nestjs/common';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
@@ -23,11 +25,59 @@ import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
 import { Public } from '../../shared/middleware/decorators/public.decorator';
-import { UserRole } from '../../shared/classes/enums';
+import { ActorType, AuditAction, OutcomeStatus, UserRole } from '../../shared/classes/enums';
+import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
+import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
+import { AuditService } from '../audit-logs/audit.service';
+import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
+
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    role: string;
+    name: string;
+  };
+}
 
 @Controller()
 export class FaqsController {
-  constructor(private readonly faqsService: FaqsService) {}
+  constructor(private readonly faqsService: FaqsService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(FaqsController.name),) {}
+
+  private toActorType(role: UserRole): ActorType {
+  switch (role) {
+    case UserRole.SUPER_ADMIN: return ActorType.SUPER_ADMIN;
+    case UserRole.ADMIN:       return ActorType.ADMIN;
+    case UserRole.FINANCE:     return ActorType.FINANCE;
+    default:                   return ActorType.CURATOR;
+  }
+}
+
+private async safeAudit(payload: AuditLogDto) {
+    try {
+      await this.auditService.createAuditLog({
+        ...payload,
+        changes: payload.changes ?? undefined,
+        context: payload.context ?? undefined,
+        outcome: payload.outcome ?? undefined,
+      });
+    } catch (e) {
+      this.logger.error(
+        "Failed to write audit log",
+        e instanceof Error ? e.stack : String(e),
+      );
+    }
+  }
+
+  private faqSnapshot(faq: Faq): Record<string, unknown> {
+    return {
+      id: faq._id.toString(),
+      question: faq.question,
+      answer: faq.answer,
+      category: faq.category,
+      isVisible: faq.isVisible,
+      displayOrder: faq.displayOrder,
+    };
+  }
 
   // ─── Public/user-facing ──────────────────────────────────────────────────
 
@@ -160,29 +210,164 @@ export class FaqsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Post('admin/faqs')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() dto: CreateFaqDto) {
-    return this.faqsService.create(dto);
+  async create(@Body() dto: CreateFaqDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
+    const base: AuditLogDto = {
+          actionType: AuditAction.CREATE_FAQ,
+          actor: {
+            id: req.user.id,
+            actorType: this.toActorType(req.user.role as UserRole),
+            name: req.user.name,
+          },
+          resource: {
+            requestId: meta.requestId,
+            ipAddress: meta.ipAddress,
+          },
+          context: {
+            question: dto.question,
+            answer: dto.answer,
+            category: dto.category,
+            isVisible: dto.isVisible 
+          },
+        };
+
+    let result: Faq;
+    try{
+      result =  await this.faqsService.create(dto);
+    }catch(err){
+            await this.safeAudit({
+              ...base,
+              changes: {
+                before: {},
+                after: {},
+              },
+              outcome: {
+                status: OutcomeStatus.FAILURE,
+                errorMessage: err instanceof Error ? err.message : String(err),
+              },
+            });
+            throw err;
+    }
+
+        await this.safeAudit({
+          ...base,
+          changes: {
+            before: {},
+            after: { id: result._id.toString() },
+          },
+          outcome: { status: OutcomeStatus.SUCCESS },
+        });
+
+    return result;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Patch('admin/faqs/:id')
-  async update(@Param('id') id: string, @Body() dto: UpdateFaqDto) {
-    return this.faqsService.update(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdateFaqDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
+    const base: AuditLogDto = {
+      actionType: AuditAction.UPDATE_FAQ,
+      actor: {
+        id: req.user.id,
+        actorType: this.toActorType(req.user.role as UserRole),
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context: { faqId: id, ...dto },
+    };
+    let before: Record<string, unknown> = {};
+    try {
+      before = this.faqSnapshot(await this.faqsService.findOne(id) as Faq);
+      const result = await this.faqsService.update(id, dto) as Faq;
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: this.faqSnapshot(result) },
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+      return result;
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: before },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Patch('admin/faqs/:id/visibility')
-  async toggleVisibility(@Param('id') id: string, @Body() dto: ToggleVisibilityDto) {
-    return this.faqsService.toggleVisibility(id, dto);
+  async toggleVisibility(@Param('id') id: string, @Body() dto: ToggleVisibilityDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
+    const base: AuditLogDto = {
+      actionType: AuditAction.UPDATE_FAQ,
+      actor: {
+        id: req.user.id,
+        actorType: this.toActorType(req.user.role as UserRole),
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context: { faqId: id, operation: 'visibility_changed', isVisible: dto.isVisible },
+    };
+    let before: Record<string, unknown> = {};
+    try {
+      before = this.faqSnapshot(await this.faqsService.findOne(id) as Faq);
+      const result = await this.faqsService.toggleVisibility(id, dto) as Faq;
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: this.faqSnapshot(result) },
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+      return result;
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: before },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Delete('admin/faqs/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
-    await this.faqsService.delete(id);
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
+    const base: AuditLogDto = {
+      actionType: AuditAction.DELETE_FAQ,
+      actor: {
+        id: req.user.id,
+        actorType: this.toActorType(req.user.role as UserRole),
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context: { faqId: id },
+    };
+    let before: Record<string, unknown> = {};
+    try {
+      before = this.faqSnapshot(await this.faqsService.findOne(id) as Faq);
+      await this.faqsService.delete(id);
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: {} },
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: before },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
   }
 }
