@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { questionApi, getErrorMessage } from "@/api/client";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,43 +9,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { AudioPlayer } from "@/components/AudioPlayer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ExportMenu } from "@/components/ExportMenu";
+import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
+import { StaffQuestionDetailDialog } from "@/components/questions/StaffQuestionDetailDialog";
+import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
+import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 import { cn, formatDate } from "@/lib/utils";
-import {
-  Clock,
-  User,
-  Eye,
-  MapPin,
-  Wheat,
-  CloudRain,
-  Globe,
-  Film,
-  Hash,
-  AlertTriangle,
-  PauseCircle,
-  CheckCircle,
-  XCircle,
-  ListFilter,
-  Search,
-  Info,
-  Mic,
-  Sprout,
-  MessageSquareReply,
-} from "lucide-react";
+import { Film, ListFilter, Search, MessageSquareReply } from "lucide-react";
 import { toast } from "sonner";
-import { StaffAnveshanAnswerSection } from "@/components/anveshan-answers/StaffAnveshanAnswerSection";
 import type { Question } from "@/types";
-import { TranslatableText } from "@/components/TranslatableText";
 import {
   DataTable,
   CardView,
@@ -54,24 +27,6 @@ import {
   DualView,
   type ColumnDef,
 } from "@/components/DataTable";
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-warning text-white",
-  held: "bg-amber-500 text-white",
-  approved: "bg-success text-white",
-  rejected: "bg-destructive text-white",
-  moved_to_final: "bg-[#8A2BE2] text-white",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  held: "On Hold",
-  approved: "Approved",
-  rejected: "Rejected",
-  moved_to_final: "Published",
-};
 
 const SEASON_LABEL: Record<string, string> = {
   Kharif: "Kharif",
@@ -89,32 +44,6 @@ const SEASON_LABEL: Record<string, string> = {
   "Dry Season": "Dry Season",
   "Wet Season": "Wet Season",
 };
-
-// ─── Detail dialog InfoRow helper ────────────────────────────────────────────
-
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: React.ReactNode;
-}) {
-  if (value == null || value === "") return null;
-
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-
-      <span className="text-sm text-muted-foreground min-w-[140px]">
-        {label}
-      </span>
-
-      <span className="text-sm text-foreground font-medium">{value}</span>
-    </div>
-  );
-}
 
 // ─── Anveshan answer filter ───────────────────────────────────────────────────
 
@@ -136,6 +65,7 @@ export function QuestionsPage() {
     "held" | "approved" | "rejected" | "pending" | ""
   >("");
   const [answerFilter, setAnswerFilter] = useState<AnswerFilter>("");
+  const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"table" | "card">("table");
   const limit = 10;
@@ -143,15 +73,7 @@ export function QuestionsPage() {
   const debouncedSearch = useDebouncedValue(search, 400);
 
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [apiTotal, setApiTotal] = useState(0);
-  const [langByQuestionId, setLangByQuestionId] = useState<
-    Record<string, string>
-  >({});
-
-  const getLang = (id: string) => langByQuestionId[id] ?? "";
-  const setLang = (id: string, lang: string) =>
-    setLangByQuestionId((prev) => ({ ...prev, [id]: lang }));
 
   // Client-side sort — newest first
   const sortedQuestions = useMemo(() => {
@@ -162,7 +84,7 @@ export function QuestionsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, statusFilter, answerFilter]);
+  }, [debouncedSearch, statusFilter, answerFilter, userTypeFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -174,6 +96,7 @@ export function QuestionsPage() {
         search: debouncedSearch || undefined,
         status: statusFilter || undefined,
         answerStatus: answerFilter || undefined,
+        userType: userTypeFilter || undefined,
       })
       .then((res) => {
         setQuestions(res.items as Question[]);
@@ -181,7 +104,7 @@ export function QuestionsPage() {
       })
       .catch((e) => toast.error(getErrorMessage(e, "Failed to load questions")))
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, answerFilter, view]);
+  }, [page, debouncedSearch, statusFilter, answerFilter, userTypeFilter, view]);
 
   const totalPages = Math.max(
     1,
@@ -195,16 +118,7 @@ export function QuestionsPage() {
       header: "Status",
       width: "110px",
       sortable: true,
-      render: (q) => (
-        <Badge
-          className={cn(
-            "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5 whitespace-nowrap",
-            STATUS_COLORS[q.status] ?? "bg-muted",
-          )}
-        >
-          {STATUS_LABELS[q.status] ?? q.status}
-        </Badge>
-      ),
+      render: (q) => <QuestionStatusBadge question={q} />,
     },
     {
       key: "isAnswerSubmitted",
@@ -336,7 +250,7 @@ export function QuestionsPage() {
   ];
 
   const emptyMessage =
-    search || statusFilter
+    search || statusFilter || answerFilter || userTypeFilter
       ? "No questions match your filters"
       : "No questions yet";
 
@@ -355,7 +269,6 @@ export function QuestionsPage() {
       emptyMessage={emptyMessage}
       onRowClick={(row) => {
         setDetailQuestion(row as Question);
-        setDetailOpen(true);
       }}
     />
   );
@@ -373,7 +286,6 @@ export function QuestionsPage() {
       emptyMessage={emptyMessage}
       onRowClick={(row) => {
         setDetailQuestion(row as Question);
-        setDetailOpen(true);
       }}
     />
   );
@@ -408,6 +320,21 @@ export function QuestionsPage() {
               {apiTotal.toLocaleString()} total
             </span>
           )}
+          <ExportMenu
+            name="questions"
+            columns={QUESTION_EXPORT_COLUMNS}
+            disabled={apiTotal === 0}
+            fetchPage={(exportPage, exportLimit) =>
+              questionApi.getQuestions({
+                page: exportPage,
+                limit: exportLimit,
+                search: debouncedSearch || undefined,
+                status: statusFilter || undefined,
+                answerStatus: answerFilter || undefined,
+                userType: userTypeFilter || undefined,
+              })
+            }
+          />
           <ViewToggle view={view} onChange={setView} />
         </div>
       </div>
@@ -462,8 +389,13 @@ export function QuestionsPage() {
             </div>
           </div>
 
+          {/* User type filter */}
+          <div className="sm:ml-auto sm:w-44">
+            <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
+          </div>
+
           {/* Anveshan answer filter */}
-          <div className="sm:ml-auto sm:w-52">
+          <div className="sm:w-52">
             <Select value={answerFilter || "all"} onValueChange={(v) => setAnswerFilter(v === "all" ? "" : (v as AnswerFilter))}>
               <SelectTrigger className="w-full" aria-label="Filter by answer">
                 <SelectValue />
@@ -503,311 +435,11 @@ export function QuestionsPage() {
 
       {/* ─── Question detail dialog ─── */}
       {detailQuestion && (
-        <Dialog
-          open={detailOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              setDetailOpen(false);
-              setDetailQuestion(null);
-            }
-          }}
-        >
-          <DialogContent className="!w-[80vw] !max-w-[80vw] !h-[80vh] !max-h-[80vh] overflow-y-auto p-2.5">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Eye className="h-4 w-4" /> Question Details
-              </DialogTitle>
-              <DialogDescription>
-                Full information for the selected question.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge
-                  className={cn(
-                    "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
-                    STATUS_COLORS[detailQuestion.status] ?? "bg-muted",
-                  )}
-                >
-                  {STATUS_LABELS[detailQuestion.status] ??
-                    detailQuestion.status}
-                </Badge>
-                {detailQuestion.domains?.length ? (
-                  <span className="text-[11px] sm:text-xs text-muted-foreground capitalize">
-                    {detailQuestion.domains.join(", ")}
-                  </span>
-                ) : null}
-                {detailQuestion.isAnveshan && (
-                  <Badge className="bg-emerald-600 text-white text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5">
-                    <Sprout className="h-3 w-3 mr-1" /> Anveshan User
-                  </Badge>
-                )}
-                {detailQuestion.duplicateFlag && (
-                  <Badge
-                    variant="destructive"
-                    className="text-[11px] sm:text-[11px] sm:text-xs"
-                  >
-                    <AlertTriangle className="h-3 w-3 mr-1" /> Duplicate
-                  </Badge>
-                )}
-              </div>
-              <div className="bg-muted/50 rounded-lg p-3">
-                <TranslatableText
-                  text={detailQuestion.questionText}
-                  selectedLang={getLang(detailQuestion.id)}
-                  onLangChange={(lang) => setLang(detailQuestion.id, lang)}
-                  sourceLanguage={detailQuestion.language ?? "en"}
-                  inline
-                />
-              </div>
-
-              {/* Basic Information */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">
-                  Basic Information
-                </h3>
-
-                <div className="grid grid-cols-2 gap-x-12 gap-y-2.5">
-                  <InfoRow
-                    icon={Hash}
-                    label="Question ID"
-                    value={
-                      <span className="font-mono text-xs">
-                        {detailQuestion.id}
-                      </span>
-                    }
-                  />
-
-                  <InfoRow
-                    icon={Globe}
-                    label="Language"
-                    value={detailQuestion.language?.toUpperCase()}
-                  />
-
-                  <InfoRow
-                    icon={Info}
-                    label="Category"
-                    value={(detailQuestion.domains ?? []).join(", ") || "—"}
-                  />
-
-                  <InfoRow
-                    icon={Wheat}
-                    label="Crop Type"
-                    value={detailQuestion.cropType}
-                  />
-
-                  <InfoRow
-                    icon={CloudRain}
-                    label="Season"
-                    value={
-                      SEASON_LABEL[detailQuestion.season] ??
-                      detailQuestion.season
-                    }
-                  />
-
-                  <InfoRow
-                    icon={MapPin}
-                    label="State"
-                    value={
-                      detailQuestion.isAnveshan
-                        ? (detailQuestion.submissionLocation?.state ??
-                          detailQuestion.state)
-                        : detailQuestion.state
-                    }
-                  />
-
-                  <InfoRow
-                    icon={MapPin}
-                    label="District"
-                    value={
-                      detailQuestion.isAnveshan
-                        ? (detailQuestion.submissionLocation?.district ??
-                          detailQuestion.district)
-                        : detailQuestion.district
-                    }
-                  />
-
-                  {(detailQuestion.isAnveshan
-                    ? detailQuestion.submissionLocation?.block
-                    : detailQuestion.block) && (
-                    <InfoRow
-                      icon={MapPin}
-                      label="Block"
-                      value={
-                        detailQuestion.isAnveshan
-                          ? detailQuestion.submissionLocation?.block
-                          : detailQuestion.block
-                      }
-                    />
-                  )}
-
-                  {detailQuestion.isAnveshan &&
-                    detailQuestion.submissionLocation?.village && (
-                      <InfoRow
-                        icon={MapPin}
-                        label="Village"
-                        value={detailQuestion.submissionLocation.village}
-                      />
-                    )}
-
-                  {detailQuestion.isAnveshan &&
-                    detailQuestion.submissionLocation?.latitude != null &&
-                    detailQuestion.submissionLocation?.longitude != null && (
-                      <InfoRow
-                        icon={MapPin}
-                        label="Coordinates"
-                        value={`${detailQuestion.submissionLocation.latitude.toFixed(5)}, ${detailQuestion.submissionLocation.longitude.toFixed(5)}`}
-                      />
-                    )}
-                </div>
-              </div>
-
-              {/* Submission Information */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">
-                  Submission Information
-                </h3>
-
-                <div className="grid grid-cols-2 gap-x-16 gap-y-4">
-                  <InfoRow
-                    icon={User}
-                    label="Submitted By"
-                    value={
-                      detailQuestion.user?.name ??
-                      detailQuestion.userName ??
-                      "—"
-                    }
-                  />
-
-                  <InfoRow
-                    icon={Clock}
-                    label="Submitted"
-                    value={formatDate(detailQuestion.submittedAt)}
-                  />
-
-                  {detailQuestion.reviewedAt && (
-                    <InfoRow
-                      icon={Clock}
-                      label="Reviewed"
-                      value={formatDate(detailQuestion.reviewedAt)}
-                    />
-                  )}
-
-                  {detailQuestion.reviewedByName && (
-                    <InfoRow
-                      icon={User}
-                      label="Reviewed By"
-                      value={detailQuestion.reviewedByName}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Review Information */}
-              {(detailQuestion.approvalReason ||
-                detailQuestion.rejectionReason ||
-                detailQuestion.heldReason) && (
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">
-                    Review Information
-                  </h3>
-
-                  <div className="grid grid-cols-1 gap-3">
-                    {detailQuestion.approvalReason && (
-                      <InfoRow
-                        icon={CheckCircle}
-                        label="Approval Reason"
-                        value={detailQuestion.approvalReason}
-                      />
-                    )}
-
-                    {detailQuestion.rejectionReason && (
-                      <InfoRow
-                        icon={XCircle}
-                        label="Rejection Reason"
-                        value={detailQuestion.rejectionReason}
-                      />
-                    )}
-
-                    {detailQuestion.heldReason && (
-                      <InfoRow
-                        icon={PauseCircle}
-                        label="Hold Reason"
-                        value={detailQuestion.heldReason}
-                      />
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {detailQuestion.isAnveshan && <StaffAnveshanAnswerSection questionId={detailQuestion.id} />}
-            </div>
-            {detailQuestion.mediaUrls &&
-              detailQuestion.mediaUrls.filter(
-                (u) => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
-              ).length > 0 && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2 text-xs sm:text-xs sm:text-sm text-muted-foreground">
-                    <Film className="h-4 w-4" />
-                    Images
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {detailQuestion.mediaUrls
-                      .filter(
-                        (u) => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
-                      )
-                      .map((url, i) => (
-                        <a
-                          key={i}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <img
-                            src={url}
-                            alt={`img-${i}`}
-                            className="rounded-md border w-full h-24 object-cover hover:opacity-80 transition-opacity"
-                          />
-                        </a>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-            {(() => {
-              const AUDIO_EXT = /\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i;
-              const isAudioUrl = (url: string) =>
-                AUDIO_EXT.test(url.split("?")[0]);
-              const mediaUrls = detailQuestion.mediaUrls ?? [];
-              const oldAudioUrls = mediaUrls.filter(isAudioUrl);
-              const newAudioUrls = detailQuestion.audioUrls ?? [];
-              const allAudioUrls = [...newAudioUrls, ...oldAudioUrls];
-
-              if (allAudioUrls.length === 0) return null;
-              return (
-                <div className="space-y-2 mt-4">
-                  <div className="flex items-center gap-1.5 mb-2 text-xs sm:text-xs sm:text-sm text-muted-foreground">
-                    <Mic className="h-4 w-4" />
-                    Audio Recordings
-                  </div>
-                  {allAudioUrls.map((url, i) => (
-                    <AudioPlayer
-                      key={i}
-                      src={url}
-                      className="max-w-sm w-full"
-                    />
-                  ))}
-                </div>
-              );
-            })()}
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDetailOpen(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <StaffQuestionDetailDialog
+          key={detailQuestion.id}
+          question={detailQuestion}
+          onClose={() => setDetailQuestion(null)}
+        />
       )}
     </div>
   );

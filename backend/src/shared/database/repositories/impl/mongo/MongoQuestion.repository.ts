@@ -11,6 +11,7 @@ import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
 import { ListQuestionsDto } from '@/modules/question/dto';
+import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
@@ -793,275 +794,213 @@ async getDailyStatsSince(
       ])
       .exec();
   }
+
+  // Lists questions with submitter and reviewer details. Staff see every question; users see only their own.
   async list(
-  userId: string,
-  dto: ListQuestionsDto,
-  isAdmin = false,
-) {
-  const {
-    page = 1,
-    limit = 20,
-    status,
-    domains,
-    cropType,
-    season,
-    state,
-    search,
-    fromDate,
-    toDate,
-  } = dto;
+    userId: string,
+    dto: ListQuestionsDto,
+    isAdmin = false,
+    canViewContact = false,
+  ) {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      domains,
+      cropType,
+      season,
+      state,
+      search,
+      fromDate,
+      toDate,
+      answerStatus,
+      userType,
+    } = dto;
 
-  const skip = (page - 1) * limit;
+    const match: Record<string, unknown> = {};
 
-  // ----------------------------------------
-  // 1. Build $match
-  // ----------------------------------------
+    // Access control
+    if (!isAdmin) match.userId = userId;
+    if (status) match.status = status;
+    if (domains) match.domains = domains;
+    if (cropType) match.cropType = { $regex: escapeRegex(cropType), $options: 'i' };
+    if (season) match.season = season;
+    if (state) match.state = state;
 
-  const match: Record<string, any> = {};
+    const submittedAt = buildDateRange(fromDate, toDate);
+    if (submittedAt) match.submittedAt = submittedAt;
 
-  // Access control
-  if (!isAdmin) {
-    match.userId = userId;
+    const searchCondition = buildSearchCondition(search);
+    if (searchCondition) match.$or = searchCondition;
+
+    const staffConditions = buildStaffConditions(userType, answerStatus);
+    if (staffConditions.length > 0) match.$and = staffConditions;
+
+    return this.paginateWithUsers(match, { submittedAt: -1 }, page, limit, canViewContact);
   }
 
-  // Status
-  if (status) {
-    match.status = status;
-  }
+  // Lists the review queue (pending and held by default) with submitter details, including contact number.
+  async listQueue(dto: ListReviewQueueDto) {
+    const {
+      page = 1,
+      limit = 20,
+      state,
+      search,
+      status,
+      sortBy = 'submittedAt',
+      sortOrder = 'DESC',
+      fromDate,
+      toDate,
+      userType,
+    } = dto;
 
-  // Domain
-  if (domains) {
-    match.domains = domains;
-  }
-
-  // Search / crop type
-  if (search) {
-    match.cropType = {
-      $regex: search,
-      $options: "i",
+    const match: Record<string, unknown> = {
+      status: { $in: status?.length ? status : [QuestionStatus.PENDING, QuestionStatus.HELD] },
     };
-  } else if (cropType) {
-    match.cropType = {
-      $regex: cropType,
-      $options: "i",
-    };
+    if (state) match.state = state;
+
+    const submittedAt = buildDateRange(fromDate, toDate);
+    if (submittedAt) match.submittedAt = submittedAt;
+
+    const searchCondition = buildSearchCondition(search);
+    if (searchCondition) match.$or = searchCondition;
+
+    const staffConditions = buildStaffConditions(userType);
+    if (staffConditions.length > 0) match.$and = staffConditions;
+
+    const direction = sortOrder === 'ASC' ? 1 : -1;
+    const sortField = QUEUE_SORT_FIELDS[sortBy] ?? 'submittedAt';
+    return this.paginateWithUsers(match, { [sortField]: direction, _id: direction }, page, limit, true);
   }
 
-  // Season
-  if (season) {
-    match.season = season;
-  }
+  // Runs one aggregation that returns a page of questions with submitter and reviewer details plus the total count.
+  private async paginateWithUsers(
+    match: Record<string, unknown>,
+    sort: Record<string, 1 | -1>,
+    page: number,
+    limit: number,
+    canViewContact: boolean,
+  ) {
+    const userFields: Record<string, 0 | 1> = { _id: 0, name: 1, username: 1, isAnveshanUser: 1 };
+    if (canViewContact) userFields.mobileNumber = 1;
 
-  // State
-  if (state) {
-    match.state = state;
-  }
-
-  // Date filters
-  if (fromDate && toDate) {
-    match.submittedAt = {
-      $gte: new Date(fromDate),
-      $lte: new Date(toDate),
-    };
-  } else if (fromDate) {
-    match.submittedAt = {
-      $gte: new Date(fromDate),
-    };
-  } else if (toDate) {
-    match.submittedAt = {
-      $lte: new Date(toDate),
-    };
-  }
-
-  // ----------------------------------------
-  // 2. Aggregation
-  // ----------------------------------------
-
-  const result = await this._model.aggregate([
-    // Filter first
-    {
-      $match: match,
-    },
-
-    // Get paginated items + total count
-    {
-      $facet: {
-        // ==================================
-        // ITEMS
-        // ==================================
-        items: [
-          // Sort latest first
-          {
-            $sort: {
-              submittedAt: -1,
-            },
-          },
-
-          // Pagination
-          {
-            $skip: skip,
-          },
-
-          {
-            $limit: limit,
-          },
-
-          // ==================================
-          // USER LOOKUP
-          // ==================================
-          {
-            $lookup: {
-              from: "users",
-              let: {
-                userObjectId: {
-                  $convert: {
-                    input: "$userId",
-                    to: "objectId",
-                    onError: null,
-                    onNull: null,
-                  },
-                },
+    const result = await this._model.aggregate([
+      { $match: match },
+      {
+        $facet: {
+          items: [
+            { $sort: sort },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            lookupUserByStringId('$userId', 'user', userFields),
+            { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+            lookupUserByStringId('$reviewerId', 'reviewerUser', { _id: 0, name: 1 }),
+            { $unwind: { path: '$reviewerUser', preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                _id: 1,
+                userId: 1,
+                question: 1,
+                questionText: 1,
+                status: 1,
+                domains: 1,
+                cropType: 1,
+                season: 1,
+                state: 1,
+                district: 1,
+                block: 1,
+                language: 1,
+                mediaType: 1,
+                mediaUrls: 1,
+                audioUrls: 1,
+                duplicateFlag: 1,
+                submissionLocation: 1,
+                isAnveshan: 1,
+                isAnswerSubmitted: 1,
+                submittedAt: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                user: 1,
+                reviewedByName: { $ifNull: ['$reviewerUser.name', null] },
+                answer: 1,
+                response: 1,
+                reviewedAt: 1,
+                rejectionReason: 1,
+                approvalReason: 1,
+                heldReason: 1,
               },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$_id", "$$userObjectId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    username: 1,
-                  },
-                },
-              ],
-              as: "user",
             },
-          },
-
-          // Convert user array -> object
-          {
-            $unwind: {
-              path: "$user",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-
-          // ==================================
-          // REVIEWER LOOKUP
-          // ==================================
-          {
-            $lookup: {
-              from: "users",
-              let: {
-                reviewerObjectId: {
-                  $convert: {
-                    input: "$reviewerId",
-                    to: "objectId",
-                    onError: null,
-                    onNull: null,
-                  },
-                },
-              },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$_id", "$$reviewerObjectId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                  },
-                },
-              ],
-              as: "reviewerUser",
-            },
-          },
-
-          // Convert reviewer array -> object
-          {
-            $unwind: {
-              path: "$reviewerUser",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-
-          // ==================================
-          // FINAL OUTPUT
-          // ==================================
-          {
-            $project: {
-              // Keep all original question fields
-              _id: 1,
-              userId: 1,
-              question: 1,
-              questionText: 1,
-              status: 1,
-              domains: 1,
-              cropType: 1,
-              season: 1,
-              state: 1,
-              submittedAt: 1,
-
-              // User information
-              user: 1,
-
-              // Reviewer name
-              reviewedByName: {
-                $ifNull: ["$reviewerUser.name", null],
-              },
-
-              // Keep anything else you need:
-              answer: 1,
-              response: 1,
-              reviewedAt: 1,
-              rejectionReason: 1,
-              approvalReason:1,
-              heldReason: 1
-            },
-          },
-        ],
-
-        // ==================================
-        // TOTAL COUNT
-        // ==================================
-        total: [
-          {
-            $count: "count",
-          },
-        ],
+          ],
+          total: [{ $count: 'count' }],
+        },
       },
-    },
-  ]);
+    ]);
 
-  // ----------------------------------------
-  // 3. Extract facet result
-  // ----------------------------------------
+    // Expose _id as id so list items match every other question endpoint.
+    const items = (result[0]?.items ?? []).map(
+      ({ _id, user, ...rest }: { _id: unknown; user?: Record<string, unknown> } & Record<string, unknown>) => ({
+        ...rest,
+        id: String(_id),
+        user: user ? { ...user, id: String(rest.userId) } : null,
+      }),
+    );
+    const total = result[0]?.total?.[0]?.count ?? 0;
 
-  // Expose _id as id so list items match every other question endpoint.
-  const items = (result[0]?.items ?? []).map(
-    ({ _id, ...rest }: { _id: unknown } & Record<string, unknown>) => ({ ...rest, id: String(_id) }),
-  );
+    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  }
+}
 
-  const total = result[0]?.total?.[0]?.count ?? 0;
+/** Review queue sort options mapped to question fields. */
+const QUEUE_SORT_FIELDS: Record<string, string> = {
+  submittedAt: 'submittedAt',
+  state: 'state',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt',
+};
 
-  // ----------------------------------------
-  // 4. Return same response structure
-  // ----------------------------------------
-
+// Builds a submittedAt range from optional ISO dates, or undefined when neither is set.
+function buildDateRange(fromDate?: string, toDate?: string): Record<string, Date> | undefined {
+  if (!fromDate && !toDate) return undefined;
   return {
-    items,
-    total,
-    page,
-    limit,
-    pages: Math.ceil(total / limit),
+    ...(fromDate ? { $gte: new Date(fromDate) } : {}),
+    ...(toDate ? { $lte: new Date(toDate) } : {}),
   };
 }
+
+// Builds a case-insensitive match across the question text, crop and location fields.
+function buildSearchCondition(search?: string): Record<string, unknown>[] | undefined {
+  const term = search?.trim();
+  if (!term) return undefined;
+  const regex = { $regex: escapeRegex(term), $options: 'i' };
+  return [{ questionText: regex }, { cropType: regex }, { state: regex }, { district: regex }];
+}
+
+// Maps the user-type and answer-status filters to question conditions. Anveshan is read from the question flag.
+function buildStaffConditions(
+  userType?: 'anveshan' | 'regular',
+  answerStatus?: 'answered' | 'unanswered',
+): Record<string, unknown>[] {
+  const conditions: Record<string, unknown>[] = [];
+  if (userType === 'anveshan') conditions.push({ isAnveshan: true });
+  if (userType === 'regular') conditions.push({ isAnveshan: { $ne: true } });
+  if (answerStatus === 'answered') conditions.push({ isAnswerSubmitted: true });
+  if (answerStatus === 'unanswered') {
+    conditions.push({ isAnveshan: true }, { isAnswerSubmitted: { $ne: true } });
+  }
+  return conditions;
+}
+
+// Joins a users document onto each question using a string user id field.
+function lookupUserByStringId(idField: string, as: string, projection: Record<string, 0 | 1>) {
+  return {
+    $lookup: {
+      from: 'users',
+      let: { userObjectId: { $convert: { input: idField, to: 'objectId', onError: null, onNull: null } } },
+      pipeline: [
+        { $match: { $expr: { $eq: ['$_id', '$$userObjectId'] } } },
+        { $project: projection },
+      ],
+      as,
+    },
+  };
 }

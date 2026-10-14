@@ -3,6 +3,7 @@ import { Question } from '../entities';
 import { QuestionStatus } from '../../classes/enums';
 import { MongoRepository } from '../abstractions/mongo.repository';
 import { ListQuestionsDto } from '@/modules/question/dto';
+import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
 
 export interface QuestionFilter {
   id?: string;
@@ -194,5 +195,9 @@ getDailyStatsSince(from: Date): Promise<Array<{
     userId: string,
     dto: ListQuestionsDto,
     isAdmin: boolean,
+    canViewContact?: boolean,
   ): Promise<any>
+
+  /** Review queue page with submitter details (pending and held unless a status is given). */
+  listQueue(dto: ListReviewQueueDto): Promise<any>
 }

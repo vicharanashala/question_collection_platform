@@ -23,11 +23,16 @@ import {
   X,
   Mic,
   CopyCheck,
+  Sprout,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Question, QuestionStatus } from "@/types";
 import { TranslatableText } from "@/components/TranslatableText";
 import { DataTable, type ColumnDef } from "@/components/DataTable";
+import { ExportMenu } from "@/components/ExportMenu";
+import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
+import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
+import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -36,13 +41,6 @@ const STATUS_COLORS: Record<string, string> = {
   held: "bg-amber-500 text-white",
   approved: "bg-success text-white",
   rejected: "bg-destructive text-white",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  held: "On Hold",
-  approved: "Approved",
-  rejected: "Rejected",
 };
 
 const REVIEWABLE_STATUSES: QuestionStatus[] = ["pending", "held"];
@@ -103,14 +101,12 @@ function ReviewDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle shrink-0">
           <div className="flex items-center gap-3">
-            <Badge
-              className={cn(
-                "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5",
-                STATUS_COLORS[q.status] ?? "bg-muted",
-              )}
-            >
-              {STATUS_LABELS[q.status] ?? q.status}
-            </Badge>
+            <QuestionStatusBadge question={q} />
+            {q.isAnveshan && (
+              <Badge className="bg-emerald-600 px-2 py-0.5 text-[11px] text-white sm:text-xs">
+                <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> Anveshan
+              </Badge>
+            )}
             <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">
               {q.id.slice(0, 8)}…
             </span>
@@ -223,6 +219,9 @@ function ReviewDetailModal({
                 <div>
                   <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
                     {q.user.name}
+                    <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                      {q.isAnveshan ? "Anveshan User" : "Regular User"}
+                    </span>
                   </p>
                   {q.user.mobileNumber && (
                     <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
@@ -632,14 +631,7 @@ function buildColumns(
       sortable: true,
       render: (q) => (
         <div className="flex justify-start">
-          <Badge
-            className={cn(
-              "capitalize text-[11px] sm:text-[11px] sm:text-xs px-2 py-0.5 whitespace-nowrap",
-              STATUS_COLORS[q.status] ?? "bg-muted",
-            )}
-          >
-            {STATUS_LABELS[q.status] ?? q.status}
-          </Badge>
+          <QuestionStatusBadge question={q} />
         </div>
       ),
     },
@@ -654,6 +646,23 @@ function buildColumns(
             ? q.questionText.slice(0, 45) + "…"
             : q.questionText}
         </span>
+      ),
+    },
+    {
+      key: "submittedBy",
+      header: "Submitted By",
+      width: "140px",
+      render: (q) => (
+        <div className="min-w-0">
+          <span className="block truncate text-[11px] sm:text-xs" title={q.user?.name ?? ""}>
+            {q.user?.name ?? "—"}
+          </span>
+          {q.isAnveshan && (
+            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+              <Sprout className="h-3 w-3" aria-hidden="true" /> Anveshan
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -908,6 +917,7 @@ export function ReviewsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
+  const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -949,7 +959,7 @@ export function ReviewsPage() {
     setSelectedQuestion(null);
     setDetailOpen(false);
     setDuplicateData(null);
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, userTypeFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -959,6 +969,7 @@ export function ReviewsPage() {
         limit,
         status: statusFilter || undefined,
         search: debouncedSearch || undefined,
+        userType: userTypeFilter || undefined,
       })
       .then((res) => {
         const start = (page - 1) * limit;
@@ -974,7 +985,7 @@ export function ReviewsPage() {
         toast.error(getErrorMessage(e, "Failed to load review queue")),
       )
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter]);
+  }, [page, debouncedSearch, statusFilter, userTypeFilter]);
 
   /**
    * Call the /check-duplicate endpoint. If a duplicate is found, open the
@@ -1064,7 +1075,7 @@ export function ReviewsPage() {
     checkDuplicateLoadingId,
   );
   const emptyMessage =
-    search || statusFilter
+    search || statusFilter || userTypeFilter
       ? "No questions match your filters"
       : "No questions in queue";
 
@@ -1102,7 +1113,7 @@ export function ReviewsPage() {
         )}
       </div>
 
-      {/* Status filter chips */}
+      {/* Filters and export */}
       <div className="flex items-center gap-2 flex-wrap mb-4">
         <ListFilter className="h-4 w-4 text-muted-foreground shrink-0" />
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -1131,6 +1142,25 @@ export function ReviewsPage() {
               {label}
             </button>
           ))}
+        </div>
+        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+          <div className="flex-1 sm:w-44 sm:flex-none">
+            <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
+          </div>
+          <ExportMenu
+            name="review_queue"
+            columns={QUESTION_EXPORT_COLUMNS}
+            disabled={total === 0}
+            fetchPage={(exportPage, exportLimit) =>
+              curatorApi.getReviewQueue({
+                page: exportPage,
+                limit: exportLimit,
+                status: statusFilter || undefined,
+                search: debouncedSearch || undefined,
+                userType: userTypeFilter || undefined,
+              })
+            }
+          />
         </div>
       </div>
 

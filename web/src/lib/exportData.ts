@@ -34,6 +34,13 @@ export function exportDate(iso: string | null | undefined, withTime = false): st
   return formatDateFns(date, withTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd')
 }
 
+/** UTC ISO 8601 timestamp for spreadsheet cells, e.g. 2026-10-14T10:30:00.000Z. Empty when missing or invalid. */
+export function exportIsoDate(value: string | Date | null | undefined): string {
+  if (!value) return ''
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString()
+}
+
 type Cell = string | number
 
 function toTable<T>(rows: T[], columns: ExportColumn<T>[]): Cell[][] {

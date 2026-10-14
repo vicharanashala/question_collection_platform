@@ -70,7 +70,9 @@ export class QuestionController {
     @Query() dto: ListQuestionsDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<{ items: unknown[]; total: number; page: number; limit: number; pages: number }> {
-    return this.questionService.list(req.user.id, dto, req.user.role === 'admin' || req.user.role === 'super_admin' || req.user.role === 'curator');
+    const canViewContact = req.user.role === 'admin' || req.user.role === 'super_admin';
+    const isStaff = canViewContact || req.user.role === 'curator';
+    return this.questionService.list(req.user.id, dto, isStaff, canViewContact);
   }
 
   // GET /questions/:id — Get single question

@@ -698,7 +698,7 @@ export class QuestionService {
 
   // ─── List ───────────────────────────────────────────────────────────────────
 
-  async list(userId: string, dto: ListQuestionsDto, isAdmin = false) {
+  async list(userId: string, dto: ListQuestionsDto, isAdmin = false, canViewContact = false) {
     // const { page = 1, limit = 20, status, domains, cropType, season, state, search, fromDate, toDate } = dto;
     // const skip = (page - 1) * limit;
 
@@ -742,7 +742,7 @@ export class QuestionService {
     //   total, page, limit, pages: Math.ceil(total / limit),
     // };
 
-    const data =  await this.questionRepo.list(userId, dto, isAdmin);
+    const data = await this.questionRepo.list(userId, dto, isAdmin, canViewContact);
     return data
   }
 

@@ -107,8 +107,12 @@ export interface Question {
   user?: {
     id: string;
     name: string;
+    username?: string;
     mobileNumber?: string;
+    isAnveshanUser?: boolean;
   } | null;
+  createdAt?: string;
+  updatedAt?: string;
   /** Alias for user.name, returned by some endpoints */
   userName?: string | null;
   /** Alias for user.mobileNumber */

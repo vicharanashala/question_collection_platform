@@ -51,4 +51,9 @@ export class ListQuestionsDto {
   @IsOptional()
   @IsIn(['answered', 'unanswered'])
   answerStatus?: 'answered' | 'unanswered';
+
+  /** Submitter type filter, based on the question's Anveshan flag. */
+  @IsOptional()
+  @IsIn(['anveshan', 'regular'])
+  userType?: 'anveshan' | 'regular';
 }
