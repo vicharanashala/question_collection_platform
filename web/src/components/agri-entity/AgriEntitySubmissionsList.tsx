@@ -4,11 +4,13 @@ import { TesterTag } from '@/components/TesterTag'
 import { useAuth } from '@/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Clock, Image as ImageIcon, User as UserIcon } from 'lucide-react'
+import { Clock, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/api/client'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { DataTable, type ColumnDef } from '@/components/DataTable'
+import { Badge } from '@/components/ui/badge'
+import { cn, formatDate as formatAbsoluteDate, formatTime } from '@/lib/utils'
 import { SubmissionStatusFilter, type StatusOption } from '@/components/submissions/SubmissionStatusFilter'
 import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
 import { useRelativeTime } from '@/components/submissions/useRelativeTime'
@@ -73,14 +75,112 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     }
   }, [type, status, testerFilter, page, scope, t])
 
+  // Columns for the staff table view.
+  const adminColumns: ColumnDef<AgriEntitySubmission>[] = [
+    { key: 'serial', header: '#', width: '56px', render: (row) => <span className="text-xs text-muted-foreground">{(page - 1) * PAGE_SIZE + items.indexOf(row) + 1}</span> },
+    {
+      key: 'entity',
+      header: typeLabel,
+      width: '300px',
+      render: (row) => (
+        <div className="flex min-w-0 items-center gap-3">
+          {row.imageUrls[0] ? (
+            <img src={row.imageUrls[0]} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-lg border border-border-subtle object-cover" />
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <TypeIcon className="h-5 w-5" aria-hidden="true" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{row.englishName}</p>
+            <p className="truncate text-xs text-text-secondary">{row.localName}</p>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'botanical', header: 'Botanical Name', width: '220px', render: (row) => <span className="truncate text-sm italic text-text-secondary">{row.botanicalName || '—'}</span> },
+    {
+      key: 'images',
+      header: 'Images',
+      width: '100px',
+      render: (row) => (
+        <span className="inline-flex items-center gap-1 text-xs text-text-secondary">
+          <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          {row.imageUrls.length}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '130px',
+      render: (row) => (
+        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(row.status))}>
+          {agriEntityStatusLabel(t, row.status)}
+        </span>
+      ),
+    },
+    {
+      key: 'submitter',
+      header: 'Submitted By',
+      width: '240px',
+      render: (row) => (
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-sm text-foreground">{submitterName(row)}</span>
+          {row.submitter?.isTester && <TesterTag />}
+        </div>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'Submitted',
+      width: '150px',
+      render: (row) => (
+        <div className="leading-tight">
+          <p className="text-sm text-foreground">{formatAbsoluteDate(row.createdAt)}</p>
+          <p className="text-xs text-muted-foreground">{formatTime(row.createdAt)}</p>
+        </div>
+      ),
+    },
+  ]
+
+  if (scope === 'all') {
+    return (
+      <>
+        <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+          <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
+          <div className="flex items-center gap-3">
+            {!loading && (
+              <Badge variant="outline" className="whitespace-nowrap">
+                {total} {typeLabel.toLowerCase()} {total === 1 ? 'submission' : 'submissions'}
+              </Badge>
+            )}
+            <div className="w-full sm:w-44">
+              <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
+            </div>
+          </div>
+        </div>
+
+        <DataTable
+          data={items}
+          columns={adminColumns}
+          loading={loading}
+          page={page}
+          totalPages={Math.max(1, Math.ceil(total / PAGE_SIZE))}
+          totalCount={total}
+          onPageChange={setPage}
+          hideSearch
+          emptyMessage={`No ${typeLabel.toLowerCase()} submissions found`}
+          onRowClick={setSelected}
+        />
+
+        <AgriEntityDetailModal entity={selected} onClose={() => setSelected(null)} />
+      </>
+    )
+  }
+
   return (
     <>
-      {scope === 'all' && (
-        <div className="w-full sm:w-44">
-          <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
-        </div>
-      )}
-
       {!hideStatus && (
         <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
       )}
@@ -146,8 +246,6 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
                       {badge && <span className="sm:hidden">{badge}</span>}
                       <MetaChip icon={Clock}>{formatDate(item.createdAt)}</MetaChip>
                       {item.imageUrls.length > 1 && <MetaChip icon={ImageIcon}>{item.imageUrls.length}</MetaChip>}
-                      {scope === 'all' && <MetaChip icon={UserIcon}>{submitterName(item)}</MetaChip>}
-                      {scope === 'all' && item.submitter?.isTester && <TesterTag />}
                     </div>
                   </SubmissionRow>
                 )
