@@ -311,9 +311,20 @@ export class GcpStorageService implements StorageService, OnModuleInit {
 
     let parsed: URL;
     try {
-      parsed = new URL(value);
+      // The base lets relative media links parse when no public API base URL is configured.
+      parsed = new URL(value, "http://localhost");
     } catch {
       return null;
+    }
+
+    // API media link minted by getSignedUrl: /api/v1/storage/media?o={objectName}&e=..&s=..
+    if (parsed.pathname === MEDIA_PATH) {
+      const objectName = parsed.searchParams.get("o");
+      return objectName &&
+        objectName.startsWith(`${this.prefix}/`) &&
+        !objectName.includes("..")
+        ? objectName
+        : null;
     }
 
     // Emulator: /v0/b/{bucket}/o/{urlEncodedObject}
