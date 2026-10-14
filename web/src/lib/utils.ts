@@ -18,6 +18,13 @@ export function formatDate(iso: string | null | undefined): string | null {
   }
 }
 
+export function formatTime(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+}
+
 export function formatDateTime(iso: string | null | undefined): string | null {
   if (!iso) return null
   try {

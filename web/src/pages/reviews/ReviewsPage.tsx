@@ -4,7 +4,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatTime } from "@/lib/utils";
 import {
   CheckCircle,
   XCircle,
@@ -29,8 +29,9 @@ import { toast } from "sonner";
 import type { Question, QuestionStatus } from "@/types";
 import { TranslatableText } from "@/components/TranslatableText";
 import { DataTable, type ColumnDef } from "@/components/DataTable";
+import { TesterTag } from "@/components/TesterTag";
 import { ExportMenu } from "@/components/ExportMenu";
-import { AnveshanTag, QuestionStatusBadge, isStatusHidden } from "@/components/questions/QuestionStatusBadge";
+import { QuestionStatusBadge, isStatusHidden } from "@/components/questions/QuestionStatusBadge";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 
@@ -222,6 +223,11 @@ function ReviewDetailModal({
                     <span className="ml-2 text-[11px] font-normal text-muted-foreground">
                       {q.isAnveshan ? "Anveshan User" : "Regular User"}
                     </span>
+                    {q.user.isTester && (
+                      <span className="ml-2 align-middle">
+                        <TesterTag />
+                      </span>
+                    )}
                   </p>
                   {q.user.mobileNumber && (
                     <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
@@ -657,7 +663,7 @@ function buildColumns(
           <span className="block truncate text-[11px] sm:text-xs" title={q.user?.name ?? ""}>
             {q.user?.name ?? "—"}
           </span>
-          {q.isAnveshan && <AnveshanTag />}
+          {q.user?.isTester && <TesterTag />}
         </div>
       ),
     },
@@ -704,9 +710,10 @@ function buildColumns(
       textAlign: "left",
       sortable: true,
       render: (q) => (
-        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-          {formatDate(q.submittedAt)}
-        </span>
+        <div className="text-[11px] leading-tight text-muted-foreground sm:text-xs">
+          <div>{formatDate(q.submittedAt)}</div>
+          <div>{formatTime(q.submittedAt)}</div>
+        </div>
       ),
     },
     {

@@ -452,6 +452,7 @@ async listUsers(dto: ListUsersDto) {
       createdAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
       isAnveshanUser: !!u.isAnveshanUser,
+      isTester: !!u.is_tester,
     }));
 
     // Attach milestone progress for the Anveshan users on this page only.
@@ -532,7 +533,12 @@ async listUsers(dto: ListUsersDto) {
       order: { createdAt: "DESC" },
     });
 
-    return { user, questions, paymentDetails, crops: user.crops ?? [] };
+    return {
+      user: { ...user, isTester: !!user.is_tester },
+      questions,
+      paymentDetails,
+      crops: user.crops ?? [],
+    };
   }
 
   async suspendOrBanUser(

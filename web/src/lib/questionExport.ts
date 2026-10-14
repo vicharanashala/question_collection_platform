@@ -26,6 +26,7 @@ export const QUESTION_EXPORT_COLUMNS: ExportColumn<Question>[] = [
   { header: "Question Source", value: (q) => MEDIA_TYPE_LABELS[q.mediaType] ?? q.mediaType },
   { header: "User Name", value: (q) => q.user?.name ?? q.userName },
   { header: "User Type", value: (q) => (q.isAnveshan ? "Anveshan" : "Regular User") },
+  { header: "Tester", value: (q) => (q.user?.isTester ? "TRUE" : "FALSE") },
   { header: "User Contact", value: (q) => q.user?.mobileNumber ?? q.userMobileNumber },
   { header: "State", value: (q) => getLocationPart(q, "state") },
   { header: "District", value: (q) => getLocationPart(q, "district") },

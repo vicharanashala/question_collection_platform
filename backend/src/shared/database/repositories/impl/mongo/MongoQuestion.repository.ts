@@ -881,7 +881,7 @@ async getDailyStatsSince(
     limit: number,
     canViewContact: boolean,
   ) {
-    const userFields: Record<string, 0 | 1> = { _id: 0, name: 1, username: 1, isAnveshanUser: 1 };
+    const userFields: Record<string, 0 | 1> = { _id: 0, name: 1, username: 1, isAnveshanUser: 1, is_tester: 1 };
     if (canViewContact) userFields.mobileNumber = 1;
 
     const result = await this._model.aggregate([
@@ -951,11 +951,14 @@ async getDailyStatsSince(
 
     // Expose _id as id so list items match every other question endpoint.
     const items = (result[0]?.items ?? []).map(
-      ({ _id, user, ...rest }: { _id: unknown; user?: Record<string, unknown> } & Record<string, unknown>) => ({
-        ...rest,
-        id: String(_id),
-        user: user ? { ...user, id: String(rest.userId) } : null,
-      }),
+      ({ _id, user, ...rest }: { _id: unknown; user?: Record<string, unknown> } & Record<string, unknown>) => {
+        const { is_tester: isTester, ...userFields } = user ?? {};
+        return {
+          ...rest,
+          id: String(_id),
+          user: user ? { ...userFields, id: String(rest.userId), isTester: !!isTester } : null,
+        };
+      },
     );
     const total = result[0]?.total?.[0]?.count ?? 0;
 

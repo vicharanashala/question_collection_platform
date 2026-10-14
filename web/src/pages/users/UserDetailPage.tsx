@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { TesterTag } from '@/components/TesterTag'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminApi, getErrorMessage, cache } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
@@ -492,6 +493,7 @@ setUser(r.user as UserType)
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <VerificationBadge status={user.verificationStatus} />
                     <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
+                    {user.isTester && <TesterTag />}
                     {user.category && <Badge variant="outline" className="capitalize">{user.category}</Badge>}
                   </div>
                 </div>

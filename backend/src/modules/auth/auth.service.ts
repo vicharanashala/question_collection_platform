@@ -101,6 +101,7 @@ export interface PublicUser {
   isUserCreatedBySuperAdmin: boolean;
   profileCreatedByAdminCompleted: boolean;
   isAnveshanUser: boolean;
+  isTester: boolean;
 }
 
 @Injectable()
@@ -974,7 +975,8 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
       consentGiven: user.consentGiven,
       isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
       profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted,
-      isAnveshanUser: user.isAnveshanUser
+      isAnveshanUser: user.isAnveshanUser,
+      isTester: !!user.is_tester,
     };
   }
 

@@ -19,6 +19,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { StaffAnveshanAnswerSection } from "@/components/anveshan-answers/StaffAnveshanAnswerSection";
 import { QuestionStatusBadge, isStatusHidden } from "@/components/questions/QuestionStatusBadge";
 import { TranslatableText } from "@/components/TranslatableText";
+import { TesterTag } from "@/components/TesterTag";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,6 +79,7 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
                 <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> Anveshan
               </Badge>
             )}
+            {q.user?.isTester && <TesterTag />}
             {q.duplicateFlag && (
               <Badge variant="destructive" className="px-2 py-0.5 text-[11px] sm:text-xs">
                 <AlertTriangle className="mr-1 h-3 w-3" aria-hidden="true" /> Duplicate
@@ -186,8 +188,9 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{submitterName}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                     {q.isAnveshan ? "Anveshan User" : "Regular User"}
+                    {q.user?.isTester && <TesterTag />}
                   </p>
                 </div>
               </div>

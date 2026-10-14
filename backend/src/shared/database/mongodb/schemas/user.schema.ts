@@ -160,6 +160,10 @@ profileCreatedByAdminCompleted: boolean
 @Prop({ type: Boolean, default: false, index: true })
 isAnveshanUser: boolean;
 
+/** Marks internal test accounts so staff can tell their data apart. */
+@Prop({ type: Boolean, default: false })
+is_tester: boolean;
+
 
 
   createdAt: Date;

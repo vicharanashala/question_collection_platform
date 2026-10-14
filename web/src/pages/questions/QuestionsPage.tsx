@@ -11,12 +11,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TesterTag } from "@/components/TesterTag";
 import { ExportMenu } from "@/components/ExportMenu";
 import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
 import { StaffQuestionDetailDialog } from "@/components/questions/StaffQuestionDetailDialog";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, formatTime } from "@/lib/utils";
 import { ListFilter, Search, MessageSquareReply } from "lucide-react";
 import { toast } from "sonner";
 import type { Question } from "@/types";
@@ -79,8 +80,11 @@ export function QuestionsPage() {
   const sortedQuestions = useMemo(() => {
     return [...questions].sort((a, b) =>
       a.submittedAt < b.submittedAt ? 1 : -1,
-    );
-  }, [questions]);
+    ).map((question, index) => ({
+      ...question,
+      _slno: (page - 1) * limit + index + 1,
+    }));
+  }, [questions, page]);
 
   useEffect(() => {
     setPage(1);
@@ -131,7 +135,12 @@ export function QuestionsPage() {
             <MessageSquareReply className="mr-1 h-3 w-3" aria-hidden="true" /> Answered
           </Badge>
         ) : q.isAnveshan ? (
-          <span className="whitespace-nowrap text-xs text-muted-foreground">Awaiting</span>
+          <Badge
+            variant="outline"
+            className="whitespace-nowrap border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-600 sm:text-xs dark:text-amber-400"
+          >
+            Awaiting
+          </Badge>
         ) : (
           <span className="text-xs text-muted-foreground" aria-label="Not applicable">—</span>
         ),
@@ -153,12 +162,15 @@ export function QuestionsPage() {
       width: "130px",
       sortable: true,
       render: (q) => (
-        <span
-          className="text-[11px] sm:text-[11px] sm:text-xs truncate block"
-          title={q.user?.name ?? q.userName ?? q.userMobileNumber ?? ""}
-        >
-          {q.user?.name ?? q.userName ?? q.userMobileNumber ?? "—"}
-        </span>
+        <div className="min-w-0">
+          <span
+            className="text-[11px] sm:text-[11px] sm:text-xs truncate block"
+            title={q.user?.name ?? q.userName ?? q.userMobileNumber ?? ""}
+          >
+            {q.user?.name ?? q.userName ?? q.userMobileNumber ?? "—"}
+          </span>
+          {q.user?.isTester && <TesterTag />}
+        </div>
       ),
     },
     {
@@ -214,9 +226,10 @@ export function QuestionsPage() {
       width: "120px",
       sortable: true,
       render: (q) => (
-        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-          {formatDate(q.submittedAt)}
-        </span>
+        <div className="text-[11px] leading-tight text-muted-foreground sm:text-xs">
+          <div>{formatDate(q.submittedAt)}</div>
+          <div>{formatTime(q.submittedAt)}</div>
+        </div>
       ),
     },
     {
@@ -225,11 +238,36 @@ export function QuestionsPage() {
       width: "120px",
       sortable: true,
       render: (q) => (
-        <span className="text-[11px] sm:text-[11px] sm:text-xs truncate block">
-          {q.reviewedByName ?? "—"}
+        q.reviewedByName ? (
+          <span className="text-[11px] sm:text-xs truncate block" title={q.reviewedByName}>
+            {q.reviewedByName}
+          </span>
+        ) : (
+          <Badge
+            variant="outline"
+            className="whitespace-nowrap px-2 py-0.5 text-[11px] text-muted-foreground sm:text-xs"
+          >
+            Not reviewed
+          </Badge>
+        )
+      ),
+    },
+  ];
+
+  // Serial number column is only shown in the table view.
+  const tableColumns: ColumnDef<Question>[] = [
+    {
+      key: "_slno",
+      header: "#",
+      width: "50px",
+      textAlign: "center",
+      render: (q) => (
+        <span className="text-[11px] text-muted-foreground sm:text-xs">
+          {(q as Question & { _slno: number })._slno}
         </span>
       ),
     },
+    ...columns,
   ];
 
   const emptyMessage =
@@ -241,7 +279,7 @@ export function QuestionsPage() {
   const tableComponent = (
     <DataTable
       data={sortedQuestions}
-      columns={columns}
+      columns={tableColumns}
       loading={loading}
       page={page}
       totalPages={totalPages}

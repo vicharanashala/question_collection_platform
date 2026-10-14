@@ -212,4 +212,7 @@ export class User {
 
   @Column({name: "anveshan_user", type: "boolean", default: false})
   isAnveshanUser: boolean
+
+  @Column({ name: "is_tester", type: "boolean", default: false })
+  is_tester?: boolean
 }

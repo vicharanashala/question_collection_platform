@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, MotionConfig } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { VerificationBanner } from '@/components/VerificationBanner'
+import { TesterBanner } from '@/components/TesterBanner'
 import { AnveshanAnswerTaskBanner, AnveshanProgressBanner } from '../AnveshanBanner'
 import { AnveshanCompletionScreen } from '../AnveshanCompletionScreen'
 import {
@@ -110,6 +111,7 @@ export function PublicLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <VerificationBanner />
+        <TesterBanner />
         <AnveshanProgressBanner
           visible={showProgressBanner}
           percent={milestone ? getAnveshanMilestonePercent(milestone) : 0}

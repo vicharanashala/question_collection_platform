@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { User as UserType } from '@/types'
+import { TesterTag } from '@/components/TesterTag'
 import { ExportMenu } from '@/components/ExportMenu'
 import { exportDate, type ExportColumn } from '@/lib/exportData'
 import { AddUserDialog } from './AddUserDialog'
@@ -44,6 +45,7 @@ const USER_EXPORT_COLUMNS: ExportColumn<UserType>[] = [
   { header: 'Username', value: (u) => u.username },
   { header: 'Mobile', value: (u) => u.mobileNumber },
   { header: 'Role', value: (u) => u.role },
+  { header: 'Tester', value: (u) => (u.isTester ? 'TRUE' : 'FALSE') },
   { header: 'Category', value: (u) => u.category },
   { header: 'Status', value: (u) => u.verificationStatus },
   { header: 'State', value: (u) => u.state },
@@ -328,6 +330,7 @@ export function UsersPage() {
                               <p className={cn('font-semibold group-hover:text-primary transition-colors', isLocked && 'text-red-700 dark:text-red-400')}>
                                 {u.name || '—'}
                               </p>
+                              {u.isTester && <TesterTag />}
                               {isLocked && (
                                 <span className={cn(
                                   'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',

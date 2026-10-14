@@ -18,6 +18,8 @@ export interface User {
   id: string;
   mobileNumber: string;
   isAnveshanUser?: boolean;
+  /** Internal test account (users.is_tester). */
+  isTester?: boolean;
   anveshanProgress?: AnveshanUserProgress | null;
   name: string;
   username: string | null;
@@ -110,6 +112,7 @@ export interface Question {
     username?: string;
     mobileNumber?: string;
     isAnveshanUser?: boolean;
+    isTester?: boolean;
   } | null;
   createdAt?: string;
   updatedAt?: string;
@@ -192,6 +195,8 @@ export interface AuthUser {
   profileCreatedByAdminCompleted?: boolean;
   organisationTypeOther?: string
   isAnveshanUser?: boolean
+  /** Internal test account (users.is_tester). */
+  isTester?: boolean
 }
 
 export type TimeRange = '7d' | '30d' | '90d'
