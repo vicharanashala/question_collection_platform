@@ -212,8 +212,38 @@ private async safeAudit(payload: AuditLogDto) {
     @Param('id') id: string,
     @Body('reason') reason: string,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.questionService.reject(id, req.user.id, reason ?? 'Not provided');
+    const finalReason = reason ?? 'Not provided';
+    const base: AuditLogDto = {
+      actionType: AuditAction.QUESTION_REJECTED,
+      actor: {
+        id: req.user.id,
+        actorType:
+          req.user.role === UserRole.SUPER_ADMIN ? ActorType.SUPER_ADMIN : ActorType.ADMIN,
+        name: req.user.name,
+      },
+      resource: {
+        ipAddress: meta.ipAddress ?? req.ip,
+        requestId: meta.requestId ?? '',
+      },
+      context: { questionId: id, reason: finalReason },
+    };
+
+    try {
+      const data = await this.questionService.reject(id, req.user.id, finalReason);
+      await this.safeAudit({ ...base, outcome: { status: OutcomeStatus.SUCCESS } });
+      return data;
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
   }
 
   // GET /questions/anveshan-milestone/me — the caller's submission and answer progress.

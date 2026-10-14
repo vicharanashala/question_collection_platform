@@ -54,6 +54,13 @@ const AUDIT_ACTIONS = [
   "update_faq",
   "delete_faq",
   "translate_question",
+  "withdrawal_processed",
+  "withdrawal_retried",
+  "withdrawal_refund_retried",
+  "withdrawal_failed",
+  "withdrawal_failure_reason_updated",
+  "wallet_adjusted",
+  "cache_flushed",
 ] as const;
 
 const POSITIVE_ACTIONS = new Set([
@@ -69,6 +76,7 @@ const DESTRUCTIVE_ACTIONS = new Set([
   "user_banned",
   "question_rejected",
   "delete_faq",
+  "withdrawal_failed",
 ]);
 
 const ROLE_OPTIONS = [

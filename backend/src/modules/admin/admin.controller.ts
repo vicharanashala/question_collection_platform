@@ -248,7 +248,7 @@ export class AdminController {
     const base: AuditLogDto = {
       actionType:
         user.verificationStatus === "suspended"
-          ? AuditAction.USER_SUSPENDED
+          ? AuditAction.USER_UNSUSPENDED
           : AuditAction.USER_UNBANNED,
       actor: {
         id: req.user.id,
@@ -509,6 +509,59 @@ export class AdminController {
     }
   }
 
+  // Maps a staff role to the actor type stored on audit logs.
+  private toActorType(role: UserRole): ActorType {
+    switch (role) {
+      case UserRole.SUPER_ADMIN:
+        return ActorType.SUPER_ADMIN;
+      case UserRole.ADMIN:
+        return ActorType.ADMIN;
+      case UserRole.FINANCE:
+        return ActorType.FINANCE;
+      case UserRole.DISTRIBUTOR:
+        return ActorType.DISTRIBUTOR;
+      default:
+        return ActorType.CURATOR;
+    }
+  }
+
+  // Runs a staff action and records a success or failure audit log for it.
+  private async withAudit<T>(
+    actionType: AuditAction,
+    req: AuthenticatedRequest,
+    meta: RequestMeta,
+    context: Record<string, unknown>,
+    run: () => Promise<T>,
+  ): Promise<T> {
+    const base: AuditLogDto = {
+      actionType,
+      actor: {
+        id: req.user.id,
+        name: req.user.name,
+        actorType: this.toActorType(req.user.role as UserRole),
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context,
+    };
+    try {
+      const result = await run();
+      await this.safeAudit({
+        ...base,
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+      return result;
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Section 3: Configuration — curator blocked
   // ─────────────────────────────────────────────────────────────
@@ -703,8 +756,15 @@ async updateConfig(
   async adjustWalletBalance(
     @Body() dto: AdjustWalletDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.adjustWalletBalance(req.user.id, dto);
+    return this.withAudit(
+      AuditAction.WALLET_ADJUSTED,
+      req,
+      meta,
+      { userId: dto.userId, amount: dto.amount, reason: dto.reason },
+      () => this.adminService.adjustWalletBalance(req.user.id, dto),
+    );
   }
 
   /** Financial summary stats for the finance role dashboard */
@@ -744,12 +804,24 @@ async updateConfig(
     @Param("id") id: string,
     @Body() dto: ProcessWithdrawalDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.processWithdrawal(
-      req.user.id,
-      id,
-      dto,
-      req.user.role as UserRole,
+    return this.withAudit(
+      AuditAction.WITHDRAWAL_PROCESSED,
+      req,
+      meta,
+      {
+        withdrawalId: id,
+        decision: dto.action,
+        rejectionReason: dto.rejectionReason,
+      },
+      () =>
+        this.adminService.processWithdrawal(
+          req.user.id,
+          id,
+          dto,
+          req.user.role as UserRole,
+        ),
     );
   }
 
@@ -761,8 +833,15 @@ async updateConfig(
   async retryWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.retryWithdrawal(req.user.id, id);
+    return this.withAudit(
+      AuditAction.WITHDRAWAL_RETRIED,
+      req,
+      meta,
+      { withdrawalId: id },
+      () => this.adminService.retryWithdrawal(req.user.id, id),
+    );
   }
 
   /**
@@ -777,8 +856,15 @@ async updateConfig(
   async retryFailedWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.retryFailedWithdrawal(req.user.id, id);
+    return this.withAudit(
+      AuditAction.WITHDRAWAL_REFUND_RETRIED,
+      req,
+      meta,
+      { withdrawalId: id },
+      () => this.adminService.retryFailedWithdrawal(req.user.id, id),
+    );
   }
 
   /** Admin explicitly marks a PROCESSING withdrawal as FAILED and refunds the user */
@@ -790,8 +876,15 @@ async updateConfig(
     @Param("id") id: string,
     @Body() dto: MarkWithdrawalFailedDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.markWithdrawalFailed(req.user.id, id, dto.reason);
+    return this.withAudit(
+      AuditAction.WITHDRAWAL_FAILED,
+      req,
+      meta,
+      { withdrawalId: id, reason: dto.reason },
+      () => this.adminService.markWithdrawalFailed(req.user.id, id, dto.reason),
+    );
   }
 
   /** Admin updates the failure reason on an already-failed withdrawal */
@@ -803,11 +896,19 @@ async updateConfig(
     @Param("id") id: string,
     @Body() dto: UpdateWithdrawalFailureReasonDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.adminService.updateWithdrawalFailureReason(
-      req.user.id,
-      id,
-      dto.reason,
+    return this.withAudit(
+      AuditAction.WITHDRAWAL_FAILURE_REASON_UPDATED,
+      req,
+      meta,
+      { withdrawalId: id, reason: dto.reason },
+      () =>
+        this.adminService.updateWithdrawalFailureReason(
+          req.user.id,
+          id,
+          dto.reason,
+        ),
     );
   }
 
@@ -818,10 +919,18 @@ async updateConfig(
   async flushCache(
     @Body() body: { keyPattern: string },
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
     if (!body.keyPattern || !body.keyPattern.trim()) {
       throw new BadRequestException("keyPattern is required");
     }
-    return this.adminService.flushCache(body.keyPattern.trim());
+    const keyPattern = body.keyPattern.trim();
+    return this.withAudit(
+      AuditAction.CACHE_FLUSHED,
+      req,
+      meta,
+      { keyPattern },
+      () => this.adminService.flushCache(keyPattern),
+    );
   }
 }

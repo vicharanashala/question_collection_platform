@@ -203,6 +203,13 @@ export enum AuditAction {
   UPDATE_FAQ= "update_faq",
   DELETE_FAQ= "delete_faq",
   TRANSLATE_QUESTION = "translate_question",
+  WITHDRAWAL_PROCESSED = "withdrawal_processed",
+  WITHDRAWAL_RETRIED = "withdrawal_retried",
+  WITHDRAWAL_REFUND_RETRIED = "withdrawal_refund_retried",
+  WITHDRAWAL_FAILED = "withdrawal_failed",
+  WITHDRAWAL_FAILURE_REASON_UPDATED = "withdrawal_failure_reason_updated",
+  WALLET_ADJUSTED = "wallet_adjusted",
+  CACHE_FLUSHED = "cache_flushed",
 }
 
 export enum ActorType {

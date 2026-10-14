@@ -3,6 +3,9 @@ import { NotFoundException, BadRequestException, ForbiddenException } from '@nes
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
+import { Logger } from '@nestjs/common';
+import { AuditService } from '../audit-logs/audit.service';
+import { UserService } from '../user/user.service';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
 import { UserRole, VerificationStatus, QuestionStatus, UserCategory } from '../../shared/classes/enums';
@@ -44,6 +47,9 @@ describe('AdminController', () => {
       controllers: [AdminController],
       providers: [
         { provide: AdminService, useFactory: mockAdminService },
+        { provide: Logger, useValue: { error: jest.fn() } },
+        { provide: AuditService, useValue: { createAuditLog: jest.fn() } },
+        { provide: UserService, useValue: { getProfile: jest.fn().mockResolvedValue({ verificationStatus: 'suspended' }) } },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -268,6 +274,7 @@ describe('AdminController', () => {
 
   describe('PATCH /admin/config', () => {
     it('should update an existing config entry', async () => {
+      service.listConfig.mockResolvedValue({ items: [] });
       service.updateConfig.mockResolvedValue({ success: true, key: 'daily_question_limit', oldValue: 20, newValue: 30 });
 
       const result = await controller.updateConfig(
@@ -356,6 +363,7 @@ describe('AdminController', () => {
         'wd-1',
         { action: 'approve' } as any,
         adminReq as any,
+        meta,
       );
 
       expect(result.status).toBe('approved');
