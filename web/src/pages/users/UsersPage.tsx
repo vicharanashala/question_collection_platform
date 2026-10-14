@@ -13,6 +13,7 @@ import {
   Search, ChevronLeft, ChevronRight, Plus, Users, FlaskConical, Sprout, UserRound,
   PauseCircle, Ban, Clock, CheckCircle,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import type { User as UserType } from '@/types'
 import { TesterTag } from '@/components/TesterTag'
@@ -71,8 +72,14 @@ const ROLE_OPTIONS: { value: string; label: string }[] = [
 const ALL_VALUE = '__all__'
 
 // Small summary card showing one user count, with a placeholder while loading.
-function CountCard({ icon: Icon, label, value }: { icon: typeof Users; label: string; value?: number }) {
+function CountCard({ icon: Icon, label, value, index }: { icon: typeof Users; label: string; value?: number; index: number }) {
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.25, ease: 'easeOut', delay: index * 0.06 }}
+    >
     <Card className="flex items-center gap-3 p-4">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="h-5 w-5" aria-hidden="true" />
@@ -82,6 +89,7 @@ function CountCard({ icon: Icon, label, value }: { icon: typeof Users; label: st
         <p className="text-xl font-extrabold text-text">{value === undefined ? '—' : value.toLocaleString()}</p>
       </div>
     </Card>
+    </motion.div>
   )
 }
 
@@ -245,10 +253,10 @@ export function UsersPage() {
 
       {/* Counts for the selected join date range */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <CountCard icon={Users} label="Total users" value={stats?.total} />
-        <CountCard icon={FlaskConical} label="Test accounts" value={stats?.testers} />
-        <CountCard icon={Sprout} label="Anveshan users" value={stats?.anveshan} />
-        <CountCard icon={UserRound} label="Non-Anveshan users" value={stats?.nonAnveshan} />
+        <CountCard index={0} icon={Users} label="Total users" value={stats?.total} />
+        <CountCard index={1} icon={FlaskConical} label="Test accounts" value={stats?.testers} />
+        <CountCard index={2} icon={Sprout} label="Anveshan users" value={stats?.anveshan} />
+        <CountCard index={3} icon={UserRound} label="Non-Anveshan users" value={stats?.nonAnveshan} />
       </div>
 
       {/* Filters */}

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -406,8 +407,11 @@ export function DataTable<T>({
 
             {/* Data rows */}
             {sorted.map((row, idx) => (
-              <div
+              <motion.div
                 key={String((row as Record<string, unknown>).id ?? idx)}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut', delay: Math.min(idx, 10) * 0.02 }}
                 className={cn(
                   'flex w-max min-w-full items-center gap-2 px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-accent/40 transition-colors',
                   onRowClick && 'cursor-pointer',
@@ -427,7 +431,7 @@ export function DataTable<T>({
                     {col.render(row)}
                   </div>
                 ))}
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

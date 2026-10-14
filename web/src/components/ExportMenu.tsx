@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react'
+import { Download, FileSpreadsheet, FileText, FlaskConical, Loader2, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
@@ -105,8 +105,8 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled, tester
           </DialogHeader>
           <div role="radiogroup" aria-label="Tester accounts" className="space-y-2">
             {[
-              { value: false, title: 'Exclude testers', hint: 'Recommended. Real user data only.' },
-              { value: true, title: 'Include testers', hint: 'Tester accounts are marked in the file.' },
+              { value: false, title: 'Exclude testers', hint: 'Recommended. Real user data only.', icon: UserCheck },
+              { value: true, title: 'Include testers', hint: 'Tester accounts are marked in the file.', icon: FlaskConical },
             ].map((option) => (
               <label
                 key={option.title}
@@ -119,6 +119,7 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled, tester
                   onChange={() => setIncludeTesters(option.value)}
                   className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
                 />
+                <option.icon className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
                 <span>
                   <span className="block font-semibold text-foreground">{option.title}</span>
                   <span className="block text-xs text-text-tertiary">{option.hint}</span>
