@@ -42,6 +42,7 @@ import {
 } from "../../shared/classes/enums";
 import {
   ListUsersDto,
+  ListUserStatsDto,
   ListReviewQueueDto,
   ReviewActionDto,
   UpdateConfigDto,
@@ -118,6 +119,15 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
     description: "Enable adding and verifying payment methods",
   },
 };
+
+// Builds a createdAt range from YYYY-MM-DD strings, treating the end date as inclusive.
+function buildJoinedRange(fromDate?: string, toDate?: string): Record<string, Date> | undefined {
+  if (!fromDate && !toDate) return undefined;
+  const range: Record<string, Date> = {};
+  if (fromDate) range.$gte = new Date(fromDate);
+  if (toDate) range.$lte = new Date(toDate.length <= 10 ? `${toDate}T23:59:59.999Z` : toDate);
+  return range;
+}
 
 @Injectable()
 export class AdminService implements OnModuleInit {
@@ -375,6 +385,20 @@ await this.userRepo.save(user);
     return { user: this.toPublicUser(user) };
   }
 
+// Counts users by type for an optional join date range.
+async getUserStats(dto: ListUserStatsDto) {
+  const base: Record<string, unknown> = {};
+  const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
+  if (joinedRange) base.createdAt = joinedRange;
+
+  const [total, testers, anveshan] = await Promise.all([
+    this.userRepo.countByFilter(base),
+    this.userRepo.countByFilter({ ...base, is_tester: true }),
+    this.userRepo.countByFilter({ ...base, isAnveshanUser: true }),
+  ]);
+  return { total, testers, anveshan, nonAnveshan: total - anveshan };
+}
+
 async listUsers(dto: ListUsersDto) {
   const {
     page = 1,
@@ -390,6 +414,8 @@ async listUsers(dto: ListUsersDto) {
   } = dto;
 
   const filter: Record<string, unknown> = {};
+  const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
+  if (joinedRange) filter.createdAt = joinedRange;
   if (state) filter.state = state;
   if (category) filter.category = category;
   if (status) filter.verificationStatus = status;

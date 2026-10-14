@@ -530,6 +530,13 @@ export const lgdApi = {
 
 // ─── Admin API ─────────────────────────────────────────────────────────────
 
+export interface UserStats {
+  total: number;
+  testers: number;
+  anveshan: number;
+  nonAnveshan: number;
+}
+
 export const adminApi = {
   getStats: () => request<AdminStats>("/admin/stats", {}, true),
 
@@ -541,6 +548,14 @@ export const adminApi = {
     return request<PaginatedResponse<User>>(
       `/admin/users${qs ? `?${qs}` : ""}`,
     );
+  },
+
+  getUserStats: (params = {} as { fromDate?: string; toDate?: string }) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<UserStats>(`/admin/users/stats${qs ? `?${qs}` : ""}`);
   },
 
   getUserDetail: (userId: string | undefined) =>

@@ -294,7 +294,8 @@ export function WithdrawalsPage() {
             columns={WITHDRAWAL_EXPORT_COLUMNS}
             disabled={total === 0}
             sort={activeFilters.sortBy === '_default' ? pendingFirst : undefined}
-            fetchPage={(page, limit) => adminApi.listWithdrawals({ ...buildParams(page, activeFilters), limit })}
+            testerFilter={activeFilters.tester ?? ''}
+            fetchPage={(page, limit, tester) => adminApi.listWithdrawals({ ...buildParams(page, activeFilters), limit, ...(tester ? { tester } : {}) })}
           />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />

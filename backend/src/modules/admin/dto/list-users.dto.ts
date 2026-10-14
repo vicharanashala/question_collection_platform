@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsIn, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsIn, IsInt, Min, Max, IsDateString } from 'class-validator';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 import { VerificationStatus, UserCategory, UserRole } from '../../../shared/classes/enums';
@@ -58,4 +58,25 @@ export class ListUsersDto {
   @IsOptional()
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
+
+  /** Only users who joined on or after this date (YYYY-MM-DD). */
+  @IsOptional()
+  @IsDateString()
+  fromDate?: string;
+
+  /** Only users who joined on or before this date (YYYY-MM-DD, inclusive). */
+  @IsOptional()
+  @IsDateString()
+  toDate?: string;
+}
+
+/** Date range for the user count summary shown above the users list. */
+export class ListUserStatsDto {
+  @IsOptional()
+  @IsDateString()
+  fromDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  toDate?: string;
 }

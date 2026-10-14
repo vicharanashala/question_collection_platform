@@ -1205,6 +1205,10 @@ export class MongoUserRepository
     };
   }
 
+  async countByFilter(filter: Record<string, unknown>): Promise<number> {
+    return this._model.countDocuments(filter).exec();
+  }
+
   async countCreatedBetween(from: Date, to: Date): Promise<number> {
     return this._model.countDocuments({
       createdAt: {

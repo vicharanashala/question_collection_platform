@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi, lgdApi, getErrorMessage, type LgdState } from '@/api/client'
+import { adminApi, lgdApi, getErrorMessage, type LgdState, type UserStats } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
 import {
-  Search, ChevronLeft, ChevronRight, Plus,
+  Search, ChevronLeft, ChevronRight, Plus, Users, FlaskConical, Sprout, UserRound,
   PauseCircle, Ban, Clock, CheckCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -69,6 +69,21 @@ const ROLE_OPTIONS: { value: string; label: string }[] = [
 
 // Radix SelectItem rejects an empty value, so "All" is mapped to a sentinel.
 const ALL_VALUE = '__all__'
+
+// Small summary card showing one user count, with a placeholder while loading.
+function CountCard({ icon: Icon, label, value }: { icon: typeof Users; label: string; value?: number }) {
+  return (
+    <Card className="flex items-center gap-3 p-4">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-xs text-text-tertiary">{label}</p>
+        <p className="text-xl font-extrabold text-text">{value === undefined ? '—' : value.toLocaleString()}</p>
+      </div>
+    </Card>
+  )
+}
 
 function FilterSelect({ value, onChange, options, ariaLabel, className }: {
   value: string
@@ -130,6 +145,9 @@ export function UsersPage() {
   const [states, setStates] = useState<LgdState[]>([])
   const [anveshanFilter, setAnveshanFilter] = useState<AnveshanFilter>('')
   const [testerFilter, setTesterFilter] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
+  const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(false)
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -150,6 +168,12 @@ export function UsersPage() {
   }, [])
 
   useEffect(() => {
+    adminApi.getUserStats({ fromDate, toDate })
+      .then(setStats)
+      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user counts')))
+  }, [fromDate, toDate])
+
+  useEffect(() => {
   setLoading(true)
   adminApi.getUsers({
     page, limit,
@@ -160,12 +184,14 @@ export function UsersPage() {
     state: stateFilter || undefined,
     anveshan: anveshanFilter || undefined,
     tester: testerFilter || undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
     excludeId: currentUser?.id,
   })
     .then((res) => { setUsers(res.items); setTotal(res.total) })
     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
     .finally(() => setLoading(false))
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, currentUser?.id])
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, fromDate, toDate, currentUser?.id])
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -193,7 +219,8 @@ export function UsersPage() {
             name="users"
             columns={USER_EXPORT_COLUMNS}
             disabled={total === 0}
-            fetchPage={(page, limit) => adminApi.getUsers({
+            testerFilter={testerFilter}
+            fetchPage={(page, limit, tester) => adminApi.getUsers({
               page, limit,
               search: debouncedSearch || undefined,
               status: statusFilter || undefined,
@@ -201,7 +228,9 @@ export function UsersPage() {
               category: categoryFilter || undefined,
               state: stateFilter || undefined,
               anveshan: anveshanFilter || undefined,
-              tester: testerFilter || undefined,
+              tester: tester ?? (testerFilter || undefined),
+              fromDate: fromDate || undefined,
+              toDate: toDate || undefined,
               excludeId: currentUser?.id,
             })}
           />
@@ -212,6 +241,14 @@ export function UsersPage() {
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Counts for the selected join date range */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <CountCard icon={Users} label="Total users" value={stats?.total} />
+        <CountCard icon={FlaskConical} label="Test accounts" value={stats?.testers} />
+        <CountCard icon={Sprout} label="Anveshan users" value={stats?.anveshan} />
+        <CountCard icon={UserRound} label="Non-Anveshan users" value={stats?.nonAnveshan} />
       </div>
 
       {/* Filters */}
@@ -277,6 +314,14 @@ export function UsersPage() {
             ]}
             className="w-[calc(50%-0.375rem)] sm:w-44"
           />
+          <label className="flex w-[calc(50%-0.375rem)] items-center gap-2 text-xs text-text-secondary sm:w-auto">
+            From
+            <Input type="date" value={fromDate} max={toDate || undefined} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="w-full sm:w-40 !bg-surface-variant dark:!bg-surface-variant" />
+          </label>
+          <label className="flex w-[calc(50%-0.375rem)] items-center gap-2 text-xs text-text-secondary sm:w-auto">
+            To
+            <Input type="date" value={toDate} min={fromDate || undefined} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="w-full sm:w-40 !bg-surface-variant dark:!bg-surface-variant" />
+          </label>
           {canFilterAnveshan && (
             <FilterSelect
               ariaLabel="Filter by Anveshan progress"

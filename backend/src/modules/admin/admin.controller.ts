@@ -17,6 +17,7 @@ import { Response, Request } from 'express';
 import { AdminService } from './admin.service';
 import {
   ListUsersDto,
+  ListUserStatsDto,
   ListReviewQueueDto,
   ReviewActionDto,
   UpdateConfigDto,
@@ -76,6 +77,14 @@ export class AdminController {
   @Cacheable('admin_users', 60)
   async listUsers(@Query() dto: ListUsersDto) {
     return this.adminService.listUsers(dto);
+  }
+
+  @Get("users/stats")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  @Cacheable('admin_users_stats', 60)
+  async getUserStats(@Query() dto: ListUserStatsDto) {
+    return this.adminService.getUserStats(dto);
   }
 
   @Get("users/:id")

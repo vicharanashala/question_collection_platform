@@ -112,6 +112,8 @@ getVerificationStats(): Promise<{
 
 countCreatedBetween(from: Date, to: Date): Promise<number>;
 
+countByFilter(filter: Record<string, unknown>): Promise<number>;
+
 getRoleDistribution(): Promise<Array<{
   role: UserRole;
   count: number;

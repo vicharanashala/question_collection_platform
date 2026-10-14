@@ -141,7 +141,8 @@ export function WalletsPage() {
             name="wallets"
             columns={WALLET_EXPORT_COLUMNS}
             disabled={total === 0}
-            fetchPage={(page, limit) => adminApi.getWallets({ page, limit, search: searchQuery || undefined, tester: testerFilter || undefined })}
+            testerFilter={testerFilter}
+            fetchPage={(page, limit, tester) => adminApi.getWallets({ page, limit, search: searchQuery || undefined, tester: tester ?? (testerFilter || undefined) })}
           />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
