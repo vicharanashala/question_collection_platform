@@ -30,7 +30,7 @@ import type { Question, QuestionStatus } from "@/types";
 import { TranslatableText } from "@/components/TranslatableText";
 import { DataTable, type ColumnDef } from "@/components/DataTable";
 import { ExportMenu } from "@/components/ExportMenu";
-import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
+import { AnveshanTag, QuestionStatusBadge, isStatusHidden } from "@/components/questions/QuestionStatusBadge";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 
@@ -102,7 +102,7 @@ function ReviewDetailModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle shrink-0">
           <div className="flex items-center gap-3">
             <QuestionStatusBadge question={q} />
-            {q.isAnveshan && (
+            {q.isAnveshan && !isStatusHidden(q) && (
               <Badge className="bg-emerald-600 px-2 py-0.5 text-[11px] text-white sm:text-xs">
                 <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> Anveshan
               </Badge>
@@ -657,11 +657,7 @@ function buildColumns(
           <span className="block truncate text-[11px] sm:text-xs" title={q.user?.name ?? ""}>
             {q.user?.name ?? "—"}
           </span>
-          {q.isAnveshan && (
-            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
-              <Sprout className="h-3 w-3" aria-hidden="true" /> Anveshan
-            </span>
-          )}
+          {q.isAnveshan && <AnveshanTag />}
         </div>
       ),
     },

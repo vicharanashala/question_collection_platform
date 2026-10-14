@@ -1,3 +1,4 @@
+import { Sprout } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Question } from "@/types";
@@ -34,14 +35,19 @@ interface QuestionStatusBadgeProps {
   className?: string;
 }
 
-// Shows the question status, or a dash for pending Anveshan questions.
+// Small tag marking a question submitted by an Anveshan user.
+export function AnveshanTag() {
+  return (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] text-emerald-600 dark:text-emerald-400">
+      <Sprout className="h-3 w-3" aria-hidden="true" /> Anveshan
+    </span>
+  );
+}
+
+// Shows the question status, or the Anveshan tag for pending Anveshan questions.
 export function QuestionStatusBadge({ question, className }: QuestionStatusBadgeProps) {
   if (isStatusHidden(question)) {
-    return (
-      <span className="text-xs text-muted-foreground" aria-label="No status">
-        —
-      </span>
-    );
+    return <AnveshanTag />;
   }
   return (
     <Badge
