@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { isTesterCondition } from '../../../../utils/tester.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
@@ -354,6 +355,7 @@ async listWithdrawals(
     fromDate,
     toDate,
     filterStatus,
+    tester,
   } = options;
 
   const skip = (page - 1) * limit;
@@ -402,6 +404,14 @@ async listWithdrawals(
       },
     },
   ];
+
+  // Tester filter
+  const testerCondition = isTesterCondition(tester);
+  if (testerCondition) {
+    pipeline.push({
+      $match: { 'user.is_tester': testerCondition.is_tester },
+    });
+  }
 
   // State filter
   if (state) {
@@ -551,6 +561,7 @@ async listWithdrawals(
                   name: '$user.name',
                   mobileNumber: '$user.mobileNumber',
                   state: '$user.state',
+                  isTester: { $eq: ['$user.is_tester', true] },
                 },
                 null,
               ],

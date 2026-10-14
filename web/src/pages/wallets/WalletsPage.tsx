@@ -14,11 +14,14 @@ import {
 import { toast } from 'sonner'
 import type { WalletSummary } from '@/types'
 import { ExportMenu } from '@/components/ExportMenu'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
+import { TesterTag } from '@/components/TesterTag'
 import type { ExportColumn } from '@/lib/exportData'
 
 const WALLET_EXPORT_COLUMNS: ExportColumn<WalletSummary>[] = [
   { header: 'Name', value: (w) => w.user.name },
   { header: 'Mobile', value: (w) => w.user.mobileNumber },
+  { header: 'Tester', value: (w) => (w.user.isTester ? 'TRUE' : 'FALSE') },
   { header: 'State', value: (w) => w.user.state },
   { header: 'Category', value: (w) => w.user.category },
   { header: 'Status', value: (w) => w.user.verificationStatus },
@@ -41,6 +44,7 @@ export function WalletsPage() {
   const [detailOpen, setDetailOpen] = useState(false)
 
   const limit = 30
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -57,11 +61,12 @@ export function WalletsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const fetchWallets = useCallback(async (pageNum = 1, search = searchQuery) => {
+  const fetchWallets = useCallback(async (pageNum = 1, search = searchQuery, tester = testerFilter) => {
     setLoading(true)
     try {
       const params: Record<string, string | number> = { page: pageNum, limit }
       if (search) params.search = search
+      if (tester) params.tester = tester
       const res = await adminApi.getWallets(params)
       setWallets(pageNum === 1 ? res.items : (prev) => [...prev, ...res.items])
       setTotal(res.total)
@@ -82,7 +87,7 @@ export function WalletsPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [searchQuery])
+  }, [searchQuery, testerFilter])
 
   useEffect(() => {
     fetchWallets(1, searchQuery)
@@ -136,7 +141,7 @@ export function WalletsPage() {
             name="wallets"
             columns={WALLET_EXPORT_COLUMNS}
             disabled={total === 0}
-            fetchPage={(page, limit) => adminApi.getWallets({ page, limit, search: searchQuery || undefined })}
+            fetchPage={(page, limit) => adminApi.getWallets({ page, limit, search: searchQuery || undefined, tester: testerFilter || undefined })}
           />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -210,6 +215,17 @@ export function WalletsPage() {
             className="pl-9"
           />
         </div>
+        <div className="w-44 shrink-0">
+          <TesterFilter
+            value={testerFilter}
+            onChange={(value) => {
+              setTesterFilter(value)
+              setPage(1)
+              setWallets([])
+              fetchWallets(1, searchQuery, value)
+            }}
+          />
+        </div>
         <Button type="submit" size="sm">Search</Button>
         {searchQuery && (
           <Button
@@ -271,6 +287,7 @@ export function WalletsPage() {
                         >
                           {wallet.user.name}
                         </button>
+                      {wallet.user.isTester && <span className="ml-2 align-middle"><TesterTag /></span>}
                       <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{wallet.user.mobileNumber} · {wallet.user.state}</p>
                     </td>
                     <td className="px-4 py-3">

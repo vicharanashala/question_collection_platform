@@ -1,4 +1,5 @@
 import { IsOptional, IsString, IsIn, IsInt, Min, Max } from 'class-validator';
+import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 import { VerificationStatus, UserCategory, UserRole } from '../../../shared/classes/enums';
 
@@ -52,4 +53,9 @@ export class ListUsersDto {
   @IsOptional()
   @IsIn(['all', 'completed', 'incomplete'])
   anveshan?: 'all' | 'completed' | 'incomplete';
+
+  /** Staff filter: only tester accounts, or everything except tester accounts. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
 }

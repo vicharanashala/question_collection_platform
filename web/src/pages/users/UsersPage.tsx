@@ -129,6 +129,7 @@ export function UsersPage() {
   const [stateFilter, setStateFilter] = useState('')
   const [states, setStates] = useState<LgdState[]>([])
   const [anveshanFilter, setAnveshanFilter] = useState<AnveshanFilter>('')
+  const [testerFilter, setTesterFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -158,12 +159,13 @@ export function UsersPage() {
     category: categoryFilter || undefined,   // ← add this
     state: stateFilter || undefined,
     anveshan: anveshanFilter || undefined,
+    tester: testerFilter || undefined,
     excludeId: currentUser?.id,
   })
     .then((res) => { setUsers(res.items); setTotal(res.total) })
     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
     .finally(() => setLoading(false))
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, currentUser?.id])
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, currentUser?.id])
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -199,6 +201,7 @@ export function UsersPage() {
               category: categoryFilter || undefined,
               state: stateFilter || undefined,
               anveshan: anveshanFilter || undefined,
+              tester: testerFilter || undefined,
               excludeId: currentUser?.id,
             })}
           />
@@ -261,6 +264,17 @@ export function UsersPage() {
             value={stateFilter}
             onChange={(v) => { setStateFilter(v); setPage(1) }}
             options={[{ value: '', label: 'All States' }, ...states.map((s) => ({ value: s.name, label: s.name }))]}
+            className="w-[calc(50%-0.375rem)] sm:w-44"
+          />
+          <FilterSelect
+            ariaLabel="Filter by tester accounts"
+            value={testerFilter}
+            onChange={(v) => { setTesterFilter(v); setPage(1) }}
+            options={[
+              { value: '', label: 'All accounts' },
+              { value: 'only', label: 'Testers only' },
+              { value: 'exclude', label: 'Exclude testers' },
+            ]}
             className="w-[calc(50%-0.375rem)] sm:w-44"
           />
           {canFilterAnveshan && (

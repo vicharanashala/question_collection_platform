@@ -64,6 +64,7 @@ export interface ListWithdrawalsOptions {
   fromDate?: Date;
   toDate?: Date;
   filterStatus?: string;
+  tester?: 'only' | 'exclude';
 }
 
 export interface WithdrawalListItem {
@@ -82,6 +83,7 @@ export interface WithdrawalListItem {
     name: string;
     mobileNumber: string;
     state: string;
+    isTester?: boolean;
   } | null;
 }
 

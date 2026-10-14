@@ -1,4 +1,5 @@
 import { IsString, IsOptional, IsInt, Min, Max, IsIn, IsDateString } from 'class-validator';
+import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 
 export class GetUserWalletDto {
@@ -125,6 +126,11 @@ export class ListAllWalletsDto {
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC';
+
+  /** Staff filter: only tester accounts, or everything except tester accounts. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
 }
 
 export class UserWalletSummaryDto {

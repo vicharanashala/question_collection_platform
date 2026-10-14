@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
+import { TesterTag } from '@/components/TesterTag'
 import { useNavigate } from 'react-router-dom'
 import { reportsApi, getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
@@ -80,6 +82,7 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
 
   const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null)
 
@@ -107,6 +110,7 @@ export default function ReportsPage() {
         status: statusFilter || undefined,
         category: categoryFilter || undefined,
         priority: priorityFilter || undefined,
+        tester: testerFilter || undefined,
         page,
         limit,
       })
@@ -118,7 +122,7 @@ export default function ReportsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, statusFilter, categoryFilter, priorityFilter])
+  }, [page, statusFilter, categoryFilter, priorityFilter, testerFilter])
 
   useEffect(() => {
     fetchReports()
@@ -127,7 +131,7 @@ export default function ReportsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, categoryFilter, priorityFilter])
+  }, [statusFilter, categoryFilter, priorityFilter, testerFilter])
 
   return (
     <div className="flex flex-col h-full">
@@ -184,11 +188,15 @@ export default function ReportsPage() {
           </SelectContent>
         </Select>
 
-        {(statusFilter || categoryFilter || priorityFilter) && (
+        <div className="w-44">
+          <TesterFilter value={testerFilter} onChange={setTesterFilter} />
+        </div>
+
+        {(statusFilter || categoryFilter || priorityFilter || testerFilter) && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setStatusFilter(''); setCategoryFilter(''); setPriorityFilter('') }}
+            onClick={() => { setStatusFilter(''); setCategoryFilter(''); setPriorityFilter(''); setTesterFilter('') }}
           >
             Clear filters
           </Button>
@@ -237,7 +245,10 @@ export default function ReportsPage() {
                 onClick={() => navigate(`/reports/${report.id}`)}
               >
                 <td className="px-4 py-3">
-                  <div className="font-medium">{report.user?.name ?? '—'}</div>
+                  <div className="flex items-center gap-2 font-medium">
+                    {report.user?.name ?? '—'}
+                    {report.user?.isTester && <TesterTag />}
+                  </div>
                   <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{report.user?.mobileNumber ?? ''}</div>
                 </td>
                 <td className="px-4 py-3 max-w-xs">

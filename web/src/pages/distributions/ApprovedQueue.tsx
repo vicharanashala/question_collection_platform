@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { distributor, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,6 +18,7 @@ export function ApprovedQueue() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(20)
   const [search, setSearch] = useState('')
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
   const [items, setItems] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [pages, setPages] = useState(0)
@@ -26,7 +28,7 @@ export function ApprovedQueue() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const list = await distributor.listApprovedQuestions({ page, limit, search })
+      const list = await distributor.listApprovedQuestions({ page, limit, search, tester: testerFilter || undefined })
       setItems(list.items)
       setTotal(list.total)
       setPages(list.pages)
@@ -35,7 +37,7 @@ export function ApprovedQueue() {
     } finally {
       setLoading(false)
     }
-  }, [page, limit, search])
+  }, [page, limit, search, testerFilter])
 
   useEffect(() => { load() }, [load])
 
@@ -50,6 +52,9 @@ export function ApprovedQueue() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
+          </div>
+          <div className="w-44">
+            <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
           </div>
           <Button variant="outline" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />

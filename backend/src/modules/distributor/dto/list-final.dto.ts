@@ -1,5 +1,6 @@
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { INDIAN_STATES } from '../../../shared/constants/indian-states.constant';
 
 /** Query DTO for GET /distributor/distributions (browse final_questions). */
@@ -41,4 +42,9 @@ export class ListDistributionsDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  /** Staff filter: only tester accounts' questions, or everything except them. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
 }

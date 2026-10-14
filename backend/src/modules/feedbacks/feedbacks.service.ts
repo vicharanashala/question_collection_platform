@@ -1,4 +1,5 @@
 import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { findTesterUserIds, userIdTesterCondition } from '../../shared/utils/tester.util';
 import { IAppFeedbackRepository, IUserRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { AnveshanMilestoneService } from '../question/anveshan-milestone.service';
 import { ListFeedbacksDto, SubmitAnveshanFeedbackDto } from './dto';
@@ -18,9 +19,13 @@ export class FeedbacksService {
 
   // Lists Anveshan feedback for staff, newest first, with the submitter's name and an overall ratings summary.
   async listAnveshanFeedback(dto: ListFeedbacksDto) {
-    const { page = 1, limit = 20, rating, inputMethod } = dto;
+    const { page = 1, limit = 20, rating, inputMethod, tester } = dto;
+    const userIdCondition = tester
+      ? userIdTesterCondition(tester, await findTesterUserIds(this.userRepo))
+      : undefined;
     const filter = {
       context: ANVESHAN_CONTEXT,
+      ...(userIdCondition ? { userId: userIdCondition } : {}),
       ...(rating ? { rating } : {}),
       ...(inputMethod ? { inputMethod } : {}),
     };
@@ -43,7 +48,7 @@ export class FeedbacksService {
           comment: feedback.comment,
           inputMethod: feedback.inputMethod,
           createdAt: feedback.createdAt,
-          user: user ? { id: user.id, name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district } : null,
+          user: user ? { id: user.id, name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district, isTester: !!user.is_tester } : null,
         };
       }),
       total,

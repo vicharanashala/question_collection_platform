@@ -1,3 +1,4 @@
+import { findTesterUserIds, userIdTesterCondition } from '../../shared/utils/tester.util';
 import {
   Inject,
   Injectable,
@@ -132,6 +133,9 @@ export class DistributorService {
 
     const filter: Record<string, unknown> = { status: QuestionStatus.APPROVED };
     if (dto.search) filter.questionText = mongoLike(dto.search);
+    if (dto.tester) {
+      filter.userId = userIdTesterCondition(dto.tester, await findTesterUserIds(this.userRepo));
+    }
 
     const result = await this.questionRepo.findAndCount(filter, {
       pagination: { page, limit, sort: { [sortBy]: sortOrder } },
@@ -525,6 +529,9 @@ export class DistributorService {
     else if (dto.distributionState) filter.distributionState = dto.distributionState;
     else if (dto.questionType === 'distributed') filter.distributionState = { $ne: null };
     if (dto.search) filter.questionText = mongoLike(dto.search);
+    const testerIds = await findTesterUserIds(this.userRepo);
+    const submitterCondition = userIdTesterCondition(dto.tester, testerIds);
+    if (submitterCondition) filter.userId = submitterCondition;
 
     const result = await this.finalQuestionRepo.findAndCount(filter, {
       pagination: { page, limit, sort: { createdAt: -1 } },
@@ -560,6 +567,7 @@ export class DistributorService {
       const u = idStr ? userById.get(idStr) : undefined;
       return {
         ...(row as unknown as Record<string, unknown>),
+        submitterIsTester: testerIds.includes(String((row as unknown as { userId?: unknown }).userId ?? '')),
         distributor: u
           ? { id: u.id, name: u.name, username: u.username }
           : null,

@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { findTesterUserIds, userIdTesterCondition } from '../../shared/utils/tester.util';
 import { IAgriEntityRepository, IUserRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { AgriEntityStatus, AgriEntityType } from '../../shared/classes/enums';
 import { isStorageUri } from '../storage/storage.service';
@@ -87,11 +88,16 @@ export class AgriEntitiesService {
 
   // Lists every user's submissions for staff review, each with the submitter's name.
   async listAll(dto: ListAgriEntitiesDto) {
-    const { data, ...rest } = await this.findPage({}, dto);
+    const testerIds = await findTesterUserIds(this.userRepo);
+    const userIdCondition = userIdTesterCondition(dto.tester, testerIds);
+    const { data, ...rest } = await this.findPage(userIdCondition ? { userId: userIdCondition } : {}, dto);
     const submitters = await this.userRepo.findByIds(data.map((entity) => entity.userId));
     const byId = new Map(submitters.map((user) => [user.id, user]));
     return {
-      items: data.map((entity) => ({ ...entity, submitter: byId.get(entity.userId) ?? null })),
+      items: data.map((entity) => {
+        const submitter = byId.get(entity.userId);
+        return { ...entity, submitter: submitter ? { ...submitter, isTester: testerIds.includes(submitter.id) } : null };
+      }),
       ...rest,
     };
   }
@@ -131,7 +137,7 @@ export class AgriEntitiesService {
     return { crop, weed, pest, disease };
   }
 
-  private async findPage(scope: { userId?: string }, dto: ListAgriEntitiesDto) {
+  private async findPage(scope: { userId?: string | Record<string, unknown> }, dto: ListAgriEntitiesDto) {
     const { type, status, page = 1, limit = 20 } = dto;
     const { data, total } = await this.agriEntityRepo.findAndCount(
       { ...scope, ...(type ? { type } : {}), ...(status ? { status } : {}) },

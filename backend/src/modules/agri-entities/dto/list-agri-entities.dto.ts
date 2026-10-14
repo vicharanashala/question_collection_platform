@@ -1,4 +1,5 @@
-import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Max, Min, IsIn } from 'class-validator';
+import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 import { AgriEntityStatus, AgriEntityType } from '../../../shared/classes/enums';
 
@@ -23,4 +24,9 @@ export class ListAgriEntitiesDto {
   @Max(100)
   @Transform(({ value }) => parseInt(value, 10))
   limit?: number = 20;
+
+  /** Staff filter: only tester accounts, or everything except tester accounts. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
 }

@@ -3,6 +3,8 @@ import { AlertCircle, Keyboard, MapPin, Mic, MessageSquareText, Phone, Star } fr
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
+import { TesterTag } from '@/components/TesterTag'
 import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
 import { feedbackApi, getErrorMessage } from '@/api/client'
 import { cn, formatDateTime } from '@/lib/utils'
@@ -37,6 +39,7 @@ export function FeedbacksPage() {
   const [page, setPage] = useState(1)
   const [ratingFilter, setRatingFilter] = useState<number | null>(null)
   const [inputFilter, setInputFilter] = useState<InputFilter>('all')
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
 
   // Loads one page of feedback for the current filters.
   const load = useCallback(async () => {
@@ -47,6 +50,7 @@ export function FeedbacksPage() {
         limit: PAGE_SIZE,
         rating: ratingFilter ?? undefined,
         inputMethod: inputFilter === 'all' ? undefined : inputFilter,
+        tester: testerFilter || undefined,
       })
       setData(result)
       setLoadState('ready')
@@ -54,7 +58,7 @@ export function FeedbacksPage() {
       setError(getErrorMessage(err, 'Could not load feedback.'))
       setLoadState('error')
     }
-  }, [page, ratingFilter, inputFilter])
+  }, [page, ratingFilter, inputFilter, testerFilter])
 
   useEffect(() => {
     void load()
@@ -108,6 +112,15 @@ export function FeedbacksPage() {
               <SelectItem value="text">Typed</SelectItem>
             </SelectContent>
           </Select>
+          <div className="w-full sm:w-44">
+            <TesterFilter
+              value={testerFilter}
+              onChange={(value) => {
+                setTesterFilter(value)
+                setPage(1)
+              }}
+            />
+          </div>
           {data && (
             <p className="text-xs text-muted-foreground sm:ml-auto" aria-live="polite">
               {data.total} {data.total === 1 ? 'response' : 'responses'}
@@ -225,7 +238,10 @@ function FeedbackCard({ item }: { item: AppFeedbackItem }) {
         <CardContent className="flex h-full flex-col gap-3 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">{item.user?.name || 'Unknown user'}</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <span className="truncate">{item.user?.name || 'Unknown user'}</span>
+                {item.user?.isTester && <TesterTag />}
+              </p>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                 {item.user?.mobileNumber && (
                   <span className="inline-flex items-center gap-1">

@@ -239,6 +239,7 @@ export interface WithdrawalUser {
   name: string
   mobileNumber: string
   state: string
+  isTester?: boolean
 }
 
 export interface PaymentLogEntry {
@@ -286,6 +287,7 @@ export interface WalletSummary {
     role: string
     verificationStatus: string
     createdAt: string
+    isTester?: boolean
   }
 }
 
@@ -605,7 +607,7 @@ export interface Report {
   relatedEntityType: string | null;
   createdAt: string;
   updatedAt: string;
-  user?: Pick<User, 'id' | 'name' | 'mobileNumber'>;
+  user?: Pick<User, 'id' | 'name' | 'mobileNumber' | 'isTester'>;
   replies?: ReportReply[];
 }
 
@@ -653,6 +655,8 @@ export interface Faq {
  */
 export interface FinalQuestion {
   id: string;
+  /** True when the original question was submitted by a tester account. */
+  submitterIsTester?: boolean;
 
   // ── Reference back to the source question ─────────────────────────────────
   referenceQuestionId: string;
@@ -773,6 +777,7 @@ export interface AgriEntitySubmitter {
   id: string;
   name: string;
   username: string | null;
+  isTester?: boolean;
 }
 
 export interface SubmitAgriEntityResponse {
@@ -885,7 +890,7 @@ export interface AppFeedbackItem {
   comment: string | null;
   inputMethod: 'text' | 'voice';
   createdAt: string;
-  user: { id: string; name: string; mobileNumber: string; state?: string; district?: string } | null;
+  user: { id: string; name: string; mobileNumber: string; state?: string; district?: string; isTester?: boolean } | null;
 }
 
 export interface FeedbackRatingSummary {

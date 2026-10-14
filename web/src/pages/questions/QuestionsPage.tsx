@@ -15,6 +15,7 @@ import { TesterTag } from "@/components/TesterTag";
 import { ExportMenu } from "@/components/ExportMenu";
 import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
 import { StaffQuestionDetailDialog } from "@/components/questions/StaffQuestionDetailDialog";
+import { TesterFilter, type TesterFilterValue } from "@/components/TesterFilter";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 import { cn, formatDate, formatTime } from "@/lib/utils";
@@ -67,6 +68,7 @@ export function QuestionsPage() {
   >("");
   const [answerFilter, setAnswerFilter] = useState<AnswerFilter>("");
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>("");
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"table" | "card">("table");
   const limit = 10;
@@ -88,7 +90,7 @@ export function QuestionsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, statusFilter, answerFilter, userTypeFilter]);
+  }, [debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -101,6 +103,7 @@ export function QuestionsPage() {
         status: statusFilter || undefined,
         answerStatus: answerFilter || undefined,
         userType: userTypeFilter || undefined,
+        tester: testerFilter || undefined,
       })
       .then((res) => {
         setQuestions(res.items as Question[]);
@@ -108,7 +111,7 @@ export function QuestionsPage() {
       })
       .catch((e) => toast.error(getErrorMessage(e, "Failed to load questions")))
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, answerFilter, userTypeFilter, view]);
+  }, [page, debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter, view]);
 
   const totalPages = Math.max(
     1,
@@ -271,7 +274,7 @@ export function QuestionsPage() {
   ];
 
   const emptyMessage =
-    search || statusFilter || answerFilter || userTypeFilter
+    search || statusFilter || answerFilter || userTypeFilter || testerFilter
       ? "No questions match your filters"
       : "No questions yet";
 
@@ -311,7 +314,7 @@ export function QuestionsPage() {
     />
   );
 
-  const hasActiveFilters = !!(search || statusFilter || answerFilter || userTypeFilter);
+  const hasActiveFilters = !!(search || statusFilter || answerFilter || userTypeFilter || testerFilter);
 
   // Resets every filter and the search box.
   const clearFilters = () => {
@@ -319,6 +322,7 @@ export function QuestionsPage() {
     setStatusFilter("");
     setAnswerFilter("");
     setUserTypeFilter("");
+    setTesterFilter("");
     setPage(1);
   };
 
@@ -364,6 +368,7 @@ export function QuestionsPage() {
                 status: statusFilter || undefined,
                 answerStatus: answerFilter || undefined,
                 userType: userTypeFilter || undefined,
+                tester: testerFilter || undefined,
               })
             }
           />
@@ -375,7 +380,7 @@ export function QuestionsPage() {
       <Card>
         <div className="space-y-4 p-4">
           {/* Search and dropdown filters */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_200px_220px]">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_180px_180px_200px]">
             <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -390,6 +395,7 @@ export function QuestionsPage() {
               />
             </div>
             <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
+            <TesterFilter value={testerFilter} onChange={setTesterFilter} />
             <Select
               value={answerFilter || "all"}
               onValueChange={(v) => setAnswerFilter(v === "all" ? "" : (v as AnswerFilter))}

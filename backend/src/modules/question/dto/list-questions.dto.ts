@@ -1,4 +1,5 @@
 import { IsOptional, IsString, IsIn, IsInt, Min, Max, IsDateString } from 'class-validator';
+import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 
 export class ListQuestionsDto {
@@ -56,4 +57,9 @@ export class ListQuestionsDto {
   @IsOptional()
   @IsIn(['anveshan', 'regular'])
   userType?: 'anveshan' | 'regular';
+
+  /** Staff filter: only tester accounts, or everything except tester accounts. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
 }

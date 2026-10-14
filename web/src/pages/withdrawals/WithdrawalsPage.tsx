@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner'
 import type { Withdrawal } from '@/types'
 import { ExportMenu } from '@/components/ExportMenu'
+import { TesterTag } from '@/components/TesterTag'
 import { exportDate, type ExportColumn } from '@/lib/exportData'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -49,13 +50,14 @@ const SORT_OPTIONS = [
 
 function buildParams(
   page: number,
-  active: { search: string; status: string; state: string; sortBy: string; fromDate: string; toDate: string; filterStatus?: string },
+  active: { search: string; status: string; state: string; sortBy: string; fromDate: string; toDate: string; filterStatus?: string; tester?: string },
 ) {
   const params: Record<string, string | number> = { page, limit: 20 }
   if (active.search)   params.search   = active.search
   if (active.state)    params.state    = active.state
   if (active.fromDate) params.fromDate = active.fromDate
   if (active.toDate)   params.toDate   = active.toDate
+  if (active.tester)   params.tester   = active.tester
   const SPECIAL_FILTERS = ['failed_pending_tx']
   if (SPECIAL_FILTERS.includes(active.status)) {
     params.filterStatus = active.status
@@ -85,6 +87,7 @@ const WITHDRAWAL_EXPORT_COLUMNS: ExportColumn<Withdrawal>[] = [
   { header: 'Processed', value: (w) => exportDate(w.processedAt, true) },
   { header: 'Name', value: (w) => w.user?.name },
   { header: 'Mobile', value: (w) => w.user?.mobileNumber },
+  { header: 'Tester', value: (w) => (w.user?.isTester ? 'TRUE' : 'FALSE') },
   { header: 'State', value: (w) => w.user?.state },
   { header: 'Method', value: (w) => w.payoutMethod },
   { header: 'Amount (INR)', value: (w) => Number(w.amount) },
@@ -128,7 +131,7 @@ export function WithdrawalsPage() {
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states')))
   }, [])
   const [activeFilters, setActiveFilters] = useState({
-    search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '',
+    search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '', tester: '',
   })
   const [draftFilters, setDraftFilters] = useState({ ...activeFilters })
 
@@ -184,7 +187,7 @@ export function WithdrawalsPage() {
   }
 
   function resetFilters() {
-    const empty = { search: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '', status: '' }
+    const empty = { search: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '', status: '', tester: '' }
     setDraftFilters(empty)
     setActiveFilters(empty)
     setPage(1)
@@ -379,6 +382,7 @@ export function WithdrawalsPage() {
                         >
                           {w.user?.name ?? w.user?.mobileNumber ?? 'Unknown'}
                         </button>
+                      {w.user?.isTester && <span className="ml-2 align-middle"><TesterTag /></span>}
                       <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                         {w.user?.mobileNumber ?? ''} · {w.user?.state ?? ''}
                       </div>
@@ -513,6 +517,18 @@ export function WithdrawalsPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Accounts</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
+                  value={draftFilters.tester}
+                  onChange={(e) => setDraftFilters((f) => ({ ...f, tester: e.target.value }))}
+                >
+                  <option value="">All accounts</option>
+                  <option value="only">Testers only</option>
+                  <option value="exclude">Exclude testers</option>
+                </select>
+              </div>
               <div className="space-y-1.5">
                 <Label>Sort By</Label>
                 <select

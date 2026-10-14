@@ -1,3 +1,4 @@
+import { isTesterCondition } from "../../shared/utils/tester.util";
 import {
   Injectable,
   NotFoundException,
@@ -407,6 +408,9 @@ async listUsers(dto: ListUsersDto) {
     // hex string to ObjectId automatically during query execution, so a string is both
     // simpler and safe here.
     if (dto.excludeId) filter._id = { $ne: dto.excludeId };
+
+    const testerCondition = isTesterCondition(dto.tester);
+    if (testerCondition) Object.assign(filter, testerCondition);
 
     // Anveshan filter: completion is computed from submissions, so 100% / in-progress become an id list.
     if (anveshan) {
@@ -1555,6 +1559,7 @@ async listUsers(dto: ListUsersDto) {
       fromDate,
       toDate,
       filterStatus,
+      tester,
     } = dto;
 
     const result = await this.withdrawalRepo.listWithdrawals({
@@ -1568,6 +1573,7 @@ async listUsers(dto: ListUsersDto) {
       fromDate: fromDate ? new Date(fromDate) : undefined,
       toDate: toDate ? new Date(toDate) : undefined,
       filterStatus,
+      tester,
     });
 
     return {
@@ -3556,7 +3562,13 @@ async listUsers(dto: ListUsersDto) {
 
     // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
     // matching user (orphaned records) are excluded from both items and total.
-    const validWallets = allWallets.filter((w) => ownersById.has(w.userId));
+    const testerCondition = isTesterCondition(dto.tester);
+    const validWallets = allWallets.filter((w) => {
+      const owner = ownersById.get(w.userId);
+      if (!owner) return false;
+      if (!testerCondition) return true;
+      return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
+    });
 
     const dir = sortOrder === "ASC" ? 1 : -1;
     validWallets.sort((a, b) => {
@@ -3630,6 +3642,7 @@ async listUsers(dto: ListUsersDto) {
           role: user.role,
           verificationStatus: user.verificationStatus,
           createdAt: user.createdAt,
+          isTester: !!user.is_tester,
         },
       };
     });

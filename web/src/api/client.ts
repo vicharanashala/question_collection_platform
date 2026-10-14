@@ -1453,6 +1453,7 @@ export const reportsApi = {
       status?: string;
       category?: string;
       priority?: string;
+      tester?: string;
       page?: number;
       limit?: number;
     } = {},
@@ -1521,7 +1522,7 @@ export const reportsApi = {
 
 export const feedbackApi = {
   /** Admin only: Anveshan feedback, newest first, with an overall ratings summary. */
-  listAnveshanFeedback: (params: { page?: number; limit?: number; rating?: number; inputMethod?: 'text' | 'voice' } = {}) => {
+  listAnveshanFeedback: (params: { page?: number; limit?: number; rating?: number; inputMethod?: 'text' | 'voice'; tester?: 'only' | 'exclude' } = {}) => {
     const qs = new URLSearchParams(
       Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])),
     ).toString();
@@ -1581,6 +1582,7 @@ export const agriEntityApi = {
       status?: AgriEntityStatus;
       page?: number;
       limit?: number;
+      tester?: 'only' | 'exclude';
     } = {},
   ) => {
     const qs = new URLSearchParams(
@@ -1709,6 +1711,7 @@ export interface ListApprovedQuestionsParams {
   search?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
+  tester?: "only" | "exclude";
 }
 
 export interface AssignStatesPayload {
@@ -1725,6 +1728,7 @@ export interface ListDistributionsParams {
   /** 'original' = reference rows only; 'distributed' = state-specific rows only. */
   questionType?: "original" | "distributed";
   search?: string;
+  tester?: "only" | "exclude";
 }
 
 export const distributor = {

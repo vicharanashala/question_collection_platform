@@ -32,6 +32,7 @@ import { DataTable, type ColumnDef } from "@/components/DataTable";
 import { TesterTag } from "@/components/TesterTag";
 import { ExportMenu } from "@/components/ExportMenu";
 import { QuestionStatusBadge, isStatusHidden } from "@/components/questions/QuestionStatusBadge";
+import { TesterFilter, type TesterFilterValue } from "@/components/TesterFilter";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 
@@ -904,6 +905,7 @@ export function ReviewsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -945,7 +947,7 @@ export function ReviewsPage() {
     setSelectedQuestion(null);
     setDetailOpen(false);
     setDuplicateData(null);
-  }, [debouncedSearch, statusFilter, userTypeFilter]);
+  }, [debouncedSearch, statusFilter, userTypeFilter, testerFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -956,6 +958,7 @@ export function ReviewsPage() {
         status: statusFilter || undefined,
         search: debouncedSearch || undefined,
         userType: userTypeFilter || undefined,
+        tester: testerFilter || undefined,
       })
       .then((res) => {
         const start = (page - 1) * limit;
@@ -971,7 +974,7 @@ export function ReviewsPage() {
         toast.error(getErrorMessage(e, "Failed to load review queue")),
       )
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, userTypeFilter]);
+  }, [page, debouncedSearch, statusFilter, userTypeFilter, testerFilter]);
 
   /**
    * Call the /check-duplicate endpoint. If a duplicate is found, open the
@@ -1061,7 +1064,7 @@ export function ReviewsPage() {
     checkDuplicateLoadingId,
   );
   const emptyMessage =
-    search || statusFilter || userTypeFilter
+    search || statusFilter || userTypeFilter || testerFilter
       ? "No questions match your filters"
       : "No questions in queue";
 
@@ -1133,6 +1136,9 @@ export function ReviewsPage() {
           <div className="flex-1 sm:w-44 sm:flex-none">
             <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
           </div>
+          <div className="flex-1 sm:w-44 sm:flex-none">
+            <TesterFilter value={testerFilter} onChange={setTesterFilter} />
+          </div>
           <ExportMenu
             name="review_queue"
             columns={QUESTION_EXPORT_COLUMNS}
@@ -1144,6 +1150,7 @@ export function ReviewsPage() {
                 status: statusFilter || undefined,
                 search: debouncedSearch || undefined,
                 userType: userTypeFilter || undefined,
+                tester: testerFilter || undefined,
               })
             }
           />

@@ -1,4 +1,5 @@
-import { IsEnum, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsEnum, IsOptional, IsInt, Min, Max, IsIn } from 'class-validator';
+import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 import { ReportCategory, ReportPriority, ReportStatus } from '../../../shared/classes/enums';
 
@@ -27,4 +28,9 @@ export class ListReportsDto {
   @Min(1)
   @Max(100)
   limit?: number = 20;
+
+  /** Staff filter: only tester accounts, or everything except tester accounts. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
 }

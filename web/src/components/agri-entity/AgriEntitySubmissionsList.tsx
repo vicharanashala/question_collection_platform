@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
+import { TesterTag } from '@/components/TesterTag'
 import { useAuth } from '@/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -39,6 +41,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState<'' | AgriEntityStatus>('')
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<AgriEntitySubmission | null>(null)
 
@@ -53,7 +56,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     let cancelled = false
     setLoading(true)
     const list = scope === 'all' ? agriEntityApi.listAll : agriEntityApi.listMine
-    list({ type, status: status || undefined, page, limit: PAGE_SIZE })
+    list({ type, status: status || undefined, page, limit: PAGE_SIZE, ...(scope === 'all' && testerFilter ? { tester: testerFilter } : {}) })
       .then((res) => {
         if (cancelled) return
         setItems(res.items ?? [])
@@ -68,10 +71,16 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     return () => {
       cancelled = true
     }
-  }, [type, status, page, scope, t])
+  }, [type, status, testerFilter, page, scope, t])
 
   return (
     <>
+      {scope === 'all' && (
+        <div className="w-full sm:w-44">
+          <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
+        </div>
+      )}
+
       {!hideStatus && (
         <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
       )}
@@ -138,6 +147,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
                       <MetaChip icon={Clock}>{formatDate(item.createdAt)}</MetaChip>
                       {item.imageUrls.length > 1 && <MetaChip icon={ImageIcon}>{item.imageUrls.length}</MetaChip>}
                       {scope === 'all' && <MetaChip icon={UserIcon}>{submitterName(item)}</MetaChip>}
+                      {scope === 'all' && item.submitter?.isTester && <TesterTag />}
                     </div>
                   </SubmissionRow>
                 )

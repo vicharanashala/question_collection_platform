@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
+import { TesterTag } from '@/components/TesterTag'
 import { distributor, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,6 +22,7 @@ export function DistributionsList() {
   const [distributionState, setDistributionState] = useState<string>('')
   const [questionType, setQuestionType] = useState<'' | 'original' | 'distributed'>('')
   const [search, setSearch] = useState('')
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(20)
   const [items, setItems] = useState<FinalQuestion[]>([])
@@ -38,6 +41,7 @@ export function DistributionsList() {
           ...(distributionState ? { distributionState } : {}),
           ...(questionType ? { questionType } : {}),
           ...(search ? { search } : {}),
+          ...(testerFilter ? { tester: testerFilter } : {}),
         }),
       ])
       // setStats(s)
@@ -50,7 +54,7 @@ export function DistributionsList() {
     } finally {
       setLoading(false)
     }
-  }, [page, limit, distributionState, questionType, search])
+  }, [page, limit, distributionState, questionType, search, testerFilter])
 
   useEffect(() => { load() }, [load])
 
@@ -75,6 +79,9 @@ export function DistributionsList() {
               {indianStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
+          <div className="w-44">
+            <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
+          </div>
           <Select
             value={questionType || 'all'}
             onValueChange={(v) => {
@@ -124,6 +131,7 @@ export function DistributionsList() {
                 <tr key={row.id} className="border-t border-border">
                   <td className="px-4 py-2 max-w-md">
                     <div className="line-clamp-2 text-foreground">{row.questionText}</div>
+                    {row.submitterIsTester && <div className="mt-1"><TesterTag /></div>}
                     {row.notes && (
                       <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">
                         Note: {row.notes}

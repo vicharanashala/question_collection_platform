@@ -12,6 +12,7 @@ import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
 import { ListQuestionsDto } from '@/modules/question/dto';
 import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
+import { userIdTesterCondition, type TesterFilter } from '../../../../utils/tester.util';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
@@ -821,6 +822,7 @@ async getDailyStatsSince(
 
     // Access control
     if (!isAdmin) match.userId = userId;
+    else await this.applyTesterFilter(match, dto.tester);
     if (status) match.status = status;
     if (domains) match.domains = domains;
     if (cropType) match.cropType = { $regex: escapeRegex(cropType), $options: 'i' };
@@ -858,6 +860,7 @@ async getDailyStatsSince(
       status: { $in: status?.length ? status : [QuestionStatus.PENDING, QuestionStatus.HELD] },
     };
     if (state) match.state = state;
+    await this.applyTesterFilter(match, dto.tester);
 
     const submittedAt = buildDateRange(fromDate, toDate);
     if (submittedAt) match.submittedAt = submittedAt;
@@ -871,6 +874,16 @@ async getDailyStatsSince(
     const direction = sortOrder === 'ASC' ? 1 : -1;
     const sortField = QUEUE_SORT_FIELDS[sortBy] ?? 'submittedAt';
     return this.paginateWithUsers(match, { [sortField]: direction, _id: direction }, page, limit, true);
+  }
+
+  // Limits the match to tester or non-tester submitters when a tester filter is set.
+  private async applyTesterFilter(match: Record<string, unknown>, tester?: TesterFilter): Promise<void> {
+    if (!tester) return;
+    const testers = await this._model.db
+      .collection('users')
+      .find({ is_tester: true }, { projection: { _id: 1 } })
+      .toArray();
+    match.userId = userIdTesterCondition(tester, testers.map((doc) => String(doc._id)));
   }
 
   // Runs one aggregation that returns a page of questions with submitter and reviewer details plus the total count.
