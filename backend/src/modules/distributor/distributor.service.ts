@@ -1,4 +1,5 @@
-import { findTesterUserIds, userIdTesterCondition } from '../../shared/utils/tester.util';
+import { findTesterUserIds } from '../../shared/utils/tester.util';
+import { resolveUserIdScope } from '../../shared/utils/anveshan-mode.util';
 import {
   Inject,
   Injectable,
@@ -133,9 +134,8 @@ export class DistributorService {
 
     const filter: Record<string, unknown> = { status: QuestionStatus.APPROVED };
     if (dto.search) filter.questionText = mongoLike(dto.search);
-    if (dto.tester) {
-      filter.userId = userIdTesterCondition(dto.tester, await findTesterUserIds(this.userRepo));
-    }
+    const submitterScope = await resolveUserIdScope(this.userRepo, dto);
+    if (submitterScope) filter.userId = submitterScope;
 
     const result = await this.questionRepo.findAndCount(filter, {
       pagination: { page, limit, sort: { [sortBy]: sortOrder } },
@@ -530,7 +530,7 @@ export class DistributorService {
     else if (dto.questionType === 'distributed') filter.distributionState = { $ne: null };
     if (dto.search) filter.questionText = mongoLike(dto.search);
     const testerIds = await findTesterUserIds(this.userRepo);
-    const submitterCondition = userIdTesterCondition(dto.tester, testerIds);
+    const submitterCondition = await resolveUserIdScope(this.userRepo, dto);
     if (submitterCondition) filter.userId = submitterCondition;
 
     const result = await this.finalQuestionRepo.findAndCount(filter, {

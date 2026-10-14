@@ -1,4 +1,5 @@
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { AnveshanOnly } from '../../../shared/utils/anveshan-mode.util';
 import { Type } from 'class-transformer';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { INDIAN_STATES } from '../../../shared/constants/indian-states.constant';
@@ -47,4 +48,8 @@ export class ListDistributionsDto {
   @IsOptional()
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
+
+  /** Staff Anveshan mode: only data from Anveshan users. */
+  @AnveshanOnly()
+  anveshanOnly?: boolean;
 }

@@ -1,4 +1,5 @@
 import { IsString, IsIn, IsOptional, IsInt, Min, Max, IsDateString, MaxLength } from 'class-validator';
+import { AnveshanOnly } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 
@@ -52,6 +53,10 @@ export class ListWithdrawalsDto {
   @IsOptional()
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
+
+  /** Staff Anveshan mode: only data from Anveshan users. */
+  @AnveshanOnly()
+  anveshanOnly?: boolean;
 }
 
 export class ProcessWithdrawalDto {

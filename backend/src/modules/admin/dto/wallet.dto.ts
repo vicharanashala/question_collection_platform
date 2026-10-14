@@ -1,4 +1,5 @@
 import { IsString, IsOptional, IsInt, Min, Max, IsIn, IsDateString } from 'class-validator';
+import { AnveshanOnly } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 
@@ -131,6 +132,10 @@ export class ListAllWalletsDto {
   @IsOptional()
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
+
+  /** Staff Anveshan mode: only data from Anveshan users. */
+  @AnveshanOnly()
+  anveshanOnly?: boolean;
 }
 
 export class UserWalletSummaryDto {

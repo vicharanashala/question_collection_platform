@@ -356,6 +356,7 @@ async listWithdrawals(
     toDate,
     filterStatus,
     tester,
+    anveshanOnly,
   } = options;
 
   const skip = (page - 1) * limit;
@@ -411,6 +412,10 @@ async listWithdrawals(
     pipeline.push({
       $match: { 'user.is_tester': testerCondition.is_tester },
     });
+  }
+
+  if (anveshanOnly) {
+    pipeline.push({ $match: { 'user.isAnveshanUser': true } });
   }
 
   // State filter

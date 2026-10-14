@@ -53,6 +53,7 @@ import {
 } from "@/events/accountLockedEvents";
 import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
+import { isAnveshanMode } from '@/lib/anveshanMode';
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -178,12 +179,37 @@ function toTimeoutError(err: unknown): unknown {
   return err
 }
 
+// Staff list endpoints that accept the Anveshan mode flag.
+const ANVESHAN_SCOPED_PATHS = new Set([
+  '/admin/users',
+  '/admin/users/stats',
+  '/admin/withdrawals',
+  '/admin/wallets',
+  '/admin/questions/queue',
+  '/questions',
+  '/agri-entities/all',
+  '/reports',
+  '/distributor/questions',
+  '/distributor/distributions',
+]);
+
+// Adds anveshanOnly=true to supported staff list requests while Anveshan mode is on.
+function withAnveshanScope(path: string, method?: string): string {
+  if (!isAnveshanMode() || (method && method !== 'GET')) return path;
+  const [pathname, query = ''] = path.split('?');
+  if (!ANVESHAN_SCOPED_PATHS.has(pathname)) return path;
+  const params = new URLSearchParams(query);
+  params.set('anveshanOnly', 'true');
+  return `${pathname}?${params.toString()}`;
+}
+
 export async function request<T>(
-  path: string,
+  rawPath: string,
   options: RequestInit = {},
   useCache = true,
   timeoutMs = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
+  const path = withAnveshanScope(rawPath, options.method);
   const token = getAccessToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

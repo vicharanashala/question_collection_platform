@@ -835,7 +835,7 @@ async getDailyStatsSince(
     const searchCondition = buildSearchCondition(search);
     if (searchCondition) match.$or = searchCondition;
 
-    const staffConditions = buildStaffConditions(userType, answerStatus);
+    const staffConditions = buildStaffConditions(dto.anveshanOnly ? 'anveshan' : userType, answerStatus);
     if (staffConditions.length > 0) match.$and = staffConditions;
 
     return this.paginateWithUsers(match, { submittedAt: -1 }, page, limit, canViewContact);
@@ -868,7 +868,7 @@ async getDailyStatsSince(
     const searchCondition = buildSearchCondition(search);
     if (searchCondition) match.$or = searchCondition;
 
-    const staffConditions = buildStaffConditions(userType);
+    const staffConditions = buildStaffConditions(dto.anveshanOnly ? 'anveshan' : userType);
     if (staffConditions.length > 0) match.$and = staffConditions;
 
     const direction = sortOrder === 'ASC' ? 1 : -1;

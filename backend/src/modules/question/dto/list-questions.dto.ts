@@ -1,4 +1,5 @@
 import { IsOptional, IsString, IsIn, IsInt, Min, Max, IsDateString } from 'class-validator';
+import { AnveshanOnly } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
 
@@ -62,4 +63,8 @@ export class ListQuestionsDto {
   @IsOptional()
   @IsIn(TESTER_FILTER_VALUES)
   tester?: TesterFilter;
+
+  /** Staff Anveshan mode: only data from Anveshan users. */
+  @AnveshanOnly()
+  anveshanOnly?: boolean;
 }

@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { findTesterUserIds, userIdTesterCondition } from '../../shared/utils/tester.util';
+import { findTesterUserIds } from '../../shared/utils/tester.util';
+import { resolveUserIdScope } from '../../shared/utils/anveshan-mode.util';
 import { IAgriEntityRepository, IUserRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { AgriEntityStatus, AgriEntityType } from '../../shared/classes/enums';
 import { isStorageUri } from '../storage/storage.service';
@@ -89,7 +90,7 @@ export class AgriEntitiesService {
   // Lists every user's submissions for staff review, each with the submitter's name.
   async listAll(dto: ListAgriEntitiesDto) {
     const testerIds = await findTesterUserIds(this.userRepo);
-    const userIdCondition = userIdTesterCondition(dto.tester, testerIds);
+    const userIdCondition = await resolveUserIdScope(this.userRepo, dto);
     const { data, ...rest } = await this.findPage(userIdCondition ? { userId: userIdCondition } : {}, dto);
     const submitters = await this.userRepo.findByIds(data.map((entity) => entity.userId));
     const byId = new Map(submitters.map((user) => [user.id, user]));

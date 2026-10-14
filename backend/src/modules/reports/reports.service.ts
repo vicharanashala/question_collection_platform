@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { findTesterUserIds, userIdTesterCondition } from '../../shared/utils/tester.util';
+import { resolveUserIdScope } from '../../shared/utils/anveshan-mode.util';
 import {
   IReportRepository,
   IReportReplyRepository,
@@ -222,9 +222,8 @@ export class ReportsService {
     if (dto.status) match.status = dto.status;
     if (dto.category) match.category = dto.category;
     if (dto.priority) match.priority = dto.priority;
-    if (dto.tester) {
-      match.userId = userIdTesterCondition(dto.tester, await findTesterUserIds(this.userRepo));
-    }
+    const userScope = await resolveUserIdScope(this.userRepo, dto);
+    if (userScope) match.userId = userScope;
 
     // MongoDB aggregation pipeline with $lookup for user
     // NOTE: reports.userId is stored as a string while users._id is ObjectId,

@@ -390,6 +390,7 @@ async getUserStats(dto: ListUserStatsDto) {
   const base: Record<string, unknown> = {};
   const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
   if (joinedRange) base.createdAt = joinedRange;
+  if (dto.anveshanOnly) base.isAnveshanUser = true;
 
   const [total, testers, anveshan] = await Promise.all([
     this.userRepo.countByFilter(base),
@@ -437,6 +438,7 @@ async listUsers(dto: ListUsersDto) {
 
     const testerCondition = isTesterCondition(dto.tester);
     if (testerCondition) Object.assign(filter, testerCondition);
+    if (dto.anveshanOnly) filter.isAnveshanUser = true;
 
     // Anveshan filter: completion is computed from submissions, so 100% / in-progress become an id list.
     if (anveshan) {
@@ -1586,6 +1588,7 @@ async listUsers(dto: ListUsersDto) {
       toDate,
       filterStatus,
       tester,
+      anveshanOnly,
     } = dto;
 
     const result = await this.withdrawalRepo.listWithdrawals({
@@ -1600,6 +1603,7 @@ async listUsers(dto: ListUsersDto) {
       toDate: toDate ? new Date(toDate) : undefined,
       filterStatus,
       tester,
+      anveshanOnly,
     });
 
     return {
@@ -3592,6 +3596,7 @@ async listUsers(dto: ListUsersDto) {
     const validWallets = allWallets.filter((w) => {
       const owner = ownersById.get(w.userId);
       if (!owner) return false;
+      if (dto.anveshanOnly && !owner.isAnveshanUser) return false;
       if (!testerCondition) return true;
       return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
     });

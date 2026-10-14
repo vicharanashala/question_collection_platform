@@ -3,7 +3,10 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
-import { LogOut, User, Sun, Moon, Languages, Menu } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Languages, Menu, Sprout } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Switch } from '@/components/ui/switch'
+import { setAnveshanMode, useAnveshanMode } from '@/lib/anveshanMode'
 import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -24,6 +27,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const anveshanMode = useAnveshanMode()
   useLanguage()
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -89,6 +93,26 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
             <Moon className="h-4 w-4" />
           )}
         </button> */}
+
+        {/* Anveshan mode: staff only. Limits every supported page to Anveshan user data. */}
+        {!isEndUser(user) && (
+          <motion.label
+            animate={{ backgroundColor: anveshanMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0)' }}
+            transition={{ duration: 0.25 }}
+            className="flex cursor-pointer items-center gap-2 rounded-full border border-border-subtle px-2.5 py-1 text-xs font-semibold text-text-secondary"
+          >
+            <motion.span animate={{ rotate: anveshanMode ? 0 : -25, scale: anveshanMode ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
+              <Sprout className={anveshanMode ? 'h-4 w-4 text-emerald-500' : 'h-4 w-4'} aria-hidden="true" />
+            </motion.span>
+            <span className="hidden sm:inline">Anveshan mode</span>
+            <Switch
+              checked={anveshanMode}
+              onCheckedChange={setAnveshanMode}
+              aria-label="Anveshan mode"
+              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4 [&>span]:translate-x-0 aria-checked:[&>span]:translate-x-4"
+            />
+          </motion.label>
+        )}
 
         {/* Language switcher — only visible to end users. Staff roles
             (admin, curator, finance, super_admin, distributor) are locked

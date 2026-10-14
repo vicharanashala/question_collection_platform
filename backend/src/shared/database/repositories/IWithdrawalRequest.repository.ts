@@ -65,6 +65,7 @@ export interface ListWithdrawalsOptions {
   toDate?: Date;
   filterStatus?: string;
   tester?: 'only' | 'exclude';
+  anveshanOnly?: boolean;
 }
 
 export interface WithdrawalListItem {
