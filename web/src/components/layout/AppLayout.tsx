@@ -15,7 +15,7 @@ export function AppLayout() {
   const location = useLocation()
   const anveshanScope = useAnveshanScope()
   const testerScope = useTesterScope()
-  const [glaze, setGlaze] = useState<{ id: number; on: boolean; tester: boolean } | null>(null)
+  const [glaze, setGlaze] = useState<{ id: number; tester: boolean } | null>(null)
   const isFirstRender = useRef(true)
 
   const previousAnveshan = useRef(anveshanScope)
@@ -28,8 +28,13 @@ export function AppLayout() {
     }
     const anveshanChanged = previousAnveshan.current !== anveshanScope
     previousAnveshan.current = anveshanScope
-    const on = (anveshanChanged ? anveshanScope : testerScope) !== 'all'
-    setGlaze((previous) => ({ id: (previous?.id ?? 0) + 1, on, tester: !anveshanChanged }))
+    const turnedOn = (anveshanChanged ? anveshanScope : testerScope) !== 'all'
+    // Going back to "all" plays no sweep.
+    if (!turnedOn) {
+      setGlaze(null)
+      return
+    }
+    setGlaze((previous) => ({ id: (previous?.id ?? 0) + 1, tester: !anveshanChanged }))
     const timer = window.setTimeout(() => setGlaze(null), 1100)
     return () => window.clearTimeout(timer)
   }, [anveshanScope, testerScope])
@@ -115,11 +120,9 @@ export function AppLayout() {
             <motion.div
               className="absolute inset-0"
               style={{
-                background: glaze.on
-                  ? glaze.tester
-                    ? 'radial-gradient(circle at 50% 0%, rgba(245,158,11,0.35), transparent 60%)'
-                    : 'radial-gradient(circle at 50% 0%, rgba(16,185,129,0.35), transparent 60%)'
-                  : 'radial-gradient(circle at 50% 0%, rgba(148,163,184,0.25), transparent 60%)',
+                background: glaze.tester
+                  ? 'radial-gradient(circle at 50% 0%, rgba(245,158,11,0.35), transparent 60%)'
+                  : 'radial-gradient(circle at 50% 0%, rgba(16,185,129,0.35), transparent 60%)',
               }}
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 1, 0] }}
@@ -128,11 +131,9 @@ export function AppLayout() {
             <motion.div
               className="absolute -inset-y-10 w-1/3 -skew-x-12"
               style={{
-                background: glaze.on
-                  ? glaze.tester
-                    ? 'linear-gradient(90deg, transparent, rgba(252,211,77,0.35), transparent)'
-                    : 'linear-gradient(90deg, transparent, rgba(110,231,183,0.35), transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)',
+                background: glaze.tester
+                  ? 'linear-gradient(90deg, transparent, rgba(252,211,77,0.35), transparent)'
+                  : 'linear-gradient(90deg, transparent, rgba(110,231,183,0.35), transparent)',
               }}
               initial={{ left: '-40%' }}
               animate={{ left: '120%' }}

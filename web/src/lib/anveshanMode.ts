@@ -1,6 +1,6 @@
 import { createModeStore } from './modeStore'
 
-const store = createModeStore('anveshan_scope')
+const store = createModeStore()
 
 /** Staff Anveshan mode: all users, only Anveshan users, or everyone except them. */
 export const getAnveshanScope = store.get

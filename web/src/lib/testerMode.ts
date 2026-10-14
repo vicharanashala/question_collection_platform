@@ -1,6 +1,6 @@
 import { createModeStore } from './modeStore'
 
-const store = createModeStore('tester_scope')
+const store = createModeStore()
 
 /** Staff Tester mode: all accounts, only tester accounts, or everyone except testers. */
 export const getTesterScope = store.get
