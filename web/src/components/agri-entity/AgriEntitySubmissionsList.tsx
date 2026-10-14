@@ -149,16 +149,15 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     return (
       <>
         <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
-          <SubmissionStatusFilter options={statusOptions} value={status} onChange={(s) => { setStatus(s); setPage(1) }} />
-          <div className="flex items-center gap-3">
-            {!loading && (
-              <Badge variant="outline" className="whitespace-nowrap">
-                {total} {typeLabel.toLowerCase()} {total === 1 ? 'submission' : 'submissions'}
-              </Badge>
-            )}
-            <div className="w-full sm:w-44">
-              <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
-            </div>
+          {!loading ? (
+            <Badge variant="outline" className="w-fit whitespace-nowrap">
+              {total} {typeLabel.toLowerCase()} {total === 1 ? 'submission' : 'submissions'}
+            </Badge>
+          ) : (
+            <span />
+          )}
+          <div className="w-full sm:w-44">
+            <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
           </div>
         </div>
 

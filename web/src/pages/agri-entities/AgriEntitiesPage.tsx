@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Sprout } from 'lucide-react'
 import { SubmissionTypeTabs } from '@/components/agri-entity/SubmissionTypeTabs'
@@ -16,6 +17,22 @@ export function AgriEntitiesPage() {
   const activeType = parseType(searchParams.get('tab'))
   const typeLabel = AGRI_ENTITY_TYPES.find((type) => type.value === activeType)?.label ?? ''
 
+  // Left and right arrow keys switch the tab, unless typing or a dialog is open.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, select, [contenteditable="true"], [role="tablist"]')) return
+      if (document.querySelector('[role="dialog"]')) return
+      const index = AGRI_ENTITY_TYPES.findIndex((type) => type.value === activeType)
+      const next = AGRI_ENTITY_TYPES[index + (event.key === 'ArrowRight' ? 1 : -1)]
+      if (next) setSearchParams({ tab: next.value }, { replace: true })
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeType, setSearchParams])
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
@@ -29,6 +46,13 @@ export function AgriEntitiesPage() {
           </p>
         </div>
       </div>
+
+      <p className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+        Tip: press
+        <kbd className="rounded border border-border-subtle bg-muted px-1.5 py-0.5 font-sans text-[11px] font-semibold text-foreground">←</kbd>
+        <kbd className="rounded border border-border-subtle bg-muted px-1.5 py-0.5 font-sans text-[11px] font-semibold text-foreground">→</kbd>
+        to switch between tabs
+      </p>
 
       <SubmissionTypeTabs
         value={activeType}
