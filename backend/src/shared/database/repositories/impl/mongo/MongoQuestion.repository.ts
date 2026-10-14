@@ -203,9 +203,11 @@ export class MongoQuestionRepository
     from: Date,
     to: Date,
     statuses: QuestionStatus[],
+    userIdFilter?: Record<string, unknown>,
   ): Promise<number> {
     const states = await this._model
       .distinct('state', {
+        ...(userIdFilter ? { userId: userIdFilter } : {}),
         status: { $in: statuses },
         submittedAt: { $gte: from, $lte: to },
         state: { $nin: [null, ''] },
@@ -217,12 +219,14 @@ export class MongoQuestionRepository
   async avgReviewTurnaroundMinutesSince(
     from: Date,
     statuses: QuestionStatus[],
+    userIdFilter?: Record<string, unknown>,
   ): Promise<number | null> {
     if (statuses.length === 0) return null;
     const row = await this._model
       .aggregate<{ avgMs: number | null }>([
         {
           $match: {
+            ...(userIdFilter ? { userId: userIdFilter } : {}),
             reviewedAt: { $ne: null, $gte: from },
             status: { $in: statuses },
           },
@@ -248,7 +252,7 @@ export class MongoQuestionRepository
   async getQuestionAnalytics(
   filters: QuestionAnalyticsFilters,
 ): Promise<QuestionAnalyticsResult> {
-  const { from, to, state, cropType } = filters;
+  const { from, to, state, cropType, userIdFilter } = filters;
 
   const match: Record<string, unknown> = {
     submittedAt: {
@@ -256,6 +260,10 @@ export class MongoQuestionRepository
       $lte: to,
     },
   };
+
+  if (userIdFilter) {
+    match.userId = userIdFilter;
+  }
 
   if (state) {
     match.state = state;
@@ -576,13 +584,14 @@ export class MongoQuestionRepository
   };
 }
 
-async getQuestionStats(): Promise<{
+async getQuestionStats(userIdFilter?: Record<string, unknown>): Promise<{
   total: number;
   approved: number;
   rejected: number;
   pending: number;
 }> {
   const [result] = await this._model.aggregate([
+    ...(userIdFilter ? [{ $match: { userId: userIdFilter } }] : []),
     {
       $group: {
         _id: null,
@@ -639,8 +648,10 @@ async getQuestionStats(): Promise<{
 async countSubmittedBetween(
   from: Date,
   to: Date,
+  userIdFilter?: Record<string, unknown>,
 ): Promise<number> {
   return this._model.countDocuments({
+    ...(userIdFilter ? { userId: userIdFilter } : {}),
     submittedAt: {
       $gte: from,
       $lte: to,
@@ -650,6 +661,7 @@ async countSubmittedBetween(
 
 async getDailyStatsSince(
   from: Date,
+  userIdFilter?: Record<string, unknown>,
 ): Promise<
   Array<{
     date: string;
@@ -662,6 +674,7 @@ async getDailyStatsSince(
   return this._model.aggregate([
     {
       $match: {
+        ...(userIdFilter ? { userId: userIdFilter } : {}),
         submittedAt: {
           $gte: from,
         },

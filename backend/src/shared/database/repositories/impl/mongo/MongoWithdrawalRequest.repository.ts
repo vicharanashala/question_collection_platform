@@ -251,13 +251,14 @@ export class MongoWithdrawalRequestRepository
 async getStatusSummary(
   from: Date,
   to: Date,
+  userIdFilter?: Record<string, unknown>,
 ): Promise<WithdrawalStatusSummary> {
   const countWhere = (status: WithdrawalStatus) => ({
     $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] },
   });
 
   const [result] = await this._model.aggregate([
-    { $match: { createdAt: { $gte: from, $lte: to } } },
+    { $match: { createdAt: { $gte: from, $lte: to }, ...(userIdFilter ? { userId: userIdFilter } : {}) } },
     {
       $group: {
         _id: null,

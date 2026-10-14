@@ -34,6 +34,8 @@ export interface QuestionAnalyticsFilters {
   to: Date;
   state?: string;
   cropType?: string;
+  /** Condition on the submitting user's id (staff dashboard scope). */
+  userIdFilter?: Record<string, unknown>;
 }
 
 export interface QuestionAnalyticsResult {
@@ -154,6 +156,7 @@ export interface IQuestionRepository extends MongoRepository<Question> {
   avgReviewTurnaroundMinutesSince(
     from: Date,
     statuses: QuestionStatus[],
+    userIdFilter?: Record<string, unknown>,
   ): Promise<number | null>;
 
 
@@ -161,7 +164,7 @@ export interface IQuestionRepository extends MongoRepository<Question> {
   filters: QuestionAnalyticsFilters,
 ): Promise<QuestionAnalyticsResult>;
 
-getQuestionStats(): Promise<{
+getQuestionStats(userIdFilter?: Record<string, unknown>): Promise<{
   total: number;
   approved: number;
   rejected: number;
@@ -171,6 +174,7 @@ getQuestionStats(): Promise<{
 countSubmittedBetween(
   from: Date,
   to: Date,
+  userIdFilter?: Record<string, unknown>,
 ): Promise<number>;
 
 /** Number of distinct question `state` values with any of the given statuses, submitted within [from, to]. */
@@ -178,9 +182,10 @@ countDistinctStates(
   from: Date,
   to: Date,
   statuses: QuestionStatus[],
+  userIdFilter?: Record<string, unknown>,
 ): Promise<number>;
 
-getDailyStatsSince(from: Date): Promise<Array<{
+getDailyStatsSince(from: Date, userIdFilter?: Record<string, unknown>): Promise<Array<{
   date: string;
   users: number;
   questions: number;

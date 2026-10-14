@@ -1,4 +1,5 @@
 import { isTesterCondition } from "../../shared/utils/tester.util";
+import { resolveUserIdScope } from "../../shared/utils/anveshan-mode.util";
 import {
   Injectable,
   NotFoundException,
@@ -1423,7 +1424,27 @@ async listUsers(dto: ListUsersDto) {
   //   }
   // }
 
-  async getStats(_query: AnalyticsQueryDto) {
+  // Turns the staff Anveshan and Tester scope into a condition for each data source behind the dashboard.
+  private async resolveDashboardScope(query: AnalyticsQueryDto) {
+    const userFilter: Record<string, unknown> = { ...isTesterCondition(query.tester) };
+    if (query.anveshanScope) {
+      userFilter.isAnveshanUser = query.anveshanScope === "only" ? true : { $ne: true };
+    }
+    const userIdFilter = await resolveUserIdScope(this.userRepo, query);
+    let walletIdFilter: Record<string, unknown> | undefined;
+    if (userIdFilter) {
+      const wallets = await this.walletRepo.findAll({ userId: userIdFilter });
+      walletIdFilter = { $in: wallets.map((wallet) => wallet.id) };
+    }
+    return {
+      userFilter: Object.keys(userFilter).length > 0 ? userFilter : undefined,
+      userIdFilter,
+      walletIdFilter,
+    };
+  }
+
+  async getStats(query: AnalyticsQueryDto) {
+    const scope = await this.resolveDashboardScope(query);
     const now = new Date();
 
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -1441,21 +1462,21 @@ async listUsers(dto: ListUsersDto) {
       signupRaw,
       recentLogs,
     ] = await Promise.all([
-      this.userRepo.getVerificationStats(),
+      this.userRepo.getVerificationStats(scope.userFilter),
 
-      this.questionRepo.getQuestionStats(),
+      this.questionRepo.getQuestionStats(scope.userIdFilter),
 
-      this.userRepo.countCreatedBetween(sevenDaysAgo, now),
+      this.userRepo.countCreatedBetween(sevenDaysAgo, now, scope.userFilter),
 
-      this.questionRepo.countSubmittedBetween(sevenDaysAgo, now),
+      this.questionRepo.countSubmittedBetween(sevenDaysAgo, now, scope.userIdFilter),
 
-      this.userRepo.getRoleDistribution(),
+      this.userRepo.getRoleDistribution(scope.userFilter),
 
-      this.userRepo.getCategoryDistribution(),
+      this.userRepo.getCategoryDistribution(scope.userFilter),
 
-      this.questionRepo.getDailyStatsSince(ninetyDaysAgo),
+      this.questionRepo.getDailyStatsSince(ninetyDaysAgo, scope.userIdFilter),
 
-      this.userRepo.getDailySignupsSince(ninetyDaysAgo),
+      this.userRepo.getDailySignupsSince(ninetyDaysAgo, scope.userFilter),
 
       this.auditRepo.getRecentWithActorName(20),
     ]);
@@ -2823,6 +2844,7 @@ async listUsers(dto: ListUsersDto) {
    * GET /analytics/dashboard  →  getAnalyticsDashboard
    */
   async getAnalyticsDashboard(query: AnalyticsQueryDto) {
+    const scope = await this.resolveDashboardScope(query);
     const [userAnalytics, questionAnalytics, rewardAnalytics] =
       await Promise.all([
         this.getUserAnalytics(query),
@@ -2841,12 +2863,14 @@ async listUsers(dto: ListUsersDto) {
         where: {
           status: QuestionStatus.APPROVED,
           submittedAt: Between(thisMonthStart, now),
+          ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
         },
       }),
       this.questionRepo.count({
         where: {
           status: QuestionStatus.APPROVED,
           submittedAt: Between(lastMonthStart, lastMonthEnd),
+          ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
         },
       }),
     ]);
@@ -2873,12 +2897,12 @@ async listUsers(dto: ListUsersDto) {
       this.questionRepo.countDistinctStates(from, to, [
         QuestionStatus.APPROVED,
         QuestionStatus.MOVED_TO_FINAL,
-      ]),
+      ], scope.userIdFilter),
       this.questionRepo.avgReviewTurnaroundMinutesSince(from, [
         QuestionStatus.APPROVED,
         QuestionStatus.MOVED_TO_FINAL,
         QuestionStatus.REJECTED,
-      ]),
+      ], scope.userIdFilter),
     ]);
 
     // Indian states count reference (29 states + 8 UTs)
@@ -2911,6 +2935,7 @@ async listUsers(dto: ListUsersDto) {
    */
   async getUserAnalytics(query: AnalyticsQueryDto) {
     const { state } = query;
+    const scope = await this.resolveDashboardScope(query);
     const { from, to } = this.resolveAnalyticsRange(query);
     const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -2924,17 +2949,18 @@ async listUsers(dto: ListUsersDto) {
 
     const [totalUsers, activity, priorSignups, categoryBreakdown, roleDistribution] =
       await Promise.all([
-        this.userRepo.count(),
+        this.userRepo.countByFilter(scope.userFilter ?? {}),
         this.userRepo.getActivityAnalytics({
           from,
           to,
           mauFrom: new Date(Date.now() - 30 * DAY_MS),
           todayStart,
           state,
+          userFilter: scope.userFilter,
         }),
-        this.userRepo.countCreatedBetween(priorFrom, priorTo),
-        this.userRepo.getCategoryDistribution(),
-        this.userRepo.getRoleDistribution(),
+        this.userRepo.countCreatedBetween(priorFrom, priorTo, scope.userFilter),
+        this.userRepo.getCategoryDistribution(scope.userFilter),
+        this.userRepo.getRoleDistribution(scope.userFilter),
       ]);
 
     const signupMap = new Map(activity.signupTrend.map((r) => [r.date, r.signups]));
@@ -3109,6 +3135,7 @@ async listUsers(dto: ListUsersDto) {
 
   async getQuestionAnalytics(query: AnalyticsQueryDto) {
     const { state, cropType } = query;
+    const scope = await this.resolveDashboardScope(query);
     const { from, to } = this.resolveAnalyticsRange(query);
 
     // Prior window of equal length, for the submission growth delta
@@ -3122,8 +3149,9 @@ async listUsers(dto: ListUsersDto) {
         to,
         state,
         cropType,
+        userIdFilter: scope.userIdFilter,
       }),
-      this.questionRepo.countSubmittedBetween(priorFrom, priorTo),
+      this.questionRepo.countSubmittedBetween(priorFrom, priorTo, scope.userIdFilter),
     ]);
 
     const { total, approved } = analytics.summary;
@@ -3152,11 +3180,12 @@ async listUsers(dto: ListUsersDto) {
    */
   async getRewardAnalytics(query: AnalyticsQueryDto) {
     const { state } = query;
+    const scope = await this.resolveDashboardScope(query);
     const { from, to } = this.resolveAnalyticsRange(query);
 
     const [rewards, withdrawals] = await Promise.all([
-      this.transactionRepo.getRewardAnalytics(from, to, state),
-      this.withdrawalRepo.getStatusSummary(from, to),
+      this.transactionRepo.getRewardAnalytics(from, to, state, scope.walletIdFilter),
+      this.withdrawalRepo.getStatusSummary(from, to, scope.userIdFilter),
     ]);
 
     return {

@@ -193,6 +193,11 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   '/distributor/questions',
   '/distributor/distributions',
   '/feedbacks/anveshan',
+  '/admin/stats',
+  '/analytics/dashboard',
+  '/analytics/users',
+  '/analytics/questions',
+  '/analytics/rewards',
 ]);
 
 // Adds the staff mode scopes to supported list requests: anveshanScope and tester, when they are not "all".

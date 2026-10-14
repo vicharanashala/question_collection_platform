@@ -1133,9 +1133,10 @@ export class MongoUserRepository
   return result[0]?.userRank ?? null;
 }
 
-  async getVerificationStats() {
+  async getVerificationStats(userFilter?: Record<string, unknown>) {
     const [result] = await this._model
       .aggregate([
+        ...(userFilter ? [{ $match: userFilter }] : []),
         {
           $group: {
             _id: null,
@@ -1209,8 +1210,9 @@ export class MongoUserRepository
     return this._model.countDocuments(filter).exec();
   }
 
-  async countCreatedBetween(from: Date, to: Date): Promise<number> {
+  async countCreatedBetween(from: Date, to: Date, userFilter?: Record<string, unknown>): Promise<number> {
     return this._model.countDocuments({
+      ...userFilter,
       createdAt: {
         $gte: from,
         $lte: to,
@@ -1218,11 +1220,12 @@ export class MongoUserRepository
     });
   }
 
-  async getRoleDistribution(): Promise<
+  async getRoleDistribution(userFilter?: Record<string, unknown>): Promise<
     Array<{ role: UserRole; count: number }>
   > {
     const rows = await this._model
       .aggregate([
+        ...(userFilter ? [{ $match: userFilter }] : []),
         {
           $group: {
             _id: "$role",
@@ -1247,13 +1250,14 @@ export class MongoUserRepository
       }));
   }
 
-  async getCategoryDistribution(): Promise<
+  async getCategoryDistribution(userFilter?: Record<string, unknown>): Promise<
     Array<{ category: UserCategory; count: number }>
   > {
     const rows = await this._model
       .aggregate([
         {
           $match: {
+            ...userFilter,
             category: {
               $ne: null,
             },
@@ -1281,7 +1285,7 @@ export class MongoUserRepository
     }));
   }
 
-  async getDailySignupsSince(from: Date): Promise<
+  async getDailySignupsSince(from: Date, userFilter?: Record<string, unknown>): Promise<
     Array<{
       date: string;
       signups: number;
@@ -1291,6 +1295,7 @@ export class MongoUserRepository
       .aggregate([
         {
           $match: {
+            ...userFilter,
             createdAt: {
               $gte: from,
             },
@@ -1329,14 +1334,16 @@ export class MongoUserRepository
     mauFrom: Date;
     todayStart: Date;
     state?: string;
+    userFilter?: Record<string, unknown>;
   }): Promise<UserActivityAnalytics> {
-    const { from, to, mauFrom, todayStart, state } = opts;
+    const { from, to, mauFrom, todayStart, state, userFilter } = opts;
     const createdInRange = { createdAt: { $gte: from, $lte: to } };
     const loggedInRange = { lastLoginAt: { $gte: from, $lte: to } };
     const count = [{ $count: "n" }];
 
     const [result] = await this._model
       .aggregate([
+        ...(userFilter ? [{ $match: userFilter }] : []),
         ...(state ? [{ $match: { state } }] : []),
         {
           $facet: {

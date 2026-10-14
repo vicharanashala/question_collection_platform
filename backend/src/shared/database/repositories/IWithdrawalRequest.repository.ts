@@ -112,6 +112,7 @@ getRewardSummary(
 getStatusSummary(
   from: Date,
   to: Date,
+  userIdFilter?: Record<string, unknown>,
 ): Promise<WithdrawalStatusSummary>;
 
 listWithdrawals(

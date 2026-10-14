@@ -35,7 +35,8 @@ export interface RewardAnalyticsResult extends RewardTransactionSummary {
 }
 
 export interface ITransactionRepository extends BaseRepository<Transaction> {
-  getRewardAnalytics(from: Date, to: Date, state?: string): Promise<RewardAnalyticsResult>;
+  /** `walletIdFilter` is a condition on the transaction's walletId (staff dashboard scope). */
+  getRewardAnalytics(from: Date, to: Date, state?: string, walletIdFilter?: Record<string, unknown>): Promise<RewardAnalyticsResult>;
   findByWalletId(walletId: string, limit?: number): Promise<Transaction[]>;
   findByReferenceId(referenceId: string): Promise<Transaction | null>;
   /** Credit/debit totals across every transaction of one wallet. */

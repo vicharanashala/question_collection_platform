@@ -93,10 +93,12 @@ export class MongoTransactionRepository
     from: Date,
     to: Date,
     state?: string,
+    walletIdFilter?: Record<string, unknown>,
   ): Promise<RewardAnalyticsResult> {
     const completedRewards = {
       source: TransactionSource.REWARD,
       status: TransactionStatus.COMPLETED,
+      ...(walletIdFilter ? { walletId: walletIdFilter } : {}),
     };
 
     // walletId / wallet.userId are stored as strings, so compare against stringified _id.

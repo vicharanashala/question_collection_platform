@@ -102,7 +102,8 @@ export interface IUserRepository extends BaseRepository<User> {
   category?: UserCategory;
 }): Promise<number | null>;
 
-getVerificationStats(): Promise<{
+/** Methods below take an optional `userFilter`: a Mongo match on the user document (staff dashboard scope). */
+getVerificationStats(userFilter?: Record<string, unknown>): Promise<{
   total: number;
   verified: number;
   pending: number;
@@ -110,21 +111,21 @@ getVerificationStats(): Promise<{
   banned: number;
 }>;
 
-countCreatedBetween(from: Date, to: Date): Promise<number>;
+countCreatedBetween(from: Date, to: Date, userFilter?: Record<string, unknown>): Promise<number>;
 
 countByFilter(filter: Record<string, unknown>): Promise<number>;
 
-getRoleDistribution(): Promise<Array<{
+getRoleDistribution(userFilter?: Record<string, unknown>): Promise<Array<{
   role: UserRole;
   count: number;
 }>>;
 
-getCategoryDistribution(): Promise<Array<{
+getCategoryDistribution(userFilter?: Record<string, unknown>): Promise<Array<{
   category: UserCategory;
   count: number;
 }>>;
 
-getDailySignupsSince(from: Date): Promise<Array<{
+getDailySignupsSince(from: Date, userFilter?: Record<string, unknown>): Promise<Array<{
   date: string;
   signups: number;
 }>>;
@@ -135,6 +136,7 @@ getActivityAnalytics(opts: {
   mauFrom: Date;
   todayStart: Date;
   state?: string;
+  userFilter?: Record<string, unknown>;
 }): Promise<UserActivityAnalytics>;
 
 /** Flat rows for CSV/Excel export, filtered by createdAt. */
