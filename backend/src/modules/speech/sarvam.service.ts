@@ -33,6 +33,7 @@ export class SarvamService {
   private readonly apiKey: string;
   private readonly sttUrl: string;
   private readonly translateUrl: string;
+  private readonly detectLangUrl: string;
 
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>('sarvam.apiKey') ?? '';
@@ -42,6 +43,9 @@ export class SarvamService {
     this.translateUrl =
       this.configService.get<string>('sarvam.translateUrl') ??
       'https://api.sarvam.ai/translate';
+    this.detectLangUrl = 
+      this.configService.get<string>('sarvam.detectLangUrl') ??
+      'https://api.sarvam.ai/text-lid'
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -236,7 +240,7 @@ export class SarvamService {
   async translateText(
     text: string,
     targetLanguage: string,
-    sourceLanguage?: string,
+    sourceLanguage: string,
   ): Promise<TranslationResult> {
     if (!this.apiKey) {
       throw new HttpException(
@@ -253,7 +257,11 @@ export class SarvamService {
     }
 
     // Skip if source and target are the same — nothing to translate.
-    const resolvedSource = sourceLanguage ?? 'en-IN';
+      const resolvedSource =
+    !sourceLanguage || sourceLanguage === 'auto'
+      ? await this.detectLanguage(text)
+      : sourceLanguage;
+      
     if (resolvedSource === targetLanguage) {
       this.logger.debug(
         `[translateText] source (${resolvedSource}) and target (${targetLanguage}) are identical — returning original text`,
@@ -578,4 +586,28 @@ export class SarvamService {
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
+
+  private async detectLanguage(text: string): Promise<string> {
+  try {
+    const res = await axios.post(
+      this.detectLangUrl,
+      { input: text },
+      {
+        headers: {
+          'api-subscription-key': this.apiKey,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10_000,
+      },
+    );
+    // e.g. "hi-IN", "ta-IN", "en-IN"
+    return res.data?.language_code ?? 'en-IN';
+  } catch (err) {
+    const axiosErr = err as AxiosError;
+    this.logger.warn(
+      `Language detection failed: ${axiosErr.message}, ${JSON.stringify(axiosErr.response?.data)}`,
+    );
+    return 'en-IN';
+  }
+}
 }

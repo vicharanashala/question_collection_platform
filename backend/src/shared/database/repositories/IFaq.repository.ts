@@ -1,5 +1,5 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { Faq } from '../entities';
+import { Faq } from '../mongodb/schemas/faq.schema';
 import { FaqCategory } from '../../classes/enums';
 
 export interface IFaqRepository extends BaseRepository<Faq> {

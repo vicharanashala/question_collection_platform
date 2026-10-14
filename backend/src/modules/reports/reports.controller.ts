@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Req,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ReportsService } from './reports.service';
@@ -18,16 +19,77 @@ import { CreateReportDto, ReplyReportDto, ListReportsDto } from './dto';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
-import { UserRole, ReportStatus, ReportPriority } from '../../shared/classes/enums';
+import { UserRole, ReportStatus, ReportPriority, ActorType, AuditAction, OutcomeStatus } from '../../shared/classes/enums';
+import { AuditService } from '../audit-logs/audit.service';
+import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
+import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string; role: string };
+  user: { id: string; role: string; name: string };
 }
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(private readonly reportsService: ReportsService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(ReportsController.name)) {}
+
+    private toActorType(role: UserRole): ActorType {
+    switch (role) {
+      case UserRole.SUPER_ADMIN: return ActorType.SUPER_ADMIN;
+      case UserRole.ADMIN:       return ActorType.ADMIN;
+      case UserRole.FINANCE:     return ActorType.FINANCE;
+      default:                   return ActorType.CURATOR;
+    }
+  }
+  
+  private async safeAudit(payload: AuditLogDto) {
+      try {
+        await this.auditService.createAuditLog({
+          ...payload,
+          changes: payload.changes ?? undefined,
+          context: payload.context ?? undefined,
+          outcome: payload.outcome ?? undefined,
+        });
+      } catch (e) {
+        this.logger.error(
+          "Failed to write audit log",
+          e instanceof Error ? e.stack : String(e),
+        );
+      }
+    }
+
+  private reportSnapshot(report: unknown): Record<string, unknown> {
+    if (!report || typeof report !== 'object') return {};
+    const value = report as Record<string, unknown>;
+    return {
+      id: value.id ?? value._id,
+      title: value.title,
+      description: value.description,
+      category: value.category,
+      status: value.status,
+      priority: value.priority,
+      relatedEntityId: value.relatedEntityId,
+      relatedEntityType: value.relatedEntityType,
+    };
+  }
+
+  private auditBase(
+    actionType: AuditAction,
+    req: AuthenticatedRequest,
+    meta: RequestMeta,
+    context: Record<string, unknown>,
+  ): AuditLogDto {
+    return {
+      actionType,
+      actor: {
+        id: req.user.id,
+        actorType: this.toActorType(req.user.role as UserRole),
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context,
+    };
+  }
 
   // ─── User routes ──────────────────────────────────────────────────────────
 
@@ -101,14 +163,31 @@ export class ReportsController {
     @Param('id') id: string,
     @Body() body: { status: ReportStatus },
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    const report = await this.reportsService.updateStatus(
-      id,
-      body.status,
-      req.user.id,
-      req.user.role as UserRole,
-    );
-    return { id: report.id, status: report.status, message: 'Status updated' };
+    const base = this.auditBase(AuditAction.UPDATE_REPORT, req, meta, {
+      reportId: id,
+      operation: 'status_changed',
+      status: body.status,
+    });
+    let before: Record<string, unknown> = {};
+    try {
+      before = this.reportSnapshot(await this.reportsService.getReport(id));
+      const report = await this.reportsService.updateStatus(id, body.status);
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: this.reportSnapshot(await this.reportsService.getReport(id)) },
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+      return { id: report.id, status: report.status, message: 'Status updated' };
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: before },
+        outcome: { status: OutcomeStatus.FAILURE, errorMessage: err instanceof Error ? err.message : String(err) },
+      });
+      throw err;
+    }
   }
 
   /** Update report priority */
@@ -119,14 +198,31 @@ export class ReportsController {
     @Param('id') id: string,
     @Body() body: { priority: ReportPriority },
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    const report = await this.reportsService.updatePriority(
-      id,
-      body.priority,
-      req.user.id,
-      req.user.role as UserRole,
-    );
-    return { id: report.id, priority: report.priority, message: 'Priority updated' };
+    const base = this.auditBase(AuditAction.UPDATE_REPORT, req, meta, {
+      reportId: id,
+      operation: 'priority_changed',
+      priority: body.priority,
+    });
+    let before: Record<string, unknown> = {};
+    try {
+      before = this.reportSnapshot(await this.reportsService.getReport(id));
+      const report = await this.reportsService.updatePriority(id, body.priority);
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: this.reportSnapshot(await this.reportsService.getReport(id)) },
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+      return { id: report.id, priority: report.priority, message: 'Priority updated' };
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: before },
+        outcome: { status: OutcomeStatus.FAILURE, errorMessage: err instanceof Error ? err.message : String(err) },
+      });
+      throw err;
+    }
   }
 
   /** Add a reply to a report */
@@ -137,13 +233,30 @@ export class ReportsController {
     @Param('id') id: string,
     @Body() dto: ReplyReportDto,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    const reply = await this.reportsService.addReply(
-      id,
-      req.user.id,
-      req.user.role as UserRole,
-      dto,
-    );
-    return { id: reply.id, message: 'Reply sent' };
+    const base = this.auditBase(AuditAction.REPORT_REPLIED, req, meta, {
+      reportId: id,
+      message: dto.message,
+    });
+    let before: Record<string, unknown> = {};
+    try {
+      before = this.reportSnapshot(await this.reportsService.getReport(id));
+      const reply = await this.reportsService.addReply(id, req.user.id, dto);
+      await this.safeAudit({
+        ...base,
+        context: { ...base.context, replyId: reply.id },
+        changes: { before, after: this.reportSnapshot(await this.reportsService.getReport(id)) },
+        outcome: { status: OutcomeStatus.SUCCESS },
+      });
+      return { id: reply.id, message: 'Reply sent' };
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before, after: before },
+        outcome: { status: OutcomeStatus.FAILURE, errorMessage: err instanceof Error ? err.message : String(err) },
+      });
+      throw err;
+    }
   }
 }

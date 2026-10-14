@@ -177,7 +177,7 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
                     key={phase.id}
                     phase={phase}
                     status="current"
-                    badgeLabel={t("anveshanComplete.pending", "Pending")}
+                    badgeLabel={t("anveshanComplete.nextPhase", "Next")}
                     description={t("anveshanComplete.documentsPending", "Complete this on the Anveshan platform.")}
                   />
                 ) : (

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { IFaqRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
+import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 
 @Injectable()
 export class FaqsService {
@@ -57,8 +58,9 @@ export class FaqsService {
     return faq;
   }
 
-  async create(dto: CreateFaqDto): Promise<unknown> {
-    return this.faqRepo.create(dto as never);
+  async create(dto: CreateFaqDto): Promise<Faq> {
+    const data = await this.faqRepo.create(dto as never);
+    return data;
   }
 
   async update(id: string, dto: UpdateFaqDto): Promise<unknown> {
