@@ -114,11 +114,12 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
       key: 'status',
       header: 'Status',
       width: '130px',
-      render: (row) => (
-        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(row.status))}>
-          {agriEntityStatusLabel(t, row.status)}
-        </span>
-      ),
+      render: (row) =>
+        row.status === 'pending' ? null : (
+          <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', agriEntityStatusBadge(row.status))}>
+            {agriEntityStatusLabel(t, row.status)}
+          </span>
+        ),
     },
     {
       key: 'submitter',
