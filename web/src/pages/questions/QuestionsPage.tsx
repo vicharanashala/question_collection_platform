@@ -311,6 +311,17 @@ export function QuestionsPage() {
     />
   );
 
+  const hasActiveFilters = !!(search || statusFilter || answerFilter || userTypeFilter);
+
+  // Resets every filter and the search box.
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setAnswerFilter("");
+    setUserTypeFilter("");
+    setPage(1);
+  };
+
   // ─── Status filter chips ───────────────────────────────────────────────────
   const statusOptions: {
     value: "held" | "approved" | "rejected" | "pending" | "";
@@ -362,62 +373,27 @@ export function QuestionsPage() {
 
       {/* ─── Filter bar ─── */}
       <Card>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4">
-          {/* Status filter chips — pills on desktop, dropdown on mobile */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <ListFilter className="h-4 w-4 text-muted-foreground shrink-0" />
-            <div className="hidden sm:flex items-center gap-1.5 flex-wrap">
-              {statusOptions.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => {
-                    setStatusFilter(value);
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150",
-                    statusFilter === value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground",
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="sm:hidden flex-1">
-              <Select
-                value={statusFilter}
-                onValueChange={(v) => {
-                  setStatusFilter(v as typeof statusFilter);
+        <div className="space-y-4 p-4">
+          {/* Search and dropdown filters */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_200px_220px]">
+            <div className="relative sm:col-span-2 lg:col-span-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Search questions"
+                placeholder="Search crop, keyword, location..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
                   setPage(1);
                 }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {statusOptions.find((o) => o.value === statusFilter)
-                      ?.label ?? "All"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="pl-9"
+              />
             </div>
-          </div>
-
-          {/* User type filter */}
-          <div className="sm:ml-auto sm:w-44">
             <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
-          </div>
-
-          {/* Anveshan answer filter */}
-          <div className="sm:w-52">
-            <Select value={answerFilter || "all"} onValueChange={(v) => setAnswerFilter(v === "all" ? "" : (v as AnswerFilter))}>
+            <Select
+              value={answerFilter || "all"}
+              onValueChange={(v) => setAnswerFilter(v === "all" ? "" : (v as AnswerFilter))}
+            >
               <SelectTrigger className="w-full" aria-label="Filter by answer">
                 <SelectValue />
               </SelectTrigger>
@@ -431,18 +407,62 @@ export function QuestionsPage() {
             </Select>
           </div>
 
-          {/* Search */}
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search crop, keyword, location..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="pl-9"
-            />
+          {/* Status filter — chips on desktop, dropdown on mobile */}
+          <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle pt-3">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <ListFilter className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Status
+            </span>
+            <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
+              {statusOptions.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => {
+                    setStatusFilter(value);
+                    setPage(1);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150",
+                    statusFilter === value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border-subtle bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="min-w-0 flex-1 sm:hidden">
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v as typeof statusFilter);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-full" aria-label="Filter by status">
+                  <SelectValue>
+                    {statusOptions.find((o) => o.value === statusFilter)?.label ?? "All"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="ml-auto text-xs font-medium text-primary hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         </div>
       </Card>

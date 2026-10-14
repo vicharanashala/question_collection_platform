@@ -385,7 +385,7 @@ export function DataTable<T>({
         ) : (
           <div className="overflow-x-auto">
             {/* Header row */}
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/60 border-b border-border-subtle">
+            <div className="flex w-max min-w-full items-center gap-2 px-4 py-2.5 bg-muted/60 border-b border-border-subtle">
               {columns.map((col) => (
                 <div
                   key={col.key}
@@ -409,7 +409,7 @@ export function DataTable<T>({
               <div
                 key={String((row as Record<string, unknown>).id ?? idx)}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-accent/40 transition-colors',
+                  'flex w-max min-w-full items-center gap-2 px-4 py-3 border-b border-border-subtle last:border-0 hover:bg-accent/40 transition-colors',
                   onRowClick && 'cursor-pointer',
                 )}
                 onClick={() => onRowClick?.(row)}
