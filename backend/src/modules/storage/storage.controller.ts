@@ -8,6 +8,9 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Get,
+  Res,
+  Headers,
   BadRequestException,
   PayloadTooLargeException,
 } from "@nestjs/common";
@@ -15,7 +18,8 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "../../shared/middleware/guards/jwt-auth.guard";
 import { StorageService } from "./storage.service";
 import { AdminService } from "../admin/admin.service";
-import { Request } from "express";
+import { Request, Response } from "express";
+import { Public } from "../../shared/middleware/decorators/public.decorator";
 import { AgriEntityType } from "../../shared/classes/enums";
 import {
   getAgriEntityImageCategory,
@@ -108,6 +112,43 @@ export class StorageController {
     );
 
     return { url, sizeBytes: image.size };
+  }
+
+  /**
+   * Streams a private object for a link minted by StorageService.getSignedUrl().
+   * Public because the HMAC signature in the query string is the authorisation; supports
+   * Range requests so audio can seek.
+   */
+  @Public()
+  @Get("media")
+  async getMedia(
+    @Query("o") objectName: string,
+    @Query("e") expires: string,
+    @Query("s") signature: string,
+    @Headers("range") range: string | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    const media = await this.storageService.openSignedObject(
+      objectName,
+      Number(expires),
+      signature,
+      range,
+    );
+
+    res.setHeader("Content-Type", media.contentType);
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cache-Control", "private, max-age=86400");
+    if (media.range) {
+      const { start, end } = media.range;
+      res.status(HttpStatus.PARTIAL_CONTENT);
+      res.setHeader("Content-Range", `bytes ${start}-${end}/${media.size}`);
+      res.setHeader("Content-Length", end - start + 1);
+    } else {
+      res.setHeader("Content-Length", media.size);
+    }
+
+    media.stream.on("error", () => res.destroy());
+    media.stream.pipe(res);
   }
 
   // Ensures an uploaded image is present, of an allowed type and within the configured size limit.

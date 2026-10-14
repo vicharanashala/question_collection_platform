@@ -22,22 +22,36 @@ export function useGeolocation() {
         reject(new Error(msg))
         return
       }
+      const onSuccess = (pos: GeolocationPosition) => {
+        setLoading(false)
+        resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+      }
+      const onFailure = (err: GeolocationPositionError) => {
+        setLoading(false)
+        const msg =
+          err.code === err.PERMISSION_DENIED
+            ? 'Location permission was denied.'
+            : 'Could not determine your location. Please try again.'
+        if (err.code === err.PERMISSION_DENIED) setPermissionDenied(true)
+        setError(msg)
+        reject(new Error(msg))
+      }
+      // Try high accuracy first, then fall back to network based location and a recent cached fix,
+      // since GPS often times out indoors or on devices without a GPS chip.
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLoading(false)
-          resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
-        },
+        onSuccess,
         (err) => {
-          setLoading(false)
           if (err.code === err.PERMISSION_DENIED) {
-            setPermissionDenied(true)
-            setError('Location permission was denied.')
-          } else {
-            setError('Could not determine your location. Please try again.')
+            onFailure(err)
+            return
           }
-          reject(new Error('location_failed'))
+          navigator.geolocation.getCurrentPosition(onSuccess, onFailure, {
+            enableHighAccuracy: false,
+            timeout: 15000,
+            maximumAge: 5 * 60 * 1000,
+          })
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60 * 1000 },
       )
     })
   }, [])

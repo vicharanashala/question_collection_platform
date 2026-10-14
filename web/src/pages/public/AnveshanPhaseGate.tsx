@@ -12,6 +12,8 @@ import { JOURNEY, JourneyStep, type PhaseStatus } from "@/components/AnveshanJou
 interface AnveshanPhaseGateState {
   currentPhase: string;
   requiredPhase: string;
+  /** Question collection progress (0-100); the module phase counts as done only at 100. */
+  questionProgressPercent?: number;
   /** Number the user signed in with, so "Check again" can prefill it. */
   mobileNumber?: string;
 }
@@ -52,9 +54,21 @@ export function AnveshanPhaseGatePage() {
   const currentIndex = phaseIndex(info?.currentPhase);
   const requiredIndex = Math.max(phaseIndex(info?.requiredPhase ?? DEFAULT_REQUIRED_PHASE), 0);
   const requiredLabel = JOURNEY[requiredIndex].label;
-  const currentLabel = currentIndex >= 0 ? JOURNEY[currentIndex].label : null;
-  const progressPercent = currentIndex >= 0 ? Math.round(((currentIndex + 1) / JOURNEY.length) * 100) : 0;
-  const statuses = JOURNEY.map((_, i) => statusFor(i, currentIndex, requiredIndex));
+  const questionPercent = Math.min(100, Math.max(0, info?.questionProgressPercent ?? 0));
+  // Anveshan may already be past the module phase while the question collection is still unfinished.
+  const isPastModule = currentIndex > requiredIndex;
+  const moduleIncomplete = isPastModule && questionPercent < 100;
+  const displayIndex = moduleIncomplete ? requiredIndex : currentIndex;
+  const nextIndex = isPastModule ? (moduleIncomplete ? requiredIndex + 1 : currentIndex) : -1;
+  const currentLabel = displayIndex >= 0 ? JOURNEY[displayIndex].label : null;
+  const progressPercent = displayIndex >= 0 ? Math.round(((displayIndex + 1) / JOURNEY.length) * 100) : 0;
+  const statuses = JOURNEY.map((_, i) => statusFor(i, displayIndex, requiredIndex));
+
+  // Badge override: question collection % on the unfinished module, "Next" on the following phase.
+  const badgeFor = (index: number): string | undefined => {
+    if (moduleIncomplete && index === requiredIndex) return `${questionPercent}%`;
+    return index === nextIndex ? "Next" : undefined;
+  };
 
   // Re-checking needs a fresh sign-in (the phase is only verified with an OTP), so any session is
   // cleared and the user returns to the Anveshan login with their number already filled in.
@@ -136,7 +150,7 @@ export function AnveshanPhaseGatePage() {
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={progressPercent}
-                  aria-valuetext={`Step ${currentIndex + 1} of ${JOURNEY.length}`}
+                  aria-valuetext={`Step ${displayIndex + 1} of ${JOURNEY.length}`}
                 >
                   {statuses.map((status, i) => (
                     <motion.span
@@ -154,7 +168,11 @@ export function AnveshanPhaseGatePage() {
             <h1 className="mt-6 text-xl font-bold text-foreground">You're almost there</h1>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               AnnaDatha unlocks at <strong className="text-foreground">{requiredLabel}</strong>.{" "}
-              {currentLabel ? (
+              {moduleIncomplete ? (
+                <>
+                  Your <strong className="text-foreground">{requiredLabel}</strong> is {questionPercent}% complete on AnnaDatha.
+                </>
+              ) : currentLabel ? (
                 <>
                   Finish <strong className="text-foreground">{currentLabel}</strong> on Anveshan, then check again.
                 </>
@@ -170,7 +188,7 @@ export function AnveshanPhaseGatePage() {
           <section aria-label="Your Anveshan journey" className="px-5 pb-6 sm:px-6 lg:bg-surface-variant/20 lg:py-8">
             <ol className="space-y-2">
               {JOURNEY.map((phase, i) => (
-                <JourneyStep key={phase.id} phase={phase} status={statuses[i]} />
+                <JourneyStep key={phase.id} phase={phase} status={statuses[i]} badgeLabel={badgeFor(i)} />
               ))}
             </ol>
           </section>

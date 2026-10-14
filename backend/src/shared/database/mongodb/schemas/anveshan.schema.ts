@@ -13,6 +13,9 @@ export class Candidate {
   @Prop({ required: true, index: true })
   user_id: string;
 
+  @Prop({ type: Boolean, default: false })
+  is_deleted: boolean;
+
   @Prop({ type: String, default: null })
   current_phase: string | null;
 

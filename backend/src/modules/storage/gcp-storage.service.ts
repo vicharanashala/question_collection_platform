@@ -1,9 +1,19 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from "@nestjs/common";
+import { createHmac, timingSafeEqual } from "crypto";
 import { ConfigService } from "@nestjs/config";
 import { Storage, Bucket } from "@google-cloud/storage";
 import { v4 as uuidv4 } from "uuid";
-import { StorageService } from "./storage.service";
+import { StorageService, StoredObjectStream } from "./storage.service";
 import { isDevelopment } from "../../config/environment";
+
+/** Route that serves private media; keep in sync with StorageController and the global API prefix. */
+const MEDIA_PATH = "/api/v1/storage/media";
 
 /** Cached signed URL, re-used until shortly before the signature expires. */
 interface SignedUrlCacheEntry {
@@ -34,6 +44,8 @@ export class GcpStorageService implements StorageService, OnModuleInit {
   private storageClass!: string;
   private signedUrlTtlSeconds!: number;
   private emulatorHost = "";
+  private mediaBaseUrl = "";
+  private mediaSigningSecret = "";
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -48,6 +60,14 @@ export class GcpStorageService implements StorageService, OnModuleInit {
     this.signedUrlTtlSeconds =
       this.configService.get<number>("gcpStorage.signedUrlTtlSeconds") ??
       7 * 24 * 60 * 60;
+
+    this.mediaBaseUrl = (
+      this.configService.get<string>("gcpStorage.mediaBaseUrl") ?? ""
+    ).replace(/\/+$/, "");
+    this.mediaSigningSecret = this.configService.get<string>("JWT_SECRET") ?? "";
+    if (!this.mediaSigningSecret) {
+      throw new Error("JWT_SECRET is required to sign media URLs.");
+    }
 
     const projectId = this.configService.get<string>("gcpStorage.projectId");
     const keyFile = this.configService.get<string>("gcpStorage.keyFile");
@@ -187,17 +207,13 @@ export class GcpStorageService implements StorageService, OnModuleInit {
       return cached.url;
     }
 
+    // The URL points at this API, which reads the private object with the service
+    // account's bucket read access. No IAM signBlob or Token Creator role is needed.
     const expiresAtMs = Date.now() + this.signedUrlTtlSeconds * 1000;
-    let url: string;
-    try {
-      [url] = await this.bucket.file(objectName).getSignedUrl({
-        version: "v4",
-        action: "read",
-        expires: expiresAtMs,
-      });
-    } catch (err: unknown) {
-      throw this.toSafeError(err, `sign ${objectName}`);
-    }
+    const signature = this.signMedia(objectName, expiresAtMs);
+    const url =
+      `${this.mediaBaseUrl}${MEDIA_PATH}` +
+      `?o=${encodeURIComponent(objectName)}&e=${expiresAtMs}&s=${signature}`;
 
     // Expire the cache entry a minute early so a URL is never handed out as it lapses.
     this.signedUrlCache.set(objectName, {
@@ -205,6 +221,73 @@ export class GcpStorageService implements StorageService, OnModuleInit {
       expiresAt: expiresAtMs - 60_000,
     });
     return url;
+  }
+
+  async openSignedObject(
+    objectName: string,
+    expires: number,
+    signature: string,
+    range?: string,
+  ): Promise<StoredObjectStream> {
+    if (!this.isValidMediaSignature(objectName, expires, signature)) {
+      throw new ForbiddenException("Invalid or expired media link");
+    }
+    // Only objects under this environment's prefix may be served.
+    if (!objectName.startsWith(`${this.prefix}/`) || objectName.includes("..")) {
+      throw new ForbiddenException("Invalid or expired media link");
+    }
+
+    const file = this.bucket.file(objectName);
+    let size: number;
+    let contentType: string;
+    try {
+      const [metadata] = await file.getMetadata();
+      size = Number(metadata.size);
+      contentType = metadata.contentType ?? "application/octet-stream";
+    } catch (err: unknown) {
+      if ((err as { code?: number }).code === 404) {
+        throw new NotFoundException("Media not found");
+      }
+      throw this.toSafeError(err, `read ${objectName}`);
+    }
+
+    const byteRange = this.parseRange(range, size);
+    return {
+      stream: file.createReadStream(byteRange ?? undefined),
+      contentType,
+      size,
+      ...(byteRange ? { range: byteRange } : {}),
+    };
+  }
+
+  // Builds an HMAC over the object name and expiry so links cannot be forged or altered.
+  private signMedia(objectName: string, expires: number): string {
+    return createHmac("sha256", this.mediaSigningSecret)
+      .update(`media:${objectName}:${expires}`)
+      .digest("hex");
+  }
+
+  private isValidMediaSignature(
+    objectName: string,
+    expires: number,
+    signature: string,
+  ): boolean {
+    if (!Number.isFinite(expires) || expires < Date.now()) return false;
+    const expected = Buffer.from(this.signMedia(objectName, expires));
+    const actual = Buffer.from(signature ?? "");
+    return expected.length === actual.length && timingSafeEqual(expected, actual);
+  }
+
+  // Parses a single "bytes=start-end" range; returns null when absent or unsupported.
+  private parseRange(
+    header: string | undefined,
+    size: number,
+  ): { start: number; end: number } | null {
+    const match = header?.match(/^bytes=(\d*)-(\d*)$/);
+    if (!match || (!match[1] && !match[2]) || size === 0) return null;
+    const start = match[1] ? Number(match[1]) : Math.max(size - Number(match[2]), 0);
+    const end = match[1] && match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+    return start <= end && start < size ? { start, end } : null;
   }
 
   toStorageUri(value: string): string {
@@ -228,9 +311,20 @@ export class GcpStorageService implements StorageService, OnModuleInit {
 
     let parsed: URL;
     try {
-      parsed = new URL(value);
+      // The base lets relative media links parse when no public API base URL is configured.
+      parsed = new URL(value, "http://localhost");
     } catch {
       return null;
+    }
+
+    // API media link minted by getSignedUrl: /api/v1/storage/media?o={objectName}&e=..&s=..
+    if (parsed.pathname === MEDIA_PATH) {
+      const objectName = parsed.searchParams.get("o");
+      return objectName &&
+        objectName.startsWith(`${this.prefix}/`) &&
+        !objectName.includes("..")
+        ? objectName
+        : null;
     }
 
     // Emulator: /v0/b/{bucket}/o/{urlEncodedObject}

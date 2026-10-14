@@ -100,6 +100,9 @@ export const gcpStorageConfig = registerAs("gcpStorage", () => ({
   // Top-level folder inside the shared bucket, so staging and production objects
   // never mix: <bucket>/<prefix>/audios/... Defaults to the current environment.
   prefix: process.env.GCP_STORAGE_PREFIX || getAppEnvironment(),
+  // Public origin of this API (no trailing path), used to build absolute media URLs for
+  // mobile clients. Leave empty to return relative URLs, which the web app resolves itself.
+  mediaBaseUrl: process.env.PUBLIC_API_BASE_URL || "",
   // Storage class applied to uploaded objects. Nearline has a 30-day minimum
   // billable duration, which suits write-once audio.
   storageClass: process.env.GCP_STORAGE_CLASS || "NEARLINE",

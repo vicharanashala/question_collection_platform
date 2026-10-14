@@ -22,8 +22,22 @@ import { UserService } from '../user/user.service';
     PaymentModule,
     forwardRef(() => GdbModule),
   ],
-  controllers: [AdminController, AnalyticsController, ExportController, CuratorController],
-  providers: [AdminService, CuratorService, AnveshanProgressService, AuditService, Logger, UserService],
-  exports: [AdminService],
+  controllers: [
+    AdminController,
+    AnalyticsController,
+    ExportController,
+    AuditController,
+    CuratorController,
+  ],
+  providers: [
+    AdminService,
+    CuratorService,
+    AnveshanProgressService,
+    AuditService,
+    Logger,
+    UserService,
+  ],
+  exports: [AdminService, AnveshanProgressService],
 })
 export class AdminModule {}
+
