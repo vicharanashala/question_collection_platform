@@ -4,14 +4,11 @@ import {
   IReportRepository,
   IReportReplyRepository,
   INotificationRepository,
-  IAuditLogRepository,
   IUserRepository,
   REPOSITORY_TOKENS,
 } from '../../shared/database/repositories';
 import { CreateReportDto, ReplyReportDto, ListReportsDto } from './dto';
 import {
-  ActorType,
-  AuditAction,
   ReportStatus,
   ReportPriority,
   UserRole,
@@ -29,40 +26,9 @@ export class ReportsService {
     private readonly replyRepo: IReportReplyRepository,
     @Inject(REPOSITORY_TOKENS.Notification)
     private readonly notificationRepo: INotificationRepository,
-    @Inject(REPOSITORY_TOKENS.AuditLog)
-    private readonly auditRepo: IAuditLogRepository,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
   ) {}
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────
-
-  private async logAudit(
-    actorId: string,
-    actorRole: UserRole,
-    action: AuditAction,
-    entityType: string,
-    entityId: string,
-    metadata?: Record<string, unknown>,
-  ): Promise<void> {
-    let actorType: ActorType;
-    if (actorRole === UserRole.FINANCE) {
-      actorType = ActorType.FINANCE;
-    } else if (actorRole === UserRole.CURATOR) {
-      actorType = ActorType.CURATOR;
-    } else {
-      actorType = ActorType.ADMIN;
-    }
-
-    await this.auditRepo.save({
-      actorType,
-      actorId,
-      action,
-      entityType,
-      entityId,
-      metadata,
-    } as Parameters<typeof this.auditRepo.save>[0]);
-  }
 
   // ─── User-facing ──────────────────────────────────────────────────────────
 
@@ -75,15 +41,6 @@ export class ReportsService {
       relatedEntityId: dto.relatedEntityId ?? null,
       relatedEntityType: dto.relatedEntityType ?? null,
     } as never);
-
-    await this.logAudit(
-      userId,
-      UserRole.USER,
-      AuditAction.REPORT_SUBMITTED,
-      'report',
-      (saved as { id: string }).id,
-      { category: dto.category },
-    );
 
     return saved;
   }
@@ -403,23 +360,12 @@ export class ReportsService {
   async updateStatus(
     reportId: string,
     status: ReportStatus,
-    actorId: string,
-    actorRole: UserRole,
   ): Promise<Report> {
     const report = await this.reportRepo.findOne({ id: reportId } as never);
     if (!report) throw new Error('Report not found');
     const oldStatus = (report as { status: ReportStatus }).status;
     (report as { status: ReportStatus }).status = status;
     const saved = await this.reportRepo.save(report);
-
-    await this.logAudit(
-      actorId,
-      actorRole,
-      AuditAction.REPORT_STATUS_CHANGED,
-      'report',
-      reportId,
-      { oldStatus, newStatus: status },
-    );
 
     if (status === ReportStatus.CLOSED) {
       await this.sendReportClosedNotification(saved as never, (saved as { title: string }).title);
@@ -452,8 +398,6 @@ export class ReportsService {
   async updatePriority(
     reportId: string,
     priority: ReportPriority,
-    actorId: string,
-    actorRole: UserRole,
   ): Promise<Report> {
     const report = await this.reportRepo.findOne({ id: reportId } as never);
     if (!report) throw new Error('Report not found');
@@ -461,22 +405,12 @@ export class ReportsService {
     (report as { priority: ReportPriority }).priority = priority;
     const saved = await this.reportRepo.save(report);
 
-    await this.logAudit(
-      actorId,
-      actorRole,
-      AuditAction.REPORT_STATUS_CHANGED,
-      'report',
-      reportId,
-      { oldPriority, newPriority: priority },
-    );
-
     return saved;
   }
 
   async addReply(
     reportId: string,
     adminId: string,
-    adminRole: UserRole,
     dto: ReplyReportDto,
   ): Promise<ReportReply> {
     const report = await this.reportRepo.findOne({ id: reportId } as never);
@@ -510,15 +444,6 @@ export class ReportsService {
       body,
       data: { reportId, replyId: (savedReply as { id: string }).id },
     });
-
-    await this.logAudit(
-      adminId,
-      adminRole,
-      AuditAction.REPORT_REPLIED,
-      'report',
-      reportId,
-      { replyId: (savedReply as { id: string }).id },
-    );
 
     return savedReply;
   }

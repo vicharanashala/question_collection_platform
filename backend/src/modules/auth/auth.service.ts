@@ -275,13 +275,13 @@ export class AuthService {
     await this.smsService.sendOtp(mobileNumber, otp);
 
     // Audit
-    await this.logAudit(
-      ActorType.USER,
-      user.id,
-      AuditAction.OTP_REQUESTED,
-      "User",
-      user.id,
-    );
+    // await this.logAudit(
+    //   ActorType.USER,
+    //   user.id,
+    //   AuditAction.OTP_REQUESTED,
+    //   "User",
+    //   user.id,
+    // );
 
     return { message: "OTP sent successfully" };
   }
@@ -374,13 +374,13 @@ export class AuthService {
       await this.userRepo.save(user);
     }
 
-    await this.logAudit(
-      ActorType.USER,
-      user.id,
-      AuditAction.OTP_VERIFIED,
-      "User",
-      user.id,
-    );
+    // await this.logAudit(
+    //   ActorType.USER,
+    //   user.id,
+    //   AuditAction.OTP_VERIFIED,
+    //   "User",
+    //   user.id,
+    // );
 
     const REQUIRED_ANVESHAN_PHASE = "module";
 
@@ -597,15 +597,15 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
     // Sync username → Redis for fast existence lookups
     await this.syncUsernameToRedis(normalizedUsername, userId);
 
-    await this.logAudit(
-      ActorType.USER,
-      userId,
-      AuditAction.USER_REGISTERED,
-      "User",
-      userId,
-      null,
-      { category: dto.category, state: dto.state, district: dto.district },
-    );
+    // await this.logAudit(
+    //   ActorType.USER,
+    //   userId,
+    //   AuditAction.USER_REGISTERED,
+    //   "User",
+    //   userId,
+    //   null,
+    //   { category: dto.category, state: dto.state, district: dto.district },
+    // );
 
     const freshUser = await this.userRepo.findOne({ where: { id: userId } });
     const tokens = await this.issueTokens(freshUser!);
@@ -980,24 +980,24 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
     };
   }
 
-  private async logAudit(
-    actorType: ActorType,
-    actorId: string | null,
-    action: string,
-    entityType?: string,
-    entityId?: string,
-    oldValue?: Record<string, unknown> | null,
-    newValue?: Record<string, unknown> | null,
-  ): Promise<void> {
-    const log = await this.auditRepo.create({
-      actorType,
-      actorId,
-      action,
-      entityType,
-      entityId,
-      oldValue: oldValue ?? null,
-      newValue: newValue ?? null,
-    });
-    await this.auditRepo.save(log);
-  }
+  // private async logAudit(
+  //   actorType: ActorType,
+  //   actorId: string | null,
+  //   action: string,
+  //   entityType?: string,
+  //   entityId?: string,
+  //   oldValue?: Record<string, unknown> | null,
+  //   newValue?: Record<string, unknown> | null,
+  // ): Promise<void> {
+  //   const log = await this.auditRepo.create({
+  //     actorType,
+  //     actorId,
+  //     action,
+  //     entityType,
+  //     entityId,
+  //     oldValue: oldValue ?? null,
+  //     newValue: newValue ?? null,
+  //   });
+  //   await this.auditRepo.save(log);
+  // }
 }

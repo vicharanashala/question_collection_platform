@@ -10,11 +10,12 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
-import { UserRole } from '../../shared/classes/enums';
+import { ActorType, AuditAction, OutcomeStatus, UserRole } from '../../shared/classes/enums';
 import { QuestionService } from './question.service';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -27,9 +28,13 @@ import { UserService } from '../user/user.service';
 import { AnveshanSubmissionsOpenGuard } from '../user/guards/anveshan-submissions-open.guard';
 import { AnveshanMilestoneService } from './anveshan-milestone.service';
 import { SubmitAnveshanAnswerDto } from './dto/anveshan-answer.dto';
+import { AuditLog } from '@/shared/database/mongodb/schemas/audit-log.schema';
+import { AuditService } from '../audit-logs/audit.service';
+import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
+import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string; role: string };
+  user: { id: string; role: string; name: string; email: string };
 }
 
 @Controller('questions')
@@ -39,6 +44,8 @@ export class QuestionController {
     private readonly questionService: QuestionService,
     private readonly userService: UserService,
     private readonly anveshanMilestoneService: AnveshanMilestoneService,
+    private readonly auditService: AuditService,
+    private readonly logger: Logger = new Logger(QuestionController.name),
   ) {}
 
   // POST /questions — Submit a new question
@@ -133,17 +140,70 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
 
   // Admin routes (protected by roles guard)
   @Post(':id/approve')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  @HttpCode(HttpStatus.OK)
-  @CacheInvalidate('leaderboard:top_users', 'hot:*', 'analytics:*', 'query:review_queue*')
-  async approve(
-    @Param('id') id: string,
-    @Body('reason') reason: string | undefined,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.questionService.approve(id, req.user.id, reason);
+@UseGuards(RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@HttpCode(HttpStatus.OK)
+@CacheInvalidate('leaderboard:top_users', 'hot:*', 'analytics:*', 'query:review_queue*')
+async approve(
+  @Param('id') id: string,
+  @Body('reason') reason: string | undefined,
+  @Req() req: AuthenticatedRequest,
+  @ReqMeta() meta: RequestMeta,
+) {
+  const base: AuditLogDto = {
+    actionType: AuditAction.QUESTION_APPROVED,
+    actor: {
+      id: req.user.id,
+      actorType:
+      req.user.role === UserRole.SUPER_ADMIN ? ActorType.SUPER_ADMIN : ActorType.CURATOR,
+      name: req.user.name,
+    },
+    resource: {
+      ipAddress: meta.ipAddress ?? req.ip,
+      requestId: meta.requestId ?? '',
+    },
+  };
+
+  let data;
+  try {
+    data = await this.questionService.approve(id, req.user.id, reason);
+  } catch (err) {
+    await this.safeAudit({
+      ...base,
+      context: { questionId: id, reason },
+      changes: { before: { status: 'pending' }, after: { status: 'pending' } },
+      outcome: {
+        status: OutcomeStatus.FAILURE,
+        errorMessage: err instanceof Error ? err.message : String(err),
+      },
+    });
+    throw err; // keep the real HTTP error
   }
+
+  await this.safeAudit({
+    ...base,
+    context: { questionId: data?.id, userId: data?.userId, reason },
+    changes: { before: { status: 'pending' }, after: { status: 'approved' } },
+    outcome: { status: OutcomeStatus.SUCCESS },
+  });
+
+  return data;
+}
+
+private async safeAudit(payload: AuditLogDto) {
+  try {
+    const auditLog: Partial<AuditLog> = {
+      ...payload,
+      changes: payload.changes ?? undefined,
+      context: payload.context ?? undefined,
+      outcome: payload.outcome ?? undefined,
+    };
+
+    await this.auditService.createAuditLog(auditLog);
+  } catch (e) {
+    this.logger.error('Failed to write audit log', e instanceof Error ? e.stack : String(e));
+  }
+}
 
   @Post(':id/reject')
   @UseGuards(RolesGuard)
@@ -154,8 +214,38 @@ async getMyStats(@Req() req: AuthenticatedRequest) {
     @Param('id') id: string,
     @Body('reason') reason: string,
     @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.questionService.reject(id, req.user.id, reason ?? 'Not provided');
+    const finalReason = reason ?? 'Not provided';
+    const base: AuditLogDto = {
+      actionType: AuditAction.QUESTION_REJECTED,
+      actor: {
+        id: req.user.id,
+        actorType:
+          req.user.role === UserRole.SUPER_ADMIN ? ActorType.SUPER_ADMIN : ActorType.ADMIN,
+        name: req.user.name,
+      },
+      resource: {
+        ipAddress: meta.ipAddress ?? req.ip,
+        requestId: meta.requestId ?? '',
+      },
+      context: { questionId: id, reason: finalReason },
+    };
+
+    try {
+      const data = await this.questionService.reject(id, req.user.id, finalReason);
+      await this.safeAudit({ ...base, outcome: { status: OutcomeStatus.SUCCESS } });
+      return data;
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
   }
 
   // GET /questions/anveshan-milestone/me — the caller's submission and answer progress.

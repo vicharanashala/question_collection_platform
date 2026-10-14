@@ -38,6 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('auth_user')
+    localStorage.removeItem('public-ask-question-draft')
+    localStorage.removeItem('public-ask-question-draft-seen')
     clearProfileDraft()
     setToken(null)
     setUser(null)
@@ -106,4 +108,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
-}
+}

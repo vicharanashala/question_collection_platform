@@ -261,14 +261,10 @@ export class AdminService implements OnModuleInit {
     metadata: Record<string, unknown> | null,
   ): string {
     switch (action) {
-      case AuditAction.QUESTION_SUBMITTED:
-        return `Submitted a question${metadata?.cropType ? ` about ${metadata.cropType}` : ""}`;
       case AuditAction.QUESTION_APPROVED:
         return `Approved ${entityType ?? "question"}`;
       case AuditAction.QUESTION_REJECTED:
         return `Rejected ${entityType ?? "question"}`;
-      case AuditAction.USER_REGISTERED:
-        return "Registered on the platform";
       case AuditAction.USER_VERIFIED:
         return `Verified user`;
       case AuditAction.USER_SUSPENDED:
@@ -279,16 +275,12 @@ export class AdminService implements OnModuleInit {
         return `Unsuspended user`;
       case AuditAction.USER_UNBANNED:
         return `Unbanned user`;
-      case AuditAction.USER_PROFILE_UPDATED:
-        return `Updated user profile`;
       case AuditAction.REWARD_CREDITED:
         return `Credited reward${metadata?.amount ? ` of ₹${metadata.amount}` : ""}`;
       case AuditAction.WITHDRAWAL_REQUESTED:
         return `Requested withdrawal${metadata?.amount ? ` of ₹${metadata.amount}` : ""}`;
       case AuditAction.WITHDRAWAL_COMPLETED:
         return `Completed withdrawal${metadata?.amount ? ` of ₹${metadata.amount}` : ""}`;
-      case AuditAction.ADMIN_CONFIG_UPDATED:
-        return `Updated config: ${metadata?.key ?? action}`;
       default:
         return (action ?? "").replace(/_/g, " ") || action;
     }
@@ -369,20 +361,20 @@ const user = await this.userRepo.create({
 await this.userRepo.save(user);
 
 
-    await this.logAudit({
-      actorType:
-        actorRole === UserRole.CURATOR ? ActorType.CURATOR : ActorType.ADMIN,
-      actorId,
-      action: AuditAction.USER_REGISTERED,
-      entityType: "user",
-      entityId: user.id,
-      newValue: {
-        name: user.name,
-        mobileNumber: user.mobileNumber,
-        role: user.role,
-        category: user.category,
-      },
-    });
+    // await this.logAudit({
+    //   actorType:
+    //     actorRole === UserRole.CURATOR ? ActorType.CURATOR : ActorType.ADMIN,
+    //   actorId,
+    //   action: AuditAction.USER_REGISTERED,
+    //   entityType: "user",
+    //   entityId: user.id,
+    //   newValue: {
+    //     name: user.name,
+    //     mobileNumber: user.mobileNumber,
+    //     role: user.role,
+    //     category: user.category,
+    //   },
+    // });
     return { user: this.toPublicUser(user) };
   }
 
@@ -644,20 +636,20 @@ async listUsers(dto: ListUsersDto) {
           }),
     });
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action:
-        action === "ban" ? AuditAction.USER_BANNED : AuditAction.USER_SUSPENDED,
-      entityType: "user",
-      entityId: userId,
-      oldValue: { verificationStatus: oldStatus },
-      newValue: {
-        verificationStatus: newStatus,
-        reason,
-        suspendedUntil: suspendedUntil ?? null,
-      },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action:
+    //     action === "ban" ? AuditAction.USER_BANNED : AuditAction.USER_SUSPENDED,
+    //   entityType: "user",
+    //   entityId: userId,
+    //   oldValue: { verificationStatus: oldStatus },
+    //   newValue: {
+    //     verificationStatus: newStatus,
+    //     reason,
+    //     suspendedUntil: suspendedUntil ?? null,
+    //   },
+    // });
 
     return { success: true, userId, newStatus };
   }
@@ -689,18 +681,18 @@ async listUsers(dto: ListUsersDto) {
       bannedReason: null,
     });
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action:
-        oldStatus === VerificationStatus.BANNED
-          ? AuditAction.USER_UNBANNED
-          : AuditAction.USER_UNSUSPENDED,
-      entityType: "user",
-      entityId: userId,
-      oldValue: { verificationStatus: oldStatus },
-      newValue: { verificationStatus: VerificationStatus.VERIFIED },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action:
+    //     oldStatus === VerificationStatus.BANNED
+    //       ? AuditAction.USER_UNBANNED
+    //       : AuditAction.USER_UNSUSPENDED,
+    //   entityType: "user",
+    //   entityId: userId,
+    //   oldValue: { verificationStatus: oldStatus },
+    //   newValue: { verificationStatus: VerificationStatus.VERIFIED },
+    // });
 
     return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
   }
@@ -736,16 +728,16 @@ async listUsers(dto: ListUsersDto) {
       verificationStatus: VerificationStatus.VERIFIED,
     });
 
-    await this.logAudit({
-      actorType:
-        actor.role === UserRole.FINANCE ? ActorType.FINANCE : ActorType.ADMIN,
-      actorId: actorId,
-      action: AuditAction.USER_VERIFIED,
-      entityType: "user",
-      entityId: userId,
-      oldValue: { verificationStatus: oldStatus },
-      newValue: { verificationStatus: VerificationStatus.VERIFIED },
-    });
+    // await this.logAudit({
+    //   actorType:
+    //     actor.role === UserRole.FINANCE ? ActorType.FINANCE : ActorType.ADMIN,
+    //   actorId: actorId,
+    //   action: AuditAction.USER_VERIFIED,
+    //   entityType: "user",
+    //   entityId: userId,
+    //   oldValue: { verificationStatus: oldStatus },
+    //   newValue: { verificationStatus: VerificationStatus.VERIFIED },
+    // });
 
     return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
   }
@@ -897,18 +889,18 @@ async listUsers(dto: ListUsersDto) {
         ),
       );
 
-      await this.logAudit({
-        actorType,
-        actorId: reviewerId,
-        action: AuditAction.QUESTION_APPROVED,
-        entityType: "question",
-        entityId: questionId,
-        oldValue: { status: oldStatus },
-        newValue: {
-          status: QuestionStatus.APPROVED,
-          reward: rewardResult.transaction.amount,
-        },
-      });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: AuditAction.QUESTION_APPROVED,
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: {
+      //     status: QuestionStatus.APPROVED,
+      //     reward: rewardResult.transaction.amount,
+      //   },
+      // });
 
       await this.notificationRepo.save(
         await this.notificationRepo.create({
@@ -950,15 +942,15 @@ async listUsers(dto: ListUsersDto) {
             `Redis cache update failed after rejection: ${err.message}`,
           ),
         );
-      await this.logAudit({
-        actorType,
-        actorId: reviewerId,
-        action: AuditAction.QUESTION_REJECTED,
-        entityType: "question",
-        entityId: questionId,
-        oldValue: { status: oldStatus },
-        newValue: { status: QuestionStatus.REJECTED, reason: dto.reason },
-      });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: AuditAction.QUESTION_REJECTED,
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: { status: QuestionStatus.REJECTED, reason: dto.reason },
+      // });
       await this.notificationRepo.save(
         await this.notificationRepo.create({
           userId: question.userId,
@@ -991,15 +983,15 @@ async listUsers(dto: ListUsersDto) {
         reviewedAt: new Date(),
         heldReason: dto.heldReason ?? null,
       });
-      await this.logAudit({
-        actorType,
-        actorId: reviewerId,
-        action: "question_held",
-        entityType: "question",
-        entityId: questionId,
-        oldValue: { status: oldStatus },
-        newValue: { status: QuestionStatus.HELD, reason: dto.heldReason },
-      });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: "question_held",
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: { status: QuestionStatus.HELD, reason: dto.heldReason },
+      // });
       await this.notificationRepo.save(
         await this.notificationRepo.create({
           userId: question.userId,
@@ -1021,15 +1013,15 @@ async listUsers(dto: ListUsersDto) {
     // request_info — hold for more info from user
     await this.questionRepo.update(questionId, {
       status: QuestionStatus.HELD,
-    });
-    await this.logAudit({
-      actorType,
-      actorId: reviewerId,
-      action: "question_review_request_info",
-      entityType: "question",
-      entityId: questionId,
-      oldValue: { status: oldStatus },
-      newValue: { status: QuestionStatus.HELD },
+    // });
+    // await this.logAudit({
+    //   actorType,
+    //   actorId: reviewerId,
+    //   action: "question_review_request_info",
+    //   entityType: "question",
+    //   entityId: questionId,
+    //   oldValue: { status: oldStatus },
+    //   newValue: { status: QuestionStatus.HELD },
     });
     await this.notificationRepo.save(
       await this.notificationRepo.create({
@@ -1108,15 +1100,15 @@ async listUsers(dto: ListUsersDto) {
       },
     );
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: AuditAction.ADMIN_CONFIG_UPDATED,
-      entityType: "admin_config",
-      entityId: config.id,
-      oldValue: { key: dto.key, value: oldValue },
-      newValue: { key: dto.key, value: dto.value },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: AuditAction.ADMIN_CONFIG_UPDATED,
+    //   entityType: "admin_config",
+    //   entityId: config.id,
+    //   oldValue: { key: dto.key, value: oldValue },
+    //   newValue: { key: dto.key, value: dto.value },
+    // });
 
     // Invalidate cache so next read gets the new value
     this.configCache.delete(dto.key);
@@ -1136,14 +1128,14 @@ async listUsers(dto: ListUsersDto) {
       updatedBy: adminId,
     });
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: AuditAction.ADMIN_CONFIG_UPDATED,
-      entityType: "admin_config",
-      entityId: saved.id,
-      newValue: { key: dto.key, value: dto.value },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: AuditAction.ADMIN_CONFIG_UPDATED,
+    //   entityType: "admin_config",
+    //   entityId: saved.id,
+    //   newValue: { key: dto.key, value: dto.value },
+    // });
 
     // Populate cache for the new key
     this.configCache.set(dto.key, dto.value);
@@ -1460,7 +1452,6 @@ async listUsers(dto: ListUsersDto) {
       categoryDistribution,
       historical,
       signupRaw,
-      recentLogs,
     ] = await Promise.all([
       this.userRepo.getVerificationStats(scope.userFilter),
 
@@ -1478,7 +1469,7 @@ async listUsers(dto: ListUsersDto) {
 
       this.userRepo.getDailySignupsSince(ninetyDaysAgo, scope.userFilter),
 
-      this.auditRepo.getRecentWithActorName(20),
+      // this.auditRepo.getRecentWithActorName(20),
     ]);
 
     const signupMap = new Map(signupRaw.map((r) => [r.date, r.signups]));
@@ -1509,19 +1500,19 @@ async listUsers(dto: ListUsersDto) {
         usersThisWeek,
       },
 
-      recentActivity: recentLogs.map((log) => ({
-        id: log.id,
-        action: log.action,
-        description: this.buildActivityDescription(
-          log.action,
-          log.entityType,
-          log.metadata,
-        ),
-        performedBy: log.actorName ?? "System",
-        performedAt: log.createdAt
-          ? new Date(log.createdAt).toISOString()
-          : now.toISOString(),
-      })),
+      // recentActivity: recentLogs.map((log) => ({
+      //   id: log.id,
+      //   action: log.action,
+      //   description: this.buildActivityDescription(
+      //     log.action,
+      //     log.entityType,
+      //     log.metadata,
+      //   ),
+      //   performedBy: log.actorName ?? "System",
+      //   performedAt: log.createdAt
+      //     ? new Date(log.createdAt).toISOString()
+      //     : now.toISOString(),
+      // })),
 
       roleDistribution,
 
@@ -1789,16 +1780,16 @@ async listUsers(dto: ListUsersDto) {
             ? ActorType.CURATOR
             : ActorType.ADMIN;
 
-      await this.logAudit({
-        actorType,
-        actorId: adminId,
-        action:
-          finalStatus === WithdrawalStatus.COMPLETED
-            ? "withdrawal_completed"
-            : "withdrawal_approved",
-        entityType: "withdrawal_request",
-        entityId: withdrawalId,
-      });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: adminId,
+      //   action:
+      //     finalStatus === WithdrawalStatus.COMPLETED
+      //       ? "withdrawal_completed"
+      //       : "withdrawal_approved",
+      //   entityType: "withdrawal_request",
+      //   entityId: withdrawalId,
+      // });
 
       // ── Step 6: On FAILED, trigger refund ────────────────────────────────────
       if (finalStatus === WithdrawalStatus.FAILED) {
@@ -1876,18 +1867,18 @@ async listUsers(dto: ListUsersDto) {
           balanceAfter: newBalance,
         }),
       );
-      await this.logAudit({
-        actorType: ActorType.ADMIN,
-        actorId: adminId,
-        action: "withdrawal_rejected",
-        entityType: "withdrawal_request",
-        entityId: withdrawalId,
-        oldValue: { status: WithdrawalStatus.PENDING },
-        newValue: {
-          status: WithdrawalStatus.REJECTED,
-          reason: rejectionReason,
-        },
-      });
+      // await this.logAudit({
+      //   actorType: ActorType.ADMIN,
+      //   actorId: adminId,
+      //   action: "withdrawal_rejected",
+      //   entityType: "withdrawal_request",
+      //   entityId: withdrawalId,
+      //   oldValue: { status: WithdrawalStatus.PENDING },
+      //   newValue: {
+      //     status: WithdrawalStatus.REJECTED,
+      //     reason: rejectionReason,
+      //   },
+      // });
       const notification = await this.notificationRepo.save(
         await this.notificationRepo.create({
           userId: withdrawal.userId,
@@ -1959,14 +1950,14 @@ async listUsers(dto: ListUsersDto) {
       );
     }
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_retry",
-      entityType: "withdrawal_request",
-      entityId: withdrawalId,
-      newValue: { action: "retry_attempted", orderId: withdrawal.orderId },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_retry",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    //   newValue: { action: "retry_attempted", orderId: withdrawal.orderId },
+    // });
 
     // Fetch user's payment detail for fund account
     const paymentDetail = await this.paymentDetailRepo.findOne({
@@ -2085,13 +2076,13 @@ async listUsers(dto: ListUsersDto) {
       };
     }
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_completed",
-      entityType: "withdrawal_request",
-      entityId: withdrawalId,
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_completed",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    // });
 
     return { success: true, withdrawalId, status: finalStatus };
   }
@@ -2137,14 +2128,14 @@ async listUsers(dto: ListUsersDto) {
       retryCount: (withdrawal.retryCount ?? 0) + 1,
     });
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_retry_refund",
-      entityType: "withdrawal_request",
-      entityId: withdrawalId,
-      newValue: { action: "retry_refund_attempted", orderId: referenceId },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_retry_refund",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    //   newValue: { action: "retry_refund_attempted", orderId: referenceId },
+    // });
 
     // 2. Fetch user's payment detail for fund account
     const paymentDetail = await this.paymentDetailRepo.findOne({
@@ -2279,13 +2270,13 @@ async listUsers(dto: ListUsersDto) {
       };
     }
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_completed",
-      entityType: "withdrawal_request",
-      entityId: withdrawalId,
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_completed",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    // });
 
     return { success: true, withdrawalId, status: finalStatus };
   }
@@ -2339,18 +2330,18 @@ async listUsers(dto: ListUsersDto) {
       status: WithdrawalStatus.FAILED,
       failureReason,
     });
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_payment_failed",
-      entityType: "withdrawal_request",
-      entityId: withdrawal.id,
-      newValue: {
-        status: WithdrawalStatus.FAILED,
-        reason: failureReason,
-        refundPending: true,
-      },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_payment_failed",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawal.id,
+    //   newValue: {
+    //     status: WithdrawalStatus.FAILED,
+    //     reason: failureReason,
+    //     refundPending: true,
+    //   },
+    // });
 
     // No notification here — notification is sent only after admin explicitly clicks "Mark Failed"
     return WithdrawalStatus.FAILED;
@@ -2515,15 +2506,15 @@ async listUsers(dto: ListUsersDto) {
       });
     }
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_marked_failed",
-      entityType: "withdrawal_request",
-      entityId: withdrawalId,
-      oldValue: { status: WithdrawalStatus.PROCESSING },
-      newValue: { status: WithdrawalStatus.FAILED, reason },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_marked_failed",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    //   oldValue: { status: WithdrawalStatus.PROCESSING },
+    //   newValue: { status: WithdrawalStatus.FAILED, reason },
+    // });
 
     return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
   }
@@ -2554,15 +2545,15 @@ async listUsers(dto: ListUsersDto) {
       { rejectionReason: reason },
     );
 
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "withdrawal_failure_reason_updated",
-      entityType: "withdrawal_request",
-      entityId: withdrawalId,
-      oldValue: { rejectionReason: debitTx?.rejectionReason ?? null },
-      newValue: { rejectionReason: reason },
-    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_failure_reason_updated",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    //   oldValue: { rejectionReason: debitTx?.rejectionReason ?? null },
+    //   newValue: { rejectionReason: reason },
+    // });
 
     return { success: true, withdrawalId };
   }
@@ -3499,7 +3490,7 @@ async listUsers(dto: ListUsersDto) {
 
   async adjustWalletBalance(adminId: string, dto: AdjustWalletDto) {
     const isSuperAdmin = await this.isSuperAdmin(adminId);
-    // if (!isSuperAdmin)
+    if (!isSuperAdmin)
     throw new ForbiddenException(
       "Only super admins can manually adjust wallet balances",
     );
@@ -3552,17 +3543,6 @@ async listUsers(dto: ListUsersDto) {
 
     const updatedWallet = await this.walletRepo.findOne({
       where: { id: walletId },
-    });
-
-    await this.logAudit({
-      actorType: ActorType.ADMIN,
-      actorId: adminId,
-      action: "wallet_balance_adjusted",
-      entityType: "wallet",
-      entityId: walletId,
-      oldValue: { balance: initialBalance },
-      newValue: { balance: Number(updatedWallet!.balance) },
-      metadata: { reason: dto.reason, adjustmentAmount: amount },
     });
 
     return {
@@ -3747,27 +3727,27 @@ async listUsers(dto: ListUsersDto) {
     };
   }
 
-  private async logAudit(params: {
-    actorType: ActorType;
-    actorId: string;
-    action: string;
-    entityType: string;
-    entityId?: string;
-    oldValue?: Record<string, unknown>;
-    newValue?: Record<string, unknown>;
-    metadata?: Record<string, unknown>;
-  }) {
-    await this.auditRepo.save({
-      actorType: params.actorType,
-      actorId: params.actorId,
-      action: params.action,
-      entityType: params.entityType,
-      entityId: params.entityId ?? null,
-      oldValue: params.oldValue ?? null,
-      newValue: params.newValue ?? null,
-      metadata: params.metadata ?? null,
-    });
-  }
+  // private async logAudit(params: {
+  //   actorType: ActorType;
+  //   actorId: string;
+  //   action: string;
+  //   entityType: string;
+  //   entityId?: string;
+  //   oldValue?: Record<string, unknown>;
+  //   newValue?: Record<string, unknown>;
+  //   metadata?: Record<string, unknown>;
+  // }) {
+  //   await this.auditRepo.save({
+  //     actorType: params.actorType,
+  //     actorId: params.actorId,
+  //     action: params.action,
+  //     entityType: params.entityType,
+  //     entityId: params.entityId ?? null,
+  //     oldValue: params.oldValue ?? null,
+  //     newValue: params.newValue ?? null,
+  //     metadata: params.metadata ?? null,
+  //   });
+  // }
 
   /** Flush cache keys matching a pattern. Super admin only. */
   async flushCache(keyPattern: string): Promise<{ flushed: number }> {

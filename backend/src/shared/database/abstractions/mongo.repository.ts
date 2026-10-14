@@ -215,6 +215,11 @@ export class MongoQueryBuilder<T> {
     return this;
   }
 
+  whereRaw(filter: Record<string, unknown>): this {
+    Object.assign(this._filter, filter);
+    return this;
+  }
+
   andWhere(
     key: string,
     params?: Record<string, unknown> | unknown,

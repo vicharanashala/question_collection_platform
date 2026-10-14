@@ -24,8 +24,7 @@ import {
   Wallet, CreditCard, Building2, Smartphone, Leaf,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { User as UserType, Question, QuestionStatus, AuditLogEntry, PaymentDetail, AuditEntityHistoryResponse } from '@/types'
-import { auditApi } from '@/api/client'
+import type { User as UserType, Question, QuestionStatus, AuditLogEntry, PaymentDetail } from '@/types'
 
 // ─── Status badge helpers ──────────────────────────────────────────────────────
 
@@ -410,22 +409,8 @@ setUser(r.user as UserType)
   }
 
   async function loadAuditHistory() {
-    if (!userId) return
-    if (auditEntries.length > 0) {
-      setAuditCollapsed((c) => !c)
-      return
-    }
-    setAuditLoading(true)
-    try {
-      const res = await auditApi.getEntityHistory('user', userId)
-      setAuditEntries((res as AuditEntityHistoryResponse).entries)
-      setAuditCollapsed(false)
-      setAuditPage(1)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load audit history'))
-    } finally {
-      setAuditLoading(false)
-    }
+    setAuditCollapsed(false)
+    toast.info('Entity-specific audit history is now available from the Audit Logs page.')
   }
 
   async function handleReinstate() {

@@ -112,7 +112,6 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
                   text={q.questionText}
                   selectedLang={lang}
                   onLangChange={setLang}
-                  sourceLanguage={q.language ?? "en"}
                   inline
                 />
               </div>
