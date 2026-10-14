@@ -98,10 +98,10 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled, tester
         </DropdownMenuContent>
       </DropdownMenu>
       <Dialog open={pendingFormat !== null} onOpenChange={(open) => { if (!open) setPendingFormat(null) }}>
-        <DialogContent className="max-w-md gap-4">
-          <DialogHeader>
-            <DialogTitle>Include tester accounts?</DialogTitle>
-            <DialogDescription>Choose whether data from tester accounts should be part of this export.</DialogDescription>
+        <DialogContent className="max-w-md gap-5 p-6 sm:p-6">
+          <DialogHeader className="space-y-1.5 pr-6">
+            <DialogTitle className="text-lg font-bold">Include tester accounts?</DialogTitle>
+            <DialogDescription className="text-sm text-text-secondary">Choose whether data from tester accounts should be part of this export.</DialogDescription>
           </DialogHeader>
           <div role="radiogroup" aria-label="Tester accounts" className="space-y-2">
             {[
@@ -110,14 +110,14 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled, tester
             ].map((option) => (
               <label
                 key={option.title}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm ${includeTesters === option.value ? 'border-primary bg-primary/5' : 'border-border-subtle'}`}
+                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm transition-colors hover:border-primary/50 ${includeTesters === option.value ? 'border-primary bg-primary/5' : 'border-border-subtle'}`}
               >
                 <input
                   type="radio"
                   name="include-testers"
                   checked={includeTesters === option.value}
                   onChange={() => setIncludeTesters(option.value)}
-                  className="mt-1"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
                 />
                 <span>
                   <span className="block font-semibold text-foreground">{option.title}</span>
@@ -126,7 +126,7 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled, tester
               </label>
             ))}
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:space-x-0 sm:gap-2">
             <Button variant="outline" size="sm" onClick={() => setPendingFormat(null)}>Cancel</Button>
             <Button size="sm" onClick={confirmExport}>Export</Button>
           </DialogFooter>

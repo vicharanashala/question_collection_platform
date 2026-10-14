@@ -124,7 +124,7 @@ export function QuestionsPage() {
       key: "status",
       header: "Status",
       width: "110px",
-      sortable: true,
+      sortable: false,
       render: (q) => <QuestionStatusBadge question={q} />,
     },
     {
@@ -163,7 +163,7 @@ export function QuestionsPage() {
       key: "submittedBy",
       header: "Submitted By",
       width: "130px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <div className="min-w-0">
           <span
@@ -180,7 +180,7 @@ export function QuestionsPage() {
       key: "domains",
       header: "Category",
       width: "180px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
           {(q.domains ?? []).join(", ") || "—"}
@@ -191,7 +191,7 @@ export function QuestionsPage() {
       key: "cropType",
       header: "Crop",
       width: "100px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">
           {q.cropType ?? "—"}
@@ -202,7 +202,7 @@ export function QuestionsPage() {
       key: "season",
       header: "Season",
       width: "90px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">
           {SEASON_LABEL[q.season] ?? q.season ?? "—"}
@@ -213,7 +213,7 @@ export function QuestionsPage() {
       key: "location",
       header: "Location",
       width: "140px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span
           className="text-[11px] sm:text-[11px] sm:text-xs truncate block"
@@ -239,7 +239,7 @@ export function QuestionsPage() {
       key: "reviewedByName",
       header: "Reviewed By",
       width: "120px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         q.reviewedByName ? (
           <span className="text-[11px] sm:text-xs truncate block" title={q.reviewedByName}>

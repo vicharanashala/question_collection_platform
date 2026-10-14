@@ -136,6 +136,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
       key: 'createdAt',
       header: 'Submitted',
       width: '150px',
+      sortable: true,
       render: (row) => (
         <div className="leading-tight">
           <p className="text-sm text-foreground">{formatAbsoluteDate(row.createdAt)}</p>

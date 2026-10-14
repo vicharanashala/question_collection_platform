@@ -635,7 +635,7 @@ function buildColumns(
       key: "status",
       header: "Status",
       width: "110px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <div className="flex justify-start">
           <QuestionStatusBadge question={q} />
@@ -646,7 +646,7 @@ function buildColumns(
       key: "questionText",
       header: "Question",
       width: "280px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-xs" title={q.questionText}>
           {q.questionText.length > 45
@@ -672,7 +672,7 @@ function buildColumns(
       key: "domains",
       header: "Domain",
       width: "110px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">
           {(q.domains ?? []).join(", ") || "—"}
@@ -683,7 +683,7 @@ function buildColumns(
       key: "cropType",
       header: "Crop",
       width: "90px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs capitalize">
           {q.cropType ?? "—"}
@@ -694,7 +694,7 @@ function buildColumns(
       key: "location",
       header: "Location",
       width: "130px",
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span
           className="text-[11px] sm:text-[11px] sm:text-xs truncate block"

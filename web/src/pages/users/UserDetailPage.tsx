@@ -117,7 +117,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       key: 'questionText',
       header: 'Question',
       width: '280px',
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-xs sm:text-xs sm:text-sm text-foreground line-clamp-2 leading-relaxed">{q.questionText}</span>
       ),
@@ -126,14 +126,14 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       key: 'status',
       header: 'Status',
       width: '120px',
-      sortable: true,
+      sortable: false,
       render: (q) => <QuestionStatusBadge status={q.status} />,
     },
     {
       key: 'domains',
       header: 'Category',
       width: '180px',
-      sortable: true,
+      sortable: false,
       filterable: true,
       filterOptions: [],  // derived from data
       render: (q) => (
@@ -146,7 +146,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       key: 'season',
       header: 'Season',
       width: '90px',
-      sortable: true,
+      sortable: false,
       filterable: true,
       filterOptions: [],
       render: (q) => (
@@ -157,7 +157,7 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       key: 'cropType',
       header: 'Crop',
       width: '100px',
-      sortable: true,
+      sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">{q.cropType || '-'}</span>
       ),
