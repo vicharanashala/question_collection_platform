@@ -25,6 +25,7 @@ import {
   getAgriEntityImageCategory,
   MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
 } from "../agri-entities/agri-entities.constants";
+import { detectImage, MAX_IMAGE_SIZE_BYTES } from "@/utils/image-validation";
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -51,6 +52,15 @@ const ALLOWED_AUDIO_MIME_TYPES = new Set([
   "audio/x-m4a",
 ]);
 
+const AGRI_ENTITY_MAX_BYTES = MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
+
+const GENERIC_IMAGE_UPLOAD_OPTIONS = {
+  limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: 1 },
+};
+const AGRI_ENTITY_UPLOAD_OPTIONS = {
+  limits: { fileSize: AGRI_ENTITY_MAX_BYTES, files: 1 },
+};
+
 @Controller("storage")
 @UseGuards(JwtAuthGuard)
 export class StorageController {
@@ -59,61 +69,60 @@ export class StorageController {
     private readonly adminService: AdminService,
   ) {}
 
-  @Post("upload")
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor("file"))
-  async uploadFile(
-    @UploadedFile() file: AuthenticatedRequest["file"],
-    @Req() req: AuthenticatedRequest,
-  ) {
-    const image = await this.assertValidImage(file);
+@Post("upload")
+@HttpCode(HttpStatus.OK)
+@UseInterceptors(FileInterceptor("file", GENERIC_IMAGE_UPLOAD_OPTIONS))
+async uploadFile(
+  @UploadedFile() file: AuthenticatedRequest["file"],
+  @Req() req: AuthenticatedRequest,
+) {
+  const { file: image, detected } = this.assertValidImage(
+    file,
+    MAX_IMAGE_SIZE_BYTES,
+  );
+  const base = image.originalname.replace(/\.[^/.]+$/, "");
 
-    const url = await this.storageService.upload(
-      image.buffer,
-      image.mimetype,
-      image.originalname,
-      req.user.id,
-      "images",
+  const url = await this.storageService.upload(
+    image.buffer,
+    detected.mime,
+    `${base}.${detected.ext}`,
+    req.user.id,
+    "images",
+  );
+
+  return { url, sizeBytes: image.size };
+}
+
+@Post("upload/agri-entity-image")
+@HttpCode(HttpStatus.OK)
+@UseInterceptors(FileInterceptor("file", AGRI_ENTITY_UPLOAD_OPTIONS))
+async uploadAgriEntityImage(
+  @UploadedFile() file: AuthenticatedRequest["file"],
+  @Query("type") type: string,
+  @Req() req: AuthenticatedRequest,
+) {
+  if (!Object.values(AgriEntityType).includes(type as AgriEntityType)) {
+    throw new BadRequestException(
+      `type must be one of: ${Object.values(AgriEntityType).join(", ")}`,
     );
-
-    return { url, sizeBytes: image.size };
   }
 
-  /**
-   * Upload one image for a crop, weed, pest or disease submission.
-   * Stored privately under {env}/agri-entities/{type}s/{userId}/{yyyy-MM}/...
-   */
-  @Post("upload/agri-entity-image")
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor("file"))
-  async uploadAgriEntityImage(
-    @UploadedFile() file: AuthenticatedRequest["file"],
-    @Query("type") type: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    if (!Object.values(AgriEntityType).includes(type as AgriEntityType)) {
-      throw new BadRequestException(
-        `type must be one of: ${Object.values(AgriEntityType).join(", ")}`,
-      );
-    }
-    const image = await this.assertValidImage(file);
-    if (image.size > MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024) {
-      throw new PayloadTooLargeException(
-        `Each image must be ${MAX_AGRI_ENTITY_IMAGE_SIZE_MB} MB or smaller`,
-      );
-    }
+  const { file: image, detected } = this.assertValidImage(
+    file,
+    AGRI_ENTITY_MAX_BYTES,
+  );
+  const base = image.originalname.replace(/\.[^/.]+$/, "");
 
-    const url = await this.storageService.upload(
-      image.buffer,
-      image.mimetype,
-      image.originalname,
-      req.user.id,
-      getAgriEntityImageCategory(type as AgriEntityType),
-    );
+  const url = await this.storageService.upload(
+    image.buffer,
+    detected.mime,
+    `${base}.${detected.ext}`,
+    req.user.id,
+    getAgriEntityImageCategory(type as AgriEntityType),
+  );
 
-    return { url, sizeBytes: image.size };
-  }
-
+  return { url, sizeBytes: image.size };
+}
   /**
    * Streams a private object for a link minted by StorageService.getSignedUrl().
    * Public because the HMAC signature in the query string is the authorisation; supports
@@ -152,22 +161,45 @@ export class StorageController {
   }
 
   // Ensures an uploaded image is present, of an allowed type and within the configured size limit.
-  private async assertValidImage(
+  // private async assertValidImage(
+  //   file: AuthenticatedRequest["file"],
+  // ): Promise<NonNullable<AuthenticatedRequest["file"]>> {
+  //   if (!file) {
+  //     throw new BadRequestException(
+  //       'No file provided — expected field named "file"',
+  //     );
+  //   }
+
+  //   if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
+  //     throw new BadRequestException(
+  //       "Only JPEG, PNG and WEBP images are supported",
+  //     );
+  //   }
+
+  //   return file;
+  // }
+
+  private assertValidImage(
     file: AuthenticatedRequest["file"],
-  ): Promise<NonNullable<AuthenticatedRequest["file"]>> {
+    maxBytes = MAX_IMAGE_SIZE_BYTES,
+  ) {
     if (!file) {
       throw new BadRequestException(
         'No file provided — expected field named "file"',
       );
     }
-
-    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
+    if (file.size > maxBytes) {
+      throw new PayloadTooLargeException(
+        `Each image must be ${Math.round(maxBytes / 1024 / 1024)} MB or smaller`,
+      );
+    }
+    const detected = detectImage(file.buffer);
+    if (!detected || !ALLOWED_IMAGE_MIME_TYPES.has(detected.mime)) {
       throw new BadRequestException(
         "Only JPEG, PNG and WEBP images are supported",
       );
     }
-
-    return file;
+    return { file, detected };
   }
 
   /**
