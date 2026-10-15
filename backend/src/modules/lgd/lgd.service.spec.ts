@@ -12,7 +12,7 @@ const village = (code: number, name: string) => ({ villageCode: code, villageNam
 const timeoutError = () => new AxiosError('timeout', 'ECONNABORTED');
 
 // Builds the service with a short retry budget so tests run quickly.
-function buildService(overrides: Record<string, number> = {}) {
+function buildService(overrides: Record<string, unknown> = {}) {
   const values: Record<string, unknown> = {
     'lgd.lgdReviewerUri': 'http://reviewer',
     'lgd.cacheTtlDays': 7,
@@ -77,5 +77,17 @@ describe('LgdService', () => {
 
     await expect(service.getVillages('10')).rejects.toBeInstanceOf(AxiosError);
     expect(mockedGet).toHaveBeenCalledTimes(3);
+  });
+
+  it('sends the internal API key header to the reviewer', async () => {
+    mockedGet.mockResolvedValue({ data: [{ stateCode: 1, stateNameEnglish: 'Kerala' }] });
+    const service = buildService({ 'lgd.internalApiKey': 'test-key' });
+
+    await service.getStates();
+
+    expect(mockedGet).toHaveBeenCalledWith(
+      'http://reviewer/location/states',
+      expect.objectContaining({ headers: { 'X-Internal-API-Key': 'test-key' } }),
+    );
   });
 });

@@ -85,6 +85,9 @@ export class LgdService {
   /** Base URL of the reviewer (LGD facade) service */
   private readonly reviewerUri: string;
 
+  /** Sent as X-Internal-API-Key on every reviewer request */
+  private readonly internalApiKey: string;
+
   /** Cache TTL in milliseconds, read from config */
   private readonly cacheTtlMs: number;
 
@@ -112,6 +115,11 @@ export class LgdService {
       this.configService.get<string>('lgd.lgdReviewerUri') ||
       process.env.REVIEWER_URI ||
       '';
+
+    this.internalApiKey =
+      this.configService.get<string>("lgd.internalApiKey") ||
+      process.env.REVIEW_SYSTEM_AUTH_KEY ||
+      "";
 
     const ttlDays =
       this.configService.get<number>('lgd.cacheTtlDays') ??
@@ -205,7 +213,10 @@ export class LgdService {
       if (remainingMs <= 0) break;
 
       try {
-        const response = await axios.get<T[]>(url, { timeout: Math.min(this.attemptTimeoutMs, remainingMs) });
+        const response = await axios.get<T[]>(url, {
+          timeout: Math.min(this.attemptTimeoutMs, remainingMs),
+          headers: { 'X-Internal-API-Key': this.internalApiKey },
+        });
         if (!Array.isArray(response.data)) {
           throw new InternalServerErrorException(`LGD reviewer returned unexpected payload for ${url}`);
         }

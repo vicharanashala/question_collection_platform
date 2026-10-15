@@ -285,7 +285,7 @@ const queueBarData = [
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary mt-0.5">
                 <Trans
                   i18nKey="curatorDashboard.slaMessage"
-                  values={{ minutes: formatDuration(summary.avgReviewTurnaroundMinutes) }}
+                  values={{ minutes: summary.avgReviewTurnaroundMinutes != null ? formatDuration(summary.avgReviewTurnaroundMinutes) : '—' }}
                   components={{ bold: <span className="font-semibold" /> }}
                 />
                 {summary.queueTotal > 0 && (

@@ -68,9 +68,15 @@ private async safeAudit(payload: AuditLogDto) {
     }
   }
 
+  // Reads the FAQ identifier from either the mapped `id` or the raw `_id`.
+  private faqId(faq: Faq): string {
+    const doc = faq as unknown as { id?: unknown; _id?: unknown };
+    return String(doc.id ?? doc._id);
+  }
+
+  // Builds an audit snapshot of a FAQ. The repository returns `id` and clears `_id`.
   private faqSnapshot(faq: Faq): Record<string, unknown> {
     return {
-      id: faq._id.toString(),
       question: faq.question,
       answer: faq.answer,
       category: faq.category,
@@ -252,7 +258,7 @@ private async safeAudit(payload: AuditLogDto) {
           ...base,
           changes: {
             before: {},
-            after: { id: result._id.toString() },
+            after: { id: this.faqId(result) },
           },
           outcome: { status: OutcomeStatus.SUCCESS },
         });
@@ -337,7 +343,6 @@ private async safeAudit(payload: AuditLogDto) {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Delete('admin/faqs/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
     const base: AuditLogDto = {
       actionType: AuditAction.DELETE_FAQ,
@@ -352,12 +357,13 @@ private async safeAudit(payload: AuditLogDto) {
     let before: Record<string, unknown> = {};
     try {
       before = this.faqSnapshot(await this.faqsService.findOne(id) as Faq);
-      await this.faqsService.delete(id);
+      const data = await this.faqsService.delete(id);
       await this.safeAudit({
         ...base,
         changes: { before, after: {} },
         outcome: { status: OutcomeStatus.SUCCESS },
       });
+      return {message: 'Faq deleted successfully'}
     } catch (err) {
       await this.safeAudit({
         ...base,

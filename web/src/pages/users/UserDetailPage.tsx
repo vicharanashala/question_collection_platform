@@ -281,8 +281,8 @@ export function UserDetailPage() {
 
   // Audit history (super_admin only)
   const [auditCollapsed, setAuditCollapsed] = useState(true)
-  const [auditEntries, setAuditEntries] = useState<AuditLogEntry[]>([])
-  const [auditLoading, setAuditLoading] = useState(false)
+  const [auditEntries] = useState<AuditLogEntry[]>([])
+  const [auditLoading] = useState(false)
   const [auditPage, setAuditPage] = useState(1)
   const AUDIT_PAGE_SIZE = 10
 
@@ -958,7 +958,7 @@ setUser(r.user as UserType)
                                   : entry.actorId ?? 'System'}
                               </span>
                               <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs capitalize">
-                                {entry.action.replace(/_/g, ' ').toLowerCase()}
+                                {(entry.action ?? '').replace(/_/g, ' ').toLowerCase()}
                               </Badge>
                             </div>
                             {entry.oldValue && entry.newValue && (

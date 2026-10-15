@@ -124,7 +124,6 @@ export interface Question {
     block: string;
     village: string;
   }
-  id: string
 }
 
 export interface DashboardStats {

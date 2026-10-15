@@ -415,7 +415,7 @@ function DeleteDialog({
   const [deleting, setDeleting] = useState(false)
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md p-2">
         <DialogHeader>
           <DialogTitle>Delete FAQ?</DialogTitle>
           <DialogDescription>
