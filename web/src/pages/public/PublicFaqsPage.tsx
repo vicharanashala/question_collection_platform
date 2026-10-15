@@ -113,15 +113,11 @@ export function PublicFaqsPage() {
   }, [items, query])
 
   const isSearching = query.trim().length > 0
+  const searchLabel = t('faq.searchPlaceholder', { defaultValue: 'Search questions' })
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-6">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => navigate(-1)}
-        className="rounded-full"
-      >
+      <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="rounded-full">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         {t('faq.backToProfile', { defaultValue: 'Back to profile' })}
       </Button>
@@ -146,8 +142,8 @@ export function PublicFaqsPage() {
           inputMode="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('faq.searchPlaceholder', { defaultValue: 'Search questions' })}
-          aria-label={t('faq.searchPlaceholder', { defaultValue: 'Search questions' })}
+          placeholder={searchLabel}
+          aria-label={searchLabel}
           className="h-11 rounded-full pl-9 pr-10 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
