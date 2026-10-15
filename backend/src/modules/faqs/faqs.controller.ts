@@ -343,7 +343,6 @@ private async safeAudit(payload: AuditLogDto) {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
   @Delete('admin/faqs/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
     const base: AuditLogDto = {
       actionType: AuditAction.DELETE_FAQ,
@@ -358,12 +357,13 @@ private async safeAudit(payload: AuditLogDto) {
     let before: Record<string, unknown> = {};
     try {
       before = this.faqSnapshot(await this.faqsService.findOne(id) as Faq);
-      await this.faqsService.delete(id);
+      const data = await this.faqsService.delete(id);
       await this.safeAudit({
         ...base,
         changes: { before, after: {} },
         outcome: { status: OutcomeStatus.SUCCESS },
       });
+      return {message: 'Faq deleted successfully'}
     } catch (err) {
       await this.safeAudit({
         ...base,
