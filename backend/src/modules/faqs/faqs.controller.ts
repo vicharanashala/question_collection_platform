@@ -68,9 +68,16 @@ private async safeAudit(payload: AuditLogDto) {
     }
   }
 
+  // Reads the FAQ identifier from either the mapped `id` or the raw `_id`.
+  private faqId(faq: Faq): string {
+    const doc = faq as unknown as { id?: unknown; _id?: unknown };
+    return String(doc.id ?? doc._id);
+  }
+
+  // Builds an audit snapshot of a FAQ. The repository returns `id` and clears `_id`.
   private faqSnapshot(faq: Faq): Record<string, unknown> {
     return {
-      id: faq._id.toString(),
+      id: this.faqId(faq),
       question: faq.question,
       answer: faq.answer,
       category: faq.category,
@@ -252,7 +259,7 @@ private async safeAudit(payload: AuditLogDto) {
           ...base,
           changes: {
             before: {},
-            after: { id: result._id.toString() },
+            after: { id: this.faqId(result) },
           },
           outcome: { status: OutcomeStatus.SUCCESS },
         });
