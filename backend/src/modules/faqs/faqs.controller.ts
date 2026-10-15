@@ -70,7 +70,6 @@ private async safeAudit(payload: AuditLogDto) {
 
   private faqSnapshot(faq: Faq): Record<string, unknown> {
     return {
-      id: faq._id.toString(),
       question: faq.question,
       answer: faq.answer,
       category: faq.category,
