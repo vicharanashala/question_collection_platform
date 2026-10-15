@@ -8,7 +8,6 @@ import {
   Send,
   Trash2,
   X,
-  Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { agriEntityApi, getErrorMessage } from "@/api/client";
