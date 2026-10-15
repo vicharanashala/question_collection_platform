@@ -117,9 +117,9 @@ export class LgdService {
       '';
 
     this.internalApiKey =
-      this.configService.get<string>('lgd.internalApiKey') ||
-      process.env.WEB_WEBHOOK_API_KEY ||
-      '';
+      this.configService.get<string>("lgd.internalApiKey") ||
+      process.env.REVIEW_SYSTEM_AUTH_KEY ||
+      "";
 
     const ttlDays =
       this.configService.get<number>('lgd.cacheTtlDays') ??
