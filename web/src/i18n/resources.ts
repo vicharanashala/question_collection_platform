@@ -1084,7 +1084,14 @@ const resources = {
         },
         "videoComingSoon": "Video guide coming soon",
         "videoGuideTitle": "Video Guide",
-        "loadError": "Failed to load FAQs"
+        "loadError": "Failed to load FAQs",
+        "backToProfile": "Back to profile",
+        "searchPlaceholder": "Search questions",
+        "clearSearch": "Clear search",
+        "categories": "Categories",
+        "retry": "Try again",
+        "noResultsTitle": "No matching questions",
+        "noResultsSubtitle": "Try different words or clear the search"
       },
       "faqAdmin": {
         "title": "FAQ Management",
