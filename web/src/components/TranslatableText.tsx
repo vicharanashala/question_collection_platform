@@ -17,6 +17,11 @@ interface TranslatableTextProps {
   text: string;
   /** Optional CSS class for the container. */
   className?: string;
+  /** Accepted for caller compatibility; not used yet. */
+  selectedLang?: string;
+  onLangChange?: (lang: string) => void;
+  sourceLanguage?: string;
+  inline?: boolean;
 }
 
 /**

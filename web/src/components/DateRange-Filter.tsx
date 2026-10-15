@@ -75,7 +75,7 @@ export function DateRangeFilter({
       {isCalendarVisible && (
         <div className="absolute right-0 z-50 mt-2 w-[20rem] rounded-lg border border-border-subtle bg-popover text-popover-foreground shadow-lg sm:w-[22rem]">
           <Calendar
-            initialFocus
+            autoFocus
             mode="range"
             defaultMonth={value?.from}
             selected={value}

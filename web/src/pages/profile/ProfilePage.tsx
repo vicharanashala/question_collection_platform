@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { SupportedLanguageCode } from "@/i18n";
-import { authApi, adminApi, lgdApi, getErrorMessage } from "@/api/client";
+import { authApi, lgdApi, getErrorMessage } from "@/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +23,6 @@ import {
   MapPin,
   Calendar,
   Globe,
-  HelpCircle,
   Edit2,
   Shield,
   CheckCircle,
@@ -36,8 +33,6 @@ import {
   GraduationCap,
   Building2,
   MapPinned,
-  TrendingUp,
-  FileText,
   Lock,
   User,
 } from "lucide-react";
@@ -666,107 +661,11 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
   );
 }
 
-// ─── Stats strip ───────────────────────────────────────────────────────────────
-
-function fetchUserQuestions(userId: string): Promise<any[]> {
-  return adminApi
-    .getUserDetail(userId)
-    .then((r) => r.questions ?? [])
-    .catch(() => []);
-}
-
-function StatsStrip({ userId }: { userId: string }) {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUserQuestions(userId)
-      .then(setQuestions)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [userId]);
-
-  if (loading)
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-20 rounded-xl bg-surface-variant animate-pulse"
-          />
-        ))}
-      </div>
-    );
-
-  const counts = {
-    total: questions.length,
-    approved: questions.filter((q) => q.status === "approved").length,
-    rejected: questions.filter((q) => q.status === "rejected").length,
-    pending: questions.filter((q) => ["pending", "held"].includes(q.status))
-      .length,
-    moved_to_final: questions.filter((q) => q.status === "moved_to_final")
-      .length,
-  };
-  const items = [
-    {
-      label: "Total Questions",
-      value: counts.total,
-      icon: FileText,
-      bg: "bg-blue-50 dark:bg-blue-950/40",
-      text: "text-blue-600",
-    },
-    {
-      label: "Approved",
-      value: counts.approved + counts.moved_to_final,
-      icon: CheckCircle,
-      bg: "bg-emerald-50 dark:bg-emerald-950/40",
-      text: "text-emerald-600",
-    },
-    {
-      label: "Pending",
-      value: counts.pending,
-      icon: Clock,
-      bg: "bg-amber-50 dark:bg-amber-950/40",
-      text: "text-amber-600",
-    },
-    {
-      label: "Rejected",
-      value: counts.rejected,
-      icon: AlertCircle,
-      bg: "bg-red-50 dark:bg-red-950/40",
-      text: "text-red-600",
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {items.map(({ label, value, icon: Icon, bg, text }) => (
-        <Card key={label} className={cn("border-0 shadow-xs", bg)}>
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground">
-                {label}
-              </p>
-              <p
-                className={cn("mt-1 text-xl sm:text-2xl font-extrabold", text)}
-              >
-                {value}
-              </p>
-            </div>
-            <Icon className={cn("h-7 w-7 opacity-60", text)} />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export function ProfilePage() {
   const { user, updateUser } = useAuth();
   const { setLanguage } = useLanguage();
-  const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
 
   if (!user) return null;

@@ -547,7 +547,7 @@ export function WithdrawalDetailModal({
                                   </span>
                                 </div>
                                 <Badge variant="secondary" className="mt-1 text-[11px] sm:text-[11px] sm:text-xs capitalize">
-                                  {entry.action.replace(/_/g, ' ').toLowerCase()}
+                                  {(entry.action ?? '').replace(/_/g, ' ').toLowerCase()}
                                 </Badge>
                                 {entry.oldValue && entry.newValue && (
                                   <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
