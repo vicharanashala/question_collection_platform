@@ -90,13 +90,10 @@ private async safeAudit(payload: AuditLogDto) {
 
   // ─── Public/user-facing ──────────────────────────────────────────────────
 
-  @Public()
   @Get('faqs')
-  async listVisible(@Query() query: ListFaqsQueryDto) {
-    if(!query.userId){
-      throw error("User id not found!!")
-    }
-    const user = await this.userservice.getProfile(query.userId);
+  @UseGuards(JwtAuthGuard)
+  async listVisible(@Query() query: ListFaqsQueryDto, @Req() req: AuthenticatedRequest) {
+    const user = await this.userservice.getProfile(req.user.id);
     return this.faqsService.findAllVisible(query, user);
   }
 

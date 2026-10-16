@@ -90,7 +90,6 @@ export function PublicFaqsPage() {
   const [activeCat, setActiveCat] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
-  const { user } = useAuth();
   // Loads the visible FAQs for the active category and ignores stale responses.
   useEffect(() => {
     let cancelled = false
@@ -98,7 +97,7 @@ export function PublicFaqsPage() {
     setFailed(false)
     setOpenId(null)
     faqApi
-      .getVisible({ category: activeCat === 'all' ? undefined : activeCat, userId: user?.id })
+      .getVisible({ category: activeCat === 'all' ? undefined : activeCat })
       .then((data) => { if (!cancelled) setItems(data) })
       .catch(() => { if (!cancelled) setFailed(true) })
       .finally(() => { if (!cancelled) setLoading(false) })

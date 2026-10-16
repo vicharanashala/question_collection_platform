@@ -33,10 +33,6 @@ export class ListFaqsQueryDto {
   userSort?: "anveshan" | "user" | "all";
 
   @IsOptional()
-  @IsString()
-  userId?: string;
-
-  @IsOptional()
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC';
 }

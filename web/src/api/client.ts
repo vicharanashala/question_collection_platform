@@ -1540,15 +1540,11 @@ export const faqApi = {
   //   return request<Faq[]>('/faqs', { params }, false)
   // },
 
-  getVisible: (filters?: { category?: string, userId?: string }) => {
+  getVisible: (filters?: { category?: string }) => {
     const params = new URLSearchParams();
 
     if (filters?.category) {
       params.set("category", filters.category);
-    }
-
-    if (filters?.userId){
-      params.set('userId', filters.userId)
     }
 
     const qs = params.toString();
