@@ -19,4 +19,8 @@ export class UpdateFaqDto extends PartialType(CreateFaqDto) {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  forAnveshan?: boolean;
 }

@@ -17,4 +17,8 @@ export class CreateFaqDto {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean = true;
+
+  @IsBoolean()
+  @IsOptional()
+  forAnveshan?: boolean = false;
 }

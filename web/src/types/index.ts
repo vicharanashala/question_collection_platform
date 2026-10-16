@@ -662,6 +662,7 @@ export interface Faq {
   answer: string;
   category: FaqCategory;
   isVisible: boolean;
+  forAnveshan: boolean;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;

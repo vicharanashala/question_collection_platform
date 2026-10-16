@@ -30,6 +30,9 @@ import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-met
 import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
 import { AuditService } from '../audit-logs/audit.service';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
+import { UserService } from '../user/user.service';
+import { error } from 'console';
+import { User } from '@/shared/database/mongodb/schemas/user.schema';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -41,7 +44,7 @@ interface AuthenticatedRequest extends Request {
 
 @Controller()
 export class FaqsController {
-  constructor(private readonly faqsService: FaqsService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(FaqsController.name),) {}
+  constructor(private readonly faqsService: FaqsService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(FaqsController.name), private readonly userservice: UserService) {}
 
   private toActorType(role: UserRole): ActorType {
   switch (role) {
@@ -90,7 +93,11 @@ private async safeAudit(payload: AuditLogDto) {
   @Public()
   @Get('faqs')
   async listVisible(@Query() query: ListFaqsQueryDto) {
-    return this.faqsService.findAllVisible(query);
+    if(!query.userId){
+      throw error("User id not found!!")
+    }
+    const user = await this.userservice.getProfile(query.userId);
+    return this.faqsService.findAllVisible(query, user);
   }
 
   /**
