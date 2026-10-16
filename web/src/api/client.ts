@@ -1559,6 +1559,7 @@ export const faqApi = {
     page?: number;
     limit?: number;
     sortBy?: "displayOrder" | "createdAt" | "updatedAt" | "question";
+    userSort?: "anveshan" | "user" | "all";
     sortOrder?: "ASC" | "DESC";
   }) => {
     const p: Record<string, string> = {};
@@ -1567,6 +1568,7 @@ export const faqApi = {
     if (filters?.page) p.page = String(filters.page);
     if (filters?.limit) p.limit = String(filters.limit);
     if (filters?.sortBy) p.sortBy = filters.sortBy;
+    if (filters?.userSort) p.userSort = filters.userSort;
     if (filters?.sortOrder) p.sortOrder = filters.sortOrder;
     const qs = new URLSearchParams(p).toString();
     return request<PaginatedResponse<Faq>>(

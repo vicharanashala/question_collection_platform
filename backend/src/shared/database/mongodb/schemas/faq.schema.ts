@@ -21,6 +21,9 @@ export class Faq {
   @Prop({ name: 'isVisible', default: true, index: true })
   isVisible: boolean;
 
+  @Prop({name: 'forAnveshan', default: false})
+  forAnveshan: boolean;
+  
   @Prop({ name: 'displayOrder', default: 0, index: true })
   displayOrder: number;
 

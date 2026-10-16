@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { IFaqRepository } from '../../IFaq.repository';
+import { FindVisibleOptions, IFaqRepository } from '../../IFaq.repository';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 import { FaqCategory } from '../../../../classes/enums';
+
+
 
 @Injectable()
 export class MongoFaqRepository
@@ -21,13 +23,38 @@ export class MongoFaqRepository
       .exec() as Promise<Faq[]>;
   }
 
-  async findVisible(category?: FaqCategory): Promise<Faq[]> {
-    const filter: Record<string, unknown> = { isVisible: true };
-    if (category) filter.category = category;
-    return this._model
-      .find(filter, undefined, { sort: { displayOrder: 1, createdAt: 1 } })
-      .exec() as Promise<Faq[]>;
+  // async findVisible(category?: FaqCategory): Promise<Faq[]> {
+  //   const filter: Record<string, unknown> = { isVisible: true };
+  //   if (category) filter.category = category;
+  //   return this._model
+  //     .find(filter, undefined, { sort: { displayOrder: 1, createdAt: 1 } })
+  //     .exec() as Promise<Faq[]>;
+  // }
+
+  async findVisible(options: FindVisibleOptions = {}): Promise<Faq[]> {
+  const { category, search, isAnveshanUser } = options;
+  const filter: Record<string, unknown> = { isVisible: true };
+
+  if (category) filter.category = category;
+
+  if (isAnveshanUser) {
+    filter.forAnveshan = true;
+  } else {
+    // matches forAnveshan: false AND documents where the key doesn't exist
+    filter.forAnveshan = { $ne: true };
   }
+
+  if (search) {
+    const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+    filter.$or = [{ question: regex }, { answer: regex }];
+  }
+
+  return this._model
+    .find(filter, undefined, { sort: { displayOrder: 1, createdAt: 1 } })
+    .exec() as Promise<Faq[]>;
+}
+
 
   async getStats(
     category?: FaqCategory,
