@@ -11,9 +11,8 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
-import { questionApi, walletApi } from '@/api/client'
+import { authApi, questionApi, userApi, walletApi, getErrorMessage } from '@/api/client'
 import { canAccessPayments } from '@/utils/paymentAccess'
-import { EditPublicProfileDialog } from '@/components/profile/EditPublicProfileDialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
@@ -25,7 +24,7 @@ import {
   ChevronRight, LogOut, Flag, ShieldCheck, X,
   FileText, MessageSquarePlus, BookOpen, GraduationCap, Briefcase,
   CalendarDays, Sprout, Ruler, Loader2, HelpCircle,
-  Languages, Moon, Sun, SlidersHorizontal, LifeBuoy,
+  Languages, Moon, Sun, SlidersHorizontal, LifeBuoy, RefreshCw,
 } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -213,7 +212,7 @@ export function PublicProfilePage() {
   const [totalQuestions, setTotalQuestions] = useState<number>(0)
   const [loadingStats, setLoadingStats] = useState(true)
   const [logoutOpen, setLogoutOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
+  const [refreshingAnveshan, setRefreshingAnveshan] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
@@ -251,6 +250,26 @@ export function PublicProfilePage() {
   // Reward tiers do not apply to Anveshan users, so their profile hides all tier UI.
   const isAnveshanUser = !!user.isAnveshanUser
   const memberSince = formatDate(user.createdAt) || em
+
+  // Re-fetches the Anveshan record and reloads the profile when anything changed.
+  const handleRefreshAnveshan = async () => {
+    if (refreshingAnveshan) return
+    setRefreshingAnveshan(true)
+    try {
+      const { updatedFields } = await userApi.refreshFromAnveshan()
+      if (updatedFields.length > 0) {
+        const { user: fresh } = await authApi.me()
+        updateUser({ ...fresh })
+        toast.success('Profile updated from Anveshan')
+      } else {
+        toast.success('Your profile is already up to date')
+      }
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Could not refresh from Anveshan'))
+    } finally {
+      setRefreshingAnveshan(false)
+    }
+  }
 
   const handleLogout = () => {
     setLogoutOpen(false)
@@ -320,6 +339,18 @@ export function PublicProfilePage() {
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{user.state}{user.district ? ` > ${user.district}` : ''}</span>
               </div>
+            )}
+
+            {isAnveshanUser && (
+              <button
+                type="button"
+                onClick={handleRefreshAnveshan}
+                disabled={refreshingAnveshan}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20 disabled:opacity-60 sm:text-xs"
+              >
+                <RefreshCw className={cn('h-3.5 w-3.5', refreshingAnveshan && 'animate-spin')} />
+                {refreshingAnveshan ? 'Refreshing...' : 'Refresh from Anveshan'}
+              </button>
             )}
 
             {/* Tier progress chip */}
@@ -544,7 +575,6 @@ export function PublicProfilePage() {
         )}
       </section>
 
-      <EditPublicProfileDialog open={editOpen} onOpenChange={setEditOpen} user={user} onSaved={updateUser} />
 
       {/* ── Preferences section ── */}
       <section>

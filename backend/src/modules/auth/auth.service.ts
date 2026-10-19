@@ -6,6 +6,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  BadGatewayException,
   Inject,
   Optional,
 } from "@nestjs/common";
@@ -272,7 +273,19 @@ export class AuthService {
     }
 
     // Send OTP via SMS gateway
-    await this.smsService.sendOtp(mobileNumber, otp);
+    try {
+      await this.smsService.sendOtp(mobileNumber, otp);
+    } catch (err) {
+      // Log the gateway detail server side and return a safe message to the client.
+      const reason = err instanceof Error ? err.message : String(err);
+      this.logger.error(`OTP delivery failed for ${mobileNumber}: ${reason}`);
+      throw new BadGatewayException({
+        message:
+          "We could not send the OTP to this number. Please check the number or try again later.",
+        code: "OTP_DELIVERY_FAILED",
+        ...(isDevelopment() && { detail: reason }),
+      });
+    }
 
     // Audit
     // await this.logAudit(
