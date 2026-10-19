@@ -284,6 +284,16 @@ async function handleResponse<T>(res: Response): Promise<T> {
 //   refreshTokens → { accessToken, refreshToken, expiresIn }
 //   me            → { user: PublicUser }
 
+export const userApi = {
+  // Re-fetches the user's Anveshan record and updates changed profile fields.
+  refreshFromAnveshan: () =>
+    request<{ updatedFields: string[] }>(
+      "/users/me/anveshan/refresh",
+      { method: "POST" },
+      false,
+    ),
+}
+
 export const authApi = {
   requestOtp: (mobileNumber: string, isWeb = false) => {
     return request<{ message: string }>('/auth/request-otp', {
