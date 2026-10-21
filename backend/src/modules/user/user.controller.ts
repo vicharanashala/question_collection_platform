@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Query,
   Body,
   UseGuards,
@@ -112,6 +113,21 @@ export class UserController {
   ) {
     const user = await this.userService.updateProfile(req.user.id, dto);
     return { user };
+  }
+
+  /**
+   * POST /users/me/anveshan/refresh
+   * Re-fetches the user's Anveshan record and updates name, state and district if they changed.
+   */
+  @Post('me/anveshan/refresh')
+  @HttpCode(HttpStatus.OK)
+  @CacheInvalidate('user:*')
+  async refreshFromAnveshan(@Req() req: AuthenticatedRequest) {
+    const { user, updatedFields } = await this.userService.refreshFromAnveshan(req.user.id);
+    return {
+      updatedFields,
+      user: { name: user.name, state: user.state, district: user.district },
+    };
   }
 
   /**
