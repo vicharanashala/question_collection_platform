@@ -19,8 +19,9 @@ export default defineConfig(({ mode }) => {
           // precached for offline use; lazy-loading languages would let this come back down.
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
           // The Zoho support-ticket page is a standalone static HTML file, not a React route —
-          // never answer its navigations with the SPA shell.
-          navigateFallbackDenylist: [/^\/raise-ticket\.html/],
+          // never answer its navigations with the SPA shell. API URLs opened directly in a tab
+          // (for example signed media links) must also reach the server, not the SPA shell.
+          navigateFallbackDenylist: [/^\/raise-ticket\.html/, /^\/api\//],
         },
               manifest: {
         name: 'AnnaDatha',
