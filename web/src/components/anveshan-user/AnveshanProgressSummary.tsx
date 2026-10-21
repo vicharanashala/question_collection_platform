@@ -1,4 +1,5 @@
-import { CheckCircle2, Circle } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle2, ChevronDown, Circle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { AnveshanMilestoneCounts, AnveshanUserProgress } from '@/types'
@@ -12,8 +13,9 @@ const GOALS: { key: keyof AnveshanMilestoneCounts; label: string }[] = [
   { key: 'answers', label: 'Answers' },
 ]
 
-// Overall Anveshan progress with a tile for every milestone goal.
+// Overall Anveshan progress, collapsed by default, with a tile for every milestone goal when expanded.
 export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserProgress | null }) {
+  const [open, setOpen] = useState(false)
   if (!progress) {
     return (
       <Card>
@@ -27,20 +29,29 @@ export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserPr
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Anveshan progress</p>
-            <p className="text-3xl font-extrabold tabular-nums text-foreground">{percent}%</p>
-          </div>
-          <span
-            className={cn(
-              'rounded-full px-3 py-1 text-xs font-semibold',
-              completed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-primary/10 text-primary',
-            )}
-          >
-            {stage}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls="anveshan-progress-goals"
+          className="flex w-full items-center justify-between gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        >
+          <span className="flex items-baseline gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Anveshan progress</span>
+            <span className="text-xl font-extrabold tabular-nums text-foreground">{percent}%</span>
           </span>
-        </div>
+          <span className="flex items-center gap-3">
+            <span
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-semibold',
+                completed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-primary/10 text-primary',
+              )}
+            >
+              {stage}
+            </span>
+            <ChevronDown className={cn('h-4 w-4 text-text-secondary transition-transform', open && 'rotate-180')} aria-hidden="true" />
+          </span>
+        </button>
         <div
           className="h-2.5 overflow-hidden rounded-full bg-border-subtle"
           role="progressbar"
@@ -51,7 +62,8 @@ export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserPr
         >
           <div className={cn('h-full rounded-full', completed ? 'bg-emerald-500' : 'bg-primary')} style={{ width: `${percent}%` }} />
         </div>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {open && (
+        <ul id="anveshan-progress-goals" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {GOALS.map(({ key, label }) => {
             const done = progress.progress[key] >= progress.requirements[key]
             const Icon = done ? CheckCircle2 : Circle
@@ -70,6 +82,7 @@ export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserPr
             )
           })}
         </ul>
+        )}
       </CardContent>
     </Card>
   )

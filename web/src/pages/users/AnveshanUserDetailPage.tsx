@@ -67,34 +67,44 @@ export function AnveshanUserDetailPage() {
       </button>
 
       <Card className="border-0 shadow-sm">
-        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:p-6">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-lg font-black text-white ring-2 ring-primary/20">
-            {getInitials(user.name || '', user.mobileNumber)}
+        <CardContent className="space-y-5 p-5 sm:p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-base font-black text-white ring-2 ring-primary/20 sm:h-16 sm:w-16 sm:text-lg">
+              {getInitials(user.name || '', user.mobileNumber)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="break-words text-lg font-extrabold leading-tight text-foreground sm:text-xl">{user.name || 'Unnamed user'}</h2>
+              {user.username && <p className="text-xs text-text-tertiary sm:text-sm">@{user.username}</p>}
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Badge className="gap-1 bg-emerald-600 text-white"><Sprout className="h-3 w-3" aria-hidden="true" />Anveshan user</Badge>
+                <Badge variant="secondary" className="capitalize">{user.verificationStatus.replace('_', ' ')}</Badge>
+                {user.isTester && <TesterTag />}
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="shrink-0" onClick={() => { markFeatureSeen('anveshanUserExport'); setExportOpen(true) }}>
+              <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Export
+              <NewBadge feature="anveshanUserExport" className="ml-1.5" />
+            </Button>
           </div>
-          <div className="min-w-0 flex-1 space-y-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="truncate text-lg font-extrabold text-foreground sm:text-xl">{user.name || 'Unnamed user'}</h2>
-                {user.username && <p className="text-xs text-text-tertiary sm:text-sm">@{user.username}</p>}
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge className="gap-1 bg-emerald-600 text-white"><Sprout className="h-3 w-3" aria-hidden="true" />Anveshan user</Badge>
-                  <Badge variant="secondary" className="capitalize">{user.verificationStatus.replace('_', ' ')}</Badge>
-                  {user.isTester && <TesterTag />}
+          <dl className="grid grid-cols-1 gap-3 border-t border-border-subtle pt-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Phone, label: 'Mobile', value: user.mobileNumber },
+              { icon: MapPin, label: 'Location', value: [user.district, user.state].filter(Boolean).join(', ') || '—' },
+              { icon: Calendar, label: 'Joined', value: formatDate(user.createdAt) ?? '—' },
+              { icon: Clock, label: 'Last login', value: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : 'Never logged in' },
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex min-w-0 items-start gap-3 rounded-lg bg-surface-variant/50 p-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-surface text-text-secondary">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{label}</dt>
+                  <dd className="mt-0.5 break-words text-sm font-medium text-foreground">{value}</dd>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => { markFeatureSeen('anveshanUserExport'); setExportOpen(true) }}>
-                <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Export
-                <NewBadge feature="anveshanUserExport" className="ml-1.5" />
-              </Button>
-            </div>
-            <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-text-secondary sm:grid-cols-2 lg:grid-cols-4 sm:text-sm">
-              <div className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" /><dd>{user.mobileNumber}</dd></div>
-              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" aria-hidden="true" /><dd className="truncate">{[user.district, user.state].filter(Boolean).join(', ') || '—'}</dd></div>
-              <div className="flex items-center gap-2"><Calendar className="h-4 w-4 shrink-0" aria-hidden="true" /><dd>Joined {formatDate(user.createdAt)}</dd></div>
-              <div className="flex items-center gap-2"><Clock className="h-4 w-4 shrink-0" aria-hidden="true" /><dd>{user.lastLoginAt ? `Last login ${formatDateTime(user.lastLoginAt)}` : 'Never logged in'}</dd></div>
-            </dl>
-          </div>
+            ))}
+          </dl>
         </CardContent>
       </Card>
 

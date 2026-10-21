@@ -517,7 +517,6 @@ export function UsersPage() {
                                 {u.name || '—'}
                               </p>
                               {u.isTester && <TesterTag />}
-                              {u.isAnveshanUser && <NewBadge feature="anveshanUserPage" />}
                               {isLocked && (
                                 <span className={cn(
                                   'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
