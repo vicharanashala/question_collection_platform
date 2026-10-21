@@ -157,6 +157,11 @@ const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'banned', label: 'Banned' },
 ]
 
+// A complete YYYY-MM-DD date from the year 2000 on, as produced by a finished date input.
+function isUsableDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '2000-01-01'
+}
+
 type UserSortKey = 'name' | 'role' | 'verificationStatus' | 'state' | 'createdAt' | 'lastLoginAt' | 'anveshanProgress'
 
 // Table header cell that sorts the list by one column when clicked.
@@ -223,13 +228,25 @@ export function UsersPage() {
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states')))
   }, [])
 
-  useEffect(() => {
-    adminApi.getUserStats({ fromDate, toDate })
-      .then(setStats)
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user counts')))
-  }, [fromDate, toDate])
+  // Date filters apply once a full, sensible date is typed, so partial years like 0002 do not trigger requests.
+  const debouncedFrom = useDebouncedValue(fromDate, 400)
+  const debouncedTo = useDebouncedValue(toDate, 400)
+  const usableFrom = isUsableDate(debouncedFrom) ? debouncedFrom : ''
+  const usableTo = isUsableDate(debouncedTo) ? debouncedTo : ''
+  const dateRangeInvalid = !!usableFrom && !!usableTo && usableFrom > usableTo
 
   useEffect(() => {
+    if (dateRangeInvalid) return
+    let cancelled = false
+    adminApi.getUserStats({ fromDate: usableFrom, toDate: usableTo })
+      .then((res) => { if (!cancelled) setStats(res) })
+      .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load user counts')) })
+    return () => { cancelled = true }
+  }, [usableFrom, usableTo, dateRangeInvalid])
+
+  useEffect(() => {
+  if (dateRangeInvalid) return
+  let cancelled = false
   setLoading(true)
   adminApi.getUsers({
     page, limit,
@@ -240,16 +257,17 @@ export function UsersPage() {
     state: stateFilter || undefined,
     anveshan: anveshanFilter || undefined,
     tester: testerFilter || undefined,
-    fromDate: fromDate || undefined,
-    toDate: toDate || undefined,
+    fromDate: usableFrom || undefined,
+    toDate: usableTo || undefined,
     excludeId: currentUser?.id,
     sortBy,
     sortOrder,
   })
-    .then((res) => { setUsers(res.items); setTotal(res.total) })
-    .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
-    .finally(() => setLoading(false))
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, fromDate, toDate, sortBy, sortOrder, currentUser?.id])
+    .then((res) => { if (!cancelled) { setUsers(res.items); setTotal(res.total) } })
+    .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load users')) })
+    .finally(() => { if (!cancelled) setLoading(false) })
+  return () => { cancelled = true }
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, usableFrom, usableTo, dateRangeInvalid, sortBy, sortOrder, currentUser?.id])
 
   // Sorts by a column, flipping the direction when it is already the active one.
   const handleSort = (key: UserSortKey) => {
@@ -312,8 +330,8 @@ export function UsersPage() {
               state: stateFilter || undefined,
               anveshan: anveshanFilter || undefined,
               tester: testerFilter || undefined,
-              fromDate: fromDate || undefined,
-              toDate: toDate || undefined,
+              fromDate: usableFrom || undefined,
+              toDate: usableTo || undefined,
               excludeId: currentUser?.id,
             })}
           />
@@ -432,7 +450,8 @@ export function UsersPage() {
             <Input id="users-from" type="date" value={fromDate} max={toDate || undefined} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" />
           </FilterField>
           <FilterField label="Joined to" htmlFor="users-to">
-            <Input id="users-to" type="date" value={toDate} min={fromDate || undefined} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" />
+            <Input id="users-to" type="date" value={toDate} min={fromDate || undefined} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" aria-invalid={dateRangeInvalid} />
+            {dateRangeInvalid && <p role="alert" className="text-xs text-red-600">To date must be on or after the From date.</p>}
           </FilterField>
         </div>
         )}

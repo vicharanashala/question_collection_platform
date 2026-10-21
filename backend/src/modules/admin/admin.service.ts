@@ -121,12 +121,12 @@ const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   },
 };
 
-// Builds a createdAt range from YYYY-MM-DD strings, treating the end date as inclusive.
+// Builds a createdAt range from YYYY-MM-DD strings as whole days in Indian Standard Time, end date inclusive.
 function buildJoinedRange(fromDate?: string, toDate?: string): Record<string, Date> | undefined {
   if (!fromDate && !toDate) return undefined;
   const range: Record<string, Date> = {};
-  if (fromDate) range.$gte = new Date(fromDate);
-  if (toDate) range.$lte = new Date(toDate.length <= 10 ? `${toDate}T23:59:59.999Z` : toDate);
+  if (fromDate) range.$gte = new Date(fromDate.length <= 10 ? `${fromDate}T00:00:00.000+05:30` : fromDate);
+  if (toDate) range.$lte = new Date(toDate.length <= 10 ? `${toDate}T23:59:59.999+05:30` : toDate);
   return range;
 }
 
