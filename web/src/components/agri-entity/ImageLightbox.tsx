@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -10,6 +10,14 @@ interface ImageLightboxProps {
   index: number | null
   title: string
   onIndexChange: (index: number | null) => void
+}
+
+// Builds a download file name from the title, image position and the extension in the storage object path.
+function buildDownloadName(title: string, index: number, url: string): string {
+  const objectPath = new URL(url, window.location.origin).searchParams.get('o') ?? ''
+  const extension = objectPath.match(/\.([a-z0-9]{2,5})$/i)?.[1] ?? 'jpg'
+  const safeTitle = title.trim().replace(/[^\w-]+/g, '_') || 'image'
+  return `${safeTitle}_${index + 1}.${extension}`
 }
 
 /** Full size image viewer with previous and next controls and a thumbnail strip when there are several images. */
@@ -47,9 +55,9 @@ export function ImageLightbox({ images, index, title, onIndexChange }: ImageLigh
                 {hasMany && <span className="ml-2 font-normal text-text-tertiary">{index + 1} / {images.length}</span>}
               </DialogTitle>
               <Button asChild variant="outline" size="sm" className="shrink-0">
-                <a href={images[index]} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                  Open original
+                <a href={images[index]} download={buildDownloadName(title, index, images[index])}>
+                  <Download className="mr-1.5 h-3.5 w-3.5" />
+                  Download
                 </a>
               </Button>
             </div>
