@@ -16,6 +16,9 @@ import { ExportMenu } from "@/components/ExportMenu";
 import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
 import { StaffQuestionDetailDialog } from "@/components/questions/StaffQuestionDetailDialog";
 import { TesterFilter, type TesterFilterValue } from "@/components/TesterFilter";
+import { AnveshanUserFilter } from "@/components/AnveshanUserFilter";
+import { useAuth } from "@/context/AuthContext";
+import { isSuperAdmin } from "@/lib/roles";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 import { cn, formatDate, formatTime } from "@/lib/utils";
@@ -69,6 +72,9 @@ export function QuestionsPage() {
   const [answerFilter, setAnswerFilter] = useState<AnswerFilter>("");
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>("");
+  const { user } = useAuth();
+  const [userIds, setUserIds] = useState<string[]>([]);
+  const userIdsParam = isSuperAdmin(user) && userIds.length ? userIds.join(",") : undefined;
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"table" | "card">("table");
   const limit = 10;
@@ -90,7 +96,7 @@ export function QuestionsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter]);
+  }, [debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter, userIds]);
 
   useEffect(() => {
     setLoading(true);
@@ -104,6 +110,7 @@ export function QuestionsPage() {
         answerStatus: answerFilter || undefined,
         userType: userTypeFilter || undefined,
         tester: testerFilter || undefined,
+        userIds: userIdsParam,
       })
       .then((res) => {
         setQuestions(res.items as Question[]);
@@ -111,7 +118,7 @@ export function QuestionsPage() {
       })
       .catch((e) => toast.error(getErrorMessage(e, "Failed to load questions")))
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter, view]);
+  }, [page, debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter, userIds, view]);
 
   const totalPages = Math.max(
     1,
@@ -274,7 +281,7 @@ export function QuestionsPage() {
   ];
 
   const emptyMessage =
-    search || statusFilter || answerFilter || userTypeFilter || testerFilter
+    search || statusFilter || answerFilter || userTypeFilter || testerFilter || userIds.length
       ? "No questions match your filters"
       : "No questions yet";
 
@@ -314,7 +321,7 @@ export function QuestionsPage() {
     />
   );
 
-  const hasActiveFilters = !!(search || statusFilter || answerFilter || userTypeFilter || testerFilter);
+  const hasActiveFilters = !!(search || statusFilter || answerFilter || userTypeFilter || testerFilter || userIds.length);
 
   // Resets every filter and the search box.
   const clearFilters = () => {
@@ -323,6 +330,7 @@ export function QuestionsPage() {
     setAnswerFilter("");
     setUserTypeFilter("");
     setTesterFilter("");
+    setUserIds([]);
     setPage(1);
   };
 
@@ -369,6 +377,7 @@ export function QuestionsPage() {
                 answerStatus: answerFilter || undefined,
                 userType: userTypeFilter || undefined,
                 tester: testerFilter || undefined,
+                userIds: userIdsParam,
               })
             }
           />
@@ -411,6 +420,11 @@ export function QuestionsPage() {
                 ))}
               </SelectContent>
             </Select>
+            {isSuperAdmin(user) && (
+              <div className="sm:col-span-2 lg:col-span-full">
+                <AnveshanUserFilter value={userIds} onApply={setUserIds} tester={testerFilter || undefined} disabled={loading} />
+              </div>
+            )}
           </div>
 
           {/* Status filter — chips on desktop, dropdown on mobile */}

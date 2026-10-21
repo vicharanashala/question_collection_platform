@@ -6,10 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Clock, Download, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
-import { agriEntityApi, getErrorMessage, type AnveshanUserOption } from '@/api/client'
+import { agriEntityApi, getErrorMessage } from '@/api/client'
+import { AnveshanUserFilter } from '@/components/AnveshanUserFilter'
 import { isSuperAdmin } from '@/lib/roles'
 import { Button } from '@/components/ui/button'
-import { MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
 import { Card, CardContent } from '@/components/ui/card'
 import { DataTable, type ColumnDef } from '@/components/DataTable'
 import { Badge } from '@/components/ui/badge'
@@ -50,8 +50,6 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<AgriEntitySubmission | null>(null)
   const canFilterUsers = scope === 'all' && isSuperAdmin(user)
-  const [anveshanUsers, setAnveshanUsers] = useState<AnveshanUserOption[]>([])
-  const [draftUserIds, setDraftUserIds] = useState<string[]>([])
   const [userIds, setUserIds] = useState<string[]>([])
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [exporting, setExporting] = useState(false)
@@ -62,21 +60,6 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     { key: 'approved', label: t('submissions.approved') },
     { key: 'rejected', label: t('submissions.rejected') },
   ]
-
-  // Loads the Anveshan users offered by the Super Admin user filter.
-  useEffect(() => {
-    if (!canFilterUsers) return
-    agriEntityApi
-      .listAnveshanUsers(testerFilter || undefined)
-      .then((users) => {
-        setAnveshanUsers(users)
-        // Drop selected users that the current tester or Anveshan scope no longer lists.
-        const listed = new Set(users.map((u) => u.id))
-        setDraftUserIds((ids) => ids.filter((id) => listed.has(id)))
-        setUserIds((ids) => (ids.every((id) => listed.has(id)) ? ids : ids.filter((id) => listed.has(id))))
-      })
-      .catch((err) => toast.error(getErrorMessage(err, 'Could not load Anveshan users')))
-  }, [canFilterUsers, testerFilter])
 
   useEffect(() => {
     let cancelled = false
@@ -109,7 +92,6 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
 
   // Applies or clears the selected users and returns to the first page.
   const applyUsers = (ids: string[]) => {
-    setDraftUserIds(ids)
     setUserIds(ids)
     setPage(1)
   }
@@ -219,19 +201,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             {canFilterUsers && (
               <>
-                <div className="w-full sm:w-72">
-                  <MultiSearchableSelect
-                    items={anveshanUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.mobileNumber})` }))}
-                    values={draftUserIds}
-                    onValuesChange={setDraftUserIds}
-                    placeholder="Filter by Anveshan users"
-                    emptyMessage="No Anveshan users found"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => applyUsers(draftUserIds)} disabled={loading}>Apply</Button>
-                  <Button size="sm" variant="outline" onClick={() => applyUsers([])} disabled={!draftUserIds.length && !userIds.length}>Reset</Button>
-                </div>
+                <AnveshanUserFilter value={userIds} onApply={applyUsers} tester={testerFilter || undefined} disabled={loading} />
               </>
             )}
             <div className="w-full sm:w-44">

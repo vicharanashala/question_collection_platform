@@ -88,7 +88,17 @@ describe('AgriEntitiesService staff listing and export', () => {
   });
 
   it('searches Anveshan users by name or mobile number', async () => {
-    expect(await service.searchAnveshanUsers('bal')).toEqual([anveshan[1]]);
-    expect(await service.searchAnveshanUsers('0001')).toEqual([anveshan[0]]);
+    expect(await service.searchAnveshanUsers({ search: 'bal' })).toEqual([anveshan[1]]);
+    expect(await service.searchAnveshanUsers({ search: '0001' })).toEqual([anveshan[0]]);
+  });
+
+  it('lists only users inside the tester scope', async () => {
+    userRepo.findAll.mockImplementation((filter: Record<string, unknown>) =>
+      Promise.resolve(filter.is_tester ? [anveshan[0]] : anveshan),
+    );
+
+    expect(await service.searchAnveshanUsers({ tester: 'exclude' })).toEqual([anveshan[1]]);
+    expect(await service.searchAnveshanUsers({ tester: 'only' })).toEqual([anveshan[0]]);
+    expect(await service.searchAnveshanUsers({ anveshanScope: 'exclude' })).toEqual([]);
   });
 });

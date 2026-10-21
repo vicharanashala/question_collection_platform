@@ -993,6 +993,7 @@ async getDailyStatsSince(
     if (searchCondition) match.$or = searchCondition;
 
     const staffConditions = buildStaffConditions(scopeToUserType(dto.anveshanScope) ?? userType, answerStatus);
+    if (isAdmin && dto.userIds?.length) staffConditions.push({ userId: { $in: dto.userIds } });
     if (staffConditions.length > 0) match.$and = staffConditions;
 
     return this.paginateWithUsers(match, { submittedAt: -1 }, page, limit, canViewContact);

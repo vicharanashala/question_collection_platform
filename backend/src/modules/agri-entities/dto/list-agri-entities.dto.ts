@@ -1,7 +1,8 @@
-import { ArrayMaxSize, IsArray, IsEnum, IsInt, IsOptional, IsString, Max, Min, IsIn } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min, IsIn } from 'class-validator';
 import { AnveshanScope } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
+import { UserIdsQuery } from '../../../shared/utils/user-ids-query.util';
 import { AgriEntityStatus, AgriEntityType } from '../../../shared/classes/enums';
 
 export class ListAgriEntitiesDto {
@@ -36,13 +37,7 @@ export class ListAgriEntitiesDto {
   anveshanScope?: AnveshanScope;
 
   /** Super Admin filter: only entities submitted by these users (comma separated or repeated). */
-  @IsOptional()
-  @Transform(({ value }) =>
-    (Array.isArray(value) ? value : String(value).split(',')).map((id: string) => id.trim()).filter(Boolean),
-  )
-  @IsArray()
-  @ArrayMaxSize(200)
-  @IsString({ each: true })
+  @UserIdsQuery()
   userIds?: string[];
 
   /** Staff list order by submission date. Defaults to newest first. */

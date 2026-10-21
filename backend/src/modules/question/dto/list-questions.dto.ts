@@ -2,6 +2,7 @@ import { IsOptional, IsString, IsIn, IsInt, Min, Max, IsDateString } from 'class
 import { AnveshanScope } from '../../../shared/utils/anveshan-mode.util';
 import { TESTER_FILTER_VALUES, type TesterFilter } from '../../../shared/utils/tester.util';
 import { Transform } from 'class-transformer';
+import { UserIdsQuery } from '../../../shared/utils/user-ids-query.util';
 
 export class ListQuestionsDto {
   @IsOptional()
@@ -67,4 +68,8 @@ export class ListQuestionsDto {
   /** Staff Anveshan mode: only Anveshan users or everyone except them. */
   @AnveshanScope()
   anveshanScope?: AnveshanScope;
+
+  /** Super Admin filter: only questions submitted by these users (comma separated or repeated). */
+  @UserIdsQuery()
+  userIds?: string[];
 }

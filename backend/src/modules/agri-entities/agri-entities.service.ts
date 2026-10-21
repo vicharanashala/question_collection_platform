@@ -9,9 +9,24 @@ import { AnveshanUsersQueryDto, ListAgriEntitiesDto, SubmitAgriEntityDto, Submit
 import { UserService } from '../user/user.service';
 
 const ENTITY_EXPORT_COLUMNS = [
-  'id', 'type', 'status', 'localName', 'englishName', 'botanicalName', 'localNameSource', 'alternateNames',
+  'type', 'localName', 'englishName', 'botanicalName', 'localNameSource', 'alternateNames',
   'imageCount', 'userName', 'userMobileNumber', 'submittedAt', 'state', 'district', 'block', 'village', 'createdAt',
 ];
+
+// Formats a date as DD/MM/YYYY HH:MM:SS in Indian Standard Time, or an empty string when missing.
+function formatExportDate(value?: Date | null): string {
+  if (!value) return '';
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    })
+      .formatToParts(new Date(value))
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}:${parts.second}`;
+}
 
 @Injectable()
 export class AgriEntitiesService {
@@ -140,9 +155,7 @@ export class AgriEntitiesService {
       const user = byId.get(entity.userId);
       const location = entity.submissionLocation;
       return {
-        id: entity.id,
         type: entity.type,
-        status: entity.status,
         localName: entity.localName,
         englishName: entity.englishName,
         botanicalName: entity.botanicalName,
@@ -151,12 +164,12 @@ export class AgriEntitiesService {
         imageCount: entity.imageUrls?.length ?? 0,
         userName: user?.name ?? '',
         userMobileNumber: user?.mobileNumber ?? '',
-        submittedAt: (location?.capturedAt ?? entity.createdAt)?.toISOString() ?? '',
+        submittedAt: formatExportDate(location?.capturedAt ?? entity.createdAt),
         state: location?.state ?? '',
         district: location?.district ?? '',
         block: location?.block ?? '',
         village: location?.village ?? '',
-        createdAt: entity.createdAt?.toISOString() ?? '',
+        createdAt: formatExportDate(entity.createdAt),
       };
     });
     const columns = ENTITY_EXPORT_COLUMNS;

@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
@@ -79,6 +80,9 @@ export class QuestionController {
   ): Promise<{ items: unknown[]; total: number; page: number; limit: number; pages: number }> {
     const canViewContact = req.user.role === 'admin' || req.user.role === 'super_admin';
     const isStaff = canViewContact || req.user.role === 'curator';
+    if (dto.userIds?.length && req.user.role !== 'super_admin') {
+      throw new ForbiddenException('Only Super Admins can filter by users');
+    }
     return this.questionService.list(req.user.id, dto, isStaff, canViewContact);
   }
 
