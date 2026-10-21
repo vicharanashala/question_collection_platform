@@ -1,6 +1,6 @@
 import { NewBadge } from '@/components/ui/new-badge'
-import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -23,6 +23,7 @@ import {
   PanelLeftOpen,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { SignOutDialog } from '@/components/SignOutDialog'
 
 // Nav items use a translation key (`labelKey`) instead of a literal so the
@@ -44,6 +45,12 @@ const navItems = [
 ]
 
 const COLLAPSED_KEY = 'staff-sidebar-collapsed'
+const HINT_DURATION_MS = 2500
+
+// True when the key event comes from a field where arrow keys have their own meaning.
+function isEditableTarget(target: EventTarget | null): boolean {
+  return target instanceof Element && !!target.closest('input, textarea, select, [contenteditable="true"], [role="combobox"]')
+}
 
 // Reads the saved collapsed state, treating blocked storage as expanded.
 function readCollapsed(): boolean {
@@ -59,6 +66,49 @@ export function Sidebar() {
   const { user } = useAuth()
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readCollapsed)
+  const [hintTo, setHintTo] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const navRef = useRef<HTMLElement>(null)
+  const hintTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  const visibleItems = navItems.filter((item) => item.roles.includes(user?.role as string))
+
+  // Shows the tooltip of the given item for a short time, restarting the timer on every switch.
+  const showHint = useCallback((to: string) => {
+    clearTimeout(hintTimer.current)
+    setHintTo(to)
+    hintTimer.current = setTimeout(() => setHintTo(null), HINT_DURATION_MS)
+  }, [])
+
+  // Moves to the previous or next sidebar page with the arrow keys and shows its tooltip.
+  // Plain arrows work while focus is inside the sidebar; Alt with an arrow works anywhere,
+  // so normal page scrolling and form fields are not affected.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey) return
+      const inSidebar = navRef.current?.contains(event.target as Node) ?? false
+      if (!inSidebar && !event.altKey) return
+      if (isEditableTarget(event.target) || document.querySelector('[role="dialog"]')) return
+      if (visibleItems.length === 0) return
+
+      event.preventDefault()
+      const current = visibleItems.findIndex(({ to }) => pathname === to || pathname.startsWith(`${to}/`))
+      const delta = event.key === 'ArrowDown' ? 1 : -1
+      const fallback = delta === 1 ? 0 : visibleItems.length - 1
+      const next = current === -1 ? fallback : (current + delta + visibleItems.length) % visibleItems.length
+      const { to } = visibleItems[next]
+
+      navigate(to)
+      showHint(to)
+      if (inSidebar) navRef.current?.querySelector<HTMLAnchorElement>(`a[href="${to}"]`)?.focus()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [visibleItems, pathname, navigate, showHint])
+
+  useEffect(() => () => clearTimeout(hintTimer.current), [])
 
   // Flips the collapsed state and remembers it for the next visit.
   const toggleCollapsed = () => {
@@ -92,13 +142,15 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className={cn('flex-1 space-y-1 overflow-y-auto', collapsed ? 'p-2' : 'p-3')}>
-        {navItems.map(({ to, labelKey, icon: Icon, roles, defaultLabel, newFeature }) => {
-          if (!roles?.includes(user?.role as string)) return null
+      <TooltipProvider>
+      <nav ref={navRef} className={cn('flex-1 space-y-1 overflow-y-auto', collapsed ? 'p-2' : 'p-3')}>
+        {visibleItems.map(({ to, labelKey, icon: Icon, defaultLabel, newFeature }) => {
           const label = t(labelKey, { defaultValue: defaultLabel })
           return (
+            <Tooltip key={to} open={hintTo === to}>
+            <TooltipTrigger asChild>
+            <div>
             <NavLink
-              key={to}
               to={to}
               title={collapsed ? label : undefined}
               aria-label={collapsed ? label : undefined}
@@ -116,9 +168,14 @@ export function Sidebar() {
               {!collapsed && label}
               {!collapsed && newFeature && <NewBadge feature={newFeature} className="ml-auto" />}
             </NavLink>
+            </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">{label}</TooltipContent>
+            </Tooltip>
           )
         })}
       </nav>
+      </TooltipProvider>
 
       {/* User + Logout */}
       <div className={cn('border-t border-sidebar-border', collapsed ? 'p-2' : 'p-3')}>
