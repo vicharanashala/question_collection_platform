@@ -95,3 +95,28 @@ export async function downloadTable<T>(
   XLSX.utils.book_append_sheet(book, sheet, baseName.slice(0, 31))
   XLSX.writeFile(book, filename)
 }
+
+/** One sheet of a multi sheet workbook export. */
+export interface WorkbookSheet {
+  name: string
+  table: Cell[][]
+}
+
+/** Builds a sheet from rows and column definitions for downloadWorkbook. */
+export function workbookSheet<T>(name: string, rows: T[], columns: ExportColumn<T>[]): WorkbookSheet {
+  return { name, table: toTable(rows, columns) }
+}
+
+/** Downloads one Excel workbook with a sheet per entry. */
+export async function downloadWorkbook(sheets: WorkbookSheet[], baseName: string) {
+  const XLSX = await import('xlsx')
+  const book = XLSX.utils.book_new()
+  for (const { name, table } of sheets) {
+    const sheet = XLSX.utils.aoa_to_sheet(table)
+    sheet['!cols'] = (table[0] ?? []).map((header, i) => ({
+      wch: Math.min(60, Math.max(String(header).length, ...table.slice(1, 200).map((r) => String(r[i] ?? '').length)) + 2),
+    }))
+    XLSX.utils.book_append_sheet(book, sheet, name.slice(0, 31))
+  }
+  XLSX.writeFile(book, `${baseName}_${formatDateFns(new Date(), 'yyyyMMdd_HHmm')}.xlsx`)
+}

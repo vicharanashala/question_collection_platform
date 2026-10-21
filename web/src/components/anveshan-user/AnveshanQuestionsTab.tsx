@@ -4,36 +4,15 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { cn, formatDateTime } from '@/lib/utils'
-import type { AnveshanUserQuestion, QuestionStatus } from '@/types'
-
-const STATUS_STYLE: Record<QuestionStatus, { label: string; cls: string }> = {
-  pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' },
-  held: { label: 'Held', cls: 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300' },
-  approved: { label: 'Approved', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' },
-  rejected: { label: 'Rejected', cls: 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' },
-  moved_to_final: { label: 'Published', cls: 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300' },
-}
-
-// The review note that explains the question's current status, if there is one.
-function statusReason(question: AnveshanUserQuestion): string | null {
-  if (question.status === 'rejected') return question.rejectionReason
-  if (question.status === 'held') return question.heldReason
-  if (question.status === 'approved') return question.approvalReason
-  return null
-}
+import type { AnveshanUserQuestion } from '@/types'
 
 function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
   const [open, setOpen] = useState(false)
-  const status = STATUS_STYLE[question.status] ?? { label: question.status, cls: 'bg-muted text-muted-foreground' }
-  const reason = statusReason(question)
   const answer = question.answer
 
   return (
     <li className="space-y-3 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="min-w-0 flex-1 text-sm font-medium text-foreground">{question.questionText}</p>
-        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', status.cls)}>{status.label}</span>
-      </div>
+      <p className="text-sm font-medium text-foreground">{question.questionText}</p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-secondary">
         {question.cropType && (
           <span className="inline-flex items-center gap-1"><Sprout className="h-3.5 w-3.5" aria-hidden="true" />{question.cropType}</span>
@@ -43,9 +22,7 @@ function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
           {[question.district, question.state].filter(Boolean).join(', ') || '—'}
         </span>
         <span>Submitted {formatDateTime(question.submittedAt)}</span>
-        {question.reviewedAt && <span>Reviewed {formatDateTime(question.reviewedAt)}</span>}
       </div>
-      {reason && <p className="rounded-md bg-surface-variant/60 px-3 py-2 text-xs text-text-secondary">Review note: {reason}</p>}
 
       {answer ? (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20">

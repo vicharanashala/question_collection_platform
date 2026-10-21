@@ -818,7 +818,13 @@ export interface AgriEntitySubmission {
   createdAt: string;
   updatedAt: string;
   /** When the entity was submitted; missing on older records, which fall back to createdAt. */
-  submissionLocation?: { capturedAt?: string } | null;
+  submissionLocation?: {
+    capturedAt?: string;
+    state?: string;
+    district?: string;
+    block?: string;
+    village?: string;
+  } | null;
   /** Present only in the staff listing; null when the user no longer exists. */
   submitter?: AgriEntitySubmitter | null;
 }

@@ -3,7 +3,6 @@ import { Clock, ImageIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { AgriEntityDetailModal } from '@/components/agri-entity/AgriEntityDetailModal'
 import { SUBMISSION_TAB_ICONS } from '@/components/agri-entity/SubmissionTypeTabs'
-import { agriEntityStatusBadge } from '@/components/agri-entity/agriEntityStatus'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AgriEntitySubmission, AgriEntityType } from '@/types'
@@ -56,12 +55,7 @@ export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmissi
                     </span>
                   )}
                   <span className="min-w-0 flex-1 space-y-0.5">
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-semibold text-foreground">{entity.englishName}</span>
-                      {entity.status !== 'pending' && (
-                        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase', agriEntityStatusBadge(entity.status))}>{entity.status}</span>
-                      )}
-                    </span>
+                    <span className="block truncate text-sm font-semibold text-foreground">{entity.englishName}</span>
                     <span className="block truncate text-xs text-text-secondary">{entity.localName}</span>
                     <span className="block truncate text-xs italic text-text-tertiary">{entity.botanicalName || '—'}</span>
                     <span className="flex items-center gap-3 pt-1 text-[11px] text-text-tertiary">

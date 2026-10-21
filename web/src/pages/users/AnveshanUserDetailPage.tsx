@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Clock, MapPin, Phone, Sprout } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, Download, MapPin, Phone, Sprout } from 'lucide-react'
 import { toast } from 'sonner'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
@@ -11,72 +11,10 @@ import { UserDetailSkeleton } from '@/components/ui/skeleton'
 import { TesterTag } from '@/components/TesterTag'
 import { AnveshanProgressSummary } from '@/components/anveshan-user/AnveshanProgressSummary'
 import { AnveshanQuestionsTab } from '@/components/anveshan-user/AnveshanQuestionsTab'
+import { AnveshanExportDialog } from '@/components/anveshan-user/AnveshanExportDialog'
 import { AnveshanEntitiesTab } from '@/components/anveshan-user/AnveshanEntitiesTab'
 import { formatDate, formatDateTime, getInitials } from '@/lib/utils'
-import type { AnveshanUserDetail, User } from '@/types'
-
-// A labelled value in the profile grid; empty values show a dash.
-function ProfileItem({ label, value }: { label: string; value: string | number | null | undefined }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{label}</dt>
-      <dd className="mt-0.5 truncate text-sm text-foreground">{value || '—'}</dd>
-    </div>
-  )
-}
-
-function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Card>
-      <CardContent className="space-y-3 p-5">
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">{children}</dl>
-      </CardContent>
-    </Card>
-  )
-}
-
-// Profile details grouped into personal, location and organisation sections.
-function ProfileTab({ user }: { user: User }) {
-  return (
-    <div className="space-y-4">
-      <ProfileSection title="Personal">
-        <ProfileItem label="Language" value={user.languagePreference} />
-        <ProfileItem label="Category" value={user.category} />
-        <ProfileItem label="Age" value={user.age} />
-        <ProfileItem label="Gender" value={user.gender} />
-        <ProfileItem label="Farm size" value={user.farmSize} />
-        <ProfileItem label="Season" value={user.season} />
-        <ProfileItem label="Main crop" value={user.cropType} />
-      </ProfileSection>
-      <ProfileSection title="Location">
-        <ProfileItem label="State" value={user.state} />
-        <ProfileItem label="District" value={user.district} />
-        <ProfileItem label="Block" value={user.block} />
-        <ProfileItem label="Village" value={user.village} />
-        <ProfileItem label="KVK" value={user.kvk} />
-      </ProfileSection>
-      <ProfileSection title="Organisation and education">
-        <ProfileItem label="Organisation" value={user.organizationName} />
-        <ProfileItem label="Role" value={user.organizationRole} />
-        <ProfileItem label="Organisation type" value={user.organisationType} />
-        <ProfileItem label="College" value={user.collegeName} />
-        <ProfileItem label="University" value={user.universityName} />
-        <ProfileItem label="Course" value={user.courseName} />
-      </ProfileSection>
-      {user.crops?.length > 0 && (
-        <Card>
-          <CardContent className="space-y-3 p-5">
-            <h3 className="text-sm font-semibold text-foreground">Crops</h3>
-            <div className="flex flex-wrap gap-2">
-              {user.crops.map((crop) => <Badge key={crop} variant="secondary">{crop}</Badge>)}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
+import type { AnveshanUserDetail } from '@/types'
 
 /** Staff review page for one Anveshan user: profile, milestone progress, questions with answers, and entities. */
 export function AnveshanUserDetailPage() {
@@ -84,6 +22,7 @@ export function AnveshanUserDetailPage() {
   const navigate = useNavigate()
   const [detail, setDetail] = useState<AnveshanUserDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -138,9 +77,15 @@ export function AnveshanUserDetailPage() {
                   {user.isTester && <TesterTag />}
                 </div>
               </div>
-              <Button asChild variant="outline" size="sm">
-                <Link to={`/users/${user.id}?classic=1`}>Account and payment details</Link>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+                  <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  Export
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link to={`/users/${user.id}?classic=1`}>Account and payment details</Link>
+                </Button>
+              </div>
             </div>
             <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-text-secondary sm:grid-cols-2 lg:grid-cols-4 sm:text-sm">
               <div className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" /><dd>{user.mobileNumber}</dd></div>
@@ -153,19 +98,18 @@ export function AnveshanUserDetailPage() {
       </Card>
 
       <AnveshanProgressSummary progress={progress} />
+      <AnveshanExportDialog detail={detail} open={exportOpen} onOpenChange={setExportOpen} />
 
       <Tabs defaultValue="questions" className="space-y-4">
         <TabsList>
           <TabsTrigger value="questions">Questions ({questions.length})</TabsTrigger>
           <TabsTrigger value="entities">Entities ({entities.length})</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
         <TabsContent value="questions">
           <p className="mb-3 text-xs text-text-secondary">{answered} of {questions.length} questions answered</p>
           <AnveshanQuestionsTab questions={questions} />
         </TabsContent>
         <TabsContent value="entities"><AnveshanEntitiesTab entities={entities} /></TabsContent>
-        <TabsContent value="profile"><ProfileTab user={user} /></TabsContent>
       </Tabs>
     </div>
   )
