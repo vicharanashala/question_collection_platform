@@ -1601,13 +1601,20 @@ export const faqApi = {
     );
   },
 
+  /** Admin: saves a new order for the given FAQ ids. */
+  reorder: (ids: string[]) =>
+    request<{ success: boolean }>(
+      "/admin/faqs/reorder",
+      { method: "PATCH", body: JSON.stringify({ ids }) },
+      false,
+    ),
+
   create: (body: {
     question: string;
     answer: string;
     category?: string;
     isVisible?: boolean;
     audience?: FaqAudience;
-    displayOrder?: number;
   }) =>
     request<Faq>(
       "/admin/faqs",
@@ -1626,7 +1633,6 @@ export const faqApi = {
       category?: string;
       isVisible?: boolean;
       audience?: FaqAudience;
-      displayOrder?: number;
     },
   ) =>
     request<Faq>(

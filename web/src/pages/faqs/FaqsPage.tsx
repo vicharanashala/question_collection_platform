@@ -40,6 +40,7 @@ import {
   ChevronsRight,
   X,
   RefreshCw,
+  GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Faq, FaqAudience, FaqCategory, PaginatedResponse } from "@/types";
@@ -56,7 +57,6 @@ interface FormState {
   category: FaqCategory;
   isVisible: boolean;
   audience: FaqAudience;
-  displayOrder: number;
 }
 
 interface Stats {
@@ -71,7 +71,6 @@ const EMPTY: FormState = {
   category: "general",
   isVisible: true,
   audience: "all",
-  displayOrder: 0,
 };
 
 const PAGE_SIZES = [10, 20, 50, 100];
@@ -90,6 +89,15 @@ function getCatMeta(key: string) {
   return CATEGORIES.find((c) => c.key === key) ?? CATEGORIES[4];
 }
 
+interface RowReorder {
+  isDragging: boolean;
+  isOver: boolean;
+  onDragStart: (e: React.DragEvent<HTMLElement>) => void;
+  onDragEnter: () => void;
+  onDragEnd: () => void;
+  onDrop: () => void;
+}
+
 // ─── FAQ row ──────────────────────────────────────────────────────────────────
 
 function FaqRow({
@@ -98,19 +106,44 @@ function FaqRow({
   onDelete,
   onToggle,
   toggling,
+  reorder,
 }: {
   faq: Faq;
   onEdit: (f: Faq) => void;
   onDelete: (f: Faq) => void;
   onToggle: (f: Faq) => void;
   toggling: string | null;
+  reorder: RowReorder | null;
 }) {
   const [open, setOpen] = useState(false);
   const catMeta = getCatMeta(faq.category);
 
   return (
-    <div className="border-b border-border-subtle last:border-0">
+    <div
+      data-faq-row
+      className={cn(
+        "border-b border-border-subtle last:border-0",
+        reorder?.isDragging && "opacity-40",
+        reorder?.isOver && "bg-primary/5 shadow-[inset_0_2px_0_0_var(--primary)]",
+      )}
+      onDragOver={reorder ? (e) => e.preventDefault() : undefined}
+      onDragEnter={reorder?.onDragEnter}
+      onDrop={reorder?.onDrop}
+    >
       <div className="flex items-start gap-3 px-4 py-3.5 hover:bg-surface-variant/30 transition-colors">
+        {reorder && (
+          <span
+            draggable
+            role="img"
+            aria-label="Drag to reorder"
+            title="Drag to reorder"
+            onDragStart={reorder.onDragStart}
+            onDragEnd={reorder.onDragEnd}
+            className="mt-1 -ml-1 shrink-0 cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" />
+          </span>
+        )}
         <div
           className="w-2 h-2 rounded-full mt-2.5 shrink-0"
           style={{ backgroundColor: catMeta.color }}
@@ -360,7 +393,6 @@ function FaqDialog({
               category: initial.category ?? "general",
               isVisible: initial.isVisible,
               audience: initial.audience ?? "all",
-              displayOrder: initial.displayOrder ?? 0,
             }
           : EMPTY,
       );
@@ -487,27 +519,6 @@ function FaqDialog({
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="faq-order">Display order</Label>
-            <Input
-              id="faq-order"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              value={form.displayOrder}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  displayOrder: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
-                }))
-              }
-            />
-            <p className="text-[11px] sm:text-xs text-muted-foreground">
-              Lower numbers appear first. FAQs with the same number are ordered by creation date.
-            </p>
-          </div>
-
           <div className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">
             <div>
               <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">
@@ -613,6 +624,8 @@ export function FaqsPage() {
   const [dialogInitial, setDialogInitial] = useState<Faq | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Faq | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -679,6 +692,28 @@ export function FaqsPage() {
       setSortOrder("ASC");
     }
     setPage(1);
+  }
+
+  // Moves the dragged FAQ to the position of the one it was dropped on and saves the new order.
+  async function handleDrop(targetId: string) {
+    const previous = result;
+    const current = result?.items ?? [];
+    const from = current.findIndex((i) => i.id === dragId);
+    const to = current.findIndex((i) => i.id === targetId);
+    setDragId(null);
+    setOverId(null);
+    if (!result || from < 0 || to < 0 || from === to) return;
+
+    const next = [...current];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setResult({ ...result, items: next });
+    try {
+      await faqApi.reorder(next.map((i) => i.id));
+    } catch (e) {
+      setResult(previous);
+      toast.error(getErrorMessage(e, "Failed to save the new order"));
+    }
   }
 
   function handlePageChange(p: number) {
@@ -780,6 +815,8 @@ export function FaqsPage() {
   const total = result?.total ?? 0;
   const pages = result?.pages ?? 1;
   const activeCatMeta = getCatMeta(activeCat);
+  // Dragging only makes sense when the list is shown in ascending display order.
+  const canReorder = sortBy === "displayOrder" && sortOrder === "ASC";
 
   // Page size options for display
   const PAGE_SIZE_OPTIONS = [
@@ -1068,10 +1105,36 @@ export function FaqsPage() {
                     onDelete={setDeleteTarget}
                     onToggle={handleToggle}
                     toggling={toggling}
+                    reorder={
+                      canReorder && items.length > 1
+                        ? {
+                            isDragging: dragId === faq.id,
+                            isOver: !!dragId && overId === faq.id && dragId !== faq.id,
+                            onDragStart: (e) => {
+                              setDragId(faq.id);
+                              e.dataTransfer.effectAllowed = "move";
+                              const row = e.currentTarget.closest("[data-faq-row]");
+                              if (row) e.dataTransfer.setDragImage(row as HTMLElement, 16, 16);
+                            },
+                            onDragEnter: () => dragId && setOverId(faq.id),
+                            onDragEnd: () => {
+                              setDragId(null);
+                              setOverId(null);
+                            },
+                            onDrop: () => handleDrop(faq.id),
+                          }
+                        : null
+                    }
                   />
                 ))}
               </div>
             </CardContent>
+
+            {canReorder && items.length > 1 && (
+              <p className="px-4 py-2 text-[11px] text-muted-foreground border-t border-border-subtle">
+                Drag the handle to change the order. Ordering applies within the current page and filters.
+              </p>
+            )}
 
             {/* Pagination footer */}
             <div className="px-4 py-2.5 border-t border-border-subtle">

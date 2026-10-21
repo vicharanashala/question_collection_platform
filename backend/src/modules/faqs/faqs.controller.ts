@@ -20,7 +20,7 @@ import { createReadStream, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { Response } from 'express';
 import { FaqsService } from './faqs.service';
-import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
+import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto, ReorderFaqsDto } from './dto';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
@@ -273,6 +273,37 @@ private async safeAudit(payload: AuditLogDto) {
         });
 
     return result;
+  }
+
+  // Must stay above the ':id' routes so 'reorder' is not read as an id.
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Patch('admin/faqs/reorder')
+  async reorder(@Body() dto: ReorderFaqsDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta: RequestMeta) {
+    const base: AuditLogDto = {
+      actionType: AuditAction.UPDATE_FAQ,
+      actor: {
+        id: req.user.id,
+        actorType: this.toActorType(req.user.role as UserRole),
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context: { operation: 'reordered', faqIds: dto.ids },
+    };
+    try {
+      await this.faqsService.reorder(dto);
+      await this.safeAudit({ ...base, outcome: { status: OutcomeStatus.SUCCESS } });
+      return { success: true };
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

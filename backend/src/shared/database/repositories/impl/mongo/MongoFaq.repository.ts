@@ -42,6 +42,25 @@ export class MongoFaqRepository
 }
 
 
+  // Returns every FAQ id in display order, using creation date to break ties.
+  async findAllIdsOrdered(): Promise<string[]> {
+    const docs = await this._model
+      .find({}, '_id', { sort: { displayOrder: 1, createdAt: 1 } })
+      .lean()
+      .exec();
+    return docs.map((d) => String(d._id));
+  }
+
+  // Writes displayOrder as the position of each id in the given list.
+  async setDisplayOrder(orderedIds: string[]): Promise<void> {
+    if (orderedIds.length === 0) return;
+    await this._model.bulkWrite(
+      orderedIds.map((id, index) => ({
+        updateOne: { filter: { _id: id }, update: { $set: { displayOrder: index } } },
+      })),
+    );
+  }
+
   async getStats(
     category?: FaqCategory,
   ): Promise<{ total: number; visible: number; hidden: number }> {

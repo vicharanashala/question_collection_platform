@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { IFaqRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
-import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
+import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto, ReorderFaqsDto } from './dto';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 
 @Injectable()
@@ -64,6 +64,19 @@ export class FaqsService {
     return updated;
   }
 
+  // Rearranges the given FAQs within the slots they already occupy and renumbers the whole list.
+  async reorder(dto: ReorderFaqsDto): Promise<void> {
+    const all = await this.faqRepo.findAllIdsOrdered();
+    const known = new Set(all);
+    if (dto.ids.some((id) => !known.has(id))) {
+      throw new BadRequestException('One or more FAQs do not exist');
+    }
+    const moving = new Set(dto.ids);
+    const queue = [...dto.ids];
+    const next = all.map((id) => (moving.has(id) ? (queue.shift() as string) : id));
+    await this.faqRepo.setDisplayOrder(next);
+  }
+
   async findAllPaginated(query: ListFaqsQueryDto): Promise<unknown> {
     const filter: Record<string, unknown> = {};
     if (query.category) filter.category = query.category;
@@ -73,7 +86,7 @@ export class FaqsService {
     if (query.userSort === 'anveshan' || query.userSort === 'user') filter.audience = query.userSort;
 
     const result = await this.faqRepo.findAndCount(filter, {
-      pagination: { page: query.page ?? 1, limit: query.limit ?? 20, sort: { [sortBy]: sortOrder } },
+      pagination: { page: query.page ?? 1, limit: query.limit ?? 20, sort: this.buildSort(sortBy, sortOrder) },
     });
 
     return {
@@ -83,6 +96,11 @@ export class FaqsService {
       limit: result.limit,
       pages: result.totalPages,
     };
+  }
+
+  // Uses creation date as a tie breaker when sorting by display order.
+  private buildSort(sortBy: string, sortOrder: 1 | -1): Record<string, 1 | -1> {
+    return sortBy === 'displayOrder' ? { displayOrder: sortOrder, createdAt: sortOrder } : { [sortBy]: sortOrder };
   }
 
   async delete(id: string): Promise<void> {
