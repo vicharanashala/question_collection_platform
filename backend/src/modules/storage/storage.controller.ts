@@ -24,6 +24,7 @@ import { AgriEntityType } from "../../shared/classes/enums";
 import {
   getAgriEntityImageCategory,
   MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+  MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
 } from "../agri-entities/agri-entities.constants";
 import { detectImage, MAX_IMAGE_SIZE_BYTES } from "@/utils/image-validation";
 
@@ -57,10 +58,11 @@ const AGRI_ENTITY_MAX_BYTES = MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
 const GENERIC_IMAGE_UPLOAD_OPTIONS = {
   limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: 1 },
 };
-// Anveshan users skip image validation, so multer only enforces this hard memory cap for them.
-const ANVESHAN_UPLOAD_HARD_CAP_BYTES = 25 * 1024 * 1024;
+// Anveshan users get a larger limit and no type check. Multer uses it as the upper bound for everyone,
+// and regular users are held to AGRI_ENTITY_MAX_BYTES in assertValidImage.
+const ANVESHAN_MAX_BYTES = MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
 const AGRI_ENTITY_UPLOAD_OPTIONS = {
-  limits: { fileSize: ANVESHAN_UPLOAD_HARD_CAP_BYTES, files: 1 },
+  limits: { fileSize: ANVESHAN_MAX_BYTES, files: 1 },
 };
 
 @Controller("storage")
@@ -110,7 +112,7 @@ async uploadAgriEntityImage(
   }
 
   const { file: image, detected } = req.user.isAnveshanUser
-    ? this.acceptWithoutValidation(file)
+    ? this.assertAnveshanImage(file)
     : this.assertValidImage(file, AGRI_ENTITY_MAX_BYTES);
   const base = image.originalname.replace(/\.[^/.]+$/, "");
 
@@ -180,11 +182,16 @@ async uploadAgriEntityImage(
   //   return file;
   // }
 
-  // Anveshan users are exempt from image type and size checks. Only a missing file is rejected.
-  private acceptWithoutValidation(file: AuthenticatedRequest["file"]) {
+  // Anveshan users are exempt from the image type check but images above their size limit are rejected.
+  private assertAnveshanImage(file: AuthenticatedRequest["file"]) {
     if (!file) {
       throw new BadRequestException(
         'No file provided — expected field named "file"',
+      );
+    }
+    if (file.size > ANVESHAN_MAX_BYTES) {
+      throw new PayloadTooLargeException(
+        `Each image must be ${MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB} MB or smaller`,
       );
     }
     const ext = /\.([a-z0-9]{1,5})$/i.exec(file.originalname)?.[1]?.toLowerCase() ?? "jpg";

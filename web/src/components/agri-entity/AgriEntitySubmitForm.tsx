@@ -1,3 +1,5 @@
+import { NewBadge } from "@/components/ui/new-badge";
+import { markFeatureSeen } from "@/lib/newFeatures";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,6 +22,7 @@ import {
   AGRI_ENTITY_IMAGE_MIME_TYPES,
   MAX_AGRI_ENTITY_IMAGES,
   MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+  MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
   MAX_AGRI_ENTITY_NAME_LENGTH,
   MAX_AGRI_ENTITY_SOURCE_LENGTH,
 } from "@/constants/public";
@@ -42,6 +45,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 const UPLOAD_CONCURRENCY = 2;
 const MAX_IMAGE_BYTES = MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
+const MAX_ANVESHAN_IMAGE_BYTES =
+  MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
 
 // The in-app camera needs getUserMedia on a secure page. Otherwise the native camera input is used.
 const canUseLiveCamera = () =>
@@ -159,8 +164,8 @@ export function AgriEntitySubmitForm({
 }: AgriEntitySubmitFormProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  // Anveshan users are exempt from image type, size and compression checks.
-  const skipImageValidation = Boolean(user?.isAnveshanUser);
+  // Anveshan users get a higher size limit, no type restriction and no compression.
+  const isAnveshan = Boolean(user?.isAnveshanUser);
   const [cameraOpen, setCameraOpen] = useState(false);
   const fieldId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -280,6 +285,12 @@ export function AgriEntitySubmitForm({
           "Only JPEG, PNG and WEBP images are supported",
         );
       case "tooLarge":
+        if (isAnveshan) {
+          return t("agriEntity.errors.imageSize", {
+            max: MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
+            defaultValue: "Each image must be {{max}} MB or smaller",
+          });
+        }
         return t("agriEntity.errors.imageTooLarge", {
           max: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
           defaultValue:
@@ -313,7 +324,10 @@ export function AgriEntitySubmitForm({
     // One at a time: decoding several 12 MP photos in parallel can exhaust memory on low-end phones.
     for (const file of batch) {
       try {
-        const processed = skipImageValidation
+        if (isAnveshan && file.size > MAX_ANVESHAN_IMAGE_BYTES) {
+          throw new ImageProcessingError("tooLarge");
+        }
+        const processed = isAnveshan
           ? file
           : await prepareImage(
               file,
@@ -723,14 +737,78 @@ export function AgriEntitySubmitForm({
                 </span>
               </h2>
               <p className="text-[11px] text-text-tertiary sm:text-xs">
-                {t("agriEntity.imagesSizeHint", {
-                  max: MAX_AGRI_ENTITY_IMAGES,
-                  size: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
-                  defaultValue:
-                    "Add 1 to {{max}} clear photos (JPEG, PNG or WEBP), up to {{size}} MB each.",
-                })}
+                {isAnveshan
+                  ? t("agriEntity.imagesSizeHintAnveshan", {
+                      max: MAX_AGRI_ENTITY_IMAGES,
+                      size: MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
+                      defaultValue:
+                        "Add 1 to {{max}} clear photos, up to {{size}} MB each.",
+                    })
+                  : t("agriEntity.imagesSizeHint", {
+                      max: MAX_AGRI_ENTITY_IMAGES,
+                      size: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
+                      defaultValue:
+                        "Add 1 to {{max}} clear photos (JPEG, PNG or WEBP), up to {{size}} MB each.",
+                    })}
               </p>
             </div>
+            {/* Add actions, above the added photos */}
+            {images.length + processingCount < MAX_AGRI_ENTITY_IMAGES && (
+              <div
+                className={`grid grid-cols-2 gap-3 ${
+                  images.length + processingCount > 0
+                    ? "border-b border-border-subtle pb-4"
+                    : ""
+                }`}
+              >
+                {[
+                  {
+                    key: "gallery",
+                    ref: fileInputRef,
+                    Icon: ImagePlus,
+                    label: t("agriEntity.addImage", "Add image"),
+                  },
+                  {
+                    key: "camera",
+                    ref: cameraInputRef,
+                    Icon: Camera,
+                    label: t("agriEntity.takePhoto", "Take photo"),
+                  },
+                ].map(({ key, ref, Icon, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      if (key === "camera") markFeatureSeen("takePhoto");
+                      if (key === "camera" && canUseLiveCamera()) {
+                        setCameraOpen(true);
+                      } else {
+                        ref.current?.click();
+                      }
+                    }}
+                    disabled={submitting}
+                    className={`relative flex items-center justify-center gap-2 rounded-xl border-2 border-dashed text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50 ${
+                      images.length + processingCount > 0 ? "h-12" : "h-28 flex-col"
+                    } ${
+                      imagesError
+                        ? "border-rose-400 text-rose-600"
+                        : "border-border-subtle text-text-secondary hover:border-emerald-400 hover:text-emerald-700"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {label}
+                    {key === "camera" && (
+                      <NewBadge
+                        feature="takePhoto"
+                        className="absolute -top-2 right-3"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {images.length + processingCount > 0 && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {images.map((img, index) => (
                 <div
@@ -770,21 +848,6 @@ export function AgriEntitySubmitForm({
                   </button>
                 </div>
               ))}
-              {/* {images.length < MAX_AGRI_ENTITY_IMAGES && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={submitting}
-                  className={`flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50 ${
-                    imagesError
-                      ? 'border-rose-400 text-rose-600'
-                      : 'border-border-subtle text-text-secondary hover:border-emerald-400 hover:text-emerald-700'
-                  }`}
-                >
-                  <ImagePlus className="h-6 w-6" />
-                  {t('agriEntity.addImage', 'Add image')}
-                </button>
-              )} */}
 
               {Array.from({ length: processingCount }).map((_, i) => (
                 <div
@@ -799,44 +862,8 @@ export function AgriEntitySubmitForm({
                   {t("agriEntity.processingImage", "Processing…")}
                 </div>
               ))}
-              {images.length + processingCount < MAX_AGRI_ENTITY_IMAGES && (
-                <>
-                  {[
-                    {
-                      key: "gallery",
-                      ref: fileInputRef,
-                      Icon: ImagePlus,
-                      label: t("agriEntity.addImage", "Add image"),
-                    },
-                    {
-                      key: "camera",
-                      ref: cameraInputRef,
-                      Icon: Camera,
-                      label: t("agriEntity.takePhoto", "Take photo"),
-                    },
-                  ].map(({ key, ref, Icon, label }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() =>
-                        key === "camera" && canUseLiveCamera()
-                          ? setCameraOpen(true)
-                          : ref.current?.click()
-                      }
-                      disabled={submitting}
-                      className={`flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50 ${
-                        imagesError
-                          ? "border-rose-400 text-rose-600"
-                          : "border-border-subtle text-text-secondary hover:border-emerald-400 hover:text-emerald-700"
-                      }`}
-                    >
-                      <Icon className="h-6 w-6" />
-                      {label}
-                    </button>
-                  ))}
-                </>
-              )}
             </div>
+            )}
 
             {/* Fallback when the in-app camera is unavailable. */}
             <input
@@ -854,7 +881,7 @@ export function AgriEntitySubmitForm({
               ref={fileInputRef}
               type="file"
               accept={
-                skipImageValidation
+                isAnveshan
                   ? "image/*"
                   : AGRI_ENTITY_IMAGE_MIME_TYPES.join(",")
               }
