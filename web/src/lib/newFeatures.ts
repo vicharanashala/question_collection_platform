@@ -14,6 +14,18 @@ export const NEW_FEATURES = {
   faqAdminTools: { expiresOn: '2026-11-20' },
   // In-app camera with date, time, location and brand stamp on the photo.
   takePhoto: { expiresOn: '2026-11-20' },
+  // Super Admin user filter on the Agri Entities and Questions pages.
+  entityUserFilter: { expiresOn: '2026-11-20' },
+  // Super Admin Excel export of Anveshan entities.
+  entityExport: { expiresOn: '2026-11-20' },
+  // Newest or oldest first toggle on the admin Agri Entities list.
+  entitySortOrder: { expiresOn: '2026-11-20' },
+  // Sortable column titles on the Users table, including Anveshan progress.
+  userColumnSort: { expiresOn: '2026-11-20' },
+  // Dedicated detail page for Anveshan users.
+  anveshanUserPage: { expiresOn: '2026-11-20' },
+  // Excel export on the Anveshan user detail page.
+  anveshanUserExport: { expiresOn: '2026-11-20' },
 } as const
 
 export type NewFeatureKey = keyof typeof NEW_FEATURES

@@ -4,6 +4,8 @@ import { ArrowLeft, Calendar, Clock, Download, MapPin, Phone, Sprout } from 'luc
 import { toast } from 'sonner'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
+import { NewBadge } from '@/components/ui/new-badge'
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -23,6 +25,9 @@ export function AnveshanUserDetailPage() {
   const [detail, setDetail] = useState<AnveshanUserDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [exportOpen, setExportOpen] = useState(false)
+
+  // Opening the page counts as having seen the new Anveshan user page.
+  useEffect(() => { markFeatureSeen('anveshanUserPage') }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -77,9 +82,10 @@ export function AnveshanUserDetailPage() {
                   {user.isTester && <TesterTag />}
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => { markFeatureSeen('anveshanUserExport'); setExportOpen(true) }}>
                 <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 Export
+                <NewBadge feature="anveshanUserExport" className="ml-1.5" />
               </Button>
             </div>
             <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-text-secondary sm:grid-cols-2 lg:grid-cols-4 sm:text-sm">

@@ -5,6 +5,8 @@ import { useAnveshanScope } from '@/lib/anveshanMode'
 import { useTesterScope } from '@/lib/testerMode'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
+import { NewBadge } from '@/components/ui/new-badge'
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
 
 interface UserFilterProps {
@@ -66,7 +68,8 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
 
   return (
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-      <div className="w-full sm:w-72">
+      <div className="relative w-full sm:w-72">
+        <NewBadge feature="entityUserFilter" className="pointer-events-none absolute -right-2 -top-2 z-10" />
         <MultiSearchableSelect
           items={items}
           values={draft}
@@ -77,7 +80,7 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
         />
       </div>
       <div className="flex gap-2">
-        <Button size="sm" onClick={() => onApply(draft)} disabled={disabled}>Apply</Button>
+        <Button size="sm" onClick={() => { markFeatureSeen('entityUserFilter'); onApply(draft) }} disabled={disabled}>Apply</Button>
         <Button size="sm" variant="outline" onClick={reset} disabled={!draft.length && !value.length}>Reset</Button>
       </div>
     </div>

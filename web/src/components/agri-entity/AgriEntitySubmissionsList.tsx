@@ -10,6 +10,8 @@ import { agriEntityApi, getErrorMessage } from '@/api/client'
 import { UserFilter } from '@/components/UserFilter'
 import { isSuperAdmin } from '@/lib/roles'
 import { Button } from '@/components/ui/button'
+import { NewBadge } from '@/components/ui/new-badge'
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { Card, CardContent } from '@/components/ui/card'
 import { DataTable, type ColumnDef } from '@/components/DataTable'
 import { Badge } from '@/components/ui/badge'
@@ -213,16 +215,18 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
             <Button
               size="sm"
               variant="outline"
-              onClick={() => { setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc')); setPage(1) }}
+              onClick={() => { markFeatureSeen('entitySortOrder'); setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc')); setPage(1) }}
               aria-label="Toggle submission date order"
             >
               {sortOrder === 'desc' ? <ArrowDownWideNarrow className="mr-1.5 h-4 w-4" /> : <ArrowUpNarrowWide className="mr-1.5 h-4 w-4" />}
               {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
+              <NewBadge feature="entitySortOrder" className="ml-1.5" />
             </Button>
             {canFilterUsers && (
-              <Button size="sm" variant="outline" onClick={handleExport} disabled={exporting}>
+              <Button size="sm" variant="outline" onClick={() => { markFeatureSeen('entityExport'); handleExport() }} disabled={exporting}>
                 <Download className="mr-1.5 h-4 w-4" />
                 {exporting ? 'Exporting…' : 'Export Excel'}
+                <NewBadge feature="entityExport" className="ml-1.5" />
               </Button>
             )}
           </div>

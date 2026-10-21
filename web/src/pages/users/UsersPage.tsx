@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
+import { NewBadge } from '@/components/ui/new-badge'
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { useAnveshanScope } from '@/lib/anveshanMode'
 import {
   Search, ChevronLeft, ChevronRight, Plus, Users, FlaskConical, Sprout, UserRound,
@@ -165,8 +167,9 @@ function isUsableDate(value: string): boolean {
 type UserSortKey = 'name' | 'role' | 'verificationStatus' | 'state' | 'createdAt' | 'lastLoginAt' | 'anveshanProgress'
 
 // Table header cell that sorts the list by one column when clicked.
-function SortableHeader({ label, sortKey, activeKey, order, onSort }: {
+function SortableHeader({ label, sortKey, activeKey, order, onSort, newBadge }: {
   label: string
+  newBadge?: boolean
   sortKey: UserSortKey
   activeKey: UserSortKey
   order: 'ASC' | 'DESC'
@@ -181,11 +184,12 @@ function SortableHeader({ label, sortKey, activeKey, order, onSort }: {
     >
       <button
         type="button"
-        onClick={() => onSort(sortKey)}
+        onClick={() => { markFeatureSeen('userColumnSort'); onSort(sortKey) }}
         className={cn('inline-flex items-center gap-1 hover:text-text', active && 'text-text')}
       >
         {label}
         <Icon className={cn('h-3.5 w-3.5', !active && 'opacity-50')} aria-hidden="true" />
+        {newBadge && <NewBadge feature="userColumnSort" />}
       </button>
     </th>
   )
@@ -467,7 +471,7 @@ export function UsersPage() {
                 <SortableHeader label="Role" sortKey="role" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label="Status" sortKey="verificationStatus" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label="Location" sortKey="state" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader label="Anveshan Progress" sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader newBadge label="Anveshan Progress" sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label="Joined" sortKey="createdAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label="Last Login" sortKey="lastLoginAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
               </tr>
@@ -513,6 +517,7 @@ export function UsersPage() {
                                 {u.name || '—'}
                               </p>
                               {u.isTester && <TesterTag />}
+                              {u.isAnveshanUser && <NewBadge feature="anveshanUserPage" />}
                               {isLocked && (
                                 <span className={cn(
                                   'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
