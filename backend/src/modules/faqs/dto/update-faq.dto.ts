@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsOptional, MaxLength, IsIn } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, MaxLength, IsIn, IsInt, Min } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateFaqDto } from './create-faq.dto';
 import { FAQ_AUDIENCES, FaqAudience } from '@/shared/database/mongodb/schemas/faq.schema';
@@ -24,4 +24,9 @@ export class UpdateFaqDto extends PartialType(CreateFaqDto) {
   @IsIn(FAQ_AUDIENCES)
   @IsOptional()
   audience?: FaqAudience;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  displayOrder?: number;
 }

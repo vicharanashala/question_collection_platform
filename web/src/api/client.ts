@@ -43,6 +43,7 @@ import type {
   SubmitAnveshanAnswerPayload,
   SubmitAnveshanAnswerResponse,
   CuratorStats,
+  FaqAudience,
 } from "@/types";
 import {
   accountLockedEmitter,
@@ -1605,6 +1606,8 @@ export const faqApi = {
     answer: string;
     category?: string;
     isVisible?: boolean;
+    audience?: FaqAudience;
+    displayOrder?: number;
   }) =>
     request<Faq>(
       "/admin/faqs",
@@ -1622,6 +1625,8 @@ export const faqApi = {
       answer?: string;
       category?: string;
       isVisible?: boolean;
+      audience?: FaqAudience;
+      displayOrder?: number;
     },
   ) =>
     request<Faq>(

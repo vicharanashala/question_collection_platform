@@ -56,6 +56,7 @@ interface FormState {
   category: FaqCategory;
   isVisible: boolean;
   audience: FaqAudience;
+  displayOrder: number;
 }
 
 interface Stats {
@@ -70,6 +71,7 @@ const EMPTY: FormState = {
   category: "general",
   isVisible: true,
   audience: "all",
+  displayOrder: 0,
 };
 
 const PAGE_SIZES = [10, 20, 50, 100];
@@ -358,6 +360,7 @@ function FaqDialog({
               category: initial.category ?? "general",
               isVisible: initial.isVisible,
               audience: initial.audience ?? "all",
+              displayOrder: initial.displayOrder ?? 0,
             }
           : EMPTY,
       );
@@ -482,6 +485,27 @@ function FaqDialog({
                 <SelectItem value="all">Both</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="faq-order">Display order</Label>
+            <Input
+              id="faq-order"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={form.displayOrder}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  displayOrder: Math.max(0, Math.trunc(Number(e.target.value) || 0)),
+                }))
+              }
+            />
+            <p className="text-[11px] sm:text-xs text-muted-foreground">
+              Lower numbers appear first. FAQs with the same number are ordered by creation date.
+            </p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">

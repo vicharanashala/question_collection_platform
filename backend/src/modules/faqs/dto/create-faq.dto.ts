@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsBoolean, IsOptional, MaxLength, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsBoolean, IsOptional, MaxLength, IsIn, IsInt, Min } from 'class-validator';
 import { FAQ_AUDIENCES, FaqAudience } from '@/shared/database/mongodb/schemas/faq.schema';
 
 export class CreateFaqDto {
@@ -22,4 +22,10 @@ export class CreateFaqDto {
   @IsIn(FAQ_AUDIENCES)
   @IsOptional()
   audience?: FaqAudience = 'all';
+
+  // Lower numbers appear first.
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  displayOrder?: number;
 }
