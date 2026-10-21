@@ -11,6 +11,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
   Inject,
 } from "@nestjs/common";
 import {
@@ -38,6 +39,7 @@ import {
   IQuestionRepository,
   ITransactionRepository,
   IAgriEntityRepository,
+  IAnveshanCandidateRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 
@@ -56,7 +58,47 @@ export class UserService {
     private readonly transactionRepo: ITransactionRepository,
     @Inject(REPOSITORY_TOKENS.AgriEntity)
     private readonly agriEntityRepo: IAgriEntityRepository,
+    @Inject(REPOSITORY_TOKENS.Candidate)
+    private readonly anveshanCandidateRepo: IAnveshanCandidateRepository,
   ) {}
+
+  // Re-fetches the Anveshan candidate and overwrites name, state and district where they differ.
+  async refreshFromAnveshan(userId: string): Promise<{ user: User; updatedFields: string[] }> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    if (!user.isAnveshanUser) {
+      throw new ForbiddenException("Only Anveshan users can refresh data from Anveshan");
+    }
+
+    // Deleted candidates are excluded by the repository, so they count as not found.
+    const candidate = await this.anveshanCandidateRepo.findByPhone(user.mobileNumber);
+    if (!candidate) {
+      throw new NotFoundException("No active Anveshan record was found for this number");
+    }
+
+    const incoming = {
+      name: candidate.full_name,
+      state: candidate.state,
+      district: candidate.district,
+    };
+    const updates: Partial<Pick<User, "name" | "state" | "district">> = {};
+    for (const [field, value] of Object.entries(incoming)) {
+      const next = value?.trim();
+      if (next && next !== user[field as keyof typeof incoming]) {
+        updates[field as keyof typeof incoming] = next;
+      }
+    }
+
+    const updatedFields = Object.keys(updates);
+    if (updatedFields.length === 0) {
+      return { user, updatedFields };
+    }
+
+    await this.userRepo.update(user.id, updates);
+    return { user: { ...user, ...updates } as User, updatedFields };
+  }
 
   async getProfile(userId: string): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id: userId } });

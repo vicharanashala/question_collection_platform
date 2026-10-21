@@ -26,6 +26,7 @@ describe('UserService.getAnveshanProgress', () => {
         { provide: REPOSITORY_TOKENS.Question, useValue: questionRepo },
         { provide: REPOSITORY_TOKENS.Transaction, useValue: {} },
         { provide: REPOSITORY_TOKENS.AgriEntity, useValue: agriEntityRepo },
+        { provide: REPOSITORY_TOKENS.Candidate, useValue: { findByPhone: jest.fn() } },
       ],
     }).compile();
     service = module.get(UserService);
