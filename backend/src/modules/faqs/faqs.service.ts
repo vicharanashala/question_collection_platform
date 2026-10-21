@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { IFaqRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto, ReorderFaqsDto } from './dto';
+import { escapeRegex } from '../../shared/database/abstractions/mongo-utils';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 
 @Injectable()
@@ -80,6 +81,10 @@ export class FaqsService {
   async findAllPaginated(query: ListFaqsQueryDto): Promise<unknown> {
     const filter: Record<string, unknown> = {};
     if (query.category) filter.category = query.category;
+    if (query.search) {
+      const regex = { $regex: escapeRegex(query.search), $options: 'i' };
+      filter.$or = [{ question: regex }, { answer: regex }];
+    }
 
     const sortBy = query.sortBy ?? 'displayOrder';
     const sortOrder: 1 | -1 = (query.sortOrder ?? 'ASC') === 'ASC' ? 1 : -1;
