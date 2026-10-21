@@ -827,6 +827,8 @@ export interface AgriEntitySubmitter {
   id: string;
   name: string;
   username: string | null;
+  /** Only sent to admins and super admins. */
+  mobileNumber?: string;
   isTester?: boolean;
 }
 

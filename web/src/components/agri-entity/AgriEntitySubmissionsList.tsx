@@ -162,12 +162,15 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     },
     {
       key: 'submitter',
-      header: 'Submitted By',
+      header: 'User',
       width: '240px',
       render: (row) => (
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm text-foreground">{submitterName(row)}</span>
-          {row.submitter?.isTester && <TesterTag />}
+        <div className="min-w-0 leading-tight">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-sm text-foreground">{submitterName(row)}</span>
+            {row.submitter?.isTester && <TesterTag />}
+          </div>
+          {row.submitter?.mobileNumber && <p className="truncate text-xs text-muted-foreground">{row.submitter.mobileNumber}</p>}
         </div>
       ),
     },

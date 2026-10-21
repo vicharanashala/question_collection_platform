@@ -65,11 +65,13 @@ describe('AgriEntitiesService staff listing and export', () => {
   it('lists entities without a submission location using the repository order', async () => {
     const entity = { id: 'e1', userId: 'u1', createdAt: new Date('2026-01-01'), submissionLocation: null };
     repo.findOrderedBySubmission.mockResolvedValue({ data: [entity], total: 1 });
-    userRepo.findByIds.mockResolvedValue([{ id: 'u1', name: 'Asha', username: null }]);
+    userRepo.findAll.mockResolvedValue([{ id: 'u1', name: 'Asha', username: null, mobileNumber: '9000000001' }]);
 
     const result = await service.listAll({}, UserRole.ADMIN);
 
-    expect(result.items[0]).toMatchObject({ id: 'e1', submitter: { name: 'Asha' } });
+    expect(result.items[0]).toMatchObject({ id: 'e1', submitter: { name: 'Asha', mobileNumber: '9000000001' } });
+    const curator = await service.listAll({}, UserRole.CURATOR);
+    expect(curator.items[0].submitter).not.toHaveProperty('mobileNumber');
     expect(result.total).toBe(1);
   });
 

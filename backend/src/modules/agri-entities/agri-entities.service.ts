@@ -112,8 +112,16 @@ export class AgriEntitiesService {
     const { page = 1, limit = 20, sortOrder = 'desc' } = dto;
     const [filter, testerIds] = await Promise.all([this.buildStaffFilter(dto, role), findTesterUserIds(this.userRepo)]);
     const { data, total } = await this.agriEntityRepo.findOrderedBySubmission({ filter, order: sortOrder, page, limit });
-    const submitters = await this.userRepo.findByIds(data.map((entity) => entity.userId));
-    const byId = new Map(submitters.map((user) => [user.id, user]));
+    // The phone number is shown to admins and super admins only.
+    const canViewContact = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+    const submitterIds = [...new Set(data.map((entity) => entity.userId))];
+    const submitters = submitterIds.length ? await this.userRepo.findAll({ id: { $in: submitterIds } } as never) : [];
+    const byId = new Map(
+      submitters.map((user) => [
+        user.id,
+        { id: user.id, name: user.name, username: user.username, ...(canViewContact ? { mobileNumber: user.mobileNumber } : {}) },
+      ]),
+    );
     return {
       items: data.map((entity) => {
         const submitter = byId.get(entity.userId);
