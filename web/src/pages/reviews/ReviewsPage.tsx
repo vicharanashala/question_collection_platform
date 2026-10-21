@@ -34,6 +34,7 @@ import { ExportMenu } from "@/components/ExportMenu";
 import { QuestionStatusBadge, isStatusHidden } from "@/components/questions/QuestionStatusBadge";
 import { TesterFilter, type TesterFilterValue } from "@/components/TesterFilter";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
+import { useAnveshanScope } from "@/lib/anveshanMode";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -905,6 +906,7 @@ export function ReviewsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
+  const anveshanScope = useAnveshanScope();
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1133,9 +1135,11 @@ export function ReviewsPage() {
           ))}
         </div>
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
-          <div className="flex-1 sm:w-44 sm:flex-none">
-            <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
-          </div>
+          {anveshanScope === 'all' && (
+            <div className="flex-1 sm:w-44 sm:flex-none">
+              <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
+            </div>
+          )}
           <div className="flex-1 sm:w-44 sm:flex-none">
             <TesterFilter value={testerFilter} onChange={setTesterFilter} />
           </div>

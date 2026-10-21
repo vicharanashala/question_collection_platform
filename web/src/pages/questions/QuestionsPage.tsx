@@ -20,6 +20,7 @@ import { UserFilter } from "@/components/UserFilter";
 import { useAuth } from "@/context/AuthContext";
 import { isSuperAdmin } from "@/lib/roles";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
+import { useAnveshanScope } from "@/lib/anveshanMode";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
 import { cn, formatDate, formatTime } from "@/lib/utils";
 import { ListFilter, Search, MessageSquareReply } from "lucide-react";
@@ -73,6 +74,7 @@ export function QuestionsPage() {
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>("");
   const { user } = useAuth();
+  const anveshanScope = useAnveshanScope();
   const [userIds, setUserIds] = useState<string[]>([]);
   const userIdsParam = isSuperAdmin(user) && userIds.length ? userIds.join(",") : undefined;
   const [loading, setLoading] = useState(false);
@@ -403,7 +405,7 @@ export function QuestionsPage() {
                 className="pl-9"
               />
             </div>
-            <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />
+            {anveshanScope === 'all' && <UserTypeFilter value={userTypeFilter} onChange={setUserTypeFilter} />}
             <TesterFilter value={testerFilter} onChange={setTesterFilter} />
             <Select
               value={answerFilter || "all"}

@@ -9,9 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
+import { useAnveshanScope } from '@/lib/anveshanMode'
 import {
   Search, ChevronLeft, ChevronRight, Plus, Users, FlaskConical, Sprout, UserRound,
   PauseCircle, Ban, Clock, CheckCircle,
+  SlidersHorizontal,
+  ChevronDown,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -93,6 +96,18 @@ function CountCard({ icon: Icon, label, value, index }: { icon: typeof Users; la
   )
 }
 
+// Wraps one filter control with a visible label above it.
+function FilterField({ label, htmlFor, children }: { label: string; htmlFor?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={htmlFor} className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
+
 function FilterSelect({ value, onChange, options, ariaLabel, className }: {
   value: string
   onChange: (value: string) => void
@@ -104,7 +119,7 @@ function FilterSelect({ value, onChange, options, ariaLabel, className }: {
     <Select value={value || ALL_VALUE} onValueChange={(v) => onChange(v === ALL_VALUE ? '' : v)}>
       <SelectTrigger
         aria-label={ariaLabel}
-        className={cn('shrink-0 !bg-surface-variant dark:!bg-surface-variant [&>span]:truncate', className)}
+        className={cn('w-full shrink-0 !bg-surface-variant dark:!bg-surface-variant [&>span]:truncate', className)}
       >
         <SelectValue />
       </SelectTrigger>
@@ -132,12 +147,12 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   banned: Ban,
 }
 
-const STATUS_FILTER_CHIPS: { value: string; label: string; dot: string }[] = [
-  { value: '',               label: 'All',     dot: 'bg-muted' },
-  { value: 'verified',      label: 'Verified', dot: 'bg-emerald-500' },
-  { value: 'pending',       label: 'Pending',  dot: 'bg-amber-500' },
-  { value: 'suspended',     label: 'Suspended',dot: 'bg-amber-500' },
-  { value: 'banned',        label: 'Banned',   dot: 'bg-red-600' },
+const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'verified', label: 'Verified' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'suspended', label: 'Suspended' },
+  { value: 'banned', label: 'Banned' },
 ]
 
 export function UsersPage() {
@@ -203,7 +218,23 @@ export function UsersPage() {
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
+  const anveshanScope = useAnveshanScope()
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const activeFilterCount = [statusFilter, roleFilter, categoryFilter, stateFilter, testerFilter, anveshanFilter, fromDate, toDate].filter(Boolean).length
   const canFilterAnveshan = isSuperAdmin || currentUser?.role === 'admin'
+  // With the header set to Anveshan only, the "All users" and "Anveshan users" choices are redundant.
+  const anveshanFilterOptions =
+    anveshanScope === 'only'
+      ? ANVESHAN_FILTER_OPTIONS.filter((o) => o.value !== 'all').map((o) => (o.value === '' ? { ...o, label: 'Any progress' } : o))
+      : ANVESHAN_FILTER_OPTIONS
+  // Clears filters that the header scope makes irrelevant.
+  useEffect(() => {
+    if (anveshanScope === 'exclude') setAnveshanFilter('')
+    if (anveshanScope === 'only') {
+      setRoleFilter('')
+      setCategoryFilter('')
+    }
+  }, [anveshanScope])
 
   const [createOpen, setCreateOpen] = useState(false)
 
@@ -259,86 +290,107 @@ export function UsersPage() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
-            <Input
-              placeholder="Search by name or mobile..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
-            />
+      <Card className="space-y-4 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
+            <FilterField label="Search" htmlFor="users-search">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
+                <Input
+                  id="users-search"
+                  placeholder="Search by name or mobile..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
+                />
+              </div>
+            </FilterField>
           </div>
-          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-            {STATUS_FILTER_CHIPS.map((chip) => (
-              <button
-                key={chip.value}
-                onClick={() => { setStatusFilter(chip.value); setPage(1) }}
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold transition-all border',
-                  statusFilter === chip.value
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border-subtle bg-surface-variant text-text-secondary hover:border-primary/40 hover:text-text',
-                )}
-              >
-                <span className={cn('h-1.5 w-1.5 rounded-full', chip.dot)} />
-                {chip.label}
-              </button>
-            ))}
-          </div>
-          {isSuperAdmin && (
-            <FilterSelect
-              ariaLabel="Filter by role"
-              value={roleFilter}
-              onChange={(v) => { setRoleFilter(v); setPage(1) }}
-              options={ROLE_OPTIONS}
-              className="w-[calc(50%-0.375rem)] sm:w-40"
-            />
-          )}
-          <FilterSelect
-            ariaLabel="Filter by category"
-            value={categoryFilter}
-            onChange={(v) => { setCategoryFilter(v); setPage(1) }}
-            options={CATEGORY_OPTIONS}
-            className="w-[calc(50%-0.375rem)] sm:w-44"
-          />
-          <FilterSelect
-            ariaLabel="Filter by state"
-            value={stateFilter}
-            onChange={(v) => { setStateFilter(v); setPage(1) }}
-            options={[{ value: '', label: 'All States' }, ...states.map((s) => ({ value: s.name, label: s.name }))]}
-            className="w-[calc(50%-0.375rem)] sm:w-44"
-          />
-          <FilterSelect
-            ariaLabel="Filter by tester accounts"
-            value={testerFilter}
-            onChange={(v) => { setTesterFilter(v); setPage(1) }}
-            options={[
-              { value: '', label: 'All accounts' },
-              { value: 'only', label: 'Testers only' },
-              { value: 'exclude', label: 'Exclude testers' },
-            ]}
-            className="w-[calc(50%-0.375rem)] sm:w-44"
-          />
-          <label className="flex w-[calc(50%-0.375rem)] items-center gap-2 text-xs text-text-secondary sm:w-auto">
-            From
-            <Input type="date" value={fromDate} max={toDate || undefined} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="w-full sm:w-40 !bg-surface-variant dark:!bg-surface-variant" />
-          </label>
-          <label className="flex w-[calc(50%-0.375rem)] items-center gap-2 text-xs text-text-secondary sm:w-auto">
-            To
-            <Input type="date" value={toDate} min={fromDate || undefined} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="w-full sm:w-40 !bg-surface-variant dark:!bg-surface-variant" />
-          </label>
-          {canFilterAnveshan && (
-            <FilterSelect
-              ariaLabel="Filter by Anveshan progress"
-              value={anveshanFilter}
-              onChange={(v) => { setAnveshanFilter(v as AnveshanFilter); setPage(1) }}
-              options={ANVESHAN_FILTER_OPTIONS}
-              className="w-[calc(50%-0.375rem)] sm:w-56"
-            />
-          )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            aria-controls="users-filters-panel"
+            className="h-10 gap-2"
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">{activeFilterCount}</span>
+            )}
+            <ChevronDown className={cn('h-4 w-4 transition-transform', filtersOpen && 'rotate-180')} aria-hidden="true" />
+          </Button>
         </div>
+
+        {filtersOpen && (
+        <div id="users-filters-panel" className="grid grid-cols-1 gap-4 border-t border-border-subtle pt-4 sm:grid-cols-2 lg:grid-cols-4">
+          <FilterField label="Status">
+            <FilterSelect
+              ariaLabel="Filter by status"
+              value={statusFilter}
+              onChange={(v) => { setStatusFilter(v); setPage(1) }}
+              options={STATUS_FILTER_OPTIONS.map((chip) => ({ value: chip.value, label: chip.value ? chip.label : 'All statuses' }))}
+            />
+          </FilterField>
+          {isSuperAdmin && anveshanScope !== 'only' && (
+            <FilterField label="Role">
+              <FilterSelect
+                ariaLabel="Filter by role"
+                value={roleFilter}
+                onChange={(v) => { setRoleFilter(v); setPage(1) }}
+                options={ROLE_OPTIONS}
+              />
+            </FilterField>
+          )}
+          {anveshanScope !== 'only' && (
+            <FilterField label="Category">
+              <FilterSelect
+                ariaLabel="Filter by category"
+                value={categoryFilter}
+                onChange={(v) => { setCategoryFilter(v); setPage(1) }}
+                options={CATEGORY_OPTIONS}
+              />
+            </FilterField>
+          )}
+          <FilterField label="State">
+            <FilterSelect
+              ariaLabel="Filter by state"
+              value={stateFilter}
+              onChange={(v) => { setStateFilter(v); setPage(1) }}
+              options={[{ value: '', label: 'All States' }, ...states.map((s) => ({ value: s.name, label: s.name }))]}
+            />
+          </FilterField>
+          <FilterField label="Account type">
+            <FilterSelect
+              ariaLabel="Filter by tester accounts"
+              value={testerFilter}
+              onChange={(v) => { setTesterFilter(v); setPage(1) }}
+              options={[
+                { value: '', label: 'All accounts' },
+                { value: 'only', label: 'Testers only' },
+                { value: 'exclude', label: 'Exclude testers' },
+              ]}
+            />
+          </FilterField>
+          {canFilterAnveshan && anveshanScope !== 'exclude' && (
+            <FilterField label="Anveshan progress">
+              <FilterSelect
+                ariaLabel="Filter by Anveshan progress"
+                value={anveshanFilter}
+                onChange={(v) => { setAnveshanFilter(v as AnveshanFilter); setPage(1) }}
+                options={anveshanFilterOptions}
+              />
+            </FilterField>
+          )}
+          <FilterField label="Joined from" htmlFor="users-from">
+            <Input id="users-from" type="date" value={fromDate} max={toDate || undefined} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" />
+          </FilterField>
+          <FilterField label="Joined to" htmlFor="users-to">
+            <Input id="users-to" type="date" value={toDate} min={fromDate || undefined} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" />
+          </FilterField>
+        </div>
+        )}
       </Card>
 
       {/* Table */}

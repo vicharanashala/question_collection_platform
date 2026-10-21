@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage, type UserFilterOption } from '@/api/client'
+import { useAnveshanScope } from '@/lib/anveshanMode'
+import { useTesterScope } from '@/lib/testerMode'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Button } from '@/components/ui/button'
 import { MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
@@ -14,10 +16,21 @@ interface UserFilterProps {
   disabled?: boolean
 }
 
+// Placeholder that names the users the current header filters allow.
+function placeholderFor(anveshan: string, tester: string | undefined): string {
+  const who = anveshan === 'only' ? 'Anveshan users' : anveshan === 'exclude' ? 'regular users' : 'users'
+  const testers = tester === 'only' ? ' (testers only)' : tester === 'exclude' ? ' (excluding testers)' : ''
+  return `Filter by ${who}${testers}`
+}
+
 const labelOf = (user: UserFilterOption) => `${user.name} (${user.mobileNumber})`
 
 // Super Admin multi-select of users with Apply and Reset controls. The list follows the header scopes.
 export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps) {
+  const anveshanScope = useAnveshanScope()
+  const testerScope = useTesterScope()
+  // The header tester scope overrides the table's own tester filter on requests.
+  const effectiveTester = testerScope !== 'all' ? testerScope : tester
   const [users, setUsers] = useState<UserFilterOption[]>([])
   const [known, setKnown] = useState<Record<string, UserFilterOption>>({})
   const [draft, setDraft] = useState<string[]>(value)
@@ -28,7 +41,7 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
   useEffect(() => {
     let cancelled = false
     agriEntityApi
-      .listUsers({ tester, search: debouncedSearch })
+      .listUsers({ tester: effectiveTester, search: debouncedSearch })
       .then((list) => {
         if (cancelled) return
         setUsers(list)
@@ -38,7 +51,7 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
     return () => {
       cancelled = true
     }
-  }, [tester, debouncedSearch])
+  }, [effectiveTester, anveshanScope, debouncedSearch])
 
   // Selected users stay in the list even when the current search does not return them.
   const items = [
@@ -59,7 +72,7 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
           values={draft}
           onValuesChange={setDraft}
           onSearchChange={setSearch}
-          placeholder="Filter by users"
+          placeholder={placeholderFor(anveshanScope, effectiveTester)}
           emptyMessage="No users found"
         />
       </div>
