@@ -78,7 +78,6 @@ import { LogOut } from "lucide-react";
 import { SignOutDialog } from "@/components/SignOutDialog";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { SupportedLanguageCode } from "@/i18n";
-import placeholderImage from "../../assets/place-holder-image.jpg";
 import {
   clearProfileDraft,
   getProfileDraft,
@@ -562,13 +561,12 @@ function Step3({
     ]);
 
     return crops
-      .slice(4)
       .slice(0, 9)
       .filter((crop) => !excludedCrops.has(crop.name))
       .map((crop) => ({
         value: crop.name,
         label: crop.name,
-        imageUrl: crop.imageUrl || placeholderImage,
+        imageUrl: crop.imageUrl,
         _id: crop._id,
       }));
   }, [crops]);
@@ -764,6 +762,7 @@ function Step3({
                     <div className="relative h-14 w-14 overflow-hidden rounded-full">
                       <CropImage
                         name={crop.value}
+                        imageUrl={crop.imageUrl}
                         className="h-full w-full rounded-full object-cover"
                       />
                       {selected && (
@@ -1086,6 +1085,7 @@ function Step3({
                       <div className="relative h-14 w-14 overflow-hidden rounded-full">
                         <CropImage
                           name={crop.value}
+                          imageUrl={crop.imageUrl}
                           className="h-full w-full rounded-full object-cover"
                         />
                         {selected && (

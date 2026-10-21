@@ -8,8 +8,6 @@ import { CropImage } from '@/components/CropImage'
 // import { CROPS } from '@/constants/public'
 import { cn } from '@/lib/utils'
 
-import placeholderImage from "../../assets/place-holder-image.jpg"
-
 interface CropPickerModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -29,9 +27,16 @@ export interface Crop {
   name: string
   imageUrl?: string | null
   scientificName?: string
+  aliases?: (string | { english_representation?: string; native_representation?: string })[]
 }
 
 
+
+// Returns the searchable names of an alias entry.
+function aliasTexts(alias: NonNullable<Crop['aliases']>[number]): string[] {
+  if (typeof alias === 'string') return [alias]
+  return [alias.english_representation ?? '', alias.native_representation ?? '']
+}
 
 export function CropPickerModal({
   open,
@@ -61,22 +66,20 @@ const allOptions = useMemo(() => {
     'All Crops',
   ])
 
-  console.log("Crops", crops)
-
   return crops
-    .slice(4)
     .filter((crop) => !excludedCrops.has(crop.name))
     .map((crop) => ({
       value: crop.name,
       label: crop.name,
-      imageUrl: crop.imageUrl || placeholderImage,
+      imageUrl: crop.imageUrl,
+      searchText: [crop.name, ...(crop.aliases ?? []).flatMap(aliasTexts)].join(' ').toLowerCase(),
     }))
 }, [crops])
 
   const filtered = useMemo(() => {
     if (!query.trim()) return allOptions
     const q = query.toLowerCase()
-    return allOptions.filter((o) => o.label.toLowerCase().includes(q))
+    return allOptions.filter((o) => o.searchText.includes(q))
   }, [query, allOptions])
 
   function toggleCrop(value: string) {
@@ -199,7 +202,7 @@ const allOptions = useMemo(() => {
                             : "border-border-subtle hover:border-emerald-300",
                         )}
                       >
-                        <CropImage name={c.value} className="h-full w-full rounded-full object-cover" />
+                        <CropImage name={c.value} imageUrl={c.imageUrl} className="h-full w-full rounded-full object-cover" />
                       </div>
                       {isSelected && (
                         <div className="absolute -bottom-0.5 -right-0.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow">

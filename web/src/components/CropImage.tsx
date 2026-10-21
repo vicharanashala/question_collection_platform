@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils'
 
 interface CropImageProps {
   name: string
+  /** Image URL from the API; takes priority over the bundled image */
+  imageUrl?: string | null
   className?: string
   iconClassName?: string
 }
@@ -14,8 +16,8 @@ interface CropImageProps {
  * thumbnails: shows the crop's bundled image when one exists, otherwise a
  * generic leaf placeholder (same fallback mobile uses).
  */
-export function CropImage({ name, className, iconClassName }: CropImageProps) {
-  const src = getCropImage(name)
+export function CropImage({ name, imageUrl, className, iconClassName }: CropImageProps) {
+  const src = imageUrl || getCropImage(name)
   const [failed, setFailed] = useState(false)
 
   if (!src || failed) {
