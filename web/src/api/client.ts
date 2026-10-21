@@ -43,6 +43,7 @@ import type {
   SubmitAnveshanAnswerPayload,
   SubmitAnveshanAnswerResponse,
   CuratorStats,
+  FaqAudience,
 } from "@/types";
 import {
   accountLockedEmitter,
@@ -1598,22 +1599,22 @@ export const agriEntityApi = {
 
 export const faqApi = {
   /** User-facing: visible FAQs only, optionally filtered */
-  // getVisible: (filters?: { category?: string }) => {
-  //   const params: Record<string, string> = {}
-  //   if (filters?.category) params.category = filters.category
-  //   return request<Faq[]>('/faqs', { params }, false)
-  // },
-
-  getVisible: (filters?: { category?: string }) => {
+  getVisible: (filters?: { category?: string; search?: string }) => {
     const params = new URLSearchParams();
 
     if (filters?.category) {
       params.set("category", filters.category);
     }
 
+    if (filters?.search) {
+      params.set("search", filters.search);
+    }
+
     const qs = params.toString();
 
-    return request<Faq[]>(`/faqs${qs ? `?${qs}` : ""}`, {}, false);
+    // Logged in users get FAQs matching their Anveshan status.
+    const path = getAccessToken() ? "/faqs/me" : "/faqs";
+    return request<Faq[]>(`${path}${qs ? `?${qs}` : ""}`, {}, false);
   },
 
   /** Admin: paginated FAQ list */
@@ -1623,6 +1624,7 @@ export const faqApi = {
     page?: number;
     limit?: number;
     sortBy?: "displayOrder" | "createdAt" | "updatedAt" | "question";
+    userSort?: "anveshan" | "user" | "all";
     sortOrder?: "ASC" | "DESC";
   }) => {
     const p: Record<string, string> = {};
@@ -1631,6 +1633,7 @@ export const faqApi = {
     if (filters?.page) p.page = String(filters.page);
     if (filters?.limit) p.limit = String(filters.limit);
     if (filters?.sortBy) p.sortBy = filters.sortBy;
+    if (filters?.userSort) p.userSort = filters.userSort;
     if (filters?.sortOrder) p.sortOrder = filters.sortOrder;
     const qs = new URLSearchParams(p).toString();
     return request<PaginatedResponse<Faq>>(
@@ -1652,11 +1655,20 @@ export const faqApi = {
     );
   },
 
+  /** Admin: saves a new order for the given FAQ ids. */
+  reorder: (ids: string[]) =>
+    request<{ success: boolean }>(
+      "/admin/faqs/reorder",
+      { method: "PATCH", body: JSON.stringify({ ids }) },
+      false,
+    ),
+
   create: (body: {
     question: string;
     answer: string;
     category?: string;
     isVisible?: boolean;
+    audience?: FaqAudience;
   }) =>
     request<Faq>(
       "/admin/faqs",
@@ -1674,6 +1686,7 @@ export const faqApi = {
       answer?: string;
       category?: string;
       isVisible?: boolean;
+      audience?: FaqAudience;
     },
   ) =>
     request<Faq>(

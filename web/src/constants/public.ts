@@ -387,6 +387,8 @@ export const AGRI_ENTITY_TYPES: { value: AgriEntityType; label: string }[] = [
 export const MAX_AGRI_ENTITY_IMAGES = 5
 // Must match MAX_AGRI_ENTITY_IMAGE_SIZE_MB in the backend agri-entities constants.
 export const MAX_AGRI_ENTITY_IMAGE_SIZE_MB = 5
+// Must match MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB in the backend agri-entities constants.
+export const MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB = 12
 export const MAX_AGRI_ENTITY_NAME_LENGTH = 200
 export const MAX_AGRI_ENTITY_SOURCE_LENGTH = 500
 export const AGRI_ENTITY_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -403,6 +405,9 @@ export const MAX_ANVESHAN_ANSWER_SOURCES = 10
 
 // Live Anveshan platform, used when no URL is configured for the current environment.
 const DEFAULT_ANVESHAN_URL = 'https://anveshan.annam.ai/'
+
+// The Take photo option is hidden in production builds (VITE_APP_ENV=production) and on in staging and local builds.
+export const TAKE_PHOTO_ENABLED = import.meta.env.VITE_APP_ENV !== 'production'
 
 // External Anveshan platform where users confirm their milestone completion.
 // Production builds use VITE_ANVESHAN_URL; staging and local builds use VITE_ANVESHAN_URL_STAGING.

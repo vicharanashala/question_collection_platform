@@ -667,12 +667,15 @@ export interface ReportReply {
 
 export type FaqCategory = 'account' | 'payment' | 'question' | 'general';
 
+export type FaqAudience = "anveshan" | "user" | "all";
+
 export interface Faq {
   id: string;
   question: string;
   answer: string;
   category: FaqCategory;
   isVisible: boolean;
+  audience: FaqAudience;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;

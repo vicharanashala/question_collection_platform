@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { IFaqRepository } from '../../IFaq.repository';
+import { FindVisibleOptions, IFaqRepository } from '../../IFaq.repository';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 import { FaqCategory } from '../../../../classes/enums';
 
@@ -21,12 +21,44 @@ export class MongoFaqRepository
       .exec() as Promise<Faq[]>;
   }
 
-  async findVisible(category?: FaqCategory): Promise<Faq[]> {
-    const filter: Record<string, unknown> = { isVisible: true };
-    if (category) filter.category = category;
-    return this._model
-      .find(filter, undefined, { sort: { displayOrder: 1, createdAt: 1 } })
-      .exec() as Promise<Faq[]>;
+  async findVisible(options: FindVisibleOptions = {}): Promise<Faq[]> {
+  const { category, search, isAnveshanUser } = options;
+  const filter: Record<string, unknown> = { isVisible: true };
+
+  if (category) filter.category = category;
+
+  // Hide FAQs meant for the other audience. FAQs without an audience are shown to everyone.
+  filter.audience = { $nin: [isAnveshanUser ? 'user' : 'anveshan'] };
+
+  if (search) {
+    const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+    filter.$or = [{ question: regex }, { answer: regex }];
+  }
+
+  return this._model
+    .find(filter, undefined, { sort: { displayOrder: 1, createdAt: 1 } })
+    .exec() as Promise<Faq[]>;
+}
+
+
+  // Returns every FAQ id in display order, using creation date to break ties.
+  async findAllIdsOrdered(): Promise<string[]> {
+    const docs = await this._model
+      .find({}, '_id', { sort: { displayOrder: 1, createdAt: 1 } })
+      .lean()
+      .exec();
+    return docs.map((d) => String(d._id));
+  }
+
+  // Writes displayOrder as the position of each id in the given list.
+  async setDisplayOrder(orderedIds: string[]): Promise<void> {
+    if (orderedIds.length === 0) return;
+    await this._model.bulkWrite(
+      orderedIds.map((id, index) => ({
+        updateOne: { filter: { _id: id }, update: { $set: { displayOrder: index } } },
+      })),
+    );
   }
 
   async getStats(

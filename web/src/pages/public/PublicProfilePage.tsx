@@ -7,6 +7,8 @@
  *   5. Actions section ───── Payment Methods / Report / Help & Feedback / Terms / Privacy / Contact Admin
  *   6. Sign Out ─────────── red outlined button with confirm dialog
  */
+import { NewBadge } from '@/components/ui/new-badge'
+import type { NewFeatureKey } from '@/lib/newFeatures'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -146,8 +148,9 @@ interface ActionRowProps {
   onClick: () => void
   danger?: boolean
   disabled?: boolean
+  newFeature?: NewFeatureKey
 }
-function ActionRow({ icon: Icon, label, onClick, danger, disabled }: ActionRowProps) {
+function ActionRow({ icon: Icon, label, onClick, danger, disabled, newFeature }: ActionRowProps) {
   return (
     <button
       type="button"
@@ -167,7 +170,9 @@ function ActionRow({ icon: Icon, label, onClick, danger, disabled }: ActionRowPr
       )}>
         <Icon className="h-4 w-4" />
       </span>
-      <span className="flex-1 text-sm font-semibold">{label}</span>
+      <span className="text-sm font-semibold">{label}</span>
+      {newFeature && <NewBadge feature={newFeature} />}
+      <span className="flex-1" />
       <ChevronRight className="h-4 w-4 text-text-tertiary" />
     </button>
   )
@@ -606,7 +611,7 @@ export function PublicProfilePage() {
               label={t('report.raiseSupportTicket', 'Raise Support Ticket')}
               onClick={() => window.open(RAISE_TICKET_URL, '_blank', 'noopener,noreferrer')}
             />
-            <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} />
+            <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} newFeature="faq" />
             <ActionRow icon={FileText} label={t('profile.termsOfService')} onClick={() => navigate('/home/terms')} />
             <ActionRow icon={ShieldCheck} label={t('profile.privacyPolicy')} onClick={() => navigate('/home/privacy')} />
             <ActionRow

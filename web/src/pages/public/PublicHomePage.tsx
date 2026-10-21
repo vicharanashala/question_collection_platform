@@ -16,7 +16,6 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { CompleteProfileModal } from "@/components/profile/CompleteProfileModal";
-import { VideoSection } from "@/components/VideoSection";
 import {
   Wallet,
   Trophy,
@@ -551,9 +550,6 @@ export function PublicHomePage() {
         />
         )}
       </div>
-
-      {/* ── Video Section (general how-to guide; not shown to Anveshan users) ── */}
-      {!isAnveshanUser && <VideoSection />}
 
       {/* ── Quick Actions ── */}
       <section aria-labelledby="quick-actions-heading">
