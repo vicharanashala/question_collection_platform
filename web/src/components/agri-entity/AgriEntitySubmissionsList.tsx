@@ -4,9 +4,12 @@ import { TesterTag } from '@/components/TesterTag'
 import { useAuth } from '@/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Clock, Image as ImageIcon } from 'lucide-react'
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, Clock, Download, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
-import { agriEntityApi, getErrorMessage } from '@/api/client'
+import { agriEntityApi, getErrorMessage, type AnveshanUserOption } from '@/api/client'
+import { isSuperAdmin } from '@/lib/roles'
+import { Button } from '@/components/ui/button'
+import { MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
 import { Card, CardContent } from '@/components/ui/card'
 import { DataTable, type ColumnDef } from '@/components/DataTable'
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +49,12 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<AgriEntitySubmission | null>(null)
+  const canFilterUsers = scope === 'all' && isSuperAdmin(user)
+  const [anveshanUsers, setAnveshanUsers] = useState<AnveshanUserOption[]>([])
+  const [draftUserIds, setDraftUserIds] = useState<string[]>([])
+  const [userIds, setUserIds] = useState<string[]>([])
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [exporting, setExporting] = useState(false)
 
   const statusOptions: StatusOption<'' | AgriEntityStatus>[] = [
     { key: '', label: t('submissions.allStatus') },
@@ -54,11 +63,34 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     { key: 'rejected', label: t('submissions.rejected') },
   ]
 
+  // Loads the Anveshan users offered by the Super Admin user filter.
+  useEffect(() => {
+    if (!canFilterUsers) return
+    agriEntityApi
+      .listAnveshanUsers(testerFilter || undefined)
+      .then((users) => {
+        setAnveshanUsers(users)
+        // Drop selected users that the current tester or Anveshan scope no longer lists.
+        const listed = new Set(users.map((u) => u.id))
+        setDraftUserIds((ids) => ids.filter((id) => listed.has(id)))
+        setUserIds((ids) => (ids.every((id) => listed.has(id)) ? ids : ids.filter((id) => listed.has(id))))
+      })
+      .catch((err) => toast.error(getErrorMessage(err, 'Could not load Anveshan users')))
+  }, [canFilterUsers, testerFilter])
+
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     const list = scope === 'all' ? agriEntityApi.listAll : agriEntityApi.listMine
-    list({ type, status: status || undefined, page, limit: PAGE_SIZE, ...(scope === 'all' && testerFilter ? { tester: testerFilter } : {}) })
+    list({
+      type,
+      status: status || undefined,
+      page,
+      limit: PAGE_SIZE,
+      ...(scope === 'all' && testerFilter ? { tester: testerFilter } : {}),
+      ...(scope === 'all' ? { sortOrder } : {}),
+      ...(canFilterUsers && userIds.length ? { userIds } : {}),
+    })
       .then((res) => {
         if (cancelled) return
         setItems(res.items ?? [])
@@ -73,7 +105,32 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     return () => {
       cancelled = true
     }
-  }, [type, status, testerFilter, page, scope, t])
+  }, [type, status, testerFilter, page, scope, sortOrder, userIds, canFilterUsers, t])
+
+  // Applies or clears the selected users and returns to the first page.
+  const applyUsers = (ids: string[]) => {
+    setDraftUserIds(ids)
+    setUserIds(ids)
+    setPage(1)
+  }
+
+  // Downloads the Anveshan entities matching the current filters as an Excel file.
+  const handleExport = async () => {
+    if (exporting) return
+    setExporting(true)
+    try {
+      await agriEntityApi.exportAnveshan({
+        type,
+        sortOrder,
+        ...(testerFilter ? { tester: testerFilter } : {}),
+        ...(userIds.length ? { userIds } : {}),
+      })
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Export failed'))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   // Columns for the staff table view.
   const adminColumns: ColumnDef<AgriEntitySubmission>[] = [
@@ -133,16 +190,18 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
       ),
     },
     {
-      key: 'createdAt',
+      key: 'submittedAt',
       header: 'Submitted',
       width: '150px',
-      sortable: true,
-      render: (row) => (
-        <div className="leading-tight">
-          <p className="text-sm text-foreground">{formatAbsoluteDate(row.createdAt)}</p>
-          <p className="text-xs text-muted-foreground">{formatTime(row.createdAt)}</p>
-        </div>
-      ),
+      render: (row) => {
+        const submittedAt = row.submissionLocation?.capturedAt ?? row.createdAt
+        return (
+          <div className="leading-tight">
+            <p className="text-sm text-foreground">{formatAbsoluteDate(submittedAt)}</p>
+            <p className="text-xs text-muted-foreground">{formatTime(submittedAt)}</p>
+          </div>
+        )
+      },
     },
   ]
 
@@ -157,8 +216,42 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
           ) : (
             <span />
           )}
-          <div className="w-full sm:w-44">
-            <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            {canFilterUsers && (
+              <>
+                <div className="w-full sm:w-72">
+                  <MultiSearchableSelect
+                    items={anveshanUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.mobileNumber})` }))}
+                    values={draftUserIds}
+                    onValuesChange={setDraftUserIds}
+                    placeholder="Filter by Anveshan users"
+                    emptyMessage="No Anveshan users found"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => applyUsers(draftUserIds)} disabled={loading}>Apply</Button>
+                  <Button size="sm" variant="outline" onClick={() => applyUsers([])} disabled={!draftUserIds.length && !userIds.length}>Reset</Button>
+                </div>
+              </>
+            )}
+            <div className="w-full sm:w-44">
+              <TesterFilter value={testerFilter} onChange={(value) => { setTesterFilter(value); setPage(1) }} />
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc')); setPage(1) }}
+              aria-label="Toggle submission date order"
+            >
+              {sortOrder === 'desc' ? <ArrowDownWideNarrow className="mr-1.5 h-4 w-4" /> : <ArrowUpNarrowWide className="mr-1.5 h-4 w-4" />}
+              {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
+            </Button>
+            {canFilterUsers && (
+              <Button size="sm" variant="outline" onClick={handleExport} disabled={exporting}>
+                <Download className="mr-1.5 h-4 w-4" />
+                {exporting ? 'Exporting…' : 'Export Excel'}
+              </Button>
+            )}
           </div>
         </div>
 

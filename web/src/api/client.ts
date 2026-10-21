@@ -187,6 +187,7 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   '/admin/questions/queue',
   '/questions',
   '/agri-entities/all',
+  '/agri-entities/anveshan-users',
   '/reports',
   '/distributor/questions',
   '/distributor/distributions',
@@ -1535,6 +1536,32 @@ export const feedbackApi = {
     ),
 };
 
+/** Filters and ordering for the staff entity list and export. */
+export interface StaffAgriEntityQuery {
+  type?: AgriEntityType;
+  status?: AgriEntityStatus;
+  page?: number;
+  limit?: number;
+  tester?: 'only' | 'exclude';
+  /** Super Admin only: restrict to these Anveshan users. */
+  userIds?: string[];
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AnveshanUserOption {
+  id: string;
+  name: string;
+  mobileNumber: string;
+}
+
+// Builds the entity list query string, sending the selected user ids as one comma separated value.
+function entityListQuery(params: StaffAgriEntityQuery): string {
+  const entries = Object.entries(params)
+    .filter(([, v]) => v !== undefined && !(Array.isArray(v) && v.length === 0))
+    .map(([k, v]) => [k, Array.isArray(v) ? v.join(",") : String(v)]);
+  return new URLSearchParams(entries).toString();
+}
+
 export const agriEntityApi = {
   /** Submit a crop, weed, pest or disease record. Images must be uploaded first via storageApi. */
   submit: (body: SubmitAgriEntityPayload) =>
@@ -1573,24 +1600,29 @@ export const agriEntityApi = {
   },
 
   /** Staff only (curator, admin, super admin): every user's submissions, with the submitter attached. */
-  listAll: (
-    params: {
-      type?: AgriEntityType;
-      status?: AgriEntityStatus;
-      page?: number;
-      limit?: number;
-      tester?: 'only' | 'exclude';
-    } = {},
-  ) => {
-    const qs = new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(params).filter(([, v]) => v !== undefined),
-      ) as Record<string, string>,
-    ).toString();
+  listAll: (params: StaffAgriEntityQuery = {}) => {
+    const qs = entityListQuery(params);
     return request<PaginatedResponse<AgriEntitySubmission>>(
       `/agri-entities/all${qs ? `?${qs}` : ""}`,
       {},
       false,
+    );
+  },
+
+  /** Super Admin only: Anveshan users available for the entity user filter. */
+  listAnveshanUsers: (tester?: 'only' | 'exclude') =>
+    request<AnveshanUserOption[]>(
+      `/agri-entities/anveshan-users${tester ? `?tester=${tester}` : ""}`,
+      {},
+      false,
+    ),
+
+  /** Super Admin only: downloads the Anveshan users' entities as Excel, honouring the list filters. */
+  exportAnveshan: (params: StaffAgriEntityQuery = {}) => {
+    const qs = entityListQuery({ ...params, page: undefined, limit: undefined });
+    return analyticsApi._download(
+      `/agri-entities/export${qs ? `?${qs}` : ""}`,
+      `anveshan_entities_${Date.now()}.xlsx`,
     );
   },
 };

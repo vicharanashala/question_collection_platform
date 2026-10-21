@@ -1,3 +1,4 @@
+import { SubmissionLocation } from './question.entity';
 import { AgriEntityStatus, AgriEntityType } from '../../classes/enums';
 
 /** An alternate name for a crop, weed, pest or disease together with its reference. */
@@ -22,6 +23,8 @@ export class AgriEntity {
   alternateNames: AgriEntityAlternateName[];
   imageUrls: string[];
   status: AgriEntityStatus;
+  /** Where and when the entity was submitted. Missing on older records. */
+  submissionLocation?: SubmissionLocation | null;
   createdAt: Date;
   updatedAt: Date;
 }
