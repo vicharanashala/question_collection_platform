@@ -359,22 +359,25 @@ export function LocationCaptureModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-md p-6 sm:p-8 [&>button]:hidden"
+        className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md [&>button]:hidden"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader className="items-center space-y-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-            <MapPin className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+        <DialogHeader className="items-center space-y-2 px-5 pb-4 pt-6 sm:px-6">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+            <MapPin className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <DialogTitle className="text-center">
+          <DialogTitle className="text-center text-lg">
             Confirm your location
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="max-w-xs text-center text-sm">
             We need your current location to submit this question.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Scrollable body, so the action buttons stay visible on small screens */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pb-4 sm:px-6">
 
         {/* Geolocation status — auto-fetched, no button */}
         <div
@@ -393,12 +396,14 @@ export function LocationCaptureModal({
           ) : (
             <MapPin className="h-4 w-4 shrink-0" />
           )}
-          <span className="flex-1">
-            {coordsLoading
-              ? "Getting your location..."
-              : coords
-                ? "Location captured"
-                : (coordsError ?? "Waiting for location access")}
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">
+              {coordsLoading
+                ? "Getting your location..."
+                : coords
+                  ? "Location captured"
+                  : (coordsError ?? "Waiting for location access")}
+            </span>
           </span>
           {coordsError && !coordsLoading && (
             <button
@@ -425,9 +430,9 @@ export function LocationCaptureModal({
         </div>
 
         {/* ── Cascading LGD selects ── */}
-        <div className="mt-4 space-y-3">
+        <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>State</Label>
+            <Label>State <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualState ? MANUAL_VALUE : stateCode}
               onValueChange={(value) => {
@@ -495,7 +500,7 @@ export function LocationCaptureModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>District</Label>
+            <Label>District <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualDistrict ? MANUAL_VALUE : districtCode}
               onValueChange={(value) => {
@@ -523,7 +528,11 @@ export function LocationCaptureModal({
               <SelectTrigger>
                 <SelectValue
                   placeholder={
-                    districtsLoading ? "Loading..." : "Select district"
+                    districtsLoading
+                      ? "Loading..."
+                      : !stateCode && !manualState
+                        ? "Select state first"
+                        : "Select district"
                   }
                 />
               </SelectTrigger>
@@ -556,7 +565,7 @@ export function LocationCaptureModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Block</Label>
+            <Label>Block <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualBlock ? MANUAL_VALUE : blockCode}
               onValueChange={(value) => {
@@ -578,7 +587,13 @@ export function LocationCaptureModal({
             >
               <SelectTrigger>
                 <SelectValue
-                  placeholder={blocksLoading ? "Loading..." : "Select block"}
+                  placeholder={
+                    blocksLoading
+                      ? "Loading..."
+                      : !districtCode && !manualDistrict
+                        ? "Select district first"
+                        : "Select block"
+                  }
                 />
               </SelectTrigger>
               <SelectContent>
@@ -608,7 +623,7 @@ export function LocationCaptureModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Village</Label>
+            <Label>Village <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualVillage ? MANUAL_VALUE : villageCode}
               onValueChange={(value) => {
@@ -626,7 +641,11 @@ export function LocationCaptureModal({
               <SelectTrigger>
                 <SelectValue
                   placeholder={
-                    villagesLoading ? "Loading..." : "Select village"
+                    villagesLoading
+                      ? "Loading..."
+                      : !blockCode && !manualBlock
+                        ? "Select block first"
+                        : "Select village"
                   }
                 />
               </SelectTrigger>
@@ -657,10 +676,16 @@ export function LocationCaptureModal({
             )}
           </div>
         </div>
+        </div>
 
-        <DialogFooter className="mt-4 flex-col gap-2 sm:flex-col">
+        <DialogFooter className="flex-col gap-2 border-t border-border-subtle bg-surface px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-col sm:space-x-0 sm:px-6">
+          {!canConfirm && !!coords && (
+            <p className="text-center text-xs text-text-tertiary">
+              Select your state, district, block and village to continue.
+            </p>
+          )}
           <Button
-            className="w-full"
+            className="h-11 w-full"
             onClick={handleConfirm}
             disabled={!canConfirm}
           >

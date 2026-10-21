@@ -12,6 +12,8 @@ export const NEW_FEATURES = {
   faqAdmin: { expiresOn: '2026-11-20' },
   // Drag to reorder and the audience filter on the admin FAQ page.
   faqAdminTools: { expiresOn: '2026-11-20' },
+  // In-app camera with date, time, location and brand stamp on the photo.
+  takePhoto: { expiresOn: '2026-11-20' },
 } as const
 
 export type NewFeatureKey = keyof typeof NEW_FEATURES
