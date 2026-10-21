@@ -13,6 +13,7 @@ import { canAccessPayments } from '@/utils/paymentAccess'
 const LoginPage       = lazyRoute(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
 const DashboardRouter = lazyRoute(() => import('@/pages/dashboard/DashboardRouter').then(m => ({ default: m.DashboardRouter })))
 const UsersPage       = lazyRoute(() => import('@/pages/users/UsersPage').then(m => ({ default: m.UsersPage })))
+const AnveshanUserDetailPage = lazyRoute(() => import('@/pages/users/AnveshanUserDetailPage').then(m => ({ default: m.AnveshanUserDetailPage })))
 const UserDetailPage  = lazyRoute(() => import('@/pages/users/UserDetailPage').then(m => ({ default: m.UserDetailPage })))
 const QuestionsPage   = lazyRoute(() => import('@/pages/questions/QuestionsPage').then(m => ({ default: m.QuestionsPage })))
 const ReviewsPage     = lazyRoute(() => import('@/pages/reviews/ReviewsPage').then(m => ({ default: m.ReviewsPage })))
@@ -204,6 +205,7 @@ export default function App() {
           <Route path="dashboard"   element={<><RoleRoute pageKey="dashboard" /><DashboardRouter /></>} />
           <Route path="users"      element={<><RoleRoute pageKey="users" /><UsersPage /></>} />
           <Route path="users/:userId" element={<><RoleRoute pageKey="userDetail" /><UserDetailPage /></>} />
+          <Route path="users/:userId/anveshan" element={<><RoleRoute pageKey="userDetail" /><AnveshanUserDetailPage /></>} />
           <Route path="questions"  element={<><RoleRoute pageKey="questions" /><QuestionsPage /></>} />
           <Route path="reviews"    element={<><RoleRoute pageKey="reviews" /><ReviewsPage /></>} />
           <Route path="profile"    element={<><RoleRoute pageKey="profile" /><ProfilePage /></>} />

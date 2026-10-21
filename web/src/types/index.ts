@@ -959,3 +959,36 @@ export interface AppFeedbackListResponse {
   pages: number;
   summary: FeedbackRatingSummary;
 }
+
+/** One question of an Anveshan user in the staff detail view, with the answer they wrote. */
+export interface AnveshanUserQuestion {
+  id: string;
+  questionText: string;
+  cropType: string;
+  season: string;
+  state: string;
+  district: string;
+  language: string;
+  status: QuestionStatus;
+  submittedAt: string;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  heldReason: string | null;
+  approvalReason: string | null;
+  isAnswerSubmitted: boolean;
+  answer: {
+    answer: string;
+    sources: AnveshanAnswerSource[];
+    remarks: string | null;
+    answeredAt: string;
+    scorePercentage: number | null;
+  } | null;
+}
+
+/** Everything staff see on the Anveshan user detail page. */
+export interface AnveshanUserDetail {
+  user: User;
+  progress: AnveshanUserProgress | null;
+  questions: AnveshanUserQuestion[];
+  entities: AgriEntitySubmission[];
+}

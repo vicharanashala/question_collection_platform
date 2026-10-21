@@ -481,7 +481,7 @@ export function UsersPage() {
                       )}
                     >
                       <td className="px-4 py-3">
-                        <Link to={`/users/${u.id}`} className="flex items-center gap-3 group">
+                        <Link to={u.isAnveshanUser ? `/users/${u.id}/anveshan` : `/users/${u.id}`} className="flex items-center gap-3 group">
                           <div className={cn(
                             'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold',
                             isLocked ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' : 'bg-primary/10 text-primary',

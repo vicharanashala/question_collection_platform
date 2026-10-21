@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { TesterTag } from '@/components/TesterTag'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { adminApi, getErrorMessage, cache } from '@/api/client'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -258,6 +258,7 @@ function DetailRow({ label, value }: DetailRowProps) {
 export function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
@@ -343,6 +344,11 @@ setUser(r.user as UserType)
       .catch((e) => toast.error(getErrorMessage(e, 'Failed to load user')))
       .finally(() => setLoading(false))
   }, [userId])
+
+  // Anveshan users have their own review page; ?classic=1 opens this account page instead.
+  useEffect(() => {
+    if (user?.isAnveshanUser && !searchParams.has('classic')) navigate(`/users/${user.id}/anveshan`, { replace: true })
+  }, [user, searchParams, navigate])
 
   // Reset page when search changes
   useEffect(() => { setQPage(1) }, [qSearch])

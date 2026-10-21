@@ -611,6 +611,9 @@ export const adminApi = {
       paymentDetails: import("@/types").PaymentDetail[];
     }>(`/admin/users/${userId}`, {}, false),
 
+  getAnveshanUserDetail: (userId: string | undefined) =>
+    request<import("@/types").AnveshanUserDetail>(`/admin/users/${userId}/anveshan`, {}, false),
+
   verifyUser: (userId: string) =>
     request<{ message: string }>(
       `/admin/users/${userId}/verify`,

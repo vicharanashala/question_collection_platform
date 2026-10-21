@@ -568,6 +568,7 @@ async listUsers(dto: ListUsersDto) {
         "bannedReason",
         "consentGiven",
         "consentTimestamp",
+        "isAnveshanUser",
       ],
     });
     if (!user) throw new NotFoundException("User not found");

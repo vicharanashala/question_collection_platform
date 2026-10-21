@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AnveshanProgressService } from './anveshan-progress.service';
+import { AnveshanUserDetailController } from './anveshan-user-detail.controller';
+import { AnveshanUserDetailService } from './anveshan-user-detail.service';
 import { CuratorController } from './curator.controller';
 import { CuratorService } from './curator.service';
 import { AnalyticsController, ExportController } from './analytics.controller';
@@ -27,11 +29,13 @@ import { UserService } from '../user/user.service';
     AnalyticsController,
     ExportController,
     CuratorController,
+    AnveshanUserDetailController,
   ],
   providers: [
     AdminService,
     CuratorService,
     AnveshanProgressService,
+    AnveshanUserDetailService,
     AuditService,
     Logger,
     UserService,
