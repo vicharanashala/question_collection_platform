@@ -42,21 +42,21 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { Faq, FaqCategory, PaginatedResponse } from "@/types";
+import type { Faq, FaqAudience, FaqCategory, PaginatedResponse } from "@/types";
 import { VideoSection } from "@/components/VideoSection";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SortBy = "displayOrder" | "createdAt" | "updatedAt" | "question";
 type SortOrder = "ASC" | "DESC";
-type AudienceFilter = "anveshan" | "user" | "all";
+type AudienceFilter = FaqAudience;
 
 interface FormState {
   question: string;
   answer: string;
   category: FaqCategory;
   isVisible: boolean;
-  forAnveshan: boolean;
+  audience: FaqAudience;
 }
 
 interface Stats {
@@ -70,7 +70,7 @@ const EMPTY: FormState = {
   answer: "",
   category: "general",
   isVisible: true,
-  forAnveshan: false,
+  audience: "all",
 };
 
 const PAGE_SIZES = [10, 20, 50, 100];
@@ -358,7 +358,7 @@ function FaqDialog({
               answer: initial.answer,
               category: initial.category ?? "general",
               isVisible: initial.isVisible,
-              forAnveshan: initial.forAnveshan,
+              audience: initial.audience ?? "all",
             }
           : EMPTY,
       );
@@ -466,21 +466,23 @@ function FaqDialog({
             </Select>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">
-            <div>
-              <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">
-                For the Anveshan Users
-              </p>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                FAQs visible to Anveshan users only.
-              </p>
-            </div>
-            <Switch
-              checked={form.forAnveshan}
-              onCheckedChange={(v) =>
-                setForm((f) => ({ ...f, forAnveshan: v }))
+          <div className="space-y-1.5">
+            <Label htmlFor="faq-audience">Audience</Label>
+            <Select
+              value={form.audience}
+              onValueChange={(v) =>
+                setForm((f) => ({ ...f, audience: v as FaqAudience }))
               }
-            />
+            >
+              <SelectTrigger id="faq-audience">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="anveshan">Anveshan users</SelectItem>
+                <SelectItem value="user">Regular users</SelectItem>
+                <SelectItem value="all">Both</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">
@@ -880,9 +882,9 @@ export function FaqsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Users</SelectItem>
+            <SelectItem value="all">All Audiences</SelectItem>
             <SelectItem value="anveshan">Anveshan Users</SelectItem>
-            <SelectItem value="user">Other Users</SelectItem>
+            <SelectItem value="user">Regular Users</SelectItem>
           </SelectContent>
         </Select>
 

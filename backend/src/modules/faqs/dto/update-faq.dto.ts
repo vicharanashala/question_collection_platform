@@ -1,6 +1,7 @@
 import { IsString, IsBoolean, IsOptional, MaxLength, IsIn } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateFaqDto } from './create-faq.dto';
+import { FAQ_AUDIENCES, FaqAudience } from '@/shared/database/mongodb/schemas/faq.schema';
 
 export class UpdateFaqDto extends PartialType(CreateFaqDto) {
   @IsString()
@@ -20,7 +21,7 @@ export class UpdateFaqDto extends PartialType(CreateFaqDto) {
   @IsOptional()
   isVisible?: boolean;
 
-  @IsBoolean()
+  @IsIn(FAQ_AUDIENCES)
   @IsOptional()
-  forAnveshan?: boolean;
+  audience?: FaqAudience;
 }

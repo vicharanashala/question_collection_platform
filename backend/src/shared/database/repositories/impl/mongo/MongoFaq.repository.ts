@@ -27,12 +27,8 @@ export class MongoFaqRepository
 
   if (category) filter.category = category;
 
-  if (isAnveshanUser) {
-    filter.forAnveshan = true;
-  } else {
-    // matches forAnveshan: false AND documents where the key doesn't exist
-    filter.forAnveshan = { $ne: true };
-  }
+  // Hide FAQs meant for the other audience. FAQs without an audience are shown to everyone.
+  filter.audience = { $nin: [isAnveshanUser ? 'user' : 'anveshan'] };
 
   if (search) {
     const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

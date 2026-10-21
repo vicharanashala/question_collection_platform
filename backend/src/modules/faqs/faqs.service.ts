@@ -70,9 +70,7 @@ export class FaqsService {
 
     const sortBy = query.sortBy ?? 'displayOrder';
     const sortOrder: 1 | -1 = (query.sortOrder ?? 'ASC') === 'ASC' ? 1 : -1;
-    if (query.userSort === 'anveshan') filter.forAnveshan = true;
-    // Also matches documents where the key does not exist.
-    if (query.userSort === 'user') filter.forAnveshan = { $ne: true };
+    if (query.userSort === 'anveshan' || query.userSort === 'user') filter.audience = query.userSort;
 
     const result = await this.faqRepo.findAndCount(filter, {
       pagination: { page: query.page ?? 1, limit: query.limit ?? 20, sort: { [sortBy]: sortOrder } },

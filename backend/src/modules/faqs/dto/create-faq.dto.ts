@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsBoolean, IsOptional, MaxLength, IsIn } from 'class-validator';
+import { FAQ_AUDIENCES, FaqAudience } from '@/shared/database/mongodb/schemas/faq.schema';
 
 export class CreateFaqDto {
   @IsString()
@@ -18,7 +19,7 @@ export class CreateFaqDto {
   @IsOptional()
   isVisible?: boolean = true;
 
-  @IsBoolean()
+  @IsIn(FAQ_AUDIENCES)
   @IsOptional()
-  forAnveshan?: boolean = false;
+  audience?: FaqAudience = 'all';
 }
