@@ -119,7 +119,10 @@ export class DistributorService {
     private readonly configService: ConfigService
   ) {
     this.reviewerIngestUri = this.configService.get<string>("reviewSystem.reviewerUri") || process.env.REVIEWER_INGEST_URL || "";
-    this.apiKey = this.configService.get<string>("reviewSystem.apiKey") || process.env.REVIEW_SYSTEM_AUTH_KEY || ''
+    this.apiKey =
+      this.configService.get<string>("reviewSystem.apiKey") ||
+      process.env.REVIEW_SYSTEM_API_AUTH_KEY ||
+      "";
   }
 
   // ── Approved-questions queue ─────────────────────────────────────────────
