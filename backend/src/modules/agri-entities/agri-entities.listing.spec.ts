@@ -31,7 +31,7 @@ describe('AgriEntitiesService staff listing and export', () => {
   });
 
   it('filters by several Anveshan users and sorts newest first by default', async () => {
-    await service.listAll({ userIds: ['u1', 'u2', 'not-anveshan'], page: 2, limit: 10 }, UserRole.SUPER_ADMIN);
+    await service.listAll({ userIds: ['u1', 'u2'], page: 2, limit: 10 }, UserRole.SUPER_ADMIN);
 
     expect(repo.findOrderedBySubmission).toHaveBeenCalledWith({
       filter: { userId: { $in: ['u1', 'u2'] } },
@@ -49,13 +49,16 @@ describe('AgriEntitiesService staff listing and export', () => {
     );
   });
 
-  it('returns an empty page when no selected user is an Anveshan user', async () => {
-    const result = await service.listAll({ userIds: ['other'] }, UserRole.SUPER_ADMIN);
+  it('keeps only selected users that the tester scope allows', async () => {
+    userRepo.findAll.mockImplementation((filter: Record<string, unknown>) =>
+      Promise.resolve(filter.is_tester ? [anveshan[0]] : anveshan),
+    );
+
+    await service.listAll({ userIds: ['u1', 'u2'], tester: 'exclude' }, UserRole.SUPER_ADMIN);
 
     expect(repo.findOrderedBySubmission).toHaveBeenCalledWith(
-      expect.objectContaining({ filter: { userId: { $in: [] } } }),
+      expect.objectContaining({ filter: { userId: { $in: ['u2'] } } }),
     );
-    expect(result).toMatchObject({ items: [], total: 0, pages: 0 });
   });
 
   it('rejects the user filter for non Super Admins', async () => {
@@ -89,18 +92,24 @@ describe('AgriEntitiesService staff listing and export', () => {
     );
   });
 
-  it('searches Anveshan users by name or mobile number', async () => {
-    expect(await service.searchAnveshanUsers({ search: 'bal' })).toEqual([anveshan[1]]);
-    expect(await service.searchAnveshanUsers({ search: '0001' })).toEqual([anveshan[0]]);
+  it('searches users by name or mobile number', async () => {
+    userRepo.findAll.mockResolvedValue([anveshan[1]]);
+
+    expect(await service.searchUsers({ search: 'bal' })).toEqual([anveshan[1]]);
+    expect(userRepo.findAll).toHaveBeenCalledWith(
+      { $or: [{ name: { $regex: 'bal', $options: 'i' } }, { mobileNumber: { $regex: 'bal', $options: 'i' } }] },
+      expect.objectContaining({ pagination: expect.objectContaining({ limit: 100 }) }),
+    );
   });
 
-  it('lists only users inside the tester scope', async () => {
+  it('restricts the listed users to the tester and Anveshan scopes', async () => {
     userRepo.findAll.mockImplementation((filter: Record<string, unknown>) =>
       Promise.resolve(filter.is_tester ? [anveshan[0]] : anveshan),
     );
 
-    expect(await service.searchAnveshanUsers({ tester: 'exclude' })).toEqual([anveshan[1]]);
-    expect(await service.searchAnveshanUsers({ tester: 'only' })).toEqual([anveshan[0]]);
-    expect(await service.searchAnveshanUsers({ anveshanScope: 'exclude' })).toEqual([]);
+    await service.searchUsers({ tester: 'exclude' });
+    expect(userRepo.findAll).toHaveBeenLastCalledWith({ id: { $nin: ['u1'] } }, expect.anything());
+    await service.searchUsers({ tester: 'only' });
+    expect(userRepo.findAll).toHaveBeenLastCalledWith({ id: { $in: ['u1'] } }, expect.anything());
   });
 });

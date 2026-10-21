@@ -3,9 +3,10 @@ import { findTesterUserIds } from '../../shared/utils/tester.util';
 import { resolveUserIdScope } from '../../shared/utils/anveshan-mode.util';
 import { IAgriEntityRepository, IUserRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { AgriEntityStatus, AgriEntityType, UserRole } from '../../shared/classes/enums';
+import { escapeRegex } from '../../shared/database/abstractions/mongo-utils';
 import { isStorageUri } from '../storage/storage.service';
 import { getAgriEntityImageCategory } from './agri-entities.constants';
-import { AnveshanUsersQueryDto, ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
+import { UserFilterQueryDto, ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 import { UserService } from '../user/user.service';
 
 const ENTITY_EXPORT_COLUMNS = [
@@ -134,20 +135,19 @@ export class AgriEntitiesService {
     };
   }
 
-  // Searches Anveshan users by name or mobile number for the Super Admin user filter, honouring the tester and Anveshan scopes.
-  async searchAnveshanUsers(query: AnveshanUsersQueryDto = {}, limit = 500) {
-    const term = query.search?.trim().toLowerCase();
-    const [users, scope] = await Promise.all([
-      this.userRepo.findAll({ isAnveshanUser: true }),
-      resolveUserIdScope(this.userRepo, query),
-    ]);
-    const inScope = (id: string) =>
-      !scope || ((scope.$in as string[] | undefined)?.includes(id) ?? !(scope.$nin as string[] | undefined)?.includes(id));
-    return users
-      .filter((user) => inScope(user.id))
-      .filter((user) => !term || user.name?.toLowerCase().includes(term) || user.mobileNumber?.includes(term))
-      .slice(0, limit)
-      .map((user) => ({ id: user.id, name: user.name, mobileNumber: user.mobileNumber }));
+  // Searches users by name or mobile number for the Super Admin user filter, honouring the tester and Anveshan scopes.
+  async searchUsers(query: UserFilterQueryDto = {}, limit = 100) {
+    const term = query.search?.trim();
+    const scope = await resolveUserIdScope(this.userRepo, query);
+    const regex = term ? { $regex: escapeRegex(term), $options: 'i' } : undefined;
+    const users = await this.userRepo.findAll(
+      {
+        ...(scope ? { id: scope } : {}),
+        ...(regex ? { $or: [{ name: regex }, { mobileNumber: regex }] } : {}),
+      } as never,
+      { pagination: { page: 1, limit, sort: { name: 1 } } },
+    );
+    return users.map((user) => ({ id: user.id, name: user.name, mobileNumber: user.mobileNumber }));
   }
 
   // Builds an Excel file of the Anveshan users' entities matching the same filters as the list.
@@ -195,12 +195,10 @@ export class AgriEntitiesService {
     }
     let userId = await resolveUserIdScope(this.userRepo, dto);
     if (userIds?.length) {
-      const anveshanIds = new Set((await this.userRepo.findAll({ isAnveshanUser: true })).map((user) => user.id));
-      const allowed = userIds.filter((id) => anveshanIds.has(id));
       const scopeIn = userId?.$in as string[] | undefined;
       const scopeNin = userId?.$nin as string[] | undefined;
       userId = {
-        $in: allowed.filter((id) => (scopeIn ? scopeIn.includes(id) : true) && !scopeNin?.includes(id)),
+        $in: userIds.filter((id) => (scopeIn ? scopeIn.includes(id) : true) && !scopeNin?.includes(id)),
       };
     }
     return { ...(userId ? { userId } : {}), ...(type ? { type } : {}), ...(status ? { status } : {}) };

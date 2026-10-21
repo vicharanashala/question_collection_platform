@@ -187,7 +187,7 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   '/admin/questions/queue',
   '/questions',
   '/agri-entities/all',
-  '/agri-entities/anveshan-users',
+  '/agri-entities/filter-users',
   '/reports',
   '/distributor/questions',
   '/distributor/distributions',
@@ -1548,7 +1548,7 @@ export interface StaffAgriEntityQuery {
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface AnveshanUserOption {
+export interface UserFilterOption {
   id: string;
   name: string;
   mobileNumber: string;
@@ -1609,13 +1609,17 @@ export const agriEntityApi = {
     );
   },
 
-  /** Super Admin only: Anveshan users available for the entity user filter. */
-  listAnveshanUsers: (tester?: 'only' | 'exclude') =>
-    request<AnveshanUserOption[]>(
-      `/agri-entities/anveshan-users${tester ? `?tester=${tester}` : ""}`,
+  /** Super Admin only: users for the entity and question user filter, narrowed by the tester scope and a name or phone search. */
+  listUsers: (params: { tester?: 'only' | 'exclude'; search?: string } = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => !!v) as [string, string][],
+    ).toString();
+    return request<UserFilterOption[]>(
+      `/agri-entities/filter-users${qs ? `?${qs}` : ""}`,
       {},
       false,
-    ),
+    );
+  },
 
   /** Super Admin only: downloads the Anveshan users' entities as Excel, honouring the list filters. */
   exportAnveshan: (params: StaffAgriEntityQuery = {}) => {

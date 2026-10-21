@@ -7,7 +7,7 @@ import { UserRole } from '../../shared/classes/enums';
 import { AgriEntitiesService } from './agri-entities.service';
 import { AnveshanSubmissionsOpenGuard } from '../user/guards/anveshan-submissions-open.guard';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
-import { AnveshanUsersQueryDto, ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
+import { UserFilterQueryDto, ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string };
@@ -38,12 +38,12 @@ export class AgriEntitiesController {
     return this.agriEntitiesService.listAll(dto, req.user.role);
   }
 
-  // GET /agri-entities/anveshan-users — Anveshan users for the entity user filter (?search=).
-  @Get('anveshan-users')
+  // GET /agri-entities/filter-users — users for the entity user filter (?search=).
+  @Get('filter-users')
   @UseGuards(RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
-  async anveshanUsers(@Query() query: AnveshanUsersQueryDto) {
-    return this.agriEntitiesService.searchAnveshanUsers(query);
+  async filterUsers(@Query() query: UserFilterQueryDto) {
+    return this.agriEntitiesService.searchUsers(query);
   }
 
   // GET /agri-entities/export — Excel export of Anveshan users' entities, honouring the list filters.

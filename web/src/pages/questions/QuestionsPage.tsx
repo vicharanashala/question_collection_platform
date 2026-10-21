@@ -16,7 +16,7 @@ import { ExportMenu } from "@/components/ExportMenu";
 import { QuestionStatusBadge } from "@/components/questions/QuestionStatusBadge";
 import { StaffQuestionDetailDialog } from "@/components/questions/StaffQuestionDetailDialog";
 import { TesterFilter, type TesterFilterValue } from "@/components/TesterFilter";
-import { AnveshanUserFilter } from "@/components/AnveshanUserFilter";
+import { UserFilter } from "@/components/UserFilter";
 import { useAuth } from "@/context/AuthContext";
 import { isSuperAdmin } from "@/lib/roles";
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
@@ -422,7 +422,7 @@ export function QuestionsPage() {
             </Select>
             {isSuperAdmin(user) && (
               <div className="sm:col-span-2 lg:col-span-full">
-                <AnveshanUserFilter value={userIds} onApply={setUserIds} tester={testerFilter || undefined} disabled={loading} />
+                <UserFilter value={userIds} onApply={setUserIds} tester={testerFilter || undefined} disabled={loading} />
               </div>
             )}
           </div>

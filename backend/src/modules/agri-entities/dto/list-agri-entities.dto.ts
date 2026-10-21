@@ -47,7 +47,7 @@ export class ListAgriEntitiesDto {
 }
 
 /** Query for the Super Admin user filter options. */
-export class AnveshanUsersQueryDto {
+export class UserFilterQueryDto {
   @IsOptional()
   @IsString()
   search?: string;

@@ -20,6 +20,8 @@ interface MultiSearchableSelectProps {
   maxSelected?: number
   /** Optional helper text rendered below the trigger. */
   helperText?: string
+  /** Called as the user types, for lists that search on the server. */
+  onSearchChange?: (search: string) => void
 }
 
 /**
@@ -42,6 +44,7 @@ export function MultiSearchableSelect({
   emptyMessage = 'No results found.',
   maxSelected,
   helperText,
+  onSearchChange,
 }: MultiSearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
@@ -49,7 +52,10 @@ export function MultiSearchableSelect({
   const listRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    if (!open) setSearch('')
+    if (!open) {
+      setSearch('')
+      onSearchChange?.('')
+    }
   }, [open])
 
   React.useEffect(() => {
@@ -156,7 +162,10 @@ export function MultiSearchableSelect({
             <input
               ref={inputRef}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                onSearchChange?.(e.target.value)
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   setOpen(false)

@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Clock, Download, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/api/client'
-import { AnveshanUserFilter } from '@/components/AnveshanUserFilter'
+import { UserFilter } from '@/components/UserFilter'
 import { isSuperAdmin } from '@/lib/roles'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -204,7 +204,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             {canFilterUsers && (
               <>
-                <AnveshanUserFilter value={userIds} onApply={applyUsers} tester={testerFilter || undefined} disabled={loading} />
+                <UserFilter value={userIds} onApply={applyUsers} tester={testerFilter || undefined} disabled={loading} />
               </>
             )}
             <div className="w-full sm:w-44">
