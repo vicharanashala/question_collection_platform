@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UserDetailSkeleton } from '@/components/ui/skeleton'
 import { TesterTag } from '@/components/TesterTag'
 import { AnveshanProgressSummary } from '@/components/anveshan-user/AnveshanProgressSummary'
-import { AnveshanQuestionsTab } from '@/components/anveshan-user/AnveshanQuestionsTab'
+import { AnveshanQuestionsTab, AnveshanQuestionsToolbar } from '@/components/anveshan-user/AnveshanQuestionsTab'
 import { AnveshanExportDialog } from '@/components/anveshan-user/AnveshanExportDialog'
 import { AnveshanEntitiesTab } from '@/components/anveshan-user/AnveshanEntitiesTab'
 import { formatDate, formatDateTime, getInitials } from '@/lib/utils'
@@ -25,6 +25,9 @@ export function AnveshanUserDetailPage() {
   const [detail, setDetail] = useState<AnveshanUserDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [exportOpen, setExportOpen] = useState(false)
+  const [tab, setTab] = useState('questions')
+  const [search, setSearch] = useState('')
+  const [answeredOnly, setAnsweredOnly] = useState(false)
 
   // Opening the page counts as having seen the new Anveshan user page.
   useEffect(() => { markFeatureSeen('anveshanUserPage') }, [])
@@ -111,14 +114,24 @@ export function AnveshanUserDetailPage() {
       <AnveshanProgressSummary progress={progress} />
       <AnveshanExportDialog detail={detail} open={exportOpen} onOpenChange={setExportOpen} />
 
-      <Tabs defaultValue="questions" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="questions">Questions ({questions.length})</TabsTrigger>
-          <TabsTrigger value="entities">Entities ({entities.length})</TabsTrigger>
-        </TabsList>
-        <TabsContent value="questions">
-          <p className="mb-3 text-xs text-text-secondary">{answered} of {questions.length} questions answered</p>
-          <AnveshanQuestionsTab questions={questions} />
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="self-start">
+            <TabsTrigger value="questions">Questions ({questions.length})</TabsTrigger>
+            <TabsTrigger value="entities">Entities ({entities.length})</TabsTrigger>
+          </TabsList>
+          {tab === 'questions' && (
+            <AnveshanQuestionsToolbar
+              search={search}
+              answeredOnly={answeredOnly}
+              onSearchChange={setSearch}
+              onAnsweredOnlyChange={setAnsweredOnly}
+            />
+          )}
+        </div>
+        <TabsContent value="questions" className="space-y-3">
+          <p className="text-xs text-text-secondary">{answered} of {questions.length} questions answered</p>
+          <AnveshanQuestionsTab questions={questions} search={search} answeredOnly={answeredOnly} />
         </TabsContent>
         <TabsContent value="entities"><AnveshanEntitiesTab entities={entities} /></TabsContent>
       </Tabs>

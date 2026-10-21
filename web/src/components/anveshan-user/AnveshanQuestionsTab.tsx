@@ -3,6 +3,7 @@ import { ChevronDown, MapPin, Search, Sprout } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AnveshanUserQuestion } from '@/types'
 
@@ -65,10 +66,42 @@ function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
   )
 }
 
-// Questions the Anveshan user submitted, searchable, with their answers.
-export function AnveshanQuestionsTab({ questions }: { questions: AnveshanUserQuestion[] }) {
-  const [search, setSearch] = useState('')
-  const [answeredOnly, setAnsweredOnly] = useState(false)
+interface QuestionFilters {
+  search: string
+  answeredOnly: boolean
+}
+
+// Search box and "Answered only" switch, shown in the tab bar row while the Questions tab is open.
+export function AnveshanQuestionsToolbar({
+  search,
+  answeredOnly,
+  onSearchChange,
+  onAnsweredOnlyChange,
+}: QuestionFilters & { onSearchChange: (value: string) => void; onAnsweredOnlyChange: (value: boolean) => void }) {
+  return (
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+      <div className="relative w-full sm:w-72">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
+        <Input
+          aria-label="Search questions"
+          placeholder="Search questions or crops..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+      <div className="flex h-10 shrink-0 items-center gap-2 rounded-md border border-border-subtle bg-surface px-3">
+        <Switch id="answered-only" checked={answeredOnly} onCheckedChange={onAnsweredOnlyChange} className="h-5 w-9" aria-label="Show answered questions only" />
+        <label htmlFor="answered-only" className="cursor-pointer whitespace-nowrap text-xs font-medium text-text-secondary">
+          Answered only
+        </label>
+      </div>
+    </div>
+  )
+}
+
+// Questions the Anveshan user submitted, narrowed by the toolbar filters, with their answers.
+export function AnveshanQuestionsTab({ questions, search, answeredOnly }: { questions: AnveshanUserQuestion[] } & QuestionFilters) {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return questions.filter(
@@ -79,26 +112,14 @@ export function AnveshanQuestionsTab({ questions }: { questions: AnveshanUserQue
   }, [questions, search, answeredOnly])
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
-          <Input aria-label="Search questions" placeholder="Search questions or crops..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <label className="flex items-center gap-2 text-xs text-text-secondary">
-          <input type="checkbox" checked={answeredOnly} onChange={(e) => setAnsweredOnly(e.target.checked)} />
-          Answered only
-        </label>
-      </div>
-      <Card className="overflow-hidden">
-        {filtered.length === 0 ? (
-          <p className="p-8 text-center text-sm text-text-secondary">No questions found</p>
-        ) : (
-          <ul className="divide-y divide-border-subtle">
-            {filtered.map((question) => <QuestionCard key={question.id} question={question} />)}
-          </ul>
-        )}
-      </Card>
-    </div>
+    <Card className="overflow-hidden">
+      {filtered.length === 0 ? (
+        <p className="p-8 text-center text-sm text-text-secondary">No questions found</p>
+      ) : (
+        <ul className="divide-y divide-border-subtle">
+          {filtered.map((question) => <QuestionCard key={question.id} question={question} />)}
+        </ul>
+      )}
+    </Card>
   )
 }
