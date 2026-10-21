@@ -28,7 +28,7 @@ import {
 import { detectImage, MAX_IMAGE_SIZE_BYTES } from "@/utils/image-validation";
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string; role: string };
+  user: { id: string; role: string; isAnveshanUser?: boolean };
   file?: {
     buffer: Buffer;
     mimetype: string;
@@ -57,8 +57,10 @@ const AGRI_ENTITY_MAX_BYTES = MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
 const GENERIC_IMAGE_UPLOAD_OPTIONS = {
   limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: 1 },
 };
+// Anveshan users skip image validation, so multer only enforces this hard memory cap for them.
+const ANVESHAN_UPLOAD_HARD_CAP_BYTES = 25 * 1024 * 1024;
 const AGRI_ENTITY_UPLOAD_OPTIONS = {
-  limits: { fileSize: AGRI_ENTITY_MAX_BYTES, files: 1 },
+  limits: { fileSize: ANVESHAN_UPLOAD_HARD_CAP_BYTES, files: 1 },
 };
 
 @Controller("storage")
@@ -107,10 +109,9 @@ async uploadAgriEntityImage(
     );
   }
 
-  const { file: image, detected } = this.assertValidImage(
-    file,
-    AGRI_ENTITY_MAX_BYTES,
-  );
+  const { file: image, detected } = req.user.isAnveshanUser
+    ? this.acceptWithoutValidation(file)
+    : this.assertValidImage(file, AGRI_ENTITY_MAX_BYTES);
   const base = image.originalname.replace(/\.[^/.]+$/, "");
 
   const url = await this.storageService.upload(
@@ -178,6 +179,17 @@ async uploadAgriEntityImage(
 
   //   return file;
   // }
+
+  // Anveshan users are exempt from image type and size checks. Only a missing file is rejected.
+  private acceptWithoutValidation(file: AuthenticatedRequest["file"]) {
+    if (!file) {
+      throw new BadRequestException(
+        'No file provided — expected field named "file"',
+      );
+    }
+    const ext = /\.([a-z0-9]{1,5})$/i.exec(file.originalname)?.[1]?.toLowerCase() ?? "jpg";
+    return { file, detected: { mime: file.mimetype, ext } };
+  }
 
   private assertValidImage(
     file: AuthenticatedRequest["file"],

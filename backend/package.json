@@ -18,8 +18,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "emulator": "firebase emulators:start --project demo-question-collection-project --import=./emulator-data --export-on-exit",
-    "emulator:export": "firebase emulators:export ./emulator-data --project demo-question-collection-project --force",
+    "emulator": "firebase emulators:start --project demo-question-collection-project",
     "dev": "concurrently \"npm run emulator\" \"npm run start:dev\""
   },
   "dependencies": {

@@ -37,6 +37,7 @@ import {
 } from "@/utils/imageProcessing";
 
 import { useIsTouchDevice } from "@/hooks/useTouchDevices";
+import { CameraCaptureModal } from "./Camera-Capture";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
@@ -153,7 +154,10 @@ export function AgriEntitySubmitForm({
 }: AgriEntitySubmitFormProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const canTakePhoto = useIsTouchDevice();
+  const isTouchDevice = useIsTouchDevice();
+  // Anveshan users are exempt from image type, size and compression checks.
+  const skipImageValidation = Boolean(user?.isAnveshanUser);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fieldId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadedUrlsRef = useRef(new Map<string, string>());
@@ -305,11 +309,13 @@ export function AgriEntitySubmitForm({
     // One at a time: decoding several 12 MP photos in parallel can exhaust memory on low-end phones.
     for (const file of batch) {
       try {
-        const processed = await prepareImage(
-          file,
-          AGRI_ENTITY_IMAGE_MIME_TYPES,
-          MAX_IMAGE_BYTES,
-        );
+        const processed = skipImageValidation
+          ? file
+          : await prepareImage(
+              file,
+              AGRI_ENTITY_IMAGE_MIME_TYPES,
+              MAX_IMAGE_BYTES,
+            );
         const previewUrl = await createPreviewUrl(processed);
         if (!mountedRef.current) {
           URL.revokeObjectURL(previewUrl);
@@ -798,21 +804,21 @@ export function AgriEntitySubmitForm({
                       Icon: ImagePlus,
                       label: t("agriEntity.addImage", "Add image"),
                     },
-                    ...(canTakePhoto
-                      ? [
-                          {
-                            key: "camera",
-                            ref: cameraInputRef,
-                            Icon: Camera,
-                            label: t("agriEntity.takePhoto", "Take photo"),
-                          },
-                        ]
-                      : []),
+                    {
+                      key: "camera",
+                      ref: cameraInputRef,
+                      Icon: Camera,
+                      label: t("agriEntity.takePhoto", "Take photo"),
+                    },
                   ].map(({ key, ref, Icon, label }) => (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => ref.current?.click()}
+                      onClick={() =>
+                        key === "camera" && !isTouchDevice
+                          ? setCameraOpen(true)
+                          : ref.current?.click()
+                      }
                       disabled={submitting}
                       className={`flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50 ${
                         imagesError
@@ -828,7 +834,7 @@ export function AgriEntitySubmitForm({
               )}
             </div>
 
-            {canTakePhoto && (
+            {isTouchDevice && (
               <>
                 <input
                   ref={cameraInputRef}
@@ -846,7 +852,11 @@ export function AgriEntitySubmitForm({
             <input
               ref={fileInputRef}
               type="file"
-              accept={AGRI_ENTITY_IMAGE_MIME_TYPES.join(",")}
+              accept={
+                skipImageValidation
+                  ? "image/*"
+                  : AGRI_ENTITY_IMAGE_MIME_TYPES.join(",")
+              }
               multiple
               className="sr-only"
               tabIndex={-1}
@@ -883,6 +893,11 @@ export function AgriEntitySubmitForm({
         </form>
       </CardContent>
 
+      <CameraCaptureModal
+        open={cameraOpen}
+        onOpenChange={setCameraOpen}
+        onCapture={(file) => void addFiles([file])}
+      />
       <LocationCaptureModal
         open={locationModalOpen}
         onOpenChange={setLocationModalOpen}
