@@ -15,6 +15,8 @@ import {
   PauseCircle, Ban, Clock, CheckCircle,
   SlidersHorizontal,
   ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -155,6 +157,35 @@ const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'banned', label: 'Banned' },
 ]
 
+type UserSortKey = 'name' | 'role' | 'verificationStatus' | 'state' | 'createdAt' | 'lastLoginAt' | 'anveshanProgress'
+
+// Table header cell that sorts the list by one column when clicked.
+function SortableHeader({ label, sortKey, activeKey, order, onSort }: {
+  label: string
+  sortKey: UserSortKey
+  activeKey: UserSortKey
+  order: 'ASC' | 'DESC'
+  onSort: (key: UserSortKey) => void
+}) {
+  const active = activeKey === sortKey
+  const Icon = !active ? ChevronsUpDown : order === 'ASC' ? ChevronUp : ChevronDown
+  return (
+    <th
+      className="px-4 py-3 text-left font-semibold text-text-secondary"
+      aria-sort={active ? (order === 'ASC' ? 'ascending' : 'descending') : 'none'}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={cn('inline-flex items-center gap-1 hover:text-text', active && 'text-text')}
+      >
+        {label}
+        <Icon className={cn('h-3.5 w-3.5', !active && 'opacity-50')} aria-hidden="true" />
+      </button>
+    </th>
+  )
+}
+
 export function UsersPage() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<UserType[]>([])
@@ -163,6 +194,8 @@ export function UsersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
+  const [sortBy, setSortBy] = useState<UserSortKey>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [stateFilter, setStateFilter] = useState('')
   const [states, setStates] = useState<LgdState[]>([])
@@ -210,11 +243,23 @@ export function UsersPage() {
     fromDate: fromDate || undefined,
     toDate: toDate || undefined,
     excludeId: currentUser?.id,
+    sortBy,
+    sortOrder,
   })
     .then((res) => { setUsers(res.items); setTotal(res.total) })
     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
     .finally(() => setLoading(false))
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, fromDate, toDate, currentUser?.id])
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, fromDate, toDate, sortBy, sortOrder, currentUser?.id])
+
+  // Sorts by a column, flipping the direction when it is already the active one.
+  const handleSort = (key: UserSortKey) => {
+    if (key === sortBy) setSortOrder((o) => (o === 'ASC' ? 'DESC' : 'ASC'))
+    else {
+      setSortBy(key)
+      setSortOrder(key === 'createdAt' || key === 'lastLoginAt' || key === 'anveshanProgress' ? 'DESC' : 'ASC')
+    }
+    setPage(1)
+  }
 
   const totalPages = Math.ceil(total / limit)
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -399,13 +444,13 @@ export function UsersPage() {
           <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-variant/50">
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">User</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Role</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Location</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Anveshan Progress</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Joined</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Last Login</th>
+                <SortableHeader label="User" sortKey="name" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label="Role" sortKey="role" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label="Status" sortKey="verificationStatus" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label="Location" sortKey="state" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label="Anveshan Progress" sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label="Joined" sortKey="createdAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label="Last Login" sortKey="lastLoginAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">

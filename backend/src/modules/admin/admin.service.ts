@@ -446,22 +446,19 @@ async listUsers(dto: ListUsersDto) {
       }
     }
 
-    const sortField =
-      sortBy === "verificationStatus"
-        ? "verificationStatus"
-        : sortBy === "state"
-          ? "state"
-          : sortBy === "name"
-            ? "name"
-            : "createdAt";
+    const direction = sortOrder === "ASC" ? 1 : -1;
 
-    const { data, total } = await this.userRepo.findAndCount(filter, {
-      pagination: {
-        page,
-        limit,
-        sort: { [sortField]: sortOrder === "ASC" ? 1 : -1 },
-      },
-    });
+    const { data, total } =
+      sortBy === "anveshanProgress"
+        ? await this.findUsersByAnveshanProgress(filter, direction, page, limit)
+        : await this.userRepo.findAndCount(filter, {
+            pagination: {
+              page,
+              limit,
+              // The id tie breaker keeps page contents stable when many users share a value.
+              sort: { [sortBy]: direction, _id: direction },
+            },
+          });
 
     // Project down to the same field set the admin user list has always returned
     // (excludes otpHash and other internal-only fields on the User document).
@@ -490,6 +487,41 @@ async listUsers(dto: ListUsersDto) {
     }));
 
     return { items: itemsWithProgress, total, page, limit, pages: Math.ceil(total / limit) };
+  }
+
+  // Pages users ordered by Anveshan progress. Progress is computed, so Anveshan users are ranked in memory
+  // and other users follow, newest first.
+  private async findUsersByAnveshanProgress(
+    filter: Record<string, unknown>,
+    direction: 1 | -1,
+    page: number,
+    limit: number,
+  ) {
+    const anveshanOnly = filter.isAnveshanUser === true;
+    const nonAnveshanOnly = typeof filter.isAnveshanUser === "object" && filter.isAnveshanUser !== null;
+    const anveshanUsers = nonAnveshanOnly ? [] : await this.userRepo.findAll({ ...filter, isAnveshanUser: true });
+    const progress = await this.anveshanProgressService.getProgressForUsers(anveshanUsers.map((u) => u.id));
+    const percentOf = (id: string) => progress.get(id)?.percent ?? 0;
+    const ranked = [...anveshanUsers].sort(
+      (a, b) =>
+        direction * (percentOf(a.id) - percentOf(b.id)) ||
+        b.createdAt.getTime() - a.createdAt.getTime() ||
+        (a.id < b.id ? -1 : 1),
+    );
+
+    const start = (page - 1) * limit;
+    const data = ranked.slice(start, start + limit);
+    const otherFilter = { ...filter, isAnveshanUser: { $ne: true } };
+    const otherTotal = anveshanOnly ? 0 : await this.userRepo.count(otherFilter);
+    const missing = limit - data.length;
+    if (missing > 0 && otherTotal > 0) {
+      const skip = Math.max(0, start - ranked.length);
+      const others = await this.userRepo.findAll(otherFilter, {
+        pagination: { page: 1, limit: skip + missing, sort: { createdAt: -1, _id: -1 } },
+      });
+      data.push(...others.slice(skip, skip + missing));
+    }
+    return { data, total: ranked.length + otherTotal };
   }
 
   async getUserDetail(userId: string) {

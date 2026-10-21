@@ -43,8 +43,8 @@ export class ListUsersDto {
   excludeId?: string;
 
   @IsOptional()
-  @IsIn(['createdAt', 'name', 'state', 'verificationStatus'])
-  sortBy?: 'createdAt' | 'name' | 'state' | 'verificationStatus';
+  @IsIn(['createdAt', 'name', 'state', 'verificationStatus', 'role', 'lastLoginAt', 'anveshanProgress'])
+  sortBy?: 'createdAt' | 'name' | 'state' | 'verificationStatus' | 'role' | 'lastLoginAt' | 'anveshanProgress';
 
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
