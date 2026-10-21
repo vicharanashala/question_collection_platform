@@ -317,8 +317,8 @@ export function UsersPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">Users</h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">{total.toLocaleString()} total users</p>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">User Management</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">Review accounts, verification status and Anveshan progress · {total.toLocaleString()} {total === 1 ? 'user' : 'users'}</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportMenu
