@@ -1,3 +1,4 @@
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -81,6 +82,9 @@ function FaqItem({ item, open, onToggle }: FaqItemProps) {
 export function PublicFaqsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // Opening the page counts as having seen the new feature.
+  useEffect(() => { markFeatureSeen('faq') }, [])
   const [items, setItems] = useState<Faq[]>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)

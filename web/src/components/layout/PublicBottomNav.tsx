@@ -1,3 +1,4 @@
+import { NewBadge } from '@/components/ui/new-badge'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Home, MessageSquarePlus, Wallet, User, ListChecks, HelpCircle } from 'lucide-react'
@@ -111,6 +112,9 @@ export function PublicBottomNav() {
                   <span className="absolute -right-4 -top-1.5 flex h-3.5 items-center justify-center rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground shadow-sm">
                     {t('common.soon', 'Soon')}
                   </span>
+                )}
+                {to === '/home/faqs' && (
+                  <NewBadge feature="faq" className="absolute -right-5 -top-1.5" />
                 )}
               </motion.div>
               <span>{label}</span>

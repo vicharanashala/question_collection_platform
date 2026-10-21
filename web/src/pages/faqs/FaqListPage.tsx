@@ -1,3 +1,4 @@
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { faqApi, getErrorMessage } from '@/api/client'
@@ -68,6 +69,9 @@ function FaqItem({ item }: { item: Faq }) {
 
 export function FaqListPage() {
   const navigate = useNavigate()
+
+  // Opening the page counts as having seen the new feature.
+  useEffect(() => { markFeatureSeen('faq') }, [])
   const [items, setItems] = useState<Faq[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCat, setActiveCat] = useState<string>('all')

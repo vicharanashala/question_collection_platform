@@ -1,3 +1,5 @@
+import { NewBadge } from "@/components/ui/new-badge";
+import { markFeatureSeen } from '@/lib/newFeatures'
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { faqApi, getErrorMessage } from "@/api/client";
@@ -606,6 +608,9 @@ function DeleteDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function FaqsPage() {
+  // Opening the page counts as having seen the new nav entry.
+  useEffect(() => { markFeatureSeen('faqAdmin') }, []);
+
   // List state
   const [result, setResult] = useState<PaginatedResponse<Faq> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -702,6 +707,7 @@ export function FaqsPage() {
     const to = current.findIndex((i) => i.id === targetId);
     setDragId(null);
     setOverId(null);
+    markFeatureSeen("faqAdminTools");
     if (!result || from < 0 || to < 0 || from === to) return;
 
     const next = [...current];
@@ -928,22 +934,26 @@ export function FaqsPage() {
           )}
         </div>
 
-        <Select
-          value={userSort}
-          onValueChange={(v) => {
-            setUserSort(v as AudienceFilter);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-9 w-40 text-[11px] sm:text-[11px] sm:text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Audiences</SelectItem>
-            <SelectItem value="anveshan">Anveshan Users</SelectItem>
-            <SelectItem value="user">Regular Users</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="relative">
+          <Select
+            value={userSort}
+            onValueChange={(v) => {
+              setUserSort(v as AudienceFilter);
+              setPage(1);
+              markFeatureSeen("faqAdminTools");
+            }}
+          >
+            <SelectTrigger className="h-9 w-40 text-[11px] sm:text-[11px] sm:text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Audiences</SelectItem>
+              <SelectItem value="anveshan">Anveshan Users</SelectItem>
+              <SelectItem value="user">Regular Users</SelectItem>
+            </SelectContent>
+          </Select>
+          <NewBadge feature="faqAdminTools" className="pointer-events-none absolute -right-2 -top-2" />
+        </div>
 
         {/* Sort */}
         <Select
@@ -1132,6 +1142,7 @@ export function FaqsPage() {
 
             {canReorder && items.length > 1 && (
               <p className="px-4 py-2 text-[11px] text-muted-foreground border-t border-border-subtle">
+                <NewBadge feature="faqAdminTools" className="mr-1.5" />
                 Drag the handle to change the order. Ordering applies within the current page and filters.
               </p>
             )}

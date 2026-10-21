@@ -1,3 +1,4 @@
+import { NewBadge } from '@/components/ui/new-badge'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -37,7 +38,7 @@ const navItems = [
   { to: '/settings',       labelKey: 'nav.settings',       icon: Settings2,       roles: ['super_admin'] },
   { to: '/audit-logs',     labelKey: 'nav.auditLogs',      icon: ScrollText,      roles: ['super_admin', 'admin', 'finance', 'curator', 'distributor'] },
   { to: '/reports',        labelKey: 'nav.reports',        icon: Flag,            roles: ['admin', 'super_admin', 'curator'] },
-  { to: '/admin/faqs',     labelKey: 'nav.faqManagement',  icon: HelpCircle,      roles: ['admin', 'super_admin'] },
+  { to: '/admin/faqs',     labelKey: 'nav.faqManagement',  icon: HelpCircle,      roles: ['admin', 'super_admin'], newFeature: 'faqAdmin' as const },
 ]
 
 export function Sidebar() {
@@ -67,7 +68,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, labelKey, icon: Icon, roles, defaultLabel }) => {
+        {navItems.map(({ to, labelKey, icon: Icon, roles, defaultLabel, newFeature }) => {
           if (!roles?.includes(user?.role as string)) return null
           return (
             <NavLink
@@ -84,6 +85,7 @@ export function Sidebar() {
             >
               <Icon className="h-4 w-4 shrink-0" />
               {t(labelKey, { defaultValue: defaultLabel })}
+              {newFeature && <NewBadge feature={newFeature} className="ml-auto" />}
             </NavLink>
           )
         })}
