@@ -40,7 +40,8 @@ export class SmsBsnlBrpsService {
    * @param otp           6-digit OTP string
    */
   async sendOtp(mobileNumber: string, otp: string): Promise<void> {
-    const cleanNumber = mobileNumber.replace(/^\+?91 ?/, '').replace(/^0/, '');
+    // Strip +91, 91 or 0 only when exactly 10 digits remain, so numbers that start with 91 stay intact.
+    const cleanNumber = mobileNumber.replace(/\s/g, '').replace(/^(\+?91|0)(?=\d{10}$)/, '');
 
     try {
       const token = await this.tokenService.getValidToken();
