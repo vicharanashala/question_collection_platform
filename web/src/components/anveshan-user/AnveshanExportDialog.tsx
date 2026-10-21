@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Download } from 'lucide-react'
+import { Check, Download, FileSpreadsheet, MessageSquare, Sprout, UserRound, type LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { downloadWorkbook, exportDateTime, workbookSheet, type ExportColumn, type WorkbookSheet } from '@/lib/exportData'
 import type { AnveshanUserDetail, AnveshanUserQuestion, AgriEntitySubmission } from '@/types'
 import { getErrorMessage } from '@/api/client'
+import { cn } from '@/lib/utils'
 
 type Section = 'user' | 'questions' | 'entities'
 
@@ -79,12 +80,13 @@ interface AnveshanExportDialogProps {
 export function AnveshanExportDialog({ detail, open, onOpenChange }: AnveshanExportDialogProps) {
   const [selected, setSelected] = useState<Record<Section, boolean>>({ user: true, questions: true, entities: true })
   const [exporting, setExporting] = useState(false)
-  const options: { key: Section; label: string; hint: string }[] = [
-    { key: 'user', label: 'User details', hint: 'Profile and Anveshan progress' },
-    { key: 'questions', label: 'Questions', hint: `${detail.questions.length} questions with their answers` },
-    { key: 'entities', label: 'Entities', hint: `${detail.entities.length} crops, weeds, pests and diseases` },
+  const options: { key: Section; label: string; hint: string; icon: LucideIcon }[] = [
+    { key: 'user', label: 'User details', hint: 'Profile and Anveshan progress', icon: UserRound },
+    { key: 'questions', label: 'Questions', hint: `${detail.questions.length} questions with their answers`, icon: MessageSquare },
+    { key: 'entities', label: 'Entities', hint: `${detail.entities.length} crops, weeds, pests and diseases`, icon: Sprout },
   ]
-  const anySelected = Object.values(selected).some(Boolean)
+  const selectedCount = Object.values(selected).filter(Boolean).length
+  const anySelected = selectedCount > 0
 
   // Builds the chosen sheets and downloads the workbook.
   const handleDownload = async () => {
@@ -106,34 +108,64 @@ export function AnveshanExportDialog({ detail, open, onOpenChange }: AnveshanExp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Export Anveshan user data</DialogTitle>
-          <DialogDescription>Choose what to include. Each choice becomes its own sheet in one Excel file.</DialogDescription>
+      <DialogContent className="max-w-md overflow-hidden">
+        <DialogHeader className="flex-row items-start gap-3 p-5 pr-12 pb-4">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <FileSpreadsheet className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <DialogTitle>Export Anveshan user data</DialogTitle>
+            <DialogDescription>Choose what to include. Each choice becomes its own sheet in one Excel file.</DialogDescription>
+          </div>
         </DialogHeader>
-        <fieldset className="space-y-2">
+
+        <fieldset className="space-y-2 px-5 pb-5">
           <legend className="sr-only">Data to export</legend>
-          {options.map(({ key, label, hint }) => (
-            <label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border-subtle p-3 hover:border-primary/40">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={selected[key]}
-                onChange={(e) => setSelected((prev) => ({ ...prev, [key]: e.target.checked }))}
-              />
-              <span>
-                <span className="block text-sm font-medium text-foreground">{label}</span>
-                <span className="block text-xs text-text-secondary">{hint}</span>
-              </span>
-            </label>
-          ))}
+          {options.map(({ key, label, hint, icon: Icon }) => {
+            const checked = selected[key]
+            return (
+              <label
+                key={key}
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors focus-within:ring-2 focus-within:ring-focus',
+                  checked ? 'border-primary bg-primary/5' : 'border-border-subtle hover:border-primary/40',
+                )}
+              >
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={checked}
+                  onChange={(e) => setSelected((prev) => ({ ...prev, [key]: e.target.checked }))}
+                />
+                <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-md', checked ? 'bg-primary/10 text-primary' : 'bg-surface-variant text-text-secondary')}>
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-foreground">{label}</span>
+                  <span className="block text-xs text-text-secondary">{hint}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', checked ? 'border-primary bg-primary text-white' : 'border-text-tertiary bg-surface')}
+                >
+                  {checked && <Check className="h-3.5 w-3.5" />}
+                </span>
+              </label>
+            )
+          })}
         </fieldset>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleDownload} disabled={!anySelected || exporting}>
-            <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            {exporting ? 'Preparing…' : 'Download Excel'}
-          </Button>
+
+        <DialogFooter className="items-center gap-3 border-t border-border-subtle bg-surface-variant/40 px-5 py-4 sm:justify-between sm:space-x-0">
+          <span className="text-xs text-text-secondary" aria-live="polite">
+            {anySelected ? `${selectedCount} ${selectedCount === 1 ? 'sheet' : 'sheets'} selected` : 'Select at least one'}
+          </span>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={handleDownload} disabled={!anySelected || exporting}>
+              <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {exporting ? 'Preparing…' : 'Download Excel'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
