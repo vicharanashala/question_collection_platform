@@ -36,13 +36,18 @@ import {
   createPreviewUrl,
 } from "@/utils/imageProcessing";
 
-import { useIsTouchDevice } from "@/hooks/useTouchDevices";
 import { CameraCaptureModal } from "./Camera-Capture";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 const UPLOAD_CONCURRENCY = 2;
 const MAX_IMAGE_BYTES = MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024;
+
+// The in-app camera needs getUserMedia on a secure page. Otherwise the native camera input is used.
+const canUseLiveCamera = () =>
+  typeof window !== "undefined" &&
+  window.isSecureContext &&
+  Boolean(navigator.mediaDevices?.getUserMedia);
 
 const newId = () =>
   globalThis.crypto?.randomUUID?.() ??
@@ -154,7 +159,6 @@ export function AgriEntitySubmitForm({
 }: AgriEntitySubmitFormProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const isTouchDevice = useIsTouchDevice();
   // Anveshan users are exempt from image type, size and compression checks.
   const skipImageValidation = Boolean(user?.isAnveshanUser);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -815,7 +819,7 @@ export function AgriEntitySubmitForm({
                       key={key}
                       type="button"
                       onClick={() =>
-                        key === "camera" && !isTouchDevice
+                        key === "camera" && canUseLiveCamera()
                           ? setCameraOpen(true)
                           : ref.current?.click()
                       }
@@ -834,20 +838,17 @@ export function AgriEntitySubmitForm({
               )}
             </div>
 
-            {isTouchDevice && (
-              <>
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="sr-only"
-                  tabIndex={-1}
-                  aria-hidden="true"
-                  onChange={handleFilesPicked}
-                />
-              </>
-            )}
+            {/* Fallback when the in-app camera is unavailable. */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={handleFilesPicked}
+            />
 
             <input
               ref={fileInputRef}
