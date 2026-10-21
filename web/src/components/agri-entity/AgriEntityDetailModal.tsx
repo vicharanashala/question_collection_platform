@@ -14,17 +14,19 @@ interface AgriEntityDetailModalProps {
   /** Submission to show; null closes the dialog. */
   entity: AgriEntitySubmission | null
   onClose: () => void
+  /** Hides the review status, e.g. on the Anveshan user page. */
+  hideStatus?: boolean
 }
 
 /** Read-only view of one crop / weed / pest / disease submission. */
-export function AgriEntityDetailModal({ entity, onClose }: AgriEntityDetailModalProps): ReactNode {
+export function AgriEntityDetailModal({ entity, onClose, hideStatus: forceHideStatus }: AgriEntityDetailModalProps): ReactNode {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [selectedImage, setSelectedImage] = useState(0)
   const [viewerIndex, setViewerIndex] = useState<number | null>(null)
   const isStaffView = entity?.submitter !== undefined
   // Anveshan users do not see review status, and staff do not need to see the pending state.
-  const hideStatus = !!user?.isAnveshanUser || (isStaffView && entity?.status === 'pending')
+  const hideStatus = !!forceHideStatus || !!user?.isAnveshanUser || (isStaffView && entity?.status === 'pending')
   const typeLabel = entity
     ? t(`agriEntity.tabs.${entity.type}`, AGRI_ENTITY_TYPES.find((type) => type.value === entity.type)?.label ?? '')
     : ''

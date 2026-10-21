@@ -69,7 +69,7 @@ export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmissi
           })}
         </ul>
       )}
-      <AgriEntityDetailModal entity={selected} onClose={() => setSelected(null)} />
+      <AgriEntityDetailModal entity={selected} onClose={() => setSelected(null)} hideStatus />
     </div>
   )
 }
