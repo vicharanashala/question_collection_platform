@@ -61,7 +61,7 @@ export function AnveshanUserDetailPage() {
   const answered = questions.filter((q) => q.answer).length
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="space-y-5">
       <button
         onClick={() => navigate('/users')}
         className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
