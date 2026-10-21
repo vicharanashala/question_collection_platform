@@ -1,17 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Clock, ImageIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
 import { AgriEntityDetailModal } from '@/components/agri-entity/AgriEntityDetailModal'
 import { SUBMISSION_TAB_ICONS } from '@/components/agri-entity/SubmissionTypeTabs'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AgriEntitySubmission, AgriEntityType } from '@/types'
 
+const PAGE_SIZE = 12
+
 // Entities the Anveshan user submitted, filtered by type, each opening the full detail dialog.
 export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmission[] }) {
   const [type, setType] = useState<'' | AgriEntityType>('')
   const [selected, setSelected] = useState<AgriEntitySubmission | null>(null)
-  const visible = type ? entities.filter((e) => e.type === type) : entities
+  const filtered = type ? entities.filter((e) => e.type === type) : entities
+  const [page, setPage] = useState(1)
+
+  // Back to the first page when the type filter changes.
+  useEffect(() => setPage(1), [type])
+
+  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const countOf = (value: AgriEntityType) => entities.filter((e) => e.type === value).length
 
   return (
@@ -33,7 +42,7 @@ export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmissi
         ))}
       </div>
 
-      {visible.length === 0 ? (
+      {filtered.length === 0 ? (
         <Card className="p-8 text-center text-sm text-text-secondary">No entities submitted</Card>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -68,6 +77,9 @@ export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmissi
             )
           })}
         </ul>
+      )}
+      {filtered.length > PAGE_SIZE && (
+        <SubmissionsPagination page={page} limit={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
       )}
       <AgriEntityDetailModal entity={selected} onClose={() => setSelected(null)} hideStatus />
     </div>

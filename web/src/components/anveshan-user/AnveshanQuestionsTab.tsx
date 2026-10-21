@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, MapPin, Search, Sprout } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AnveshanUserQuestion } from '@/types'
 
@@ -66,6 +67,8 @@ function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
   )
 }
 
+const PAGE_SIZE = 10
+
 interface QuestionFilters {
   search: string
   answeredOnly: boolean
@@ -110,16 +113,27 @@ export function AnveshanQuestionsTab({ questions, search, answeredOnly }: { ques
         (!term || q.questionText.toLowerCase().includes(term) || q.cropType.toLowerCase().includes(term)),
     )
   }, [questions, search, answeredOnly])
+  const [page, setPage] = useState(1)
+
+  // Back to the first page whenever the filters change.
+  useEffect(() => setPage(1), [search, answeredOnly])
+
+  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <Card className="overflow-hidden">
-      {filtered.length === 0 ? (
-        <p className="p-8 text-center text-sm text-text-secondary">No questions found</p>
-      ) : (
-        <ul className="divide-y divide-border-subtle">
-          {filtered.map((question) => <QuestionCard key={question.id} question={question} />)}
-        </ul>
+    <div className="space-y-3">
+      <Card className="overflow-hidden">
+        {filtered.length === 0 ? (
+          <p className="p-8 text-center text-sm text-text-secondary">No questions found</p>
+        ) : (
+          <ul className="divide-y divide-border-subtle">
+            {visible.map((question) => <QuestionCard key={question.id} question={question} />)}
+          </ul>
+        )}
+      </Card>
+      {filtered.length > PAGE_SIZE && (
+        <SubmissionsPagination page={page} limit={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
       )}
-    </Card>
+    </div>
   )
 }
