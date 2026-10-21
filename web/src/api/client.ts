@@ -1544,11 +1544,15 @@ export const agriEntityApi = {
 
 export const faqApi = {
   /** User-facing: visible FAQs only, optionally filtered */
-  getVisible: (filters?: { category?: string }) => {
+  getVisible: (filters?: { category?: string; search?: string }) => {
     const params = new URLSearchParams();
 
     if (filters?.category) {
       params.set("category", filters.category);
+    }
+
+    if (filters?.search) {
+      params.set("search", filters.search);
     }
 
     const qs = params.toString();

@@ -6,7 +6,6 @@ import { faqApi } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { VideoSection } from '@/components/VideoSection'
 import { cn } from '@/lib/utils'
 import type { Faq } from '@/types'
 
@@ -116,73 +115,81 @@ export function PublicFaqsPage() {
   const searchLabel = t('faq.searchPlaceholder', { defaultValue: 'Search questions' })
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5 pb-6">
-      <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="rounded-full">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        {t('faq.backToProfile', { defaultValue: 'Back to profile' })}
-      </Button>
-
-      <header className="flex flex-col items-center py-1 text-center">
-        <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 sm:h-[72px] sm:w-[72px]">
-          <HelpingHand className="h-8 w-8" aria-hidden="true" />
+    <div className="mx-auto max-w-2xl space-y-4 pb-6">
+      {/* Compact header so the questions start high on small screens */}
+      <header className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="h-10 w-10 shrink-0 rounded-full"
+          aria-label={t('faq.backToProfile', { defaultValue: 'Back to profile' })}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-extrabold leading-tight text-foreground sm:text-2xl">{t('faq.title')}</h1>
+          <p className="truncate text-sm text-text-secondary">{t('faq.subtitle')}</p>
         </div>
-        <h1 className="text-xl font-extrabold text-foreground sm:text-2xl">{t('faq.title')}</h1>
-        <p className="mt-1 text-sm text-text-secondary">{t('faq.subtitle')}</p>
+        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 sm:flex">
+          <HelpingHand className="h-6 w-6" aria-hidden="true" />
+        </div>
       </header>
 
-      <VideoSection />
-
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
-          aria-hidden="true"
-        />
-        <Input
-          type="search"
-          inputMode="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={searchLabel}
-          aria-label={searchLabel}
-          className="h-11 rounded-full pl-9 pr-10 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery('')}
-            aria-label={t('faq.clearSearch', { defaultValue: 'Clear search' })}
-            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-
-      <div
-        role="group"
-        aria-label={t('faq.categories', { defaultValue: 'Categories' })}
-        className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide"
-      >
-        {CATEGORIES.map((cat) => {
-          const isActive = activeCat === cat.key
-          return (
+      {/* Search and categories stay visible while scrolling the list */}
+      <div className="sticky -top-4 z-10 -mx-4 space-y-3 bg-background/95 px-4 pb-2 pt-2 backdrop-blur sm:-top-6 sm:-mx-6 sm:px-6">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            inputMode="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={searchLabel}
+            aria-label={searchLabel}
+            className="h-11 rounded-full pl-10 pr-10 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+          />
+          {query && (
             <button
-              key={cat.key}
               type="button"
-              aria-pressed={isActive}
-              onClick={() => setActiveCat(cat.key)}
-              className={cn(
-                'flex min-h-9 shrink-0 items-center rounded-full px-4 text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                isActive
-                  ? 'text-white shadow-sm'
-                  : 'border border-border bg-surface text-muted-foreground hover:border-primary/40 hover:text-foreground',
-              )}
-              style={isActive ? { backgroundColor: cat.color } : undefined}
+              onClick={() => setQuery('')}
+              aria-label={t('faq.clearSearch', { defaultValue: 'Clear search' })}
+              className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {t(cat.labelKey)}
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
-          )
-        })}
+          )}
+        </div>
+
+        <div
+          role="group"
+          aria-label={t('faq.categories', { defaultValue: 'Categories' })}
+          className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide sm:mx-0 sm:px-0"
+        >
+          {CATEGORIES.map((cat) => {
+            const isActive = activeCat === cat.key
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setActiveCat(cat.key)}
+                className={cn(
+                  'flex min-h-9 shrink-0 items-center rounded-full px-4 text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  isActive
+                    ? 'text-white shadow-sm'
+                    : 'border border-border bg-surface text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                )}
+                style={isActive ? { backgroundColor: cat.color } : undefined}
+              >
+                {t(cat.labelKey)}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {loading ? (

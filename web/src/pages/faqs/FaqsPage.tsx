@@ -43,7 +43,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Faq, FaqAudience, FaqCategory, PaginatedResponse } from "@/types";
-import { VideoSection } from "@/components/VideoSection";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -846,9 +845,6 @@ export function FaqsPage() {
           </Card>
         ))}
       </div>
-
-      {/* Video guide */}
-      <VideoSection />
 
       {/* Filter bar: search + sort */}
       <div className="flex items-center gap-3 flex-wrap">

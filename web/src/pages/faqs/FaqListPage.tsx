@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { faqApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  ChevronDown, ChevronUp, HelpCircle, ArrowLeft,
+  ChevronDown, ChevronUp, HelpCircle, ArrowLeft, Search, X, RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Faq } from '@/types'
-import { VideoSection } from '@/components/VideoSection'
 // ─── Category config ──────────────────────────────────────────────────────────
 
 const CATEGORIES = [
@@ -30,6 +31,7 @@ function FaqItem({ item }: { item: Faq }) {
       <button
         className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-surface-variant/40 transition-colors"
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
       >
         {/* Category colour dot */}
         <div
@@ -69,22 +71,35 @@ export function FaqListPage() {
   const [items, setItems] = useState<Faq[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCat, setActiveCat] = useState<string>('all')
+  const [search, setSearch] = useState('')
+  const [error, setError] = useState(false)
+  const debouncedSearch = useDebouncedValue(search.trim(), 400)
+  const [reloadKey, setReloadKey] = useState(0)
 
-  const fetch_ = useCallback((category?: string) => {
+  // Loads FAQs for the active filters and ignores responses from outdated requests.
+  const loadFaqs = useCallback((signal: { cancelled: boolean }) => {
     setLoading(true)
-    faqApi.getVisible({ category })
-      .then((data) => setItems(data))
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load FAQs')))
-      .finally(() => setLoading(false))
-  }, [])
+    setError(false)
+    faqApi.getVisible({
+      category: activeCat === 'all' ? undefined : activeCat,
+      search: debouncedSearch || undefined,
+    })
+      .then((data) => { if (!signal.cancelled) setItems(data) })
+      .catch((e) => {
+        if (signal.cancelled) return
+        setError(true)
+        toast.error(getErrorMessage(e, 'Failed to load FAQs'))
+      })
+      .finally(() => { if (!signal.cancelled) setLoading(false) })
+  }, [activeCat, debouncedSearch])
 
-  // Initial load
-  useEffect(() => { fetch_() }, [fetch_])
-
-  // Re-fetch when category changes
   useEffect(() => {
-    fetch_(activeCat === 'all' ? undefined : activeCat)
-  }, [activeCat, fetch_])
+    const signal = { cancelled: false }
+    loadFaqs(signal)
+    return () => { signal.cancelled = true }
+  }, [loadFaqs, reloadKey])
+
+  const hasFilters = activeCat !== 'all' || debouncedSearch !== ''
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -106,8 +121,27 @@ export function FaqListPage() {
         </div>
       </div>
 
-      {/* Video guide */}
-      <VideoSection />
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search questions or answers"
+          aria-label="Search FAQs"
+          className="h-10 pl-9 pr-9 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            aria-label="Clear search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
       {/* Category tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -139,16 +173,43 @@ export function FaqListPage() {
             </Card>
           ))}
         </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+              We could not load the FAQs
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 gap-2"
+              onClick={() => setReloadKey((k) => k + 1)}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <HelpCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
             <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">
-              No FAQs available yet
+              {hasFilters ? 'No FAQs match your search' : 'No FAQs available yet'}
             </p>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
-              Check back later for help content
+              {hasFilters ? 'Try different words or another category' : 'Check back later for help content'}
             </p>
+            {hasFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => { setSearch(''); setActiveCat('all') }}
+              >
+                Clear filters
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
