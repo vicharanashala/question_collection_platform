@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input'
 import { VideoSection } from '@/components/VideoSection'
 import { cn } from '@/lib/utils'
 import type { Faq } from '@/types'
-import { useAuth } from '@/context/AuthContext'
 
 const CATEGORIES = [
   { key: 'all', labelKey: 'wallet.filterAll', color: '#6366F1' },
@@ -90,6 +89,7 @@ export function PublicFaqsPage() {
   const [activeCat, setActiveCat] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
+
   // Loads the visible FAQs for the active category and ignores stale responses.
   useEffect(() => {
     let cancelled = false

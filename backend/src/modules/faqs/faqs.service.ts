@@ -2,8 +2,6 @@ import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { IFaqRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { CreateFaqDto, UpdateFaqDto, ToggleVisibilityDto, ListFaqsQueryDto } from './dto';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
-import { User } from '@/shared/database/mongodb/schemas/user.schema';
-
 
 @Injectable()
 export class FaqsService {
@@ -12,39 +10,17 @@ export class FaqsService {
     private readonly faqRepo: IFaqRepository,
   ) {}
 
-  /** Public: return only visible FAQs ordered by display_order */
-  // async findAllVisible(query: ListFaqsQueryDto, user: User): Promise<unknown[]> {
-  //   const qb = this.faqRepo.createQueryBuilder('faq');
-  //   qb.where('faq.isVisible = :isVisible', { isVisible: true });
-
-  //   if (query.category) {
-  //     qb.andWhere('faq.category = :category', { category: query.category });
-  //   }
-
-  //   if (query.search) {
-  //     const term = `%${query.search}%`;
-  //     qb.andWhere(
-  //       "(faq.question ILIKE :term OR faq.answer ILIKE :term)",
-  //       { term },
-  //     );
-  //   }
-
-  //   return qb
-  //     .orderBy('faq.displayOrder', 'ASC')
-  //     .addOrderBy('faq.createdAt', 'ASC')
-  //     .getMany();
-  // }
-
-async findAllVisible(
-  query: ListFaqsQueryDto,
-  user: { isAnveshanUser?: boolean },
-): Promise<Faq[]> {
-  return this.faqRepo.findVisible({
-    category: query.category,
-    search: query.search,
-    isAnveshanUser: user.isAnveshanUser,
-  });
-}
+  /** Returns visible FAQs for the given audience, ordered by display order. */
+  async findAllVisible(
+    query: ListFaqsQueryDto,
+    user: { isAnveshanUser?: boolean },
+  ): Promise<Faq[]> {
+    return this.faqRepo.findVisible({
+      category: query.category,
+      search: query.search,
+      isAnveshanUser: user.isAnveshanUser,
+    });
+  }
 
   /** Admin: FAQ counts (used for stats row) */
   async getStats(category?: string): Promise<{ total: number; visible: number; hidden: number }> {
@@ -94,19 +70,9 @@ async findAllVisible(
 
     const sortBy = query.sortBy ?? 'displayOrder';
     const sortOrder: 1 | -1 = (query.sortOrder ?? 'ASC') === 'ASC' ? 1 : -1;
-      switch (query.userSort) {
-    case 'anveshan':
-      filter.forAnveshan = true;
-      break;
-    case 'user':
-      // matches forAnveshan: false AND documents where the key doesn't exist
-      filter.forAnveshan = { $ne: true };
-      break;
-    case 'all':
-    default:
-      // no filter on forAnveshan
-      break;
-  }
+    if (query.userSort === 'anveshan') filter.forAnveshan = true;
+    // Also matches documents where the key does not exist.
+    if (query.userSort === 'user') filter.forAnveshan = { $ne: true };
 
     const result = await this.faqRepo.findAndCount(filter, {
       pagination: { page: query.page ?? 1, limit: query.limit ?? 20, sort: { [sortBy]: sortOrder } },

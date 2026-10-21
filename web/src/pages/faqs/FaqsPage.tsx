@@ -49,7 +49,7 @@ import { VideoSection } from "@/components/VideoSection";
 
 type SortBy = "displayOrder" | "createdAt" | "updatedAt" | "question";
 type SortOrder = "ASC" | "DESC";
-type User = "anveshan" | "user" | "all";
+type AudienceFilter = "anveshan" | "user" | "all";
 
 interface FormState {
   question: string;
@@ -579,7 +579,7 @@ export function FaqsPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("displayOrder");
   const [sortOrder, setSortOrder] = useState<SortOrder>("ASC");
-  const [userSort, setUserSort] = useState<User>("all");
+  const [userSort, setUserSort] = useState<AudienceFilter>("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
 
@@ -872,7 +872,7 @@ export function FaqsPage() {
         <Select
           value={userSort}
           onValueChange={(v) => {
-            setUserSort(v as User);
+            setUserSort(v as AudienceFilter);
             setPage(1);
           }}
         >

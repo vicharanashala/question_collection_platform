@@ -30,12 +30,10 @@ import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-met
 import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
 import { AuditService } from '../audit-logs/audit.service';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
-import { UserService } from '../user/user.service';
-import { error } from 'console';
-import { User } from '@/shared/database/mongodb/schemas/user.schema';
 
 interface AuthenticatedRequest extends Request {
   user: {
+    isAnveshanUser?: boolean;
     id: string;
     role: string;
     name: string;
@@ -44,7 +42,7 @@ interface AuthenticatedRequest extends Request {
 
 @Controller()
 export class FaqsController {
-  constructor(private readonly faqsService: FaqsService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(FaqsController.name), private readonly userservice: UserService) {}
+  constructor(private readonly faqsService: FaqsService, private readonly auditService: AuditService, private readonly logger: Logger = new Logger(FaqsController.name)) {}
 
   private toActorType(role: UserRole): ActorType {
   switch (role) {
@@ -90,11 +88,18 @@ private async safeAudit(payload: AuditLogDto) {
 
   // ─── Public/user-facing ──────────────────────────────────────────────────
 
+  // Anonymous visitors only see FAQs that are not restricted to Anveshan users.
+  @Public()
   @Get('faqs')
+  async listVisible(@Query() query: ListFaqsQueryDto) {
+    return this.faqsService.findAllVisible(query, { isAnveshanUser: false });
+  }
+
+  // Logged in users see the FAQs that match their Anveshan status.
+  @Get('faqs/me')
   @UseGuards(JwtAuthGuard)
-  async listVisible(@Query() query: ListFaqsQueryDto, @Req() req: AuthenticatedRequest) {
-    const user = await this.userservice.getProfile(req.user.id);
-    return this.faqsService.findAllVisible(query, user);
+  async listVisibleForUser(@Query() query: ListFaqsQueryDto, @Req() req: AuthenticatedRequest) {
+    return this.faqsService.findAllVisible(query, { isAnveshanUser: req.user.isAnveshanUser });
   }
 
   /**

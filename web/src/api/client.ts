@@ -1544,12 +1544,6 @@ export const agriEntityApi = {
 
 export const faqApi = {
   /** User-facing: visible FAQs only, optionally filtered */
-  // getVisible: (filters?: { category?: string }) => {
-  //   const params: Record<string, string> = {}
-  //   if (filters?.category) params.category = filters.category
-  //   return request<Faq[]>('/faqs', { params }, false)
-  // },
-
   getVisible: (filters?: { category?: string }) => {
     const params = new URLSearchParams();
 
@@ -1559,7 +1553,9 @@ export const faqApi = {
 
     const qs = params.toString();
 
-    return request<Faq[]>(`/faqs${qs ? `?${qs}` : ""}`, {}, false);
+    // Logged in users get FAQs matching their Anveshan status.
+    const path = getAccessToken() ? "/faqs/me" : "/faqs";
+    return request<Faq[]>(`${path}${qs ? `?${qs}` : ""}`, {}, false);
   },
 
   /** Admin: paginated FAQ list */

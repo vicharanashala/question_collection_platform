@@ -29,7 +29,7 @@ export class ListFaqsQueryDto {
   sortBy?: 'displayOrder' | 'createdAt' | 'updatedAt' | 'question';
 
   @IsOptional()
-  @IsIn(["anveshan" , "user" , "all"])
+  @IsIn(['anveshan', 'user', 'all'])
   userSort?: "anveshan" | "user" | "all";
 
   @IsOptional()

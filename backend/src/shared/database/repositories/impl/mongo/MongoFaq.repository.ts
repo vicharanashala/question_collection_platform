@@ -6,8 +6,6 @@ import { FindVisibleOptions, IFaqRepository } from '../../IFaq.repository';
 import { Faq } from '@/shared/database/mongodb/schemas/faq.schema';
 import { FaqCategory } from '../../../../classes/enums';
 
-
-
 @Injectable()
 export class MongoFaqRepository
   extends MongoRepository<Faq>
@@ -22,14 +20,6 @@ export class MongoFaqRepository
       .find({ category }, undefined, { sort: { displayOrder: 1 } })
       .exec() as Promise<Faq[]>;
   }
-
-  // async findVisible(category?: FaqCategory): Promise<Faq[]> {
-  //   const filter: Record<string, unknown> = { isVisible: true };
-  //   if (category) filter.category = category;
-  //   return this._model
-  //     .find(filter, undefined, { sort: { displayOrder: 1, createdAt: 1 } })
-  //     .exec() as Promise<Faq[]>;
-  // }
 
   async findVisible(options: FindVisibleOptions = {}): Promise<Faq[]> {
   const { category, search, isAnveshanUser } = options;
