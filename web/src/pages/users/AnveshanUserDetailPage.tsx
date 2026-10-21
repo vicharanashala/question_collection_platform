@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, Download, MapPin, Phone, Sprout } from 'lucide-react'
 import { toast } from 'sonner'
 import { adminApi, getErrorMessage } from '@/api/client'
@@ -77,15 +77,10 @@ export function AnveshanUserDetailPage() {
                   {user.isTester && <TesterTag />}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-                  <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                  Export
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <Link to={`/users/${user.id}?classic=1`}>Account and payment details</Link>
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+                <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Export
+              </Button>
             </div>
             <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-text-secondary sm:grid-cols-2 lg:grid-cols-4 sm:text-sm">
               <div className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" /><dd>{user.mobileNumber}</dd></div>
