@@ -23,6 +23,7 @@ import {
   MAX_AGRI_ENTITY_IMAGES,
   MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
   MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
+  TAKE_PHOTO_ENABLED,
   MAX_AGRI_ENTITY_NAME_LENGTH,
   MAX_AGRI_ENTITY_SOURCE_LENGTH,
 } from "@/constants/public";
@@ -755,7 +756,9 @@ export function AgriEntitySubmitForm({
             {/* Add actions, above the added photos */}
             {images.length + processingCount < MAX_AGRI_ENTITY_IMAGES && (
               <div
-                className={`grid grid-cols-2 gap-3 ${
+                className={`grid gap-3 ${
+                  TAKE_PHOTO_ENABLED ? "grid-cols-2" : "grid-cols-1"
+                } ${
                   images.length + processingCount > 0
                     ? "border-b border-border-subtle pb-4"
                     : ""
@@ -768,12 +771,16 @@ export function AgriEntitySubmitForm({
                     Icon: ImagePlus,
                     label: t("agriEntity.addImage", "Add image"),
                   },
-                  {
-                    key: "camera",
-                    ref: cameraInputRef,
-                    Icon: Camera,
-                    label: t("agriEntity.takePhoto", "Take photo"),
-                  },
+                  ...(TAKE_PHOTO_ENABLED
+                    ? [
+                        {
+                          key: "camera",
+                          ref: cameraInputRef,
+                          Icon: Camera,
+                          label: t("agriEntity.takePhoto", "Take photo"),
+                        },
+                      ]
+                    : []),
                 ].map(({ key, ref, Icon, label }) => (
                   <button
                     key={key}
@@ -921,11 +928,13 @@ export function AgriEntitySubmitForm({
         </form>
       </CardContent>
 
+      {TAKE_PHOTO_ENABLED && (
       <CameraCaptureModal
         open={cameraOpen}
         onOpenChange={setCameraOpen}
         onCapture={(file) => void addFiles([file])}
       />
+      )}
       <LocationCaptureModal
         open={locationModalOpen}
         onOpenChange={setLocationModalOpen}

@@ -406,6 +406,9 @@ export const MAX_ANVESHAN_ANSWER_SOURCES = 10
 // Live Anveshan platform, used when no URL is configured for the current environment.
 const DEFAULT_ANVESHAN_URL = 'https://anveshan.annam.ai/'
 
+// The Take photo option is hidden in production builds (VITE_APP_ENV=production) and on in staging and local builds.
+export const TAKE_PHOTO_ENABLED = import.meta.env.VITE_APP_ENV !== 'production'
+
 // External Anveshan platform where users confirm their milestone completion.
 // Production builds use VITE_ANVESHAN_URL; staging and local builds use VITE_ANVESHAN_URL_STAGING.
 export const ANVESHAN_PLATFORM_URL =
