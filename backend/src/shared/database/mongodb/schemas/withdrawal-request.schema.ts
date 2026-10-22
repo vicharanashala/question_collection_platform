@@ -29,7 +29,7 @@ export class WithdrawalRequest {
   @Prop({ name: 'pinelabsTransactionId', type: String, default: null })
   pinelabsTransactionId: string | null;
 
-  @Prop({ name: 'orderId', type: String, unique: true, default: null })
+  @Prop({ name: 'orderId', type: String, default: null })
   orderId: string | null;
 
   @Prop({ name: 'razorpayPayoutId', type: String, default: null })
@@ -50,7 +50,7 @@ export class WithdrawalRequest {
   @Prop({ name: 'retryCount', default: 0 })
   retryCount: number;
 
-  @Prop({ name: 'createdAt' })
+  // @Prop({ name: 'createdAt' })
   createdAt: Date;
 
   updatedAt: Date;
@@ -61,3 +61,7 @@ export const WithdrawalRequestSchema = SchemaFactory.createForClass(WithdrawalRe
 // Compound index for common query pattern
 WithdrawalRequestSchema.index({ userId: 1, status: 1 });
 WithdrawalRequestSchema.index({ walletId: 1, createdAt: -1 });
+WithdrawalRequestSchema.index(
+  { orderId: 1 },
+  { unique: true, partialFilterExpression: { orderId: { $type: 'string' } } },
+);

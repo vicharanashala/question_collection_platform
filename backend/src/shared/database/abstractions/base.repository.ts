@@ -170,7 +170,7 @@ export abstract class BaseRepository<T extends object> {
   /**
    * Updates a document by id and returns the updated document, or null.
    */
-  abstract update(id: string, data: Partial<T>, session?: ClientSession): Promise<T | null>;
+  abstract update(id: Object, data: Partial<T>, session?: ClientSession): Promise<T | null>;
 
   /**
    * Bulk-updates all documents matching `filter` with `data`.

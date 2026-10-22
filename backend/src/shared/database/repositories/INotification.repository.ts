@@ -1,7 +1,7 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { Notification } from '../entities';
+// import { Notification } from '../entities';
 import { NotificationType, NotificationTriggerType } from '../../classes/enums';
-
+import { Notification } from '../mongodb/schemas/notification.schema';
 export interface NotificationFilter {
   id?: string;
   userId?: string;

@@ -114,14 +114,14 @@ export class PaymentWebhookController {
     const isSuccess = ['AUTHORIZED', 'SUCCESS', 'COMPLETED', 'ACCEPTED'].includes(status);
 
     if (isSuccess) {
-      await this.withdrawalRepo.update(withdrawal.id, {
+      await this.withdrawalRepo.update(withdrawal._id, {
         status: WithdrawalStatus.COMPLETED,
         processedAt: new Date(),
         pinelabsTransactionId: transactionId || null,
       });
 
       const log = await this.paymentLogRepo.create({
-        withdrawalRequestId: withdrawal.id,
+        withdrawalRequestId: withdrawal._id.toString(),
         orderId,
         pinelabsTransactionId: transactionId || null,
         status: PaymentLogStatus.SUCCESS,
@@ -129,12 +129,12 @@ export class PaymentWebhookController {
       });
       await this.paymentLogRepo.save(log);
 
-      this.logger.log(`[Webhook] Withdrawal ${withdrawal.id} marked COMPLETED`);
+      this.logger.log(`[Webhook] Withdrawal ${withdrawal._id.toString()} marked COMPLETED`);
     } else {
       // Failure — log error but do NOT auto-mark FAILED (per task spec):
       // admin must manually review and trigger refund.
       const log = await this.paymentLogRepo.create({
-        withdrawalRequestId: withdrawal.id,
+        withdrawalRequestId: withdrawal._id.toString(),
         orderId,
         pinelabsTransactionId: transactionId || null,
         status: PaymentLogStatus.FAILED,
@@ -144,7 +144,7 @@ export class PaymentWebhookController {
       });
       await this.paymentLogRepo.save(log);
 
-      this.logger.warn(`[Webhook] Withdrawal ${withdrawal.id} payment failed — logged only (admin must manually review)`);
+      this.logger.warn(`[Webhook] Withdrawal ${withdrawal._id.toString()} payment failed — logged only (admin must manually review)`);
     }
 
     return { received: true };

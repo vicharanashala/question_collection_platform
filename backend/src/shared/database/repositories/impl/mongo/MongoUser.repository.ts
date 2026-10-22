@@ -3,9 +3,9 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { MongoRepository } from "../../../abstractions/mongo.repository";
 import { IUserRepository } from "../../IUser.repository";
-import { User } from "../../../entities";
-import { Question } from "../../../entities";
-import { Wallet } from "../../../entities";
+// import { User } from "../../../entities";
+// import { Question } from "../../../entities";
+// import { Wallet } from "../../../entities";
 import {
   QuestionStatus,
   UserCategory,
@@ -18,7 +18,9 @@ import {
   TransactionType,
   TransactionStatus,
 } from "../../../../classes/enums";
-
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Question } from "@/shared/database/mongodb/schemas/question.schema";
+import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
 @Injectable()
 export class MongoUserRepository
   extends MongoRepository<User>
@@ -107,7 +109,7 @@ export class MongoUserRepository
 
   async findWithWallet(
     userId: string,
-  ): Promise<(User & { wallet?: unknown }) | null> {
+  ): Promise<(User & { wallet?: Wallet }) | null> {
     if (!Types.ObjectId.isValid(userId)) return null;
     const user = await this._model.findById(userId).exec();
     if (!user) return null;
@@ -123,7 +125,7 @@ export class MongoUserRepository
       _id: undefined,
       wallet: wallet ?? undefined,
     };
-    return result as unknown as User & { wallet?: unknown };
+    return result as unknown as User & { wallet?: Wallet };
   }
 
   // async getLeaderboard(opts: {

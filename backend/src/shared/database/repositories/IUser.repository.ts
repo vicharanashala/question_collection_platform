@@ -1,5 +1,5 @@
 import { BaseRepository } from "../abstractions/base.repository";
-import { User, Wallet, AuditLog } from "../entities";
+// import { User, Wallet, AuditLog } from "../entities";
 import {
   UserCategory,
   VerificationStatus,
@@ -8,6 +8,8 @@ import {
   ActorType,
 } from "../../classes/enums";
 import type { Types } from "mongoose";
+import { User } from "../mongodb/schemas/user.schema";
+import { Wallet } from "../mongodb/schemas/wallet.schema";
 
 /** ─── User entity filter shorthands ──────────────────────────────────────── */
 export interface UserFilter {

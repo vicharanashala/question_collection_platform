@@ -1,6 +1,6 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { Transaction } from '../entities';
-
+// import { Transaction } from '../entities';
+import { Transaction } from '../mongodb/schemas/transaction.schema';
 export type TransactionType = 'CREDIT' | 'DEBIT' | 'REFUND';
 export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
 
@@ -18,6 +18,8 @@ export interface RewardTransactionSummary {
   avgReward: number;
 }
 
+
+
 export interface WalletTransactionSummary {
   totalCount: number;
   totalCredits: number;
@@ -28,10 +30,30 @@ export interface WalletTransactionSummary {
   withdrawalCount: number;
 }
 
+  export interface TransactionListOptions {
+  type?: string;
+  status?: string;
+  source?: string;
+  fromDate?: Date;
+  toDate?: Date;
+  sortBy?: 'amount' | 'createdAt';
+  sortOrder?: 'ASC' | 'DESC';
+  select?: string;
+}
+
+
 export interface RewardAnalyticsResult extends RewardTransactionSummary {
   /** All-time completed reward total, ignoring the date window. */
   totalPool: number;
   dailyRewardTrend: Array<{ date: string; amount: number; count: number }>;
+}
+
+export interface TransactionBySourceOptions {
+  fromDate: Date;
+  toDate: Date;
+  walletIds?: string[]; // restrict to these wallets (used for the state filter)
+  limit?: number;
+  select?: string;
 }
 
 export interface ITransactionRepository extends BaseRepository<Transaction> {
@@ -48,4 +70,21 @@ export interface ITransactionRepository extends BaseRepository<Transaction> {
 
   /** Reward transactions (joined with user name/mobile) for CSV/Excel export. */
   findRewardsForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
+
+findPaginatedByWalletId(
+  walletId: string,
+  page: number,
+  limit: number,
+  options?: TransactionListOptions,
+): Promise<{ items: Transaction[]; total: number }>;
+
+getEarnedAndWithdrawn(
+  walletId: string,
+): Promise<{ totalEarned: number; totalWithdrawn: number }>;
+
+findBySource(
+  source: string,
+  options: TransactionBySourceOptions,
+): Promise<Transaction[]>;
+
 }

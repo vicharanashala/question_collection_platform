@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { IPaymentLogRepository } from '../../IPaymentLog.repository';
-import { PaymentLog } from '../../../entities';
-
+// import { PaymentLog } from '../../../entities';
+import { PaymentLog } from '@/shared/database/mongodb/schemas/payment-log.schema';
 @Injectable()
 export class MongoPaymentLogRepository
   extends MongoRepository<PaymentLog>

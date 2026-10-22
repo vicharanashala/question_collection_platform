@@ -5,6 +5,7 @@ import { isStorageUri } from '../storage/storage.service';
 import { getAgriEntityImageCategory } from './agri-entities.constants';
 import { ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 import { UserService } from '../user/user.service';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class AgriEntitiesService {
@@ -46,7 +47,8 @@ export class AgriEntitiesService {
   // }
 
   async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId);
+    const user = await this.userService.getProfile(objectId);
     if (user?.isAnveshanUser && !dto.submissionLocation) {
       throw new BadRequestException(
         'Location is required for Anveshan users when submitting an entry.',

@@ -1,24 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { lookupByStringId } from '../../../abstractions/mongo-utils';
-import { IWithdrawalRequestRepository, ListWithdrawalsOptions, ListWithdrawalsResult, WithdrawalFinancialSummary, WithdrawalRewardSummary, WithdrawalStatusSummary } from '../../IWithdrawalRequest.repository';
-import { WithdrawalRequest } from '../../../entities';
-import { TransactionType, WithdrawalStatus } from '../../../../classes/enums';
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model, QueryFilter, UpdateQuery } from "mongoose";
+import { MongoRepository } from "../../../abstractions/mongo.repository";
+import { lookupByStringId } from "../../../abstractions/mongo-utils";
+import {
+  IWithdrawalRequestRepository,
+  ListWithdrawalsOptions,
+  ListWithdrawalsResult,
+  WithdrawalFinancialSummary,
+  WithdrawalListOptions,
+  WithdrawalRewardSummary,
+  WithdrawalStatusSummary,
+} from "../../IWithdrawalRequest.repository";
+// import { WithdrawalRequest } from '../../../entities';
+import { TransactionType, WithdrawalStatus } from "../../../../classes/enums";
+import { WithdrawalRequest } from "@/shared/database/mongodb/schemas/withdrawal-request.schema";
+import { ClientSession } from "mongoose";
 
 @Injectable()
 export class MongoWithdrawalRequestRepository
   extends MongoRepository<WithdrawalRequest>
   implements IWithdrawalRequestRepository
 {
-  constructor(@InjectModel('WithdrawalRequest') protected readonly _model: Model<WithdrawalRequest>) {
+  constructor(
+    @InjectModel("WithdrawalRequest")
+    protected readonly _model: Model<WithdrawalRequest>,
+  ) {
     super(_model);
   }
 
   async findPendingByUserId(userId: string): Promise<WithdrawalRequest | null> {
     return this._model
-      .findOne({ userId, status: WithdrawalStatus.PENDING } as Record<string, unknown>)
+      .findOne({ userId, status: WithdrawalStatus.PENDING } as Record<
+        string,
+        unknown
+      >)
       .exec() as Promise<WithdrawalRequest | null>;
   }
 
@@ -36,593 +52,658 @@ export class MongoWithdrawalRequestRepository
   }
 
   async getFinancialSummary(
-  since: Date,
-  todayStart: Date,
-  now: Date,
-): Promise<WithdrawalFinancialSummary> {
-  const [result] = await this._model.aggregate([
-    {
-      $facet: {
-        summary: [
-          {
-            $group: {
-              _id: null,
+    since: Date,
+    todayStart: Date,
+    now: Date,
+  ): Promise<WithdrawalFinancialSummary> {
+    const [result] = await this._model.aggregate([
+      {
+        $facet: {
+          summary: [
+            {
+              $group: {
+                _id: null,
 
-              totalPaidOut: {
-                $sum: {
-                  $cond: [
-                    {
-                      $eq: [
-                        '$status',
-                        WithdrawalStatus.COMPLETED,
-                      ],
-                    },
-                    '$amount',
-                    0,
-                  ],
+                totalPaidOut: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: ["$status", WithdrawalStatus.COMPLETED],
+                      },
+                      "$amount",
+                      0,
+                    ],
+                  },
                 },
-              },
 
-              pendingWithdrawalCount: {
-                $sum: {
-                  $cond: [
-                    {
-                      $eq: [
-                        '$status',
-                        WithdrawalStatus.PENDING,
-                      ],
-                    },
-                    1,
-                    0,
-                  ],
+                pendingWithdrawalCount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: ["$status", WithdrawalStatus.PENDING],
+                      },
+                      1,
+                      0,
+                    ],
+                  },
                 },
-              },
 
-              pendingWithdrawalAmount: {
-                $sum: {
-                  $cond: [
-                    {
-                      $eq: [
-                        '$status',
-                        WithdrawalStatus.PENDING,
-                      ],
-                    },
-                    '$amount',
-                    0,
-                  ],
+                pendingWithdrawalAmount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: ["$status", WithdrawalStatus.PENDING],
+                      },
+                      "$amount",
+                      0,
+                    ],
+                  },
                 },
-              },
 
-              completedWithdrawalCount: {
-                $sum: {
-                  $cond: [
-                    {
-                      $eq: [
-                        '$status',
-                        WithdrawalStatus.COMPLETED,
-                      ],
-                    },
-                    1,
-                    0,
-                  ],
+                completedWithdrawalCount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: ["$status", WithdrawalStatus.COMPLETED],
+                      },
+                      1,
+                      0,
+                    ],
+                  },
                 },
-              },
 
-              completedWithdrawalAmount: {
-                $sum: {
-                  $cond: [
-                    {
-                      $eq: [
-                        '$status',
-                        WithdrawalStatus.COMPLETED,
-                      ],
-                    },
-                    '$amount',
-                    0,
-                  ],
+                completedWithdrawalAmount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: ["$status", WithdrawalStatus.COMPLETED],
+                      },
+                      "$amount",
+                      0,
+                    ],
+                  },
                 },
-              },
 
-              failedWithdrawalCount: {
-                $sum: {
-                  $cond: [
-                    {
-                      $eq: [
-                        '$status',
-                        WithdrawalStatus.FAILED,
-                      ],
-                    },
-                    1,
-                    0,
-                  ],
+                failedWithdrawalCount: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $eq: ["$status", WithdrawalStatus.FAILED],
+                      },
+                      1,
+                      0,
+                    ],
+                  },
                 },
               },
             },
-          },
-        ],
+          ],
 
-        today: [
+          today: [
+            {
+              $match: {
+                status: WithdrawalStatus.COMPLETED,
+                processedAt: {
+                  $gte: todayStart,
+                  $lte: now,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+
+                payoutCount: {
+                  $sum: 1,
+                },
+
+                payoutAmount: {
+                  $sum: "$amount",
+                },
+              },
+            },
+          ],
+
+          dailyPayoutTrend: [
+            {
+              $match: {
+                status: WithdrawalStatus.COMPLETED,
+                processedAt: {
+                  $gte: since,
+                  $lte: now,
+                },
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$processedAt",
+                  },
+                },
+
+                count: {
+                  $sum: 1,
+                },
+
+                amount: {
+                  $sum: "$amount",
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                date: "$_id",
+                count: 1,
+                amount: 1,
+              },
+            },
+            {
+              $sort: {
+                date: 1,
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    const summary = result?.summary?.[0] ?? {};
+    const today = result?.today?.[0] ?? {};
+
+    return {
+      totalPaidOut: Number(summary.totalPaidOut ?? 0),
+
+      pendingWithdrawals: {
+        count: Number(summary.pendingWithdrawalCount ?? 0),
+        amount: Number(summary.pendingWithdrawalAmount ?? 0),
+      },
+
+      completedWithdrawals: {
+        count: Number(summary.completedWithdrawalCount ?? 0),
+        amount: Number(summary.completedWithdrawalAmount ?? 0),
+      },
+
+      failedWithdrawals: {
+        count: Number(summary.failedWithdrawalCount ?? 0),
+      },
+
+      today: {
+        payoutCount: Number(today.payoutCount ?? 0),
+        payoutAmount: Number(today.payoutAmount ?? 0),
+      },
+
+      dailyPayoutTrend: (result?.dailyPayoutTrend ?? []).map((item: any) => ({
+        date: item.date,
+        count: Number(item.count ?? 0),
+        amount: Number(item.amount ?? 0),
+      })),
+    };
+  }
+
+  async getStatusSummary(
+    from: Date,
+    to: Date,
+  ): Promise<WithdrawalStatusSummary> {
+    const countWhere = (status: WithdrawalStatus) => ({
+      $sum: { $cond: [{ $eq: ["$status", status] }, 1, 0] },
+    });
+
+    const [result] = await this._model.aggregate([
+      { $match: { createdAt: { $gte: from, $lte: to } } },
+      {
+        $group: {
+          _id: null,
+          totalWithdrawn: { $sum: "$amount" },
+          withdrawalCount: { $sum: 1 },
+          pending: countWhere(WithdrawalStatus.PENDING),
+          completed: countWhere(WithdrawalStatus.COMPLETED),
+          failed: countWhere(WithdrawalStatus.FAILED),
+        },
+      },
+    ]);
+
+    return {
+      totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
+      withdrawalCount: Number(result?.withdrawalCount ?? 0),
+      pending: Number(result?.pending ?? 0),
+      completed: Number(result?.completed ?? 0),
+      failed: Number(result?.failed ?? 0),
+    };
+  }
+
+  async getRewardSummary(
+    from: Date,
+    to: Date,
+  ): Promise<WithdrawalRewardSummary> {
+    const [result] = await this._model.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: null,
+
+          totalWithdrawn: {
+            $sum: "$amount",
+          },
+
+          withdrawalCount: {
+            $sum: 1,
+          },
+
+          pendingWithdrawals: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ["$status", WithdrawalStatus.PENDING],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+          totalWithdrawn: 1,
+          withdrawalCount: 1,
+          pendingWithdrawals: 1,
+        },
+      },
+    ]);
+
+    return {
+      totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
+      withdrawalCount: Number(result?.withdrawalCount ?? 0),
+      pendingWithdrawals: Number(result?.pendingWithdrawals ?? 0),
+    };
+  }
+
+  async listWithdrawals(
+    options: ListWithdrawalsOptions,
+  ): Promise<ListWithdrawalsResult> {
+    const {
+      page,
+      limit,
+      status,
+      state,
+      search,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+      fromDate,
+      toDate,
+      filterStatus,
+    } = options;
+
+    const skip = (page - 1) * limit;
+
+    const match: Record<string, unknown> = {};
+
+    if (status) {
+      match.status = status;
+    }
+
+    if (fromDate || toDate) {
+      match.createdAt = {
+        ...(fromDate ? { $gte: fromDate } : {}),
+        ...(toDate ? { $lte: toDate } : {}),
+      };
+    }
+
+    const sortField =
+      sortBy === "amount"
+        ? "amount"
+        : sortBy === "processedAt"
+          ? "processedAt"
+          : "createdAt";
+
+    const sortDirection = sortOrder === "ASC" ? 1 : -1;
+
+    // const pipeline: any[] = [
+    //   {
+    //     $match: match,
+    //   },
+
+    //    {
+    //   $addFields: {
+    //     userObjectId: {
+    //       $convert: { input: '$userId', to: 'objectId', onError: null, onNull: null },
+    //     },
+    //   },
+    // },
+
+    //   // Withdrawal -> User
+    //   {
+    //     $lookup: {
+    //       from: 'users',
+    //       localField: 'userId',
+    //       foreignField: '_id',
+    //       as: 'user',
+    //     },
+    //   },
+
+    //   {
+    //     $unwind: {
+    //       path: '$user',
+    //       preserveNullAndEmptyArrays: true,
+    //     },
+    //   },
+    // ];
+
+    const pipeline: any[] = [
+      { $match: match },
+
+      // userId is stored as a string; users._id is an ObjectId
+      {
+        $addFields: {
+          userObjectId: {
+            $convert: {
+              input: "$userId",
+              to: "objectId",
+              onError: null,
+              onNull: null,
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userObjectId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+    ];
+
+    // State filter
+    if (state) {
+      pipeline.push({
+        $match: {
+          "user.state": state,
+        },
+      });
+    }
+
+    // Search by user name/mobile
+    if (search) {
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      pipeline.push({
+        $match: {
+          $or: [
+            {
+              "user.name": {
+                $regex: escapedSearch,
+                $options: "i",
+              },
+            },
+            {
+              "user.mobileNumber": {
+                $regex: escapedSearch,
+                $options: "i",
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    // Withdrawal -> Debit Transaction
+    pipeline.push({
+      $lookup: {
+        from: "transactions",
+        let: {
+          withdrawalId: "$_id",
+        },
+        pipeline: [
           {
             $match: {
-              status: WithdrawalStatus.COMPLETED,
-              processedAt: {
-                $gte: todayStart,
-                $lte: now,
-              },
-            },
-          },
-          {
-            $group: {
-              _id: null,
-
-              payoutCount: {
-                $sum: 1,
-              },
-
-              payoutAmount: {
-                $sum: '$amount',
-              },
-            },
-          },
-        ],
-
-        dailyPayoutTrend: [
-          {
-            $match: {
-              status: WithdrawalStatus.COMPLETED,
-              processedAt: {
-                $gte: since,
-                $lte: now,
-              },
-            },
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: {
-                  format: '%Y-%m-%d',
-                  date: '$processedAt',
-                },
-              },
-
-              count: {
-                $sum: 1,
-              },
-
-              amount: {
-                $sum: '$amount',
+              $expr: {
+                $and: [
+                  {
+                    $eq: [
+                      "$referenceId",
+                      {
+                        $toString: "$$withdrawalId",
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ["$type", TransactionType.DEBIT],
+                  },
+                ],
               },
             },
           },
           {
             $project: {
-              _id: 0,
-              date: '$_id',
-              count: 1,
-              amount: 1,
+              rejectionReason: 1,
             },
           },
           {
+            $limit: 1,
+          },
+        ],
+        as: "transaction",
+      },
+    });
+
+    // failed_pending_tx filter
+    if (filterStatus === "failed_pending_tx") {
+      pipeline.push({
+        $match: {
+          status: "failed",
+          transaction: {
+            $size: 0,
+          },
+        },
+      });
+    }
+
+    // Pagination + total
+    pipeline.push({
+      $facet: {
+        items: [
+          {
             $sort: {
-              date: 1,
+              [sortField]: sortDirection,
+            },
+          },
+
+          {
+            $skip: skip,
+          },
+
+          {
+            $limit: limit,
+          },
+
+          {
+            $project: {
+              _id: 0,
+              id: {
+                $toString: "$_id",
+              },
+              amount: 1,
+              payoutMethod: 1,
+              payoutDetails: 1,
+              status: 1,
+              createdAt: 1,
+              processedAt: 1,
+              pinelabsTransactionId: 1,
+              orderId: 1,
+              utrNumber: 1,
+              razorpayPayoutId: 1,
+              failureReason: 1,
+              retryCount: 1,
+              rejectionReason: {
+                $ifNull: [
+                  {
+                    $arrayElemAt: ["$transaction.rejectionReason", 0],
+                  },
+                  null,
+                ],
+              },
+
+              // user: {
+              //   $cond: [
+              //     {
+              //       $ne: ['$user', null],
+              //     },
+              //     {
+              //       id: {
+              //         $toString: '$user._id',
+              //       },
+              //       name: '$user.name',
+              //       mobileNumber: '$user.mobileNumber',
+              //       state: '$user.state',
+              //     },
+              //     null,
+              //   ],
+              // },
+
+              user: {
+                $cond: [
+                  { $ne: [{ $type: "$user" }, "missing"] },
+                  {
+                    id: { $toString: "$user._id" },
+                    name: "$user.name",
+                    mobileNumber: "$user.mobileNumber",
+                    state: "$user.state",
+                  },
+                  null,
+                ],
+              },
             },
           },
         ],
-      },
-    },
-  ]);
 
-  const summary = result?.summary?.[0] ?? {};
-  const today = result?.today?.[0] ?? {};
-
-  return {
-    totalPaidOut: Number(summary.totalPaidOut ?? 0),
-
-    pendingWithdrawals: {
-      count: Number(summary.pendingWithdrawalCount ?? 0),
-      amount: Number(summary.pendingWithdrawalAmount ?? 0),
-    },
-
-    completedWithdrawals: {
-      count: Number(summary.completedWithdrawalCount ?? 0),
-      amount: Number(summary.completedWithdrawalAmount ?? 0),
-    },
-
-    failedWithdrawals: {
-      count: Number(summary.failedWithdrawalCount ?? 0),
-    },
-
-    today: {
-      payoutCount: Number(today.payoutCount ?? 0),
-      payoutAmount: Number(today.payoutAmount ?? 0),
-    },
-
-    dailyPayoutTrend: (result?.dailyPayoutTrend ?? []).map(
-      (item: any) => ({
-        date: item.date,
-        count: Number(item.count ?? 0),
-        amount: Number(item.amount ?? 0),
-      }),
-    ),
-  };
-}
-
-async getStatusSummary(
-  from: Date,
-  to: Date,
-): Promise<WithdrawalStatusSummary> {
-  const countWhere = (status: WithdrawalStatus) => ({
-    $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] },
-  });
-
-  const [result] = await this._model.aggregate([
-    { $match: { createdAt: { $gte: from, $lte: to } } },
-    {
-      $group: {
-        _id: null,
-        totalWithdrawn: { $sum: '$amount' },
-        withdrawalCount: { $sum: 1 },
-        pending: countWhere(WithdrawalStatus.PENDING),
-        completed: countWhere(WithdrawalStatus.COMPLETED),
-        failed: countWhere(WithdrawalStatus.FAILED),
-      },
-    },
-  ]);
-
-  return {
-    totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
-    withdrawalCount: Number(result?.withdrawalCount ?? 0),
-    pending: Number(result?.pending ?? 0),
-    completed: Number(result?.completed ?? 0),
-    failed: Number(result?.failed ?? 0),
-  };
-}
-
-async getRewardSummary(
-  from: Date,
-  to: Date,
-): Promise<WithdrawalRewardSummary> {
-  const [result] = await this._model.aggregate([
-    {
-      $match: {
-        createdAt: {
-          $gte: from,
-          $lte: to,
-        },
-      },
-    },
-
-    {
-      $group: {
-        _id: null,
-
-        totalWithdrawn: {
-          $sum: '$amount',
-        },
-
-        withdrawalCount: {
-          $sum: 1,
-        },
-
-        pendingWithdrawals: {
-          $sum: {
-            $cond: [
-              {
-                $eq: [
-                  '$status',
-                  WithdrawalStatus.PENDING,
-                ],
-              },
-              1,
-              0,
-            ],
+        total: [
+          {
+            $count: "count",
           },
-        },
+        ],
       },
-    },
+    });
 
-    {
-      $project: {
-        _id: 0,
-        totalWithdrawn: 1,
-        withdrawalCount: 1,
-        pendingWithdrawals: 1,
-      },
-    },
-  ]);
+    const [result] = await this._model.aggregate(pipeline);
 
-  return {
-    totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
-    withdrawalCount: Number(result?.withdrawalCount ?? 0),
-    pendingWithdrawals: Number(
-      result?.pendingWithdrawals ?? 0,
-    ),
-  };
-}
-
-async listWithdrawals(
-  options: ListWithdrawalsOptions,
-): Promise<ListWithdrawalsResult> {
-  const {
-    page,
-    limit,
-    status,
-    state,
-    search,
-    sortBy = 'createdAt',
-    sortOrder = 'DESC',
-    fromDate,
-    toDate,
-    filterStatus,
-  } = options;
-
-  const skip = (page - 1) * limit;
-
-  const match: Record<string, unknown> = {};
-
-  if (status) {
-    match.status = status;
-  }
-
-  if (fromDate || toDate) {
-    match.createdAt = {
-      ...(fromDate ? { $gte: fromDate } : {}),
-      ...(toDate ? { $lte: toDate } : {}),
+    return {
+      items: result?.items ?? [],
+      total: result?.total?.[0]?.count ?? 0,
     };
   }
 
-  const sortField =
-    sortBy === 'amount'
-      ? 'amount'
-      : sortBy === 'processedAt'
-        ? 'processedAt'
-        : 'createdAt';
-
-  const sortDirection = sortOrder === 'ASC' ? 1 : -1;
-
-  const pipeline: any[] = [
-    {
-      $match: match,
-    },
-
-    // Withdrawal -> User
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'userId',
-        foreignField: '_id',
-        as: 'user',
-      },
-    },
-
-    {
-      $unwind: {
-        path: '$user',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-  ];
-
-  // State filter
-  if (state) {
-    pipeline.push({
-      $match: {
-        'user.state': state,
-      },
-    });
-  }
-
-  // Search by user name/mobile
-  if (search) {
-    const escapedSearch = search.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      '\\$&',
-    );
-
-    pipeline.push({
-      $match: {
-        $or: [
-          {
-            'user.name': {
-              $regex: escapedSearch,
-              $options: 'i',
-            },
-          },
-          {
-            'user.mobileNumber': {
-              $regex: escapedSearch,
-              $options: 'i',
-            },
-          },
-        ],
-      },
-    });
-  }
-
-  // Withdrawal -> Debit Transaction
-  pipeline.push({
-    $lookup: {
-      from: 'transactions',
-      let: {
-        withdrawalId: '$_id',
-      },
-      pipeline: [
+  async findForExport(filters: {
+    from: Date;
+    to: Date;
+    state?: string;
+  }): Promise<Record<string, unknown>[]> {
+    const { from, to, state } = filters;
+    return this._model
+      .aggregate([
+        { $match: { createdAt: { $gte: from, $lte: to } } },
+        { $sort: { createdAt: -1 } },
+        ...lookupByStringId("users", "userId", "u"),
+        ...(state ? [{ $match: { "u.state": state } }] : []),
         {
-          $match: {
-            $expr: {
-              $and: [
-                {
-                  $eq: [
-                    '$referenceId',
-                    {
-                      $toString: '$$withdrawalId',
-                    },
-                  ],
+          $lookup: {
+            from: "transactions",
+            let: { wid: { $toString: "$_id" } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$referenceId", "$$wid"] },
+                      { $eq: ["$type", TransactionType.DEBIT] },
+                    ],
+                  },
                 },
-                {
-                  $eq: [
-                    '$type',
-                    TransactionType.DEBIT,
-                  ],
-                },
-              ],
-            },
+              },
+              { $project: { rejectionReason: 1 } },
+              { $limit: 1 },
+            ],
+            as: "tx",
           },
         },
-        {
-          $project: {
-            rejectionReason: 1,
-          },
-        },
-        {
-          $limit: 1,
-        },
-      ],
-      as: 'transaction',
-    },
-  });
-
-  // failed_pending_tx filter
-  if (filterStatus === 'failed_pending_tx') {
-    pipeline.push({
-      $match: {
-        status: 'failed',
-        transaction: {
-          $size: 0,
-        },
-      },
-    });
-  }
-
-  // Pagination + total
-  pipeline.push({
-    $facet: {
-      items: [
-        {
-          $sort: {
-            [sortField]: sortDirection,
-          },
-        },
-
-        {
-          $skip: skip,
-        },
-
-        {
-          $limit: limit,
-        },
-
         {
           $project: {
             _id: 0,
-            id: {
-              $toString: '$_id',
-            },
+            id: { $toString: "$_id" },
+            mobileNumber: "$u.mobileNumber",
+            name: "$u.name",
             amount: 1,
             payoutMethod: 1,
-            payoutDetails: 1,
             status: 1,
             createdAt: 1,
             processedAt: 1,
-            pinelabsTransactionId: 1,
-            orderId: 1,
-
-            rejectionReason: {
-              $ifNull: [
-                {
-                  $arrayElemAt: [
-                    '$transaction.rejectionReason',
-                    0,
-                  ],
-                },
-                null,
-              ],
-            },
-
-            user: {
-              $cond: [
-                {
-                  $ne: ['$user', null],
-                },
-                {
-                  id: {
-                    $toString: '$user._id',
-                  },
-                  name: '$user.name',
-                  mobileNumber: '$user.mobileNumber',
-                  state: '$user.state',
-                },
-                null,
-              ],
-            },
+            rejectionReason: { $arrayElemAt: ["$tx.rejectionReason", 0] },
           },
         },
-      ],
+      ])
+      .exec();
+  }
 
-      total: [
-        {
-          $count: 'count',
-        },
-      ],
-    },
-  });
+  async findPaginatedByWalletId(
+    walletId: string,
+    page: number,
+    limit: number,
+    options: WithdrawalListOptions = {},
+  ): Promise<{ items: WithdrawalRequest[]; total: number }> {
+    const { status, fromDate, toDate, select } = options;
 
-  const [result] = await this._model.aggregate(pipeline);
+    const filter: Record<string, unknown> = { walletId };
+    if (status) filter.status = status;
+    if (fromDate || toDate) {
+      filter.createdAt = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
+      };
+    }
 
-  return {
-    items: result?.items ?? [],
-    total: result?.total?.[0]?.count ?? 0,
-  };
-}
+    let query = this._model.find(filter);
+    if (select) query = query.select(select);
 
-async findForExport(filters: {
-  from: Date;
-  to: Date;
-  state?: string;
-}): Promise<Record<string, unknown>[]> {
-  const { from, to, state } = filters;
-  return this._model
-    .aggregate([
-      { $match: { createdAt: { $gte: from, $lte: to } } },
-      { $sort: { createdAt: -1 } },
-      ...lookupByStringId('users', 'userId', 'u'),
-      ...(state ? [{ $match: { 'u.state': state } }] : []),
-      {
-        $lookup: {
-          from: 'transactions',
-          let: { wid: { $toString: '$_id' } },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$referenceId', '$$wid'] },
-                    { $eq: ['$type', TransactionType.DEBIT] },
-                  ],
-                },
-              },
-            },
-            { $project: { rejectionReason: 1 } },
-            { $limit: 1 },
-          ],
-          as: 'tx',
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          id: { $toString: '$_id' },
-          mobileNumber: '$u.mobileNumber',
-          name: '$u.name',
-          amount: 1,
-          payoutMethod: 1,
-          status: 1,
-          createdAt: 1,
-          processedAt: 1,
-          rejectionReason: { $arrayElemAt: ['$tx.rejectionReason', 0] },
-        },
-      },
-    ])
-    .exec();
-}
+    const [docs, total] = await Promise.all([
+      query
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this._model.countDocuments(filter).exec(),
+    ]);
+
+    const items = docs.map((d) => ({
+      ...d,
+      id: d._id.toString(),
+    })) as unknown as WithdrawalRequest[];
+    return { items, total };
+  }
+
+  async findOneAndUpdate(
+    filter: QueryFilter<WithdrawalRequest>,
+    update: UpdateQuery<WithdrawalRequest>,
+    session?: ClientSession,
+  ): Promise<WithdrawalRequest | null> {
+    return this._model
+      .findOneAndUpdate(filter, update, { new: true })
+      .lean()
+      .exec() as any;
+  }
 }

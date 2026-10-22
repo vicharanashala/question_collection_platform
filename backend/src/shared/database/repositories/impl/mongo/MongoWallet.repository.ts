@@ -3,8 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { IWalletRepository } from '../../IWallet.repository';
-import { Wallet } from '../../../entities';
+// import { Wallet } from '../../../entities';
 import { toMongoFilter } from '../../../abstractions/mongo-utils';
+import { Wallet } from '@/shared/database/mongodb/schemas/wallet.schema';
 
 @Injectable()
 export class MongoWalletRepository

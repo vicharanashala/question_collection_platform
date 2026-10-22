@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { INotificationRepository } from '../../INotification.repository';
-import { Notification } from '../../../entities';
-
+// import { Notification } from '../../../entities';
+import { Notification } from '@/shared/database/mongodb/schemas/notification.schema';
 @Injectable()
 export class MongoNotificationRepository
   extends MongoRepository<Notification>

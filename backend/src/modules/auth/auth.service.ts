@@ -14,7 +14,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { randomInt } from "crypto";
 import * as bcrypt from "bcryptjs";
-import { User, Wallet, AuditLog } from "../../shared/database/entities";
+// import { User, Wallet, AuditLog } from "../../shared/database/entities";
 import {
   UserCategory,
   VerificationStatus,
@@ -38,7 +38,8 @@ import {
   IAnveshanCandidateRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
-
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Types } from "mongoose";
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -67,7 +68,7 @@ export interface AuthResponse {
 
 export interface PublicUser {
   id: string;
-  mobileNumber: string;
+  mobileNumber: string | null;
   name: string;
   category: UserCategory | null;
   state: string;
@@ -227,7 +228,7 @@ export class AuthService {
         user.suspendedUntil &&
         new Date() > new Date(user.suspendedUntil)
       ) {
-        await this.userRepo.update(user.id, {
+        await this.userRepo.update(user._id, {
           verificationStatus: VerificationStatus.VERIFIED,
           suspendedAt: null,
           suspendedUntil: null,
@@ -260,7 +261,7 @@ export class AuthService {
       user.otpExpiresAt = expiresAt;
     }
 
-    await this.userRepo.update(user.id, { otpHash, otpExpiresAt: expiresAt });
+    await this.userRepo.update(user._id, { otpHash, otpExpiresAt: expiresAt });
 
     // Increment rate-limit counter
     if (otpRateLimitEnabled) {
@@ -309,7 +310,7 @@ export class AuthService {
       (this.configService.get<boolean>("app.otpDevBypass") ?? false) &&
       isDevelopment();
     let user = await this.userRepo.findOne({ where: { mobileNumber } });
-
+    this.logger.debug(`The user is ${JSON.stringify(user)}`);
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -320,7 +321,7 @@ export class AuthService {
       user.suspendedUntil &&
       new Date() > new Date(user.suspendedUntil)
     ) {
-      await this.userRepo.update(user.id, {
+      await this.userRepo.update(user._id, {
         verificationStatus: VerificationStatus.VERIFIED,
         suspendedAt: null,
         suspendedUntil: null,
@@ -348,6 +349,14 @@ export class AuthService {
         bannedAt: user.bannedAt,
       });
     }
+
+    this.logger.debug(`verifyOtp lookup: ${mobileNumber} -> ${user?.mobileNumber}`);
+
+    this.logger.debug(
+  `verifyOtp user=${user._id} hasHash=${!!user.otpHash} expires=${user.otpExpiresAt}`,
+);
+
+this.logger.debug(`keys=${Object.keys(user).join(',')} id=${(user as any).id} _id=${(user as any)._id}`);
 
     if (!bypassOtpChecks && (!user.otpHash || !user.otpExpiresAt)) {
       throw new UnauthorizedException("No OTP was requested for this number");
@@ -388,13 +397,13 @@ let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
 
 if (anveshanCandidate) {
   const eligible = anveshanCandidate.current_phase === REQUIRED_ANVESHAN_PHASE;
-  const progressByUser = await this.anveshanProgressService.getProgressForUsers([user.id]);
+  const progressByUser = await this.anveshanProgressService.getProgressForUsers([user._id.toString()]);
   anveshanPhaseInfo = {
     isAnveshanUser: true,
     currentPhase: anveshanCandidate.current_phase as string,
     requiredPhase: REQUIRED_ANVESHAN_PHASE,
     eligible,
-    questionProgressPercent: progressByUser.get(user.id)?.percent ?? 0,
+    questionProgressPercent: progressByUser.get(user._id.toString())?.percent ?? 0,
   };
 
   if (eligible) {
@@ -416,7 +425,7 @@ if (anveshanCandidate) {
       updates.district = anveshanCandidate.district;
     }
 
-    await this.userRepo.update(user.id, updates);
+    await this.userRepo.update(user._id, updates);
     user = { ...user, ...updates } as User;
   } else {
     // Flag them as an Anveshan user for tracking, but withhold verification
@@ -425,7 +434,7 @@ if (anveshanCandidate) {
       isAnveshanUser: true,
       category: UserCategory.ANVESHAN_USER,
     };
-    await this.userRepo.update(user.id, updates);
+    await this.userRepo.update(user._id, updates);
     user = { ...user, ...updates } as User;
   }
 }
@@ -435,7 +444,7 @@ const isRegistered = user.name && user.name.trim().length > 0;
 
 if (!isRegistered) {
   const tempToken = this.jwtService.sign(
-    { sub: user.id, mobileNumber, type: "registration" },
+    { sub: user._id.toString(), mobileNumber, type: "registration" },
     { expiresIn: "1h" },
   );
   return { requiresRegistration: true, tempToken, role: user.role, anveshanPhaseInfo };
@@ -445,10 +454,10 @@ if (!isRegistered) {
 user.lastLoginAt = new Date();
 await this.userRepo.save(user);
 
-const walletExists = await this.walletRepo.count({ where: { userId: user.id } });
+const walletExists = await this.walletRepo.count({ where: { userId: user._id.toString() } });
 if (walletExists === 0) {
   await this.walletRepo.save(
-    await this.walletRepo.create({ userId: user.id, balance: 0, currency: "INR" }),
+    await this.walletRepo.create({ userId: user._id.toString(), balance: 0, currency: "INR" }),
   );
 }
 
@@ -464,8 +473,8 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
    */
   async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
     const isDev = isDevelopment();
-
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const objectId = new Types.ObjectId(userId)
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -624,7 +633,7 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
     const tokenVersion = user.tokenVersion;
 
     const payload = {
-      sub: user.id,
+      sub: user._id.toString(),
       mobileNumber: user.mobileNumber,
       role: user.role,
       tokenVersion,
@@ -664,7 +673,7 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
         user.suspendedUntil &&
         new Date() > new Date(user.suspendedUntil)
       ) {
-        await this.userRepo.update(user.id, {
+        await this.userRepo.update(user._id, {
           verificationStatus: VerificationStatus.VERIFIED,
           suspendedAt: null,
           suspendedUntil: null,
@@ -783,12 +792,12 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
         where: { username },
         select: ["id"],
       });
-      if (existing && existing.id !== user.id)
+      if (existing && existing._id.toString() !== user._id.toString())
         throw new BadRequestException("That username is already taken.");
       if (user.username && user.username !== username)
         await this.redisService.del(usernameKey(user.username));
       user.username = username;
-      await this.syncUsernameToRedis(username, user.id);
+      await this.syncUsernameToRedis(username, user._id.toString());
     }
 
     // Only assign fields that were explicitly provided (not undefined)
@@ -867,12 +876,12 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
     // Cache miss → check DB (username col is unique, so an exact match means taken)
     const existing = await this.userRepo.findOne({
       where: { username: normalized },
-      select: ["id"],
+      select: ["_id"],
     });
 
     if (existing) {
       // Populate Redis so subsequent requests are fast
-      await this.syncUsernameToRedis(normalized, existing.id);
+      await this.syncUsernameToRedis(normalized, existing._id.toString());
       const suggestions = await this.suggestUsernames(normalized, 5);
       return { available: false, suggestions };
     }
@@ -941,7 +950,7 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
 
   private toPublicUser(user: User): PublicUser {
     return {
-      id: user.id,
+      id: user._id.toString(),
       mobileNumber: user.mobileNumber,
       username: user.username ?? null,
       name: user.name,

@@ -53,6 +53,7 @@ import {
 } from "@/shared/middleware/decorators/request-meta.decorator";
 import { AuditLogDto } from "../audit-logs/dto/audit_log-dto";
 import { UserService } from "../user/user.service";
+import { Types } from "mongoose";
 
 type AuditLogPayload = Parameters<AuditService["createAuditLog"]>[0];
 
@@ -244,7 +245,8 @@ export class AdminController {
     @ReqMeta() meta: RequestMeta,
   ) {
     const role = req.user.role as UserRole;
-    const user = await this.userService.getProfile(id);
+    const objectId = new Types.ObjectId(id);
+    const user = await this.userService.getProfile(objectId);
     const base: AuditLogDto = {
       actionType:
         user.verificationStatus === "suspended"

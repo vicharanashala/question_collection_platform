@@ -7,11 +7,13 @@ import {
   ITransactionRepository,
   RewardAnalyticsResult,
   RewardTransactionSummary,
+  TransactionBySourceOptions,
+  TransactionListOptions,
   WalletTransactionSummary,
 } from '../../ITransaction.repository';
-import { Transaction } from '../../../entities';
+// import { Transaction } from '../../../entities';
 import { TransactionSource, TransactionStatus, TransactionType } from '@/shared/classes/enums';
-
+import { Transaction } from '@/shared/database/mongodb/schemas/transaction.schema';
 @Injectable()
 export class MongoTransactionRepository
   extends MongoRepository<Transaction>
@@ -288,4 +290,120 @@ export class MongoTransactionRepository
       ])
       .exec();
   }
+
+  async findPaginatedByWalletId(
+  walletId: string,
+  page: number,
+  limit: number,
+  options: TransactionListOptions = {},
+): Promise<{ items: Transaction[]; total: number }> {
+  const {
+    type, status, source, fromDate, toDate,
+    sortBy = 'createdAt', sortOrder = 'DESC', select,
+  } = options;
+
+  const filter: Record<string, unknown> = { walletId };
+  if (type) filter.type = type;
+  if (status) filter.status = status;
+  if (source) filter.source = source;
+  if (fromDate || toDate) {
+    filter.createdAt = {
+      ...(fromDate && { $gte: fromDate }),
+      ...(toDate && { $lte: toDate }),
+    };
+  }
+
+  const dir = sortOrder === 'ASC' ? 1 : -1;
+  // _id as a tiebreaker keeps pagination stable when many rows share the same value
+  const sort: Record<string, 1 | -1> = { [sortBy]: dir, _id: dir };
+
+  let query = this._model.find(filter);
+  if (select) query = query.select(select);
+
+  const [docs, total] = await Promise.all([
+    query.sort(sort).skip((page - 1) * limit).limit(limit).lean().exec(),
+    this._model.countDocuments(filter).exec(),
+  ]);
+
+  const items = docs.map((d) => ({ ...d, id: d._id.toString() })) as unknown as Transaction[];
+  return { items, total };
+}
+
+async getEarnedAndWithdrawn(
+  walletId: string,
+): Promise<{ totalEarned: number; totalWithdrawn: number }> {
+  const [result] = await this._model.aggregate([
+    {
+      $match: {
+        // use new Types.ObjectId(walletId) here if the schema stores walletId as ObjectId
+        walletId,
+        status: TransactionStatus.COMPLETED,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalEarned: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $eq: ['$type', TransactionType.CREDIT] },
+                  { $in: ['$source', [TransactionSource.REWARD, TransactionSource.REFUND]] },
+                ],
+              },
+              '$amount',
+              0,
+            ],
+          },
+        },
+        totalWithdrawn: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $eq: ['$type', TransactionType.DEBIT] },
+                  { $eq: ['$source', TransactionSource.WITHDRAWAL] },
+                ],
+              },
+              '$amount',
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+
+  return {
+    totalEarned: Number(result?.totalEarned ?? 0),
+    totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
+  };
+}
+
+async findBySource(
+  source: string,
+  options: TransactionBySourceOptions,
+): Promise<Transaction[]> {
+  const { fromDate, toDate, walletIds, limit = 100, select } = options;
+
+  const filter: Record<string, unknown> = {
+    source,
+    createdAt: { $gte: fromDate, $lte: toDate }, // BETWEEN is inclusive
+  };
+  if (walletIds) filter.walletId = { $in: walletIds };
+
+  let query = this._model.find(filter);
+  if (select) query = query.select(select);
+
+  const docs = await query
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(limit)
+    .lean()
+    .exec();
+
+  return docs.map((d) => ({ ...d, id: d._id.toString() })) as unknown as Transaction[];
+}
+
+
 }

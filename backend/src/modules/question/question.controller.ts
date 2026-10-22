@@ -32,6 +32,7 @@ import { AuditLog } from '@/shared/database/mongodb/schemas/audit-log.schema';
 import { AuditService } from '../audit-logs/audit.service';
 import { AuditLogDto } from '../audit-logs/dto/audit_log-dto';
 import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
+import { Types } from 'mongoose';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string; name: string; email: string };
@@ -117,8 +118,9 @@ export class QuestionController {
 @Get('stats/me')
 @Cacheable('question_stats', 60)
 async getMyStats(@Req() req: AuthenticatedRequest) {
+  const objectId = new Types.ObjectId(req.user.id);
   const [user, dailyCount, limits, totalApproved] = await Promise.all([
-    this.userService.getProfile(req.user.id),
+    this.userService.getProfile(objectId),
     this.questionService.getDailyCount(req.user.id),
     this.questionService.getLimits(),
     this.questionService.getApprovedCount(req.user.id),

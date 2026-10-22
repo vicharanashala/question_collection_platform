@@ -24,6 +24,7 @@ import {
   ANVESHAN_SCORE_MISSING_GRACE_MS,
   isAnswerScoringEnabled,
 } from '../../shared/constants/anveshan.constant';
+import { Types } from 'mongoose';
 
 
 export interface AnveshanMilestone {
@@ -287,7 +288,8 @@ export class AnveshanMilestoneService {
 
   // Loads counts and eligible questions once, so callers share a single consistent snapshot.
   private async buildMilestone(userId: string) {
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId);
+    const user = await this.userService.getProfile(objectId);
     if (!user?.isAnveshanUser) {
       throw new ForbiddenException('This milestone is only available to Anveshan users.');
     }

@@ -32,7 +32,7 @@ export class FeedbacksService {
 
     const userIds = [...new Set(data.map((feedback) => feedback.userId))];
     const users = userIds.length ? await this.userRepo.find({ id: { $in: userIds } }) : [];
-    const usersById = new Map(users.map((user) => [user.id, user]));
+    const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
     return {
       items: data.map((feedback) => {
@@ -43,7 +43,7 @@ export class FeedbacksService {
           comment: feedback.comment,
           inputMethod: feedback.inputMethod,
           createdAt: feedback.createdAt,
-          user: user ? { id: user.id, name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district } : null,
+          user: user ? { id: user._id.toString(), name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district } : null,
         };
       }),
       total,

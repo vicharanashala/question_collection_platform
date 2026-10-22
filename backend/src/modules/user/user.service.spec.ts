@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource, Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User, AuditLog } from '../../shared/database/entities';
+// import { User, AuditLog } from '../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { User } from '@/shared/database/mongodb/schemas/user.schema';
 import {
   UserCategory,
   VerificationStatus,
@@ -25,8 +26,11 @@ const mockDataSource = () => ({
   createQueryRunner: jest.fn(),
 });
 
+const userId = '507f1f77bcf86cd799439011' as unknown as User['_id'];
+const nonexistentUserId = '507f1f77bcf86cd799439012' as unknown as User['_id'];
+
 const mockUser: Partial<User> = {
-  id: 'user-uuid-1',
+  _id: userId,
   mobileNumber: '+919876543210',
   name: 'Ramesh Kumar',
   role: UserRole.USER,
@@ -67,16 +71,16 @@ describe('UserService', () => {
     it('should return the user when found', async () => {
       userRepo.findOne.mockResolvedValue(mockUser);
 
-      const result = await service.getProfile('user-uuid-1');
+      const result = await service.getProfile(userId);
 
       expect(result).toEqual(mockUser);
-      expect(userRepo.findOne).toHaveBeenCalledWith({ where: { id: 'user-uuid-1' } });
+      expect(userRepo.findOne).toHaveBeenCalledWith({ where: { id: userId } });
     });
 
     it('should throw NotFoundException when user not found', async () => {
       userRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getProfile('nonexistent-id')).rejects.toThrow(
+      await expect(service.getProfile(nonexistentUserId)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -89,7 +93,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.updateProfile('nonexistent-id', { name: 'New Name' }),
+        service.updateProfile(nonexistentUserId, { name: 'New Name' }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -98,7 +102,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(mutableUser);
       userRepo.save.mockImplementation((u) => u);
 
-      const result = await service.updateProfile('user-uuid-1', {
+      const result = await service.updateProfile(userId, {
         name: 'Suresh Kumar',
         state: 'Karnataka',
       });
@@ -112,7 +116,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(mutableUser);
       userRepo.save.mockImplementation((u) => u);
 
-      const result = await service.updateProfile('user-uuid-1', {
+      const result = await service.updateProfile(userId, {
         crops: ['Wheat', 'Rice'],
       });
 
@@ -126,7 +130,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(mutableUser);
       userRepo.save.mockResolvedValue(mutableUser);
 
-      await service.updateProfile('user-uuid-1', {});
+      await service.updateProfile(userId, {});
 
       expect(userRepo.save).toHaveBeenCalled();
     });
@@ -136,7 +140,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(mutableUser);
       userRepo.save.mockImplementation((u) => u);
 
-      await service.updateProfile('user-uuid-1', {
+      await service.updateProfile(userId, {
         state: 'Gujarat',
       });
 
@@ -153,7 +157,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.updateCropDetails('nonexistent-id', { crops: [] }),
+        service.updateCropDetails(nonexistentUserId, { crops: [] }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -162,7 +166,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(mutableUser);
       userRepo.save.mockImplementation((u) => u);
 
-      const result = await service.updateCropDetails('user-uuid-1', {
+      const result = await service.updateCropDetails(userId, {
         crops: ['Soybean', 'Cotton'],
       });
 
@@ -176,7 +180,7 @@ describe('UserService', () => {
       userRepo.findOne.mockResolvedValue(mutableUser);
       userRepo.save.mockImplementation((u) => u);
 
-      const result = await service.updateCropDetails('user-uuid-1', { crops: [] });
+      const result = await service.updateCropDetails(userId, { crops: [] });
 
       expect(result).toEqual([]);
     });

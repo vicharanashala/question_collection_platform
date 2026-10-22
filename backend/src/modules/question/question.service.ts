@@ -31,6 +31,7 @@ import {
   INotificationRepository,
 } from '../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class QuestionService {
@@ -395,7 +396,8 @@ export class QuestionService {
 
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
     // 0. User must be verified and location must be set in profile
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId);
+    const user = await this.userService.getProfile(objectId);
     if (!user) throw new NotFoundException('User not found');
     if (!user.state || !user.district) {
       throw new BadRequestException(
@@ -858,7 +860,8 @@ export class QuestionService {
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
     // 1. Load user profile for location
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId)
+    const user = await this.userService.getProfile(objectId);
     if (!user) throw new NotFoundException('User not found');
 
     const { state, district, block } = user;
