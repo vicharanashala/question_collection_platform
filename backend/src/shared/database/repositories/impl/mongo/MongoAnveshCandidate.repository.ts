@@ -12,10 +12,12 @@ export class MongoAnveshCandidateRepository extends MongoRepository<Candidate> i
         super(_model)
     }
 
-    // Finds the candidate by phone, ignoring soft deleted records.
+    // Finds the latest candidate by phone, ignoring soft deleted records.
+    // A phone can have multiple documents (summary and module), so the newest one wins.
     async findByPhone(phone: string): Promise<Candidate | null> {
         const user =  await this._model
         .findOne({ phone, is_deleted: { $ne: true } } as Record<string, unknown>)
+        .sort({ created_at: -1 })
         .exec()
         return user
     }
