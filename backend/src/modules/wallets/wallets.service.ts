@@ -7,8 +7,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Wallet, Transaction, WithdrawalRequest, User } from '../../shared/database/entities';
-import { UserPaymentDetail } from '../../shared/database/entities/user-payment-detail.entity';
+// import { Wallet, Transaction, WithdrawalRequest, User } from '../../shared/database/entities';
+// import { UserPaymentDetail } from '../../shared/database/entities/user-payment-detail.entity';
 import {
   TransactionType,
   TransactionSource,
@@ -31,7 +31,11 @@ import {
 } from '../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { MongoTransactionService } from '../../shared/database/mongodb/mongo-transaction.service';
-
+import { WithdrawalRequest } from '@/shared/database/mongodb/schemas/withdrawal-request.schema';
+import { Wallet } from '@/shared/database/mongodb/schemas/wallet.schema';
+import { Transaction } from '@/shared/database/mongodb/schemas/transaction.schema';
+import { Types } from 'mongoose';
+import { UserPaymentDetail } from '@/shared/database/mongodb/schemas/user-payment-detail.schema';
 // Reward tiers based on approved question count (per TASK_06)
 // Tier 1:  1–25  approved → ₹1  (stored as maxApproved=26 → condition: count < 26)
 // Tier 2: 26–250 approved → ₹5  (stored as maxApproved=251 → condition: count < 251)
@@ -127,10 +131,10 @@ export class WalletsService {
     return this.mongoTransactionService.runInTransaction(async (session) => {
       // Atomic $inc on the wallet document — returns the post-increment balance
       // so the transaction log always records a consistent balanceAfter.
-      const updatedBalance = await this.walletRepo.incrementBalance(wallet.id, rewardAmount, session);
+      const updatedBalance = await this.walletRepo.incrementBalance(wallet._id.toString(), rewardAmount, session);
 
       const savedTx = await this.transactionRepo.save({
-        walletId: wallet.id,
+        walletId: wallet._id.toString(),
         type: TransactionType.CREDIT,
         source: TransactionSource.REWARD,
         amount: rewardAmount,
@@ -190,7 +194,7 @@ export class WalletsService {
     const skip = (page - 1) * limit;
 
     const { data: items, total } = await this.transactionRepo.findAndCount(
-      { walletId: wallet.id },
+      { walletId: wallet._id.toString() },
       { pagination: { page, limit, sort: { createdAt: -1 } } },
     );
 
@@ -200,36 +204,56 @@ export class WalletsService {
   async getWithdrawal(userId: string, withdrawalId: string) {
     const wallet = await this.walletRepo.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
-
+    const objectId = new Types.ObjectId(withdrawalId);
     const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId, walletId: wallet.id },
+      where: { id: objectId, walletId: wallet._id.toString() },
     });
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
 
     return withdrawal;
   }
 
+  // async getWithdrawals(
+  //   userId: string,
+  //   params?: { page?: number; limit?: number },
+  // ): Promise<{ items: WithdrawalRequest[]; total: number; page: number; limit: number; pages: number }> {
+  //   const wallet = await this.walletRepo.findOne({ where: { userId } });
+  //   if (!wallet) throw new NotFoundException('Wallet not found');
+
+  //   const page = Math.max(1, params?.page ?? 1);
+  //   const limit = Math.min(50, Math.max(1, params?.limit ?? 20));
+
+  //   const qb = this.withdrawalRepo
+  //     .createQueryBuilder('wr')
+  //     .where('wr.walletId = :walletId', { walletId: wallet.id })
+  //     .select(['wr.id', 'wr.amount', 'wr.payoutMethod', 'wr.payoutDetails', 'wr.status', 'wr.rejectionReason', 'wr.processedAt', 'wr.createdAt', 'wr.cancelledAt', 'wr.utrNumber', 'wr.razorpayPayoutId'])
+  //     .orderBy('wr.createdAt', 'DESC')
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   const [items, total] = await qb.getManyAndCount();
+  //   return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  // }
+
   async getWithdrawals(
-    userId: string,
-    params?: { page?: number; limit?: number },
-  ): Promise<{ items: WithdrawalRequest[]; total: number; page: number; limit: number; pages: number }> {
-    const wallet = await this.walletRepo.findOne({ where: { userId } });
-    if (!wallet) throw new NotFoundException('Wallet not found');
+  userId: string,
+  params?: { page?: number; limit?: number },
+) {
+  // Mongo-style filter: no `where` wrapper
+  const wallet = await this.walletRepo.findOne({ userId });
+  if (!wallet) throw new NotFoundException('Wallet not found');
 
-    const page = Math.max(1, params?.page ?? 1);
-    const limit = Math.min(50, Math.max(1, params?.limit ?? 20));
+  const page = Math.max(1, params?.page ?? 1);
+  const limit = Math.min(50, Math.max(1, params?.limit ?? 20));
 
-    const qb = this.withdrawalRepo
-      .createQueryBuilder('wr')
-      .where('wr.walletId = :walletId', { walletId: wallet.id })
-      .select(['wr.id', 'wr.amount', 'wr.payoutMethod', 'wr.payoutDetails', 'wr.status', 'wr.rejectionReason', 'wr.processedAt', 'wr.createdAt', 'wr.cancelledAt', 'wr.utrNumber', 'wr.razorpayPayoutId'])
-      .orderBy('wr.createdAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+  const { items, total } = await this.withdrawalRepo.findPaginatedByWalletId(
+    wallet._id.toString(),
+    page,
+    limit,
+  );
 
-    const [items, total] = await qb.getManyAndCount();
-    return { items, total, page, limit, pages: Math.ceil(total / limit) };
-  }
+  return { items, total, page, limit, pages: Math.ceil(total / limit) };
+}
 
   /**
    * Request a withdrawal.
@@ -296,17 +320,17 @@ export class WalletsService {
 
     // Re-check balance immediately before deducting to narrow the race window,
     // then apply the debit atomically via $inc.
-    const fresh = await this.walletRepo.findOne({ where: { id: wallet.id } });
+    const fresh = await this.walletRepo.findOne({ where: { _id: wallet._id } });
     if (!fresh || Number(fresh.balance) < dto.amount) {
       throw new BadRequestException('Insufficient wallet balance.');
     }
 
     return this.mongoTransactionService.runInTransaction(async (session) => {
-      const newBalance = await this.walletRepo.incrementBalance(wallet.id, -dto.amount, session);
+      const newBalance = await this.walletRepo.incrementBalance(wallet._id.toString(), -dto.amount, session);
 
       const saved = await this.withdrawalRepo.save({
         userId,
-        walletId: wallet.id,
+        walletId: wallet._id.toString(),
         amount: dto.amount,
         payoutMethod: paymentDetail.payoutMethod,
         payoutDetails,
@@ -314,12 +338,12 @@ export class WalletsService {
       }, session);
 
       await this.transactionRepo.save({
-        walletId: wallet.id,
+        walletId: wallet._id.toString(),
         type: TransactionType.DEBIT,
         source: TransactionSource.WITHDRAWAL,
         amount: dto.amount,
         balanceAfter: newBalance,
-        referenceId: saved.id,
+        referenceId: saved._id.toString(),
         description: `Withdrawal request — ${paymentDetail.payoutMethod}`,
         status: TransactionStatus.PENDING,
       }, session);
@@ -336,8 +360,9 @@ export class WalletsService {
     userId: string,
     withdrawalId: string,
   ): Promise<WithdrawalRequest> {
+    const objectid = new Types.ObjectId(withdrawalId)
     const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
+      where: { _id: objectid },
     });
 
     if (!withdrawal) {
@@ -363,7 +388,7 @@ export class WalletsService {
         cancelledAt: new Date(),
       }, session);
 
-      await this.walletRepo.incrementBalance(wallet.id, Number(withdrawal.amount), session);
+      await this.walletRepo.incrementBalance(wallet._id.toString(), Number(withdrawal.amount), session);
 
       // Update the original debit transaction to reversed status
       await this.transactionRepo.updateMany(
@@ -375,7 +400,7 @@ export class WalletsService {
 
     // Reload to return updated entity
     const cancelled = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
+      where: { _id: withdrawalId },
     });
     if (!cancelled) throw new NotFoundException('Withdrawal request not found.');
     return cancelled;
@@ -394,7 +419,8 @@ export class WalletsService {
     withdrawalId: string,
     payoutId: string,
   ): Promise<Wallet> {
-    const wallet = await this.walletRepo.findOne({ where: { id: walletId } });
+    const objectId = new Types.ObjectId(walletId);
+    const wallet = await this.walletRepo.findOne({ where: { _id: objectId } });
     if (!wallet) {
       throw new NotFoundException('Wallet not found for reversed payout credit');
     }
@@ -427,7 +453,7 @@ export class WalletsService {
         `[Reversal] ₹${amount} credited to wallet ${walletId} | withdrawal=${withdrawalId} | payout=${payoutId}`,
       );
 
-      const updated = await this.walletRepo.findOne({ where: { id: walletId } });
+      const updated = await this.walletRepo.findOne({ where: { _id: objectId } });
       return updated ?? wallet;
     } catch (err) {
       this.logger.error(`[Reversal] Failed to credit wallet ${walletId}: ${err.message}`);
@@ -518,12 +544,12 @@ export class WalletsService {
       const validationResult = await this.razorpayPayoutService.validateFundAccount({
         fundAccountId: fundAccountResult.fundAccountId,
         contactId: contactResult.contactId,
-        paymentDetailId: saved.id,
+        paymentDetailId: saved._id.toString(),
         userPhone,
       });
 
       // Persist IDs on the payment detail record
-      await this.paymentDetailRepo.update(saved.id, {
+      await this.paymentDetailRepo.update(saved._id, {
         razorpayFundAccountId: fundAccountResult.fundAccountId,
         razorpayValidationId: validationResult.validationId,
       });
@@ -531,12 +557,12 @@ export class WalletsService {
       // Step 4: For VPAs, Razorpay may return status=completed synchronously.
       // If so, mark the detail verified immediately instead of waiting for a webhook.
       if (validationResult.status === 'completed') {
-        await this.paymentDetailRepo.update(saved.id, {
+        await this.paymentDetailRepo.update(saved._id, {
           status: 'verified',
           verifiedAt: new Date(),
         });
         return {
-          id: saved.id,
+          id: saved._id.toString(),
           status: 'verified',
           message:
             `Your ${dto.payoutMethod === 'upi' ? 'UPI ID' : 'bank account'} has been verified successfully.`,
@@ -544,7 +570,7 @@ export class WalletsService {
       }
 
       return {
-        id: saved.id,
+        id: saved._id.toString(),
         status: 'in_progress',
         message:
           `Your ${dto.payoutMethod === 'upi' ? 'UPI ID' : 'bank account'} is being verified. ` +
@@ -552,7 +578,7 @@ export class WalletsService {
       };
     } catch (err: any) {
       // Clean up the payment detail if we couldn't initiate validation
-      await this.paymentDetailRepo.delete(saved.id);
+      await this.paymentDetailRepo.delete(saved._id.toString());
       this.logger.error(`[addPaymentDetail] Fund account validation failed: ${err.message}`);
       throw new BadRequestException(
         'Could not initiate account verification. Please check your details and try again.',
@@ -567,7 +593,7 @@ export class WalletsService {
     });
 
     return details.map((d) => ({
-      id: d.id,
+      id: d._id.toString(),
       payoutMethod: d.payoutMethod as 'upi' | 'bank_transfer',
       status: d.status as 'pending' | 'in_progress' | 'verified' | 'failed',
       displayValue:
@@ -666,7 +692,7 @@ export class WalletsService {
       const validationDetail = await this.paymentDetailRepo.findOne({
         where: { razorpayValidationId: params.orderId },
       });
-      paymentDetailId = validationDetail?.id ?? null;
+      paymentDetailId = validationDetail?._id.toString() ?? null;
     }
     // else: PineLabs or other — try by verificationOrderId below
 
@@ -686,7 +712,7 @@ export class WalletsService {
 
     if (params.success) {
       // Mark verified
-      await this.paymentDetailRepo.update(detail.id, {
+      await this.paymentDetailRepo.update(detail._id, {
         status: 'verified',
         verifiedAt: new Date(),
       });
@@ -700,11 +726,11 @@ export class WalletsService {
         if (wallet) {
           try {
             await this.mongoTransactionService.runInTransaction(async (session) => {
-              const newBalance = await this.walletRepo.incrementBalance(wallet.id, 1, session);
+              const newBalance = await this.walletRepo.incrementBalance(wallet._id.toString(), 1, session);
 
               // Credit refund transaction
               await this.transactionRepo.save({
-                walletId: wallet.id,
+                walletId: wallet._id.toString(),
                 type: TransactionType.CREDIT,
                 source: TransactionSource.REFUND,
                 amount: 1,
@@ -727,10 +753,10 @@ export class WalletsService {
         }
       }
 
-    this.logger.log(`[Verification] Payment detail verified | detailId=${detail.id} | orderId=${params.orderId}`);
+    this.logger.log(`[Verification] Payment detail verified | detailId=${detail._id.toString()} | orderId=${params.orderId}`);
   } else {
     // Mark failed
-    await this.paymentDetailRepo.update(detail.id, {
+    await this.paymentDetailRepo.update(detail._id, {
       status: 'failed',
       verificationFailedReason: [params.errorCode, params.errorMessage].filter(Boolean).join(': '),
     });
@@ -743,7 +769,7 @@ export class WalletsService {
       );
     }
 
-    this.logger.warn(`[Verification] Payment detail failed | detailId=${detail.id} | code=${params.errorCode} | msg=${params.errorMessage}`);
+    this.logger.warn(`[Verification] Payment detail failed | detailId=${detail._id.toString()} | code=${params.errorCode} | msg=${params.errorMessage}`);
   }
 }
 
@@ -804,13 +830,13 @@ export class WalletsService {
     }
 
     // Mark verified
-    await this.paymentDetailRepo.update(detail.id, {
+    await this.paymentDetailRepo.update(detail._id, {
       status: 'verified',
       verifiedAt: new Date(),
     });
 
     this.logger.log(
-      `[Razorpay Verification] Payment detail verified via SDK | detailId=${detail.id} | paymentId=${razorpayPaymentId}`,
+      `[Razorpay Verification] Payment detail verified via SDK | detailId=${detail._id.toString()} | paymentId=${razorpayPaymentId}`,
     );
 
     return { success: true, message: 'Payment verified successfully' };

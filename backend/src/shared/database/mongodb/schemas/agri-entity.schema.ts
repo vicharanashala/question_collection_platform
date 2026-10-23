@@ -49,6 +49,12 @@ export class AgriEntity {
   @Prop({ name: 'submissionLocation', type: SubmissionLocation, default: null })
   submissionLocation: SubmissionLocation | null;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   @Prop({ name: 'createdAt' })
   createdAt: Date;
 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authApi } from '@/api/client'
-import { accountLockedEmitter } from '@/events/accountLockedEvents'
+import { accountLockedEmitter, sessionExpiredEmitter } from '@/events/accountLockedEvents'
+
 import { clearProfileDraft } from '@/utils/profileDraft'
 import type { AuthUser } from '@/types'
 
@@ -79,19 +80,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
   }, [logout])
 
+  useEffect(() => {
+  return sessionExpiredEmitter.on(() => logout())
+}, [logout])
+
   // Heartbeat: probe /auth/me every 30s so bans are detected even during idle
   useEffect(() => {
     if (!token) return
-    const interval = setInterval(async () => {
-      try {
-        await authApi.me()
-      } catch (e: any) {
-        if (e?.response?.status === 423) {
-          accountLockedEmitter.emit(e.response.data)
-          logout()
-        }
-      }
-    }, 30_000)
+const interval = setInterval(async () => {
+  try {
+    await authApi.me()
+  } catch (e: any) {
+    if (e?.status === 423) {
+      accountLockedEmitter.emit(e.data)
+      logout()
+    }
+  }
+}, 30_000)
     return () => clearInterval(interval)
   }, [token, logout])
 

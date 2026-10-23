@@ -4,7 +4,8 @@ import { Model, PipelineStage, Types } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { toObjectIdOrNull } from '../../../abstractions/mongo-utils';
 import { IFinalQuestionRepository } from '../../IFinalQuestion.repository';
-import { FinalQuestion } from '../../../entities';
+// import { FinalQuestion } from '../../../entities';
+import { FinalQuestion } from '@/shared/database/mongodb/schemas/final-question.schema';
 
 @Injectable()
 export class MongoFinalQuestionRepository

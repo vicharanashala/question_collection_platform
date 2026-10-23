@@ -11,7 +11,7 @@ export interface IAnveshanCandidateRepository extends BaseRepository<Candidate> 
 
   // findByUserId(userId: string): Promise<Candidate | null>;
 
-  findByPhone(phone: string): Promise<Candidate | null>;
+  findByPhone(phone: string | null): Promise<Candidate | null>;
   
   // findByIds(
   //   ids: ReadonlyArray<string | Types.ObjectId | null | undefined>,

@@ -9,7 +9,7 @@ import { SmsService } from './sms.service';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { RateLimitCounterService } from '../../shared/database/cache/rate-limit-counter.service';
 import { AdminService } from '../admin/admin.service';
-import { User, Wallet, AuditLog } from '../../shared/database/entities';
+// import { User, Wallet, AuditLog } from '../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import {
   UserCategory,
@@ -17,6 +17,9 @@ import {
   UserRole,
   ActorType,
 } from '../../shared/classes/enums';
+
+import { User } from '@/shared/database/mongodb/schemas/user.schema';
+import { Types } from 'mongoose';
 
 const mockUserRepo = () => ({
   findOne: jest.fn(),
@@ -86,7 +89,7 @@ describe('AuthService', () => {
 
   // Factory functions to avoid mutation across tests
   const makeMockUser = (): Partial<User> => ({
-    id: 'user-uuid-1',
+    _id: new Types.ObjectId,
     mobileNumber: '+919876543210',
     name: '',
     role: UserRole.USER,
@@ -289,7 +292,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('requiresRegistration', true);
       expect(result).toHaveProperty('tempToken');
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: newUser.id, mobileNumber: '9876543210', type: 'registration' },
+        { sub: newUser._id, mobileNumber: '9876543210', type: 'registration' },
         { expiresIn: '15m' },
       );
     });

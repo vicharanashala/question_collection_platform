@@ -34,6 +34,12 @@ export class Notification {
   @Prop({ name: 'isRead', default: false, index: true })
   isRead: boolean;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   @Prop({ name: 'createdAt' })
   createdAt: Date;
 

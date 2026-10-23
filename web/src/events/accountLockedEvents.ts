@@ -19,6 +19,8 @@ export const accountLockedEmitter = {
   },
 }
 
+
+
 export function parseAccountLocked(body: unknown): AccountLockedInfo | null {
   if (!body || typeof body !== 'object') return null
   const b = body as Record<string, unknown>
@@ -31,4 +33,25 @@ export function parseAccountLocked(body: unknown): AccountLockedInfo | null {
     bannedAt: typeof b.bannedAt === 'string' ? b.bannedAt : null,
     suspendedUntil: typeof b.suspendedUntil === 'string' ? b.suspendedUntil : null,
   }
+}
+
+type SessionListener = () => void
+const sessionListeners = new Set<SessionListener>()
+
+export const sessionExpiredEmitter = {
+  on(listener: SessionListener) {
+    sessionListeners.add(listener)
+    return () => { sessionListeners.delete(listener) }
+  },
+  emit() {
+    sessionListeners.forEach((l) => l())
+  },
+}
+
+let ending = false // parallel requests can all get a 401 at once
+export function endSession() {
+  if (ending) return
+  ending = true
+  sessionExpiredEmitter.emit()
+  setTimeout(() => { ending = false }, 1000)
 }

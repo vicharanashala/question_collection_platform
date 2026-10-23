@@ -22,5 +22,5 @@ export function userIdTesterCondition(tester: TesterFilter | undefined, testerId
 // Ids of every tester user. Testers are few, so one small query per request is enough.
 export async function findTesterUserIds(userRepo: IUserRepository): Promise<string[]> {
   const testers = await userRepo.findAll({ is_tester: true });
-  return testers.map((user) => user.id);
+  return testers.map((user) => user._id.toString());
 }

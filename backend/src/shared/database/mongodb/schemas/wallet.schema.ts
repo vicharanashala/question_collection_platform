@@ -16,6 +16,12 @@ export class Wallet {
   @Prop({ default: 'INR' })
   currency: string;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+  
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 }

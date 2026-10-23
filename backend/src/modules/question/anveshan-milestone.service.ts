@@ -5,7 +5,7 @@ import {
   IQuestionRepository,
   REPOSITORY_TOKENS,
 } from '../../shared/database/repositories';
-import type { AnveshanAnswer, AnveshanAnswerScore, AnveshanAnswerSource, Question } from '../../shared/database/entities';
+import type { AnveshanAnswer, AnveshanAnswerScore, AnveshanAnswerSource } from '../../shared/database/entities';
 import { UserService } from '../user/user.service';
 import { AgriEntitiesService } from '../agri-entities/agri-entities.service';
 import { QuestionService } from './question.service';
@@ -24,7 +24,8 @@ import {
   ANVESHAN_SCORE_MISSING_GRACE_MS,
   isAnswerScoringEnabled,
 } from '../../shared/constants/anveshan.constant';
-
+import { Types } from 'mongoose';
+import { Question } from '@/shared/database/mongodb/schemas/question.schema';
 
 export interface AnveshanMilestone {
   requirements: AnveshanCounts;
@@ -100,7 +101,7 @@ export class AnveshanMilestoneService {
     const scoringEnabled = isAnswerScoringEnabled();
     return {
       items: eligibleQuestions.map((question) =>
-        toAnswerableQuestion(question, answersByQuestion.get(question.id) ?? null, scoringEnabled),
+        toAnswerableQuestion(question, answersByQuestion.get(question._id.toString()) ?? null, scoringEnabled),
       ),
       /** False when AI scoring is turned off; the web app then shows no scores. */
       scoringEnabled,
@@ -126,7 +127,7 @@ export class AnveshanMilestoneService {
       throw new ForbiddenException('Complete your submission goals before writing advisories.');
     }
 
-    const question = eligibleQuestions.find((q) => q.id === questionId);
+    const question = eligibleQuestions.find((q) => q._id.toString() === questionId);
     if (!question) {
       throw new NotFoundException('This query is not in your advisory list.');
     }
@@ -287,7 +288,8 @@ export class AnveshanMilestoneService {
 
   // Loads counts and eligible questions once, so callers share a single consistent snapshot.
   private async buildMilestone(userId: string) {
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId);
+    const user = await this.userService.getProfile(objectId);
     if (!user?.isAnveshanUser) {
       throw new ForbiddenException('This milestone is only available to Anveshan users.');
     }
@@ -331,7 +333,7 @@ export class AnveshanMilestoneService {
 
   // Loads the stored answers for the answered questions only, keyed by question id.
   private async findAnswersByQuestion(userId: string, questions: Question[]): Promise<Map<string, AnveshanAnswer>> {
-    const answeredIds = questions.filter((q) => q.isAnswerSubmitted).map((q) => q.id);
+    const answeredIds = questions.filter((q) => q.isAnswerSubmitted).map((q) => q._id.toString());
     if (answeredIds.length === 0) return new Map();
     const answers = await this.answerRepo.find({ userId, questionId: { $in: answeredIds } });
     return new Map(answers.map((answer) => [answer.questionId, answer]));
@@ -394,7 +396,7 @@ function toAnswerableQuestion(
   includeScore: boolean,
 ): AnveshanAnswerableQuestion {
   return {
-    id: question.id,
+    id: question._id.toString(),
     questionText: question.questionText,
     cropType: question.cropType,
     state: question.state,

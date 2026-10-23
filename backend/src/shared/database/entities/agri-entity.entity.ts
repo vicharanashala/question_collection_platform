@@ -25,6 +25,8 @@ export class AgriEntity {
   status: AgriEntityStatus;
   /** Where and when the entity was submitted. Missing on older records. */
   submissionLocation?: SubmissionLocation | null;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

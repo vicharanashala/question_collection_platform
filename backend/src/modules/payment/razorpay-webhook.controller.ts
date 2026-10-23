@@ -327,7 +327,7 @@ export class RazorpayWebhookController {
       this.logger.debug(`[handlePayoutSuccess] payment_log created`);
     } else {
       // Back-fill UTR and settlement if they weren't available at initiation time
-      await this.paymentLogRepo.update(existingLog.id, {
+      await this.paymentLogRepo.update(existingLog._id, {
         utrNumber,
         status: isSuccess ? PaymentLogStatus.SUCCESS : PaymentLogStatus.FAILED,
       });
@@ -462,7 +462,7 @@ export class RazorpayWebhookController {
       return;
     }
 
-    this.logger.debug(`[handlePayoutReversed] withdrawal found: ${JSON.stringify({ id: withdrawal.id, status: withdrawal.status, amount: withdrawal.amount, walletId: withdrawal.walletId })}`);
+    this.logger.debug(`[handlePayoutReversed] withdrawal found: ${JSON.stringify({ id: withdrawal._id, status: withdrawal.status, amount: withdrawal.amount, walletId: withdrawal.walletId })}`);
 
     // ── Check if reversal was already processed ──────────────────────────────
     if (withdrawal.status === WithdrawalStatus.FAILED || withdrawal.status === WithdrawalStatus.REVERSED) {

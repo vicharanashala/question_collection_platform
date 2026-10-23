@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
-import { Question, AuditLog, Notification } from '../../shared/database/entities';
+// import { Question, AuditLog, Notification } from '../../shared/database/entities';
 import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../../shared/classes/enums';
 import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
@@ -29,8 +29,11 @@ import {
   IQuestionRepository,
   IAuditLogRepository,
   INotificationRepository,
+  IUserRepository,
 } from '../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { Types } from 'mongoose';
+import { Question } from '@/shared/database/mongodb/schemas/question.schema';
 
 @Injectable()
 export class QuestionService {
@@ -41,6 +44,8 @@ export class QuestionService {
     private readonly auditRepo: IAuditLogRepository,
     @Inject(REPOSITORY_TOKENS.Notification)
     private readonly notifRepo: INotificationRepository,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
     private readonly adminService: AdminService,
     private readonly userService: UserService,
     private readonly storageService: StorageService,
@@ -81,35 +86,77 @@ export class QuestionService {
    * Returns null if no exact match found.
    * Returns the matched question with its submitter's display name if found.
    */
+  // private async findExactDuplicate(
+  //   questionText: string,
+  //   userId: string,
+  // ): Promise<{ matchedQuestion: Question; matchedUserName: string | null } | null> {
+  //   const normalized = questionText.trim().toLowerCase();
+  //   const existing = await this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .innerJoinAndSelect('q.user', 'u')
+  //     .where('LOWER(TRIM(q.question_text)) = :normalized', { normalized })
+  //     .andWhere('q.user_id != :userId', { userId })
+  //     .orderBy('q.submittedAt', 'DESC')
+  //     .getOne();
+
+  //   if (!existing) return null;
+
+  //   // Resolve submitter name: prefer username > name > mobileNumber (masked)
+  //   let displayName: string | null = 'user name not available';
+  //   if (existing.user) {
+  //     if (existing.user.username) {
+  //       displayName = existing.user.username;
+  //     } else if (existing.user.name && existing.user.name.trim()) {
+  //       displayName = existing.user.name.trim();
+  //     } else if (existing.user.mobileNumber) {
+  //       displayName = this.maskMobile(existing.user.mobileNumber);
+  //     }
+  //   }
+
+  //   return { matchedQuestion: existing, matchedUserName: displayName };
+  // }
   private async findExactDuplicate(
-    questionText: string,
-    userId: string,
-  ): Promise<{ matchedQuestion: Question; matchedUserName: string | null } | null> {
-    const normalized = questionText.trim().toLowerCase();
-    const existing = await this.questionRepo
-      .createQueryBuilder('q')
-      .innerJoinAndSelect('q.user', 'u')
-      .where('LOWER(TRIM(q.question_text)) = :normalized', { normalized })
-      .andWhere('q.user_id != :userId', { userId })
-      .orderBy('q.submittedAt', 'DESC')
-      .getOne();
+  questionText: string,
+  userId: string,
+): Promise<{ matchedQuestion: Question; matchedUserName: string | null } | null> {
+  const text = questionText.trim();
+  if (!text) return null;
 
-    if (!existing) return null;
+  // Free text often contains ? ( . + etc., so escape it before building the regex
+  const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    // Resolve submitter name: prefer username > name > mobileNumber (masked)
-    let displayName: string | null = 'user name not available';
-    if (existing.user) {
-      if (existing.user.username) {
-        displayName = existing.user.username;
-      } else if (existing.user.name && existing.user.name.trim()) {
-        displayName = existing.user.name.trim();
-      } else if (existing.user.mobileNumber) {
-        displayName = this.maskMobile(existing.user.mobileNumber);
-      }
+  const { data } = await this.questionRepo.findAndCount(
+    {
+      questionText: { $regex: `^\\s*${escaped}\\s*$`, $options: 'i' },
+      userId: { $ne: userId },
+      isDeleted: { $ne: true },
+    },
+    { pagination: { page: 1, limit: 1, sort: { submittedAt: -1, _id: -1 } } },
+  );
+
+  const existing = data[0];
+  if (!existing) return null;
+
+  // Replaces innerJoinAndSelect('q.user', 'u')
+  const submitterId = String(existing.userId);
+  const submitter = Types.ObjectId.isValid(submitterId)
+    ? await this.userRepo.findById(submitterId)
+    : null;
+
+  // Resolve submitter name: prefer username > name > mobileNumber (masked)
+  let displayName: string | null = 'user name not available';
+  if (submitter) {
+    if (submitter.username) {
+      displayName = submitter.username;
+    } else if (submitter.name && submitter.name.trim()) {
+      displayName = submitter.name.trim();
+    } else if (submitter.mobileNumber) {
+      displayName = this.maskMobile(submitter.mobileNumber);
     }
-
-    return { matchedQuestion: existing, matchedUserName: displayName };
   }
+
+  return { matchedQuestion: existing, matchedUserName: displayName };
+}
 
   private maskMobile(mobile: string): string {
     // Show only last 4 digits: +91****7654
@@ -395,7 +442,8 @@ export class QuestionService {
 
   async submit(userId: string, dto: SubmitQuestionDto): Promise<SubmitQuestionResponseDto> {
     // 0. User must be verified and location must be set in profile
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId);
+    const user = await this.userService.getProfile(objectId);
     if (!user) throw new NotFoundException('User not found');
     if (!user.state || !user.district) {
       throw new BadRequestException(
@@ -515,12 +563,12 @@ export class QuestionService {
         //   metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup?.id },
         // });
         return {
-          id: duplicateQuestion.id,
+          id: duplicateQuestion._id.toString(),
           status: 'DUPLICATE',
           message: 'This question already exists in our database',
           duplicate: {
             isDuplicate: true,
-            matchedQuestionId: dup?.id ?? null,
+            matchedQuestionId: dup?._id.toString() ?? null,
             matchedQuestion: dup?.questionText ?? null,
             matchedAnswer: null,
             similarityScore: null,
@@ -576,7 +624,7 @@ export class QuestionService {
       //   metadata: { duplicateQuestionId: duplicateQuestion.id, matchedQuestionId: dup.matchedQuestionId },
       // });
       return {
-        id: duplicateQuestion.id,
+        id: duplicateQuestion._id.toString(),
         status: 'DUPLICATE',
         message: 'Similar question found',
         duplicate: {
@@ -645,7 +693,7 @@ export class QuestionService {
     // });
 
     return {
-      id: saved.id,
+      id: saved._id.toString(),
       status: saved.status,
       message: 'Question submitted successfully',
     };
@@ -681,7 +729,7 @@ export class QuestionService {
 
     question.audioUrls = dto.audioUrls;
     const saved = await this.questionRepo.save(question);
-    return { id: saved.id, audioUrls: saved.audioUrls ?? [] };
+    return { id: saved._id.toString(), audioUrls: saved.audioUrls ?? [] };
   }
 
   // ─── Get single ─────────────────────────────────────────────────────────────
@@ -858,7 +906,8 @@ export class QuestionService {
    */
   async preview(userId: string, dto: PreviewQuestionDto) {
     // 1. Load user profile for location
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId)
+    const user = await this.userService.getProfile(objectId);
     if (!user) throw new NotFoundException('User not found');
 
     const { state, district, block } = user;
@@ -958,12 +1007,12 @@ export class QuestionService {
         dailyLimit,
         duplicate: {
           isDuplicate: true,
-          matchedQuestionId: dup.id,
+          matchedQuestionId: dup._id.toString(),
           matchedQuestion: dup.questionText,
           matchedAnswer: null,
           similarityScore: null,
           matchedUserName: dbDup.matchedUserName,
-          questionId: duplicateQuestion.id,
+          questionId: duplicateQuestion._id.toString(),
           submissionStatus: 'rejected' as const,
         },
       };
@@ -1034,7 +1083,7 @@ export class QuestionService {
           matchedAnswer: dup.matchedAnswer,
           similarityScore: dup.similarityScore,
           matchedUserName: dup.matchedUserName ?? 'user name not available',
-          questionId: duplicateQuestion.id,
+          questionId: duplicateQuestion._id.toString(),
           submissionStatus: 'rejected' as const,
         },
       };

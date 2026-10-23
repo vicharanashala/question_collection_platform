@@ -71,7 +71,7 @@ export class AuthController {
         'No OTP-verified account found for this mobile number. Please request OTP first.',
       );
     }
-    return this.authService.register(dto, user.id);
+    return this.authService.register(dto, user._id.toString());
   }
 
   /**

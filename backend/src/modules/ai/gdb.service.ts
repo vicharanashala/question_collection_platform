@@ -22,9 +22,10 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QuestionRejectionCategory } from '../../shared/classes/enums';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
-import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
+import { IUserRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { SarvamService } from '../speech/sarvam.service';
 import { isDevelopment, isProduction } from '../../config/environment';
+import { Types } from 'mongoose';
 
 // GDB checks (duplicate search and safety/relevance classification) run when GDB_DUPLICATE_CHECK_ENABLED
 // is true. When it is not set they run only in production. When off, questions are treated as new and allowed.
@@ -96,6 +97,8 @@ export class GdbService {
     private readonly sarvamService: SarvamService,
     @Inject(REPOSITORY_TOKENS.Question)
     private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
   ) {}
 
   // ─── Public API ──────────────────────────────────────────────────────────────
@@ -176,31 +179,61 @@ export class GdbService {
     // ── Duplicate found ───────────────────────────────────────────────────────
     //    GDB's present_question_id is its own identifier, not our UUID, so the
     //    matching row is resolved by question text to get our id + submitter.
+    // const matchedQuestionEntity = raw.present_question_text
+    //   ? await this.questionRepo.findOne({
+    //       where: { questionText: raw.present_question_text },
+    //       select: ['id', 'questionText'],
+    //       relations: ['user'],
+    //     })
+    //   : null;
+
+    // this.logger.debug(
+    //   `[GDB] duplicate found: status=${raw.present_status} exact=${raw.exact_match_found} candidates=${raw.total_candidates_found}`,
+    // );
+
+    // return {
+    //   isDuplicate: true,
+    //   matchedQuestionId: matchedQuestionEntity?._id.toString() ?? null,
+    //   matchedQuestion: raw.present_question_text,
+    //   matchedAnswer: raw.present_answer_text?.trim() || null,
+    //   similarityScore: null,
+    //   matchedUserName:
+    //     this.resolveDisplayName(matchedQuestionEntity?.user ?? null) ??
+    //     raw.present_author?.trim() ??
+    //     null,
+    //   rejection: null,
+    //   rawResponse: raw,
+    // };
+
     const matchedQuestionEntity = raw.present_question_text
-      ? await this.questionRepo.findOne({
-          where: { questionText: raw.present_question_text },
-          select: ['id', 'questionText'],
-          relations: ['user'],
-        })
-      : null;
+  ? await this.questionRepo.findOne({
+      questionText: raw.present_question_text,
+      isDeleted: { $ne: true },
+    })
+  : null;
 
-    this.logger.debug(
-      `[GDB] duplicate found: status=${raw.present_status} exact=${raw.exact_match_found} candidates=${raw.total_candidates_found}`,
-    );
+// Replaces relations: ['user']. There are no joins in Mongo.
+const submitterId = matchedQuestionEntity ? String(matchedQuestionEntity.userId) : null;
+const submitter =
+  submitterId && Types.ObjectId.isValid(submitterId)
+    ? await this.userRepo.findById(submitterId)
+    : null;
 
-    return {
-      isDuplicate: true,
-      matchedQuestionId: matchedQuestionEntity?.id ?? null,
-      matchedQuestion: raw.present_question_text,
-      matchedAnswer: raw.present_answer_text?.trim() || null,
-      similarityScore: null,
-      matchedUserName:
-        this.resolveDisplayName(matchedQuestionEntity?.user ?? null) ??
-        raw.present_author?.trim() ??
-        null,
-      rejection: null,
-      rawResponse: raw,
-    };
+this.logger.debug(
+  `[GDB] duplicate found: status=${raw.present_status} exact=${raw.exact_match_found} candidates=${raw.total_candidates_found}`,
+);
+
+return {
+  isDuplicate: true,
+  matchedQuestionId: matchedQuestionEntity ? String(matchedQuestionEntity._id) : null,
+  matchedQuestion: raw.present_question_text,
+  matchedAnswer: raw.present_answer_text?.trim() || null,
+  similarityScore: null,
+  matchedUserName:
+    this.resolveDisplayName(submitter) ?? raw.present_author?.trim() ?? null,
+  rejection: null,
+  rawResponse: raw,
+};
   }
 
   /**

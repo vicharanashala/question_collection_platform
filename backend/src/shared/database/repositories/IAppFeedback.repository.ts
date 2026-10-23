@@ -1,6 +1,5 @@
 import { BaseRepository } from '../abstractions/base.repository';
 import { AppFeedback, AppFeedbackContext } from '../entities';
-
 /** Count and average of ratings, plus how many feedbacks gave each star value. */
 export interface FeedbackRatingSummary {
   total: number;

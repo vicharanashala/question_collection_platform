@@ -1,12 +1,14 @@
-import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
-import { User } from '../../database/entities';
-import { VerificationStatus } from '../../classes/enums';
-import { UserAccountLockedException } from '../../classes/exceptions/user-status.exception';
-import { IUserRepository } from '../../../shared/database/repositories/IUser.repository';
-import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
+import { Injectable, UnauthorizedException, Inject } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { ConfigService } from "@nestjs/config";
+// import { User } from '../../database/entities';
+import { VerificationStatus } from "../../classes/enums";
+import { UserAccountLockedException } from "../../classes/exceptions/user-status.exception";
+import { IUserRepository } from "../../../shared/database/repositories/IUser.repository";
+import { REPOSITORY_TOKENS } from "../../../shared/database/repositories";
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Types } from "mongoose";
 
 export interface JwtPayload {
   sub: string;
@@ -27,7 +29,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('jwt.secret') ?? 'change-me-in-production',
+      secretOrKey:
+        configService.get<string>("jwt.secret") ?? "change-me-in-production",
     });
   }
 
@@ -37,19 +40,32 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    */
   async validate(payload: JwtPayload) {
     if (!payload.sub || !payload.mobileNumber) {
-      throw new UnauthorizedException('Invalid token payload');
+      throw new UnauthorizedException("Invalid token payload");
+    }
+
+    if (!Types.ObjectId.isValid(payload.sub)) {
+      throw new UnauthorizedException("Invalid token payload");
     }
 
     // Token signature and expiry are already verified by Passport.
     // Now verify the user still exists in the DB.
-    const user = await this.userRepo.findOne({ id: payload.sub });
+    const user = await this.userRepo.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
+
+ if (user.isDeleted) {
+  throw new UnauthorizedException({
+    statusCode: 401,
+    error: "Unauthorized",
+    code: "ACCOUNT_DELETED",
+    message: "Account no longer exists",
+  });
+}
 
     // Verify tokenVersion matches — invalidates tokens issued before the last login/logout
     if (user.tokenVersion !== payload.tokenVersion) {
-      throw new UnauthorizedException('Session expired. Please login again.');
+      throw new UnauthorizedException("Session expired. Please login again.");
     }
 
     // Auto-reinstate: suspension period has expired
@@ -58,7 +74,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       user.suspendedUntil &&
       new Date() > new Date(user.suspendedUntil)
     ) {
-      await this.userRepo.update(user.id, {
+      await this.userRepo.update(user._id.toString(), {
         verificationStatus: VerificationStatus.VERIFIED,
         suspendedAt: null,
         suspendedUntil: null,

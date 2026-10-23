@@ -7,12 +7,13 @@ import {
   IQuestionRepository,
   QuestionAnalyticsFilters,
   QuestionAnalyticsResult, UserQuestionCounts } from '../../IQuestion.repository';
-import { Question } from '../../../entities';
+// import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
 import { ListQuestionsDto } from '@/modules/question/dto';
 import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
 import { userIdTesterCondition, type TesterFilter } from '../../../../utils/tester.util';
+import { Question } from '@/shared/database/mongodb/schemas/question.schema';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
@@ -975,7 +976,7 @@ async getDailyStatsSince(
       userType,
     } = dto;
 
-    const match: Record<string, unknown> = {};
+      const match: Record<string, any> = {isDeleted: {$ne: true}};
 
     // Access control
     if (!isAdmin) match.userId = userId;
@@ -988,6 +989,7 @@ async getDailyStatsSince(
 
     const submittedAt = buildDateRange(fromDate, toDate);
     if (submittedAt) match.submittedAt = submittedAt;
+;
 
     const searchCondition = buildSearchCondition(search);
     if (searchCondition) match.$or = searchCondition;
