@@ -73,6 +73,12 @@ export class UserPaymentDetail {
   @Prop({ name: 'razorpayValidationId', type: String, index: true, default: null })
   razorpayValidationId: string | null;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 }

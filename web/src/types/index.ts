@@ -60,6 +60,7 @@ export interface User {
   consentGiven: boolean;
   /** Crop names stored as a string array on the user record */
   crops: string[];
+  isDeleted?: boolean;
 }
 
 

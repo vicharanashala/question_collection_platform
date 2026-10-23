@@ -53,6 +53,7 @@ import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
 import { getAnveshanScope } from '@/lib/anveshanMode';
 import { getTesterScope } from '@/lib/testerMode';
+const NO_SESSION_END = ['/auth/send-otp', '/auth/verify-otp', '/auth/refresh']
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -239,7 +240,7 @@ export async function request<T>(
       fetch(url, { ...options, headers, signal: AbortSignal.timeout(timeoutMs) })
         .catch((err: unknown) => { throw toTimeoutError(err) })
         .then(async (res) => {
-          if (res.status === 401) {
+          if (res.status === 401 && !NO_SESSION_END.some((p) => path.startsWith(p))) {
             const refresh = getRefreshToken();
             if (refresh) {
               try {
@@ -592,7 +593,7 @@ export const adminApi = {
     ) as Record<string, string>;
     const qs = new URLSearchParams(p).toString();
     return request<PaginatedResponse<User>>(
-      `/admin/users${qs ? `?${qs}` : ""}`,
+      `/admin/users${qs ? `?${qs}` : ""}`, {}, false
     );
   },
 
@@ -644,6 +645,25 @@ export const adminApi = {
       { method: "POST" },
       false,
     ).finally(() => invalidateCache("/api/admin")),
+
+    deleteUser: (userId: string) =>
+  request<{
+    message: string;
+    userId?: string;
+    deleted?: Record<string, number | null>;
+  }>(
+    `/admin/delete-user/${userId}`,
+    { method: "POST" },
+    false,
+  ).finally(() => invalidateCache("/api/admin")),
+
+  restoreUser: (userId: string) =>
+  request<{ message: string; userId?: string }>(
+    `/admin/restore-user/${userId}`,
+    { method: "POST" },
+    false,
+  ).finally(() => invalidateCache("/api/admin")),
+
 
   createUser: (body: {
     name: string;

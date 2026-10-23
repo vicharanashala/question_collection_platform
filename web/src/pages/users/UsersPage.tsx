@@ -29,24 +29,24 @@ import { exportDate, type ExportColumn } from '@/lib/exportData'
 import { AddUserDialog } from './AddUserDialog'
 import { AnveshanProgressCell } from './AnveshanProgressCell'
 
-type AnveshanFilter = '' | 'all' | 'completed' | 'incomplete'
+type AnveshanFilter = "" | "all" | "completed" | "incomplete";
 
 const ANVESHAN_FILTER_OPTIONS: { value: AnveshanFilter; label: string }[] = [
-  { value: '', label: 'All users' },
-  { value: 'all', label: 'Anveshan users' },
-  { value: 'completed', label: 'Anveshan · 100% complete' },
-  { value: 'incomplete', label: 'Anveshan · In progress' },
-]
+  { value: "", label: "All users" },
+  { value: "all", label: "Anveshan users" },
+  { value: "completed", label: "Anveshan · 100% complete" },
+  { value: "incomplete", label: "Anveshan · In progress" },
+];
 
 const CATEGORY_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'All Categories' },
-  { value: 'farmer', label: 'Farmer' },
-  { value: 'fpo', label: 'FPO' },
-  { value: 'student', label: 'Student' },
-  { value: 'volunteer', label: 'Volunteer' },
-  { value: 'ngo', label: 'NGO' },
-  { value: 'anveshan_user', label: 'Anveshan User' },
-]
+  { value: "", label: "All Categories" },
+  { value: "farmer", label: "Farmer" },
+  { value: "fpo", label: "FPO" },
+  { value: "student", label: "Student" },
+  { value: "volunteer", label: "Volunteer" },
+  { value: "ngo", label: "NGO" },
+  { value: "anveshan_user", label: "Anveshan User" },
+];
 
 const USER_EXPORT_COLUMNS: ExportColumn<UserType>[] = [
   { header: 'Name', value: (u) => u.name },
@@ -66,17 +66,17 @@ const USER_EXPORT_COLUMNS: ExportColumn<UserType>[] = [
 ]
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'All Roles' },
-  { value: 'user', label: 'User' },
-  { value: 'curator', label: 'Curator' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'distributor', label: 'Distributor' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'super_admin', label: 'Super Admin' },
-]
+  { value: "", label: "All Roles" },
+  { value: "user", label: "User" },
+  { value: "curator", label: "Curator" },
+  { value: "finance", label: "Finance" },
+  { value: "distributor", label: "Distributor" },
+  { value: "admin", label: "Admin" },
+  { value: "super_admin", label: "Super Admin" },
+];
 
 // Radix SelectItem rejects an empty value, so "All" is mapped to a sentinel.
-const ALL_VALUE = '__all__'
+const ALL_VALUE = "__all__";
 
 // Small summary card showing one user count, with a placeholder while loading.
 function CountCard({ icon: Icon, label, value, index }: { icon: typeof Users; label: string; value?: number; index: number }) {
@@ -120,36 +120,44 @@ function FilterSelect({ value, onChange, options, ariaLabel, className }: {
   className?: string
 }) {
   return (
-    <Select value={value || ALL_VALUE} onValueChange={(v) => onChange(v === ALL_VALUE ? '' : v)}>
+    <Select
+      value={value || ALL_VALUE}
+      onValueChange={(v) => onChange(v === ALL_VALUE ? "" : v)}
+    >
       <SelectTrigger
         aria-label={ariaLabel}
         className={cn('w-full shrink-0 !bg-surface-variant dark:!bg-surface-variant [&>span]:truncate', className)}
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent collisionPadding={8} className="max-h-72 max-w-[calc(100vw-1rem)]">
+      <SelectContent
+        collisionPadding={8}
+        className="max-h-72 max-w-[calc(100vw-1rem)]"
+      >
         {options.map((o) => (
-          <SelectItem key={o.value || ALL_VALUE} value={o.value || ALL_VALUE}>{o.label}</SelectItem>
+          <SelectItem key={o.value || ALL_VALUE} value={o.value || ALL_VALUE}>
+            {o.label}
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  verified: 'bg-success text-white',
-  pending: 'bg-warning text-white',
-  suspended: 'bg-warning text-white',
-  banned: 'bg-destructive text-white',
-  manual_review: 'bg-amber-500 text-white',
-}
+  verified: "bg-success text-white",
+  pending: "bg-warning text-white",
+  suspended: "bg-warning text-white",
+  banned: "bg-destructive text-white",
+  manual_review: "bg-amber-500 text-white",
+};
 
 const STATUS_ICONS: Record<string, React.ElementType> = {
   verified: CheckCircle,
   pending: Clock,
   suspended: PauseCircle,
   banned: Ban,
-}
+};
 
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'All' },
@@ -225,12 +233,12 @@ export function UsersPage() {
   //     .finally(() => setLoading(false))
   // }, [page, debouncedSearch, statusFilter, roleFilter, currentUser?.id])
 
-
   useEffect(() => {
-    lgdApi.getStates()
+    lgdApi
+      .getStates()
       .then(({ states }) => setStates(states))
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states')))
-  }, [])
+      .catch((e) => toast.error(getErrorMessage(e, "Failed to load states")));
+  }, []);
 
   // Date filters apply once a full, sensible date is typed, so partial years like 0002 do not trigger requests.
   const debouncedFrom = useDebouncedValue(fromDate, 400)
@@ -303,14 +311,32 @@ export function UsersPage() {
     }
   }, [anveshanScope])
 
-  const [createOpen, setCreateOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false);
 
   function handleUserCreated() {
-    toast.success('User created successfully')
-    setPage(1)
-    adminApi.getUsers({ page: 1, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
-      .then((res) => { setUsers(res.items); setTotal(res.total) })
-      .catch((error) => toast.error(getErrorMessage(error, 'User created, but the list could not be refreshed')))
+    toast.success("User created successfully");
+    setPage(1);
+    adminApi
+      .getUsers({
+        page: 1,
+        limit,
+        search: debouncedSearch || undefined,
+        status: statusFilter || undefined,
+        role: roleFilter || undefined,
+        excludeId: currentUser?.id,
+      })
+      .then((res) => {
+        setUsers(res.items);
+        setTotal(res.total);
+      })
+      .catch((error) =>
+        toast.error(
+          getErrorMessage(
+            error,
+            "User created, but the list could not be refreshed",
+          ),
+        ),
+      );
   }
 
   return (
@@ -489,18 +515,29 @@ export function UsersPage() {
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-text-secondary">No users found</td>
+                  <td
+                    colSpan={7}
+                    className="py-12 text-center text-text-secondary"
+                  >
+                    No users found
+                  </td>
                 </tr>
               ) : (
                 users.map((u) => {
-                  const StatusIcon = STATUS_ICONS[u.verificationStatus] ?? Clock
-                  const isLocked = u.verificationStatus === 'suspended' || u.verificationStatus === 'banned'
+                  const StatusIcon =
+                    STATUS_ICONS[u.verificationStatus] ?? Clock;
+                  const isDeleted = !!u.isDeleted;
+                  const isLocked =
+                    !isDeleted &&
+                    (u.verificationStatus === "suspended" ||
+                      u.verificationStatus === "banned");
                   return (
                     <tr
                       key={u.id}
                       className={cn(
-                        'hover:bg-surface-variant/30 transition-colors',
-                        isLocked && 'bg-red-50 dark:bg-red-950/20',
+                        "hover:bg-surface-variant/30 transition-colors",
+                        isLocked && "bg-red-50 dark:bg-red-950/20",
+                        isDeleted && "bg-muted/40 opacity-60",
                       )}
                     >
                       <td className="px-4 py-3">
@@ -513,60 +550,108 @@ export function UsersPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <p className={cn('font-semibold group-hover:text-primary transition-colors', isLocked && 'text-red-700 dark:text-red-400')}>
-                                {u.name || '—'}
+                              <p
+                                className={cn(
+                                  "font-semibold group-hover:text-primary transition-colors",
+                                  isLocked && "text-red-700 dark:text-red-400",
+                                  isDeleted && "line-through",
+                                )}
+                              >
+                                {u.name || "—"}
                               </p>
                               {u.isTester && <TesterTag />}
+                              {isDeleted && (
+                                <span className="inline-flex items-center rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                  DELETED
+                                </span>
+                              )}
                               {isLocked && (
-                                <span className={cn(
-                                  'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
-                                  u.verificationStatus === 'banned'
-                                    ? 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-300'
-                                    : 'bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
-                                )}>
-                                  {u.verificationStatus === 'banned' ? 'BANNED' : 'SUSPENDED'}
+                                <span
+                                  className={cn(
+                                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                                    u.verificationStatus === "banned"
+                                      ? "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                      : "bg-amber-200 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
+                                  )}
+                                >
+                                  {u.verificationStatus === "banned"
+                                    ? "BANNED"
+                                    : "SUSPENDED"}
                                 </span>
                               )}
                             </div>
-                            {u.username && <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">@{u.username}</p>}
-                            <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{u.mobileNumber}</p>
+                            {u.username && (
+                              <p className="text-[11px] sm:text-xs text-text-tertiary">
+                                @{u.username}
+                              </p>
+                            )}
+                            <p className="text-[11px] sm:text-xs text-text-tertiary">
+                              {u.mobileNumber}
+                            </p>
                           </div>
                         </Link>
                       </td>
                       <td className="px-4 py-3">
                         <Badge
-                          variant={u.role === 'super_admin' ? 'destructive' : u.role === 'admin' ? 'default' : 'secondary'}
+                          variant={
+                            u.role === "super_admin"
+                              ? "destructive"
+                              : u.role === "admin"
+                                ? "default"
+                                : "secondary"
+                          }
                           className="capitalize text-[11px] sm:text-[11px] sm:text-xs"
                         >
-                          {u.role.replace('_', ' ')}
+                          {u.role.replace("_", " ")}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <StatusIcon className={cn('h-3.5 w-3.5', STATUS_COLORS[u.verificationStatus] ? 'text-text' : 'text-text-tertiary')} />
-                          <span className={cn('rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize', STATUS_COLORS[u.verificationStatus] ?? 'bg-surface-variant text-text-secondary')}>
+                          <StatusIcon
+                            className={cn(
+                              "h-3.5 w-3.5",
+                              STATUS_COLORS[u.verificationStatus]
+                                ? "text-text"
+                                : "text-text-tertiary",
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize",
+                              STATUS_COLORS[u.verificationStatus] ??
+                                "bg-surface-variant text-text-secondary",
+                            )}
+                          >
                             {u.verificationStatus}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {[u.district, u.state].filter(Boolean).join(', ') || '—'}
+                        {[u.district, u.state].filter(Boolean).join(", ") ||
+                          "—"}
                       </td>
                       <td className="px-4 py-3">
                         {u.anveshanProgress ? (
                           <AnveshanProgressCell progress={u.anveshanProgress} />
                         ) : (
-                          <span className="text-text-tertiary" aria-label="Not an Anveshan user">—</span>
+                          <span
+                            className="text-text-tertiary"
+                            aria-label="Not an Anveshan user"
+                          >
+                            —
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {formatDate(u.createdAt) ?? '—'}
+                        {formatDate(u.createdAt) ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {u.lastLoginAt ? formatDateTime(u.lastLoginAt) : 'Never'}
+                        {u.lastLoginAt
+                          ? formatDateTime(u.lastLoginAt)
+                          : "Never"}
                       </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -577,7 +662,8 @@ export function UsersPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border-subtle px-4 py-3">
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
-              Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+              Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)}{" "}
+              of {total}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -604,7 +690,11 @@ export function UsersPage() {
         )}
       </Card>
 
-      <AddUserDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={handleUserCreated} />
+      <AddUserDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={handleUserCreated}
+      />
     </div>
-  )
+  );
 }

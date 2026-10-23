@@ -1,7 +1,7 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { Report } from '../entities';
+// import { Report } from '../entities';
 import { ReportStatus, ReportPriority } from '../../classes/enums';
-
+import { Report } from '../mongodb/schemas/report.schema';
 export interface ReportFilter {
   id?: string;
   userId?: string;

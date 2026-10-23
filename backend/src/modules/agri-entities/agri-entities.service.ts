@@ -8,6 +8,7 @@ import { isStorageUri } from '../storage/storage.service';
 import { getAgriEntityImageCategory } from './agri-entities.constants';
 import { UserFilterQueryDto, ListAgriEntitiesDto, SubmitAgriEntityDto, SubmitAgriEntityResponseDto } from './dto';
 import { UserService } from '../user/user.service';
+import { Types } from 'mongoose';
 
 const ENTITY_EXPORT_COLUMNS = [
   'type', 'localName', 'englishName', 'botanicalName', 'localNameSource', 'alternateNames',
@@ -69,7 +70,8 @@ export class AgriEntitiesService {
   // }
 
   async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
-    const user = await this.userService.getProfile(userId);
+    const objectId = new Types.ObjectId(userId);
+    const user = await this.userService.getProfile(objectId);
     if (user?.isAnveshanUser && !dto.submissionLocation) {
       throw new BadRequestException(
         'Location is required for Anveshan users when submitting an entry.',
@@ -119,8 +121,8 @@ export class AgriEntitiesService {
     const submitters = submitterIds.length ? await this.userRepo.findAll({ id: { $in: submitterIds } } as never) : [];
     const byId = new Map(
       submitters.map((user) => [
-        user.id,
-        { id: user.id, name: user.name, username: user.username, ...(canViewContact ? { mobileNumber: user.mobileNumber } : {}) },
+        user._id.toString(),
+        { id: user._id.toString(), name: user.name, username: user.username, ...(canViewContact ? { mobileNumber: user.mobileNumber } : {}) },
       ]),
     );
     return {
@@ -147,7 +149,7 @@ export class AgriEntitiesService {
       } as never,
       { pagination: { page: 1, limit, sort: { name: 1 } } },
     );
-    return users.map((user) => ({ id: user.id, name: user.name, mobileNumber: user.mobileNumber }));
+    return users.map((user) => ({ id: user._id.toString(), name: user.name, mobileNumber: user.mobileNumber }));
   }
 
   // Builds an Excel file of the Anveshan users' entities matching the same filters as the list.
@@ -158,7 +160,7 @@ export class AgriEntitiesService {
       order: dto.sortOrder ?? 'desc',
     });
     const users = await this.userRepo.findAll({ isAnveshanUser: true });
-    const byId = new Map(users.map((user) => [user.id, user]));
+    const byId = new Map(users.map((user) => [user._id.toString(), user]));
     const rows = data.map((entity) => {
       const user = byId.get(entity.userId);
       const location = entity.submissionLocation;
@@ -242,7 +244,7 @@ export class AgriEntitiesService {
   private async findPage(scope: { userId?: string | Record<string, unknown> }, dto: ListAgriEntitiesDto) {
     const { type, status, page = 1, limit = 20 } = dto;
     const { data, total } = await this.agriEntityRepo.findAndCount(
-      { ...scope, ...(type ? { type } : {}), ...(status ? { status } : {}) },
+      { ...scope, ...(type ? { type } : {}), ...(status ? { status } : {}),  isDeleted: { $ne: true }, },
       { pagination: { page, limit, sort: { createdAt: -1 } } },
     );
     return { data, total, page, limit, pages: Math.ceil(total / limit) };

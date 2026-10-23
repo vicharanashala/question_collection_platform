@@ -1,9 +1,10 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { Question } from '../entities';
+// import { Question } from '../entities';
 import { QuestionStatus } from '../../classes/enums';
 import { MongoRepository } from '../abstractions/mongo.repository';
 import { ListQuestionsDto } from '@/modules/question/dto';
 import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
+import { Question } from '../mongodb/schemas/question.schema';
 
 export interface QuestionFilter {
   id?: string;

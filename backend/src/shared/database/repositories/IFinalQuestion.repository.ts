@@ -1,5 +1,6 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { FinalQuestion } from '../entities';
+// import { FinalQuestion } from '../entities';
+import { FinalQuestion } from '../mongodb/schemas/final-question.schema';
 
 /**
  * Filter shape for `findAndCount` queries against `final_questions`.

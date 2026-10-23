@@ -18,6 +18,7 @@ import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
 import { ApiKeyAuth } from '../../shared/middleware/decorators/api-key-auth.decorator';
+import { Types } from 'mongoose';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
@@ -36,9 +37,11 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @Cacheable('user', 180)
   async getProfile(@Req() req: AuthenticatedRequest) {
-    const user = await this.userService.getProfile(req.user.id);
+    const userObjectId = new Types.ObjectId(req.user.id);
+    const user = await this.userService.getProfile(userObjectId);
+    const userStringId = user._id.toString();
     return {
-      id: user.id,
+      id: userStringId,
       mobileNumber: user.mobileNumber,
       name: user.name,
       username: user.username,
@@ -111,7 +114,8 @@ export class UserController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: UpdateProfileDto,
   ) {
-    const user = await this.userService.updateProfile(req.user.id, dto);
+    const objectId = new Types.ObjectId(req.user.id)
+    const user = await this.userService.updateProfile(objectId, dto);
     return { user };
   }
 
@@ -185,7 +189,8 @@ export class UserController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: UpdateCropDetailsDto,
   ) {
-    const crops = await this.userService.updateCropDetails(req.user.id, dto);
+    const objectId = new Types.ObjectId(req.user.id)
+    const crops = await this.userService.updateCropDetails(objectId, dto);
     return { crops };
   }
 }

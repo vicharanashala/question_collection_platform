@@ -15,16 +15,11 @@ import { RedisService } from "../../shared/database/cache/redis.service";
 import { HotDataService } from "../../shared/database/cache/hot-data.service";
 import { AnalyticsCacheService } from "../../shared/database/cache/analytics-cache.service";
 import {
-  User,
   Question,
-  Wallet,
   Transaction,
-  WithdrawalRequest,
   AuditLog,
   AdminConfig,
   Notification,
-  NotificationType,
-  NotificationTriggerType,
   PaymentLog,
   UserPaymentDetail,
 } from "../../shared/database/entities";
@@ -77,10 +72,23 @@ import {
   INotificationRepository,
   IPaymentLogRepository,
   IUserPaymentDetailRepository,
+  IFinalQuestionRepository,
+  IAgriEntityRepository,
+  IReportRepository,
+  IAppFeedbackRepository,
+  IAnveshanAnswerRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
-
+import { Types } from "mongoose";
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
+import {
+  NotificationType,
+  NotificationTriggerType,
+} from "../../shared/classes/enums";
+import { WithdrawalRequest } from "@/shared/database/mongodb/schemas/withdrawal-request.schema";
+import { ExceptionMessages } from "node_modules/@google-cloud/storage/build/cjs/src/storage";
 // Config key constants — mirrors database.md defaults
 const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
   max_users_per_state: {
@@ -154,7 +162,11 @@ export class AdminService implements OnModuleInit {
   private async getCachedConfigValue(key: string): Promise<number> {
     // TEMPORARY RESTRICTION
     const isPaymentModifiable = false;
-    if (!isPaymentModifiable && (key === 'payment_withdrawal_enabled' || key === 'payment_verification_enabled')) {
+    if (
+      !isPaymentModifiable &&
+      (key === "payment_withdrawal_enabled" ||
+        key === "payment_verification_enabled")
+    ) {
       return 0;
     }
 
@@ -207,12 +219,14 @@ export class AdminService implements OnModuleInit {
         }
       }
     }
-    
+
     // TEMPORARY RESTRICTION
     const isPaymentModifiable = false;
     if (!isPaymentModifiable) {
-      if (keys.includes('payment_withdrawal_enabled')) result['payment_withdrawal_enabled'] = 0;
-      if (keys.includes('payment_verification_enabled')) result['payment_verification_enabled'] = 0;
+      if (keys.includes("payment_withdrawal_enabled"))
+        result["payment_withdrawal_enabled"] = 0;
+      if (keys.includes("payment_verification_enabled"))
+        result["payment_verification_enabled"] = 0;
     }
 
     return result;
@@ -238,6 +252,16 @@ export class AdminService implements OnModuleInit {
     private readonly paymentLogRepo: IPaymentLogRepository,
     @Inject(REPOSITORY_TOKENS.UserPaymentDetail)
     private readonly paymentDetailRepo: IUserPaymentDetailRepository,
+    @Inject(REPOSITORY_TOKENS.FinalQuestion)
+    private readonly finalQuestionRepo: IFinalQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.AgriEntity)
+    private readonly agriEntityRepo: IAgriEntityRepository,
+    @Inject(REPOSITORY_TOKENS.Report)
+    private readonly reportRepo: IReportRepository,
+    @Inject(REPOSITORY_TOKENS.AppFeedback)
+    private readonly feedbackRepo: IAppFeedbackRepository,
+    @Inject(REPOSITORY_TOKENS.AnveshanAnswer)
+    private readonly anveshanAnswerRepo: IAnveshanAnswerRepository,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WalletsService))
     private readonly walletsService: WalletsService,
@@ -299,7 +323,7 @@ export class AdminService implements OnModuleInit {
       role: UserRole;
       category?: UserCategory;
       isUserCreatedBySuperAdmin: boolean;
-      profileCreatedByAdminCompleted: boolean
+      profileCreatedByAdminCompleted: boolean;
     },
   ) {
     // Super admin cannot create another super admin
@@ -336,30 +360,26 @@ export class AdminService implements OnModuleInit {
     if (isEndUser && !dto.category) {
       throw new BadRequestException("Category is required for user accounts.");
     }
-const isCreatedBySuperAdmin =
-  dto.isUserCreatedBySuperAdmin ?? true;
+    const isCreatedBySuperAdmin = dto.isUserCreatedBySuperAdmin ?? true;
 
+    const profileCreatedByAdminCompleted =
+      dto.profileCreatedByAdminCompleted ?? false;
 
-  const profileCreatedByAdminCompleted = dto.profileCreatedByAdminCompleted ?? false
+    const user = await this.userRepo.create({
+      name: dto.name.trim(),
+      mobileNumber: mobile,
+      role: dto.role,
+      category: isEndUser ? dto.category! : null,
+      languagePreference: "en",
+      consentGiven: false,
+      verificationStatus: VerificationStatus.VERIFIED,
+      tokenVersion: 0,
+      lastLoginAt: null,
+      isUserCreatedBySuperAdmin: isCreatedBySuperAdmin,
+      profileCreatedByAdminCompleted: profileCreatedByAdminCompleted,
+    });
 
-
-const user = await this.userRepo.create({
-  name: dto.name.trim(),
-  mobileNumber: mobile,
-  role: dto.role,
-  category: isEndUser ? dto.category! : null,
-  languagePreference: "en",
-  consentGiven: false,
-  verificationStatus: VerificationStatus.VERIFIED,
-  tokenVersion: 0,
-  lastLoginAt: null,
-  isUserCreatedBySuperAdmin: isCreatedBySuperAdmin,
-  profileCreatedByAdminCompleted: profileCreatedByAdminCompleted
-});
-
-
-await this.userRepo.save(user);
-
+    await this.userRepo.save(user);
 
     // await this.logAudit({
     //   actorType:
@@ -394,27 +414,24 @@ async getUserStats(dto: ListUserStatsDto) {
   return { total, testers, anveshan, nonAnveshan: total - anveshan };
 }
 
-async listUsers(dto: ListUsersDto) {
-  const {
-    page = 1,
-    limit = 20,
-    state,
-    category,
-    status,
-    role,          // ← destructure it
-    search,
-    anveshan,
-    sortBy = "createdAt",
-    sortOrder = "DESC",
-  } = dto;
-
-  const filter: Record<string, unknown> = {};
-  const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
-  if (joinedRange) filter.createdAt = joinedRange;
-  if (state) filter.state = state;
-  if (category) filter.category = category;
-  if (status) filter.verificationStatus = status;
-  if (role) filter.role = role;   // ← apply it
+  async listUsers(dto: ListUsersDto) {
+    const {
+      page = 1,
+      limit = 20,
+      state,
+      category,
+      status,
+      role, // ← destructure it
+      search,
+      anveshan,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+    } = dto;
+    const filter: Record<string, unknown> = {};
+    if (state) filter.state = state;
+    if (category) filter.category = category;
+    if (status) filter.verificationStatus = status;
+    if (role) filter.role = role; // ← apply it
     if (search) {
       const regex = { $regex: search, $options: "i" };
       filter.$or = [
@@ -438,11 +455,16 @@ async listUsers(dto: ListUsersDto) {
     if (anveshan) {
       filter.isAnveshanUser = true;
       if (anveshan !== "all") {
-        const completedIds = await this.anveshanProgressService.findCompletedUserIds();
+        const completedIds =
+          await this.anveshanProgressService.findCompletedUserIds();
         filter._id =
           anveshan === "completed"
             ? { $in: completedIds.filter((id) => id !== dto.excludeId) }
-            : { $nin: dto.excludeId ? [...completedIds, dto.excludeId] : completedIds };
+            : {
+                $nin: dto.excludeId
+                  ? [...completedIds, dto.excludeId]
+                  : completedIds,
+              };
       }
     }
 
@@ -463,7 +485,7 @@ async listUsers(dto: ListUsersDto) {
     // Project down to the same field set the admin user list has always returned
     // (excludes otpHash and other internal-only fields on the User document).
     const items = data.map((u) => ({
-      id: u.id,
+      id: u._id.toString(),
       mobileNumber: u.mobileNumber,
       name: u.name,
       username: u.username,
@@ -476,17 +498,25 @@ async listUsers(dto: ListUsersDto) {
       lastLoginAt: u.lastLoginAt,
       isAnveshanUser: !!u.isAnveshanUser,
       isTester: !!u.is_tester,
+      isDeleted: !!u.isDeleted,  
     }));
 
     // Attach milestone progress for the Anveshan users on this page only.
     const anveshanIds = items.filter((u) => u.isAnveshanUser).map((u) => u.id);
-    const progressById = await this.anveshanProgressService.getProgressForUsers(anveshanIds);
+    const progressById =
+      await this.anveshanProgressService.getProgressForUsers(anveshanIds);
     const itemsWithProgress = items.map((u) => ({
       ...u,
       anveshanProgress: progressById.get(u.id) ?? null,
     }));
 
-    return { items: itemsWithProgress, total, page, limit, pages: Math.ceil(total / limit) };
+    return {
+      items: itemsWithProgress,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
   }
 
   // Pages users ordered by Anveshan progress. Progress is computed, so Anveshan users are ranked in memory
@@ -500,13 +530,13 @@ async listUsers(dto: ListUsersDto) {
     const anveshanOnly = filter.isAnveshanUser === true;
     const nonAnveshanOnly = typeof filter.isAnveshanUser === "object" && filter.isAnveshanUser !== null;
     const anveshanUsers = nonAnveshanOnly ? [] : await this.userRepo.findAll({ ...filter, isAnveshanUser: true });
-    const progress = await this.anveshanProgressService.getProgressForUsers(anveshanUsers.map((u) => u.id));
+    const progress = await this.anveshanProgressService.getProgressForUsers(anveshanUsers.map((u) => u._id.toString()));
     const percentOf = (id: string) => progress.get(id)?.percent ?? 0;
     const ranked = [...anveshanUsers].sort(
       (a, b) =>
-        direction * (percentOf(a.id) - percentOf(b.id)) ||
+        direction * (percentOf(a._id.toString()) - percentOf(b._id.toString())) ||
         b.createdAt.getTime() - a.createdAt.getTime() ||
-        (a.id < b.id ? -1 : 1),
+        (a._id.toString() < b._id.toString() ? -1 : 1),
     );
 
     const start = (page - 1) * limit;
@@ -523,82 +553,171 @@ async listUsers(dto: ListUsersDto) {
     }
     return { data, total: ranked.length + otherTotal };
   }
+  // async getUserDetail(userId: string) {
+  //   const user = await this.userRepo.findOne({
+  //     where: { id: userId },
+  //     relations: ["wallet"],
+  //     select: [
+  //       "id",
+  //       "mobileNumber",
+  //       "name",
+  //       "username",
+  //       "role",
+  //       "verificationStatus",
+  //       "category",
+  //       "district",
+  //       "state",
+  //       "block",
+  //       "village",
+  //       "kvk",
+  //       "numberOfFarmers",
+  //       "organisationType",
+  //       "languagePreference",
+  //       "age",
+  //       "gender",
+  //       "farmSize",
+  //       "season",
+  //       "cropType",
+  //       "courseName",
+  //       "collegeName",
+  //       "universityName",
+  //       "organizationName",
+  //       "organizationRole",
+  //       "organizationState",
+  //       "organizationDistrict",
+  //       "organizationBlock",
+  //       "organizationVillage",
+  //       "crops",
+  //       "createdAt",
+  //       "lastLoginAt",
+  //       "suspendedAt",
+  //       "suspendedUntil",
+  //       "suspendedReason",
+  //       "bannedAt",
+  //       "bannedReason",
+  //       "consentGiven",
+  //       "consentTimestamp",
+  //     ],
+  //   });
+  //   if (!user) throw new NotFoundException("User not found");
+
+  //   const questions = await this.questionRepo.find({
+  //     where: { userId },
+  //     order: { submittedAt: "DESC" },
+  //     take: 20,
+  //     select: [
+  //       "id",
+  //       "questionText",
+  //       "status",
+  //       "submittedAt",
+  //       "reviewedAt",
+  //       "rejectionReason",
+  //     ],
+  //   });
+
+  //   const paymentDetails = await this.paymentDetailRepo.find({
+  //     where: { userId },
+  //     order: { createdAt: "DESC" },
+  //   });
+
+  //   return { user, questions, paymentDetails, crops: user.crops ?? [] };
+  // }
 
   async getUserDetail(userId: string) {
-    const user = await this.userRepo.findOne({
-      where: { id: userId },
-      relations: ["wallet"],
-      select: [
-        "id",
-        "mobileNumber",
-        "name",
-        "username",
-        "role",
-        "verificationStatus",
-        "category",
-        "district",
-        "state",
-        "block",
-        "village",
-        "kvk",
-        "numberOfFarmers",
-        "organisationType",
-        "languagePreference",
-        "age",
-        "gender",
-        "farmSize",
-        "season",
-        "cropType",
-        "courseName",
-        "collegeName",
-        "universityName",
-        "organizationName",
-        "organizationRole",
-        "organizationState",
-        "organizationDistrict",
-        "organizationBlock",
-        "organizationVillage",
-        "crops",
-        "createdAt",
-        "lastLoginAt",
-        "suspendedAt",
-        "suspendedUntil",
-        "suspendedReason",
-        "bannedAt",
-        "bannedReason",
-        "consentGiven",
-        "consentTimestamp",
-        "isAnveshanUser",
-      ],
-    });
-    if (!user) throw new NotFoundException("User not found");
-
-    const questions = await this.questionRepo.find({
-      where: { userId },
-      order: { submittedAt: "DESC" },
-      take: 20,
-      select: [
-        "id",
-        "questionText",
-        "status",
-        "submittedAt",
-        "reviewedAt",
-        "rejectionReason",
-      ],
-    });
-
-    const paymentDetails = await this.paymentDetailRepo.find({
-      where: { userId },
-      order: { createdAt: "DESC" },
-    });
-
-    return {
-      user: { ...user, isTester: !!user.is_tester },
-      questions,
-      paymentDetails,
-      crops: user.crops ?? [],
-    };
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new NotFoundException("User not found");
   }
+
+  // The explicit isDeleted key bypasses the default "hide deleted" filter,
+  // so a deleted user's page still opens (with the Restore button).
+  const user = await this.userRepo.findOne({
+    _id: userId, // plain string: Mongoose casts it, the repo won't mangle it
+    isDeleted: { $in: [true, false, null] },
+  });
+  if (!user) throw new NotFoundException("User not found");
+
+  // A deleted user's related records were marked deleted by the cascade,
+  // so for them we need to read the deleted ones instead of hiding them.
+  const recordScope = user.isDeleted ? { isDeleted: true } : { isDeleted: { $ne: true } };
+
+  const [{ data: questionRows }, paymentRows] = await Promise.all([
+    this.questionRepo.findAndCount(
+      { userId, ...recordScope },
+      { pagination: { page: 1, limit: 20, sort: { submittedAt: -1, _id: -1 } } },
+    ),
+    this.paymentDetailRepo.findAll({ userId, ...recordScope }),
+  ]);
+
+  const questions = questionRows.map((q) => ({
+    id: String(q._id),
+    questionText: q.questionText,
+    status: q.status,
+    submittedAt: q.submittedAt,
+    reviewedAt: q.reviewedAt,
+    rejectionReason: q.rejectionReason,
+    // the page's search box reads these two; without them q.cropType.toLowerCase() throws
+    cropType: q.cropType ?? "",
+    domains: q.domains ?? [],
+  }));
+
+  // Never send secrets to the browser (the old code returned whole entities)
+  const paymentDetails = paymentRows
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .map(({ accountNumberEncrypted, razorpayFundAccountId, ...safe }: any) => ({
+      ...safe,
+      id: String(safe._id),
+    }));
+
+  return {
+    user: {
+      id: String(user._id),
+      mobileNumber: user.mobileNumber,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      verificationStatus: user.verificationStatus,
+      category: user.category,
+      district: user.district,
+      state: user.state,
+      block: user.block,
+      village: user.village,
+      kvk: user.kvk,
+      numberOfFarmers: user.numberOfFarmers,
+      organisationType: user.organisationType,
+      languagePreference: user.languagePreference,
+      age: user.age,
+      gender: user.gender,
+      farmSize: user.farmSize,
+      season: user.season,
+      cropType: user.cropType,
+      courseName: user.courseName,
+      collegeName: user.collegeName,
+      universityName: user.universityName,
+      organizationName: user.organizationName,
+      organizationRole: user.organizationRole,
+      organizationState: user.organizationState,
+      organizationDistrict: user.organizationDistrict,
+      organizationBlock: user.organizationBlock,
+      organizationVillage: user.organizationVillage,
+      crops: user.crops ?? [],
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt,
+      suspendedAt: user.suspendedAt,
+      suspendedUntil: user.suspendedUntil,
+      suspendedReason: user.suspendedReason,
+      bannedAt: user.bannedAt,
+      bannedReason: user.bannedReason,
+      consentGiven: user.consentGiven,
+      consentTimestamp: user.consentTimestamp,
+      // needed by the Restore button, the "Deleted account" banner and hiding Verify
+      isDeleted: !!user.isDeleted,
+      deletedAt: user.deletedAt ?? null,
+    },
+    questions,
+    paymentDetails,
+    crops: user.crops ?? [],
+  };
+}
 
   async suspendOrBanUser(
     adminId: string,
@@ -609,6 +728,8 @@ async listUsers(dto: ListUsersDto) {
   ) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException("User not found");
+    if (user.isDeleted)
+      throw new Error("Deleted users can not be Ban or Suspend");
 
     const isSuperAdmin = await this.isSuperAdmin(adminId);
     if (!isSuperAdmin)
@@ -688,9 +809,11 @@ async listUsers(dto: ListUsersDto) {
   }
 
   async unsuspendOrUnbanUser(adminId: string, userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    console.log("User id coming to be-----------------------------", userId);
+    const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException("User not found");
-
+    if (user.isDeleted)
+      throw new Error("Deleted User can not be unbanned or unsuspend");
     const isSuperAdmin = await this.isSuperAdmin(adminId);
     if (!isSuperAdmin)
       throw new ForbiddenException(
@@ -746,7 +869,7 @@ async listUsers(dto: ListUsersDto) {
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException("User not found");
-
+    if (user.isDeleted) throw new Error("Deleted users can not be verified..");
     const oldStatus = user.verificationStatus;
     if (oldStatus === VerificationStatus.VERIFIED) {
       return {
@@ -779,27 +902,163 @@ async listUsers(dto: ListUsersDto) {
   // Section 2: Question Review
   // ─────────────────────────────────────────────────────────────
 
+  // async listReviewQueue(dto: ListReviewQueueDto) {
+  //   const {
+  //     page = 1,
+  //     limit = 20,
+  //     state,
+  //     search,
+  //     status,
+  //     sortBy = "submittedAt",
+  //     sortOrder = "DESC",
+  //     fromDate,
+  //     toDate,
+  //   } = dto;
+
+  //   const qb = this.questionRepo
+  //     .createQueryBuilder("q")
+  //     .leftJoinAndSelect("q.user", "u")
+  //     .leftJoinAndSelect("q.reviewer", "r")
+  //     .select([
+  //       "q.id",
+  //       "q.userId",
+  //       "q.questionText",
+  //       "q.mediaType",
+  //       "q.mediaUrls",
+  //       "q.status",
+  //       "q.submittedAt",
+  //       "q.reviewedAt",
+  //       "q.rejectionReason",
+  //       "q.heldReason",
+  //       "q.approvalReason",
+  //       "q.language",
+  //       "q.domains",
+  //       "q.cropType",
+  //       "q.state",
+  //       "q.district",
+  //       "u.name",
+  //       "u.mobileNumber",
+  //       "r.name",
+  //     ])
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   // Status filter
+  //   if (status && status.length > 0) {
+  //     if (status.length === 1) {
+  //       qb.andWhere("q.status = :status", { status: status[0] });
+  //     } else {
+  //       qb.andWhere("q.status IN (:...statuses)", { statuses: status });
+  //     }
+  //   } else {
+  //     // Default: show all reviewable statuses
+  //     const defaultStatuses = [QuestionStatus.PENDING, QuestionStatus.HELD];
+  //     qb.andWhere("q.status IN (:...statuses)", { statuses: defaultStatuses });
+  //   }
+
+  //   // State filter
+  //   if (state) qb.andWhere("q.state = :state", { state });
+
+  //   // Search: question text or user mobile
+  //   if (search) {
+  //     qb.andWhere(
+  //       `(q.questionText ILIKE :search OR u.mobileNumber ILIKE :search)`,
+  //       { search: `%${search}%` },
+  //     );
+  //   }
+
+  //   // Date range
+  //   if (fromDate)
+  //     qb.andWhere("q.submittedAt >= :fromDate", {
+  //       fromDate: new Date(fromDate),
+  //     });
+  //   if (toDate)
+  //     qb.andWhere("q.submittedAt <= :toDate", { toDate: new Date(toDate) });
+
+  //   // Sorting
+  //   const sortColumn =
+  //     sortBy === "state"
+  //       ? "q.state"
+  //       : sortBy === "reviewedAt"
+  //         ? "q.reviewedAt"
+  //         : "q.submittedAt";
+  //   qb.orderBy(sortColumn, sortOrder);
+
+  //   const [items, total] = await qb.getManyAndCount();
+  //   return {
+  //     items: items.map((q) => ({
+  //       ...q,
+  //       user: q.user
+  //         ? {
+  //             id: q.user.id,
+  //             name: q.user.name,
+  //             mobileNumber: q.user.mobileNumber,
+  //           }
+  //         : null,
+  //       reviewedByName: (q as any).reviewer?.name ?? null,
+  //     })),
+  //     total,
+  //     page,
+  //     limit,
+  //     pages: Math.ceil(total / limit),
+  //   };
+  // }
+
   async listReviewQueue(dto: ListReviewQueueDto) {
     return this.questionRepo.listQueue(dto);
   }
 
+  // async getQuestionForReview(questionId: string) {
+  //   const question = await this.questionRepo.findOne({
+  //     where: { id: questionId },
+  //     relations: ["user", "reviewer"],
+  //   });
+  //   if (!question) throw new NotFoundException("Question not found");
+  //   return {
+  //     ...question,
+  //     user: question.user
+  //       ? {
+  //           id: question.user.id,
+  //           name: question.user.name,
+  //           mobileNumber: question.user.mobileNumber,
+  //           state: question.user.state,
+  //         }
+  //       : null,
+  //     reviewedByName: question.reviewer?.name ?? null,
+  //   };
+  // }
+
   async getQuestionForReview(questionId: string) {
-    const question = await this.questionRepo.findOne({
-      where: { id: questionId },
-      relations: ["user", "reviewer"],
-    });
-    if (!question) throw new NotFoundException("Question not found");
+    if (!Types.ObjectId.isValid(questionId)) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const question = await this.questionRepo.findById(questionId);
+    if (!question || question.isDeleted) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const [user, reviewer] = await Promise.all([
+      Types.ObjectId.isValid(String(question.userId))
+        ? this.userRepo.findById(String(question.userId))
+        : null,
+      question.reviewerId && Types.ObjectId.isValid(String(question.reviewerId))
+        ? this.userRepo.findById(String(question.reviewerId))
+        : null,
+    ]);
+
     return {
       ...question,
-      user: question.user
+      id: String(question._id),
+      user: user
         ? {
-            id: question.user.id,
-            name: question.user.name,
-            mobileNumber: question.user.mobileNumber,
-            state: question.user.state,
+            id: String(user._id),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
           }
         : null,
-      reviewedByName: question.reviewer?.name ?? null,
+      reviewedByName: reviewer?.name ?? null,
     };
   }
 
@@ -812,6 +1071,60 @@ async listUsers(dto: ListUsersDto) {
    * Returns { isDuplicate: true, matchedQuestion, matchedAnswer, similarityScore }
    *         if a duplicate was found in either the DB or GDB.
    */
+  // async checkDuplicate(questionId: string): Promise<{
+  //   isDuplicate: boolean;
+  //   matchedQuestion?: string;
+  //   matchedAnswer?: string | null;
+  //   similarityScore?: number | null;
+  //   matchedUserName?: string | null;
+  // }> {
+  //   const question = await this.questionRepo.findOne({
+  //     where: { id: questionId },
+  //   });
+  //   if (!question) throw new NotFoundException("Question not found");
+  //   // Step 1: DB exact-match (case-insensitive trimmed comparison, excluding self)
+  //   const dbDup = await this.questionRepo
+  //     .createQueryBuilder("q")
+  //     .innerJoinAndSelect("q.user", "u")
+  //     .where("LOWER(TRIM(q.questionText)) = LOWER(TRIM(:text))", {
+  //       text: question.questionText,
+  //     })
+  //     .andWhere("q.id != :id", { id: questionId })
+  //     .andWhere("q.status = :status", { status: QuestionStatus.APPROVED })
+  //     .select(["q.id", "q.questionText", "u.name"])
+  //     .getOne();
+
+  //   if (dbDup) {
+  //     return {
+  //       isDuplicate: true,
+  //       matchedQuestion: dbDup.questionText,
+  //       matchedAnswer: null, // exact DB match has no stored answer in this query path
+  //       similarityScore: null,
+  //       matchedUserName: dbDup.user?.name ?? null,
+  //     };
+  //   }
+
+  //   // Step 2: GDB semantic duplicate check
+  //   // Pass the question's stored language so non-English text gets translated
+  //   // to English before the semantic GDB search.
+  //   const gdbResult = await this.gdbService.checkDuplicate({
+  //     questionText: question.questionText,
+  //     languageCode: question.language,
+  //   });
+
+  //   if (gdbResult.isDuplicate) {
+  //     return {
+  //       isDuplicate: true,
+  //       matchedQuestion: gdbResult.matchedQuestion ?? undefined,
+  //       matchedAnswer: gdbResult.matchedAnswer ?? null,
+  //       similarityScore: gdbResult.similarityScore ?? null,
+  //       matchedUserName: gdbResult.matchedUserName ?? null,
+  //     };
+  //   }
+
+  //   return { isDuplicate: false };
+  // }
+
   async checkDuplicate(questionId: string): Promise<{
     isDuplicate: boolean;
     matchedQuestion?: string;
@@ -819,35 +1132,42 @@ async listUsers(dto: ListUsersDto) {
     similarityScore?: number | null;
     matchedUserName?: string | null;
   }> {
-    const question = await this.questionRepo.findOne({
-      where: { id: questionId },
+    if (!Types.ObjectId.isValid(questionId)) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const question = await this.questionRepo.findById(questionId);
+    if (!question || question.isDeleted) {
+      throw new NotFoundException("Question not found");
+    }
+
+    // Step 1: DB exact-match (case-insensitive, whitespace-trimmed, excluding self)
+    const text = question.questionText.trim();
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const dbDup = await this.questionRepo.findOne({
+      questionText: { $regex: `^\\s*${escaped}\\s*$`, $options: "i" },
+      _id: { $ne: questionId }, // plain string: Mongoose casts it, and the repo won't mangle it
+      status: QuestionStatus.APPROVED,
+      isDeleted: { $ne: true },
     });
-    if (!question) throw new NotFoundException("Question not found");
-    // Step 1: DB exact-match (case-insensitive trimmed comparison, excluding self)
-    const dbDup = await this.questionRepo
-      .createQueryBuilder("q")
-      .innerJoinAndSelect("q.user", "u")
-      .where("LOWER(TRIM(q.questionText)) = LOWER(TRIM(:text))", {
-        text: question.questionText,
-      })
-      .andWhere("q.id != :id", { id: questionId })
-      .andWhere("q.status = :status", { status: QuestionStatus.APPROVED })
-      .select(["q.id", "q.questionText", "u.name"])
-      .getOne();
 
     if (dbDup) {
+      // Replaces innerJoinAndSelect("q.user", "u")
+      const matchedUser = Types.ObjectId.isValid(String(dbDup.userId))
+        ? await this.userRepo.findById(String(dbDup.userId))
+        : null;
+
       return {
         isDuplicate: true,
         matchedQuestion: dbDup.questionText,
         matchedAnswer: null, // exact DB match has no stored answer in this query path
         similarityScore: null,
-        matchedUserName: dbDup.user?.name ?? null,
+        matchedUserName: matchedUser?.name ?? null,
       };
     }
 
-    // Step 2: GDB semantic duplicate check
-    // Pass the question's stored language so non-English text gets translated
-    // to English before the semantic GDB search.
+    // Step 2: GDB semantic duplicate check (unchanged)
     const gdbResult = await this.gdbService.checkDuplicate({
       questionText: question.questionText,
       languageCode: question.language,
@@ -876,7 +1196,8 @@ async listUsers(dto: ListUsersDto) {
       where: { id: questionId },
     });
     if (!question) throw new NotFoundException("Question not found");
-
+    if (question.isDeleted)
+      throw new Error("Deleted questions are not allowed to review...");
     const terminalStatuses = [QuestionStatus.APPROVED, QuestionStatus.REJECTED];
     if (terminalStatuses.includes(question.status)) {
       throw new BadRequestException("Question has already been reviewed");
@@ -1046,15 +1367,15 @@ async listUsers(dto: ListUsersDto) {
     // request_info — hold for more info from user
     await this.questionRepo.update(questionId, {
       status: QuestionStatus.HELD,
-    // });
-    // await this.logAudit({
-    //   actorType,
-    //   actorId: reviewerId,
-    //   action: "question_review_request_info",
-    //   entityType: "question",
-    //   entityId: questionId,
-    //   oldValue: { status: oldStatus },
-    //   newValue: { status: QuestionStatus.HELD },
+      // });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: "question_review_request_info",
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: { status: QuestionStatus.HELD },
     });
     await this.notificationRepo.save(
       await this.notificationRepo.create({
@@ -1095,7 +1416,11 @@ async listUsers(dto: ListUsersDto) {
 
     return {
       items: configs.map((c) => {
-        if (!isPaymentModifiable && (c.key === 'payment_withdrawal_enabled' || c.key === 'payment_verification_enabled')) {
+        if (
+          !isPaymentModifiable &&
+          (c.key === "payment_withdrawal_enabled" ||
+            c.key === "payment_verification_enabled")
+        ) {
           return {
             key: c.key,
             value: 0,
@@ -1114,8 +1439,14 @@ async listUsers(dto: ListUsersDto) {
   async updateConfig(adminId: string, dto: UpdateConfigDto) {
     // TEMPORARY RESTRICTION: Block enabling/disabling payment features
     const isPaymentModifiable = false;
-    if (!isPaymentModifiable && (dto.key === 'payment_withdrawal_enabled' || dto.key === 'payment_verification_enabled')) {
-      throw new BadRequestException('Payment features cannot be enabled or disabled at the moment. Kindly contact the development team.');
+    if (
+      !isPaymentModifiable &&
+      (dto.key === "payment_withdrawal_enabled" ||
+        dto.key === "payment_verification_enabled")
+    ) {
+      throw new BadRequestException(
+        "Payment features cannot be enabled or disabled at the moment. Kindly contact the development team.",
+      );
     }
 
     const config = await this.configRepo.findOne({ where: { key: dto.key } });
@@ -1459,7 +1790,7 @@ async listUsers(dto: ListUsersDto) {
     let walletIdFilter: Record<string, unknown> | undefined;
     if (userIdFilter) {
       const wallets = await this.walletRepo.findAll({ userId: userIdFilter });
-      walletIdFilter = { $in: wallets.map((wallet) => wallet.id) };
+      walletIdFilter = { $in: wallets.map((wallet) => wallet._id.toString()) };
     }
     return {
       userFilter: Object.keys(userFilter).length > 0 ? userFilter : undefined,
@@ -1661,71 +1992,386 @@ async listUsers(dto: ListUsersDto) {
     };
   }
 
+  // async processWithdrawal(
+  //   adminId: string,
+  //   withdrawalId: string,
+  //   dto: ProcessWithdrawalDto,
+  //   reviewerRole?: UserRole,
+  // ) {
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { id: withdrawalId },
+  //     relations: ["user", "wallet"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+  //   if (withdrawal.status !== WithdrawalStatus.PENDING) {
+  //     // Idempotent: if already processed, return current state without error.
+  //     return {
+  //       success: true,
+  //       action:
+  //         withdrawal.status === WithdrawalStatus.PROCESSING
+  //           ? "approved"
+  //           : "rejected",
+  //       withdrawalId,
+  //       status: withdrawal.status,
+  //     };
+  //   }
+
+  //   if (dto.action === "approve") {
+  //     // ── Step 1: Fetch user's verified payment detail ──────────────────────────
+  //     const paymentDetail = await this.paymentDetailRepo.findOne({
+  //       where: { userId: withdrawal.userId, status: "verified" },
+  //       order: { verifiedAt: "DESC" },
+  //     });
+  //     if (!paymentDetail) {
+  //       throw new BadRequestException(
+  //         "No verified payment detail found for this user.",
+  //       );
+  //     }
+
+  //     // ── Step 2: Create or reuse Razorpay fund account ─────────────────────────
+  //     let fundAccountId = paymentDetail.razorpayFundAccountId;
+  //     if (!fundAccountId) {
+  //       const fundAccount = await this.razorpayPayoutService.createFundAccount({
+  //         userId: withdrawal.userId,
+  //         phone: withdrawal.user.mobileNumber,
+  //         name: withdrawal.user.name ?? "User",
+  //         existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+  //         vpa: paymentDetail.upiId ?? undefined,
+  //         bankAccount:
+  //           paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+  //             ? {
+  //                 accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+  //                 ifsc: paymentDetail.ifsc,
+  //                 accountHolderName: paymentDetail.accountHolderName ?? "",
+  //               }
+  //             : undefined,
+  //       });
+  //       fundAccountId = fundAccount.fundAccountId;
+  //       // Persist fund account and contact ID for future use
+  //       await this.paymentDetailRepo.update(paymentDetail.id, {
+  //         razorpayFundAccountId: fundAccountId,
+  //       });
+  //       if (!withdrawal.user.razorpayContactId) {
+  //         await this.userRepo.update(withdrawal.userId, {
+  //           razorpayContactId: fundAccount.contactId,
+  //         });
+  //       }
+  //     }
+
+  //     const referenceId = `wd_${withdrawalId}`;
+  //     const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+  //     const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+  //     let payoutResult: {
+  //       payoutId: string;
+  //       status: string;
+  //       utrNumber?: string | null;
+  //     };
+  //     try {
+  //       payoutResult = await this.razorpayPayoutService.initiatePayout({
+  //         fundAccountId,
+  //         amount: amountPaise,
+  //         referenceId,
+  //         mode: payoutMode,
+  //         narration: "Withdrawal payout",
+  //       });
+  //     } catch (err) {
+  //       // Payout initiation failed — mark FAILED and refund immediately
+  //       this.logger.error(
+  //         `[Razorpay] initiatePayout failed for withdrawal ${withdrawalId}: ${err.message}`,
+  //       );
+  //       await this.handleWithdrawalFailure({
+  //         withdrawal,
+  //         orderId: referenceId,
+  //         adminId,
+  //         result: {
+  //           pinelabsTransactionId: null,
+  //           errorCode: "RAZORPAY_INIT_ERROR",
+  //           errorMessage: err.message,
+  //           rawResponse: {},
+  //         },
+  //       });
+  //       return {
+  //         success: true,
+  //         action: "approved",
+  //         withdrawalId,
+  //         status: WithdrawalStatus.FAILED,
+  //         paymentFailed: true,
+  //         errorCode: "RAZORPAY_INIT_ERROR",
+  //         errorMessage: err.message,
+  //       };
+  //     }
+
+  //     // ── Step 4: Update withdrawal based on Razorpay response ─────────────────
+  //     const { payoutId, status: razorpayStatus } = payoutResult;
+  //     const finalStatus =
+  //       razorpayStatus === "success" || razorpayStatus === "processed"
+  //         ? WithdrawalStatus.COMPLETED
+  //         : razorpayStatus === "failed" || razorpayStatus === "rejected"
+  //           ? WithdrawalStatus.FAILED
+  //           : WithdrawalStatus.PROCESSING;
+
+  //     await this.withdrawalRepo.update(withdrawalId, {
+  //       status: finalStatus,
+  //       processedAt:
+  //         finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+  //       razorpayPayoutId: payoutId,
+  //       orderId: referenceId,
+  //       utrNumber: payoutResult.utrNumber ?? null,
+  //     });
+
+  //     // ── Step 5: Log the payment attempt ─────────────────────────────────────
+  //     const paymentLog = await this.paymentLogRepo.create({
+  //       withdrawalRequestId: withdrawalId,
+  //       adminId,
+  //       orderId: referenceId,
+  //       razorpayPayoutId: payoutId,
+  //       utrNumber: payoutResult.utrNumber ?? null,
+  //       status:
+  //         finalStatus === WithdrawalStatus.COMPLETED
+  //           ? PaymentLogStatus.SUCCESS
+  //           : finalStatus === WithdrawalStatus.FAILED
+  //             ? PaymentLogStatus.FAILED
+  //             : PaymentLogStatus.PENDING,
+  //     });
+  //     await this.paymentLogRepo.save(paymentLog);
+
+  //     const actorType: ActorType =
+  //       reviewerRole === UserRole.FINANCE
+  //         ? ActorType.FINANCE
+  //         : reviewerRole === UserRole.CURATOR
+  //           ? ActorType.CURATOR
+  //           : ActorType.ADMIN;
+
+  //     // await this.logAudit({
+  //     //   actorType,
+  //     //   actorId: adminId,
+  //     //   action:
+  //     //     finalStatus === WithdrawalStatus.COMPLETED
+  //     //       ? "withdrawal_completed"
+  //     //       : "withdrawal_approved",
+  //     //   entityType: "withdrawal_request",
+  //     //   entityId: withdrawalId,
+  //     // });
+
+  //     // ── Step 6: On FAILED, trigger refund ────────────────────────────────────
+  //     if (finalStatus === WithdrawalStatus.FAILED) {
+  //       await this.handleWithdrawalFailure({
+  //         withdrawal,
+  //         orderId: referenceId,
+  //         adminId,
+  //         result: {
+  //           pinelabsTransactionId: null,
+  //           errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //           errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //           rawResponse: { payoutId, razorpayStatus },
+  //         },
+  //       });
+  //     } else {
+  //       // Send notification (PROCESSING or COMPLETED)
+  //       await this.notificationRepo.save(
+  //         await this.notificationRepo.create({
+  //           userId: withdrawal.userId,
+  //           type: NotificationType.WITHDRAWAL_APPROVED,
+  //           title: "Withdrawal Approved",
+  //           body:
+  //             finalStatus === WithdrawalStatus.COMPLETED
+  //               ? `Your withdrawal of Rs. ${withdrawal.amount} has been credited to your account.`
+  //               : `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
+  //           data: {
+  //             withdrawalId,
+  //             status:
+  //               finalStatus === WithdrawalStatus.COMPLETED
+  //                 ? "completed"
+  //                 : "processing",
+  //             userId: withdrawal.userId,
+  //           },
+  //           triggerType: NotificationTriggerType.WITHDRAW,
+  //         }),
+  //       );
+  //     }
+
+  //     return {
+  //       success: true,
+  //       action: "approved",
+  //       withdrawalId,
+  //       status: finalStatus,
+  //       razorpayPayoutId: payoutId,
+  //       paymentFailed: finalStatus === WithdrawalStatus.FAILED,
+  //     };
+  //   } else {
+  //     const rejectionReason = dto.rejectionReason ?? "Rejected by admin";
+  //     await this.walletRepo.increment(
+  //       { id: withdrawal.walletId },
+  //       "balance",
+  //       Number(withdrawal.amount),
+  //     );
+  //     const updatedWallet = await this.walletRepo.findOne({
+  //       where: { id: withdrawal.walletId },
+  //     });
+  //     const newBalance = updatedWallet ? Number(updatedWallet.balance) : 0;
+  //     await this.withdrawalRepo.update(withdrawalId, {
+  //       status: WithdrawalStatus.REJECTED,
+  //       processedAt: new Date(),
+  //     });
+  //     await this.transactionRepo.updateMany(
+  //       { referenceId: withdrawalId, status: TransactionStatus.PENDING },
+  //       { status: TransactionStatus.REJECTED, rejectionReason },
+  //     );
+  //     await this.transactionRepo.save(
+  //       await this.transactionRepo.create({
+  //         walletId: withdrawal.walletId,
+  //         amount: Number(withdrawal.amount),
+  //         type: TransactionType.CREDIT,
+  //         source: TransactionSource.REFUND,
+  //         description: `Withdrawal refunded${rejectionReason ? ": " + rejectionReason : ""}`,
+  //         status: TransactionStatus.COMPLETED,
+  //         referenceId: withdrawalId,
+  //         balanceAfter: newBalance,
+  //       }),
+  //     );
+  //     // await this.logAudit({
+  //     //   actorType: ActorType.ADMIN,
+  //     //   actorId: adminId,
+  //     //   action: "withdrawal_rejected",
+  //     //   entityType: "withdrawal_request",
+  //     //   entityId: withdrawalId,
+  //     //   oldValue: { status: WithdrawalStatus.PENDING },
+  //     //   newValue: {
+  //     //     status: WithdrawalStatus.REJECTED,
+  //     //     reason: rejectionReason,
+  //     //   },
+  //     // });
+  //     const notification = await this.notificationRepo.save(
+  //       await this.notificationRepo.create({
+  //         userId: withdrawal.userId,
+  //         type: NotificationType.WITHDRAWAL_REJECTED,
+  //         title: "Withdrawal Rejected",
+  //         body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected.${rejectionReason ? " Reason: " + rejectionReason + "." : ""} Rs. ${withdrawal.amount} has been credited back to your wallet.`,
+  //         data: {
+  //           withdrawalId,
+  //           status: "rejected",
+  //           reason: rejectionReason,
+  //           userId: withdrawal.userId,
+  //         },
+  //         triggerType: NotificationTriggerType.WITHDRAW,
+  //       }),
+  //     );
+  //     this.notificationsService
+  //       .sendToUser(withdrawal.userId, {
+  //         title: notification.title,
+  //         body: notification.body,
+  //         data: notification.data ?? undefined,
+  //         sound: "default",
+  //         priority: "high",
+  //       })
+  //       .catch((pushErr) =>
+  //         console.error(
+  //           "[AdminService] Failed to send withdrawal rejection push:",
+  //           pushErr,
+  //         ),
+  //       );
+  //     return {
+  //       success: true,
+  //       action: "rejected",
+  //       withdrawalId,
+  //       status: WithdrawalStatus.REJECTED,
+  //     };
+  //   }
+  // }
+
   async processWithdrawal(
     adminId: string,
     withdrawalId: string,
     dto: ProcessWithdrawalDto,
     reviewerRole?: UserRole,
   ) {
-    const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
-      relations: ["user", "wallet"],
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const alreadyProcessed = (status: WithdrawalStatus) => ({
+      success: true,
+      action: status === WithdrawalStatus.PROCESSING ? "approved" : "rejected",
+      withdrawalId,
+      status,
     });
+
+    const withdrawal = await this.withdrawalRepo.findById(withdrawalId);
     if (!withdrawal)
       throw new NotFoundException("Withdrawal request not found");
     if (withdrawal.status !== WithdrawalStatus.PENDING) {
-      // Idempotent: if already processed, return current state without error.
-      return {
-        success: true,
-        action:
-          withdrawal.status === WithdrawalStatus.PROCESSING
-            ? "approved"
-            : "rejected",
-        withdrawalId,
-        status: withdrawal.status,
-      };
+      return alreadyProcessed(withdrawal.status);
     }
 
+    // ───────────────────────────── APPROVE ─────────────────────────────
     if (dto.action === "approve") {
-      // ── Step 1: Fetch user's verified payment detail ──────────────────────────
-      const paymentDetail = await this.paymentDetailRepo.findOne({
-        where: { userId: withdrawal.userId, status: "verified" },
-        order: { verifiedAt: "DESC" },
-      });
+      // No joins in Mongo: fetch the user explicitly
+      const user = await this.userRepo.findById(withdrawal.userId);
+      if (!user)
+        throw new NotFoundException("User not found for this withdrawal");
+
+      const paymentDetail =
+        await this.paymentDetailRepo.findLatestVerifiedByUserId(
+          withdrawal.userId,
+        );
       if (!paymentDetail) {
         throw new BadRequestException(
           "No verified payment detail found for this user.",
         );
       }
 
-      // ── Step 2: Create or reuse Razorpay fund account ─────────────────────────
+      // Atomic claim: only one admin request can move PENDING -> PROCESSING,
+      // so two simultaneous approvals can never trigger two payouts.
+      const claimed = await this.withdrawalRepo.findOneAndUpdate(
+        { _id: withdrawalId, status: WithdrawalStatus.PENDING },
+        { status: WithdrawalStatus.PROCESSING },
+      );
+      if (!claimed) {
+        const current = await this.withdrawalRepo.findById(withdrawalId);
+        return alreadyProcessed(current?.status ?? WithdrawalStatus.PROCESSING);
+      }
+
+      // Fund account setup. If this throws, release the claim so it can be retried
+      // (matches the old behaviour where status stayed PENDING).
       let fundAccountId = paymentDetail.razorpayFundAccountId;
-      if (!fundAccountId) {
-        const fundAccount = await this.razorpayPayoutService.createFundAccount({
-          userId: withdrawal.userId,
-          phone: withdrawal.user.mobileNumber,
-          name: withdrawal.user.name ?? "User",
-          existingContactId: withdrawal.user.razorpayContactId ?? undefined,
-          vpa: paymentDetail.upiId ?? undefined,
-          bankAccount:
-            paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
-              ? {
-                  accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
-                  ifsc: paymentDetail.ifsc,
-                  accountHolderName: paymentDetail.accountHolderName ?? "",
-                }
-              : undefined,
-        });
-        fundAccountId = fundAccount.fundAccountId;
-        // Persist fund account and contact ID for future use
-        await this.paymentDetailRepo.update(paymentDetail.id, {
-          razorpayFundAccountId: fundAccountId,
-        });
-        if (!withdrawal.user.razorpayContactId) {
-          await this.userRepo.update(withdrawal.userId, {
-            razorpayContactId: fundAccount.contactId,
+      try {
+        if (!fundAccountId) {
+          const fundAccount =
+            await this.razorpayPayoutService.createFundAccount({
+              userId: withdrawal.userId,
+              phone: user.mobileNumber,
+              name: user.name ?? "User",
+              existingContactId: user.razorpayContactId ?? undefined,
+              vpa: paymentDetail.upiId ?? undefined,
+              bankAccount:
+                paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+                  ? {
+                      accountNumber: decrypt(
+                        paymentDetail.accountNumberEncrypted,
+                      ),
+                      ifsc: paymentDetail.ifsc,
+                      accountHolderName: paymentDetail.accountHolderName ?? "",
+                    }
+                  : undefined,
+            });
+          fundAccountId = fundAccount.fundAccountId;
+
+          await this.paymentDetailRepo.update(paymentDetail._id.toString(), {
+            razorpayFundAccountId: fundAccountId,
           });
+          if (!user.razorpayContactId) {
+            await this.userRepo.update(withdrawal.userId, {
+              razorpayContactId: fundAccount.contactId,
+            });
+          }
         }
+      } catch (err) {
+        await this.withdrawalRepo.update(withdrawalId, {
+          status: WithdrawalStatus.PENDING,
+        });
+        throw err;
       }
 
       const referenceId = `wd_${withdrawalId}`;
@@ -1746,9 +2392,10 @@ async listUsers(dto: ListUsersDto) {
           narration: "Withdrawal payout",
         });
       } catch (err) {
-        // Payout initiation failed — mark FAILED and refund immediately
+        const errorMessage =
+          err instanceof Error ? err.message : String(err);
         this.logger.error(
-          `[Razorpay] initiatePayout failed for withdrawal ${withdrawalId}: ${err.message}`,
+          `[Razorpay] initiatePayout failed for withdrawal ${withdrawalId}: ${errorMessage}`,
         );
         await this.handleWithdrawalFailure({
           withdrawal,
@@ -1757,7 +2404,7 @@ async listUsers(dto: ListUsersDto) {
           result: {
             pinelabsTransactionId: null,
             errorCode: "RAZORPAY_INIT_ERROR",
-            errorMessage: err.message,
+            errorMessage,
             rawResponse: {},
           },
         });
@@ -1768,11 +2415,10 @@ async listUsers(dto: ListUsersDto) {
           status: WithdrawalStatus.FAILED,
           paymentFailed: true,
           errorCode: "RAZORPAY_INIT_ERROR",
-          errorMessage: err.message,
+          errorMessage,
         };
       }
 
-      // ── Step 4: Update withdrawal based on Razorpay response ─────────────────
       const { payoutId, status: razorpayStatus } = payoutResult;
       const finalStatus =
         razorpayStatus === "success" || razorpayStatus === "processed"
@@ -1790,21 +2436,21 @@ async listUsers(dto: ListUsersDto) {
         utrNumber: payoutResult.utrNumber ?? null,
       });
 
-      // ── Step 5: Log the payment attempt ─────────────────────────────────────
-      const paymentLog = await this.paymentLogRepo.create({
-        withdrawalRequestId: withdrawalId,
-        adminId,
-        orderId: referenceId,
-        razorpayPayoutId: payoutId,
-        utrNumber: payoutResult.utrNumber ?? null,
-        status:
-          finalStatus === WithdrawalStatus.COMPLETED
-            ? PaymentLogStatus.SUCCESS
-            : finalStatus === WithdrawalStatus.FAILED
-              ? PaymentLogStatus.FAILED
-              : PaymentLogStatus.PENDING,
-      });
-      await this.paymentLogRepo.save(paymentLog);
+      await this.paymentLogRepo.save(
+        await this.paymentLogRepo.create({
+          withdrawalRequestId: withdrawalId,
+          adminId,
+          orderId: referenceId,
+          razorpayPayoutId: payoutId,
+          utrNumber: payoutResult.utrNumber ?? null,
+          status:
+            finalStatus === WithdrawalStatus.COMPLETED
+              ? PaymentLogStatus.SUCCESS
+              : finalStatus === WithdrawalStatus.FAILED
+                ? PaymentLogStatus.FAILED
+                : PaymentLogStatus.PENDING,
+        }),
+      );
 
       const actorType: ActorType =
         reviewerRole === UserRole.FINANCE
@@ -1812,19 +2458,8 @@ async listUsers(dto: ListUsersDto) {
           : reviewerRole === UserRole.CURATOR
             ? ActorType.CURATOR
             : ActorType.ADMIN;
+      // logAudit stays commented out as before; actorType is ready for it.
 
-      // await this.logAudit({
-      //   actorType,
-      //   actorId: adminId,
-      //   action:
-      //     finalStatus === WithdrawalStatus.COMPLETED
-      //       ? "withdrawal_completed"
-      //       : "withdrawal_approved",
-      //   entityType: "withdrawal_request",
-      //   entityId: withdrawalId,
-      // });
-
-      // ── Step 6: On FAILED, trigger refund ────────────────────────────────────
       if (finalStatus === WithdrawalStatus.FAILED) {
         await this.handleWithdrawalFailure({
           withdrawal,
@@ -1838,7 +2473,6 @@ async listUsers(dto: ListUsersDto) {
           },
         });
       } else {
-        // Send notification (PROCESSING or COMPLETED)
         await this.notificationRepo.save(
           await this.notificationRepo.create({
             userId: withdrawal.userId,
@@ -1869,85 +2503,94 @@ async listUsers(dto: ListUsersDto) {
         razorpayPayoutId: payoutId,
         paymentFailed: finalStatus === WithdrawalStatus.FAILED,
       };
-    } else {
-      const rejectionReason = dto.rejectionReason ?? "Rejected by admin";
-      await this.walletRepo.increment(
-        { id: withdrawal.walletId },
-        "balance",
-        Number(withdrawal.amount),
-      );
-      const updatedWallet = await this.walletRepo.findOne({
-        where: { id: withdrawal.walletId },
-      });
-      const newBalance = updatedWallet ? Number(updatedWallet.balance) : 0;
-      await this.withdrawalRepo.update(withdrawalId, {
+    }
+
+    // ───────────────────────────── REJECT ─────────────────────────────
+    const rejectionReason = dto.rejectionReason ?? "Rejected by admin";
+
+    // Claim FIRST (PENDING -> REJECTED), then refund. A retry or double click can
+    // never refund twice. If the process crashes between the claim and the refund,
+    // you get a rejected withdrawal with no REFUND transaction, which is detectable
+    // and fixable, whereas a double refund creates money.
+    const claimed = await this.withdrawalRepo.findOneAndUpdate(
+      { _id: withdrawalId, status: WithdrawalStatus.PENDING },
+      {
         status: WithdrawalStatus.REJECTED,
         processedAt: new Date(),
-      });
-      await this.transactionRepo.updateMany(
-        { referenceId: withdrawalId, status: TransactionStatus.PENDING },
-        { status: TransactionStatus.REJECTED, rejectionReason },
-      );
-      await this.transactionRepo.save(
-        await this.transactionRepo.create({
-          walletId: withdrawal.walletId,
-          amount: Number(withdrawal.amount),
-          type: TransactionType.CREDIT,
-          source: TransactionSource.REFUND,
-          description: `Withdrawal refunded${rejectionReason ? ": " + rejectionReason : ""}`,
-          status: TransactionStatus.COMPLETED,
-          referenceId: withdrawalId,
-          balanceAfter: newBalance,
-        }),
-      );
-      // await this.logAudit({
-      //   actorType: ActorType.ADMIN,
-      //   actorId: adminId,
-      //   action: "withdrawal_rejected",
-      //   entityType: "withdrawal_request",
-      //   entityId: withdrawalId,
-      //   oldValue: { status: WithdrawalStatus.PENDING },
-      //   newValue: {
-      //     status: WithdrawalStatus.REJECTED,
-      //     reason: rejectionReason,
-      //   },
-      // });
-      const notification = await this.notificationRepo.save(
-        await this.notificationRepo.create({
-          userId: withdrawal.userId,
-          type: NotificationType.WITHDRAWAL_REJECTED,
-          title: "Withdrawal Rejected",
-          body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected.${rejectionReason ? " Reason: " + rejectionReason + "." : ""} Rs. ${withdrawal.amount} has been credited back to your wallet.`,
-          data: {
-            withdrawalId,
-            status: "rejected",
-            reason: rejectionReason,
-            userId: withdrawal.userId,
-          },
-          triggerType: NotificationTriggerType.WITHDRAW,
-        }),
-      );
-      this.notificationsService
-        .sendToUser(withdrawal.userId, {
-          title: notification.title,
-          body: notification.body,
-          data: notification.data ?? undefined,
-          sound: "default",
-          priority: "high",
-        })
-        .catch((pushErr) =>
-          console.error(
-            "[AdminService] Failed to send withdrawal rejection push:",
-            pushErr,
-          ),
-        );
-      return {
-        success: true,
-        action: "rejected",
-        withdrawalId,
-        status: WithdrawalStatus.REJECTED,
-      };
+        failureReason: rejectionReason,
+      },
+    );
+    if (!claimed) {
+      const current = await this.withdrawalRepo.findById(withdrawalId);
+      return alreadyProcessed(current?.status ?? WithdrawalStatus.REJECTED);
     }
+
+    const refundedBalance = await this.walletRepo.incrementBalance(
+      withdrawal.walletId,
+      Number(withdrawal.amount),
+    );
+    if (refundedBalance === null) {
+      this.logger.error(
+        `Wallet ${withdrawal.walletId} not found while refunding withdrawal ${withdrawalId}`,
+      );
+    }
+    const newBalance = refundedBalance ?? 0;
+
+    await this.transactionRepo.updateMany(
+      { referenceId: withdrawalId, status: TransactionStatus.PENDING },
+      { status: TransactionStatus.REJECTED, rejectionReason },
+    );
+
+    await this.transactionRepo.save(
+      await this.transactionRepo.create({
+        walletId: withdrawal.walletId,
+        amount: Number(withdrawal.amount),
+        type: TransactionType.CREDIT,
+        source: TransactionSource.REFUND,
+        description: `Withdrawal refunded${rejectionReason ? ": " + rejectionReason : ""}`,
+        status: TransactionStatus.COMPLETED,
+        referenceId: withdrawalId,
+        balanceAfter: newBalance,
+      }),
+    );
+
+    const notification = await this.notificationRepo.save(
+      await this.notificationRepo.create({
+        userId: withdrawal.userId,
+        type: NotificationType.WITHDRAWAL_REJECTED,
+        title: "Withdrawal Rejected",
+        body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected.${rejectionReason ? " Reason: " + rejectionReason + "." : ""} Rs. ${withdrawal.amount} has been credited back to your wallet.`,
+        data: {
+          withdrawalId,
+          status: "rejected",
+          reason: rejectionReason,
+          userId: withdrawal.userId,
+        },
+        triggerType: NotificationTriggerType.WITHDRAW,
+      }),
+    );
+
+    this.notificationsService
+      .sendToUser(withdrawal.userId, {
+        title: notification.title,
+        body: notification.body,
+        data: notification.data ?? undefined,
+        sound: "default",
+        priority: "high",
+      })
+      .catch((pushErr) =>
+        console.error(
+          "[AdminService] Failed to send withdrawal rejection push:",
+          pushErr,
+        ),
+      );
+
+    return {
+      success: true,
+      action: "rejected",
+      withdrawalId,
+      status: WithdrawalStatus.REJECTED,
+    };
   }
 
   /**
@@ -1955,6 +2598,172 @@ async listUsers(dto: ListUsersDto) {
    * On payout failure the withdrawal is marked FAILED (no auto-refund —
    * admin must explicitly call markWithdrawalFailed to refund the user).
    */
+  // async retryWithdrawal(
+  //   adminId: string,
+  //   withdrawalId: string,
+  // ): Promise<{
+  //   success: boolean;
+  //   withdrawalId: string;
+  //   status: WithdrawalStatus;
+  //   paymentFailed?: boolean;
+  //   errorCode?: string | null;
+  //   errorMessage?: string | null;
+  // }> {
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { id: withdrawalId },
+  //     relations: ["user", "wallet"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+  //   if (withdrawal.status !== WithdrawalStatus.PROCESSING) {
+  //     throw new BadRequestException(
+  //       `Cannot retry withdrawal in '${withdrawal.status}' status. Only PROCESSING withdrawals can be retried.`,
+  //     );
+  //   }
+  //   if (!withdrawal.orderId) {
+  //     throw new BadRequestException(
+  //       "No orderId found for this withdrawal. Please re-approve the withdrawal first.",
+  //     );
+  //   }
+
+  //   // Fetch user's payment detail for fund account
+  //   const paymentDetail = await this.paymentDetailRepo.findOne({
+  //     where: { userId: withdrawal.userId, status: "verified" },
+  //     order: { verifiedAt: "DESC" },
+  //   });
+  //   if (!paymentDetail) {
+  //     throw new BadRequestException(
+  //       "No verified payment detail found for this user.",
+  //     );
+  //   }
+
+  //   // Reuse or recreate fund account
+  //   let fundAccountId = paymentDetail.razorpayFundAccountId;
+  //   if (!fundAccountId) {
+  //     const fundAccount = await this.razorpayPayoutService.createFundAccount({
+  //       userId: withdrawal.userId,
+  //       phone: withdrawal.user.mobileNumber,
+  //       name: withdrawal.user.name ?? "User",
+  //       existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+  //       vpa: paymentDetail.upiId ?? undefined,
+  //       bankAccount:
+  //         paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+  //           ? {
+  //               accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+  //               ifsc: paymentDetail.ifsc,
+  //               accountHolderName: paymentDetail.accountHolderName ?? "",
+  //             }
+  //           : undefined,
+  //     });
+  //     fundAccountId = fundAccount.fundAccountId;
+  //     await this.paymentDetailRepo.update(paymentDetail.id, {
+  //       razorpayFundAccountId: fundAccountId,
+  //     });
+  //     if (!withdrawal.user.razorpayContactId) {
+  //       await this.userRepo.update(withdrawal.userId, {
+  //         razorpayContactId: fundAccount.contactId,
+  //       });
+  //     }
+  //   }
+  //   const referenceId = `wd_${withdrawalId}`;
+  //   const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+  //   const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+  //   let payoutResult: {
+  //     payoutId: string;
+  //     status: string;
+  //     utrNumber?: string | null;
+  //   };
+  //   try {
+  //     payoutResult = await this.razorpayPayoutService.initiatePayout({
+  //       fundAccountId,
+  //       amount: amountPaise,
+  //       referenceId,
+  //       mode: payoutMode,
+  //       narration: "Withdrawal payout retry",
+  //     });
+  //   } catch (err) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: "RAZORPAY_INIT_ERROR",
+  //         errorMessage: err.message,
+  //         rawResponse: {},
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: "RAZORPAY_INIT_ERROR",
+  //       errorMessage: err.message,
+  //     };
+  //   }
+
+  //   const { payoutId, status: razorpayStatus } = payoutResult;
+  //   const finalStatus =
+  //     razorpayStatus === "success" || razorpayStatus === "processed"
+  //       ? WithdrawalStatus.COMPLETED
+  //       : razorpayStatus === "failed" || razorpayStatus === "rejected"
+  //         ? WithdrawalStatus.FAILED
+  //         : WithdrawalStatus.PROCESSING;
+
+  //   await this.withdrawalRepo.update(withdrawalId, {
+  //     status: finalStatus,
+  //     processedAt:
+  //       finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+  //     razorpayPayoutId: payoutId,
+  //     utrNumber: payoutResult.utrNumber ?? null,
+  //   });
+
+  //   if (finalStatus === WithdrawalStatus.FAILED) {
+  //     await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //         errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //         rawResponse: { payoutId, razorpayStatus },
+  //         utrNumber: payoutResult.utrNumber ?? null,
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: finalStatus,
+  //       paymentFailed: true,
+  //       errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //       errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //     };
+  //   }
+
+  //   // await this.logAudit({
+  //   //   actorType: ActorType.ADMIN,
+  //   //   actorId: adminId,
+  //   //   action: "withdrawal_completed",
+  //   //   entityType: "withdrawal_request",
+  //   //   entityId: withdrawalId,
+  //   // });
+
+  //   return { success: true, withdrawalId, status: finalStatus };
+  // }
+
+  private async getLatestVerifiedPaymentDetail(userId: string) {
+    const details = await this.paymentDetailRepo.findAll({
+      userId,
+      status: "verified",
+    });
+    const time = (d: { verifiedAt: Date | null }) =>
+      d.verifiedAt ? new Date(d.verifiedAt).getTime() : 0;
+    return details.sort((a, b) => time(b) - time(a))[0] ?? null;
+  }
+
   async retryWithdrawal(
     adminId: string,
     withdrawalId: string,
@@ -1966,10 +2775,11 @@ async listUsers(dto: ListUsersDto) {
     errorCode?: string | null;
     errorMessage?: string | null;
   }> {
-    const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
-      relations: ["user", "wallet"],
-    });
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const withdrawal = await this.withdrawalRepo.findById(withdrawalId);
     if (!withdrawal)
       throw new NotFoundException("Withdrawal request not found");
     if (withdrawal.status !== WithdrawalStatus.PROCESSING) {
@@ -1983,34 +2793,46 @@ async listUsers(dto: ListUsersDto) {
       );
     }
 
-    // await this.logAudit({
-    //   actorType: ActorType.ADMIN,
-    //   actorId: adminId,
-    //   action: "withdrawal_retry",
-    //   entityType: "withdrawal_request",
-    //   entityId: withdrawalId,
-    //   newValue: { action: "retry_attempted", orderId: withdrawal.orderId },
-    // });
+    const user = await this.userRepo.findById(withdrawal.userId);
+    if (!user)
+      throw new NotFoundException("User not found for this withdrawal");
 
-    // Fetch user's payment detail for fund account
-    const paymentDetail = await this.paymentDetailRepo.findOne({
-      where: { userId: withdrawal.userId, status: "verified" },
-      order: { verifiedAt: "DESC" },
+    // Latest verified payment detail (same lookup as processWithdrawal)
+    const details = await this.paymentDetailRepo.findAll({
+      userId: withdrawal.userId,
+      status: "verified",
     });
+    const paymentDetail = await this.getLatestVerifiedPaymentDetail(
+      withdrawal.userId,
+    );
     if (!paymentDetail) {
       throw new BadRequestException(
         "No verified payment detail found for this user.",
       );
     }
 
-    // Reuse or recreate fund account
+    // Optimistic lock: only one concurrent retry can move retryCount from N to N+1
+    const claimed = await this.withdrawalRepo.findOneAndUpdate(
+      {
+        _id: withdrawalId,
+        status: WithdrawalStatus.PROCESSING,
+        retryCount: withdrawal.retryCount ?? 0,
+      },
+      { $inc: { retryCount: 1 } },
+    );
+    if (!claimed) {
+      throw new BadRequestException(
+        "This withdrawal is already being retried. Please refresh.",
+      );
+    }
+
     let fundAccountId = paymentDetail.razorpayFundAccountId;
     if (!fundAccountId) {
       const fundAccount = await this.razorpayPayoutService.createFundAccount({
         userId: withdrawal.userId,
-        phone: withdrawal.user.mobileNumber,
-        name: withdrawal.user.name ?? "User",
-        existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+        phone: user.mobileNumber,
+        name: user.name ?? "User",
+        existingContactId: user.razorpayContactId ?? undefined,
         vpa: paymentDetail.upiId ?? undefined,
         bankAccount:
           paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
@@ -2022,15 +2844,16 @@ async listUsers(dto: ListUsersDto) {
             : undefined,
       });
       fundAccountId = fundAccount.fundAccountId;
-      await this.paymentDetailRepo.update(paymentDetail.id, {
+      await this.paymentDetailRepo.update(paymentDetail._id.toString(), {
         razorpayFundAccountId: fundAccountId,
       });
-      if (!withdrawal.user.razorpayContactId) {
+      if (!user.razorpayContactId) {
         await this.userRepo.update(withdrawal.userId, {
           razorpayContactId: fundAccount.contactId,
         });
       }
     }
+
     const referenceId = `wd_${withdrawalId}`;
     const amountPaise = Math.round(Number(withdrawal.amount) * 100);
     const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
@@ -2049,6 +2872,7 @@ async listUsers(dto: ListUsersDto) {
         narration: "Withdrawal payout retry",
       });
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       const newStatus = await this.handleWithdrawalFailure({
         withdrawal,
         orderId: referenceId,
@@ -2056,7 +2880,7 @@ async listUsers(dto: ListUsersDto) {
         result: {
           pinelabsTransactionId: null,
           errorCode: "RAZORPAY_INIT_ERROR",
-          errorMessage: err.message,
+          errorMessage,
           rawResponse: {},
         },
       });
@@ -2066,7 +2890,7 @@ async listUsers(dto: ListUsersDto) {
         status: newStatus,
         paymentFailed: true,
         errorCode: "RAZORPAY_INIT_ERROR",
-        errorMessage: err.message,
+        errorMessage,
       };
     }
 
@@ -2109,14 +2933,6 @@ async listUsers(dto: ListUsersDto) {
       };
     }
 
-    // await this.logAudit({
-    //   actorType: ActorType.ADMIN,
-    //   actorId: adminId,
-    //   action: "withdrawal_completed",
-    //   entityType: "withdrawal_request",
-    //   entityId: withdrawalId,
-    // });
-
     return { success: true, withdrawalId, status: finalStatus };
   }
 
@@ -2126,6 +2942,194 @@ async listUsers(dto: ListUsersDto) {
    * If payout fails again, withdrawal is marked FAILED again — no auto-refund;
    * admin must explicitly call markWithdrawalFailed to refund.
    */
+  // async retryFailedWithdrawal(
+  //   adminId: string,
+  //   withdrawalId: string,
+  // ): Promise<{
+  //   success: boolean;
+  //   withdrawalId: string;
+  //   status: WithdrawalStatus;
+  //   paymentFailed?: boolean;
+  //   errorCode?: string | null;
+  //   errorMessage?: string | null;
+  // }> {
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { id: withdrawalId },
+  //     relations: ["user", "wallet"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+  //   if (withdrawal.status !== WithdrawalStatus.FAILED) {
+  //     throw new BadRequestException(
+  //       `Cannot retry-refund a withdrawal in '${withdrawal.status}' status. Only FAILED withdrawals can be retried.`,
+  //     );
+  //   }
+
+  //   // Use existing referenceId if present, otherwise build a new one
+  //   const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
+
+  //   // Reset withdrawal to PROCESSING and increment retry count
+  //   await this.withdrawalRepo.update(withdrawalId, {
+  //     status: WithdrawalStatus.PROCESSING,
+  //     processedAt: new Date(),
+  //     orderId: referenceId,
+  //     razorpayPayoutId: null,
+  //     retryCount: (withdrawal.retryCount ?? 0) + 1,
+  //   });
+
+  //   // await this.logAudit({
+  //   //   actorType: ActorType.ADMIN,
+  //   //   actorId: adminId,
+  //   //   action: "withdrawal_retry_refund",
+  //   //   entityType: "withdrawal_request",
+  //   //   entityId: withdrawalId,
+  //   //   newValue: { action: "retry_refund_attempted", orderId: referenceId },
+  //   // });
+
+  //   // 2. Fetch user's payment detail for fund account
+  //   const paymentDetail = await this.paymentDetailRepo.findOne({
+  //     where: { userId: withdrawal.userId, status: "verified" },
+  //     order: { verifiedAt: "DESC" },
+  //   });
+  //   if (!paymentDetail) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: "NO_PAYMENT_DETAIL",
+  //         errorMessage: "No verified payment detail found for this user.",
+  //         rawResponse: {},
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: "NO_PAYMENT_DETAIL",
+  //       errorMessage: "No verified payment detail found.",
+  //     };
+  //   }
+
+  //   // 3. Reuse or recreate fund account
+  //   let fundAccountId = paymentDetail.razorpayFundAccountId;
+  //   if (!fundAccountId) {
+  //     const fundAccount = await this.razorpayPayoutService.createFundAccount({
+  //       userId: withdrawal.userId,
+  //       phone: withdrawal.user.mobileNumber,
+  //       name: withdrawal.user.name ?? "User",
+  //       existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+  //       vpa: paymentDetail.upiId ?? undefined,
+  //       bankAccount:
+  //         paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+  //           ? {
+  //               accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+  //               ifsc: paymentDetail.ifsc,
+  //               accountHolderName: paymentDetail.accountHolderName ?? "",
+  //             }
+  //           : undefined,
+  //     });
+  //     fundAccountId = fundAccount.fundAccountId;
+  //     await this.paymentDetailRepo.update(paymentDetail.id, {
+  //       razorpayFundAccountId: fundAccountId,
+  //     });
+  //     if (!withdrawal.user.razorpayContactId) {
+  //       await this.userRepo.update(withdrawal.userId, {
+  //         razorpayContactId: fundAccount.contactId,
+  //       });
+  //     }
+  //   }
+
+  //   const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+  //   const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+  //   let payoutResult: {
+  //     payoutId: string;
+  //     status: string;
+  //     utrNumber?: string | null;
+  //   };
+  //   try {
+  //     payoutResult = await this.razorpayPayoutService.initiatePayout({
+  //       fundAccountId,
+  //       amount: amountPaise,
+  //       referenceId,
+  //       mode: payoutMode,
+  //       narration: "Withdrawal payout retry",
+  //     });
+  //   } catch (err) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: "RAZORPAY_INIT_ERROR",
+  //         errorMessage: err.message,
+  //         rawResponse: {},
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: "RAZORPAY_INIT_ERROR",
+  //       errorMessage: err.message,
+  //     };
+  //   }
+
+  //   const { payoutId, status: razorpayStatus } = payoutResult;
+  //   const finalStatus =
+  //     razorpayStatus === "success" || razorpayStatus === "processed"
+  //       ? WithdrawalStatus.COMPLETED
+  //       : razorpayStatus === "failed" || razorpayStatus === "rejected"
+  //         ? WithdrawalStatus.FAILED
+  //         : WithdrawalStatus.PROCESSING;
+
+  //   await this.withdrawalRepo.update(withdrawalId, {
+  //     status: finalStatus,
+  //     processedAt:
+  //       finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+  //     razorpayPayoutId: payoutId,
+  //     utrNumber: payoutResult.utrNumber ?? null,
+  //   });
+
+  //   if (finalStatus === WithdrawalStatus.FAILED) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //         errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //         rawResponse: { payoutId, razorpayStatus },
+  //         utrNumber: payoutResult.utrNumber ?? null,
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //       errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //     };
+  //   }
+
+  //   // await this.logAudit({
+  //   //   actorType: ActorType.ADMIN,
+  //   //   actorId: adminId,
+  //   //   action: "withdrawal_completed",
+  //   //   entityType: "withdrawal_request",
+  //   //   entityId: withdrawalId,
+  //   // });
+
+  //   return { success: true, withdrawalId, status: finalStatus };
+  // }
+
   async retryFailedWithdrawal(
     adminId: string,
     withdrawalId: string,
@@ -2137,10 +3141,11 @@ async listUsers(dto: ListUsersDto) {
     errorCode?: string | null;
     errorMessage?: string | null;
   }> {
-    const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
-      relations: ["user", "wallet"],
-    });
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const withdrawal = await this.withdrawalRepo.findById(withdrawalId);
     if (!withdrawal)
       throw new NotFoundException("Withdrawal request not found");
     if (withdrawal.status !== WithdrawalStatus.FAILED) {
@@ -2149,32 +3154,40 @@ async listUsers(dto: ListUsersDto) {
       );
     }
 
-    // Use existing referenceId if present, otherwise build a new one
+    const user = await this.userRepo.findById(withdrawal.userId);
+    if (!user)
+      throw new NotFoundException("User not found for this withdrawal");
+
     const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
 
-    // Reset withdrawal to PROCESSING and increment retry count
-    await this.withdrawalRepo.update(withdrawalId, {
-      status: WithdrawalStatus.PROCESSING,
-      processedAt: new Date(),
-      orderId: referenceId,
-      razorpayPayoutId: null,
-      retryCount: (withdrawal.retryCount ?? 0) + 1,
-    });
+    // Atomic claim: only one request can move FAILED -> PROCESSING
+    const claimed = await this.withdrawalRepo.findOneAndUpdate(
+      { _id: withdrawalId, status: WithdrawalStatus.FAILED },
+      {
+        $set: {
+          status: WithdrawalStatus.PROCESSING,
+          processedAt: new Date(),
+          orderId: referenceId,
+          razorpayPayoutId: null,
+        },
+        $inc: { retryCount: 1 },
+      },
+    );
+    if (!claimed) {
+      throw new BadRequestException(
+        "This withdrawal is already being retried. Please refresh.",
+      );
+    }
 
-    // await this.logAudit({
-    //   actorType: ActorType.ADMIN,
-    //   actorId: adminId,
-    //   action: "withdrawal_retry_refund",
-    //   entityType: "withdrawal_request",
-    //   entityId: withdrawalId,
-    //   newValue: { action: "retry_refund_attempted", orderId: referenceId },
-    // });
-
-    // 2. Fetch user's payment detail for fund account
-    const paymentDetail = await this.paymentDetailRepo.findOne({
-      where: { userId: withdrawal.userId, status: "verified" },
-      order: { verifiedAt: "DESC" },
+    // Latest verified payment detail
+    const details = await this.paymentDetailRepo.findAll({
+      userId: withdrawal.userId,
+      status: "verified",
     });
+    const paymentDetail = await this.getLatestVerifiedPaymentDetail(
+      withdrawal.userId,
+    );
+
     if (!paymentDetail) {
       const newStatus = await this.handleWithdrawalFailure({
         withdrawal,
@@ -2197,33 +3210,41 @@ async listUsers(dto: ListUsersDto) {
       };
     }
 
-    // 3. Reuse or recreate fund account
+    // Fund account setup; if it throws, put the withdrawal back to FAILED
+    // so it isn't stuck in PROCESSING with no payout behind it.
     let fundAccountId = paymentDetail.razorpayFundAccountId;
-    if (!fundAccountId) {
-      const fundAccount = await this.razorpayPayoutService.createFundAccount({
-        userId: withdrawal.userId,
-        phone: withdrawal.user.mobileNumber,
-        name: withdrawal.user.name ?? "User",
-        existingContactId: withdrawal.user.razorpayContactId ?? undefined,
-        vpa: paymentDetail.upiId ?? undefined,
-        bankAccount:
-          paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
-            ? {
-                accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
-                ifsc: paymentDetail.ifsc,
-                accountHolderName: paymentDetail.accountHolderName ?? "",
-              }
-            : undefined,
-      });
-      fundAccountId = fundAccount.fundAccountId;
-      await this.paymentDetailRepo.update(paymentDetail.id, {
-        razorpayFundAccountId: fundAccountId,
-      });
-      if (!withdrawal.user.razorpayContactId) {
-        await this.userRepo.update(withdrawal.userId, {
-          razorpayContactId: fundAccount.contactId,
+    try {
+      if (!fundAccountId) {
+        const fundAccount = await this.razorpayPayoutService.createFundAccount({
+          userId: withdrawal.userId,
+          phone: user.mobileNumber,
+          name: user.name ?? "User",
+          existingContactId: user.razorpayContactId ?? undefined,
+          vpa: paymentDetail.upiId ?? undefined,
+          bankAccount:
+            paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+              ? {
+                  accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+                  ifsc: paymentDetail.ifsc,
+                  accountHolderName: paymentDetail.accountHolderName ?? "",
+                }
+              : undefined,
         });
+        fundAccountId = fundAccount.fundAccountId;
+        await this.paymentDetailRepo.update(paymentDetail._id.toString(), {
+          razorpayFundAccountId: fundAccountId,
+        });
+        if (!user.razorpayContactId) {
+          await this.userRepo.update(withdrawal.userId, {
+            razorpayContactId: fundAccount.contactId,
+          });
+        }
       }
+    } catch (err) {
+      await this.withdrawalRepo.update(withdrawalId, {
+        status: WithdrawalStatus.FAILED,
+      });
+      throw err;
     }
 
     const amountPaise = Math.round(Number(withdrawal.amount) * 100);
@@ -2243,6 +3264,8 @@ async listUsers(dto: ListUsersDto) {
         narration: "Withdrawal payout retry",
       });
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : String(err);
       const newStatus = await this.handleWithdrawalFailure({
         withdrawal,
         orderId: referenceId,
@@ -2250,7 +3273,7 @@ async listUsers(dto: ListUsersDto) {
         result: {
           pinelabsTransactionId: null,
           errorCode: "RAZORPAY_INIT_ERROR",
-          errorMessage: err.message,
+          errorMessage,
           rawResponse: {},
         },
       });
@@ -2260,7 +3283,7 @@ async listUsers(dto: ListUsersDto) {
         status: newStatus,
         paymentFailed: true,
         errorCode: "RAZORPAY_INIT_ERROR",
-        errorMessage: err.message,
+        errorMessage,
       };
     }
 
@@ -2303,14 +3326,6 @@ async listUsers(dto: ListUsersDto) {
       };
     }
 
-    // await this.logAudit({
-    //   actorType: ActorType.ADMIN,
-    //   actorId: adminId,
-    //   action: "withdrawal_completed",
-    //   entityType: "withdrawal_request",
-    //   entityId: withdrawalId,
-    // });
-
     return { success: true, withdrawalId, status: finalStatus };
   }
 
@@ -2341,7 +3356,7 @@ async listUsers(dto: ListUsersDto) {
     // 1. Log failure to payment_logs
     await this.paymentLogRepo.save(
       await this.paymentLogRepo.create({
-        withdrawalRequestId: withdrawal.id,
+        withdrawalRequestId: withdrawal._id.toString(),
         adminId,
         orderId,
         pinelabsTransactionId: result.pinelabsTransactionId,
@@ -2359,7 +3374,7 @@ async listUsers(dto: ListUsersDto) {
         ? (result.errorMessage ?? "Payout dispatch failed")
         : `${result.errorCode ?? "Payout failed"}: ${result.errorMessage ?? "Unknown error"}`;
 
-    await this.withdrawalRepo.update(withdrawal.id, {
+    await this.withdrawalRepo.update(withdrawal._id, {
       status: WithdrawalStatus.FAILED,
       failureReason,
     });
@@ -2425,10 +3440,22 @@ async listUsers(dto: ListUsersDto) {
       );
     }
 
+    let claimedOk = true;
+
     await this.mongoTransactionService.runInTransaction(async (session) => {
       // 1. Mark withdrawal as FAILED
-      await this.withdrawalRepo.update(
-        withdrawalId,
+      // await this.withdrawalRepo.update(
+      //   withdrawalId,
+      //   {
+      //     status: WithdrawalStatus.FAILED,
+      //     processedAt: new Date(),
+      //     failureReason: reason ?? "Marked failed by admin",
+      //   },
+      //   session,
+      // );
+
+      const claimed = await this.withdrawalRepo.findOneAndUpdate(
+        { _id: withdrawalId, status: WithdrawalStatus.PROCESSING },
         {
           status: WithdrawalStatus.FAILED,
           processedAt: new Date(),
@@ -2436,6 +3463,10 @@ async listUsers(dto: ListUsersDto) {
         },
         session,
       );
+      if (!claimed) {
+        claimedOk = false;
+        return; // someone else already handled it; don't refund
+      }
 
       // 2. Mark the DEBIT transaction as FAILED and store the reason
       await this.transactionRepo.updateMany(
@@ -2472,11 +3503,77 @@ async listUsers(dto: ListUsersDto) {
     });
 
     // Send two notifications: one for failed withdrawal, one for refund
-    const withdrawalForNotify = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
-      relations: ["user"],
-    });
-    if (withdrawalForNotify?.user) {
+    // const withdrawalForNotify = await this.withdrawalRepo.findOne({
+    //   where: { id: withdrawalId },
+    //   relations: ["user"],
+    // });
+    // if (withdrawalForNotify?.user) {
+    //   const maskPayout = (details: Record<string, unknown> | null) => {
+    //     if (!details) return {};
+    //     return Object.fromEntries(
+    //       Object.entries(details).map(([k, v]) => [
+    //         k,
+    //         typeof v === "string" && v.length > 4
+    //           ? v.slice(0, 2) + "****" + v.slice(-2)
+    //           : (v ?? ""),
+    //       ]),
+    //     );
+    //   };
+    //   const maskedDetails = maskPayout(
+    //     (withdrawalForNotify.payoutDetails as Record<string, unknown>) ?? null,
+    //   );
+
+    //   // 6a. Notify: withdrawal failed
+    //   const failedNotification = await this.notificationRepo.save(
+    //     await this.notificationRepo.create({
+    //       userId: withdrawalForNotify.userId,
+    //       type: NotificationType.WITHDRAWAL_FAILED,
+    //       title: "Withdrawal Failed",
+    //       body: `Your withdrawal of Rs. ${withdrawalForNotify.amount} has failed.${reason ? " Reason: " + reason + "." : ""}`,
+    //       data: {
+    //         withdrawalId,
+    //         status: "failed",
+    //         reason,
+    //         payoutDetails: maskedDetails,
+    //         userId: withdrawalForNotify.userId,
+    //       },
+    //       triggerType: NotificationTriggerType.WITHDRAW,
+    //     }),
+    //   );
+    //   this.notificationsService.sendToUser(withdrawalForNotify.userId, {
+    //     title: failedNotification.title,
+    //     body: failedNotification.body,
+    //     data: failedNotification.data ?? undefined,
+    //   });
+
+    //   // 6b. Notify: refund completed
+    //   const refundNotification = await this.notificationRepo.save(
+    //     await this.notificationRepo.create({
+    //       userId: withdrawalForNotify.userId,
+    //       type: NotificationType.REFUND_COMPLETED,
+    //       title: "Refund Processed",
+    //       body: `Rs. ${withdrawalForNotify.amount} has been credited back to your wallet.${reason ? " Reason: " + reason + "." : ""}`,
+    //       data: {
+    //         withdrawalId,
+    //         refundAmount: Number(withdrawalForNotify.amount),
+    //         reason,
+    //         payoutDetails: maskedDetails,
+    //         userId: withdrawalForNotify.userId,
+    //       },
+    //       triggerType: NotificationTriggerType.WITHDRAW,
+    //     }),
+    //   );
+    //   this.notificationsService.sendToUser(withdrawalForNotify.userId, {
+    //     title: refundNotification.title,
+    //     body: refundNotification.body,
+    //     data: refundNotification.data ?? undefined,
+    //   });
+    // }
+
+    // return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
+
+    const user = await this.userRepo.findById(withdrawal.userId);
+    if (user) {
       const maskPayout = (details: Record<string, unknown> | null) => {
         if (!details) return {};
         return Object.fromEntries(
@@ -2488,66 +3585,62 @@ async listUsers(dto: ListUsersDto) {
           ]),
         );
       };
-      const maskedDetails = maskPayout(
-        (withdrawalForNotify.payoutDetails as Record<string, unknown>) ?? null,
-      );
+      const maskedDetails = maskPayout(withdrawal.payoutDetails ?? null);
 
-      // 6a. Notify: withdrawal failed
+      // Notify: withdrawal failed
       const failedNotification = await this.notificationRepo.save(
         await this.notificationRepo.create({
-          userId: withdrawalForNotify.userId,
+          userId: withdrawal.userId,
           type: NotificationType.WITHDRAWAL_FAILED,
           title: "Withdrawal Failed",
-          body: `Your withdrawal of Rs. ${withdrawalForNotify.amount} has failed.${reason ? " Reason: " + reason + "." : ""}`,
+          body: `Your withdrawal of Rs. ${withdrawal.amount} has failed.${reason ? " Reason: " + reason + "." : ""}`,
           data: {
             withdrawalId,
             status: "failed",
             reason,
             payoutDetails: maskedDetails,
-            userId: withdrawalForNotify.userId,
+            userId: withdrawal.userId,
           },
           triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
-      this.notificationsService.sendToUser(withdrawalForNotify.userId, {
-        title: failedNotification.title,
-        body: failedNotification.body,
-        data: failedNotification.data ?? undefined,
-      });
+      this.notificationsService
+        .sendToUser(withdrawal.userId, {
+          title: failedNotification.title,
+          body: failedNotification.body,
+          data: failedNotification.data ?? undefined,
+        })
+        .catch((err) =>
+          this.logger.error(`Failed-withdrawal push failed: ${err.message}`),
+        );
 
-      // 6b. Notify: refund completed
+      // Notify: refund completed
       const refundNotification = await this.notificationRepo.save(
         await this.notificationRepo.create({
-          userId: withdrawalForNotify.userId,
+          userId: withdrawal.userId,
           type: NotificationType.REFUND_COMPLETED,
           title: "Refund Processed",
-          body: `Rs. ${withdrawalForNotify.amount} has been credited back to your wallet.${reason ? " Reason: " + reason + "." : ""}`,
+          body: `Rs. ${withdrawal.amount} has been credited back to your wallet.${reason ? " Reason: " + reason + "." : ""}`,
           data: {
             withdrawalId,
-            refundAmount: Number(withdrawalForNotify.amount),
+            refundAmount: Number(withdrawal.amount),
             reason,
             payoutDetails: maskedDetails,
-            userId: withdrawalForNotify.userId,
+            userId: withdrawal.userId,
           },
           triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
-      this.notificationsService.sendToUser(withdrawalForNotify.userId, {
-        title: refundNotification.title,
-        body: refundNotification.body,
-        data: refundNotification.data ?? undefined,
-      });
+      this.notificationsService
+        .sendToUser(withdrawal.userId, {
+          title: refundNotification.title,
+          body: refundNotification.body,
+          data: refundNotification.data ?? undefined,
+        })
+        .catch((err) =>
+          this.logger.error(`Refund push failed: ${err.message}`),
+        );
     }
-
-    // await this.logAudit({
-    //   actorType: ActorType.ADMIN,
-    //   actorId: adminId,
-    //   action: "withdrawal_marked_failed",
-    //   entityType: "withdrawal_request",
-    //   entityId: withdrawalId,
-    //   oldValue: { status: WithdrawalStatus.PROCESSING },
-    //   newValue: { status: WithdrawalStatus.FAILED, reason },
-    // });
 
     return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
   }
@@ -2591,59 +3684,140 @@ async listUsers(dto: ListUsersDto) {
     return { success: true, withdrawalId };
   }
 
+  // async listRewardLogs(dto: AnalyticsQueryDto) {
+  //   const { fromDate, toDate, state, cropType } = dto;
+  //   const from = fromDate
+  //     ? new Date(fromDate)
+  //     : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  //   const to = toDate ? new Date(toDate) : new Date();
+
+  //   const qb = this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .innerJoin("tx.wallet", "w")
+  //     .innerJoinAndSelect("w.user", "u")
+  //     .select([
+  //       "tx.id",
+  //       "tx.amount",
+  //       "tx.type",
+  //       "tx.source",
+  //       "tx.description",
+  //       "tx.status",
+  //       "tx.referenceId",
+  //       "tx.createdAt",
+  //       "w.id",
+  //     ])
+  //     .where("tx.source = :source", { source: TransactionSource.REWARD })
+  //     .andWhere("tx.createdAt BETWEEN :from AND :to", { from, to })
+  //     .orderBy("tx.createdAt", "DESC")
+  //     .take(100);
+
+  //   if (state) qb.andWhere("u.state = :state", { state });
+
+  //   const items = await qb.getMany();
+
+  //   return {
+  //     items: items.map((tx) => ({
+  //       id: tx.id,
+  //       amount: tx.amount,
+  //       type: tx.type,
+  //       source: tx.source,
+  //       description: tx.description,
+  //       status: tx.status,
+  //       referenceId: tx.referenceId,
+  //       createdAt: tx.createdAt,
+  //       user: tx.wallet?.user
+  //         ? {
+  //             id: tx.wallet.user.id,
+  //             name: tx.wallet.user.name,
+  //             mobileNumber: tx.wallet.user.mobileNumber,
+  //             state: tx.wallet.user.state,
+  //           }
+  //         : null,
+  //     })),
+  //     from,
+  //     to,
+  //   };
+  // }
+
   async listRewardLogs(dto: AnalyticsQueryDto) {
-    const { fromDate, toDate, state, cropType } = dto;
+    const { fromDate, toDate, state } = dto;
     const from = fromDate
       ? new Date(fromDate)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const to = toDate ? new Date(toDate) : new Date();
 
-    const qb = this.transactionRepo
-      .createQueryBuilder("tx")
-      .innerJoin("tx.wallet", "w")
-      .innerJoinAndSelect("w.user", "u")
-      .select([
-        "tx.id",
-        "tx.amount",
-        "tx.type",
-        "tx.source",
-        "tx.description",
-        "tx.status",
-        "tx.referenceId",
-        "tx.createdAt",
-        "w.id",
-      ])
-      .where("tx.source = :source", { source: TransactionSource.REWARD })
-      .andWhere("tx.createdAt BETWEEN :from AND :to", { from, to })
-      .orderBy("tx.createdAt", "DESC")
-      .take(100);
+    // 1. State filter: users in state -> their wallets
+    let walletIdFilter: string[] | undefined;
+    if (state) {
+      const stateUsers = await this.userRepo.findAll({ state });
+      const stateUserIds = stateUsers.map((u) => u._id.toString());
+      const stateWallets = stateUserIds.length
+        ? await this.walletRepo.findAll({ userId: { $in: stateUserIds } })
+        : [];
+      walletIdFilter = stateWallets.map((w) => w._id.toString());
+      if (walletIdFilter.length === 0) return { items: [], from, to };
+    }
 
-    if (state) qb.andWhere("u.state = :state", { state });
+    // 2. Transactions
+    const transactions = await this.transactionRepo.findBySource(
+      TransactionSource.REWARD,
+      {
+        fromDate: from,
+        toDate: to,
+        walletIds: walletIdFilter,
+        limit: 100,
+        select:
+          "amount type source description status referenceId createdAt walletId",
+      },
+    );
 
-    const items = await qb.getMany();
+    // 3. Batch-fetch wallets, then users
+    const walletIds = [
+      ...new Set(transactions.map((tx) => String(tx.walletId))),
+    ].filter((id) => Types.ObjectId.isValid(id));
+    const wallets = walletIds.length
+      ? await this.walletRepo.findAll({
+          _id: { $in: walletIds.map((id) => new Types.ObjectId(id)) },
+        })
+      : [];
+    const walletsById = new Map(wallets.map((w) => [w._id.toString(), w]));
 
-    return {
-      items: items.map((tx) => ({
-        id: tx.id,
-        amount: tx.amount,
-        type: tx.type,
-        source: tx.source,
-        description: tx.description,
-        status: tx.status,
-        referenceId: tx.referenceId,
-        createdAt: tx.createdAt,
-        user: tx.wallet?.user
-          ? {
-              id: tx.wallet.user.id,
-              name: tx.wallet.user.name,
-              mobileNumber: tx.wallet.user.mobileNumber,
-              state: tx.wallet.user.state,
-            }
-          : null,
-      })),
-      from,
-      to,
-    };
+    const userIds = [...new Set(wallets.map((w) => String(w.userId)))].filter(
+      (id) => Types.ObjectId.isValid(id),
+    );
+    const users = userIds.length
+      ? await this.userRepo.findAll({
+          _id: { $in: userIds.map((id) => new Types.ObjectId(id)) },
+        })
+      : [];
+    const usersById = new Map(users.map((u) => [u._id.toString(), u]));
+
+    // 4. Join (mirrors the inner joins: orphaned rows are dropped)
+    const items = transactions.flatMap((tx) => {
+      const wallet = walletsById.get(String(tx.walletId));
+      const user = wallet ? usersById.get(String(wallet.userId)) : undefined;
+      if (!user) return [];
+      return [
+        {
+          id: tx._id.toString(),
+          amount: tx.amount,
+          type: tx.type,
+          source: tx.source,
+          description: tx.description,
+          status: tx.status,
+          referenceId: tx.referenceId,
+          createdAt: tx.createdAt,
+          user: {
+            id: user._id.toString(),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+          },
+        },
+      ];
+    });
+
+    return { items, from, to };
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -2987,7 +4161,9 @@ async listUsers(dto: ListUsersDto) {
         this.userRepo.getRoleDistribution(scope.userFilter),
       ]);
 
-    const signupMap = new Map(activity.signupTrend.map((r) => [r.date, r.signups]));
+    const signupMap = new Map(
+      activity.signupTrend.map((r) => [r.date, r.signups]),
+    );
     const loginMap = new Map(activity.loginTrend.map((r) => [r.date, r.dau]));
     const signupTrend = [...new Set([...signupMap.keys(), ...loginMap.keys()])]
       .sort()
@@ -3163,7 +4339,10 @@ async listUsers(dto: ListUsersDto) {
     const { from, to } = this.resolveAnalyticsRange(query);
 
     // Prior window of equal length, for the submission growth delta
-    const periodMs = Math.max(24 * 60 * 60 * 1000, to.getTime() - from.getTime());
+    const periodMs = Math.max(
+      24 * 60 * 60 * 1000,
+      to.getTime() - from.getTime(),
+    );
     const priorFrom = new Date(from.getTime() - periodMs);
     const priorTo = new Date(from.getTime() - 1);
 
@@ -3257,21 +4436,58 @@ async listUsers(dto: ListUsersDto) {
 
     const COLUMNS: Record<NonNullable<ExportQueryDto["dataType"]>, string[]> = {
       questions: [
-        "id", "mobileNumber", "name", "questionText", "language", "domains",
-        "cropType", "season", "state", "district", "mediaType", "status",
-        "submittedAt", "reviewedAt", "rejectionReason", "heldReason", "approvalReason",
+        "id",
+        "mobileNumber",
+        "name",
+        "questionText",
+        "language",
+        "domains",
+        "cropType",
+        "season",
+        "state",
+        "district",
+        "mediaType",
+        "status",
+        "submittedAt",
+        "reviewedAt",
+        "rejectionReason",
+        "heldReason",
+        "approvalReason",
       ],
       users: [
-        "id", "mobileNumber", "name", "category", "state", "district",
-        "verificationStatus", "role", "createdAt", "lastLoginAt",
+        "id",
+        "mobileNumber",
+        "name",
+        "category",
+        "state",
+        "district",
+        "verificationStatus",
+        "role",
+        "createdAt",
+        "lastLoginAt",
       ],
       rewards: [
-        "id", "mobileNumber", "name", "amount", "type", "source",
-        "description", "status", "referenceId", "createdAt",
+        "id",
+        "mobileNumber",
+        "name",
+        "amount",
+        "type",
+        "source",
+        "description",
+        "status",
+        "referenceId",
+        "createdAt",
       ],
       withdrawals: [
-        "id", "mobileNumber", "name", "amount", "payoutMethod", "status",
-        "createdAt", "processedAt", "rejectionReason",
+        "id",
+        "mobileNumber",
+        "name",
+        "amount",
+        "payoutMethod",
+        "status",
+        "createdAt",
+        "processedAt",
+        "rejectionReason",
       ],
     };
     const columns = COLUMNS[dataType];
@@ -3317,100 +4533,274 @@ async listUsers(dto: ListUsersDto) {
   // Section 8b: Wallet Management (super_admin only for adjustments)
   // ─────────────────────────────────────────────────────────────
 
+  // async getUserWallet(userId: string) {
+  //   const wallet = await this.walletRepo.findOne({
+  //     where: { userId },
+  //     relations: ["user"],
+  //     select: ["id", "balance", "createdAt", "updatedAt"],
+  //   });
+  //   if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+  //   // Aggregate total earned (completed credits from rewards + refunds)
+  //   const earnedAgg = await this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
+  //     .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
+  //     .andWhere("tx.type = :type", { type: TransactionType.CREDIT })
+  //     .andWhere("tx.source IN (:...sources)", {
+  //       sources: [TransactionSource.REWARD, TransactionSource.REFUND],
+  //     })
+  //     .select("COALESCE(SUM(tx.amount), 0)", "total")
+  //     .getRawOne();
+
+  //   // Aggregate total withdrawn (completed debits from withdrawals)
+  //   const withdrawnAgg = await this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
+  //     .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
+  //     .andWhere("tx.type = :type", { type: TransactionType.DEBIT })
+  //     .andWhere("tx.source = :source", { source: TransactionSource.WITHDRAWAL })
+  //     .select("COALESCE(SUM(tx.amount), 0)", "total")
+  //     .getRawOne();
+
+  //   return {
+  //     id: wallet.id,
+  //     balance: Number(wallet.balance),
+  //     totalEarned: Number(earnedAgg?.total ?? 0),
+  //     totalWithdrawn: Number(withdrawnAgg?.total ?? 0),
+  //     currency: "INR",
+  //     createdAt: wallet.createdAt,
+  //     updatedAt: wallet.updatedAt,
+  //     user: wallet.user
+  //       ? {
+  //           id: wallet.user.id,
+  //           name: wallet.user.name,
+  //           mobileNumber: wallet.user.mobileNumber,
+  //           state: wallet.user.state,
+  //           district: wallet.user.district,
+  //           category: wallet.user.category,
+  //           role: wallet.user.role,
+  //           verificationStatus: wallet.user.verificationStatus,
+  //         }
+  //       : null,
+  //   };
+  // }
+
   async getUserWallet(userId: string) {
-    const wallet = await this.walletRepo.findOne({
-      where: { userId },
-      relations: ["user"],
-      select: ["id", "balance", "createdAt", "updatedAt"],
-    });
+    const wallet = await this.walletRepo.findOne({ userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
+    if (wallet.isDeleted) throw new Error("Wallet is deleted for this user...");
 
-    // Aggregate total earned (completed credits from rewards + refunds)
-    const earnedAgg = await this.transactionRepo
-      .createQueryBuilder("tx")
-      .where("tx.walletId = :walletId", { walletId: wallet.id })
-      .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
-      .andWhere("tx.type = :type", { type: TransactionType.CREDIT })
-      .andWhere("tx.source IN (:...sources)", {
-        sources: [TransactionSource.REWARD, TransactionSource.REFUND],
-      })
-      .select("COALESCE(SUM(tx.amount), 0)", "total")
-      .getRawOne();
-
-    // Aggregate total withdrawn (completed debits from withdrawals)
-    const withdrawnAgg = await this.transactionRepo
-      .createQueryBuilder("tx")
-      .where("tx.walletId = :walletId", { walletId: wallet.id })
-      .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
-      .andWhere("tx.type = :type", { type: TransactionType.DEBIT })
-      .andWhere("tx.source = :source", { source: TransactionSource.WITHDRAWAL })
-      .select("COALESCE(SUM(tx.amount), 0)", "total")
-      .getRawOne();
+    const [user, { totalEarned, totalWithdrawn }] = await Promise.all([
+      // replaces relations: ["user"]; there are no joins in Mongo
+      this.userRepo.findById(userId),
+      this.transactionRepo.getEarnedAndWithdrawn(wallet._id.toString()),
+    ]);
 
     return {
-      id: wallet.id,
+      id: wallet._id.toString(),
       balance: Number(wallet.balance),
-      totalEarned: Number(earnedAgg?.total ?? 0),
-      totalWithdrawn: Number(withdrawnAgg?.total ?? 0),
+      totalEarned,
+      totalWithdrawn,
       currency: "INR",
       createdAt: wallet.createdAt,
       updatedAt: wallet.updatedAt,
-      user: wallet.user
+      user: user
         ? {
-            id: wallet.user.id,
-            name: wallet.user.name,
-            mobileNumber: wallet.user.mobileNumber,
-            state: wallet.user.state,
-            district: wallet.user.district,
-            category: wallet.user.category,
-            role: wallet.user.role,
-            verificationStatus: wallet.user.verificationStatus,
+            id: user._id.toString(),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+            district: user.district,
+            category: user.category,
+            role: user.role,
+            verificationStatus: user.verificationStatus,
           }
         : null,
     };
   }
 
+  // async getWithdrawalWithTransactions(id: string) {
+  //   const objectId = new Types.ObjectId(id);
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { objectId },
+  //     relations: ["user", "paymentLogs"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+
+  //   const transactions = await this.transactionRepo.find({
+  //     where: { referenceId: id },
+  //     order: { createdAt: "ASC" },
+  //   });
+
+  //   const paymentLogs = (withdrawal.paymentLogs ?? []).map((pl) => ({
+  //     id: pl.id,
+  //     orderId: pl.orderId,
+  //     pinelabsTransactionId: pl.pinelabsTransactionId,
+  //     razorpayPayoutId: pl.razorpayPayoutId,
+  //     utrNumber: pl.utrNumber,
+  //     status: pl.status,
+  //     errorCode: pl.errorCode,
+  //     errorMessage: pl.errorMessage,
+  //     rawResponse: pl.rawResponse,
+  //     attemptedAt: pl.attemptedAt,
+  //   }));
+
+  //   return {
+  //     ...withdrawal,
+  //     transactions: transactions.map((tx) => ({
+  //       id: tx._id.toString(),
+  //       type: tx.type,
+  //       amount: Number(tx.amount),
+  //       status: tx.status,
+  //       rejectionReason: tx.rejectionReason,
+  //       description: tx.description,
+  //       source: tx.source,
+  //       createdAt: tx.createdAt,
+  //     })),
+  //     paymentLogs,
+  //   };
+  // }
+
   async getWithdrawalWithTransactions(id: string) {
-    const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id },
-      relations: ["user", "paymentLogs"],
-    });
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const withdrawal = await this.withdrawalRepo.findById(id);
     if (!withdrawal)
       throw new NotFoundException("Withdrawal request not found");
 
-    const transactions = await this.transactionRepo.find({
-      where: { referenceId: id },
-      order: { createdAt: "ASC" },
-    });
+    const [user, logs, transactions] = await Promise.all([
+      this.userRepo.findById(withdrawal.userId),
+      this.paymentLogRepo.findAll({ withdrawalRequestId: id }),
+      this.transactionRepo.findAll({ referenceId: id }),
+    ]);
 
-    const paymentLogs = (withdrawal.paymentLogs ?? []).map((pl) => ({
-      id: pl.id,
-      orderId: pl.orderId,
-      pinelabsTransactionId: pl.pinelabsTransactionId,
-      razorpayPayoutId: pl.razorpayPayoutId,
-      utrNumber: pl.utrNumber,
-      status: pl.status,
-      errorCode: pl.errorCode,
-      errorMessage: pl.errorMessage,
-      rawResponse: pl.rawResponse,
-      attemptedAt: pl.attemptedAt,
-    }));
+    // Sort in JS so this doesn't depend on whether findAll supports sorting.
+    // A single withdrawal only has a handful of logs and transactions.
+    const byDate = (
+      a: { createdAt?: Date; attemptedAt?: Date },
+      b: typeof a,
+      key: "createdAt" | "attemptedAt",
+    ) =>
+      new Date(a[key] as Date).getTime() - new Date(b[key] as Date).getTime();
+
+    const paymentLogs = logs
+      .sort((a, b) => byDate(a, b, "attemptedAt"))
+      .map((pl) => ({
+        id: pl._id.toString(),
+        orderId: pl.orderId,
+        pinelabsTransactionId: pl.pinelabsTransactionId,
+        razorpayPayoutId: pl.razorpayPayoutId,
+        utrNumber: pl.utrNumber,
+        status: pl.status,
+        errorCode: pl.errorCode,
+        errorMessage: pl.errorMessage,
+        rawResponse: pl.rawResponse,
+        attemptedAt: pl.attemptedAt,
+      }));
 
     return {
       ...withdrawal,
-      transactions: transactions.map((tx) => ({
-        id: tx.id,
-        type: tx.type,
-        amount: Number(tx.amount),
-        status: tx.status,
-        rejectionReason: tx.rejectionReason,
-        description: tx.description,
-        source: tx.source,
-        createdAt: tx.createdAt,
-      })),
+      id: withdrawal._id.toString(),
+      user: user
+        ? {
+            id: user._id.toString(),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+            district: user.district,
+          }
+        : null,
+      transactions: transactions
+        .sort((a, b) => byDate(a, b, "createdAt"))
+        .map((tx) => ({
+          id: tx._id.toString(),
+          type: tx.type,
+          amount: Number(tx.amount),
+          status: tx.status,
+          rejectionReason: tx.rejectionReason,
+          description: tx.description,
+          source: tx.source,
+          createdAt: tx.createdAt,
+        })),
       paymentLogs,
     };
   }
+
+  // async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
+  //   const {
+  //     page = 1,
+  //     limit = 50,
+  //     type,
+  //     status,
+  //     source,
+  //     fromDate,
+  //     toDate,
+  //     sortBy = "createdAt",
+  //     sortOrder = "DESC",
+  //   } = dto;
+
+  //   // Verify user/wallet exists
+  //   const wallet = await this.walletRepo.findOne({ where: { userId } });
+  //   if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+  //   const qb = this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
+  //     .select([
+  //       "tx.id",
+  //       "tx.amount",
+  //       "tx.type",
+  //       "tx.source",
+  //       "tx.description",
+  //       "tx.rejectionReason",
+  //       "tx.status",
+  //       "tx.referenceId",
+  //       "tx.balanceAfter",
+  //       "tx.createdAt",
+  //     ])
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   if (type && type !== "all") qb.andWhere("tx.type = :type", { type });
+  //   if (status && status !== "all")
+  //     qb.andWhere("tx.status = :status", { status });
+  //   if (source && source !== "all")
+  //     qb.andWhere("tx.source = :source", { source });
+  //   if (fromDate)
+  //     qb.andWhere("tx.createdAt >= :fromDate", {
+  //       fromDate: new Date(fromDate),
+  //     });
+  //   if (toDate)
+  //     qb.andWhere("tx.createdAt <= :toDate", { toDate: new Date(toDate) });
+
+  //   const sortCol = sortBy === "amount" ? "tx.amount" : "tx.createdAt";
+  //   qb.orderBy(sortCol, sortOrder);
+
+  //   const [items, total] = await qb.getManyAndCount();
+
+  //   // Compute summary
+  //   const summary = await this.transactionRepo.getWalletSummary(String(wallet._id));
+
+  //   return {
+  //     items,
+  //     total,
+  //     page,
+  //     limit,
+  //     pages: Math.ceil(total / limit),
+  //     summary: {
+  //       totalTransactions: summary.totalCount,
+  //       totalCredits: summary.totalCredits,
+  //       totalDebits: summary.totalDebits,
+  //       completedCredits: summary.completedCredits,
+  //       completedDebits: summary.completedDebits,
+  //       withdrawalTransactions: summary.withdrawalCount,
+  //     },
+  //   };
+  // }
 
   async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
     const {
@@ -3425,47 +4815,28 @@ async listUsers(dto: ListUsersDto) {
       sortOrder = "DESC",
     } = dto;
 
-    // Verify user/wallet exists
-    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    const wallet = await this.walletRepo.findOne({ userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
+    if (wallet.isDeleted)
+      throw new Error(
+        "Wallet for this user is deleted so unable to show transcations!!",
+      );
+    const walletId = wallet._id.toString();
 
-    const qb = this.transactionRepo
-      .createQueryBuilder("tx")
-      .where("tx.walletId = :walletId", { walletId: wallet.id })
-      .select([
-        "tx.id",
-        "tx.amount",
-        "tx.type",
-        "tx.source",
-        "tx.description",
-        "tx.rejectionReason",
-        "tx.status",
-        "tx.referenceId",
-        "tx.balanceAfter",
-        "tx.createdAt",
-      ])
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    if (type && type !== "all") qb.andWhere("tx.type = :type", { type });
-    if (status && status !== "all")
-      qb.andWhere("tx.status = :status", { status });
-    if (source && source !== "all")
-      qb.andWhere("tx.source = :source", { source });
-    if (fromDate)
-      qb.andWhere("tx.createdAt >= :fromDate", {
-        fromDate: new Date(fromDate),
-      });
-    if (toDate)
-      qb.andWhere("tx.createdAt <= :toDate", { toDate: new Date(toDate) });
-
-    const sortCol = sortBy === "amount" ? "tx.amount" : "tx.createdAt";
-    qb.orderBy(sortCol, sortOrder);
-
-    const [items, total] = await qb.getManyAndCount();
-
-    // Compute summary
-    const summary = await this.transactionRepo.getWalletSummary(String(wallet.id));
+    const [{ items, total }, summary] = await Promise.all([
+      this.transactionRepo.findPaginatedByWalletId(walletId, page, limit, {
+        type: type && type !== "all" ? type : undefined,
+        status: status && status !== "all" ? status : undefined,
+        source: source && source !== "all" ? source : undefined,
+        fromDate: fromDate ? new Date(fromDate) : undefined,
+        toDate: toDate ? new Date(toDate) : undefined,
+        sortBy: sortBy === "amount" ? "amount" : "createdAt",
+        sortOrder: sortOrder === "ASC" ? "ASC" : "DESC",
+        select:
+          "amount type source description rejectionReason status referenceId balanceAfter createdAt",
+      }),
+      this.transactionRepo.getWalletSummary(walletId),
+    ]);
 
     return {
       items,
@@ -3484,49 +4855,74 @@ async listUsers(dto: ListUsersDto) {
     };
   }
 
+  // async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
+  //   const { page = 1, limit = 20, status, fromDate, toDate } = dto;
+
+  //   const wallet = await this.walletRepo.findOne({ where: { userId } });
+  //   if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+  //   const qb = this.withdrawalRepo
+  //     .createQueryBuilder("wr")
+  //     .where("wr.walletId = :walletId", { walletId: wallet.id })
+  //     .select([
+  //       "wr.id",
+  //       "wr.amount",
+  //       "wr.payoutMethod",
+  //       "wr.payoutDetails",
+  //       "wr.status",
+  //       "wr.processedAt",
+  //       "wr.createdAt",
+  //       "wr.utrNumber",
+  //       "wr.razorpayPayoutId",
+  //     ])
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   if (status) qb.andWhere("wr.status = :status", { status });
+  //   if (fromDate)
+  //     qb.andWhere("wr.createdAt >= :fromDate", {
+  //       fromDate: new Date(fromDate),
+  //     });
+  //   if (toDate)
+  //     qb.andWhere("wr.createdAt <= :toDate", { toDate: new Date(toDate) });
+
+  //   qb.orderBy("wr.createdAt", "DESC");
+
+  //   const [items, total] = await qb.getManyAndCount();
+  //   return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  // }
+
   async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
     const { page = 1, limit = 20, status, fromDate, toDate } = dto;
 
-    const wallet = await this.walletRepo.findOne({ where: { userId } });
+    const wallet = await this.walletRepo.findOne({ userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
+    if (wallet.isDeleted)
+      throw new Error(
+        "Wallet is deleted so unable to show the withdrawal data",
+      );
+    const { items, total } = await this.withdrawalRepo.findPaginatedByWalletId(
+      wallet._id.toString(),
+      page,
+      limit,
+      {
+        status,
+        fromDate: fromDate ? new Date(fromDate) : undefined,
+        toDate: toDate ? new Date(toDate) : undefined,
+        select:
+          "amount payoutMethod payoutDetails status processedAt createdAt utrNumber razorpayPayoutId",
+      },
+    );
 
-    const qb = this.withdrawalRepo
-      .createQueryBuilder("wr")
-      .where("wr.walletId = :walletId", { walletId: wallet.id })
-      .select([
-        "wr.id",
-        "wr.amount",
-        "wr.payoutMethod",
-        "wr.payoutDetails",
-        "wr.status",
-        "wr.processedAt",
-        "wr.createdAt",
-        "wr.utrNumber",
-        "wr.razorpayPayoutId",
-      ])
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    if (status) qb.andWhere("wr.status = :status", { status });
-    if (fromDate)
-      qb.andWhere("wr.createdAt >= :fromDate", {
-        fromDate: new Date(fromDate),
-      });
-    if (toDate)
-      qb.andWhere("wr.createdAt <= :toDate", { toDate: new Date(toDate) });
-
-    qb.orderBy("wr.createdAt", "DESC");
-
-    const [items, total] = await qb.getManyAndCount();
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
   async adjustWalletBalance(adminId: string, dto: AdjustWalletDto) {
     const isSuperAdmin = await this.isSuperAdmin(adminId);
     if (!isSuperAdmin)
-    throw new ForbiddenException(
-      "Only super admins can manually adjust wallet balances",
-    );
+      throw new ForbiddenException(
+        "Only super admins can manually adjust wallet balances",
+      );
 
     const wallet = await this.walletRepo.findOne({
       where: { userId: dto.userId },
@@ -3534,7 +4930,7 @@ async listUsers(dto: ListUsersDto) {
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
 
     // Extract non-null values immediately after the guard — TypeScript cannot narrow across await
-    const walletId = wallet!.id;
+    const walletId = wallet!._id.toString();
     const initialBalance = Number(wallet!.balance);
     let currentBalance = initialBalance;
 
@@ -3543,7 +4939,11 @@ async listUsers(dto: ListUsersDto) {
       throw new BadRequestException("Adjustment amount cannot be zero");
 
     if (amount > 0) {
-      await this.walletRepo.increment({ id: walletId }, "balance", amount);
+      await this.walletRepo.increment(
+        { _id: new Types.ObjectId(walletId) },
+        "balance",
+        amount,
+      );
       currentBalance += amount;
       await this.transactionRepo.save({
         walletId,
@@ -3561,7 +4961,11 @@ async listUsers(dto: ListUsersDto) {
           "Insufficient balance for this debit adjustment",
         );
       }
-      await this.walletRepo.decrement({ id: walletId }, "balance", debit);
+      await this.walletRepo.decrement(
+        { _id: new Types.ObjectId(walletId) },
+        "balance",
+        debit,
+      );
       currentBalance -= debit;
       await this.transactionRepo.save({
         walletId,
@@ -3600,38 +5004,33 @@ async listUsers(dto: ListUsersDto) {
       sortOrder = "DESC",
     } = dto;
 
-    // Rebuilt as native Mongo filters + an in-memory join/aggregate instead of
-    // createQueryBuilder().innerJoinAndSelect()/SUM(CASE...)/groupBy() — none of those
-    // SQL constructs have a working Mongo-query-builder translation (joins aren't real
-    // joins there, and groupBy/addGroupBy are documented no-ops for Mongo), so this
-    // always returned zero rows. Wallet/transaction counts are small enough that
-    // fetching the filtered set and joining/aggregating in JS is simple and correct.
+    const notDeleted = { isDeleted: { $ne: true } };
+
     let ownerIdFilter: string[] | undefined;
     if (userId) {
       ownerIdFilter = [userId];
     } else if (search || state) {
-      const userFilter: Record<string, unknown> = {};
+      const userFilter: Record<string, unknown> = { ...notDeleted };
       if (state) userFilter.state = state;
       if (search) {
-        const regex = { $regex: search, $options: "i" };
+        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = { $regex: escaped, $options: "i" };
         userFilter.$or = [{ name: regex }, { mobileNumber: regex }];
       }
       const matchedUsers = await this.userRepo.findAll(userFilter);
-      ownerIdFilter = matchedUsers.map((u) => u.id);
+      ownerIdFilter = matchedUsers.map((u) => String(u._id));
       if (ownerIdFilter.length === 0) {
         return { items: [], total: 0, page, limit, pages: 0 };
       }
     }
 
-    const walletFilter: Record<string, unknown> = {};
+    const walletFilter: Record<string, unknown> = { ...notDeleted };
     if (ownerIdFilter) walletFilter.userId = { $in: ownerIdFilter };
 
     const allWallets = await this.walletRepo.findAll(walletFilter);
-    const ownerIds = [...new Set(allWallets.map((w) => w.userId))];
-    const owners = ownerIds.length
-      ? await this.userRepo.findAll({ _id: { $in: ownerIds } })
-      : [];
-    const ownersById = new Map(owners.map((u) => [u.id, u]));
+    const ownerIds = [
+      ...new Set(allWallets.map((w) => String(w.userId))),
+    ].filter((id) => Types.ObjectId.isValid(id));
 
     // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
     // matching user (orphaned records) are excluded from both items and total.
@@ -3643,6 +5042,14 @@ async listUsers(dto: ListUsersDto) {
       if (!testerCondition) return true;
       return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
     });
+    // Strings, not ObjectId instances: Mongoose casts them, the repo doesn't mangle them.
+    // The notDeleted filter drops deleted owners, so their wallets fall out as orphans below.
+    const owners = ownerIds.length
+      ? await this.userRepo.findAll({ _id: { $in: ownerIds }, ...notDeleted })
+      : [];
+    const ownersById = new Map(owners.map((u) => [String(u._id), u]));
+
+    // Mirrors the old inner join: wallets with no (non-deleted) user are excluded from items and total
 
     const dir = sortOrder === "ASC" ? 1 : -1;
     validWallets.sort((a, b) => {
@@ -3658,14 +5065,14 @@ async listUsers(dto: ListUsersDto) {
     });
 
     const total = validWallets.length;
-    const pageWallets = validWallets.slice(
-      (page - 1) * limit,
-      (page - 1) * limit + limit,
-    );
-    const walletIds = pageWallets.map((w) => w.id);
+    const pageWallets = validWallets.slice((page - 1) * limit, page * limit);
+    const walletIds = pageWallets.map((w) => String(w._id));
 
     const transactions = walletIds.length
-      ? await this.transactionRepo.findAll({ walletId: { $in: walletIds } })
+      ? await this.transactionRepo.findAll({
+          walletId: { $in: walletIds },
+          ...notDeleted,
+        })
       : [];
 
     const sumsByWallet = new Map<
@@ -3673,7 +5080,8 @@ async listUsers(dto: ListUsersDto) {
       { totalEarned: number; totalWithdrawn: number }
     >();
     for (const tx of transactions) {
-      const entry = sumsByWallet.get(tx.walletId) ?? {
+      const key = String(tx.walletId);
+      const entry = sumsByWallet.get(key) ?? {
         totalEarned: 0,
         totalWithdrawn: 0,
       };
@@ -3691,23 +5099,23 @@ async listUsers(dto: ListUsersDto) {
       ) {
         entry.totalWithdrawn += Number(tx.amount);
       }
-      sumsByWallet.set(tx.walletId, entry);
+      sumsByWallet.set(key, entry);
     }
 
     const items = pageWallets.map((w) => {
-      const user = ownersById.get(w.userId)!;
-      const sums = sumsByWallet.get(w.id) ?? {
+      const user = ownersById.get(String(w.userId))!;
+      const sums = sumsByWallet.get(String(w._id)) ?? {
         totalEarned: 0,
         totalWithdrawn: 0,
       };
       return {
-        id: w.id,
-        userId: user.id,
+        id: String(w._id),
+        userId: String(user._id),
         balance: Number(w.balance),
         totalEarned: sums.totalEarned,
         totalWithdrawn: sums.totalWithdrawn,
         user: {
-          id: user.id,
+          id: String(user._id),
           name: user.name,
           mobileNumber: user.mobileNumber,
           state: user.state,
@@ -3721,13 +5129,7 @@ async listUsers(dto: ListUsersDto) {
       };
     });
 
-    return {
-      items,
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit),
-    };
+    return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -3741,7 +5143,7 @@ async listUsers(dto: ListUsersDto) {
 
   private toPublicUser(user: User): Record<string, unknown> {
     return {
-      id: user.id,
+      id: user._id.toString(),
       mobileNumber: user.mobileNumber,
       name: user.name,
       category: user.category,
@@ -3756,7 +5158,7 @@ async listUsers(dto: ListUsersDto) {
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
       isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
-      profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted
+      profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted,
     };
   }
 
@@ -3790,4 +5192,184 @@ async listUsers(dto: ListUsersDto) {
     );
     return { flushed: count };
   }
+
+  async deleteUser(
+    userId: string,
+  ): Promise<{ message: string; userId: string; deleted: any }> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new NotFoundException("User not found");
+    }
+    const user = await this.userRepo.findById(userId);
+    if (!user || user.isDeleted) throw new NotFoundException("User not found");
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException("A super admin cannot be deleted");
+    }
+
+    const openWithdrawals = await this.withdrawalRepo.findAll({
+      userId,
+      status: { $in: [WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING] },
+    });
+    if (openWithdrawals.length > 0) {
+      throw new BadRequestException(
+        "User has pending or processing withdrawals. Settle them before deleting.",
+      );
+    }
+
+    const [wallets, withdrawals] = await Promise.all([
+      this.walletRepo.findAll({ userId }),
+      this.withdrawalRepo.findAll({ userId }),
+    ]);
+    const walletIds = wallets.map((w) => String(w._id));
+    const withdrawalIds = withdrawals.map((w) => String(w._id));
+
+    const mark = { isDeleted: true, deletedAt: new Date() };
+    const notDeleted = { isDeleted: { $ne: true } };
+
+    const count = (r: unknown): number | null => {
+      const x = r as
+        | { modifiedCount?: number; affected?: number }
+        | null
+        | undefined;
+      return x?.modifiedCount ?? x?.affected ?? null;
+    };
+
+    const none = Promise.resolve(null);
+
+    const [
+      questions,
+      wallets_,
+      withdrawals_,
+      paymentDetails,
+      notifications,
+      finalQuestions,
+      agriEntities,
+      reports,
+      feedback,
+      anveshanAnswers,
+      transactions,
+      paymentLogs,
+    ] = await Promise.all([
+      this.questionRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.walletRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.withdrawalRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.paymentDetailRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.notificationRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.finalQuestionRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.agriEntityRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.reportRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.feedbackRepo.updateMany({ userId, ...notDeleted }, mark),
+      this.anveshanAnswerRepo.updateMany({ userId, ...notDeleted }, mark),
+      walletIds.length
+        ? this.transactionRepo.updateMany(
+            { walletId: { $in: walletIds }, ...notDeleted },
+            mark,
+          )
+        : none,
+      withdrawalIds.length
+        ? this.paymentLogRepo.updateMany(
+            { withdrawalRequestId: { $in: withdrawalIds }, ...notDeleted },
+            mark,
+          )
+        : none,
+    ]);
+
+    await this.userRepo.update(userId, {
+      ...mark,
+      tokenVersion: (user.tokenVersion ?? 0) + 1,
+      otpHash: null,
+      otpExpiresAt: null,
+      expoPushToken: null,
+    });
+
+    return {
+      message: "User deleted successfully!!",
+      userId,
+      deleted: {
+        user: 1,
+        questions: count(questions),
+        wallets: count(wallets_),
+        withdrawals: count(withdrawals_),
+        paymentDetails: count(paymentDetails),
+        notifications: count(notifications),
+        finalQuestions: count(finalQuestions),
+        agriEntities: count(agriEntities),
+        reports: count(reports),
+        feedback: count(feedback),
+        anveshanAnswers: count(anveshanAnswers),
+        transactions: count(transactions),
+        paymentLogs: count(paymentLogs),
+      },
+    };
+  }
+
+  async restoreUser(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new NotFoundException("User not found");
+  }
+
+  // Explicit isDeleted key bypasses the default "hide deleted" filter
+  const user = await this.userRepo.findOne({ _id: userId, isDeleted: true });
+  if (!user) throw new NotFoundException("Deleted user not found");
+
+  const stamp = user.deletedAt; // same value deleteUser put on every related record
+  const deletedWithUser = (extra: Record<string, unknown>) => ({
+    ...extra,
+    isDeleted: true,
+    ...(stamp ? { deletedAt: stamp } : {}),
+  });
+  const unmark = { isDeleted: false, deletedAt: null };
+
+  // Collect indirect ids first (explicit isDeleted again)
+  const [wallets, withdrawals] = await Promise.all([
+    this.walletRepo.findAll({ userId, isDeleted: true }),
+    this.withdrawalRepo.findAll({ userId, isDeleted: true }),
+  ]);
+  const walletIds = wallets.map((w) => String(w._id));
+  const withdrawalIds = withdrawals.map((w) => String(w._id));
+
+  await Promise.all([
+    this.questionRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.walletRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.withdrawalRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.paymentDetailRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.notificationRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.finalQuestionRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.agriEntityRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.reportRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.feedbackRepo.updateMany(deletedWithUser({ userId }), unmark),
+    this.anveshanAnswerRepo.updateMany(deletedWithUser({ userId }), unmark),
+    walletIds.length
+      ? this.transactionRepo.updateMany(deletedWithUser({ walletId: { $in: walletIds } }), unmark)
+      : Promise.resolve(),
+    withdrawalIds.length
+      ? this.paymentLogRepo.updateMany(
+          deletedWithUser({ withdrawalRequestId: { $in: withdrawalIds } }),
+          unmark,
+        )
+      : Promise.resolve(),
+  ]);
+
+  // User LAST, so a failed run above can simply be retried (the stamp is still on the user)
+  await this.userRepo.update(userId, unmark);
+
+  return { message: "User restored successfully!!", userId };
+}
+
+async getUserAuditSnapshot(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) return null;
+  const u = await this.userRepo.findOne({
+    _id: userId,
+    isDeleted: { $in: [true, false, null] },
+  });
+  if (!u) return null;
+  return {
+    name: u.name,
+    mobileNumber: u.mobileNumber,
+    role: u.role,
+    verificationStatus: u.verificationStatus,
+    isDeleted: !!u.isDeleted,
+    deletedAt: u.deletedAt ?? null,
+  };
+}
+
 }

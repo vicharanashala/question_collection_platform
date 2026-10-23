@@ -101,7 +101,7 @@ export class ReportsController {
     @Req() req: AuthenticatedRequest,
   ) {
     const report = await this.reportsService.createReport(req.user.id, dto);
-    return { id: report.id, message: 'Report submitted successfully' };
+    return { id: report._id.toString(), message: 'Report submitted successfully' };
   }
 
   /** Get a single report belonging to the current user */
@@ -179,7 +179,7 @@ export class ReportsController {
         changes: { before, after: this.reportSnapshot(await this.reportsService.getReport(id)) },
         outcome: { status: OutcomeStatus.SUCCESS },
       });
-      return { id: report.id, status: report.status, message: 'Status updated' };
+      return { id: report._id.toString(), status: report.status, message: 'Status updated' };
     } catch (err) {
       await this.safeAudit({
         ...base,
@@ -214,7 +214,7 @@ export class ReportsController {
         changes: { before, after: this.reportSnapshot(await this.reportsService.getReport(id)) },
         outcome: { status: OutcomeStatus.SUCCESS },
       });
-      return { id: report.id, priority: report.priority, message: 'Priority updated' };
+      return { id: report._id.toString(), priority: report.priority, message: 'Priority updated' };
     } catch (err) {
       await this.safeAudit({
         ...base,
@@ -245,11 +245,11 @@ export class ReportsController {
       const reply = await this.reportsService.addReply(id, req.user.id, dto);
       await this.safeAudit({
         ...base,
-        context: { ...base.context, replyId: reply.id },
+        context: { ...base.context, replyId: reply._id.toString() },
         changes: { before, after: this.reportSnapshot(await this.reportsService.getReport(id)) },
         outcome: { status: OutcomeStatus.SUCCESS },
       });
-      return { id: reply.id, message: 'Reply sent' };
+      return { id: reply._id.toString(), message: 'Reply sent' };
     } catch (err) {
       await this.safeAudit({
         ...base,

@@ -91,10 +91,13 @@ export class RazorpayPayoutService {
    */
   async createContact(params: {
     userId: string;
-    phone: string;
+    phone: string | null;
     name: string;
   }): Promise<CreateContactResult> {
     const { userId, phone, name } = params;
+    if(!phone){
+      throw new Error('Phone number no there!!')
+    }
 
     try {
       const response = await axios.post(
@@ -140,7 +143,7 @@ export class RazorpayPayoutService {
    */
   async createFundAccount(params: {
     userId: string;
-    phone: string;
+    phone: string | null;
     name: string;
     existingContactId?: string;
     vpa?: string;

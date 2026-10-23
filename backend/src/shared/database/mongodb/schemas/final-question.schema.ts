@@ -166,6 +166,12 @@ export class FinalQuestion {
   @Prop({ name: 'approvalReason', type: String, default: null })
   approvalReason: string | null;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   // â”€â”€ Distribution timestamps (Mongoose-managed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /** When this final_question row was created (Mongoose timestamp). */
@@ -175,6 +181,8 @@ export class FinalQuestion {
   /** When this final_question row was last updated (Mongoose timestamp). */
   @Prop({ name: 'updatedAt' })
   updatedAt: Date;
+
+
 }
 export const FinalQuestionSchema = SchemaFactory.createForClass(FinalQuestion);
 
