@@ -22,6 +22,8 @@ export class AgriEntity {
   alternateNames: AgriEntityAlternateName[];
   imageUrls: string[];
   status: AgriEntityStatus;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

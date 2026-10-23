@@ -54,6 +54,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException("User not found");
     }
 
+ if (user.isDeleted) {
+  throw new UnauthorizedException({
+    statusCode: 401,
+    error: "Unauthorized",
+    code: "ACCOUNT_DELETED",
+    message: "Account no longer exists",
+  });
+}
+
     // Verify tokenVersion matches — invalidates tokens issued before the last login/logout
     if (user.tokenVersion !== payload.tokenVersion) {
       throw new UnauthorizedException("Session expired. Please login again.");

@@ -2,6 +2,7 @@ import { ConflictException, ForbiddenException, Inject, Injectable } from '@nest
 import { IAppFeedbackRepository, IUserRepository, REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { AnveshanMilestoneService } from '../question/anveshan-milestone.service';
 import { ListFeedbacksDto, SubmitAnveshanFeedbackDto } from './dto';
+import { Types } from 'mongoose';
 
 const ANVESHAN_CONTEXT = 'anveshan_completion' as const;
 const DUPLICATE_KEY_ERROR = 11000;
@@ -17,42 +18,95 @@ export class FeedbacksService {
   ) {}
 
   // Lists Anveshan feedback for staff, newest first, with the submitter's name and an overall ratings summary.
+  // async listAnveshanFeedback(dto: ListFeedbacksDto) {
+  //   const { page = 1, limit = 20, rating, inputMethod } = dto;
+  //   const filter = {
+  //     context: ANVESHAN_CONTEXT,
+  //     ...(rating ? { rating } : {}),
+  //     ...(inputMethod ? { inputMethod } : {}),
+  //   };
+
+  //   const [{ data, total }, summary] = await Promise.all([
+  //     this.feedbackRepo.findAndCount(filter, { pagination: { page, limit, sort: { createdAt: -1 } } }),
+  //     this.feedbackRepo.getRatingSummary(ANVESHAN_CONTEXT),
+  //   ]);
+
+  //   const userIds = [...new Set(data.map((feedback) => feedback.userId))];
+  //   const users = userIds.length ? await this.userRepo.find({ id: { $in: userIds } }) : [];
+  //   const usersById = new Map(users.map((user) => [user._id.toString(), user]));
+
+  //   return {
+  //     items: data.map((feedback) => {
+  //       const user = usersById.get(feedback.userId);
+  //       return {
+  //         id: feedback.id,
+  //         rating: feedback.rating,
+  //         comment: feedback.comment,
+  //         inputMethod: feedback.inputMethod,
+  //         createdAt: feedback.createdAt,
+  //         user: user ? { id: user._id.toString(), name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district } : null,
+  //       };
+  //     }),
+  //     total,
+  //     page,
+  //     limit,
+  //     pages: Math.ceil(total / limit),
+  //     summary,
+  //   };
+  // }
+
   async listAnveshanFeedback(dto: ListFeedbacksDto) {
-    const { page = 1, limit = 20, rating, inputMethod } = dto;
-    const filter = {
-      context: ANVESHAN_CONTEXT,
-      ...(rating ? { rating } : {}),
-      ...(inputMethod ? { inputMethod } : {}),
-    };
+  const { page = 1, limit = 20, rating, inputMethod } = dto;
 
-    const [{ data, total }, summary] = await Promise.all([
-      this.feedbackRepo.findAndCount(filter, { pagination: { page, limit, sort: { createdAt: -1 } } }),
-      this.feedbackRepo.getRatingSummary(ANVESHAN_CONTEXT),
-    ]);
+  const filter: Record<string, unknown> = {
+    context: ANVESHAN_CONTEXT,
+    ...(rating ? { rating } : {}),
+    ...(inputMethod ? { inputMethod } : {}),
+    isDeleted: { $ne: true }, // false, null or missing; excludes only true
+  };
 
-    const userIds = [...new Set(data.map((feedback) => feedback.userId))];
-    const users = userIds.length ? await this.userRepo.find({ id: { $in: userIds } }) : [];
-    const usersById = new Map(users.map((user) => [user._id.toString(), user]));
+  const [{ data, total }, summary] = await Promise.all([
+    this.feedbackRepo.findAndCount(filter, {
+      pagination: { page, limit, sort: { createdAt: -1, _id: -1 } },
+    }),
+    this.feedbackRepo.getRatingSummary(ANVESHAN_CONTEXT), // must also exclude deleted, see below
+  ]);
 
-    return {
-      items: data.map((feedback) => {
-        const user = usersById.get(feedback.userId);
-        return {
-          id: feedback.id,
-          rating: feedback.rating,
-          comment: feedback.comment,
-          inputMethod: feedback.inputMethod,
-          createdAt: feedback.createdAt,
-          user: user ? { id: user._id.toString(), name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district } : null,
-        };
-      }),
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit),
-      summary,
-    };
-  }
+  const userIds = [...new Set(data.map((feedback) => String(feedback.userId)))].filter(
+    (id) => Types.ObjectId.isValid(id),
+  );
+  const users = userIds.length
+    ? await this.userRepo.findAll({ _id: { $in: userIds }, isDeleted: { $ne: true } })
+    : [];
+  const usersById = new Map(users.map((user) => [String(user._id), user]));
+
+  return {
+    items: data.map((feedback) => {
+      const user = usersById.get(String(feedback.userId));
+      return {
+        id: String(feedback.id),
+        rating: feedback.rating,
+        comment: feedback.comment,
+        inputMethod: feedback.inputMethod,
+        createdAt: feedback.createdAt,
+        user: user
+          ? {
+              id: String(user._id),
+              name: user.name,
+              mobileNumber: user.mobileNumber,
+              state: user.state,
+              district: user.district,
+            }
+          : null,
+      };
+    }),
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
+    summary,
+  };
+}
 
   // Stores an Anveshan user's app feedback once they reach 100%. Each user can submit it once.
   async submitAnveshanFeedback(userId: string, dto: SubmitAnveshanFeedbackDto) {

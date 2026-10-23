@@ -7,10 +7,11 @@ import {
   IQuestionRepository,
   QuestionAnalyticsFilters,
   QuestionAnalyticsResult, UserQuestionCounts } from '../../IQuestion.repository';
-import { Question } from '../../../entities';
+// import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
 import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
 import { ListQuestionsDto } from '@/modules/question/dto';
+import { Question } from '@/shared/database/mongodb/schemas/question.schema';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
@@ -961,7 +962,7 @@ async getDailyStatsSince(
   // 1. Build $match
   // ----------------------------------------
 
-  const match: Record<string, any> = {};
+  const match: Record<string, any> = {isDeleted: {$ne: true}};
 
   // Access control
   if (!isAdmin) {

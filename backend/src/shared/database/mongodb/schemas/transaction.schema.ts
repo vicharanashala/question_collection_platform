@@ -35,6 +35,12 @@ export class Transaction {
   @Prop({ required: true, enum: TransactionStatus, index: true })
   status: TransactionStatus;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   @Prop({ name: 'createdAt', index: true })
   createdAt: Date;
 

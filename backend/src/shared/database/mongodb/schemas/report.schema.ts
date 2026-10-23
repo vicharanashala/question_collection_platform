@@ -32,6 +32,12 @@ export class Report {
   @Prop({ name: 'relatedEntityType', type: String, default: null })
   relatedEntityType: string | null;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   @Prop({ name: 'createdAt' })
   createdAt: Date;
 

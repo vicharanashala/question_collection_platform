@@ -11,7 +11,10 @@ import {
   UserCategory,
   VerificationStatus,
 } from "../../../../classes/enums";
-import type { LeaderboardEntry, UserActivityAnalytics } from "../../IUser.repository";
+import type {
+  LeaderboardEntry,
+  UserActivityAnalytics,
+} from "../../IUser.repository";
 import { UserRole } from "../../../../classes/enums";
 import {
   TransactionSource,
@@ -492,6 +495,7 @@ export class MongoUserRepository
     const userFilter: Record<string, unknown> = {
       role: UserRole.USER,
       verificationStatus: VerificationStatus.VERIFIED,
+      isDeleted: { $ne: true },
     };
 
     if (state) {
@@ -528,6 +532,7 @@ export class MongoUserRepository
                   $expr: {
                     $eq: ["$userId", "$$userId"],
                   },
+                  isDeleted: { $ne: true },
                 },
               },
               {
@@ -538,6 +543,7 @@ export class MongoUserRepository
                       QuestionStatus.MOVED_TO_FINAL,
                     ],
                   },
+                  isDeleted: { $ne: true },
                 },
               },
               {
@@ -580,26 +586,70 @@ export class MongoUserRepository
         // --------------------------------------------------
         // 4. Find user's wallet
         // --------------------------------------------------
+        // {
+        //   $lookup: {
+        //     from: "wallets",
+        //     let: {
+        //       userId: {
+        //         $toString: "$_id",
+        //       },
+        //     },
+        //     pipeline: [
+        //       {
+        //         $match: {
+        //           $expr: {
+        //             $eq: ["$userId", "$$userId"],
+        //           },
+        //           isDeleted: { $ne: true }
+        //         },
+        //       },
+        //       {
+        //         $project: {
+        //           _id: 0,
+        //           balance: 1,
+        //         },
+        //       },
+        //     ],
+        //     as: "walletStats",
+        //   },
+        // },
+
         {
           $lookup: {
             from: "wallets",
-            let: {
-              userId: {
-                $toString: "$_id",
-              },
-            },
+            let: { userId: { $toString: "$_id" } },
             pipeline: [
               {
                 $match: {
-                  $expr: {
-                    $eq: ["$userId", "$$userId"],
-                  },
+                  $expr: { $eq: ["$userId", "$$userId"] },
+                  isDeleted: { $ne: true },
+                },
+              },
+              {
+                $lookup: {
+                  from: "transactions",
+                  let: { walletId: { $toString: "$_id" } },
+                  pipeline: [
+                    {
+                      $match: {
+                        $expr: { $eq: ["$walletId", "$$walletId"] },
+                        type: TransactionType.CREDIT,
+                        source: TransactionSource.REWARD,
+                        status: TransactionStatus.COMPLETED,
+                        isDeleted: { $ne: true },
+                      },
+                    },
+                    { $group: { _id: null, total: { $sum: "$amount" } } },
+                  ],
+                  as: "earned",
                 },
               },
               {
                 $project: {
                   _id: 0,
-                  balance: 1,
+                  earned: {
+                    $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
+                  },
                 },
               },
             ],
@@ -940,200 +990,243 @@ export class MongoUserRepository
   // }
 
   async getLeaderboardRank(opts: {
-  userId: string;
-  state?: string;
-  category?: UserCategory;
-}): Promise<number | null> {
-  const { userId, state, category } = opts;
+    userId: string;
+    state?: string;
+    category?: UserCategory;
+  }): Promise<number | null> {
+    const { userId, state, category } = opts;
 
-  const userFilter: Record<string, unknown> = {
-    role: UserRole.USER,
-    verificationStatus: VerificationStatus.VERIFIED,
-  };
+    const userFilter: Record<string, unknown> = {
+      role: UserRole.USER,
+      verificationStatus: VerificationStatus.VERIFIED,
+      isDeleted: { $ne: true },
+    };
 
-  if (state) {
-    userFilter.state = state;
-  }
+    if (state) {
+      userFilter.state = state;
+    }
 
-  if (category) {
-    userFilter.category = category;
-  }
+    if (category) {
+      userFilter.category = category;
+    }
 
-  const result = await this._model
-    .aggregate([
-      // --------------------------------------------------
-      // 1. Eligible users
-      // --------------------------------------------------
-      {
-        $match: userFilter,
-      },
-
-      // --------------------------------------------------
-      // 2. Count eligible questions
-      //    APPROVED + MOVED_TO_FINAL
-      // --------------------------------------------------
-      {
-        $lookup: {
-          from: "questions",
-          let: {
-            userId: {
-              $toString: "$_id",
-            },
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$userId", "$$userId"],
-                    },
-                    {
-                      $in: [
-                        "$status",
-                        [
-                          QuestionStatus.APPROVED,
-                          QuestionStatus.MOVED_TO_FINAL,
-                        ],
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-            {
-              $count: "count",
-            },
-          ],
-          as: "questionStats",
+    const result = await this._model
+      .aggregate([
+        // --------------------------------------------------
+        // 1. Eligible users
+        // --------------------------------------------------
+        {
+          $match: userFilter,
         },
-      },
 
-      // --------------------------------------------------
-      // 3. Ensure totalQuestions always exists
-      // --------------------------------------------------
-      {
-        $addFields: {
-          totalQuestions: {
-            $ifNull: [
-              {
-                $arrayElemAt: ["$questionStats.count", 0],
-              },
-              0,
-            ],
-          },
-        },
-      },
-
-      // --------------------------------------------------
-      // 4. Find user's wallet
-      // --------------------------------------------------
-      {
-        $lookup: {
-          from: "wallets",
-          let: {
-            userId: {
-              $toString: "$_id",
-            },
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$userId", "$$userId"],
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                balance: 1,
-              },
-            },
-          ],
-          as: "walletStats",
-        },
-      },
-
-      // --------------------------------------------------
-      // 5. Calculate total earned
-      // --------------------------------------------------
-      {
-        $addFields: {
-          totalEarned: {
-            $ifNull: [
-              {
-                $arrayElemAt: ["$walletStats.balance", 0],
-              },
-              0,
-            ],
-          },
-        },
-      },
-
-      // --------------------------------------------------
-      // 6. Sort EXACTLY like getLeaderboard()
-      // --------------------------------------------------
-      {
-        $sort: {
-          totalEarned: -1,
-          totalQuestions: -1,
-          _id: 1,
-        },
-      },
-
-      // --------------------------------------------------
-      // 7. Find current user's position
-      // --------------------------------------------------
-      {
-        $group: {
-          _id: null,
-          rankedUsers: {
-            $push: {
+        // --------------------------------------------------
+        // 2. Count eligible questions
+        //    APPROVED + MOVED_TO_FINAL
+        // --------------------------------------------------
+        {
+          $lookup: {
+            from: "questions",
+            let: {
               userId: {
                 $toString: "$_id",
               },
             },
-          },
-        },
-      },
-
-      // --------------------------------------------------
-      // 8. Convert index to 1-based rank
-      // --------------------------------------------------
-      {
-        $project: {
-          _id: 0,
-          userRank: {
-            $let: {
-              vars: {
-                userIndex: {
-                  $indexOfArray: [
-                    "$rankedUsers.userId",
-                    userId,
-                  ],
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      {
+                        $eq: ["$userId", "$$userId"],
+                      },
+                      {
+                        $in: [
+                          "$status",
+                          [
+                            QuestionStatus.APPROVED,
+                            QuestionStatus.MOVED_TO_FINAL,
+                          ],
+                        ],
+                      },
+                    ],
+                  },
+                  isDeleted: { $ne: true },
                 },
               },
-              in: {
-                $cond: [
-                  {
-                    $eq: ["$$userIndex", -1],
+              {
+                $count: "count",
+              },
+            ],
+            as: "questionStats",
+          },
+        },
+
+        // --------------------------------------------------
+        // 3. Ensure totalQuestions always exists
+        // --------------------------------------------------
+        {
+          $addFields: {
+            totalQuestions: {
+              $ifNull: [
+                {
+                  $arrayElemAt: ["$questionStats.count", 0],
+                },
+                0,
+              ],
+            },
+          },
+        },
+
+        // --------------------------------------------------
+        // 4. Find user's wallet
+        // --------------------------------------------------
+        // {
+        //   $lookup: {
+        //     from: "wallets",
+        //     let: {
+        //       userId: {
+        //         $toString: "$_id",
+        //       },
+        //     },
+        //     pipeline: [
+        //       {
+        //         $match: {
+        //           $expr: {
+        //             $eq: ["$userId", "$$userId"],
+        //           },
+        //           isDeleted: { $ne: true },
+        //         },
+        //       },
+        //       {
+        //         $project: {
+        //           _id: 0,
+        //           balance: 1,
+        //         },
+        //       },
+        //     ],
+        //     as: "walletStats",
+        //   },
+        // },
+
+        {
+          $lookup: {
+            from: "wallets",
+            let: { userId: { $toString: "$_id" } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ["$userId", "$$userId"] },
+                  isDeleted: { $ne: true },
+                },
+              },
+              {
+                $lookup: {
+                  from: "transactions",
+                  let: { walletId: { $toString: "$_id" } },
+                  pipeline: [
+                    {
+                      $match: {
+                        $expr: { $eq: ["$walletId", "$$walletId"] },
+                        type: TransactionType.CREDIT,
+                        source: TransactionSource.REWARD,
+                        status: TransactionStatus.COMPLETED,
+                        isDeleted: { $ne: true },
+                      },
+                    },
+                    { $group: { _id: null, total: { $sum: "$amount" } } },
+                  ],
+                  as: "earned",
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                  earned: {
+                    $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
                   },
-                  null,
-                  {
-                    $add: ["$$userIndex", 1],
-                  },
-                ],
+                },
+              },
+            ],
+            as: "walletStats",
+          },
+        },
+
+        // --------------------------------------------------
+        // 5. Calculate total earned
+        // --------------------------------------------------
+        {
+          $addFields: {
+            totalEarned: {
+              $ifNull: [
+                {
+                  $arrayElemAt: ["$walletStats.balance", 0],
+                },
+                0,
+              ],
+            },
+          },
+        },
+
+        // --------------------------------------------------
+        // 6. Sort EXACTLY like getLeaderboard()
+        // --------------------------------------------------
+        {
+          $sort: {
+            totalEarned: -1,
+            totalQuestions: -1,
+            _id: 1,
+          },
+        },
+
+        // --------------------------------------------------
+        // 7. Find current user's position
+        // --------------------------------------------------
+        {
+          $group: {
+            _id: null,
+            rankedUsers: {
+              $push: {
+                userId: {
+                  $toString: "$_id",
+                },
               },
             },
           },
         },
-      },
-    ])
-    .exec();
 
-  return result[0]?.userRank ?? null;
-}
+        // --------------------------------------------------
+        // 8. Convert index to 1-based rank
+        // --------------------------------------------------
+        {
+          $project: {
+            _id: 0,
+            userRank: {
+              $let: {
+                vars: {
+                  userIndex: {
+                    $indexOfArray: ["$rankedUsers.userId", userId],
+                  },
+                },
+                in: {
+                  $cond: [
+                    {
+                      $eq: ["$$userIndex", -1],
+                    },
+                    null,
+                    {
+                      $add: ["$$userIndex", 1],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      ])
+      .exec();
+
+    return result[0]?.userRank ?? null;
+  }
 
   async getVerificationStats() {
     const [result] = await this._model
@@ -1369,7 +1462,9 @@ export class MongoUserRepository
               { $match: createdInRange },
               {
                 $group: {
-                  _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                  _id: {
+                    $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+                  },
                   signups: { $sum: 1 },
                 },
               },
@@ -1379,7 +1474,9 @@ export class MongoUserRepository
               { $match: loggedInRange },
               {
                 $group: {
-                  _id: { $dateToString: { format: "%Y-%m-%d", date: "$lastLoginAt" } },
+                  _id: {
+                    $dateToString: { format: "%Y-%m-%d", date: "$lastLoginAt" },
+                  },
                   dau: { $sum: 1 },
                 },
               },
@@ -1416,13 +1513,19 @@ export class MongoUserRepository
       mau: n(result?.mau),
       dau: n(result?.dau),
       signupTrend: (result?.signupTrend ?? []).map(
-        (r: { _id: string; signups: number }) => ({ date: r._id, signups: r.signups }),
+        (r: { _id: string; signups: number }) => ({
+          date: r._id,
+          signups: r.signups,
+        }),
       ),
       loginTrend: (result?.loginTrend ?? []).map(
         (r: { _id: string; dau: number }) => ({ date: r._id, dau: r.dau }),
       ),
       stateBreakdown: (result?.stateBreakdown ?? []).map(
-        (r: { _id: string; count: number }) => ({ state: r._id, count: r.count }),
+        (r: { _id: string; count: number }) => ({
+          state: r._id,
+          count: r.count,
+        }),
       ),
       districtBreakdown: (result?.districtBreakdown ?? []).map(
         (r: { _id: { district: string; state: string }; count: number }) => ({
@@ -1442,7 +1545,12 @@ export class MongoUserRepository
     const { from, to, state } = filters;
     return this._model
       .aggregate([
-        { $match: { createdAt: { $gte: from, $lte: to }, ...(state ? { state } : {}) } },
+        {
+          $match: {
+            createdAt: { $gte: from, $lte: to },
+            ...(state ? { state } : {}),
+          },
+        },
         { $sort: { createdAt: -1 } },
         {
           $project: {

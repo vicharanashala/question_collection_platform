@@ -150,7 +150,13 @@ export class AdminController {
   }
 
   @Get("users/:id")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.CURATOR, UserRole.DISTRIBUTOR)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.FINANCE,
+    UserRole.CURATOR,
+    UserRole.DISTRIBUTOR,
+  )
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_user:${args[0]}`, 120)
   async getUserDetail(@Param("id") id: string) {
@@ -528,41 +534,89 @@ export class AdminController {
   }
 
   // Runs a staff action and records a success or failure audit log for it.
+  // private async withAudit<T>(
+  //   actionType: AuditAction,
+  //   req: AuthenticatedRequest,
+  //   meta: RequestMeta,
+  //   context: Record<string, unknown>,
+  //   run: () => Promise<T>,
+  // ): Promise<T> {
+  //   const base: AuditLogDto = {
+  //     actionType,
+  //     actor: {
+  //       id: req.user.id,
+  //       name: req.user.name,
+  //       actorType: this.toActorType(req.user.role as UserRole),
+  //     },
+  //     resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+  //     context,
+  //   };
+  //   try {
+  //     const result = await run();
+  //     await this.safeAudit({
+  //       ...base,
+  //       outcome: { status: OutcomeStatus.SUCCESS },
+  //     });
+  //     return result;
+  //   } catch (err) {
+  //     await this.safeAudit({
+  //       ...base,
+  //       outcome: {
+  //         status: OutcomeStatus.FAILURE,
+  //         errorMessage: err instanceof Error ? err.message : String(err),
+  //       },
+  //     });
+  //     throw err;
+  //   }
+  // }
+
   private async withAudit<T>(
-    actionType: AuditAction,
-    req: AuthenticatedRequest,
-    meta: RequestMeta,
-    context: Record<string, unknown>,
-    run: () => Promise<T>,
-  ): Promise<T> {
-    const base: AuditLogDto = {
-      actionType,
-      actor: {
-        id: req.user.id,
-        name: req.user.name,
-        actorType: this.toActorType(req.user.role as UserRole),
-      },
-      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
-      context,
-    };
-    try {
-      const result = await run();
-      await this.safeAudit({
-        ...base,
-        outcome: { status: OutcomeStatus.SUCCESS },
-      });
-      return result;
-    } catch (err) {
-      await this.safeAudit({
-        ...base,
-        outcome: {
-          status: OutcomeStatus.FAILURE,
-          errorMessage: err instanceof Error ? err.message : String(err),
-        },
-      });
-      throw err;
-    }
+  actionType: AuditAction,
+  req: AuthenticatedRequest,
+  meta: RequestMeta,
+  context: Record<string, unknown>,
+  run: () => Promise<T>,
+  snapshot?: {
+    before?: () => Promise<Record<string, unknown> | null>;
+    after?: (result: T) => Promise<Record<string, unknown> | null>;
+  },
+): Promise<T> {
+  const base: AuditLogDto = {
+    actionType,
+    actor: {
+      id: req.user.id,
+      name: req.user.name,
+      actorType: this.toActorType(req.user.role as UserRole),
+    },
+    resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+    context,
+  };
+
+  // Snapshot failures must never block the real action
+  const safely = async <V,>(fn?: () => Promise<V>) => {
+    try { return fn ? await fn() : undefined; } catch { return undefined; }
+  };
+
+  const before = await safely(snapshot?.before);
+
+  try {
+    const result = await run();
+    const after = await safely(snapshot?.after ? () => snapshot.after!(result) : undefined);
+    await this.safeAudit({
+      ...base,
+      changes: { before: before ?? {}, after: after ?? {} },
+      outcome: { status: OutcomeStatus.SUCCESS },
+    });
+    return result;
+  } catch (err) {
+    await this.safeAudit({
+      ...base,
+      changes: { before: before ?? {}, after: {} },
+      outcome: { status: OutcomeStatus.FAILURE, errorMessage: err instanceof Error ? err.message : String(err) },
+    });
+    throw err;
   }
+}
 
   // ─────────────────────────────────────────────────────────────
   // Section 3: Configuration — curator blocked
@@ -589,54 +643,53 @@ export class AdminController {
   //   return result;
   // }
 
-  @Patch('config')
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-@HttpCode(HttpStatus.OK)
-@CacheInvalidate('meta:*', 'hot:reward_tiers')
-async updateConfig(
-  @Body() dto: UpdateConfigDto,
-  @Req() req: AuthenticatedRequest,
-  @ReqMeta() meta: RequestMeta,
-) {
-  const base: AuditLogDto = {
-    actionType: AuditAction.CONFIG_UPDATED,
-    actor: {
-      id: req.user.id,
-      actorType: ActorType.SUPER_ADMIN,
-      name: req.user.name,
-     
-    },
-    resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
-    context: { key: dto.key, description: dto.description },
-  };
+  @Patch("config")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  @CacheInvalidate("meta:*", "hot:reward_tiers")
+  async updateConfig(
+    @Body() dto: UpdateConfigDto,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    const base: AuditLogDto = {
+      actionType: AuditAction.CONFIG_UPDATED,
+      actor: {
+        id: req.user.id,
+        actorType: ActorType.SUPER_ADMIN,
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context: { key: dto.key, description: dto.description },
+    };
 
-  let before: unknown = null;
-  let result;
-  try {
-    const { items } = await this.adminService.listConfig();
-    before = items.find((c) => c.key === dto.key)?.value ?? null;
+    let before: unknown = null;
+    let result;
+    try {
+      const { items } = await this.adminService.listConfig();
+      before = items.find((c) => c.key === dto.key)?.value ?? null;
 
-    result = await this.adminService.updateConfig(req.user.id, dto);
-  } catch (err) {
+      result = await this.adminService.updateConfig(req.user.id, dto);
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before: { value: before }, after: { value: before } }, // unchanged
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+
     await this.safeAudit({
       ...base,
-      changes: { before: { value: before }, after: { value: before } }, // unchanged
-      outcome: {
-        status: OutcomeStatus.FAILURE,
-        errorMessage: err instanceof Error ? err.message : String(err),
-      },
+      changes: { before: { value: before }, after: { value: dto.value } },
+      outcome: { status: OutcomeStatus.SUCCESS },
     });
-    throw err;
+
+    return result;
   }
-
-  await this.safeAudit({
-    ...base,
-    changes: { before: { value: before }, after: { value: dto.value } },
-    outcome: { status: OutcomeStatus.SUCCESS },
-  });
-
-  return result;
-}
 
   // ─────────────────────────────────────────────────────────────
   // Section 4: Analytics Dashboard
@@ -934,5 +987,47 @@ async updateConfig(
       { keyPattern },
       () => this.adminService.flushCache(keyPattern),
     );
+  }
+
+  @Post("delete-user/:id")
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async deleteuser(
+    @Param("id") id: string,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+  return this.withAudit(
+  AuditAction.USER_DELETED,
+  req,
+  meta,
+  { userId: id },
+  () => this.adminService.deleteUser(id),
+  {
+    before: () => this.adminService.getUserAuditSnapshot(id),
+    after: () => this.adminService.getUserAuditSnapshot(id),
+  },
+);
+  }
+
+  @Post("restore-user/:id")
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async restoreUser(
+    @Param("id") id: string,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+   return this.withAudit(
+  AuditAction.USER_RESTORED,
+  req,
+  meta,
+  { userId: id },
+  () => this.adminService.restoreUser(id),
+  {
+    before: () => this.adminService.getUserAuditSnapshot(id),
+    after: () => this.adminService.getUserAuditSnapshot(id),
+  },
+);
   }
 }

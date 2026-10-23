@@ -89,7 +89,7 @@ export class AgriEntitiesService {
 
   // Lists every user's submissions for staff review, each with the submitter's name.
   async listAll(dto: ListAgriEntitiesDto) {
-    const { data, ...rest } = await this.findPage({}, dto);
+   const { data, ...rest } = await this.findPage({}, dto);
     const submitters = await this.userRepo.findByIds(data.map((entity) => entity.userId));
     const byId = new Map(submitters.map((user) => [user.id, user]));
     return {
@@ -136,7 +136,7 @@ export class AgriEntitiesService {
   private async findPage(scope: { userId?: string }, dto: ListAgriEntitiesDto) {
     const { type, status, page = 1, limit = 20 } = dto;
     const { data, total } = await this.agriEntityRepo.findAndCount(
-      { ...scope, ...(type ? { type } : {}), ...(status ? { status } : {}) },
+      { ...scope, ...(type ? { type } : {}), ...(status ? { status } : {}),  isDeleted: { $ne: true }, },
       { pagination: { page, limit, sort: { createdAt: -1 } } },
     );
     return { data, total, page, limit, pages: Math.ceil(total / limit) };

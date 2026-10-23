@@ -11,6 +11,8 @@ export class AppFeedback {
   comment: string | null;
   /** Whether the comment was dictated with the microphone or typed. */
   inputMethod: AppFeedbackInputMethod;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

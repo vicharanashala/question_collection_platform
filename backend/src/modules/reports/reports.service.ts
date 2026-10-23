@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import {
   IReportRepository,
   IReportReplyRepository,
@@ -13,8 +13,12 @@ import {
   UserRole,
 } from '../../shared/classes/enums';
 import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
-import { Report } from '../../shared/database/entities/report.entity';
-import { ReportReply } from '../../shared/database/entities/report-reply.entity';
+// import { Report } from '../../shared/database/entities/report.entity';
+// import { ReportReply } from '../../shared/database/entities/report-reply.entity';
+
+import { Report } from '@/shared/database/mongodb/schemas/report.schema';
+import { ReportReply } from '@/shared/database/mongodb/schemas/report-reply.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class ReportsService {
@@ -48,7 +52,8 @@ export class ReportsService {
     const { Types } = require('mongoose');
     if (!Types.ObjectId.isValid(reportId)) return null;
     const oid = new Types.ObjectId(reportId);
-
+    const user = await this.userRepo.findById(userId);
+    if(user?.isDeleted) throw new Error ("Unable to show user report becuase it is deleted..")
     // Same aggregation pattern as getReport() below (with an added userId ownership
     // match) — a plain .where('a = :x AND b = :y', ...) compound condition isn't one
     // of the patterns the Mongo query builder's SQL-string translator recognizes, so
@@ -174,7 +179,7 @@ export class ReportsService {
     const offset = (page - 1) * limit;
 
     // Build the base filter
-    const match: Record<string, unknown> = {};
+    const match: Record<string, unknown> = {isDeleted: { $ne: true }};
     if (dto.status) match.status = dto.status;
     if (dto.category) match.category = dto.category;
     if (dto.priority) match.priority = dto.priority;
@@ -404,45 +409,89 @@ export class ReportsService {
     return saved;
   }
 
+  // async addReply(
+  //   reportId: string,
+  //   adminId: string,
+  //   dto: ReplyReportDto,
+  // ): Promise<ReportReply> {
+  //   const report = await this.reportRepo.findOne({ id: reportId } as never);
+  //   if (!report) throw new Error('Report not found');
+
+  //   const savedReply = await this.replyRepo.create({
+  //     reportId,
+  //     adminId,
+  //     message: dto.message,
+  //   } as never);
+
+  //   if ((report as { status: ReportStatus }).status === ReportStatus.OPEN) {
+  //     (report as { status: ReportStatus }).status = ReportStatus.IN_PROGRESS;
+  //     await this.reportRepo.save(report);
+  //   }
+
+  //   const body = dto.message.length > 100 ? dto.message.slice(0, 97) + '...' : dto.message;
+  //   const userId = (report as { userId: string }).userId;
+
+  //   await this.notificationRepo.create({
+  //     userId,
+  //     type: NotificationType.REPORT_REPLY,
+  //     triggerType: NotificationTriggerType.REPORT,
+  //     title: 'Your report has been replied to',
+  //     body,
+  //     data: { reportId, replyId: (savedReply as { id: string }).id },
+  //   } as never);
+
+  //   await this.sendPushNotification(userId, {
+  //     title: 'Your report has been replied to',
+  //     body,
+  //     data: { reportId, replyId: (savedReply as { id: string }).id },
+  //   });
+
+  //   return savedReply;
+  // }
+
   async addReply(
-    reportId: string,
-    adminId: string,
-    dto: ReplyReportDto,
-  ): Promise<ReportReply> {
-    const report = await this.reportRepo.findOne({ id: reportId } as never);
-    if (!report) throw new Error('Report not found');
-
-    const savedReply = await this.replyRepo.create({
-      reportId,
-      adminId,
-      message: dto.message,
-    } as never);
-
-    if ((report as { status: ReportStatus }).status === ReportStatus.OPEN) {
-      (report as { status: ReportStatus }).status = ReportStatus.IN_PROGRESS;
-      await this.reportRepo.save(report);
-    }
-
-    const body = dto.message.length > 100 ? dto.message.slice(0, 97) + '...' : dto.message;
-    const userId = (report as { userId: string }).userId;
-
-    await this.notificationRepo.create({
-      userId,
-      type: NotificationType.REPORT_REPLY,
-      triggerType: NotificationTriggerType.REPORT,
-      title: 'Your report has been replied to',
-      body,
-      data: { reportId, replyId: (savedReply as { id: string }).id },
-    } as never);
-
-    await this.sendPushNotification(userId, {
-      title: 'Your report has been replied to',
-      body,
-      data: { reportId, replyId: (savedReply as { id: string }).id },
-    });
-
-    return savedReply;
+  reportId: string,
+  adminId: string,
+  dto: ReplyReportDto,
+): Promise<ReportReply> {
+  if (!Types.ObjectId.isValid(reportId)) {
+    throw new NotFoundException('Report not found');
   }
+
+  const report = await this.reportRepo.findById(reportId);
+  if (!report || report.isDeleted) throw new NotFoundException('Report not found');
+
+  const savedReply = await this.replyRepo.create({
+    reportId,
+    adminId,
+    message: dto.message,
+  });
+
+  if (report.status === ReportStatus.OPEN) {
+    await this.reportRepo.update(reportId, { status: ReportStatus.IN_PROGRESS });
+  }
+
+  const body = dto.message.length > 100 ? dto.message.slice(0, 97) + '...' : dto.message;
+  const userId = String(report.userId);
+  const replyId = savedReply._id.toString();
+
+  await this.notificationRepo.create({
+    userId,
+    type: NotificationType.REPORT_REPLY,
+    triggerType: NotificationTriggerType.REPORT,
+    title: 'Your report has been replied to',
+    body,
+    data: { reportId, replyId },
+  });
+
+  await this.sendPushNotification(userId, {
+    title: 'Your report has been replied to',
+    body,
+    data: { reportId, replyId },
+  });
+
+  return savedReply;
+}
 
   private async sendPushNotification(
     userId: string,

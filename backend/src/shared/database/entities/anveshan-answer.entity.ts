@@ -54,6 +54,8 @@ export class AnveshanAnswer {
   answeredAt: Date;
   /** Null for answers submitted before scoring was introduced. */
   score: AnveshanAnswerScore | null;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

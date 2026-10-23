@@ -219,17 +219,87 @@ function isTypeormIn(val: unknown): val is { __type: 'in'; value: unknown[] } {
  *   - plain objects           → recurse via toMongoFilter
  *   - primitives             → pass through unchanged
  */
-export function translateValue(val: unknown): unknown {
-  if (val === null || val === undefined) return val;
+// export function translateValue(val: unknown): unknown {
+//   if (val === null || val === undefined) return val;
 
-  // TypeORM FindOperator (MoreThanOrEqual, LessThan, etc.) — has Symbol(@instanceof) = FindOperator
+//   // TypeORM FindOperator (MoreThanOrEqual, LessThan, etc.) — has Symbol(@instanceof) = FindOperator
+//   if (isTypeormFindOperator(val)) {
+//     // `Between(from, to)` is a 2-arg range operator — it doesn't map to a single
+//     // Mongo comparator. Return both bounds in one filter object so the field
+//     // becomes { $gte: from, $lte: to } after toMongoFilter assigns it.
+//     if (val._type === 'between' && Array.isArray(val._value) && val._value.length === 2) {
+//       return { $gte: val._value[0], $lte: val._value[1] };
+//     }
+//     const typeToMongo: Record<string, string> = {
+//       moreThanOrEqual: '$gte',
+//       lessThanOrEqual: '$lte',
+//       moreThan: '$gt',
+//       lessThan: '$lt',
+//       equal: '$eq',
+//       notEqual: '$ne',
+//     };
+//     const mongoOp = typeToMongo[val._type];
+//     if (mongoOp) return { [mongoOp]: val._value };
+//     return val._value;
+//   }
+
+//   if (isTypeormBetween(val)) {
+//     return { $gte: val.value[0], $lte: val.value[1] };
+//   }
+
+//   if (isTypeormComparison(val)) {
+//     return { [val.__type]: val.value };
+//   }
+
+//   if (isTypeormLike(val)) {
+//     return mongoLike(String(val.value));
+//   }
+
+//   if (isTypeormIn(val)) {
+//     return mongoIn(val.value as unknown[]);
+//   }
+
+//   if (typeof val === 'object' && !Array.isArray(val)) {
+//     if ('__type' in (val as Record<string, unknown>) && (val as Record<string, unknown>).__type === 'array') {
+//       return mongoAll((val as { value: unknown[] }).value);
+//     }
+//     const translated = toMongoFilter(val);
+//     if (Object.keys(translated).length > 0) return translated;
+//     return val;
+//   }
+
+//   return val;
+// }
+
+
+export function translateValue(val: unknown): unknown {
+  if (val === null || val === undefined) {
+    return val;
+  }
+
+  // Preserve valid MongoDB ObjectIds.
+  if (val instanceof Types.ObjectId) {
+    return val;
+  }
+
+  // Preserve dates.
+  if (val instanceof Date) {
+    return val;
+  }
+
+  // TypeORM FindOperator support.
   if (isTypeormFindOperator(val)) {
-    // `Between(from, to)` is a 2-arg range operator — it doesn't map to a single
-    // Mongo comparator. Return both bounds in one filter object so the field
-    // becomes { $gte: from, $lte: to } after toMongoFilter assigns it.
-    if (val._type === 'between' && Array.isArray(val._value) && val._value.length === 2) {
-      return { $gte: val._value[0], $lte: val._value[1] };
+    if (
+      val._type === 'between' &&
+      Array.isArray(val._value) &&
+      val._value.length === 2
+    ) {
+      return {
+        $gte: val._value[0],
+        $lte: val._value[1],
+      };
     }
+
     const typeToMongo: Record<string, string> = {
       moreThanOrEqual: '$gte',
       lessThanOrEqual: '$lte',
@@ -238,13 +308,21 @@ export function translateValue(val: unknown): unknown {
       equal: '$eq',
       notEqual: '$ne',
     };
+
     const mongoOp = typeToMongo[val._type];
-    if (mongoOp) return { [mongoOp]: val._value };
+
+    if (mongoOp) {
+      return { [mongoOp]: val._value };
+    }
+
     return val._value;
   }
 
   if (isTypeormBetween(val)) {
-    return { $gte: val.value[0], $lte: val.value[1] };
+    return {
+      $gte: val.value[0],
+      $lte: val.value[1],
+    };
   }
 
   if (isTypeormComparison(val)) {
@@ -260,11 +338,18 @@ export function translateValue(val: unknown): unknown {
   }
 
   if (typeof val === 'object' && !Array.isArray(val)) {
-    if ('__type' in (val as Record<string, unknown>) && (val as Record<string, unknown>).__type === 'array') {
+    const obj = val as Record<string, unknown>;
+
+    if ('__type' in obj && obj.__type === 'array') {
       return mongoAll((val as { value: unknown[] }).value);
     }
+
     const translated = toMongoFilter(val);
-    if (Object.keys(translated).length > 0) return translated;
+
+    if (Object.keys(translated).length > 0) {
+      return translated;
+    }
+
     return val;
   }
 

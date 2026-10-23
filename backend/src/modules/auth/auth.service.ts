@@ -160,7 +160,7 @@ export class AuthService {
           "This number is not registered on the platform. Please use the mobile app to sign up.",
         );
       }
-      
+
       // if (
       //   user.role !== UserRole.ADMIN &&
       //   user.role !== UserRole.SUPER_ADMIN &&
@@ -297,11 +297,11 @@ export class AuthService {
   ): Promise<
     | AuthResponse
     | {
-      requiresRegistration: true;
-      tempToken: string;
-      role: UserRole;
-      anveshanPhaseInfo?: AnveshanPhaseInfo;
-    }
+        requiresRegistration: true;
+        tempToken: string;
+        role: UserRole;
+        anveshanPhaseInfo?: AnveshanPhaseInfo;
+      }
   > {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     // Opt-in local shortcut for developing without a live SMS gateway. main.ts refuses
@@ -314,6 +314,14 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
+  if (user.isDeleted) {
+  throw new ForbiddenException({
+    statusCode: 403,
+    error: "Forbidden",
+    code: "ACCOUNT_DELETED",
+    message: "This user is deleted. Please contact admin to restore.",
+  });
+}
 
     // Auto-reinstate: suspension period has expired
     if (
@@ -350,14 +358,6 @@ export class AuthService {
       });
     }
 
-    this.logger.debug(`verifyOtp lookup: ${mobileNumber} -> ${user?.mobileNumber}`);
-
-    this.logger.debug(
-  `verifyOtp user=${user._id} hasHash=${!!user.otpHash} expires=${user.otpExpiresAt}`,
-);
-
-this.logger.debug(`keys=${Object.keys(user).join(',')} id=${(user as any).id} _id=${(user as any)._id}`);
-
     if (!bypassOtpChecks && (!user.otpHash || !user.otpExpiresAt)) {
       throw new UnauthorizedException("No OTP was requested for this number");
     }
@@ -393,76 +393,92 @@ this.logger.debug(`keys=${Object.keys(user).join(',')} id=${(user as any).id} _i
     const REQUIRED_ANVESHAN_PHASE = "module";
 
     const anveshanCandidate = await this.anveshanRepo.findByPhone(mobileNumber);
-let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
+    let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
 
-if (anveshanCandidate) {
-  const eligible = anveshanCandidate.current_phase === REQUIRED_ANVESHAN_PHASE;
-  const progressByUser = await this.anveshanProgressService.getProgressForUsers([user._id.toString()]);
-  anveshanPhaseInfo = {
-    isAnveshanUser: true,
-    currentPhase: anveshanCandidate.current_phase as string,
-    requiredPhase: REQUIRED_ANVESHAN_PHASE,
-    eligible,
-    questionProgressPercent: progressByUser.get(user._id.toString())?.percent ?? 0,
-  };
+    if (anveshanCandidate) {
+      const eligible =
+        anveshanCandidate.current_phase === REQUIRED_ANVESHAN_PHASE;
+      const progressByUser =
+        await this.anveshanProgressService.getProgressForUsers([
+          user._id.toString(),
+        ]);
+      anveshanPhaseInfo = {
+        isAnveshanUser: true,
+        currentPhase: anveshanCandidate.current_phase as string,
+        requiredPhase: REQUIRED_ANVESHAN_PHASE,
+        eligible,
+        questionProgressPercent:
+          progressByUser.get(user._id.toString())?.percent ?? 0,
+      };
 
-  if (eligible) {
-    this.logger.debug(`User ${mobileNumber} belongs to Anveshan platform`);
+      if (eligible) {
+        this.logger.debug(`User ${mobileNumber} belongs to Anveshan platform`);
 
-    const updates: Partial<User> = {
-      isAnveshanUser: true,
-      category: UserCategory.ANVESHAN_USER,
-      verificationStatus: VerificationStatus.VERIFIED,
-    };
+        const updates: Partial<User> = {
+          isAnveshanUser: true,
+          category: UserCategory.ANVESHAN_USER,
+          verificationStatus: VerificationStatus.VERIFIED,
+        };
 
-    if (!user.name?.trim() && anveshanCandidate.full_name) {
-      updates.name = anveshanCandidate.full_name;
+        if (!user.name?.trim() && anveshanCandidate.full_name) {
+          updates.name = anveshanCandidate.full_name;
+        }
+        if (!user.state?.trim() && anveshanCandidate.state) {
+          updates.state = anveshanCandidate.state;
+        }
+        if (!user.district?.trim() && anveshanCandidate.district) {
+          updates.district = anveshanCandidate.district;
+        }
+
+        await this.userRepo.update(user._id, updates);
+        user = { ...user, ...updates } as User;
+      } else {
+        // Flag them as an Anveshan user for tracking, but withhold verification
+        // and profile backfill until they reach the required phase.
+        const updates: Partial<User> = {
+          isAnveshanUser: true,
+          category: UserCategory.ANVESHAN_USER,
+        };
+        await this.userRepo.update(user._id, updates);
+        user = { ...user, ...updates } as User;
+      }
     }
-    if (!user.state?.trim() && anveshanCandidate.state) {
-      updates.state = anveshanCandidate.state;
+
+    // Check if registration is complete (name is set)
+    const isRegistered = user.name && user.name.trim().length > 0;
+
+    if (!isRegistered) {
+      const tempToken = this.jwtService.sign(
+        { sub: user._id.toString(), mobileNumber, type: "registration" },
+        { expiresIn: "1h" },
+      );
+      return {
+        requiresRegistration: true,
+        tempToken,
+        role: user.role,
+        anveshanPhaseInfo,
+      };
     }
-    if (!user.district?.trim() && anveshanCandidate.district) {
-      updates.district = anveshanCandidate.district;
+
+    // Returning user — issue full auth tokens
+    user.lastLoginAt = new Date();
+    await this.userRepo.save(user);
+
+    const walletExists = await this.walletRepo.count({
+      where: { userId: user._id.toString() },
+    });
+    if (walletExists === 0) {
+      await this.walletRepo.save(
+        await this.walletRepo.create({
+          userId: user._id.toString(),
+          balance: 0,
+          currency: "INR",
+        }),
+      );
     }
 
-    await this.userRepo.update(user._id, updates);
-    user = { ...user, ...updates } as User;
-  } else {
-    // Flag them as an Anveshan user for tracking, but withhold verification
-    // and profile backfill until they reach the required phase.
-    const updates: Partial<User> = {
-      isAnveshanUser: true,
-      category: UserCategory.ANVESHAN_USER,
-    };
-    await this.userRepo.update(user._id, updates);
-    user = { ...user, ...updates } as User;
-  }
-}
-
-// Check if registration is complete (name is set)
-const isRegistered = user.name && user.name.trim().length > 0;
-
-if (!isRegistered) {
-  const tempToken = this.jwtService.sign(
-    { sub: user._id.toString(), mobileNumber, type: "registration" },
-    { expiresIn: "1h" },
-  );
-  return { requiresRegistration: true, tempToken, role: user.role, anveshanPhaseInfo };
-}
-
-// Returning user — issue full auth tokens
-user.lastLoginAt = new Date();
-await this.userRepo.save(user);
-
-const walletExists = await this.walletRepo.count({ where: { userId: user._id.toString() } });
-if (walletExists === 0) {
-  await this.walletRepo.save(
-    await this.walletRepo.create({ userId: user._id.toString(), balance: 0, currency: "INR" }),
-  );
-}
-
-const tokens = await this.issueTokens(user);
-return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
+    const tokens = await this.issueTokens(user);
+    return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
   }
 
   // ─── Registration ───────────────────────────────────────────────────────────
@@ -473,7 +489,7 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
    */
   async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
     const isDev = isDevelopment();
-    const objectId = new Types.ObjectId(userId)
+    const objectId = new Types.ObjectId(userId);
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new UnauthorizedException("User not found");
@@ -983,7 +999,7 @@ return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
       consentGiven: user.consentGiven,
       isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
       profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted,
-      isAnveshanUser: user.isAnveshanUser
+      isAnveshanUser: user.isAnveshanUser,
     };
   }
 

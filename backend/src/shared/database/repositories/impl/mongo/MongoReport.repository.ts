@@ -3,9 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
 import { IReportRepository } from '../../IReport.repository';
-import { Report } from '../../../entities';
+// import { Report } from '../../../entities';
 import { ReportStatus } from '../../../../classes/enums';
-
+import { Report } from '@/shared/database/mongodb/schemas/report.schema';
 @Injectable()
 export class MongoReportRepository
   extends MongoRepository<Report>

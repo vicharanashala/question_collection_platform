@@ -108,7 +108,7 @@ describe('AdminController', () => {
 
       const result = await controller.getUserDetail('user-1');
 
-      expect(result.user._id).toBe('user-1');
+      expect(result.user.id).toBe('user-1');
     });
   });
 
