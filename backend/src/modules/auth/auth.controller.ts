@@ -167,13 +167,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getCrops(){
     try{
-          const resposne = await axios.get(`${process.env.REVIEWER_URI}/crops/get-all-crops-client`, 
-      {
-        headers:{
-          'x-internal-api-key':process.env.REVIEW_SYSTEM_AUTH_KEY
+      const resposne = await axios.get(
+        `${process.env.REVIEWER_URI}/crops/get-all-crops-client`,
+        {
+          headers: {
+            'x-internal-api-key': process.env.REVIEW_SYSTEM_API_AUTH_KEY || '',
+          },
         },
-      }
-    )
+      );
     return resposne.data
     }catch(err){
       console.error("Something went wrong", err);
