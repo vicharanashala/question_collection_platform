@@ -61,6 +61,9 @@ export interface User {
   /** Crop names stored as a string array on the user record */
   crops: string[];
   isDeleted?: boolean;
+  /** True when the user has an unexpired login session. Sent by the admin user list only. */
+  isActive?: boolean;
+  lastActivityAt?: string | null;
 }
 
 

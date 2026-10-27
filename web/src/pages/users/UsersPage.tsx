@@ -63,6 +63,7 @@ const USER_EXPORT_COLUMNS: ExportColumn<UserType>[] = [
   { header: 'Organisation Type', value: (u) => u.organisationType },
   { header: 'Joined', value: (u) => exportDate(u.createdAt) },
   { header: 'Last Login', value: (u) => exportDate(u.lastLoginAt, true) },
+  { header: 'Logged In', value: (u) => (u.isActive ? 'Yes' : 'No') },
 ]
 
 const ROLE_OPTIONS: { value: string; label: string }[] = [
@@ -173,6 +174,36 @@ function isUsableDate(value: string): boolean {
 }
 
 type UserSortKey = 'name' | 'role' | 'verificationStatus' | 'state' | 'createdAt' | 'lastLoginAt' | 'anveshanProgress'
+
+// Shows whether the user currently has a login session. Uses text as well as colour.
+function SessionStatus({ isActive, lastActivityAt, isDeleted }: {
+  isActive: boolean
+  lastActivityAt?: string | null
+  isDeleted: boolean
+}) {
+  if (isDeleted) return <span className="text-text-tertiary">—</span>
+  if (!isActive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-text-secondary">
+        <span className="h-2 w-2 rounded-full bg-gray-400" aria-hidden="true" />
+        Logged out
+      </span>
+    )
+  }
+  return (
+    <div>
+      <span className="inline-flex items-center gap-1.5 font-medium text-green-700 dark:text-green-400">
+        <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
+        Logged in
+      </span>
+      {lastActivityAt && (
+        <p className="text-[11px] sm:text-xs text-text-tertiary">
+          Active {formatDateTime(lastActivityAt)}
+        </p>
+      )}
+    </div>
+  )
+}
 
 // Table header cell that sorts the list by one column when clicked.
 function SortableHeader({ label, sortKey, activeKey, order, onSort, newBadge }: {
@@ -500,13 +531,14 @@ export function UsersPage() {
                 <SortableHeader newBadge label="Anveshan Progress" sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label="Joined" sortKey="createdAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label="Last Login" sortKey="lastLoginAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Session</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-24 rounded bg-surface-variant animate-pulse" />
                       </td>
@@ -516,7 +548,7 @@ export function UsersPage() {
               ) : users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="py-12 text-center text-text-secondary"
                   >
                     No users found
@@ -649,6 +681,13 @@ export function UsersPage() {
                         {u.lastLoginAt
                           ? formatDateTime(u.lastLoginAt)
                           : "Never"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <SessionStatus
+                          isActive={!!u.isActive}
+                          lastActivityAt={u.lastActivityAt}
+                          isDeleted={isDeleted}
+                        />
                       </td>
                     </tr>
                   );
