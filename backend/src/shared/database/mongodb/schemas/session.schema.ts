@@ -8,8 +8,8 @@ export class Session {
   _id: Types.ObjectId;
 
   // Use Types.ObjectId + ref: 'User' if your users' _id is an ObjectId
-  @Prop({ required: true, type: String })
-  userId: string;
+  @Prop({ required: true, type: String, unique: true })
+  userId: string; // one session per user
 
   @Prop({ required: true, type: String, unique: true })
   sessionId: string; // goes into the JWT as `sid`
@@ -48,9 +48,6 @@ export class Session {
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
-
-// Admin view, "log out all sessions for user"
-SessionSchema.index({ userId: 1, status: 1 });
 
 // Cleanup: Mongo deletes the doc once expiresAt passes.
 // To keep expired/revoked sessions around for audit, use expireAfterSeconds: 60 * 60 * 24 * 7 (7 days)

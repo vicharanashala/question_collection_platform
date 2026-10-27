@@ -47,6 +47,7 @@ import type {
 } from "@/types";
 import {
   accountLockedEmitter,
+  endSession,
   parseAccountLocked,
 } from "@/events/accountLockedEvents";
 import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
@@ -257,11 +258,17 @@ export async function request<T>(
             const refresh = getRefreshToken();
             if (refresh) {
               try {
-                const refreshed = await fetch(`${BASE}/auth/refresh`, {
+                const refreshRes = await fetch(`${BASE}/auth/refresh`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ refreshToken: refresh }),
-                }).then((r) => r.json());
+                });
+                const refreshed = await refreshRes.json();
+                // The session was revoked or expired: log the user out. Other
+                // failures (such as a 503) must not wipe the login.
+                if (!refreshed.accessToken && refreshRes.status === 401) {
+                  endSession();
+                }
                 if (refreshed.accessToken) {
                   setTokens(
                     refreshed.accessToken,

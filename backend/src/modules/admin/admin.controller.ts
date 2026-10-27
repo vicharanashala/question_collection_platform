@@ -144,14 +144,6 @@ export class AdminController {
     return result;
   }
 
-  // @Get("users")
-  // @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-  // @HttpCode(HttpStatus.OK)
-  // @Cacheable("admin_users", 60)
-  // async listUsers(@Query() dto: ListUsersDto) {
-  //   return this.adminService.listUsers(dto);
-  // }
-
   @Get("users")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
@@ -244,7 +236,7 @@ export class AdminController {
     };
     let result;
     try {
-      result = this.adminService.suspendOrBanUser(
+      result = await this.adminService.suspendOrBanUser(
         req.user.id,
         id,
         body.action,
@@ -281,6 +273,9 @@ export class AdminController {
       outcome: { status: OutcomeStatus.SUCCESS },
     });
 
+    // A suspended or banned user must not keep an active session
+    await this.revokeSessionQuietly(id);
+
     return result;
   }
 
@@ -294,8 +289,10 @@ export class AdminController {
     @ReqMeta() meta: RequestMeta,
   ) {
     const role = req.user.role as UserRole;
-    const objectId = new Types.ObjectId(id);
-    const user = await this.userService.getProfile(objectId);
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("Invalid user id");
+    }
+    const user = await this.userService.getProfile(new Types.ObjectId(id));
     const base: AuditLogDto = {
       actionType:
         user.verificationStatus === "suspended"
@@ -577,42 +574,6 @@ export class AdminController {
   }
 
   // Runs a staff action and records a success or failure audit log for it.
-  // private async withAudit<T>(
-  //   actionType: AuditAction,
-  //   req: AuthenticatedRequest,
-  //   meta: RequestMeta,
-  //   context: Record<string, unknown>,
-  //   run: () => Promise<T>,
-  // ): Promise<T> {
-  //   const base: AuditLogDto = {
-  //     actionType,
-  //     actor: {
-  //       id: req.user.id,
-  //       name: req.user.name,
-  //       actorType: this.toActorType(req.user.role as UserRole),
-  //     },
-  //     resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
-  //     context,
-  //   };
-  //   try {
-  //     const result = await run();
-  //     await this.safeAudit({
-  //       ...base,
-  //       outcome: { status: OutcomeStatus.SUCCESS },
-  //     });
-  //     return result;
-  //   } catch (err) {
-  //     await this.safeAudit({
-  //       ...base,
-  //       outcome: {
-  //         status: OutcomeStatus.FAILURE,
-  //         errorMessage: err instanceof Error ? err.message : String(err),
-  //       },
-  //     });
-  //     throw err;
-  //   }
-  // }
-
   private async withAudit<T>(
     actionType: AuditAction,
     req: AuthenticatedRequest,
@@ -639,7 +600,8 @@ export class AdminController {
     const safely = async <V>(fn?: () => Promise<V>) => {
       try {
         return fn ? await fn() : undefined;
-      } catch {
+      } catch (err) {
+        this.logger.warn(`Audit snapshot failed: ${err}`);
         return undefined;
       }
     };
@@ -1044,7 +1006,7 @@ export class AdminController {
 @Post("delete-user/:id")
 @Roles(UserRole.SUPER_ADMIN)
 @HttpCode(HttpStatus.OK)
-async deleteuser(
+async deleteUser(
   @Param("id") id: string,
   @Req() req: AuthenticatedRequest,
   @ReqMeta() meta: RequestMeta,

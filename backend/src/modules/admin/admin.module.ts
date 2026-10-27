@@ -15,7 +15,7 @@ import { PaymentModule } from '../payment/payment.module';
 import { GdbModule } from '../ai/gdb.module';
 import { AuditService } from '../audit-logs/audit.service';
 import { UserService } from '../user/user.service';
-import { SessionService } from '../session/session.service';
+import { SessionModule } from '../session/session.module';
 
 @Module({
   imports: [
@@ -24,6 +24,7 @@ import { SessionService } from '../session/session.service';
     NotificationsModule,
     PaymentModule,
     forwardRef(() => GdbModule),
+    SessionModule,
   ],
   controllers: [
     AdminController,
@@ -40,7 +41,6 @@ import { SessionService } from '../session/session.service';
     AuditService,
     Logger,
     UserService,
-    SessionService
   ],
   exports: [AdminService, AnveshanProgressService],
 })

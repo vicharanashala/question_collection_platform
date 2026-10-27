@@ -217,12 +217,20 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
   });
 
   describe('POST /admin/users/:id/unsuspend', () => {
+    const userObjectId = '507f1f77bcf86cd799439011';
+
     it('should unsuspend or unban a user', async () => {
-      service.unsuspendOrUnbanUser.mockResolvedValue({ success: true, userId: 'user-1', newStatus: VerificationStatus.VERIFIED });
+      service.unsuspendOrUnbanUser.mockResolvedValue({ success: true, userId: userObjectId, newStatus: VerificationStatus.VERIFIED });
 
-      await controller.unsuspendUser('user-1', superAdminReq as any, meta);
+      await controller.unsuspendUser(userObjectId, superAdminReq as any, meta);
 
-      expect(service.unsuspendOrUnbanUser).toHaveBeenCalledWith('super-1', 'user-1');
+      expect(service.unsuspendOrUnbanUser).toHaveBeenCalledWith('super-1', userObjectId);
+    });
+
+    it('should reject an invalid user id with a 400', async () => {
+      await expect(
+        controller.unsuspendUser('not-an-id', superAdminReq as any, meta),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 

@@ -60,22 +60,8 @@ export class AuthController {
    * Complete new-user registration. Requires a valid registration temp token
    * returned from verify-otp on first login.
    */
-  // @Public()
-  // @Post('register')
-  // @HttpCode(HttpStatus.CREATED)
-  // async register(@Body() dto: RegisterDto, @ReqMeta() meta?:RequestMeta) {
-  //   // Normalize: strip country code and leading zeros so the lookup matches
-  //   // what was stored during the OTP request/verify flow.
-  //   const mobileNumber = this.authService.normalizePhone(dto?.mobileNumber);
-  //   const user = await this.authService.findUserByMobile(mobileNumber);
-  //   if (!user) {
-  //     throw new UnauthorizedException(
-  //       'No OTP-verified account found for this mobile number. Please request OTP first.',
-  //     );
-  //   }
-  //   return this.authService.register(dto, user._id.toString());
-  // }
-
+  // Public so the global JWT guard skips it; RegistrationAuthGuard checks the registration token.
+  @Public()
   @UseGuards(RegistrationAuthGuard)
 @Post('register')
 @HttpCode(HttpStatus.CREATED)
@@ -133,14 +119,6 @@ async register(
    * Invalidates the current session by incrementing tokenVersion.
    * All previously issued tokens become invalid instantly.
    */
-  // @UseGuards(JwtAuthGuard)
-  // @Post('logout')
-  // @HttpCode(HttpStatus.OK)
-  // async logout(@Req() req: AuthenticatedRequest) {
-  //   await this.authService.incrementTokenVersion(req.user.id);
-  //   return { message: 'Logged out successfully' };
-  // }
-
   @UseGuards(JwtAuthGuard)
 @Post('logout')
 @HttpCode(HttpStatus.OK)

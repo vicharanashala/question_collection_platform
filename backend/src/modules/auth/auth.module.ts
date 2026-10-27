@@ -11,7 +11,7 @@ import { JwtStrategy } from '../../shared/middleware/guards/jwt.strategy';
 import { AdminModule } from '../admin/admin.module';
 import { CacheModule } from '../../shared/database/cache/cache.module';
 import { DbModule } from '../../shared/database/db.module';
-import { SessionService } from '../session/session.service';
+import { SessionModule } from '../session/session.module';
 
 @Module({
   imports: [
@@ -29,9 +29,10 @@ import { SessionService } from '../session/session.service';
     }),
     AdminModule,
     CacheModule,
+    SessionModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy, SessionService],
+  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}

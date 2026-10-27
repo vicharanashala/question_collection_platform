@@ -41,7 +41,6 @@ import {
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
-import { Types } from "mongoose";
 import { SessionMeta, SessionService } from "../session/session.service";
 import { RequestMeta } from "@/shared/middleware/decorators/request-meta.decorator";
 export interface AuthTokens {
@@ -508,7 +507,6 @@ export class AuthService {
    */
   async register(dto: RegisterDto, userId: string, meta?:RequestMeta): Promise<AuthResponse> {
     const isDev = isDevelopment();
-    const objectId = new Types.ObjectId(userId);
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new UnauthorizedException("User not found");
@@ -662,9 +660,8 @@ export class AuthService {
    * Increments tokenVersion to invalidate all previously issued tokens.
    */
   async issueTokens(user: User, meta?: SessionMeta): Promise<AuthTokens> {
-    // NOTE: tokenVersion is NOT incremented here.
-    // It is only incremented on logout (see logout handler) to allow
-    // the same account to be used on multiple devices simultaneously.
+    // NOTE: tokenVersion is NOT incremented here. Each login creates a new session
+    // that replaces the user's previous one, so only one device stays logged in.
     const sid = randomUUID()
     const tokenVersion = user.tokenVersion;
     const base = {
@@ -693,72 +690,6 @@ export class AuthService {
    * Refresh access token using a valid refresh token.
    * Also validates tokenVersion to reject tokens invalidated by logout.
    */
-  // async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-  //   try {
-  //     const payload = this.jwtService.verify<{
-  //       sub: string;
-  //       mobileNumber: string;
-  //       role: UserRole;
-  //       tokenVersion: number;
-  //     }>(refreshToken);
-
-  //     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-  //     if (!user) {
-  //       throw new UnauthorizedException("User not found");
-  //     }
-
-  //     if (user.tokenVersion !== payload.tokenVersion) {
-  //       throw new UnauthorizedException("Session expired. Please login again.");
-  //     }
-
-  //     // Auto-reinstate: suspension period has expired
-  //     if (
-  //       user.verificationStatus === VerificationStatus.SUSPENDED &&
-  //       user.suspendedUntil &&
-  //       new Date() > new Date(user.suspendedUntil)
-  //     ) {
-  //       await this.userRepo.update(user._id, {
-  //         verificationStatus: VerificationStatus.VERIFIED,
-  //         suspendedAt: null,
-  //         suspendedUntil: null,
-  //         suspendedReason: null,
-  //       });
-  //       user.verificationStatus = VerificationStatus.VERIFIED;
-  //     }
-
-  //     // Block suspended or banned users from refreshing a session
-  //     if (user.verificationStatus === VerificationStatus.SUSPENDED) {
-  //       throw new UserAccountLockedException({
-  //         status: VerificationStatus.SUSPENDED,
-  //         reason: user.suspendedReason,
-  //         suspendedAt: user.suspendedAt,
-  //         suspendedUntil: user.suspendedUntil,
-  //         bannedAt: null,
-  //       });
-  //     }
-  //     if (user.verificationStatus === VerificationStatus.BANNED) {
-  //       throw new UserAccountLockedException({
-  //         status: VerificationStatus.BANNED,
-  //         reason: user.bannedReason,
-  //         suspendedAt: null,
-  //         suspendedUntil: null,
-  //         bannedAt: user.bannedAt,
-  //       });
-  //     }
-
-  //     const tokens = await this.issueTokens(user);
-
-  //     // Update last login timestamp on every token refresh
-  //     user.lastLoginAt = new Date();
-  //     await this.userRepo.save(user);
-
-  //     return tokens;
-  //   } catch (err) {
-  //     if (err instanceof UnauthorizedException) throw err;
-  //     throw new UnauthorizedException("Invalid or expired refresh token");
-  //   }
-  // }
-
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
   try {
     const payload = this.jwtService.verify<{
@@ -787,7 +718,49 @@ export class AuthService {
       throw new UnauthorizedException("Session expired. Please login again.");
     }
 
-    // ...your existing auto-reinstate + suspended/banned checks, unchanged...
+    if (user.isDeleted) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: "Forbidden",
+        code: "ACCOUNT_DELETED",
+        message: "This user is deleted. Please contact admin to restore.",
+      });
+    }
+
+    // Auto-reinstate: suspension period has expired
+    if (
+      user.verificationStatus === VerificationStatus.SUSPENDED &&
+      user.suspendedUntil &&
+      new Date() > new Date(user.suspendedUntil)
+    ) {
+      await this.userRepo.update(user._id, {
+        verificationStatus: VerificationStatus.VERIFIED,
+        suspendedAt: null,
+        suspendedUntil: null,
+        suspendedReason: null,
+      });
+      user.verificationStatus = VerificationStatus.VERIFIED;
+    }
+
+    // Block suspended or banned users from refreshing a session
+    if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.SUSPENDED,
+        reason: user.suspendedReason,
+        suspendedAt: user.suspendedAt,
+        suspendedUntil: user.suspendedUntil,
+        bannedAt: null,
+      });
+    }
+    if (user.verificationStatus === VerificationStatus.BANNED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.BANNED,
+        reason: user.bannedReason,
+        suspendedAt: null,
+        suspendedUntil: null,
+        bannedAt: user.bannedAt,
+      });
+    }
 
     // Same session, same refresh token: only a new access token is issued
     const accessToken = this.jwtService.sign(
@@ -816,19 +789,6 @@ export class AuthService {
   /**
    * Validate a JWT access token and return the user.
    */
-  // async validateToken(token: string): Promise<User> {
-  //   try {
-  //     const payload = this.jwtService.verify<{ sub: string }>(token);
-  //     const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-  //     if (!user) {
-  //       throw new UnauthorizedException("User not found");
-  //     }
-  //     return user;
-  //   } catch {
-  //     throw new UnauthorizedException("Invalid or expired access token");
-  //   }
-  // }
-
   async validateToken(token: string): Promise<User> {
   try {
     const payload = this.jwtService.verify<{ sub: string; sid?: string; type?: string }>(token);
