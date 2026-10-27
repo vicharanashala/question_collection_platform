@@ -503,7 +503,7 @@ export function UserDetailPage() {
 
   // Anveshan users have their own review page; ?classic=1 opens this account page instead.
   useEffect(() => {
-    if (user?.isAnveshanUser && !searchParams.has('classic')) navigate(`/users/${user.id}/anveshan`, { replace: true })
+    if (user?.isAnveshanUser && !user.isDeleted && !searchParams.has('classic')) navigate(`/users/${user.id}/anveshan`, { replace: true })
   }, [user, searchParams, navigate])
 
   // Reset page when search changes
