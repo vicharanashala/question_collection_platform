@@ -41,7 +41,6 @@ import {
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Types } from "mongoose";
-import { INCLUDE_DELETED } from "@/shared/database/abstractions/mongo-utils";
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -206,9 +205,7 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
 
     // Store hashed OTP in DB (upsert user record)
-    let user = await this.userRepo.findOne({
-      where: { mobileNumber, isDeleted: INCLUDE_DELETED },
-    });
+    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     let isNewUser = false;
 
     if (user?.isDeleted) {
@@ -335,9 +332,7 @@ export class AuthService {
     const bypassOtpChecks =
       (this.configService.get<boolean>("app.otpDevBypass") ?? false) &&
       isDevelopment();
-    let user = await this.userRepo.findOne({
-      where: { mobileNumber, isDeleted: INCLUDE_DELETED },
-    });
+    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -889,6 +884,15 @@ export class AuthService {
 
     await this.userRepo.save(user);
     return this.toPublicUser(user);
+  }
+
+  // Finds the active user for a mobile number, falling back to a deleted one.
+  private async findUserByMobileIncludingDeleted(
+    mobileNumber: string,
+  ): Promise<User | null> {
+    const activeUser = await this.userRepo.findOne({ where: { mobileNumber } });
+    if (activeUser) return activeUser;
+    return this.userRepo.findOne({ where: { mobileNumber, isDeleted: true } });
   }
 
   async findUserByMobile(mobileNumber: string): Promise<User | null> {

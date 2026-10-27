@@ -18,8 +18,6 @@ export class User {
   @Prop({
     name: "mobileNumber",
     type: String,
-    unique: true,
-    index: true,
     default: null,
   })
   mobileNumber: string | null;
@@ -193,3 +191,6 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// One active and one deleted user per mobile number. This index also serves mobile number lookups.
+UserSchema.index({ mobileNumber: 1, isDeleted: 1 }, { unique: true });

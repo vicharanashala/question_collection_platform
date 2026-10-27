@@ -204,8 +204,6 @@ function isTypeormIn(val: unknown): val is { __type: 'in'; value: unknown[] } {
 
 // ─── TypeORM filter → MongoDB filter translator ─────────────────────────────
 
-export const INCLUDE_DELETED = { $in: [true, false, null] };
-
 // Hides soft deleted documents unless the filter sets isDeleted explicitly.
 export function hideDeleted(
   filter: Record<string, unknown>,

@@ -81,7 +81,6 @@ import {
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
 import { Types } from "mongoose";
-import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
 import {
@@ -349,7 +348,7 @@ export class AdminService implements OnModuleInit {
 
     // Check for duplicate mobile number
     const existing = await this.userRepo.findOne({
-      where: { mobileNumber: mobile, isDeleted: INCLUDE_DELETED },
+      where: { mobileNumber: mobile },
     });
     if (existing) {
       throw new BadRequestException(
@@ -5325,6 +5324,17 @@ async getUserStats(dto: ListUserStatsDto) {
   // Explicit isDeleted key bypasses the default "hide deleted" filter
   const user = await this.userRepo.findOne({ _id: userId, isDeleted: true });
   if (!user) throw new NotFoundException("Deleted user not found");
+
+  if (user.mobileNumber) {
+    const activeUser = await this.userRepo.findOne({
+      mobileNumber: user.mobileNumber,
+    });
+    if (activeUser) {
+      throw new BadRequestException(
+        "Another active user already uses this mobile number.",
+      );
+    }
+  }
 
   const stamp = user.deletedAt; // same value deleteUser put on every related record
   const deletedWithUser = (extra: Record<string, unknown>) => ({
