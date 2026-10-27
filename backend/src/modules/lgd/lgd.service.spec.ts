@@ -87,7 +87,7 @@ describe('LgdService', () => {
 
     expect(mockedGet).toHaveBeenCalledWith(
       'http://reviewer/location/states',
-      expect.objectContaining({ headers: { 'X-Internal-API-Key': 'test-key' } }),
+      expect.objectContaining({ headers: { 'x-internal-api-key': 'test-key' } }),
     );
   });
 });
