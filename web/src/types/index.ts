@@ -999,3 +999,11 @@ export interface AnveshanUserDetail {
   questions: AnveshanUserQuestion[];
   entities: AgriEntitySubmission[];
 }
+
+export interface UserSession {
+  isActive: boolean;
+  lastActivityAt: string | null;
+  browser: string | null;
+  os: string | null;
+  device: string | null;
+}

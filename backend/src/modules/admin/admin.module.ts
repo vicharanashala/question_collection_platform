@@ -15,6 +15,7 @@ import { PaymentModule } from '../payment/payment.module';
 import { GdbModule } from '../ai/gdb.module';
 import { AuditService } from '../audit-logs/audit.service';
 import { UserService } from '../user/user.service';
+import { SessionService } from '../session/session.service';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { UserService } from '../user/user.service';
     AuditService,
     Logger,
     UserService,
+    SessionService
   ],
   exports: [AdminService, AnveshanProgressService],
 })

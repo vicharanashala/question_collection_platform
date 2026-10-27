@@ -16,6 +16,7 @@ import { Report, ReportSchema } from './schemas/report.schema';
 import { ReportReply, ReportReplySchema } from './schemas/report-reply.schema';
 import { Faq, FaqSchema } from './schemas/faq.schema';
 import { Candidate, CandidateSchema } from './schemas/anveshan.schema';
+import { Session, SessionSchema } from './schemas/session.schema';
 
 const SCHEMAS = [
   { name: User.name, schema: UserSchema },
@@ -31,6 +32,7 @@ const SCHEMAS = [
   { name: Report.name, schema: ReportSchema },
   { name: ReportReply.name, schema: ReportReplySchema },
   { name: Faq.name, schema: FaqSchema },
+  { name: Session.name, schema: SessionSchema }
 ];
 
 const ANVESHAN_SCHEMAS = [

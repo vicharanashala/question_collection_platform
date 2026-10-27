@@ -51,9 +51,9 @@ import {
 } from "@/events/accountLockedEvents";
 import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
-import { getAnveshanScope } from '@/lib/anveshanMode';
-import { getTesterScope } from '@/lib/testerMode';
-const NO_SESSION_END = ['/auth/send-otp', '/auth/verify-otp', '/auth/refresh']
+import { getAnveshanScope } from "@/lib/anveshanMode";
+import { getTesterScope } from "@/lib/testerMode";
+const NO_SESSION_END = ["/auth/send-otp", "/auth/verify-otp", "/auth/refresh"];
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -162,55 +162,59 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 // ─── Core request ──────────────────────────────────────────────────────────
 
 // Slow mobile networks and backend cold starts often need more than 10 s for ordinary requests.
-const DEFAULT_TIMEOUT_MS = 20_000
+const DEFAULT_TIMEOUT_MS = 20_000;
 // OTP requests can include a Cloud Run cold start plus BRPS token and SMS calls.
-const OTP_REQUEST_TIMEOUT_MS = 30_000
+const OTP_REQUEST_TIMEOUT_MS = 30_000;
 // Question preview and submit wait on LLM classification, which is slower for non-English text.
-const AI_REQUEST_TIMEOUT_MS = 60_000
+const AI_REQUEST_TIMEOUT_MS = 60_000;
 
 // Converts a fetch timeout into a readable, non-retryable error instead of the raw abort message.
 function toTimeoutError(err: unknown): unknown {
-  if (err instanceof DOMException && err.name === 'TimeoutError') {
+  if (err instanceof DOMException && err.name === "TimeoutError") {
     return Object.assign(
-      new Error('The server is taking longer than usual to respond. Please try again.'),
+      new Error(
+        "The server is taking longer than usual to respond. Please try again.",
+      ),
       { status: 408 },
-    )
+    );
   }
-  return err
+  return err;
 }
 
 // Staff list endpoints that accept the Anveshan mode flag.
 const ANVESHAN_SCOPED_PATHS = new Set([
-  '/admin/users',
-  '/admin/users/stats',
-  '/admin/withdrawals',
-  '/admin/wallets',
-  '/admin/questions/queue',
-  '/questions',
-  '/agri-entities/all',
-  '/agri-entities/filter-users',
-  '/reports',
-  '/distributor/questions',
-  '/distributor/distributions',
-  '/feedbacks/anveshan',
-  '/admin/stats',
-  '/analytics/dashboard',
-  '/analytics/users',
-  '/analytics/questions',
-  '/analytics/rewards',
+  "/admin/users",
+  "/admin/users/stats",
+  "/admin/withdrawals",
+  "/admin/wallets",
+  "/admin/questions/queue",
+  "/questions",
+  "/agri-entities/all",
+  "/agri-entities/filter-users",
+  "/reports",
+  "/distributor/questions",
+  "/distributor/distributions",
+  "/feedbacks/anveshan",
+  "/admin/stats",
+  "/analytics/dashboard",
+  "/analytics/users",
+  "/analytics/questions",
+  "/analytics/rewards",
 ]);
 
 // Adds the staff mode scopes to supported list requests: anveshanScope and tester, when they are not "all".
 function withAnveshanScope(path: string, method?: string): string {
   const anveshan = getAnveshanScope();
   const tester = getTesterScope();
-  if ((anveshan === 'all' && tester === 'all') || (method && method !== 'GET')) return path;
-  const [pathname, query = ''] = path.split('?');
+  if ((anveshan === "all" && tester === "all") || (method && method !== "GET"))
+    return path;
+  const [pathname, query = ""] = path.split("?");
   if (!ANVESHAN_SCOPED_PATHS.has(pathname)) return path;
   const params = new URLSearchParams(query);
   // Feedback is already Anveshan-only, so it takes just the tester scope.
-  if (anveshan !== 'all' && pathname !== '/feedbacks/anveshan') params.set('anveshanScope', anveshan);
-  if (tester !== 'all') params.set('tester', tester);
+  if (anveshan !== "all" && pathname !== "/feedbacks/anveshan")
+    params.set("anveshanScope", anveshan);
+  if (tester !== "all") params.set("tester", tester);
   return `${pathname}?${params.toString()}`;
 }
 
@@ -234,13 +238,22 @@ export async function request<T>(
   }
 
   const doFetch = () => {
-    const url = `${BASE}${path}`
+    const url = `${BASE}${path}`;
     // A fresh timeout signal per attempt so retries are not born already aborted.
     return withRetry(() =>
-      fetch(url, { ...options, headers, signal: AbortSignal.timeout(timeoutMs) })
-        .catch((err: unknown) => { throw toTimeoutError(err) })
+      fetch(url, {
+        ...options,
+        headers,
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+        .catch((err: unknown) => {
+          throw toTimeoutError(err);
+        })
         .then(async (res) => {
-          if (res.status === 401 && !NO_SESSION_END.some((p) => path.startsWith(p))) {
+          if (
+            res.status === 401 &&
+            !NO_SESSION_END.some((p) => path.startsWith(p))
+          ) {
             const refresh = getRefreshToken();
             if (refresh) {
               try {
@@ -332,14 +345,22 @@ export const userApi = {
       { method: "POST" },
       false,
     ),
-}
+};
 
 export const authApi = {
   requestOtp: (mobileNumber: string, isWeb = false) => {
-    return request<{ message: string }>('/auth/request-otp', {
-      method: 'POST',
-      body: JSON.stringify({ mobileNumber, ...(isWeb ? { client: 'web' } : {}) }),
-    }, false, OTP_REQUEST_TIMEOUT_MS)
+    return request<{ message: string }>(
+      "/auth/request-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          mobileNumber,
+          ...(isWeb ? { client: "web" } : {}),
+        }),
+      },
+      false,
+      OTP_REQUEST_TIMEOUT_MS,
+    );
   },
 
   verifyOtp: (mobileNumber: string, otp: string) =>
@@ -480,7 +501,7 @@ export const authApi = {
       false,
     ),
 
-  getCrops: () => request('/auth/get-crops', {}, false),
+  getCrops: () => request("/auth/get-crops", {}, false),
 
   /** Suggest N available usernames based on a base string. */
   suggestUsernames: (base: string, limit = 5) =>
@@ -489,7 +510,6 @@ export const authApi = {
       {},
       false,
     ),
-  
 };
 
 // ─── LGD / Location API ───────────────────────────────────────────────────
@@ -527,7 +547,10 @@ const lgdResponses = new Map<string, Promise<unknown>>();
 
 // Location lists rarely change: each list is fetched once per session and concurrent callers share
 // the request. Failed or empty responses are dropped so the next attempt asks the server again.
-function cachedLgdRequest<T>(path: string, isEmpty: (data: T) => boolean): Promise<T> {
+function cachedLgdRequest<T>(
+  path: string,
+  isEmpty: (data: T) => boolean,
+): Promise<T> {
   const existing = lgdResponses.get(path) as Promise<T> | undefined;
   if (existing) return existing;
 
@@ -547,7 +570,10 @@ function cachedLgdRequest<T>(path: string, isEmpty: (data: T) => boolean): Promi
 
 export const lgdApi = {
   getStates: () =>
-    cachedLgdRequest<{ states: LgdState[] }>("/lgd/states", (d) => !d.states?.length),
+    cachedLgdRequest<{ states: LgdState[] }>(
+      "/lgd/states",
+      (d) => !d.states?.length,
+    ),
 
   getDistricts: (stateCode: string) =>
     cachedLgdRequest<{ districts: LgdDistrict[] }>(
@@ -592,9 +618,19 @@ export const adminApi = {
       Object.entries(params).filter(([, v]) => v !== undefined),
     ) as Record<string, string>;
     const qs = new URLSearchParams(p).toString();
-    return request<PaginatedResponse<User>>(
-      `/admin/users${qs ? `?${qs}` : ""}`, {}, false
-    );
+    return request<
+      PaginatedResponse<
+        User & {
+          isActive: boolean;
+          lastActivityAt: string | null;
+          session?: {
+            browser: string | null;
+            os: string | null;
+            device: string | null;
+          };
+        }
+      >
+    >(`/admin/users${qs ? `?${qs}` : ""}`, {}, false);
   },
 
   getUserStats: (params = {} as { fromDate?: string; toDate?: string }) => {
@@ -613,7 +649,11 @@ export const adminApi = {
     }>(`/admin/users/${userId}`, {}, false),
 
   getAnveshanUserDetail: (userId: string | undefined) =>
-    request<import("@/types").AnveshanUserDetail>(`/admin/users/${userId}/anveshan`, {}, false),
+    request<import("@/types").AnveshanUserDetail>(
+      `/admin/users/${userId}/anveshan`,
+      {},
+      false,
+    ),
 
   verifyUser: (userId: string) =>
     request<{ message: string }>(
@@ -646,24 +686,35 @@ export const adminApi = {
       false,
     ).finally(() => invalidateCache("/api/admin")),
 
-    deleteUser: (userId: string) =>
-  request<{
-    message: string;
-    userId?: string;
-    deleted?: Record<string, number | null>;
-  }>(
-    `/admin/delete-user/${userId}`,
-    { method: "POST" },
-    false,
-  ).finally(() => invalidateCache("/api/admin")),
+  deleteUser: (userId: string) =>
+    request<{
+      message: string;
+      userId?: string;
+      deleted?: Record<string, number | null>;
+    }>(`/admin/delete-user/${userId}`, { method: "POST" }, false).finally(() =>
+      invalidateCache("/api/admin"),
+    ),
 
   restoreUser: (userId: string) =>
-  request<{ message: string; userId?: string }>(
-    `/admin/restore-user/${userId}`,
-    { method: "POST" },
-    false,
-  ).finally(() => invalidateCache("/api/admin")),
+    request<{ message: string; userId?: string }>(
+      `/admin/restore-user/${userId}`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
 
+  getUserSession: (userId: string) =>
+    request<import("@/types").UserSession>(
+      `/admin/users/${userId}/session`,
+      { method: "GET" },
+      false, // never cache: the button must reflect the live session
+    ),
+
+  revokeUserSession: (userId: string) =>
+    request<{ revoked: boolean; message: string }>(
+      `/admin/users/${userId}/revoke-session`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
 
   createUser: (body: {
     name: string;
@@ -805,9 +856,12 @@ export const adminApi = {
   },
 
   getUserWallet: (userId: string) =>
-    request<{ id: string; balance: number; totalEarned: number; totalWithdrawn: number }>(
-      `/admin/wallets/user/${userId}`,
-    ),
+    request<{
+      id: string;
+      balance: number;
+      totalEarned: number;
+      totalWithdrawn: number;
+    }>(`/admin/wallets/user/${userId}`),
 
   getUserTransactions: (
     userId: string,
@@ -979,7 +1033,11 @@ export const questionApi = {
 
   /** Staff only: the answer an Anveshan user submitted for this question, or null. */
   getAnveshanAnswer: (id: string) =>
-    request<{ answer: AnveshanAnswer | null }>(`/questions/${encodeURIComponent(id)}/anveshan-answer`, {}, false),
+    request<{ answer: AnveshanAnswer | null }>(
+      `/questions/${encodeURIComponent(id)}/anveshan-answer`,
+      {},
+      false,
+    ),
 
   approveQuestion: (id: string) =>
     request<{ message: string }>(
@@ -1059,25 +1117,25 @@ export const questionApi = {
    * the wizard does not have to call `/auth/me` first.
    */
   submitQuestion: (body: {
-  questionText: string;
-  domains: string[];
-  season: string;
-  cropType: string;
-  state: string;
-  district: string;
-  block?: string;
-  agroClimaticZone?: string;
-  mediaType?: "none" | "image" | "video" | "audio";
-  mediaUrls?: string[];
-  audioUrls?: string[];
-  submissionLocation?: {
-    latitude: number;
-    longitude: number;
+    questionText: string;
+    domains: string[];
+    season: string;
+    cropType: string;
     state: string;
     district: string;
-    block: string;
-    village: string;
-  };
+    block?: string;
+    agroClimaticZone?: string;
+    mediaType?: "none" | "image" | "video" | "audio";
+    mediaUrls?: string[];
+    audioUrls?: string[];
+    submissionLocation?: {
+      latitude: number;
+      longitude: number;
+      state: string;
+      district: string;
+      block: string;
+      village: string;
+    };
   }) =>
     request<{
       id: string;
@@ -1113,14 +1171,14 @@ export const questionApi = {
   //   }>("/questions/stats/me", {}, false),
 
   getMyStats: () =>
-  request<{
-    dailyCount: number;
-    remainingToday: number | null;
-    totalApproved: number;
-    dailyLimit: number | null;
-    unlimited?: boolean;
-    [k: string]: unknown;
-  }>("/questions/stats/me", {}, false),
+    request<{
+      dailyCount: number;
+      remainingToday: number | null;
+      totalApproved: number;
+      dailyLimit: number | null;
+      unlimited?: boolean;
+      [k: string]: unknown;
+    }>("/questions/stats/me", {}, false),
 
   /**
    * List the current (public) user's own questions.
@@ -1146,7 +1204,7 @@ export const questionApi = {
     );
   },
 
-   getMyAnveshanMilestone: () =>
+  getMyAnveshanMilestone: () =>
     request<AnveshanMilestoneResponse>(
       "/questions/anveshan-milestone/me",
       {},
@@ -1162,7 +1220,10 @@ export const questionApi = {
     ),
 
   /** Submit the Anveshan user's answer, with sources, for one of their own questions. */
-  submitAnveshanAnswer: (questionId: string, body: SubmitAnveshanAnswerPayload) =>
+  submitAnveshanAnswer: (
+    questionId: string,
+    body: SubmitAnveshanAnswerPayload,
+  ) =>
     request<SubmitAnveshanAnswerResponse>(
       `/questions/anveshan-answers/${encodeURIComponent(questionId)}`,
       { method: "POST", body: JSON.stringify(body) },
@@ -1339,19 +1400,19 @@ export const curatorApi = {
   // getCuratorStats: () =>
   //   request<import("@/types").CuratorStats>("/curator/stats"),
 
-getCuratorStats: (params?: {
-  fromDate?: string;
-  toDate?: string;
-  state?: string;
-  cropType?: string;
-}) => {
-  const qs = new URLSearchParams();
-  Object.entries(params ?? {}).forEach(([k, v]) => {
-    if (v) qs.set(k, v);
-  });
-  const suffix = qs.toString() ? `?${qs}` : '';
-  return request<CuratorStats>(`/curator/stats${suffix}`);
-},
+  getCuratorStats: (params?: {
+    fromDate?: string;
+    toDate?: string;
+    state?: string;
+    cropType?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    Object.entries(params ?? {}).forEach(([k, v]) => {
+      if (v) qs.set(k, v);
+    });
+    const suffix = qs.toString() ? `?${qs}` : "";
+    return request<CuratorStats>(`/curator/stats${suffix}`);
+  },
 
   getMyStats: (userId: string) =>
     request<import("@/types").CuratorReviewerStats>(
@@ -1445,7 +1506,6 @@ export const auditApi = {
       false,
     );
   },
-
 };
 
 // ─── Reports API ────────────────────────────────────────────────────────────────
@@ -1543,15 +1603,35 @@ export const reportsApi = {
 
 export const feedbackApi = {
   /** Admin only: Anveshan feedback, newest first, with an overall ratings summary. */
-  listAnveshanFeedback: (params: { page?: number; limit?: number; rating?: number; inputMethod?: 'text' | 'voice'; tester?: 'only' | 'exclude' } = {}) => {
+  listAnveshanFeedback: (
+    params: {
+      page?: number;
+      limit?: number;
+      rating?: number;
+      inputMethod?: "text" | "voice";
+      tester?: "only" | "exclude";
+    } = {},
+  ) => {
     const qs = new URLSearchParams(
-      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])),
+      Object.fromEntries(
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      ),
     ).toString();
-    return request<AppFeedbackListResponse>(`/feedbacks/anveshan${qs ? `?${qs}` : ""}`, {}, false);
+    return request<AppFeedbackListResponse>(
+      `/feedbacks/anveshan${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
   },
 
   /** Anveshan users rate the app (1 to 5 stars) and optionally comment, once they reach 100%. */
-  submitAnveshanFeedback: (body: { rating: number; comment?: string; inputMethod: 'text' | 'voice' }) =>
+  submitAnveshanFeedback: (body: {
+    rating: number;
+    comment?: string;
+    inputMethod: "text" | "voice";
+  }) =>
     request<{ id: string; message: string }>(
       "/feedbacks/anveshan",
       { method: "POST", body: JSON.stringify(body) },
@@ -1565,10 +1645,10 @@ export interface StaffAgriEntityQuery {
   status?: AgriEntityStatus;
   page?: number;
   limit?: number;
-  tester?: 'only' | 'exclude';
+  tester?: "only" | "exclude";
   /** Super Admin only: restrict to these Anveshan users. */
   userIds?: string[];
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface UserFilterOption {
@@ -1599,7 +1679,11 @@ export const agriEntityApi = {
 
   /** The signed-in user's submission count for each type. */
   getMyCounts: () =>
-    request<Record<AgriEntityType, number>>("/agri-entities/counts/me", {}, false),
+    request<Record<AgriEntityType, number>>(
+      "/agri-entities/counts/me",
+      {},
+      false,
+    ),
 
   /** The signed-in user's own submissions, newest first. */
   listMine: (
@@ -1633,7 +1717,9 @@ export const agriEntityApi = {
   },
 
   /** Super Admin only: users for the entity and question user filter, narrowed by the tester scope and a name or phone search. */
-  listUsers: (params: { tester?: 'only' | 'exclude'; search?: string } = {}) => {
+  listUsers: (
+    params: { tester?: "only" | "exclude"; search?: string } = {},
+  ) => {
     const qs = new URLSearchParams(
       Object.entries(params).filter(([, v]) => !!v) as [string, string][],
     ).toString();
@@ -1646,7 +1732,11 @@ export const agriEntityApi = {
 
   /** Super Admin only: downloads the Anveshan users' entities as Excel, honouring the list filters. */
   exportAnveshan: (params: StaffAgriEntityQuery = {}) => {
-    const qs = entityListQuery({ ...params, page: undefined, limit: undefined });
+    const qs = entityListQuery({
+      ...params,
+      page: undefined,
+      limit: undefined,
+    });
     return analyticsApi._download(
       `/agri-entities/export${qs ? `?${qs}` : ""}`,
       `anveshan_entities_${Date.now()}.xlsx`,

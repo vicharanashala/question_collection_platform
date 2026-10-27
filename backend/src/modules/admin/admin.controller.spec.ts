@@ -9,6 +9,16 @@ import { UserService } from '../user/user.service';
 import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
 import { UserRole, VerificationStatus, QuestionStatus, UserCategory } from '../../shared/classes/enums';
+import { SessionService } from "../session/session.service";
+import { Request } from 'express';
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    mobileNumber: string;
+    role: string;
+    name: string;
+  };
+}
 
 const mockAdminService = () => ({
   createUser: jest.fn(),
@@ -33,14 +43,25 @@ const mockAdminService = () => ({
   processWithdrawal: jest.fn(),
   exportData: jest.fn(),
 });
+
+const mockSessionService = () => ({
+  getActiveSessionMap: jest.fn(),
+  revokeUser: jest.fn(),
+  listActiveSessions: jest.fn(),
+});
+
+const asReq = (user: Partial<AuthenticatedRequest["user"]>) =>
+  ({ user }) as unknown as AuthenticatedRequest;
+
 const meta = { requestId: 'req-1', ipAddress: '127.0.0.1' };
 describe('AdminController', () => {
   let controller: AdminController;
-  let service: ReturnType<typeof mockAdminService>;
+    let service: ReturnType<typeof mockAdminService>;
+  let sessionService: ReturnType<typeof mockSessionService>;
 
-  const adminReq = { user: { id: 'admin-1', mobileNumber: '9999', role: UserRole.ADMIN } };
-  const superAdminReq = { user: { id: 'super-1', mobileNumber: '9998', role: UserRole.SUPER_ADMIN } };
-  const curatorReq = { user: { id: 'curator-1', mobileNumber: '9997', role: UserRole.CURATOR } };
+const adminReq = asReq({ id: "admin-1", mobileNumber: "9999", role: UserRole.ADMIN });
+const superAdminReq = asReq({ id: "super-1", mobileNumber: "9998", role: UserRole.SUPER_ADMIN });
+const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole.CURATOR });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,6 +71,7 @@ describe('AdminController', () => {
         { provide: Logger, useValue: { error: jest.fn() } },
         { provide: AuditService, useValue: { createAuditLog: jest.fn() } },
         { provide: UserService, useValue: { getProfile: jest.fn().mockResolvedValue({ verificationStatus: 'suspended' }) } },
+        { provide: SessionService, useFactory: mockSessionService }
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -60,6 +82,8 @@ describe('AdminController', () => {
 
     controller = module.get<AdminController>(AdminController);
     service = module.get(AdminService);
+    sessionService = module.get(SessionService); // new
+    sessionService.getActiveSessionMap.mockResolvedValue(new Map());
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -90,16 +114,57 @@ describe('AdminController', () => {
     });
   });
 
+  // describe('GET /admin/users', () => {
+  //   it('should return paginated user list', async () => {
+  //     const result = { items: [], total: 0, page: 1, limit: 20, pages: 0 };
+  //     service.listUsers.mockResolvedValue(result);
+
+  //     const response = await controller.listUsers({ page: 1, limit: 20 } as any);
+
+  //     expect(response.total).toBe(0);
+  //   });
+  // });
+
   describe('GET /admin/users', () => {
-    it('should return paginated user list', async () => {
-      const result = { items: [], total: 0, page: 1, limit: 20, pages: 0 };
-      service.listUsers.mockResolvedValue(result);
+  it('should return paginated user list', async () => {
+    service.listUsers.mockResolvedValue({ items: [], total: 0, page: 1, limit: 20, pages: 0 });
 
-      const response = await controller.listUsers({ page: 1, limit: 20 } as any);
+    const response = await controller.listUsers({ page: 1, limit: 20 } as any, superAdminReq);
 
-      expect(response.total).toBe(0);
-    });
+    expect(response.total).toBe(0);
   });
+
+  it('should flag users who have an active session', async () => {
+    service.listUsers.mockResolvedValue({
+      items: [{ id: 'u1' }, { id: 'u2' }],
+      total: 2, page: 1, limit: 20, pages: 1,
+    });
+    const lastActivityAt = new Date();
+    sessionService.getActiveSessionMap.mockResolvedValue(
+      new Map([['u1', { userId: 'u1', lastActivityAt, browser: 'Chrome 126', os: 'Windows 11', device: 'desktop' }]]),
+    );
+
+    const res = await controller.listUsers({ page: 1, limit: 20 } as any, superAdminReq);
+
+    expect(sessionService.getActiveSessionMap).toHaveBeenCalledWith(['u1', 'u2']);
+    expect(res.items[0]).toMatchObject({ id: 'u1', isActive: true, lastActivityAt });
+    expect(res.items[1]).toMatchObject({ id: 'u2', isActive: false, lastActivityAt: null });
+  });
+
+  it('should include device details for super admins only', async () => {
+    service.listUsers.mockResolvedValue({ items: [{ id: 'u1' }], total: 1, page: 1, limit: 20, pages: 1 });
+    sessionService.getActiveSessionMap.mockResolvedValue(
+      new Map([['u1', { userId: 'u1', lastActivityAt: new Date(), browser: 'Chrome 126', os: 'Windows 11', device: 'desktop' }]]),
+    );
+
+    const asSuper = await controller.listUsers({} as any, superAdminReq);
+    const asAdmin = await controller.listUsers({} as any, adminReq);
+
+    expect(asSuper.items[0]).toHaveProperty('session');
+    expect(asAdmin.items[0]).not.toHaveProperty('session');
+  });
+});
+
 
   describe('GET /admin/users/:id', () => {
     it('should return user detail with recent questions', async () => {

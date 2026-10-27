@@ -46,6 +46,7 @@ import { MongoDbModule } from './shared/database/mongodb/mongo.module';
 import { DbModule } from './shared/database/db.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
+import { SessionModule } from './modules/session/session.module';
 
 
 @Module({
@@ -100,6 +101,7 @@ import { RequestIdMiddleware } from './shared/middleware/request-id.middleware';
     FeedbacksModule,
     DistributorModule,
     AuditLogsModule,
+    SessionModule
   ],
   controllers: [HealthController],
   providers: [
