@@ -12,6 +12,7 @@ import {
   includeFields,
   toMongoFilter,
   translateValue,
+  hideDeleted,
 } from './mongo-utils';
 
 /**
@@ -418,7 +419,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     filter: EntityFilter<T>,
     options?: FindAllOptions<T>,
   ): Promise<T[]> {
-    const mongoFilter_ = toMongoFilter(this.translateIdField(filter));
+    const mongoFilter_ = hideDeleted(toMongoFilter(this.translateIdField(filter)));
     const { skip, limit } = toSkipLimit(
       options?.pagination?.page,
       options?.pagination?.limit,
@@ -469,7 +470,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
 
   async findOne(filter: EntityFilter<T>, session?: ClientSession): Promise<T | null> {
     const translated = this.translateIdField(filter);
-    const doc = await this._model.findOne(toMongoFilter(translated)).session(session ?? null).exec();
+    const doc = await this._model.findOne(hideDeleted(toMongoFilter(translated))).session(session ?? null).exec();
     return doc ? this.docToEntity(doc) : null;
   }
 
@@ -535,16 +536,18 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
   async count(
     filter?: EntityFilter<T> | { where: EntityFilter<T> },
   ): Promise<number> {
-    if (!filter) return this._model.countDocuments().exec();
+    if (!filter) return this._model.countDocuments(hideDeleted({})).exec();
     const where = 'where' in filter ? filter.where : filter;
-    return this._model.countDocuments(toMongoFilter(this.translateIdField({ where }))).exec();
+    return this._model
+      .countDocuments(hideDeleted(toMongoFilter(this.translateIdField({ where }))))
+      .exec();
   }
 
   async findAndCount(
     filter: EntityFilter<T>,
     options?: FindAllOptions<T>,
   ): Promise<PaginatedResult<T>> {
-    const mongoFilter_ = toMongoFilter(this.translateIdField(filter));
+    const mongoFilter_ = hideDeleted(toMongoFilter(this.translateIdField(filter)));
     const { skip, limit } = toSkipLimit(
       options?.pagination?.page,
       options?.pagination?.limit,
@@ -612,24 +615,6 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
    * - Rename _id → id (string)
    * - Remove __v
    */
-//   protected docToEntity(doc: unknown): T {
-//     // If passed a Mongoose document, use _doc which holds the actual plain data;
-//     // otherwise use the object as-is (supports plain objects from create()).
-//     const raw = doc as Record<string, unknown>;
-//     const obj = raw._doc ?? raw;
-//     const out: Record<string, unknown> = {};
-//     for (const [k, v] of Object.entries(obj)) {
-//       if (k === '__v') continue;
-//       if (k === '_id') {
-//         out['id'] = String(v);
-//       } else {
-//         out[k] = v;
-//       }
-//     }
-//     return out as T;
-//   }
-
-
 protected docToEntity(doc: unknown): T {
   if (!doc) return doc as T;
   const raw = doc as Record<string, unknown>;

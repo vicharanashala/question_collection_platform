@@ -1001,7 +1001,7 @@ export class AdminController {
   @Post("delete-user/:id")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
-  async deleteuser(
+  async deleteUser(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
     @ReqMeta() meta: RequestMeta,

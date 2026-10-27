@@ -81,6 +81,7 @@ import {
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
 import { Types } from "mongoose";
+import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
 import {
@@ -348,7 +349,7 @@ export class AdminService implements OnModuleInit {
 
     // Check for duplicate mobile number
     const existing = await this.userRepo.findOne({
-      where: { mobileNumber: mobile },
+      where: { mobileNumber: mobile, isDeleted: INCLUDE_DELETED },
     });
     if (existing) {
       throw new BadRequestException(
@@ -869,7 +870,7 @@ async getUserStats(dto: ListUserStatsDto) {
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException("User not found");
-    if (user.isDeleted) throw new Error("Deleted users can not be verified..");
+    if (user.isDeleted) throw new Error("Deleted users cannot be verified.");
     const oldStatus = user.verificationStatus;
     if (oldStatus === VerificationStatus.VERIFIED) {
       return {
@@ -4589,7 +4590,7 @@ async getUserStats(dto: ListUserStatsDto) {
   async getUserWallet(userId: string) {
     const wallet = await this.walletRepo.findOne({ userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
-    if (wallet.isDeleted) throw new Error("Wallet is deleted for this user...");
+    if (wallet.isDeleted) throw new Error("Wallet is deleted for this user.");
 
     const [user, { totalEarned, totalWithdrawn }] = await Promise.all([
       // replaces relations: ["user"]; there are no joins in Mongo
@@ -5248,41 +5249,55 @@ async getUserStats(dto: ListUserStatsDto) {
       anveshanAnswers,
       transactions,
       paymentLogs,
-    ] = await Promise.all([
-      this.questionRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.walletRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.withdrawalRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.paymentDetailRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.notificationRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.finalQuestionRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.agriEntityRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.reportRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.feedbackRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.anveshanAnswerRepo.updateMany({ userId, ...notDeleted }, mark),
-      walletIds.length
+    ] = await this.mongoTransactionService.runInTransaction(async (session) => {
+      // Sequential on purpose: a transaction session must not run operations in parallel.
+      const operations: Array<() => Promise<unknown>> = [
+      () => this.questionRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.walletRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.withdrawalRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.paymentDetailRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.notificationRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.finalQuestionRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.agriEntityRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.reportRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.feedbackRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.anveshanAnswerRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () =>
+        walletIds.length
         ? this.transactionRepo.updateMany(
             { walletId: { $in: walletIds }, ...notDeleted },
             mark,
+            session,
           )
         : none,
-      withdrawalIds.length
+      () =>
+        withdrawalIds.length
         ? this.paymentLogRepo.updateMany(
             { withdrawalRequestId: { $in: withdrawalIds }, ...notDeleted },
             mark,
+            session,
           )
         : none,
-    ]);
+      ];
+      const results: unknown[] = [];
+      for (const run of operations) results.push(await run());
 
-    await this.userRepo.update(userId, {
-      ...mark,
-      tokenVersion: (user.tokenVersion ?? 0) + 1,
-      otpHash: null,
-      otpExpiresAt: null,
-      expoPushToken: null,
+      await this.userRepo.update(
+        userId,
+        {
+          ...mark,
+          tokenVersion: (user.tokenVersion ?? 0) + 1,
+          otpHash: null,
+          otpExpiresAt: null,
+          expoPushToken: null,
+        },
+        session,
+      );
+      return results;
     });
 
     return {
-      message: "User deleted successfully!!",
+      message: "User deleted successfully.",
       userId,
       deleted: {
         user: 1,
@@ -5352,7 +5367,7 @@ async getUserStats(dto: ListUserStatsDto) {
   // User LAST, so a failed run above can simply be retried (the stamp is still on the user)
   await this.userRepo.update(userId, unmark);
 
-  return { message: "User restored successfully!!", userId };
+  return { message: "User restored successfully.", userId };
 }
 
 async getUserAuditSnapshot(userId: string) {
