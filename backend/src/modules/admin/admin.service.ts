@@ -81,6 +81,7 @@ import {
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
 import { Types } from "mongoose";
+import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
 import {
@@ -427,7 +428,8 @@ async getUserStats(dto: ListUserStatsDto) {
       sortBy = "createdAt",
       sortOrder = "DESC",
     } = dto;
-    const filter: Record<string, unknown> = {};
+    // The admin list shows deleted users too, so they can be restored.
+    const filter: Record<string, unknown> = { isDeleted: INCLUDE_DELETED };
     if (state) filter.state = state;
     if (category) filter.category = category;
     if (status) filter.verificationStatus = status;
@@ -632,7 +634,7 @@ async getUserStats(dto: ListUserStatsDto) {
   // so a deleted user's page still opens (with the Restore button).
   const user = await this.userRepo.findOne({
     _id: userId, // plain string: Mongoose casts it, the repo won't mangle it
-    isDeleted: { $in: [true, false, null] },
+    isDeleted: INCLUDE_DELETED,
   });
   if (!user) throw new NotFoundException("User not found");
 
@@ -5384,7 +5386,7 @@ async getUserAuditSnapshot(userId: string) {
   if (!Types.ObjectId.isValid(userId)) return null;
   const u = await this.userRepo.findOne({
     _id: userId,
-    isDeleted: { $in: [true, false, null] },
+    isDeleted: INCLUDE_DELETED,
   });
   if (!u) return null;
   return {

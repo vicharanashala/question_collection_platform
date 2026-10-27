@@ -12,7 +12,6 @@ import {
   includeFields,
   toMongoFilter,
   translateValue,
-  hideDeleted,
 } from './mongo-utils';
 
 /**
@@ -419,7 +418,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     filter: EntityFilter<T>,
     options?: FindAllOptions<T>,
   ): Promise<T[]> {
-    const mongoFilter_ = hideDeleted(toMongoFilter(this.translateIdField(filter)));
+    const mongoFilter_ = toMongoFilter(this.translateIdField(filter));
     const { skip, limit } = toSkipLimit(
       options?.pagination?.page,
       options?.pagination?.limit,
@@ -470,7 +469,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
 
   async findOne(filter: EntityFilter<T>, session?: ClientSession): Promise<T | null> {
     const translated = this.translateIdField(filter);
-    const doc = await this._model.findOne(hideDeleted(toMongoFilter(translated))).session(session ?? null).exec();
+    const doc = await this._model.findOne(toMongoFilter(translated)).session(session ?? null).exec();
     return doc ? this.docToEntity(doc) : null;
   }
 
@@ -536,10 +535,10 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
   async count(
     filter?: EntityFilter<T> | { where: EntityFilter<T> },
   ): Promise<number> {
-    if (!filter) return this._model.countDocuments(hideDeleted({})).exec();
+    if (!filter) return this._model.countDocuments().exec();
     const where = 'where' in filter ? filter.where : filter;
     return this._model
-      .countDocuments(hideDeleted(toMongoFilter(this.translateIdField({ where }))))
+      .countDocuments(toMongoFilter(this.translateIdField({ where })))
       .exec();
   }
 
@@ -547,7 +546,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     filter: EntityFilter<T>,
     options?: FindAllOptions<T>,
   ): Promise<PaginatedResult<T>> {
-    const mongoFilter_ = hideDeleted(toMongoFilter(this.translateIdField(filter)));
+    const mongoFilter_ = toMongoFilter(this.translateIdField(filter));
     const { skip, limit } = toSkipLimit(
       options?.pagination?.page,
       options?.pagination?.limit,

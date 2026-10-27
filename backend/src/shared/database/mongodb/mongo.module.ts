@@ -16,6 +16,7 @@ import { Report, ReportSchema } from './schemas/report.schema';
 import { ReportReply, ReportReplySchema } from './schemas/report-reply.schema';
 import { Faq, FaqSchema } from './schemas/faq.schema';
 import { Candidate, CandidateSchema } from './schemas/anveshan.schema';
+import { softDeleteConnectionFactory } from './soft-delete.plugin';
 
 const SCHEMAS = [
   { name: User.name, schema: UserSchema },
@@ -56,6 +57,7 @@ export const ANVESHAN_CONNECTION = 'anveshan';
         const options: Record<string, unknown> = {
           serverSelectionTimeoutMS: 8_000,
           connectTimeoutMS: 8_000,
+          connectionFactory: softDeleteConnectionFactory,
         };
 
         if (isAtlas) {

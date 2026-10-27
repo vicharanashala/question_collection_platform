@@ -192,5 +192,14 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// One active and one deleted user per mobile number. This index also serves mobile number lookups.
-UserSchema.index({ mobileNumber: 1, isDeleted: 1 }, { unique: true });
+// Only one active user per mobile number. Deleted users keep their number without blocking it.
+UserSchema.index(
+  { mobileNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      mobileNumber: { $type: 'string' },
+    },
+  },
+);
