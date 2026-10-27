@@ -28,7 +28,7 @@ export async function resolveUserIdScope(
   const exclude = new Set<string>();
 
   if (scope.anveshanScope) {
-    const anveshanIds = (await userRepo.findAll({ isAnveshanUser: true })).map((user) => user.id);
+    const anveshanIds = (await userRepo.findAll({ isAnveshanUser: true })).map((user) => user._id.toString());
     if (scope.anveshanScope === 'only') include = new Set(anveshanIds);
     else anveshanIds.forEach((id) => exclude.add(id));
   }

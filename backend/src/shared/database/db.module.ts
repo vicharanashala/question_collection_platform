@@ -47,6 +47,7 @@ import { ANVESHAN_CONNECTION } from './mongodb/mongo.module';
 import { AgriEntitySchema } from './mongodb/schemas/agri-entity.schema';
 import { AnveshanAnswerSchema } from './mongodb/schemas/anveshan-answer.schema';
 import { AppFeedbackSchema } from './mongodb/schemas/app-feedback.schema';
+import { Session, SessionSchema } from './mongodb/schemas/session.schema';
 
 const MONGO_SCHEMA_ENTRIES = [
   { name: 'User', schema: UserSchema },
@@ -66,6 +67,7 @@ const MONGO_SCHEMA_ENTRIES = [
   { name: 'AgriEntity', schema: AgriEntitySchema },
   { name: 'AnveshanAnswer', schema: AnveshanAnswerSchema },
   { name: 'AppFeedback', schema: AppFeedbackSchema },
+  { name: 'Session', schema: SessionSchema}
 ];
 
 @Global()

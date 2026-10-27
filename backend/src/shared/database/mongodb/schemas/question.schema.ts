@@ -111,9 +111,14 @@ export class Question {
   @Prop({name: 'is_Anveshan', type: Boolean, default: false})
   isAnveshan: boolean;
 
+  @Prop({name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
   /** True once the Anveshan user has answered this question; the answer lives in `anveshan_answers`. */
   @Prop({ name: 'isAnswerSubmitted', type: Boolean, default: false })
   isAnswerSubmitted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
 
   @Prop({ name: 'createdAt' })
   createdAt: Date;

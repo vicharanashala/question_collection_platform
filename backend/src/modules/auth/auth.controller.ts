@@ -20,9 +20,11 @@ import { Public } from '../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
 import axios from "axios";
+import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
+import { RegistrationAuthGuard } from '@/shared/middleware/guards/registration-auth.guard';
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string; mobileNumber: string; role: string };
+  user: { id: string; mobileNumber: string; role: string, sid:string };
 }
 
 @Controller('auth')
@@ -49,8 +51,8 @@ export class AuthController {
   @Public()
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
-  async verifyOtp(@Body() dto: VerifyOtpDto) {
-    return this.authService.verifyOtp(dto.mobileNumber, dto);
+  async verifyOtp(@Body() dto: VerifyOtpDto, @ReqMeta() meta?:RequestMeta) {
+    return this.authService.verifyOtp(dto.mobileNumber, dto, meta);
   }
 
   /**
@@ -58,21 +60,18 @@ export class AuthController {
    * Complete new-user registration. Requires a valid registration temp token
    * returned from verify-otp on first login.
    */
+  // Public so the global JWT guard skips it; RegistrationAuthGuard checks the registration token.
   @Public()
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  async register(@Body() dto: RegisterDto) {
-    // Normalize: strip country code and leading zeros so the lookup matches
-    // what was stored during the OTP request/verify flow.
-    const mobileNumber = this.authService.normalizePhone(dto?.mobileNumber);
-    const user = await this.authService.findUserByMobile(mobileNumber);
-    if (!user) {
-      throw new UnauthorizedException(
-        'No OTP-verified account found for this mobile number. Please request OTP first.',
-      );
-    }
-    return this.authService.register(dto, user.id);
-  }
+  @UseGuards(RegistrationAuthGuard)
+@Post('register')
+@HttpCode(HttpStatus.CREATED)
+async register(
+  @Body() dto: RegisterDto,
+  @Req() req: { user: { id: string } },
+  @ReqMeta() meta?: RequestMeta,
+) {
+  return this.authService.register(dto, req.user.id, meta);
+}
 
   /**
    * POST /auth/refresh
@@ -121,12 +120,12 @@ export class AuthController {
    * All previously issued tokens become invalid instantly.
    */
   @UseGuards(JwtAuthGuard)
-  @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  async logout(@Req() req: AuthenticatedRequest) {
-    await this.authService.incrementTokenVersion(req.user.id);
-    return { message: 'Logged out successfully' };
-  }
+@Post('logout')
+@HttpCode(HttpStatus.OK)
+async logout(@Req() req: AuthenticatedRequest) {
+  await this.authService.logout(req.user.id, req.user.sid);
+  return { message: 'Logged out successfully' };
+}
 
   /**
    * GET /auth/check-username?username=rakesh42

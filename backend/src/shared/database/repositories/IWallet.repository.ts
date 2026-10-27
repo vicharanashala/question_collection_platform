@@ -1,6 +1,7 @@
 import { ClientSession } from 'mongoose';
 import { BaseRepository } from '../abstractions/base.repository';
-import { Wallet } from '../entities';
+// import { Wallet } from '../entities';
+import { Wallet } from '../mongodb/schemas/wallet.schema';
 
 export interface WalletFilter {
   id?: string;

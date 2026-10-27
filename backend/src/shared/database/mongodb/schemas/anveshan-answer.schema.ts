@@ -113,6 +113,12 @@ export class AnveshanAnswer {
   @Prop({ type: AnveshanAnswerScoreSchema, default: null })
   score: AnveshanAnswerScore | null;
 
+  @Prop({ name: 'isDeleted', type: Boolean, default: false})
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+deletedAt: Date | null;
+
   @Prop({ name: 'createdAt' })
   createdAt: Date;
 

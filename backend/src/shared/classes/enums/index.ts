@@ -180,6 +180,9 @@ export enum NotificationTriggerType {
 
 export enum AuditAction {
   // User
+  USER_SESSION_REVOKED = "user_session_revoked",
+  USER_DELETED= 'user_deleted',
+  USER_RESTORED= 'user_restored',
   USER_SUSPENDED = "user_suspended",
   USER_BANNED = "user_banned",
   USER_UNSUSPENDED = "user_unsuspended",

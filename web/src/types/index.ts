@@ -60,6 +60,7 @@ export interface User {
   consentGiven: boolean;
   /** Crop names stored as a string array on the user record */
   crops: string[];
+  isDeleted?: boolean;
 }
 
 
@@ -997,4 +998,12 @@ export interface AnveshanUserDetail {
   progress: AnveshanUserProgress | null;
   questions: AnveshanUserQuestion[];
   entities: AgriEntitySubmission[];
+}
+
+export interface UserSession {
+  isActive: boolean;
+  lastActivityAt: string | null;
+  browser: string | null;
+  os: string | null;
+  device: string | null;
 }

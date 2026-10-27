@@ -54,6 +54,8 @@ import {
 } from "@/shared/middleware/decorators/request-meta.decorator";
 import { AuditLogDto } from "../audit-logs/dto/audit_log-dto";
 import { UserService } from "../user/user.service";
+import { Types } from "mongoose";
+import { SessionService } from "../session/session.service";
 
 type AuditLogPayload = Parameters<AuditService["createAuditLog"]>[0];
 
@@ -75,6 +77,7 @@ export class AdminController {
     private readonly auditService: AuditService,
     private readonly logger: Logger = new Logger(AdminController.name),
     private readonly userService: UserService,
+    private readonly sessionService: SessionService,
   ) {}
 
   // ─────────────────────────────────────────────────────────────
@@ -144,21 +147,51 @@ export class AdminController {
   @Get("users")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable("admin_users", 60)
-  async listUsers(@Query() dto: ListUsersDto) {
-    return this.adminService.listUsers(dto);
+  async listUsers(
+    @Query() dto: ListUsersDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const result = await this.adminService.listUsers(dto);
+
+    const sessions = await this.sessionService.getActiveSessionMap(
+      result.items.map((u) => u.id),
+    );
+    const isSuperAdmin = req.user.role === UserRole.SUPER_ADMIN;
+
+    return {
+      ...result,
+      items: result.items.map((u) => {
+        const s = sessions.get(u.id);
+        return {
+          ...u,
+          isActive: !!s,
+          lastActivityAt: s?.lastActivityAt ?? null,
+          // device details only for Super Admins
+          ...(isSuperAdmin &&
+            s && {
+              session: { browser: s.browser, os: s.os, device: s.device },
+            }),
+        };
+      }),
+    };
   }
 
   @Get("users/stats")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @Cacheable('admin_users_stats', 60)
+  @Cacheable("admin_users_stats", 60)
   async getUserStats(@Query() dto: ListUserStatsDto) {
     return this.adminService.getUserStats(dto);
   }
 
   @Get("users/:id")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE, UserRole.CURATOR, UserRole.DISTRIBUTOR)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.FINANCE,
+    UserRole.CURATOR,
+    UserRole.DISTRIBUTOR,
+  )
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_user:${args[0]}`, 120)
   async getUserDetail(@Param("id") id: string) {
@@ -203,7 +236,7 @@ export class AdminController {
     };
     let result;
     try {
-      result = this.adminService.suspendOrBanUser(
+      result = await this.adminService.suspendOrBanUser(
         req.user.id,
         id,
         body.action,
@@ -240,6 +273,9 @@ export class AdminController {
       outcome: { status: OutcomeStatus.SUCCESS },
     });
 
+    // A suspended or banned user must not keep an active session
+    await this.revokeSessionQuietly(id);
+
     return result;
   }
 
@@ -253,7 +289,10 @@ export class AdminController {
     @ReqMeta() meta: RequestMeta,
   ) {
     const role = req.user.role as UserRole;
-    const user = await this.userService.getProfile(id);
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("Invalid user id");
+    }
+    const user = await this.userService.getProfile(new Types.ObjectId(id));
     const base: AuditLogDto = {
       actionType:
         user.verificationStatus === "suspended"
@@ -541,6 +580,10 @@ export class AdminController {
     meta: RequestMeta,
     context: Record<string, unknown>,
     run: () => Promise<T>,
+    snapshot?: {
+      before?: () => Promise<Record<string, unknown> | null>;
+      after?: (result: T) => Promise<Record<string, unknown> | null>;
+    },
   ): Promise<T> {
     const base: AuditLogDto = {
       actionType,
@@ -552,16 +595,34 @@ export class AdminController {
       resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
       context,
     };
+
+    // Snapshot failures must never block the real action
+    const safely = async <V>(fn?: () => Promise<V>) => {
+      try {
+        return fn ? await fn() : undefined;
+      } catch (err) {
+        this.logger.warn(`Audit snapshot failed: ${err}`);
+        return undefined;
+      }
+    };
+
+    const before = await safely(snapshot?.before);
+
     try {
       const result = await run();
+      const after = await safely(
+        snapshot?.after ? () => snapshot.after!(result) : undefined,
+      );
       await this.safeAudit({
         ...base,
+        changes: { before: before ?? {}, after: after ?? {} },
         outcome: { status: OutcomeStatus.SUCCESS },
       });
       return result;
     } catch (err) {
       await this.safeAudit({
         ...base,
+        changes: { before: before ?? {}, after: {} },
         outcome: {
           status: OutcomeStatus.FAILURE,
           errorMessage: err instanceof Error ? err.message : String(err),
@@ -596,54 +657,53 @@ export class AdminController {
   //   return result;
   // }
 
-  @Patch('config')
-@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-@HttpCode(HttpStatus.OK)
-@CacheInvalidate('meta:*', 'hot:reward_tiers')
-async updateConfig(
-  @Body() dto: UpdateConfigDto,
-  @Req() req: AuthenticatedRequest,
-  @ReqMeta() meta: RequestMeta,
-) {
-  const base: AuditLogDto = {
-    actionType: AuditAction.CONFIG_UPDATED,
-    actor: {
-      id: req.user.id,
-      actorType: ActorType.SUPER_ADMIN,
-      name: req.user.name,
-     
-    },
-    resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
-    context: { key: dto.key, description: dto.description },
-  };
+  @Patch("config")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  @CacheInvalidate("meta:*", "hot:reward_tiers")
+  async updateConfig(
+    @Body() dto: UpdateConfigDto,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    const base: AuditLogDto = {
+      actionType: AuditAction.CONFIG_UPDATED,
+      actor: {
+        id: req.user.id,
+        actorType: ActorType.SUPER_ADMIN,
+        name: req.user.name,
+      },
+      resource: { requestId: meta.requestId, ipAddress: meta.ipAddress },
+      context: { key: dto.key, description: dto.description },
+    };
 
-  let before: unknown = null;
-  let result;
-  try {
-    const { items } = await this.adminService.listConfig();
-    before = items.find((c) => c.key === dto.key)?.value ?? null;
+    let before: unknown = null;
+    let result;
+    try {
+      const { items } = await this.adminService.listConfig();
+      before = items.find((c) => c.key === dto.key)?.value ?? null;
 
-    result = await this.adminService.updateConfig(req.user.id, dto);
-  } catch (err) {
+      result = await this.adminService.updateConfig(req.user.id, dto);
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: { before: { value: before }, after: { value: before } }, // unchanged
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+
     await this.safeAudit({
       ...base,
-      changes: { before: { value: before }, after: { value: before } }, // unchanged
-      outcome: {
-        status: OutcomeStatus.FAILURE,
-        errorMessage: err instanceof Error ? err.message : String(err),
-      },
+      changes: { before: { value: before }, after: { value: dto.value } },
+      outcome: { status: OutcomeStatus.SUCCESS },
     });
-    throw err;
+
+    return result;
   }
-
-  await this.safeAudit({
-    ...base,
-    changes: { before: { value: before }, after: { value: dto.value } },
-    outcome: { status: OutcomeStatus.SUCCESS },
-  });
-
-  return result;
-}
 
   // ─────────────────────────────────────────────────────────────
   // Section 4: Analytics Dashboard
@@ -941,5 +1001,138 @@ async updateConfig(
       { keyPattern },
       () => this.adminService.flushCache(keyPattern),
     );
+  }
+
+@Post("delete-user/:id")
+@Roles(UserRole.SUPER_ADMIN)
+@HttpCode(HttpStatus.OK)
+async deleteUser(
+  @Param("id") id: string,
+  @Req() req: AuthenticatedRequest,
+  @ReqMeta() meta: RequestMeta,
+) {
+  return this.withAudit(
+    AuditAction.USER_DELETED,
+    req,
+    meta,
+    { userId: id },
+    async () => {
+      const result = await this.adminService.deleteUser(id);
+      // Only runs if the delete succeeded. A failed delete (for example pending
+      // withdrawals) throws above and the user keeps their session.
+      await this.revokeSessionQuietly(id);
+      return result;
+    },
+    {
+      before: () => this.adminService.getUserAuditSnapshot(id),
+      after: () => this.adminService.getUserAuditSnapshot(id),
+    },
+  );
+}
+
+// Session cleanup must not turn a successful action into an error response.
+private async revokeSessionQuietly(userId: string) {
+  try {
+    await this.sessionService.revokeUser(userId);
+  } catch (err) {
+    this.logger.error(
+      `Failed to revoke session for ${userId}`,
+      err instanceof Error ? err.stack : String(err),
+    );
+  }
+}
+
+  @Post("restore-user/:id")
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async restoreUser(
+    @Param("id") id: string,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    return this.withAudit(
+      AuditAction.USER_RESTORED,
+      req,
+      meta,
+      { userId: id },
+      () => this.adminService.restoreUser(id),
+      {
+        before: () => this.adminService.getUserAuditSnapshot(id),
+        after: () => this.adminService.getUserAuditSnapshot(id),
+      },
+    );
+  }
+
+  @Post("users/:id/revoke-session")
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async revokeUserSession(
+    @Param("id") id: string,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("Invalid user id");
+    }
+    if (id === req.user.id) {
+  throw new BadRequestException("Use logout to end your own session");
+}
+
+    return this.withAudit(
+      AuditAction.USER_SESSION_REVOKED,
+      req,
+      meta,
+      { userId: id },
+      async () => {
+        const deleted = await this.sessionService.revokeUser(id);
+        return {
+          revoked: deleted > 0,
+          message:
+            deleted > 0
+              ? "User has been logged out"
+              : "User had no active session",
+        };
+      },
+      {
+        // snapshot of what is being terminated (no token hash, ever)
+        before: async () => {
+          const { items } = await this.sessionService.listActiveSessions({
+            userId: id,
+            limit: 1,
+          });
+          const s = items[0];
+          return s
+            ? {
+                sessionId: s.sessionId,
+                createdAt: s.createdAt,
+                lastActivityAt: s.lastActivityAt,
+                browser: s.browser,
+                os: s.os,
+                device: s.device,
+                ipAddress: s.ipAddress,
+              }
+            : { session: null };
+        },
+        after: async () => ({ session: null }),
+      },
+    );
+  }
+
+  @Get("users/:id/session")
+  @Roles(UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async getUserSession(@Param("id") id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("Invalid user id");
+    }
+    
+    const s = (await this.sessionService.getActiveSessionMap([id])).get(id);
+    return {
+      isActive: !!s,
+      lastActivityAt: s?.lastActivityAt ?? null,
+      browser: s?.browser ?? null,
+      os: s?.os ?? null,
+      device: s?.device ?? null,
+    };
   }
 }

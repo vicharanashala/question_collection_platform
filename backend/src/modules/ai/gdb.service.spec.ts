@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { GdbService, isGdbDuplicateCheckEnabled } from './gdb.service';
 import { SarvamService } from '../speech/sarvam.service';
 import { IQuestionRepository } from '../../shared/database/repositories/IQuestion.repository';
+import { IUserRepository } from '@/shared/database/repositories';
 
 describe('GDB duplicate check flag', () => {
   const originalEnv = { ...process.env };
@@ -31,7 +32,7 @@ describe('GDB duplicate check flag', () => {
   describe('GdbService', () => {
     const fetchMock = jest.fn();
     const config = { get: jest.fn().mockReturnValue('http://vm:8110') } as unknown as ConfigService;
-    const service = new GdbService(config, {} as SarvamService, {} as IQuestionRepository);
+    const service = new GdbService(config, {} as SarvamService, {} as IQuestionRepository, {} as IUserRepository);
 
     beforeEach(() => {
       fetchMock.mockReset();

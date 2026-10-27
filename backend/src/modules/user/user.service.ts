@@ -14,13 +14,11 @@ import {
   ForbiddenException,
   Inject,
 } from "@nestjs/common";
-import {
-  User,
-  AuditLog,
-  Notification,
-  Question,
-  Transaction,
-} from "../../shared/database/entities";
+// import {
+//   AuditLog,
+//   Question,
+//   Transaction,
+// } from "../../shared/database/entities";
 import {
   AuditAction,
   ActorType,
@@ -42,7 +40,9 @@ import {
   IAnveshanCandidateRepository,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
-
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Notification } from "@/shared/database/mongodb/schemas/notification.schema";
+import { Types } from "mongoose";
 @Injectable()
 export class UserService {
   constructor(
@@ -96,12 +96,11 @@ export class UserService {
       return { user, updatedFields };
     }
 
-    await this.userRepo.update(user.id, updates);
+    await this.userRepo.update(user._id, updates);
     return { user: { ...user, ...updates } as User, updatedFields };
   }
-
-  async getProfile(userId: string): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+  async getProfile(userId: Types.ObjectId): Promise<User> {
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -141,7 +140,7 @@ export class UserService {
       throw new NotFoundException("User not found");
     }
 
-    const userId = user.id;
+    const userId = user._id.toString();
     const isAnveshanUser = user.isAnveshanUser === true;
     const requiredQuestions = getAnveshanRequiredQuestionCount();
 
@@ -195,12 +194,12 @@ export class UserService {
   }
 
   async updateProfile(
-    userId: string,
+    userId: Types.ObjectId,
     dto: UpdateProfileDto,
     actorType: ActorType = ActorType.USER,
     actorId?: string,
   ): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -237,10 +236,10 @@ export class UserService {
    * Kept for backwards-compatible /me/crops endpoint.
    */
   async updateCropDetails(
-    userId: string,
+    userId: Types.ObjectId,
     dto: UpdateCropDetailsDto,
   ): Promise<string[]> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new NotFoundException("User not found");
     }

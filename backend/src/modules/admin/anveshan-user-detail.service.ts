@@ -41,9 +41,9 @@ export class AnveshanUserDetailService {
       user: { ...user, isAnveshanUser: true },
       progress: progressById.get(userId) ?? null,
       questions: questions.map((question) => {
-        const answer = answerByQuestion.get(question.id);
+        const answer = answerByQuestion.get(question._id.toString());
         return {
-          id: question.id,
+          id: question._id.toString(),
           questionText: question.questionText,
           cropType: question.cropType,
           season: question.season,

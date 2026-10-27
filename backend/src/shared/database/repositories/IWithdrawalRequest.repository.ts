@@ -1,6 +1,8 @@
 import { BaseRepository } from '../abstractions/base.repository';
-import { WithdrawalRequest } from '../entities';
+// import { WithdrawalRequest } from '../entities';
+import { WithdrawalRequest } from '../mongodb/schemas/withdrawal-request.schema';
 import { WithdrawalStatus } from '../../classes/enums';
+import { ClientSession, QueryFilter, UpdateQuery } from 'mongoose';
 
 export interface WithdrawalRequestFilter {
   id?: string;
@@ -93,6 +95,14 @@ export interface ListWithdrawalsResult {
   total: number;
 }
 
+export interface WithdrawalListOptions {
+  status?: string;
+  fromDate?: Date;
+  toDate?: Date;
+  select?: string; // optional projection
+}
+
+
 export interface IWithdrawalRequestRepository extends BaseRepository<WithdrawalRequest> {
   findPendingByUserId(userId: string): Promise<WithdrawalRequest | null>;
   findByWalletId(walletId: string): Promise<WithdrawalRequest[]>;
@@ -121,4 +131,18 @@ listWithdrawals(
 
 /** Flat rows (joined with user and debit-transaction rejection reason) for CSV/Excel export. */
 findForExport(filters: { from: Date; to: Date; state?: string }): Promise<Record<string, unknown>[]>;
+
+findPaginatedByWalletId(
+  walletId: string,
+  page: number,
+  limit: number,
+  options?: WithdrawalListOptions,
+): Promise<{ items: WithdrawalRequest[]; total: number }>;
+
+findOneAndUpdate(
+  filter: QueryFilter<WithdrawalRequest>,
+  update: UpdateQuery<WithdrawalRequest>,
+  session?: ClientSession
+): Promise<WithdrawalRequest | null>
+
 }
