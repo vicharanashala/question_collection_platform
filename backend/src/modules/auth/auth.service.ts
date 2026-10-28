@@ -9,11 +9,12 @@ import {
   BadGatewayException,
   Inject,
   Optional,
+  HttpException,
 } from "@nestjs/common";
 import { MoreThanOrEqual } from "typeorm";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { randomInt } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 import * as bcrypt from "bcryptjs";
 // import { User, Wallet, AuditLog } from "../../shared/database/entities";
 import {
@@ -40,7 +41,8 @@ import {
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
-import { Types } from "mongoose";
+import { SessionMeta, SessionService } from "../session/session.service";
+import { RequestMeta } from "@/shared/middleware/decorators/request-meta.decorator";
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -129,6 +131,7 @@ export class AuthService {
     private readonly rateLimitCounter: RateLimitCounterService,
     private readonly adminService: AdminService,
     private readonly anveshanProgressService: AnveshanProgressService,
+    private readonly sessionService: SessionService
   ) {}
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -317,6 +320,7 @@ export class AuthService {
   async verifyOtp(
     rawMobile: string,
     dto: VerifyOtpDto,
+    meta?: RequestMeta
   ): Promise<
     | AuthResponse
     | {
@@ -499,7 +503,7 @@ export class AuthService {
       );
     }
 
-    const tokens = await this.issueTokens(user);
+    const tokens = await this.issueTokens(user, meta);
     return { tokens, user: this.toPublicUser(user), anveshanPhaseInfo };
   }
 
@@ -509,7 +513,7 @@ export class AuthService {
    * Complete registration for a new user (after OTP verification).
    * Creates user wallet and returns auth tokens.
    */
-  async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
+  async register(dto: RegisterDto, userId: string, meta?:RequestMeta): Promise<AuthResponse> {
     const isDev = isDevelopment();
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
@@ -653,7 +657,7 @@ export class AuthService {
     // );
 
     const freshUser = await this.userRepo.findOne({ where: { id: userId } });
-    const tokens = await this.issueTokens(freshUser!);
+    const tokens = await this.issueTokens(freshUser!, meta);
     return { tokens, user: this.toPublicUser(freshUser!) };
   }
 
@@ -663,21 +667,29 @@ export class AuthService {
    * Issue access + refresh JWT tokens for an authenticated user.
    * Increments tokenVersion to invalidate all previously issued tokens.
    */
-  async issueTokens(user: User): Promise<AuthTokens> {
-    // NOTE: tokenVersion is NOT incremented here.
-    // It is only incremented on logout (see logout handler) to allow
-    // the same account to be used on multiple devices simultaneously.
+  async issueTokens(user: User, meta?: SessionMeta): Promise<AuthTokens> {
+    // NOTE: tokenVersion is NOT incremented here. Each login creates a new session
+    // that replaces the user's previous one, so only one device stays logged in.
+    const sid = randomUUID()
     const tokenVersion = user.tokenVersion;
-
-    const payload = {
+    const base = {
       sub: user._id.toString(),
       mobileNumber: user.mobileNumber,
       role: user.role,
-      tokenVersion,
+      tokenVersion: tokenVersion,
+      sid,
     };
 
-    const accessToken = this.jwtService.sign(payload, { expiresIn: "15m" });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
+    const accessToken = this.jwtService.sign({ ...base, type: 'access' }, { expiresIn: '15m' });
+    const refreshToken = this.jwtService.sign({ ...base, type: 'refresh' }, { expiresIn: '7d' });
+
+    await this.sessionService.create({
+      sessionId: sid,
+      userId: user._id.toString(),
+      refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      meta,
+    });
 
     return { accessToken, refreshToken, expiresIn: 15 * 60 };
   }
@@ -687,86 +699,126 @@ export class AuthService {
    * Also validates tokenVersion to reject tokens invalidated by logout.
    */
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-    try {
-      const payload = this.jwtService.verify<{
-        sub: string;
-        mobileNumber: string;
-        role: UserRole;
-        tokenVersion: number;
-      }>(refreshToken);
+  try {
+    const payload = this.jwtService.verify<{
+      sub: string;
+      mobileNumber: string;
+      role: UserRole;
+      tokenVersion: number;
+      sid?: string;
+      type?: string;
+    }>(refreshToken);
 
-      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-      if (!user) {
-        throw new UnauthorizedException("User not found");
-      }
-
-      if (user.tokenVersion !== payload.tokenVersion) {
-        throw new UnauthorizedException("Session expired. Please login again.");
-      }
-
-      // Auto-reinstate: suspension period has expired
-      if (
-        user.verificationStatus === VerificationStatus.SUSPENDED &&
-        user.suspendedUntil &&
-        new Date() > new Date(user.suspendedUntil)
-      ) {
-        await this.userRepo.update(user._id, {
-          verificationStatus: VerificationStatus.VERIFIED,
-          suspendedAt: null,
-          suspendedUntil: null,
-          suspendedReason: null,
-        });
-        user.verificationStatus = VerificationStatus.VERIFIED;
-      }
-
-      // Block suspended or banned users from refreshing a session
-      if (user.verificationStatus === VerificationStatus.SUSPENDED) {
-        throw new UserAccountLockedException({
-          status: VerificationStatus.SUSPENDED,
-          reason: user.suspendedReason,
-          suspendedAt: user.suspendedAt,
-          suspendedUntil: user.suspendedUntil,
-          bannedAt: null,
-        });
-      }
-      if (user.verificationStatus === VerificationStatus.BANNED) {
-        throw new UserAccountLockedException({
-          status: VerificationStatus.BANNED,
-          reason: user.bannedReason,
-          suspendedAt: null,
-          suspendedUntil: null,
-          bannedAt: user.bannedAt,
-        });
-      }
-
-      const tokens = await this.issueTokens(user);
-
-      // Update last login timestamp on every token refresh
-      user.lastLoginAt = new Date();
-      await this.userRepo.save(user);
-
-      return tokens;
-    } catch (err) {
-      if (err instanceof UnauthorizedException) throw err;
-      throw new UnauthorizedException("Invalid or expired refresh token");
+    // reject access tokens, registration tokens, and old tokens that have no sid
+    if (payload.type !== "refresh" || !payload.sid) {
+      throw new UnauthorizedException("Invalid refresh token");
     }
+
+    // session must exist, be unexpired, and match this refresh token
+    await this.sessionService.validateRefresh(payload.sid, payload.sub, refreshToken);
+
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException("Session expired. Please login again.");
+    }
+
+    if (user.isDeleted) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: "Forbidden",
+        code: "ACCOUNT_DELETED",
+        message: "This user is deleted. Please contact admin to restore.",
+      });
+    }
+
+    // Auto-reinstate: suspension period has expired
+    if (
+      user.verificationStatus === VerificationStatus.SUSPENDED &&
+      user.suspendedUntil &&
+      new Date() > new Date(user.suspendedUntil)
+    ) {
+      await this.userRepo.update(user._id, {
+        verificationStatus: VerificationStatus.VERIFIED,
+        suspendedAt: null,
+        suspendedUntil: null,
+        suspendedReason: null,
+      });
+      user.verificationStatus = VerificationStatus.VERIFIED;
+    }
+
+    // Block suspended or banned users from refreshing a session
+    if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.SUSPENDED,
+        reason: user.suspendedReason,
+        suspendedAt: user.suspendedAt,
+        suspendedUntil: user.suspendedUntil,
+        bannedAt: null,
+      });
+    }
+    if (user.verificationStatus === VerificationStatus.BANNED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.BANNED,
+        reason: user.bannedReason,
+        suspendedAt: null,
+        suspendedUntil: null,
+        bannedAt: user.bannedAt,
+      });
+    }
+
+    // Same session, same refresh token: only a new access token is issued
+    const accessToken = this.jwtService.sign(
+      {
+        sub: user._id.toString(),
+        mobileNumber: user.mobileNumber,
+        role: user.role,
+        tokenVersion: user.tokenVersion,
+        sid: payload.sid,
+        type: "access",
+      },
+      { expiresIn: "15m" },
+    );
+
+    user.lastLoginAt = new Date();
+    await this.userRepo.save(user);
+
+    return { accessToken, refreshToken, expiresIn: 15 * 60 };
+  } catch (err) {
+    // Rethrow every HttpException (401 with SESSION_REVOKED, 503, account locked)
+    if (err instanceof HttpException) throw err;
+    throw new UnauthorizedException("Invalid or expired refresh token");
   }
+}
 
   /**
    * Validate a JWT access token and return the user.
    */
   async validateToken(token: string): Promise<User> {
-    try {
-      const payload = this.jwtService.verify<{ sub: string }>(token);
-      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-      if (!user) {
-        throw new UnauthorizedException("User not found");
-      }
-      return user;
-    } catch {
-      throw new UnauthorizedException("Invalid or expired access token");
+  try {
+    const payload = this.jwtService.verify<{ sub: string; sid?: string; type?: string }>(token);
+    if (payload.type !== "access" || !payload.sid) {
+      throw new UnauthorizedException("Invalid access token");
     }
+    await this.sessionService.validateAccess(payload.sid, payload.sub);
+
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user) throw new UnauthorizedException("User not found");
+    return user;
+  } catch (err) {
+    if (err instanceof HttpException) throw err;
+    throw new UnauthorizedException("Invalid or expired access token");
   }
+}
+
+async logout(userId: string, sid: string): Promise<void> {
+  // Deletes only if sid is still the user's current session, so a stale
+  // device can't log out a newer login. Idempotent: 0 deleted is fine.
+  await this.sessionService.revoke(sid, userId);
+}
 
   /**
    * Increment tokenVersion to invalidate all existing sessions for a user.

@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo } from 'react'
-import { TesterTag } from '@/components/TesterTag'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { adminApi, getErrorMessage, cache } from '@/api/client'
-import { useAuth } from '@/context/AuthContext'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { UserDetailSkeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
+import { useState, useEffect, useMemo } from "react";
+import { TesterTag } from "@/components/TesterTag";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { adminApi, getErrorMessage, cache } from "@/api/client";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserDetailSkeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,7 @@ import {
   Leaf,
   Trash2,
   RotateCcw,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -58,6 +59,14 @@ import type {
   AuditLogEntry,
   PaymentDetail,
 } from "@/types";
+
+interface UserSession {
+  isActive: boolean;
+  lastActivityAt: string | null;
+  browser: string | null;
+  os: string | null;
+  device: string | null;
+}
 
 // ─── Status badge helpers ──────────────────────────────────────────────────────
 
@@ -226,38 +235,40 @@ function StatsStrip({ questions }: { questions: Question[] }) {
 function buildQuestionColumns(): ColumnDef<Question>[] {
   return [
     {
-      key: 'questionText',
-      header: 'Question',
-      width: '280px',
+      key: "questionText",
+      header: "Question",
+      width: "280px",
       sortable: false,
       render: (q) => (
-        <span className="text-xs sm:text-xs sm:text-sm text-foreground line-clamp-2 leading-relaxed">{q.questionText}</span>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      width: '120px',
-      sortable: false,
-      render: (q) => <QuestionStatusBadge status={q.status} />,
-    },
-    {
-      key: 'domains',
-      header: 'Category',
-      width: '180px',
-      sortable: false,
-      filterable: true,
-      filterOptions: [],  // derived from data
-      render: (q) => (
-        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
-          {(q.domains ?? []).join(', ') || '-'}
+        <span className="text-xs sm:text-xs sm:text-sm text-foreground line-clamp-2 leading-relaxed">
+          {q.questionText}
         </span>
       ),
     },
     {
-      key: 'season',
-      header: 'Season',
-      width: '90px',
+      key: "status",
+      header: "Status",
+      width: "120px",
+      sortable: false,
+      render: (q) => <QuestionStatusBadge status={q.status} />,
+    },
+    {
+      key: "domains",
+      header: "Category",
+      width: "180px",
+      sortable: false,
+      filterable: true,
+      filterOptions: [], // derived from data
+      render: (q) => (
+        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
+          {(q.domains ?? []).join(", ") || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "season",
+      header: "Season",
+      width: "90px",
       sortable: false,
       filterable: true,
       filterOptions: [],
@@ -268,9 +279,9 @@ function buildQuestionColumns(): ColumnDef<Question>[] {
       ),
     },
     {
-      key: 'cropType',
-      header: 'Crop',
-      width: '100px',
+      key: "cropType",
+      header: "Crop",
+      width: "100px",
       sortable: false,
       render: (q) => (
         <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground capitalize">
@@ -392,11 +403,11 @@ function DetailRow({ label, value }: DetailRowProps) {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export function UserDetailPage() {
-  const { userId } = useParams<{ userId: string }>()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { user: currentUser } = useAuth()
-  const isSuperAdmin = currentUser?.role === 'super_admin'
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === "super_admin";
 
   const [user, setUser] = useState<UserType | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -411,6 +422,9 @@ export function UserDetailPage() {
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  const [session, setSession] = useState<UserSession | null>(null);
+  const [revokeModalOpen, setRevokeModalOpen] = useState(false);
 
   const isDeleted = !!user?.isDeleted;
   const [restoreModalOpen, setRestoreModalOpen] = useState(false);
@@ -471,6 +485,38 @@ export function UserDetailPage() {
     [filteredQuestions, qPage, activePageSize],
   );
 
+  async function loadSession() {
+    if (!userId || !isSuperAdmin) return;
+    try {
+      setSession(await adminApi.getUserSession(userId));
+    } catch {
+      setSession(null); // no badge or button if the lookup fails
+    }
+  }
+
+  useEffect(() => {
+    loadSession();
+  }, [userId, isSuperAdmin]);
+
+  async function handleRevokeSession() {
+    if (!userId) return;
+    setActionLoading(true);
+    try {
+      const res = await adminApi.revokeUserSession(userId);
+      toast.success(
+        res.revoked ? "User logged out" : "User had no active session",
+      );
+      setRevokeModalOpen(false);
+      setSession((s) =>
+        s ? { ...s, isActive: false, lastActivityAt: null } : s,
+      );
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Failed to log out user"));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   // Centralized user refetch — bust the user detail cache so fresh data always loads
   async function refreshUser() {
     cache.invalidate(`/admin/users/${userId}`);
@@ -503,8 +549,9 @@ export function UserDetailPage() {
 
   // Anveshan users have their own review page; ?classic=1 opens this account page instead.
   useEffect(() => {
-    if (user?.isAnveshanUser && !user.isDeleted && !searchParams.has('classic')) navigate(`/users/${user.id}/anveshan`, { replace: true })
-  }, [user, searchParams, navigate])
+    if (user?.isAnveshanUser && !searchParams.has("classic"))
+      navigate(`/users/${user.id}/anveshan`, { replace: true });
+  }, [user, searchParams, navigate]);
 
   // Reset page when search changes
   useEffect(() => {
@@ -706,15 +753,32 @@ export function UserDetailPage() {
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <VerificationBadge status={user.verificationStatus} />
-                    <Badge variant="secondary" className="capitalize">{user.role.replace('_', ' ')}</Badge>
+                    <Badge variant="secondary" className="capitalize">
+                      {user.role.replace("_", " ")}
+                    </Badge>
                     {user.isTester && <TesterTag />}
-                    {user.category && <Badge variant="outline" className="capitalize">{user.category}</Badge>}
+                    {user.category && (
+                      <Badge variant="outline" className="capitalize">
+                        {user.category}
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
                 {/* Action buttons - only for super_admin, never on self */}
                 {isSuperAdmin && user.role !== "super_admin" && (
                   <div className="flex flex-wrap gap-2">
+                    {session?.isActive && !isDeleted && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => setRevokeModalOpen(true)}
+                      >
+                        <LogOut className="h-4 w-4" /> Log out user
+                      </Button>
+                    )}
+
                     {isPending && !isDeleted && (
                       <Button
                         size="sm"
@@ -1903,28 +1967,60 @@ export function UserDetailPage() {
       </Dialog>
 
       <Dialog open={restoreModalOpen} onOpenChange={setRestoreModalOpen}>
-  <DialogContent className="p-4">
-    <DialogHeader>
-      <DialogTitle>Restore User?</DialogTitle>
-      <DialogDescription>
-        This restores {user.name || user.mobileNumber} and all data that was deleted
-        with them (questions, wallet, transactions, withdrawals, payment methods).
-        They will be able to log in again.
-      </DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setRestoreModalOpen(false)}>Cancel</Button>
-      <Button
-        className="bg-emerald-600 hover:bg-emerald-700 text-white"
-        onClick={handleRestore}
-        disabled={actionLoading}
-      >
-        {actionLoading ? 'Restoring...' : 'Restore User'}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+        <DialogContent className="p-4">
+          <DialogHeader>
+            <DialogTitle>Restore User?</DialogTitle>
+            <DialogDescription>
+              This restores {user.name || user.mobileNumber} and all data that
+              was deleted with them (questions, wallet, transactions,
+              withdrawals, payment methods). They will be able to log in again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRestoreModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={handleRestore}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Restoring..." : "Restore User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
+      <Dialog open={revokeModalOpen} onOpenChange={setRevokeModalOpen}>
+        <DialogContent className="p-4">
+          <DialogHeader>
+            <DialogTitle>Log out user?</DialogTitle>
+            <DialogDescription>
+              {user.name || user.mobileNumber} will be signed out
+              {session?.browser || session?.os
+                ? ` (${[session.browser, session.os].filter(Boolean).join(" on ")})`
+                : ""}{" "}
+              and will have to log in again with an OTP.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRevokeModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              style={{ backgroundColor: "#dc2626" }}
+              className="text-white"
+              onClick={handleRevokeSession}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Logging out..." : "Log out user"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

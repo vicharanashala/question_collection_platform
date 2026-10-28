@@ -2,19 +2,21 @@ import { Injectable, UnauthorizedException, Inject } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
-// import { User } from '../../database/entities';
 import { VerificationStatus } from "../../classes/enums";
 import { UserAccountLockedException } from "../../classes/exceptions/user-status.exception";
 import { IUserRepository } from "../../../shared/database/repositories/IUser.repository";
 import { REPOSITORY_TOKENS } from "../../../shared/database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Types } from "mongoose";
+import { SessionService } from "@/modules/session/session.service";
 
 export interface JwtPayload {
   sub: string;
   mobileNumber: string;
   role: string;
   tokenVersion: number;
+  sid?: string;
+  type?: "access" | "refresh" | "registration";
   iat?: number;
   exp?: number;
 }
@@ -25,6 +27,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     configService: ConfigService,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
+
+     private readonly sessionService: SessionService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -38,13 +42,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * Passport invokes this after decoding the JWT.
    * Return value becomes `request.user`.
    */
-  async validate(payload: JwtPayload) {
+async validate(payload: JwtPayload) {
     if (!payload.sub || !payload.mobileNumber) {
       throw new UnauthorizedException("Invalid token payload");
     }
-
     if (!Types.ObjectId.isValid(payload.sub)) {
       throw new UnauthorizedException("Invalid token payload");
+    }
+
+      if (payload.type !== "access" || !payload.sid) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        code: "SESSION_REVOKED",
+        message: "Your session has ended. Please log in again.",
+      });
     }
 
     // Token signature and expiry are already verified by Passport.
@@ -62,6 +73,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     message: "Account no longer exists",
   });
 }
+
+ await this.sessionService.validateAccess(payload.sid, payload.sub);
 
     // Verify tokenVersion matches — invalidates tokens issued before the last login/logout
     if (user.tokenVersion !== payload.tokenVersion) {
@@ -88,6 +101,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // JwtAuthGuard.handleRequest where NestJS controls the HTTP status code.
     return {
       id: payload.sub,
+      sid: payload.sid,
       mobileNumber: payload.mobileNumber,
       role: payload.role,
       verificationStatus: user.verificationStatus,
