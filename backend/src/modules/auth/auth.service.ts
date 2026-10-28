@@ -205,8 +205,17 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
 
     // Store hashed OTP in DB (upsert user record)
-    let user = await this.userRepo.findOne({ where: { mobileNumber } });
+    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     let isNewUser = false;
+
+    if (user?.isDeleted) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: "Forbidden",
+        code: "ACCOUNT_DELETED",
+        message: "This user is deleted. Please contact admin to restore.",
+      });
+    }
 
     if (!user) {
       isNewUser = true;
@@ -323,8 +332,7 @@ export class AuthService {
     const bypassOtpChecks =
       (this.configService.get<boolean>("app.otpDevBypass") ?? false) &&
       isDevelopment();
-    let user = await this.userRepo.findOne({ where: { mobileNumber } });
-    this.logger.debug(`The user is ${JSON.stringify(user)}`);
+    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -503,7 +511,6 @@ export class AuthService {
    */
   async register(dto: RegisterDto, userId: string): Promise<AuthResponse> {
     const isDev = isDevelopment();
-    const objectId = new Types.ObjectId(userId);
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new UnauthorizedException("User not found");
@@ -877,6 +884,15 @@ export class AuthService {
 
     await this.userRepo.save(user);
     return this.toPublicUser(user);
+  }
+
+  // Finds the active user for a mobile number, falling back to a deleted one.
+  private async findUserByMobileIncludingDeleted(
+    mobileNumber: string,
+  ): Promise<User | null> {
+    const activeUser = await this.userRepo.findOne({ where: { mobileNumber } });
+    if (activeUser) return activeUser;
+    return this.userRepo.findOne({ where: { mobileNumber, isDeleted: true } });
   }
 
   async findUserByMobile(mobileNumber: string): Promise<User | null> {

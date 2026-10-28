@@ -18,8 +18,6 @@ export class User {
   @Prop({
     name: "mobileNumber",
     type: String,
-    unique: true,
-    index: true,
     default: null,
   })
   mobileNumber: string | null;
@@ -193,3 +191,15 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Only one active user per mobile number. Deleted users keep their number without blocking it.
+UserSchema.index(
+  { mobileNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      mobileNumber: { $type: 'string' },
+    },
+  },
+);
