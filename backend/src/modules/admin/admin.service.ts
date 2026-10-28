@@ -5034,6 +5034,11 @@ async getUserStats(dto: ListUserStatsDto) {
 
     // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
     // matching user (orphaned records) are excluded from both items and total.
+        const owners = ownerIds.length
+      ? await this.userRepo.findAll({ _id: { $in: ownerIds }, ...notDeleted })
+      : [];
+    const ownersById = new Map(owners.map((u) => [String(u._id), u]));
+    
     const testerCondition = isTesterCondition(dto.tester);
     const validWallets = allWallets.filter((w) => {
       const owner = ownersById.get(w.userId);
@@ -5044,10 +5049,7 @@ async getUserStats(dto: ListUserStatsDto) {
     });
     // Strings, not ObjectId instances: Mongoose casts them, the repo doesn't mangle them.
     // The notDeleted filter drops deleted owners, so their wallets fall out as orphans below.
-    const owners = ownerIds.length
-      ? await this.userRepo.findAll({ _id: { $in: ownerIds }, ...notDeleted })
-      : [];
-    const ownersById = new Map(owners.map((u) => [String(u._id), u]));
+
 
     // Mirrors the old inner join: wallets with no (non-deleted) user are excluded from items and total
 
