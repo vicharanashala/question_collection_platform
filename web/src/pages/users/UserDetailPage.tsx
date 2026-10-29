@@ -753,9 +753,15 @@ export function UserDetailPage() {
                   )}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <VerificationBadge status={user.verificationStatus} />
+                    {isDeleted && (
+                      <span className="inline-block rounded-full bg-gray-700 px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-white">
+                        Deleted
+                      </span>
+                    )}
                     <Badge variant="secondary" className="capitalize">
                       {user.role.replace("_", " ")}
                     </Badge>
+
                     {user.isTester && <TesterTag />}
                     {user.category && (
                       <Badge variant="outline" className="capitalize">
@@ -811,7 +817,7 @@ export function UserDetailPage() {
                       </Button>
                     )}
 
-                    {!isLocked && (
+                    {!isLocked && !isDeleted && (
                       <>
                         <Button
                           size="sm"
@@ -837,7 +843,7 @@ export function UserDetailPage() {
                         </Button>
                       </>
                     )}
-                    {isLocked && (
+                    {isLocked && !isDeleted && (
                       <Button
                         size="sm"
                         className="gap-1.5 text-white"
@@ -1369,164 +1375,6 @@ export function UserDetailPage() {
       </div>
 
       {/* Audit History - super_admin only */}
-      {isSuperAdmin && (
-        <Card>
-          <CardHeader className="p-0">
-            <button
-              className="flex items-center justify-between w-full cursor-pointer transition-all duration-200 py-3 px-6"
-              onClick={() => {
-                if (auditCollapsed && auditEntries.length === 0) {
-                  loadAuditHistory();
-                } else {
-                  setAuditCollapsed((c) => !c);
-                }
-              }}
-              aria-expanded={!auditCollapsed}
-            >
-              <div className="flex items-center gap-2">
-                <ScrollText className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">
-                  Audit History
-                </CardTitle>
-                {auditEntries.length > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[11px] sm:text-[11px] sm:text-xs"
-                  >
-                    {auditEntries.length}
-                  </Badge>
-                )}
-                {auditLoading && (
-                  <span className="ml-1 h-3 w-3 border border-blue-400 border-t-transparent rounded-full animate-spin" />
-                )}
-              </div>
-              <ChevronRight
-                className={cn(
-                  "h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200",
-                  auditCollapsed ? "" : "rotate-90",
-                )}
-              />
-            </button>
-          </CardHeader>
-          <div
-            className={cn(
-              "overflow-hidden transition-all duration-200",
-              auditCollapsed
-                ? "max-h-0 opacity-0"
-                : "max-h-[600px] opacity-100",
-            )}
-          >
-            <CardContent className="pt-0">
-              {/* Loading skeleton */}
-              {auditLoading ? (
-                <div className="space-y-2 py-2">
-                  {[3, 2, 4].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-14 rounded-lg bg-muted/40 animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : auditEntries.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
-                  <ScrollText className="h-7 w-7 opacity-25" />
-                  <p className="text-[11px] sm:text-[11px] sm:text-xs">
-                    No audit history for this user
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    {auditEntries
-                      .slice(
-                        (auditPage - 1) * AUDIT_PAGE_SIZE,
-                        auditPage * AUDIT_PAGE_SIZE,
-                      )
-                      .map((entry) => (
-                        <div
-                          key={entry.id}
-                          className="flex items-start gap-3 rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20 hover:bg-muted/30 transition-colors"
-                        >
-                          {/* Avatar initials */}
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[11px] sm:text-[11px] sm:text-xs font-bold shrink-0">
-                            {(entry.actorName ?? entry.actorId ?? "S")
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-foreground">
-                                {entry.actorName
-                                  ? `${entry.actorName} (${entry.actorRole ?? entry.actorType})`
-                                  : (entry.actorId ?? "System")}
-                              </span>
-                              <Badge
-                                variant="secondary"
-                                className="text-[11px] sm:text-[11px] sm:text-xs capitalize"
-                              >
-                                {(entry.action ?? "")
-                                  .replace(/_/g, " ")
-                                  .toLowerCase()}
-                              </Badge>
-                            </div>
-                            {entry.oldValue && entry.newValue && (
-                              <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono">
-                                {JSON.stringify(entry.oldValue)} →{" "}
-                                {JSON.stringify(entry.newValue)}
-                              </p>
-                            )}
-                          </div>
-                          {/* Timestamp */}
-                          <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0 whitespace-nowrap mt-0.5">
-                            {formatDateTime(entry.createdAt) ?? entry.createdAt}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Pagination */}
-                  {auditEntries.length > AUDIT_PAGE_SIZE && (
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-border-subtle">
-                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                        {(auditPage - 1) * AUDIT_PAGE_SIZE + 1}-
-                        {Math.min(
-                          auditPage * AUDIT_PAGE_SIZE,
-                          auditEntries.length,
-                        )}{" "}
-                        of {auditEntries.length}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() =>
-                            setAuditPage((p) => Math.max(1, p - 1))
-                          }
-                          disabled={auditPage === 1}
-                          className="h-7 w-7 flex items-center justify-center rounded text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronLeft className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground px-1">
-                          {auditPage}
-                        </span>
-                        <button
-                          onClick={() => setAuditPage((p) => p + 1)}
-                          disabled={
-                            auditPage * AUDIT_PAGE_SIZE >= auditEntries.length
-                          }
-                          className="h-7 w-7 flex items-center justify-center rounded text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </div>
-        </Card>
-      )}
 
       {/* Suspend / Ban dialog */}
       <Dialog open={suspendModalOpen} onOpenChange={setSuspendModalOpen}>
@@ -1973,7 +1821,7 @@ export function UserDetailPage() {
             <DialogDescription>
               This restores {user.name || user.mobileNumber} and all data that
               was deleted with them (questions, wallet, transactions,
-              withdrawals, payment methods). They will be able to log in again.
+              withdrawals, payment methods, notifications). They will be able to log in again.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
