@@ -579,17 +579,31 @@ export function UserDetailPage() {
     }
   }
 
+  // async function handleDelete() {
+  //   if (!userId) return;
+  //   setActionLoading(true);
+  //   try {
+  //     const res = await adminApi.deleteUser(userId);
+  //     toast.success(res.message ?? "User deleted");
+  //     cache.invalidate(`/admin/users/${userId}`);
+  //     setDeleteModalOpen(false);
+  //   } catch (e) {
+  //     // Shows backend messages like "User has pending or processing withdrawals..."
+  //     toast.error(getErrorMessage(e, "Failed to delete user"));
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // }
+
   async function handleDelete() {
     if (!userId) return;
     setActionLoading(true);
     try {
       const res = await adminApi.deleteUser(userId);
       toast.success(res.message ?? "User deleted");
-      cache.invalidate(`/admin/users/${userId}`);
       setDeleteModalOpen(false);
-      navigate("/users", { replace: true });
+      await refreshUser(); // reload so isDeleted becomes true
     } catch (e) {
-      // Shows backend messages like "User has pending or processing withdrawals..."
       toast.error(getErrorMessage(e, "Failed to delete user"));
     } finally {
       setActionLoading(false);
@@ -669,12 +683,12 @@ export function UserDetailPage() {
     }
   }
 
-  async function loadAuditHistory() {
-    setAuditCollapsed(false);
-    toast.info(
-      "Entity-specific audit history is now available from the Audit Logs page.",
-    );
-  }
+  // async function loadAuditHistory() {
+  //   setAuditCollapsed(false);
+  //   toast.info(
+  //     "Entity-specific audit history is now available from the Audit Logs page.",
+  //   );
+  // }
 
   async function handleReinstate() {
     if (!userId) return;
@@ -1821,7 +1835,8 @@ export function UserDetailPage() {
             <DialogDescription>
               This restores {user.name || user.mobileNumber} and all data that
               was deleted with them (questions, wallet, transactions,
-              withdrawals, payment methods, notifications). They will be able to log in again.
+              withdrawals, payment methods, notifications). They will be able to
+              log in again.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

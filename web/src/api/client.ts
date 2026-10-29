@@ -645,7 +645,7 @@ export const adminApi = {
       Object.entries(params).filter(([, v]) => v),
     ) as Record<string, string>;
     const qs = new URLSearchParams(p).toString();
-    return request<UserStats>(`/admin/users/stats${qs ? `?${qs}` : ""}`);
+    return request<UserStats>(`/admin/users/stats${qs ? `?${qs}` : ""}`, {}, false);
   },
 
   getUserDetail: (userId: string | undefined) =>

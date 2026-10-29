@@ -253,6 +253,7 @@ export function UsersPage() {
   const [toDate, setToDate] = useState('')
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
 
@@ -278,14 +279,23 @@ export function UsersPage() {
   const usableTo = isUsableDate(debouncedTo) ? debouncedTo : ''
   const dateRangeInvalid = !!usableFrom && !!usableTo && usableFrom > usableTo
 
+  // useEffect(() => {
+  //   if (dateRangeInvalid) return
+  //   let cancelled = false
+  //   adminApi.getUserStats({ fromDate: usableFrom, toDate: usableTo })
+  //     .then((res) => { if (!cancelled) setStats(res) })
+  //     .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load user counts')) })
+  //   return () => { cancelled = true }
+  // }, [usableFrom, usableTo, dateRangeInvalid])
+
   useEffect(() => {
-    if (dateRangeInvalid) return
-    let cancelled = false
-    adminApi.getUserStats({ fromDate: usableFrom, toDate: usableTo })
-      .then((res) => { if (!cancelled) setStats(res) })
-      .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load user counts')) })
-    return () => { cancelled = true }
-  }, [usableFrom, usableTo, dateRangeInvalid])
+  if (dateRangeInvalid) return
+  let cancelled = false
+  adminApi.getUserStats({ fromDate: usableFrom, toDate: usableTo })
+    .then((res) => { if (!cancelled) setStats(res) })
+    .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load user counts')) })
+  return () => { cancelled = true }
+}, [usableFrom, usableTo, dateRangeInvalid, refreshKey])
 
   useEffect(() => {
   if (dateRangeInvalid) return
@@ -310,7 +320,7 @@ export function UsersPage() {
     .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load users')) })
     .finally(() => { if (!cancelled) setLoading(false) })
   return () => { cancelled = true }
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, usableFrom, usableTo, dateRangeInvalid, sortBy, sortOrder, currentUser?.id])
+}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, usableFrom, usableTo, dateRangeInvalid, sortBy, sortOrder, currentUser?.id, refreshKey])
 
   // Sorts by a column, flipping the direction when it is already the active one.
   const handleSort = (key: UserSortKey) => {
@@ -347,6 +357,7 @@ export function UsersPage() {
   function handleUserCreated() {
     toast.success("User created successfully");
     setPage(1);
+    setRefreshKey((k) => k + 1)
     adminApi
       .getUsers({
         page: 1,
