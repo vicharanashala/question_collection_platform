@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
           'favicon.ico',
           'favicon-16x16.png',
           'favicon-32x32.png',
-          'apple-touch-icon.png',
+          'apple-touch-icon-180x180.png',
           'logo-192x192.png',
           'android-chrome-512x512.png',
           'maskable-icon.svg',
@@ -47,12 +47,12 @@ export default defineConfig(({ mode }) => {
           background_color: '#ffffff',
           icons: [
             {
-              src: 'logo-192x192.png',
+              src: 'icon-192x192.png',
               sizes: '192x192',
               type: 'image/png'
             },
             {
-              src: 'android-chrome-512x512.png',
+              src: 'icon-512x512.png',
               sizes: '512x512',
               type: 'image/png'
             },
