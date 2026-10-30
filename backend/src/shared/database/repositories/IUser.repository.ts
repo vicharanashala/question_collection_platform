@@ -96,13 +96,13 @@ export interface IUserRepository extends BaseRepository<User> {
     offset: number;
     state?: string;
     category?: UserCategory;
-  }): Promise<{ entries: LeaderboardEntry[]; total: number }>;
+  }): Promise<{ entries: LeaderboardEntry[]; total: number; totalApprovedQuestions: number; }>;
   getApprovedQuestionCount(userId: string): Promise<number>;
   getLeaderboardRank(opts: {
   userId: string;
   state?: string;
   category?: UserCategory;
-}): Promise<number | null>;
+}): Promise<{ rank: number; totalQuestions: number } | null>;
 
 /** Methods below take an optional `userFilter`: a Mongo match on the user document (staff dashboard scope). */
 getVerificationStats(userFilter?: Record<string, unknown>): Promise<{

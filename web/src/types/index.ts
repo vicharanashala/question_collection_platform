@@ -341,9 +341,11 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardResponse {
-  entries: LeaderboardEntry[]
-  userRank: number | null
-  total: number
+  entries: LeaderboardEntry[];
+  userRank: number | null;
+  userTotalQuestions: number;
+  totalApprovedQuestions: number;
+  total: number;
 }
 
 // ─── Analytics (Task 11) ────────────────────────────────────────────────────────

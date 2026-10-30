@@ -29,7 +29,7 @@ const MEDALS = {
     ring: "#FCD34D",
     glow: "#FBBF24",
     icon: "trophy" as const,
-    label: 'leaderboard.podium.rank1',
+    label: "leaderboard.podium.rank1",
   },
   silver: {
     color: "#64748B",
@@ -37,7 +37,7 @@ const MEDALS = {
     ring: "#CBD5E1",
     glow: "#94A3B8",
     icon: "medal" as const,
-    label: 'leaderboard.podium.rank2',
+    label: "leaderboard.podium.rank2",
   },
   bronze: {
     color: "#B45309",
@@ -45,7 +45,7 @@ const MEDALS = {
     ring: "#FBBF24",
     glow: "#D97706",
     icon: "medal" as const,
-    label: 'leaderboard.podium.rank3',
+    label: "leaderboard.podium.rank3",
   },
 };
 
@@ -106,7 +106,15 @@ function Avatar({
 
 // ─── Podium (Top 3 hero) ──────────────────────────────────────────────────────
 
-function Podium({ top3, c, t }: { top3: LeaderboardEntry[]; c: ThemeColors; t: (k: string) => string }) {
+function Podium({
+  top3,
+  c,
+  t,
+}: {
+  top3: LeaderboardEntry[];
+  c: ThemeColors;
+  t: (k: string) => string;
+}) {
   if (top3.length === 0) return null;
 
   // Order: 2nd, 1st, 3rd for visual podium
@@ -149,11 +157,18 @@ function Podium({ top3, c, t }: { top3: LeaderboardEntry[]; c: ThemeColors; t: (
                 >
                   {entry!.name || "Unknown"}
                 </Text>
-                <Text
+                {/* <Text
                   style={[podStyles.earned, { color: c.success }]}
                   numberOfLines={1}
                 >
                   {formatINR(entry!.totalEarned)}
+                </Text> */}
+
+                <Text
+                  style={[podStyles.earned, { color: c.primary }]}
+                  numberOfLines={1}
+                >
+                  {entry!.totalQuestions} {t("leaderboard.approvedLabel")}
                 </Text>
               </View>
               <View
@@ -179,7 +194,9 @@ function Podium({ top3, c, t }: { top3: LeaderboardEntry[]; c: ThemeColors; t: (
                 >
                   {entry!.rank}
                 </Text>
-                <Text style={[podStyles.rankLabel, { color: m.color, fontSize: 9 }]}>
+                <Text
+                  style={[podStyles.rankLabel, { color: m.color, fontSize: 9 }]}
+                >
                   {t(m.label)}
                 </Text>
               </View>
@@ -216,7 +233,12 @@ const podStyles = StyleSheet.create({
     gap: 2,
   },
   rankNum: { fontWeight: "900", letterSpacing: -0.5 },
-  rankLabel: { fontWeight: "700", letterSpacing: 0.5, textAlign: "center", marginTop: 2 },
+  rankLabel: {
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textAlign: "center",
+    marginTop: 2,
+  },
 });
 
 // ─── Stat pill ────────────────────────────────────────────────────────────────
@@ -244,7 +266,7 @@ function StatCard({
       <View style={[statStyles.iconBox, { backgroundColor: iconColor + "18" }]}>
         <Ionicons name={icon} size={13} color={iconColor} />
       </View>
-      <View style={{ flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <View style={{ flexDirection: "column", flex: 1, minWidth: 0 }}>
         <Text style={[statStyles.val, { color: c.text }]} numberOfLines={1}>
           {value}
         </Text>
@@ -289,7 +311,15 @@ const statStyles = StyleSheet.create({
 
 // ─── Section label ────────────────────────────────────────────────────────────
 
-function SectionLabel({ label, c, t }: { label: string; c: ThemeColors; t: (k: string) => string }) {
+function SectionLabel({
+  label,
+  c,
+  t,
+}: {
+  label: string;
+  c: ThemeColors;
+  t: (k: string) => string;
+}) {
   return (
     <View style={slStyles.wrap}>
       <View style={[slStyles.line, { backgroundColor: c.borderSubtle }]} />
@@ -339,7 +369,7 @@ function YourRankCard({
       ]}
     >
       <View style={yrStyles.rankBox}>
-        <Text style={yrStyles.rankLabel}>{t('leaderboard.rankLabel')}</Text>
+        <Text style={yrStyles.rankLabel}>{t("leaderboard.rankLabel")}</Text>
         <Text style={yrStyles.rankNum}>#{entry.rank}</Text>
       </View>
 
@@ -353,15 +383,18 @@ function YourRankCard({
       />
 
       <View style={yrStyles.mid}>
-        <Text style={yrStyles.youLabel}>{t('leaderboard.yourPosition')}</Text>
+        <Text style={yrStyles.youLabel}>{t("leaderboard.yourPosition")}</Text>
         <Text style={yrStyles.name} numberOfLines={1}>
           {entry.name || "Unknown"}
         </Text>
       </View>
 
       <View style={yrStyles.right}>
-        <Text style={yrStyles.earnedVal}>{formatINR(entry.totalEarned)}</Text>
-        <Text style={yrStyles.qVal}>{entry.totalQuestions} Qs</Text>
+        {/* <Text style={yrStyles.earnedVal}>{formatINR(entry.totalEarned)}</Text>
+        <Text style={yrStyles.qVal}>{entry.totalQuestions} Qs</Text> */}
+
+        <Text style={yrStyles.earnedVal}>{entry.totalQuestions}</Text>
+        <Text style={yrStyles.qVal}>{t("leaderboard.approvedLabel")}</Text>
       </View>
     </View>
   );
@@ -426,7 +459,15 @@ const yrStyles = StyleSheet.create({
 
 // ─── List row (rank 4+) ───────────────────────────────────────────────────────
 
-function ListRow({ entry, c, t }: { entry: LeaderboardEntry; c: ThemeColors; t: (k: string) => string }) {
+function ListRow({
+  entry,
+  c,
+  t,
+}: {
+  entry: LeaderboardEntry;
+  c: ThemeColors;
+  t: (k: string) => string;
+}) {
   const isMe = entry.isCurrentUser;
   return (
     <View
@@ -462,11 +503,13 @@ function ListRow({ entry, c, t }: { entry: LeaderboardEntry; c: ThemeColors; t: 
           {entry.name || "Unknown"}
         </Text>
         {isMe && (
-          <Text style={[rowStyles.youTag, { color: c.primary }]}>{t('leaderboard.you')}</Text>
+          <Text style={[rowStyles.youTag, { color: c.primary }]}>
+            {t("leaderboard.you")}
+          </Text>
         )}
       </View>
 
-      <View style={rowStyles.stats}>
+      {/* <View style={rowStyles.stats}>
         <Text
           style={[
             rowStyles.earned,
@@ -477,6 +520,20 @@ function ListRow({ entry, c, t }: { entry: LeaderboardEntry; c: ThemeColors; t: 
         </Text>
         <Text style={[rowStyles.q, { color: c.textTertiary }]}>
           {entry.totalQuestions > 0 ? `${entry.totalQuestions} Qs` : "—"}
+        </Text>
+      </View> */}
+
+      <View style={rowStyles.stats}>
+        <Text
+          style={[
+            rowStyles.earned,
+            { color: entry.totalQuestions > 0 ? c.primary : c.textTertiary },
+          ]}
+        >
+          {entry.totalQuestions}
+        </Text>
+        <Text style={[rowStyles.q, { color: c.textTertiary }]}>
+          {t("leaderboard.approvedLabel")}
         </Text>
       </View>
     </View>
@@ -537,32 +594,58 @@ export function LeaderboardScreen() {
     await fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  const sortedEntries = useMemo(() => {
-    if (!response) return [];
-    return [...response.entries].sort((a, b) => {
-      if (b.totalEarned !== a.totalEarned) return b.totalEarned - a.totalEarned;
-      return b.totalQuestions - a.totalQuestions;
-    });
-  }, [response]);
+  // const sortedEntries = useMemo(() => {
+  //   if (!response) return [];
+  //   return [...response.entries].sort((a, b) => {
+  //     if (b.totalEarned !== a.totalEarned) return b.totalEarned - a.totalEarned;
+  //     return b.totalQuestions - a.totalQuestions;
+  //   });
+  // }, [response]);
 
-  const top3 = sortedEntries.slice(0, 3);
-  const rest = sortedEntries.slice(3);
-  const userEntry = sortedEntries.find((e) => e.isCurrentUser);
+  const entries = response?.entries ?? [];
+
+  const top3 = entries.slice(0, 3);
+  const rest = entries.slice(3);
+
+  // const top3 = sortedEntries.slice(0, 3);
+  // const rest = sortedEntries.slice(3);
+  // const userEntry = sortedEntries.find((e) => e.isCurrentUser);
+  const yourEntry = useMemo<LeaderboardEntry | null>(() => {
+    if (!response?.userRank) return null;
+    return (
+      entries.find((e) => e.isCurrentUser) ?? {
+        rank: response.userRank,
+        userId: "me",
+        name: "",
+        totalQuestions: response.userTotalQuestions ?? 0,
+        medal: null,
+        isCurrentUser: true,
+      }
+    );
+  }, [response, entries]);
+
+  // const userInTop3 = top3.some((e) => e.isCurrentUser);
+  // const userInRest = rest.some((e) => e.isCurrentUser);
+  // const showUserCard = userEntry && !userInTop3 && !userInRest;
+
   const userInTop3 = top3.some((e) => e.isCurrentUser);
   const userInRest = rest.some((e) => e.isCurrentUser);
-  const showUserCard = userEntry && !userInTop3 && !userInRest;
+  const showUserCard = !!yourEntry && !userInTop3 && !userInRest;
 
-  const totalEarningsAll = sortedEntries.reduce(
-    (sum, e) => sum + (e.totalEarned ?? 0),
-    0,
-  );
-  const totalQuestionsAll = sortedEntries.reduce(
-    (sum, e) => sum + (e.totalQuestions ?? 0),
-    0,
-  );
+  // const totalEarningsAll = sortedEntries.reduce(
+  //   (sum, e) => sum + (e.totalEarned ?? 0),
+  //   0,
+  // );
+  // const totalQuestionsAll = sortedEntries.reduce(
+  //   (sum, e) => sum + (e.totalQuestions ?? 0),
+  //   0,
+  // );
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={[styles.container, { backgroundColor: c.background }]}
+    >
       {/* ── Header ── */}
       <View
         style={[
@@ -579,12 +662,12 @@ export function LeaderboardScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: c.text }]}>
-            {t('leaderboard.title')}
+            {t("leaderboard.title")}
           </Text>
           <Text style={[styles.headerSub, { color: c.textTertiary }]}>
             {response?.total
-              ? `${response.total} ${t('leaderboard.participants')}`
-              : t('leaderboard.loading')}
+              ? `${response.total} ${t("leaderboard.participants")}`
+              : t("leaderboard.loading")}
           </Text>
         </View>
       </View>
@@ -607,27 +690,53 @@ export function LeaderboardScreen() {
           ListHeaderComponent={
             <>
               {/* Stats row */}
+              {/* {response && (
+  <View style={styles.statsRow}>
+    <StatCard
+      icon="help-circle"
+      iconColor={c.primary}
+      value={response.userTotalQuestions ?? 0}
+      label={t('leaderboard.stats.approvedQs')}
+      c={c}
+    />
+    <StatCard
+      icon="people"
+      iconColor="#F59E0B"
+      value={response.total}
+      label={t('leaderboard.participants')}
+      c={c}
+    />
+    <StatCard
+      icon="ribbon"
+      iconColor={c.success}
+      value={response.userRank ? `#${response.userRank}` : "—"}
+      label={t('leaderboard.stats.yourRank')}
+      c={c}
+    />
+  </View>
+)} */}
+
               {response && (
                 <View style={styles.statsRow}>
                   <StatCard
-                    icon="cash"
-                    iconColor="#F59E0B"
-                    value={formatINR(totalEarningsAll)}
-                    label={t('leaderboard.stats.totalRewards')}
+                    icon="help-circle"
+                    iconColor={c.primary}
+                    value={response.userTotalQuestions ?? 0}
+                    label={t("leaderboard.stats.approvedQs")}
                     c={c}
                   />
                   <StatCard
-                    icon="help-circle"
-                    iconColor={c.primary}
-                    value={totalQuestionsAll > 0 ? `${totalQuestionsAll}` : "—"}
-                    label={t('leaderboard.stats.approvedQs')}
+                    icon="people"
+                    iconColor="#F59E0B"
+                    value={response.total}
+                    label={t("leaderboard.participants")}
                     c={c}
                   />
                   <StatCard
                     icon="ribbon"
                     iconColor={c.success}
                     value={response.userRank ? `#${response.userRank}` : "—"}
-                    label={t('leaderboard.stats.yourRank')}
+                    label={t("leaderboard.stats.yourRank")}
                     c={c}
                   />
                 </View>
@@ -639,13 +748,23 @@ export function LeaderboardScreen() {
               {/* Your rank (if outside top 3 AND not in rest list) */}
               {showUserCard && (
                 <>
-                  <SectionLabel label={t('leaderboard.section.yourPosition')} c={c} t={t} />
-                  <YourRankCard entry={userEntry!} c={c} t={t} />
+                  <SectionLabel
+                    label={t("leaderboard.section.yourPosition")}
+                    c={c}
+                    t={t}
+                  />
+                  <YourRankCard entry={yourEntry!} c={c} t={t} />
                 </>
               )}
 
               {/* Rest header */}
-              {rest.length > 0 && <SectionLabel label={t('leaderboard.section.allParticipants')} c={c} t={t} />}
+              {rest.length > 0 && (
+                <SectionLabel
+                  label={t("leaderboard.section.allParticipants")}
+                  c={c}
+                  t={t}
+                />
+              )}
             </>
           }
           renderItem={({ item }) => <ListRow entry={item} c={c} t={t} />}
@@ -660,10 +779,10 @@ export function LeaderboardScreen() {
                   />
                 </View>
                 <Text style={[styles.emptyTitle, { color: c.text }]}>
-                  {t('leaderboard.empty.title')}
+                  {t("leaderboard.empty.title")}
                 </Text>
                 <Text style={[styles.emptySub, { color: c.textTertiary }]}>
-                  {t('leaderboard.empty.subtitle')}
+                  {t("leaderboard.empty.subtitle")}
                 </Text>
               </View>
             ) : null
