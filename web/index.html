@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#006239" />
     <title>AnnaDatha - A Question Collection Platform</title>
@@ -13,8 +17,15 @@
     <!-- Critical CSS inlined to avoid render-blocking stylesheet -->
     <style>
       /* Prevent FOUC during JS load */
-      *, *::before, *::after { box-sizing: border-box; }
-      body { margin: 0; background: hsl(var(--background)); }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: hsl(var(--background));
+      }
     </style>
 
     <!-- Preload the main entry bundle for fastest possible parse -->

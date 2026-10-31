@@ -6,13 +6,23 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiBase = env.VITE_API_BASE_URL || '/api/v1'
+  const isStaging = env.VITE_APP_ENV === 'staging'
+  const appName = isStaging ? 'AnnaDatha-Staging' : 'AnnaDatha'
 
   return {
     plugins: [
       react(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'maskable-icon.svg'],
+        includeAssets: [
+          'favicon.ico',
+          'favicon-16x16.png',
+          'favicon-32x32.png',
+          'apple-touch-icon-180x180.png',
+          'logo-192x192.png',
+          'android-chrome-512x512.png',
+          'maskable-icon.svg',
+        ],
         workbox: {
           // The entry bundle carries every language's translations (src/i18n/resources.ts, ~2.2 MB),
           // which exceeds Workbox's 2 MiB default and would fail the build. Raised so it is still
@@ -23,30 +33,37 @@ export default defineConfig(({ mode }) => {
           // (for example signed media links) must also reach the server, not the SPA shell.
           navigateFallbackDenylist: [/^\/raise-ticket\.html/, /^\/api\//],
         },
-              manifest: {
-        name: 'AnnaDatha',
-        short_name: 'AnnaDatha',
-        description: 'An question collection platform for Indian farmers',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'logo-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'android-chrome-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'maskable-icon.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
-        ]
-      }
+        manifest: {
+          id: '/',
+          name: appName,
+          short_name: appName,
+          description: isStaging
+            ? 'AnnaDatha staging — a question collection platform for Indian farmers'
+            : 'AnnaDatha — a question collection platform for Indian farmers',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          theme_color: '#006239',
+          background_color: '#ffffff',
+          icons: [
+            {
+              src: 'icon-192x192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: 'icon-512x512.png',
+              sizes: '512x512',
+              type: 'image/png'
+            },
+            {
+              src: 'maskable-icon.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
+            }
+          ]
+        }
       })
     ],
 
