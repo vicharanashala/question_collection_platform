@@ -40,7 +40,6 @@ export interface UserFilter {
 export interface LeaderboardEntry {
   id: string;
   name: string;
-  totalEarned: number;
   totalQuestions: number;
 }
 

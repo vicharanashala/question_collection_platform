@@ -7,7 +7,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -15,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { leaderboardApi, getErrorMessage } from "@/api/client";
 import { Card, CardContent } from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
-import { HelpCircle, Trophy, Medal, Star, Loader2, Users } from "lucide-react";
+import { HelpCircle, Info, Trophy, Medal, Star, Loader2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { LeaderboardEntry } from "@/types";
@@ -23,11 +22,6 @@ import type { LeaderboardEntry } from "@/types";
 // const FETCH_LIMIT = 100
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatINR(amount: number): string {
-  if (amount <= 0) return "₹0";
-  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
-}
 
 function getInitials(name?: string): string {
   if (!name) return "?";
@@ -470,23 +464,7 @@ export function PublicLeaderboardPage(): ReactNode {
     fetchLeaderboard(offset);
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // Sort
-  // ─────────────────────────────────────────────────────────────
-
-  const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => {
-      if (b.totalEarned !== a.totalEarned) {
-        return b.totalEarned - a.totalEarned;
-      }
-
-      if (b.totalQuestions !== a.totalQuestions) {
-        return b.totalQuestions - a.totalQuestions;
-      }
-
-      return a.rank - b.rank;
-    });
-  }, [entries]);
+  // Entries arrive already ranked by the server on approved question count, so no client-side sort.
 
   // ─────────────────────────────────────────────────────────────
   // Top 3
@@ -531,6 +509,11 @@ export function PublicLeaderboardPage(): ReactNode {
               ? `${total} ${t("leaderboard.participants")}`
               : t("leaderboard.loading")}
           </p>
+
+          <p className="mt-2 flex items-start gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
+            <Info className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>{t("leaderboard.rankingNote")}</span>
+          </p>
         </CardContent>
       </Card>
 
@@ -548,7 +531,7 @@ export function PublicLeaderboardPage(): ReactNode {
             </p>
           </CardContent>
         </Card>
-      ) : sortedEntries.length === 0 ? (
+      ) : entries.length === 0 ? (
         /* ───────────────────────────────────────────
            Empty state
         ─────────────────────────────────────────── */

@@ -53,12 +53,6 @@ function getMedal(medal: "gold" | "silver" | "bronze" | null) {
   return medal ? MEDALS[medal] : null;
 }
 
-function formatINR(amount: number) {
-  if (amount == null) return "—";
-  if (amount <= 0) return "₹0";
-  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
-}
-
 function getInitials(name?: string) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
@@ -669,6 +663,9 @@ export function LeaderboardScreen() {
               ? `${response.total} ${t("leaderboard.participants")}`
               : t("leaderboard.loading")}
           </Text>
+          <Text style={[styles.rankingNote, { color: c.textTertiary }]}>
+            {t("leaderboard.rankingNote")}
+          </Text>
         </View>
       </View>
 
@@ -818,6 +815,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
   headerSub: { fontSize: 12, fontWeight: "500", marginTop: 1 },
+  rankingNote: { fontSize: 11, marginTop: 4, lineHeight: 15 },
 
   statsRow: {
     flexDirection: "row",
