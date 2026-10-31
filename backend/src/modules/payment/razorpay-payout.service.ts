@@ -96,7 +96,7 @@ export class RazorpayPayoutService {
   }): Promise<CreateContactResult> {
     const { userId, phone, name } = params;
     if(!phone){
-      throw new Error('Phone number no there!!')
+      throw new Error('Phone number is required to create a Razorpay contact.')
     }
 
     try {

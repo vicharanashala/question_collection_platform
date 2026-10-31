@@ -397,7 +397,6 @@ export interface LeaderboardEntry {
   rank: number;
   userId: string;
   name: string;
-  totalEarned: number;
   totalQuestions: number;
   medal: 'gold' | 'silver' | 'bronze' | null;
   isCurrentUser: boolean;
@@ -406,6 +405,8 @@ export interface LeaderboardEntry {
 export interface LeaderboardResponse {
   entries: LeaderboardEntry[];
   userRank: number | null;
+  userTotalQuestions: number;
+  totalApprovedQuestions: number
   total: number;
 }
 
