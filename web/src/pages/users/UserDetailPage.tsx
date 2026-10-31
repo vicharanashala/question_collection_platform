@@ -39,9 +39,6 @@ import {
   FileText,
   Image,
   ChevronDown,
-  ScrollText,
-  ChevronRight,
-  ChevronLeft,
   Wallet,
   CreditCard,
   Building2,
@@ -56,7 +53,6 @@ import type {
   User as UserType,
   Question,
   QuestionStatus,
-  AuditLogEntry,
   PaymentDetail,
 } from "@/types";
 
@@ -440,13 +436,6 @@ export function UserDetailPage() {
     "unsuspend",
   );
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
-
-  // Audit history (super_admin only)
-  const [auditCollapsed, setAuditCollapsed] = useState(true);
-  const [auditEntries] = useState<AuditLogEntry[]>([]);
-  const [auditLoading] = useState(false);
-  const [auditPage, setAuditPage] = useState(1);
-  const AUDIT_PAGE_SIZE = 10;
 
   // Questions view state
   const [qView, setQView] = useState<"table" | "card">("table");

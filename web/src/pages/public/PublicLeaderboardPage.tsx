@@ -240,7 +240,7 @@ function ListRow({ entry }: { entry: LeaderboardEntry }) {
         </p>
         {isMe && (
           <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-            You
+            {t("leaderboard.you")}
           </p>
         )}
       </div>
@@ -391,7 +391,6 @@ export function PublicLeaderboardPage(): ReactNode {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const [userTotalQuestions, setUserTotalQuestions] = useState(0);
 
   const [totalApproved, setTotalApproved] = useState(0)
 
@@ -431,7 +430,6 @@ export function PublicLeaderboardPage(): ReactNode {
 
         setTotal(res.total);
         setUserRank(res.userRank);
-        setUserTotalQuestions(res.userTotalQuestions);
         setTotalApproved(res.totalApprovedQuestions ?? 0)
 
         // Move offset forward by the number actually returned
