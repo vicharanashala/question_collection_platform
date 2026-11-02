@@ -295,6 +295,12 @@ export interface WalletSummary {
   }
 }
 
+export interface WalletListSummary {
+  totalBalance: number
+  totalEarned: number
+  totalWithdrawn: number
+}
+
 export interface Transaction {
   id: string
   amount: number

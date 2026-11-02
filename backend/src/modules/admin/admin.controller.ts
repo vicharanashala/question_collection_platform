@@ -784,6 +784,15 @@ export class AdminController {
     return this.adminService.listAllWallets(dto);
   }
 
+  /** Aggregate balance / earned / withdrawn totals across all wallets matching the list filters */
+  @Get("wallets/summary")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  @Cacheable("admin_wallets_summary", 60)
+  async getWalletsSummary(@Query() dto: ListAllWalletsDto) {
+    return this.adminService.getWalletsSummary(dto);
+  }
+
   /** Get a single user's wallet + user details */
   @Get("wallets/user/:userId")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)

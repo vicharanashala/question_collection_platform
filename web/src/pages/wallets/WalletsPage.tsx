@@ -12,7 +12,7 @@ import {
   TrendingDown, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { WalletSummary } from '@/types'
+import type { WalletSummary, WalletListSummary } from '@/types'
 import { ExportMenu } from '@/components/ExportMenu'
 import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { TesterTag } from '@/components/TesterTag'
@@ -35,6 +35,11 @@ const WALLET_EXPORT_COLUMNS: ExportColumn<WalletSummary>[] = [
 export function WalletsPage() {
   const [wallets, setWallets] = useState<WalletSummary[]>([])
   const [total, setTotal] = useState(0)
+  const [summary, setSummary] = useState<WalletListSummary>({
+    totalBalance: 0,
+    totalEarned: 0,
+    totalWithdrawn: 0,
+  })
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -67,6 +72,12 @@ export function WalletsPage() {
       const params: Record<string, string | number> = { page: pageNum, limit }
       if (search) params.search = search
       if (tester) params.tester = tester
+      if (pageNum === 1) {
+        adminApi
+          .getWalletsSummary({ search: search || undefined, tester: tester || undefined })
+          .then(setSummary)
+          .catch(() => {})
+      }
       const res = await adminApi.getWallets(params)
       setWallets(pageNum === 1 ? res.items : (prev) => [...prev, ...res.items])
       setTotal(res.total)
@@ -118,10 +129,7 @@ export function WalletsPage() {
     setDetailWallet(null)
   }
 
-  // Aggregate totals
-  const totalBalance = wallets.reduce((s, w) => s + Number(w.balance), 0)
-  const totalEarned = wallets.reduce((s, w) => s + Number(w.totalEarned), 0)
-  const totalWithdrawn = wallets.reduce((s, w) => s + Number(w.totalWithdrawn), 0)
+  const { totalBalance, totalEarned, totalWithdrawn } = summary
 
   return (
     <div className="space-y-5">

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { MongoRepository } from '../../../abstractions/mongo.repository';
-import { IWalletRepository } from '../../IWallet.repository';
+import { IWalletRepository, WalletAdminSummary, WalletAdminSummaryFilter } from '../../IWallet.repository';
+import { TransactionSource, TransactionStatus, TransactionType } from '@/shared/classes/enums';
 // import { Wallet } from '../../../entities';
 import { toMongoFilter } from '../../../abstractions/mongo-utils';
 import { Wallet } from '@/shared/database/mongodb/schemas/wallet.schema';
@@ -64,4 +65,65 @@ export class MongoWalletRepository
 
   return Number(result?.total ?? 0);
 }
+
+  async getAdminSummary({ userId, ownerFilter }: WalletAdminSummaryFilter): Promise<WalletAdminSummary> {
+    const sumWhere = (type: TransactionType, source: TransactionSource) => ({
+      $sum: {
+        $cond: [{ $and: [{ $eq: ['$type', type] }, { $eq: ['$source', source] }] }, '$amount', 0],
+      },
+    });
+
+    const [result] = await this._model.aggregate([
+      { $match: { isDeleted: { $ne: true }, ...(userId ? { userId } : {}) } },
+      {
+        $lookup: {
+          from: 'users',
+          let: { uid: { $convert: { input: '$userId', to: 'objectId', onError: null, onNull: null } } },
+          pipeline: [
+            { $match: { $and: [{ $expr: { $eq: ['$_id', '$$uid'] } }, ownerFilter] } },
+            { $project: { _id: 1 } },
+          ],
+          as: 'owner',
+        },
+      },
+      { $match: { 'owner.0': { $exists: true } } },
+      {
+        $lookup: {
+          from: 'transactions',
+          let: { walletId: { $toString: '$_id' } },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$walletId', '$$walletId'] },
+                status: TransactionStatus.COMPLETED,
+                isDeleted: { $ne: true },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                earned: sumWhere(TransactionType.CREDIT, TransactionSource.REWARD),
+                withdrawn: sumWhere(TransactionType.DEBIT, TransactionSource.WITHDRAWAL),
+              },
+            },
+          ],
+          as: 'tx',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalBalance: { $sum: '$balance' },
+          totalEarned: { $sum: { $ifNull: [{ $arrayElemAt: ['$tx.earned', 0] }, 0] } },
+          totalWithdrawn: { $sum: { $ifNull: [{ $arrayElemAt: ['$tx.withdrawn', 0] }, 0] } },
+        },
+      },
+    ]);
+
+    return {
+      totalBalance: Number(result?.totalBalance ?? 0),
+      totalEarned: Number(result?.totalEarned ?? 0),
+      totalWithdrawn: Number(result?.totalWithdrawn ?? 0),
+    };
+  }
 }

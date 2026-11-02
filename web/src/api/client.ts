@@ -16,6 +16,7 @@ import type {
   ConfigItem,
   Withdrawal,
   WalletSummary,
+  WalletListSummary,
   Transaction,
   PaymentDetail,
   Notification,
@@ -859,6 +860,15 @@ export const adminApi = {
     const qs = new URLSearchParams(p).toString();
     return request<PaginatedResponse<WalletSummary>>(
       `/admin/wallets${qs ? `?${qs}` : ""}`,
+    );
+  },
+  getWalletsSummary: (params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<WalletListSummary>(
+      `/admin/wallets/summary${qs ? `?${qs}` : ""}`,
     );
   },
 

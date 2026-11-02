@@ -5133,6 +5133,23 @@ async getUserStats(dto: ListUserStatsDto) {
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
+  async getWalletsSummary(dto: ListAllWalletsDto) {
+    const ownerFilter: Record<string, unknown> = { isDeleted: { $ne: true } };
+    if (!dto.userId) {
+      if (dto.state) ownerFilter.state = dto.state;
+      if (dto.search) {
+        const escaped = dto.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = { $regex: escaped, $options: "i" };
+        ownerFilter.$or = [{ name: regex }, { mobileNumber: regex }];
+      }
+    }
+    Object.assign(ownerFilter, isTesterCondition(dto.tester));
+    if (dto.anveshanScope) {
+      ownerFilter.isAnveshanUser = dto.anveshanScope === "only" ? true : { $ne: true };
+    }
+    return this.walletRepo.getAdminSummary({ userId: dto.userId, ownerFilter });
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Section 9: Helpers
   // ─────────────────────────────────────────────────────────────
