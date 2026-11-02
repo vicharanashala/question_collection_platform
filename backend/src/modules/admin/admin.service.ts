@@ -5032,22 +5032,23 @@ async getUserStats(dto: ListUserStatsDto) {
       ...new Set(allWallets.map((w) => String(w.userId))),
     ].filter((id) => Types.ObjectId.isValid(id));
 
-    // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
-    // matching user (orphaned records) are excluded from both items and total.
-    const testerCondition = isTesterCondition(dto.tester);
-    const validWallets = allWallets.filter((w) => {
-      const owner = ownersById.get(w.userId);
-      if (!owner) return false;
-      if (dto.anveshanScope && !!owner.isAnveshanUser !== (dto.anveshanScope === 'only')) return false;
-      if (!testerCondition) return true;
-      return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
-    });
     // Strings, not ObjectId instances: Mongoose casts them, the repo doesn't mangle them.
     // The notDeleted filter drops deleted owners, so their wallets fall out as orphans below.
     const owners = ownerIds.length
       ? await this.userRepo.findAll({ _id: { $in: ownerIds }, ...notDeleted })
       : [];
     const ownersById = new Map(owners.map((u) => [String(u._id), u]));
+
+    // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
+    // matching user (orphaned records) are excluded from both items and total.
+    const testerCondition = isTesterCondition(dto.tester);
+    const validWallets = allWallets.filter((w) => {
+      const owner = ownersById.get(String(w.userId));
+      if (!owner) return false;
+      if (dto.anveshanScope && !!owner.isAnveshanUser !== (dto.anveshanScope === 'only')) return false;
+      if (!testerCondition) return true;
+      return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
+    });
 
     // Mirrors the old inner join: wallets with no (non-deleted) user are excluded from items and total
 
