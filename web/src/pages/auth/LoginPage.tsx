@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type KeyboardEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ANVESHAN_TAGLINE } from "@/constants/public";
 import { motion, AnimatePresence } from "framer-motion";
-import { authApi, getErrorMessage } from "@/api/client";
+import { authApi, getErrorMessage, setRegistrationToken } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -426,15 +426,18 @@ export function LoginPage() {
     const res = await authApi.verifyOtp(mobile, cleaned);
 
     if ("requiresRegistration" in res && res.requiresRegistration) {
+      if (res.tempToken) {
+        setRegistrationToken(res.tempToken);
+      }
       if (res.anveshanPhaseInfo && !res.anveshanPhaseInfo.eligible) {
         navigate("/home/anveshan-phase-gate", {
-          state: { ...res.anveshanPhaseInfo, mobileNumber: mobile },
+          state: { ...res.anveshanPhaseInfo, mobileNumber: mobile, tempToken: res.tempToken },
           replace: true,
         });
         return;
       }
       if (res.role === "user") {
-        navigate("/home", { state: { mobileNumber: mobile }, replace: true });
+        navigate("/home", { state: { mobileNumber: mobile, tempToken: res.tempToken }, replace: true });
       } else {
         toast.error(
           "Your account is not yet activated. Please contact your administrator.",

@@ -97,6 +97,31 @@ function setTokens(access: string, refresh: string) {
   localStorage.setItem("refresh_token", refresh);
 }
 
+export function getRegistrationToken(): string | null {
+  return (
+    sessionStorage.getItem("registration_token") ??
+    localStorage.getItem("registration_token")
+  );
+}
+
+export function setRegistrationToken(token: string): void {
+  try {
+    sessionStorage.setItem("registration_token", token);
+    localStorage.setItem("registration_token", token);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearRegistrationToken(): void {
+  try {
+    sessionStorage.removeItem("registration_token");
+    localStorage.removeItem("registration_token");
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 // ─── In-flight request deduplication ──────────────────────────────────────
 
 const inflightRequests = new Map<string, Promise<unknown>>();
@@ -483,18 +508,21 @@ export const authApi = {
     volunteerCropType?: string;
     languagePreference: string;
     consentGiven: boolean;
-  }) =>
-    request<{
+  }, tempToken?: string) => {
+    const regToken = tempToken || getRegistrationToken();
+    return request<{
       tokens: { accessToken: string; refreshToken: string; expiresIn: number };
       user: AuthUser;
     }>(
       "/auth/register",
       {
         method: "POST",
+        headers: regToken ? { Authorization: `Bearer ${regToken}` } : {},
         body: JSON.stringify(body),
       },
       false,
-    ),
+    );
+  },
 
   /** Check whether a username is available. */
   checkUsername: (username: string) =>

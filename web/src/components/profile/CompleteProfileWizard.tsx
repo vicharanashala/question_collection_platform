@@ -17,7 +17,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { authApi, lgdApi, getErrorMessage } from "@/api/client";
+import { authApi, lgdApi, getErrorMessage, clearRegistrationToken } from "@/api/client";
 import type {
   LgdDistrict,
   LgdKvk,
@@ -1815,6 +1815,7 @@ export function CompleteProfileWizard({
       }
       const res = await authApi.register(payload);
       clearProfileDraft();
+      clearRegistrationToken();
       login(res.tokens, res.user);
       window.location.href = "/home/verification-pending";
     } catch (err) {
