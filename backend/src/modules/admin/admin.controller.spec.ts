@@ -40,6 +40,7 @@ const mockAdminService = () => ({
   listRewardLogs: jest.fn(),
   getFraudStats: jest.fn(),
   listWithdrawals: jest.fn(),
+  getWalletsSummary: jest.fn(),
   processWithdrawal: jest.fn(),
   exportData: jest.fn(),
 });
@@ -381,6 +382,25 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
       const result = await controller.getStats({} as any) as any;
 
       expect(result.dashboard.totalUsers).toBe(500);
+    });
+  });
+
+  describe('GET /admin/wallets/summary', () => {
+    it('returns the totals for the requested filters', async () => {
+      const summary = {
+        totalWallets: 3,
+        totalBalance: 10,
+        totalDistributed: 15,
+        totalWithdrawn: 5,
+        appliedFilters: { tester: 'exclude' },
+        isFiltered: true,
+      };
+      service.getWalletsSummary.mockResolvedValue(summary);
+
+      const result = await controller.getWalletsSummary({ tester: 'exclude' });
+
+      expect(service.getWalletsSummary).toHaveBeenCalledWith({ tester: 'exclude' });
+      expect(result).toEqual(summary);
     });
   });
 

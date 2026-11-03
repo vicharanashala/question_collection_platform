@@ -16,6 +16,7 @@ import type {
   ConfigItem,
   Withdrawal,
   WalletSummary,
+  WalletTotals,
   Transaction,
   PaymentDetail,
   Notification,
@@ -95,6 +96,31 @@ function getRefreshToken(): string | null {
 function setTokens(access: string, refresh: string) {
   localStorage.setItem("access_token", access);
   localStorage.setItem("refresh_token", refresh);
+}
+
+export function getRegistrationToken(): string | null {
+  return (
+    sessionStorage.getItem("registration_token") ??
+    localStorage.getItem("registration_token")
+  );
+}
+
+export function setRegistrationToken(token: string): void {
+  try {
+    sessionStorage.setItem("registration_token", token);
+    localStorage.setItem("registration_token", token);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearRegistrationToken(): void {
+  try {
+    sessionStorage.removeItem("registration_token");
+    localStorage.removeItem("registration_token");
+  } catch {
+    // Ignore storage errors
+  }
 }
 
 // ─── In-flight request deduplication ──────────────────────────────────────
@@ -188,6 +214,7 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   "/admin/users/stats",
   "/admin/withdrawals",
   "/admin/wallets",
+  "/admin/wallets/summary",
   "/admin/questions/queue",
   "/questions",
   "/agri-entities/all",
@@ -483,18 +510,21 @@ export const authApi = {
     volunteerCropType?: string;
     languagePreference: string;
     consentGiven: boolean;
-  }) =>
-    request<{
+  }, tempToken?: string) => {
+    const regToken = tempToken || getRegistrationToken();
+    return request<{
       tokens: { accessToken: string; refreshToken: string; expiresIn: number };
       user: AuthUser;
     }>(
       "/auth/register",
       {
         method: "POST",
+        headers: regToken ? { Authorization: `Bearer ${regToken}` } : {},
         body: JSON.stringify(body),
       },
       false,
-    ),
+    );
+  },
 
   /** Check whether a username is available. */
   checkUsername: (username: string) =>
@@ -645,7 +675,7 @@ export const adminApi = {
       Object.entries(params).filter(([, v]) => v),
     ) as Record<string, string>;
     const qs = new URLSearchParams(p).toString();
-    return request<UserStats>(`/admin/users/stats${qs ? `?${qs}` : ""}`);
+    return request<UserStats>(`/admin/users/stats${qs ? `?${qs}` : ""}`, {}, false);
   },
 
   getUserDetail: (userId: string | undefined) =>
@@ -859,6 +889,16 @@ export const adminApi = {
     const qs = new URLSearchParams(p).toString();
     return request<PaginatedResponse<WalletSummary>>(
       `/admin/wallets${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getWalletsSummary: (params: Record<string, string | undefined> = {}) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<WalletTotals>(
+      `/admin/wallets/summary${qs ? `?${qs}` : ""}`,
     );
   },
 

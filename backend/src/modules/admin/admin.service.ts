@@ -52,6 +52,7 @@ import {
   ListUserWithdrawalsDto,
   AdjustWalletDto,
   ListAllWalletsDto,
+  WalletScopeDto,
 } from "./dto";
 import { ConfigService } from "@nestjs/config";
 import { WalletsService } from "../wallets/wallets.service";
@@ -77,10 +78,12 @@ import {
   IReportRepository,
   IAppFeedbackRepository,
   IAnveshanAnswerRepository,
+  AdminWalletScope,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
 import { Types } from "mongoose";
+import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
 import {
@@ -427,7 +430,8 @@ async getUserStats(dto: ListUserStatsDto) {
       sortBy = "createdAt",
       sortOrder = "DESC",
     } = dto;
-    const filter: Record<string, unknown> = {};
+    // The admin list shows deleted users too, so they can be restored.
+    const filter: Record<string, unknown> = { isDeleted: INCLUDE_DELETED };
     if (state) filter.state = state;
     if (category) filter.category = category;
     if (status) filter.verificationStatus = status;
@@ -632,7 +636,7 @@ async getUserStats(dto: ListUserStatsDto) {
   // so a deleted user's page still opens (with the Restore button).
   const user = await this.userRepo.findOne({
     _id: userId, // plain string: Mongoose casts it, the repo won't mangle it
-    isDeleted: { $in: [true, false, null] },
+    isDeleted: INCLUDE_DELETED,
   });
   if (!user) throw new NotFoundException("User not found");
 
@@ -869,7 +873,7 @@ async getUserStats(dto: ListUserStatsDto) {
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException("User not found");
-    if (user.isDeleted) throw new Error("Deleted users can not be verified..");
+    if (user.isDeleted) throw new Error("Deleted users cannot be verified.");
     const oldStatus = user.verificationStatus;
     if (oldStatus === VerificationStatus.VERIFIED) {
       return {
@@ -4589,7 +4593,7 @@ async getUserStats(dto: ListUserStatsDto) {
   async getUserWallet(userId: string) {
     const wallet = await this.walletRepo.findOne({ userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
-    if (wallet.isDeleted) throw new Error("Wallet is deleted for this user...");
+    if (wallet.isDeleted) throw new Error("Wallet is deleted for this user.");
 
     const [user, { totalEarned, totalWithdrawn }] = await Promise.all([
       // replaces relations: ["user"]; there are no joins in Mongo
@@ -4994,142 +4998,46 @@ async getUserStats(dto: ListUserStatsDto) {
   }
 
   async listAllWallets(dto: ListAllWalletsDto) {
-    const {
-      page = 1,
-      limit = 50,
-      userId,
-      search,
-      state,
-      sortBy = "createdAt",
-      sortOrder = "DESC",
-    } = dto;
+    const { page = 1, limit = 50, sortBy = "createdAt", sortOrder = "DESC" } = dto;
 
-    const notDeleted = { isDeleted: { $ne: true } };
+    const { items, total } = await this.walletRepo.findAdminPage(
+      this.toWalletScope(dto),
+      { page, limit, sortBy, sortOrder },
+    );
 
-    let ownerIdFilter: string[] | undefined;
-    if (userId) {
-      ownerIdFilter = [userId];
-    } else if (search || state) {
-      const userFilter: Record<string, unknown> = { ...notDeleted };
-      if (state) userFilter.state = state;
-      if (search) {
-        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const regex = { $regex: escaped, $options: "i" };
-        userFilter.$or = [{ name: regex }, { mobileNumber: regex }];
-      }
-      const matchedUsers = await this.userRepo.findAll(userFilter);
-      ownerIdFilter = matchedUsers.map((u) => String(u._id));
-      if (ownerIdFilter.length === 0) {
-        return { items: [], total: 0, page, limit, pages: 0 };
-      }
-    }
+    return {
+      items: items.map(({ owner, ...wallet }) => ({ ...wallet, user: owner })),
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
 
-    const walletFilter: Record<string, unknown> = { ...notDeleted };
-    if (ownerIdFilter) walletFilter.userId = { $in: ownerIdFilter };
+  /** Wallet count and money totals across every wallet the filters cover, plus the filters that were applied. */
+  async getWalletsSummary(dto: WalletScopeDto) {
+    const scope = this.toWalletScope(dto);
+    const totals = await this.walletRepo.getAdminTotals(scope);
+    const appliedFilters = Object.fromEntries(
+      Object.entries(scope).filter(([, value]) => value !== undefined),
+    ) as AdminWalletScope;
 
-    const allWallets = await this.walletRepo.findAll(walletFilter);
-    const ownerIds = [
-      ...new Set(allWallets.map((w) => String(w.userId))),
-    ].filter((id) => Types.ObjectId.isValid(id));
+    return {
+      ...totals,
+      appliedFilters,
+      isFiltered: Object.keys(appliedFilters).length > 0,
+    };
+  }
 
-    // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
-    // matching user (orphaned records) are excluded from both items and total.
-    const testerCondition = isTesterCondition(dto.tester);
-    const validWallets = allWallets.filter((w) => {
-      const owner = ownersById.get(w.userId);
-      if (!owner) return false;
-      if (dto.anveshanScope && !!owner.isAnveshanUser !== (dto.anveshanScope === 'only')) return false;
-      if (!testerCondition) return true;
-      return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
-    });
-    // Strings, not ObjectId instances: Mongoose casts them, the repo doesn't mangle them.
-    // The notDeleted filter drops deleted owners, so their wallets fall out as orphans below.
-    const owners = ownerIds.length
-      ? await this.userRepo.findAll({ _id: { $in: ownerIds }, ...notDeleted })
-      : [];
-    const ownersById = new Map(owners.map((u) => [String(u._id), u]));
-
-    // Mirrors the old inner join: wallets with no (non-deleted) user are excluded from items and total
-
-    const dir = sortOrder === "ASC" ? 1 : -1;
-    validWallets.sort((a, b) => {
-      const av =
-        sortBy === "balance"
-          ? Number(a.balance)
-          : new Date(a.createdAt).getTime();
-      const bv =
-        sortBy === "balance"
-          ? Number(b.balance)
-          : new Date(b.createdAt).getTime();
-      return (av - bv) * dir;
-    });
-
-    const total = validWallets.length;
-    const pageWallets = validWallets.slice((page - 1) * limit, page * limit);
-    const walletIds = pageWallets.map((w) => String(w._id));
-
-    const transactions = walletIds.length
-      ? await this.transactionRepo.findAll({
-          walletId: { $in: walletIds },
-          ...notDeleted,
-        })
-      : [];
-
-    const sumsByWallet = new Map<
-      string,
-      { totalEarned: number; totalWithdrawn: number }
-    >();
-    for (const tx of transactions) {
-      const key = String(tx.walletId);
-      const entry = sumsByWallet.get(key) ?? {
-        totalEarned: 0,
-        totalWithdrawn: 0,
-      };
-      if (
-        tx.type === TransactionType.CREDIT &&
-        tx.source === TransactionSource.REWARD &&
-        tx.status === TransactionStatus.COMPLETED
-      ) {
-        entry.totalEarned += Number(tx.amount);
-      }
-      if (
-        tx.type === TransactionType.DEBIT &&
-        tx.source === TransactionSource.WITHDRAWAL &&
-        tx.status === TransactionStatus.COMPLETED
-      ) {
-        entry.totalWithdrawn += Number(tx.amount);
-      }
-      sumsByWallet.set(key, entry);
-    }
-
-    const items = pageWallets.map((w) => {
-      const user = ownersById.get(String(w.userId))!;
-      const sums = sumsByWallet.get(String(w._id)) ?? {
-        totalEarned: 0,
-        totalWithdrawn: 0,
-      };
-      return {
-        id: String(w._id),
-        userId: String(user._id),
-        balance: Number(w.balance),
-        totalEarned: sums.totalEarned,
-        totalWithdrawn: sums.totalWithdrawn,
-        user: {
-          id: String(user._id),
-          name: user.name,
-          mobileNumber: user.mobileNumber,
-          state: user.state,
-          district: user.district,
-          category: user.category,
-          role: user.role,
-          verificationStatus: user.verificationStatus,
-          createdAt: user.createdAt,
-          isTester: !!user.is_tester,
-        },
-      };
-    });
-
-    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  // Normalizes the wallet filters so the list and the summary read them the same way.
+  private toWalletScope(dto: WalletScopeDto): AdminWalletScope {
+    return {
+      userId: dto.userId || undefined,
+      search: dto.search?.trim() || undefined,
+      state: dto.state || undefined,
+      tester: dto.tester,
+      anveshanScope: dto.anveshanScope,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -5248,41 +5156,55 @@ async getUserStats(dto: ListUserStatsDto) {
       anveshanAnswers,
       transactions,
       paymentLogs,
-    ] = await Promise.all([
-      this.questionRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.walletRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.withdrawalRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.paymentDetailRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.notificationRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.finalQuestionRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.agriEntityRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.reportRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.feedbackRepo.updateMany({ userId, ...notDeleted }, mark),
-      this.anveshanAnswerRepo.updateMany({ userId, ...notDeleted }, mark),
-      walletIds.length
+    ] = await this.mongoTransactionService.runInTransaction(async (session) => {
+      // Sequential on purpose: a transaction session must not run operations in parallel.
+      const operations: Array<() => Promise<unknown>> = [
+      () => this.questionRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.walletRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.withdrawalRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.paymentDetailRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.notificationRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.finalQuestionRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.agriEntityRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.reportRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.feedbackRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.anveshanAnswerRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () =>
+        walletIds.length
         ? this.transactionRepo.updateMany(
             { walletId: { $in: walletIds }, ...notDeleted },
             mark,
+            session,
           )
         : none,
-      withdrawalIds.length
+      () =>
+        withdrawalIds.length
         ? this.paymentLogRepo.updateMany(
             { withdrawalRequestId: { $in: withdrawalIds }, ...notDeleted },
             mark,
+            session,
           )
         : none,
-    ]);
+      ];
+      const results: unknown[] = [];
+      for (const run of operations) results.push(await run());
 
-    await this.userRepo.update(userId, {
-      ...mark,
-      tokenVersion: (user.tokenVersion ?? 0) + 1,
-      otpHash: null,
-      otpExpiresAt: null,
-      expoPushToken: null,
+      await this.userRepo.update(
+        userId,
+        {
+          ...mark,
+          tokenVersion: (user.tokenVersion ?? 0) + 1,
+          otpHash: null,
+          otpExpiresAt: null,
+          expoPushToken: null,
+        },
+        session,
+      );
+      return results;
     });
 
     return {
-      message: "User deleted successfully!!",
+      message: "User deleted successfully.",
       userId,
       deleted: {
         user: 1,
@@ -5310,6 +5232,17 @@ async getUserStats(dto: ListUserStatsDto) {
   // Explicit isDeleted key bypasses the default "hide deleted" filter
   const user = await this.userRepo.findOne({ _id: userId, isDeleted: true });
   if (!user) throw new NotFoundException("Deleted user not found");
+
+  if (user.mobileNumber) {
+    const activeUser = await this.userRepo.findOne({
+      mobileNumber: user.mobileNumber,
+    });
+    if (activeUser) {
+      throw new BadRequestException(
+        "Another active user already uses this mobile number.",
+      );
+    }
+  }
 
   const stamp = user.deletedAt; // same value deleteUser put on every related record
   const deletedWithUser = (extra: Record<string, unknown>) => ({
@@ -5352,14 +5285,14 @@ async getUserStats(dto: ListUserStatsDto) {
   // User LAST, so a failed run above can simply be retried (the stamp is still on the user)
   await this.userRepo.update(userId, unmark);
 
-  return { message: "User restored successfully!!", userId };
+  return { message: "User restored successfully.", userId };
 }
 
 async getUserAuditSnapshot(userId: string) {
   if (!Types.ObjectId.isValid(userId)) return null;
   const u = await this.userRepo.findOne({
     _id: userId,
-    isDeleted: { $in: [true, false, null] },
+    isDeleted: INCLUDE_DELETED,
   });
   if (!u) return null;
   return {

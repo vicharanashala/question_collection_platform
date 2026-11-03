@@ -8,6 +8,7 @@ import { SmsService } from './sms.service';
 import { SmsBsnlBrpsService } from './sms-bsnl-brps.service';
 import { BrpsTokenService } from './brps-token.service';
 import { JwtStrategy } from '../../shared/middleware/guards/jwt.strategy';
+import { RegistrationAuthGuard } from '../../shared/middleware/guards/registration-auth.guard';
 import { AdminModule } from '../admin/admin.module';
 import { CacheModule } from '../../shared/database/cache/cache.module';
 import { DbModule } from '../../shared/database/db.module';
@@ -32,7 +33,7 @@ import { SessionModule } from '../session/session.module';
     SessionModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy],
-  exports: [AuthService, JwtModule, PassportModule],
+  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy, RegistrationAuthGuard],
+  exports: [AuthService, JwtModule, PassportModule, RegistrationAuthGuard],
 })
 export class AuthModule {}

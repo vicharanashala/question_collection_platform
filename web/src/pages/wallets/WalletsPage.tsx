@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/button'
@@ -12,11 +12,12 @@ import {
   TrendingDown, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { WalletSummary } from '@/types'
+import type { WalletScopeFilters, WalletSummary, WalletTotals } from '@/types'
 import { ExportMenu } from '@/components/ExportMenu'
 import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { TesterTag } from '@/components/TesterTag'
 import type { ExportColumn } from '@/lib/exportData'
+import { useTesterScope } from '@/lib/testerMode'
 
 const WALLET_EXPORT_COLUMNS: ExportColumn<WalletSummary>[] = [
   { header: 'Name', value: (w) => w.user.name },
@@ -30,11 +31,92 @@ const WALLET_EXPORT_COLUMNS: ExportColumn<WalletSummary>[] = [
   { header: 'Total Withdrawn (INR)', value: (w) => Number(w.totalWithdrawn) },
 ]
 
+type FilterChipKey = 'search' | 'state' | 'user' | 'tester' | 'anveshan'
+
+interface FilterChip {
+  key: FilterChipKey
+  label: string
+  /** True when the filter belongs to this page; header mode filters are changed from the header. */
+  removable: boolean
+}
+
+const SCOPE_LABELS: Record<'only' | 'exclude', { tester: string; anveshan: string }> = {
+  only: { tester: 'Testers only', anveshan: 'Anveshan users only' },
+  exclude: { tester: 'Testers excluded', anveshan: 'Anveshan users excluded' },
+}
+
+// Chips for the filters the server reports it applied to the totals.
+function buildFilterChips(filters: WalletScopeFilters, testerFromHeader: boolean): FilterChip[] {
+  const chips: FilterChip[] = []
+  if (filters.search) chips.push({ key: 'search', label: `Search: "${filters.search}"`, removable: true })
+  if (filters.state) chips.push({ key: 'state', label: `State: ${filters.state}`, removable: false })
+  if (filters.userId) chips.push({ key: 'user', label: `User: ${filters.userId}`, removable: false })
+  if (filters.tester) {
+    const label = SCOPE_LABELS[filters.tester].tester
+    chips.push({ key: 'tester', label: testerFromHeader ? `Mode: ${label}` : label, removable: !testerFromHeader })
+  }
+  if (filters.anveshanScope) {
+    chips.push({ key: 'anveshan', label: `Mode: ${SCOPE_LABELS[filters.anveshanScope].anveshan}`, removable: false })
+  }
+  return chips
+}
+
+interface AppliedFilterChipsProps {
+  chips: FilterChip[]
+  onRemove: (key: FilterChipKey) => void
+  onClearAll: () => void
+}
+
+function AppliedFilterChips({ chips, onRemove, onClearAll }: AppliedFilterChipsProps) {
+  if (chips.length === 0) return null
+  const hasRemovable = chips.some((chip) => chip.removable)
+  return (
+    <div className="flex flex-wrap items-center gap-2" aria-label="Applied filters">
+      <span className="text-xs text-muted-foreground">Filtered by:</span>
+      {chips.map((chip) => (
+        <Badge
+          key={chip.key}
+          variant="secondary"
+          className="gap-1 text-[11px] sm:text-xs"
+          title={chip.removable ? undefined : 'Change this from the mode selector in the header'}
+        >
+          {chip.label}
+          {chip.removable && (
+            <button
+              type="button"
+              onClick={() => onRemove(chip.key)}
+              className="rounded-full hover:text-foreground"
+              aria-label={`Remove filter ${chip.label}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </Badge>
+      ))}
+      {hasRemovable && (
+        <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={onClearAll}>
+          Clear filters
+        </Button>
+      )}
+    </div>
+  )
+}
+
+function StatValue({ value, className }: { value: number | undefined; className: string }) {
+  if (value === undefined) {
+    return <span className="mt-1 block h-8 w-28 rounded bg-muted animate-pulse" aria-label="Loading" />
+  }
+  return <p className={cn('mt-1 text-xl sm:text-2xl font-extrabold tabular-nums', className)}>₹{formatINRFull(value)}</p>
+}
+
 // ─── Main Wallets Page ───────────────────────────────────────────────────────
 
 export function WalletsPage() {
   const [wallets, setWallets] = useState<WalletSummary[]>([])
   const [total, setTotal] = useState(0)
+  const [totals, setTotals] = useState<WalletTotals | null>(null)
+  const latestTotalsRequest = useRef(0)
+  const testerFromHeader = useTesterScope() !== 'all'
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -61,8 +143,21 @@ export function WalletsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Totals cover every wallet matching the filters, so they are fetched once per filter change, not per page.
+  const fetchTotals = useCallback(async (search: string, tester: TesterFilterValue) => {
+    const requestId = ++latestTotalsRequest.current
+    setTotals(null)
+    try {
+      const res = await adminApi.getWalletsSummary({ search: search || undefined, tester: tester || undefined })
+      if (requestId === latestTotalsRequest.current) setTotals(res)
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to load wallet totals'))
+    }
+  }, [])
+
   const fetchWallets = useCallback(async (pageNum = 1, search = searchQuery, tester = testerFilter) => {
     setLoading(true)
+    if (pageNum === 1) void fetchTotals(search, tester)
     try {
       const params: Record<string, string | number> = { page: pageNum, limit }
       if (search) params.search = search
@@ -87,7 +182,7 @@ export function WalletsPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [searchQuery, testerFilter])
+  }, [searchQuery, testerFilter, fetchTotals])
 
   useEffect(() => {
     fetchWallets(1, searchQuery)
@@ -118,10 +213,39 @@ export function WalletsPage() {
     setDetailWallet(null)
   }
 
-  // Aggregate totals
-  const totalBalance = wallets.reduce((s, w) => s + Number(w.balance), 0)
-  const totalEarned = wallets.reduce((s, w) => s + Number(w.totalEarned), 0)
-  const totalWithdrawn = wallets.reduce((s, w) => s + Number(w.totalWithdrawn), 0)
+  function clearSearch() {
+    setSearchInput('')
+    setSearchQuery('')
+    setPage(1)
+    setWallets([])
+    fetchWallets(1, '')
+  }
+
+  function changeTesterFilter(value: TesterFilterValue) {
+    setTesterFilter(value)
+    setPage(1)
+    setWallets([])
+    fetchWallets(1, searchQuery, value)
+  }
+
+  function clearPageFilters() {
+    setSearchInput('')
+    setSearchQuery('')
+    setTesterFilter('')
+    setPage(1)
+    setWallets([])
+    fetchWallets(1, '', '')
+  }
+
+  function removeFilter(key: FilterChipKey) {
+    if (key === 'search') clearSearch()
+    if (key === 'tester') changeTesterFilter('')
+  }
+
+  const filterChips = totals ? buildFilterChips(totals.appliedFilters, testerFromHeader) : []
+  const scopeCaption = totals
+    ? `Across ${totals.isFiltered ? '' : 'all '}${totals.totalWallets.toLocaleString('en-IN')}${totals.isFiltered ? ' filtered' : ''} wallet${totals.totalWallets === 1 ? '' : 's'}`
+    : 'Across all wallets'
 
   return (
     <div className="space-y-5">
@@ -150,6 +274,8 @@ export function WalletsPage() {
         </div>
       </div>
 
+      <AppliedFilterChips chips={filterChips} onRemove={removeFilter} onClearAll={clearPageFilters} />
+
       {/* Summary stat cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="shadow-xs">
@@ -157,10 +283,8 @@ export function WalletsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Total Distributed</p>
-                <p className="mt-1 text-xl sm:text-2xl font-extrabold text-success tabular-nums">
-                  ₹{formatINRFull(totalEarned)}
-                </p>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Across all wallets</p>
+                <StatValue value={totals?.totalDistributed} className="text-success" />
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">{scopeCaption}</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-success" />
@@ -174,10 +298,8 @@ export function WalletsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Total Withdrawn</p>
-                <p className="mt-1 text-xl sm:text-2xl font-extrabold text-destructive tabular-nums">
-                  ₹{formatINRFull(totalWithdrawn)}
-                </p>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">All withdrawal payouts</p>
+                <StatValue value={totals?.totalWithdrawn} className="text-destructive" />
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Completed withdrawal payouts</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center">
                 <TrendingDown className="h-5 w-5 text-destructive" />
@@ -191,9 +313,7 @@ export function WalletsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Active Balance</p>
-                <p className="mt-1 text-xl sm:text-2xl font-extrabold text-primary tabular-nums">
-                  ₹{formatINRFull(totalBalance)}
-                </p>
+                <StatValue value={totals?.totalBalance} className="text-primary" />
                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Available in wallets</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -218,12 +338,7 @@ export function WalletsPage() {
         <div className="w-44 shrink-0">
           <TesterFilter
             value={testerFilter}
-            onChange={(value) => {
-              setTesterFilter(value)
-              setPage(1)
-              setWallets([])
-              fetchWallets(1, searchQuery, value)
-            }}
+            onChange={changeTesterFilter}
           />
         </div>
         <Button type="submit" size="sm">Search</Button>
@@ -232,13 +347,7 @@ export function WalletsPage() {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              setSearchInput('')
-              setSearchQuery('')
-              setPage(1)
-              setWallets([])
-              fetchWallets(1, '')
-            }}
+            onClick={clearSearch}
           >
             <X className="h-4 w-4 mr-1" />
             Clear

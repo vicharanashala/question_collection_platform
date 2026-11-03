@@ -1,8 +1,5 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { IS_SKIP_JWT_KEY } from '../../../modules/auth/decorators/skip-jwt-auth.decorator';
 
 /**
  * Guard that accepts the short-lived registration `tempToken` issued by
@@ -12,29 +9,15 @@ import { IS_SKIP_JWT_KEY } from '../../../modules/auth/decorators/skip-jwt-auth.
  *
  * On success, sets `request.user = { id, mobileNumber }`.
  *
- * Used by the `/auth/register/draft` endpoints that let the wizard
- * save partial profile fields while the user is still mid-registration.
+ * Used by endpoints that require a valid registration token (e.g. POST /auth/register).
  */
 @Injectable()
 export class RegistrationAuthGuard {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly reflector: Reflector,
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
-    const isSkipJwt = this.reflector.getAllAndOverride<boolean>(IS_SKIP_JWT_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isSkipJwt) return true;
-
     const req = context.switchToHttp().getRequest<{
       headers: Record<string, string | undefined>;
       user?: unknown;

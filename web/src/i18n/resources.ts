@@ -1268,6 +1268,7 @@ const resources = {
       },
       "leaderboard": {
         "title": "Leaderboard",
+        "rankingNote": "Ranked by the number of your questions approved by our experts. If two users have the same count, the one who joined earlier ranks higher. Earnings do not affect your rank.",
         "stats": {
           "totalRewards": "Total Rewards",
           "approvedQs": "Approved Qs",
