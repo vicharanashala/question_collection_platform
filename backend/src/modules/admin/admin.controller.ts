@@ -32,6 +32,7 @@ import {
   CreateUserDto,
   SuspendUserDto,
   ListAllWalletsDto,
+  WalletScopeDto,
   ListUserTransactionsDto,
   ListUserWithdrawalsDto,
   AdjustWalletDto,
@@ -784,6 +785,15 @@ export class AdminController {
     return this.adminService.listAllWallets(dto);
   }
 
+  /** Wallet count and money totals across every wallet matching the filters, for the summary cards */
+  @Get("wallets/summary")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @HttpCode(HttpStatus.OK)
+  @Cacheable("admin_wallets_summary", 60)
+  async getWalletsSummary(@Query() dto: WalletScopeDto) {
+    return this.adminService.getWalletsSummary(dto);
+  }
+
   /** Get a single user's wallet + user details */
   @Get("wallets/user/:userId")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
@@ -821,7 +831,7 @@ export class AdminController {
   @Post("wallets/adjust")
   @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate("wallet:*")
+  @CacheInvalidate("wallet:*", "admin_wallets*")
   async adjustWalletBalance(
     @Body() dto: AdjustWalletDto,
     @Req() req: AuthenticatedRequest,
@@ -868,7 +878,7 @@ export class AdminController {
   @Post("withdrawals/:id/process")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate("wallet:*")
+  @CacheInvalidate("wallet:*", "admin_wallets*")
   async processWithdrawal(
     @Param("id") id: string,
     @Body() dto: ProcessWithdrawalDto,
@@ -898,7 +908,7 @@ export class AdminController {
   @Post("withdrawals/:id/retry")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate("wallet:*")
+  @CacheInvalidate("wallet:*", "admin_wallets*")
   async retryWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -921,7 +931,7 @@ export class AdminController {
   @Post("withdrawals/:id/retry-refund")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate("wallet:*")
+  @CacheInvalidate("wallet:*", "admin_wallets*")
   async retryFailedWithdrawal(
     @Param("id") id: string,
     @Req() req: AuthenticatedRequest,
@@ -940,7 +950,7 @@ export class AdminController {
   @Post("withdrawals/:id/fail")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
-  @CacheInvalidate("wallet:*")
+  @CacheInvalidate("wallet:*", "admin_wallets*")
   async markWithdrawalFailed(
     @Param("id") id: string,
     @Body() dto: MarkWithdrawalFailedDto,

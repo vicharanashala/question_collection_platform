@@ -52,6 +52,7 @@ import {
   ListUserWithdrawalsDto,
   AdjustWalletDto,
   ListAllWalletsDto,
+  WalletScopeDto,
 } from "./dto";
 import { ConfigService } from "@nestjs/config";
 import { WalletsService } from "../wallets/wallets.service";
@@ -77,6 +78,7 @@ import {
   IReportRepository,
   IAppFeedbackRepository,
   IAnveshanAnswerRepository,
+  AdminWalletScope,
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
@@ -4996,144 +4998,46 @@ async getUserStats(dto: ListUserStatsDto) {
   }
 
   async listAllWallets(dto: ListAllWalletsDto) {
-    const {
-      page = 1,
-      limit = 50,
-      userId,
-      search,
-      state,
-      sortBy = "createdAt",
-      sortOrder = "DESC",
-    } = dto;
+    const { page = 1, limit = 50, sortBy = "createdAt", sortOrder = "DESC" } = dto;
 
-    const notDeleted = { isDeleted: { $ne: true } };
+    const { items, total } = await this.walletRepo.findAdminPage(
+      this.toWalletScope(dto),
+      { page, limit, sortBy, sortOrder },
+    );
 
-    let ownerIdFilter: string[] | undefined;
-    if (userId) {
-      ownerIdFilter = [userId];
-    } else if (search || state) {
-      const userFilter: Record<string, unknown> = { ...notDeleted };
-      if (state) userFilter.state = state;
-      if (search) {
-        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const regex = { $regex: escaped, $options: "i" };
-        userFilter.$or = [{ name: regex }, { mobileNumber: regex }];
-      }
-      const matchedUsers = await this.userRepo.findAll(userFilter);
-      ownerIdFilter = matchedUsers.map((u) => String(u._id));
-      if (ownerIdFilter.length === 0) {
-        return { items: [], total: 0, page, limit, pages: 0 };
-      }
-    }
+    return {
+      items: items.map(({ owner, ...wallet }) => ({ ...wallet, user: owner })),
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
 
-    const walletFilter: Record<string, unknown> = { ...notDeleted };
-    if (ownerIdFilter) walletFilter.userId = { $in: ownerIdFilter };
+  /** Wallet count and money totals across every wallet the filters cover, plus the filters that were applied. */
+  async getWalletsSummary(dto: WalletScopeDto) {
+    const scope = this.toWalletScope(dto);
+    const totals = await this.walletRepo.getAdminTotals(scope);
+    const appliedFilters = Object.fromEntries(
+      Object.entries(scope).filter(([, value]) => value !== undefined),
+    ) as AdminWalletScope;
 
-    const allWallets = await this.walletRepo.findAll(walletFilter);
-    const ownerIds = [
-      ...new Set(allWallets.map((w) => String(w.userId))),
-    ].filter((id) => Types.ObjectId.isValid(id));
+    return {
+      ...totals,
+      appliedFilters,
+      isFiltered: Object.keys(appliedFilters).length > 0,
+    };
+  }
 
-    // Mirrors the original innerJoinAndSelect('w.user', 'u') — wallets with no
-    // matching user (orphaned records) are excluded from both items and total.
-        const owners = ownerIds.length
-      ? await this.userRepo.findAll({ _id: { $in: ownerIds }, ...notDeleted })
-      : [];
-    const ownersById = new Map(owners.map((u) => [String(u._id), u]));
-    
-    const testerCondition = isTesterCondition(dto.tester);
-    const validWallets = allWallets.filter((w) => {
-      const owner = ownersById.get(w.userId);
-      if (!owner) return false;
-      if (dto.anveshanScope && !!owner.isAnveshanUser !== (dto.anveshanScope === 'only')) return false;
-      if (!testerCondition) return true;
-      return dto.tester === "only" ? !!owner.is_tester : !owner.is_tester;
-    });
-    // Strings, not ObjectId instances: Mongoose casts them, the repo doesn't mangle them.
-    // The notDeleted filter drops deleted owners, so their wallets fall out as orphans below.
-
-
-    // Mirrors the old inner join: wallets with no (non-deleted) user are excluded from items and total
-
-    const dir = sortOrder === "ASC" ? 1 : -1;
-    validWallets.sort((a, b) => {
-      const av =
-        sortBy === "balance"
-          ? Number(a.balance)
-          : new Date(a.createdAt).getTime();
-      const bv =
-        sortBy === "balance"
-          ? Number(b.balance)
-          : new Date(b.createdAt).getTime();
-      return (av - bv) * dir;
-    });
-
-    const total = validWallets.length;
-    const pageWallets = validWallets.slice((page - 1) * limit, page * limit);
-    const walletIds = pageWallets.map((w) => String(w._id));
-
-    const transactions = walletIds.length
-      ? await this.transactionRepo.findAll({
-          walletId: { $in: walletIds },
-          ...notDeleted,
-        })
-      : [];
-
-    const sumsByWallet = new Map<
-      string,
-      { totalEarned: number; totalWithdrawn: number }
-    >();
-    for (const tx of transactions) {
-      const key = String(tx.walletId);
-      const entry = sumsByWallet.get(key) ?? {
-        totalEarned: 0,
-        totalWithdrawn: 0,
-      };
-      if (
-        tx.type === TransactionType.CREDIT &&
-        tx.source === TransactionSource.REWARD &&
-        tx.status === TransactionStatus.COMPLETED
-      ) {
-        entry.totalEarned += Number(tx.amount);
-      }
-      if (
-        tx.type === TransactionType.DEBIT &&
-        tx.source === TransactionSource.WITHDRAWAL &&
-        tx.status === TransactionStatus.COMPLETED
-      ) {
-        entry.totalWithdrawn += Number(tx.amount);
-      }
-      sumsByWallet.set(key, entry);
-    }
-
-    const items = pageWallets.map((w) => {
-      const user = ownersById.get(String(w.userId))!;
-      const sums = sumsByWallet.get(String(w._id)) ?? {
-        totalEarned: 0,
-        totalWithdrawn: 0,
-      };
-      return {
-        id: String(w._id),
-        userId: String(user._id),
-        balance: Number(w.balance),
-        totalEarned: sums.totalEarned,
-        totalWithdrawn: sums.totalWithdrawn,
-        user: {
-          id: String(user._id),
-          name: user.name,
-          mobileNumber: user.mobileNumber,
-          state: user.state,
-          district: user.district,
-          category: user.category,
-          role: user.role,
-          verificationStatus: user.verificationStatus,
-          createdAt: user.createdAt,
-          isTester: !!user.is_tester,
-        },
-      };
-    });
-
-    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  // Normalizes the wallet filters so the list and the summary read them the same way.
+  private toWalletScope(dto: WalletScopeDto): AdminWalletScope {
+    return {
+      userId: dto.userId || undefined,
+      search: dto.search?.trim() || undefined,
+      state: dto.state || undefined,
+      tester: dto.tester,
+      anveshanScope: dto.anveshanScope,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ import type {
   ConfigItem,
   Withdrawal,
   WalletSummary,
+  WalletTotals,
   Transaction,
   PaymentDetail,
   Notification,
@@ -213,6 +214,7 @@ const ANVESHAN_SCOPED_PATHS = new Set([
   "/admin/users/stats",
   "/admin/withdrawals",
   "/admin/wallets",
+  "/admin/wallets/summary",
   "/admin/questions/queue",
   "/questions",
   "/agri-entities/all",
@@ -887,6 +889,16 @@ export const adminApi = {
     const qs = new URLSearchParams(p).toString();
     return request<PaginatedResponse<WalletSummary>>(
       `/admin/wallets${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getWalletsSummary: (params: Record<string, string | undefined> = {}) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<WalletTotals>(
+      `/admin/wallets/summary${qs ? `?${qs}` : ""}`,
     );
   },
 
