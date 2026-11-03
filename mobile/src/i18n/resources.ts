@@ -1139,6 +1139,7 @@ const resources = {
       "cat.fpo": "FPO Member",
       "cat.ngo": "NGO Partner",
       "leaderboard.title": "Leaderboard",
+      "leaderboard.rankingNote": "Ranked by the number of your questions approved by our experts. If two users have the same count, the one who joined earlier ranks higher. Earnings do not affect your rank.",
       "leaderboard.stats.totalRewards": "Total Rewards",
       "leaderboard.stats.approvedQs": "Approved Qs",
       "leaderboard.stats.yourRank": "Your Rank",

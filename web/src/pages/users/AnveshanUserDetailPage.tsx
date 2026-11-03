@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Clock, Download, MapPin, Phone, Sprout } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, Download, MapPin, Phone, Sprout, UserCog } from 'lucide-react'
 import { toast } from 'sonner'
 import { adminApi, getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
@@ -84,11 +84,17 @@ export function AnveshanUserDetailPage() {
                 {user.isTester && <TesterTag />}
               </div>
             </div>
-            <Button variant="outline" size="sm" className="shrink-0" onClick={() => { markFeatureSeen('anveshanUserExport'); setExportOpen(true) }}>
-              <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Export
-              <NewBadge feature="anveshanUserExport" className="ml-1.5" />
-            </Button>
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/users/${user.id}?classic=1`)}>
+                <UserCog className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Account
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { markFeatureSeen('anveshanUserExport'); setExportOpen(true) }}>
+                <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Export
+                <NewBadge feature="anveshanUserExport" className="ml-1.5" />
+              </Button>
+            </div>
           </div>
           <dl className="grid grid-cols-1 gap-3 border-t border-border-subtle pt-5 sm:grid-cols-2 lg:grid-cols-4">
             {[

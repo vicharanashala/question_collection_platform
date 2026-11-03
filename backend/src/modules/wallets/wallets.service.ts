@@ -204,9 +204,14 @@ export class WalletsService {
   async getWithdrawal(userId: string, withdrawalId: string) {
     const wallet = await this.walletRepo.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
-    const objectId = new Types.ObjectId(withdrawalId);
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException('Withdrawal not found');
+    }
     const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: objectId, walletId: wallet._id.toString() },
+      where: {
+        _id: new Types.ObjectId(withdrawalId),
+        walletId: wallet._id.toString(),
+      },
     });
     if (!withdrawal) throw new NotFoundException('Withdrawal not found');
 

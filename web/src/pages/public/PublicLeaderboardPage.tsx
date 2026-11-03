@@ -4,144 +4,272 @@
  * Reached from the trophy icon in the public header. Top-3 podium, a stats
  * row, and a ranked list of the rest of the participants.
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-import { leaderboardApi, getErrorMessage } from '@/api/client'
-import { Card, CardContent } from '@/components/ui/card'
-import { Banknote, HelpCircle, Trophy, Medal, Star, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
-import type { LeaderboardEntry } from '@/types'
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { useTranslation } from "react-i18next";
+import { leaderboardApi, getErrorMessage } from "@/api/client";
+import { Card, CardContent } from "@/components/ui/card";
+import type { LucideIcon } from "lucide-react";
+import { HelpCircle, Info, Trophy, Medal, Star, Loader2, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import type { LeaderboardEntry } from "@/types";
 
 // const FETCH_LIMIT = 100
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatINR(amount: number): string {
-  if (amount <= 0) return '₹0'
-  return `₹${Math.round(amount).toLocaleString('en-IN')}`
-}
-
 function getInitials(name?: string): string {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/)
-  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?'
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
 const MEDALS = {
-  gold:   { color: 'text-amber-600 dark:text-amber-400',   ring: 'ring-amber-400',  bg: 'bg-amber-50 dark:bg-amber-950/40',   labelKey: 'leaderboard.podium.rank1' },
-  silver: { color: 'text-slate-600 dark:text-slate-300',   ring: 'ring-slate-400',  bg: 'bg-slate-100 dark:bg-slate-800/60',  labelKey: 'leaderboard.podium.rank2' },
-  bronze: { color: 'text-orange-700 dark:text-orange-400', ring: 'ring-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/40', labelKey: 'leaderboard.podium.rank3' },
-} as const
+  gold: {
+    color: "text-amber-600 dark:text-amber-400",
+    ring: "ring-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    labelKey: "leaderboard.podium.rank1",
+  },
+  silver: {
+    color: "text-slate-600 dark:text-slate-300",
+    ring: "ring-slate-400",
+    bg: "bg-slate-100 dark:bg-slate-800/60",
+    labelKey: "leaderboard.podium.rank2",
+  },
+  bronze: {
+    color: "text-orange-700 dark:text-orange-400",
+    ring: "ring-orange-400",
+    bg: "bg-orange-50 dark:bg-orange-950/40",
+    labelKey: "leaderboard.podium.rank3",
+  },
+} as const;
 
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 
-function Avatar({ name, size, ring, isCurrentUser }: { name?: string; size: number; ring?: string; isCurrentUser?: boolean }) {
+function Avatar({
+  name,
+  size,
+  ring,
+  isCurrentUser,
+}: {
+  name?: string;
+  size: number;
+  ring?: string;
+  isCurrentUser?: boolean;
+}) {
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full font-extrabold',
-        ring ? `ring-2 ${ring}` : '',
-        isCurrentUser ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+        "flex shrink-0 items-center justify-center rounded-full font-extrabold",
+        ring ? `ring-2 ${ring}` : "",
+        isCurrentUser
+          ? "bg-emerald-500 text-white"
+          : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
       )}
       style={{ width: size, height: size, fontSize: size * 0.36 }}
     >
       {getInitials(name)}
     </div>
-  )
+  );
 }
 
 // ─── Stat card ───────────────────────────────────────────────────────────────
 
-function StatCard({ icon: Icon, iconClassName, value, label }: { icon: typeof Banknote; iconClassName: string; value: string | number; label: string }) {
+function StatCard({
+  icon: Icon,
+  iconClassName,
+  value,
+  label,
+}: {
+  icon: LucideIcon;
+  iconClassName: string;
+  value: string | number;
+  label: string;
+}) {
   return (
     <div className="flex flex-1 items-center gap-2.5 rounded-lg border border-border-subtle bg-surface px-3 py-3">
-      <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-md', iconClassName)}>
+      <div
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+          iconClassName,
+        )}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs sm:text-xs sm:text-sm font-extrabold text-foreground">{value}</p>
-        <p className="truncate text-[11px] font-medium text-text-secondary">{label}</p>
+        <p className="truncate text-xs sm:text-xs sm:text-sm font-extrabold text-foreground">
+          {value}
+        </p>
+        <p className="truncate text-[11px] font-medium text-text-secondary">
+          {label}
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Podium ──────────────────────────────────────────────────────────────────
 
-function PodiumSlot({ entry, medal, height }: { entry: LeaderboardEntry; medal: keyof typeof MEDALS; height: number }) {
-  const { t } = useTranslation()
-  const m = MEDALS[medal]
-  const isWinner = medal === 'gold'
+function PodiumSlot({
+  entry,
+  medal,
+  height,
+}: {
+  entry: LeaderboardEntry;
+  medal: keyof typeof MEDALS;
+  height: number;
+}) {
+  const { t } = useTranslation();
+  const m = MEDALS[medal];
+  const isWinner = medal === "gold";
   return (
     <div className="flex flex-1 flex-col items-center">
       <div className="mb-2.5 flex flex-col items-center">
-        {isWinner && <Star className={cn('mb-1 h-3.5 w-3.5', m.color)} fill="currentColor" />}
+        {isWinner && (
+          <Star
+            className={cn("mb-1 h-3.5 w-3.5", m.color)}
+            fill="currentColor"
+          />
+        )}
         <Avatar name={entry.name} size={isWinner ? 56 : 46} ring={m.ring} />
-        <p className="mt-2 max-w-[96px] truncate text-center text-[11px] sm:text-[11px] sm:text-xs font-bold text-foreground">{entry.name || 'Unknown'}</p>
-        <p className="truncate text-[11px] sm:text-[11px] sm:text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{formatINR(entry.totalEarned)}</p>
+        <p className="mt-2 max-w-[96px] truncate text-center text-[11px] sm:text-[11px] sm:text-xs font-bold text-foreground">
+          {entry.name || "Unknown"}
+        </p>
+        <p className="truncate text-[11px] sm:text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+          {entry.totalQuestions} Qs Approved
+        </p>
       </div>
       <div
-        className={cn('flex w-full flex-col items-center justify-center gap-0.5 rounded-t-lg border', m.bg)}
-        style={{ height, borderColor: 'transparent' }}
+        className={cn(
+          "flex w-full flex-col items-center justify-center gap-0.5 rounded-t-lg border",
+          m.bg,
+        )}
+        style={{ height, borderColor: "transparent" }}
       >
-        <Medal className={cn(isWinner ? 'h-6 w-6' : 'h-5 w-5', m.color)} />
-        <span className={cn('font-black', m.color, isWinner ? 'text-lg sm:text-xl' : 'text-sm sm:text-sm sm:text-base')}>{entry.rank}</span>
-        <span className={cn('text-[9px] font-bold uppercase tracking-wide', m.color)}>{t(m.labelKey)}</span>
+        <Medal className={cn(isWinner ? "h-6 w-6" : "h-5 w-5", m.color)} />
+        <span
+          className={cn(
+            "font-black",
+            m.color,
+            isWinner ? "text-lg sm:text-xl" : "text-sm sm:text-sm sm:text-base",
+          )}
+        >
+          {entry.rank}
+        </span>
+        <span
+          className={cn(
+            "text-[9px] font-bold uppercase tracking-wide",
+            m.color,
+          )}
+        >
+          {t(m.labelKey)}
+        </span>
       </div>
     </div>
-  )
+  );
 }
 
 function Podium({ top3 }: { top3: LeaderboardEntry[] }) {
-  if (top3.length === 0) return null
-  const slots: Array<{ entry: LeaderboardEntry; medal: keyof typeof MEDALS; height: number }> = []
-  if (top3[1]) slots.push({ entry: top3[1], medal: 'silver', height: 76 })
-  if (top3[0]) slots.push({ entry: top3[0], medal: 'gold', height: 100 })
-  if (top3[2]) slots.push({ entry: top3[2], medal: 'bronze', height: 64 })
+  if (top3.length === 0) return null;
+  const slots: Array<{
+    entry: LeaderboardEntry;
+    medal: keyof typeof MEDALS;
+    height: number;
+  }> = [];
+  if (top3[1]) slots.push({ entry: top3[1], medal: "silver", height: 76 });
+  if (top3[0]) slots.push({ entry: top3[0], medal: "gold", height: 100 });
+  if (top3[2]) slots.push({ entry: top3[2], medal: "bronze", height: 64 });
 
   return (
     <Card>
       <CardContent className="flex items-end gap-2 px-3 py-4">
         {slots.map((s) => (
-          <PodiumSlot key={s.entry.userId} entry={s.entry} medal={s.medal} height={s.height} />
+          <PodiumSlot
+            key={s.entry.userId}
+            entry={s.entry}
+            medal={s.medal}
+            height={s.height}
+          />
         ))}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ─── List row ────────────────────────────────────────────────────────────────
 
 function ListRow({ entry }: { entry: LeaderboardEntry }) {
-  const isMe = entry.isCurrentUser
+  const isMe = entry.isCurrentUser;
+  const { t } = useTranslation();
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-lg border px-3 py-2.5',
-        isMe ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/30' : 'border-border-subtle bg-surface',
+        "flex items-center gap-3 rounded-lg border px-3 py-2.5",
+        isMe
+          ? "border-emerald-300 bg-emerald-50/60 dark:border-emerald-800 dark:bg-emerald-950/30"
+          : "border-border-subtle bg-surface",
       )}
     >
-      <span className={cn('w-6 shrink-0 text-center text-xs sm:text-xs sm:text-sm font-extrabold', isMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
+      <span
+        className={cn(
+          "w-6 shrink-0 text-center text-xs sm:text-xs sm:text-sm font-extrabold",
+          isMe
+            ? "text-emerald-600 dark:text-emerald-400"
+            : "text-text-tertiary",
+        )}
+      >
         {entry.rank}
       </span>
       <Avatar name={entry.name} size={36} isCurrentUser={isMe} />
       <div className="min-w-0 flex-1">
-        <p className={cn('truncate text-xs sm:text-xs sm:text-sm', isMe ? 'font-extrabold text-foreground' : 'font-semibold text-foreground')}>
-          {entry.name || 'Unknown'}
+        <p
+          className={cn(
+            "truncate text-xs sm:text-xs sm:text-sm",
+            isMe
+              ? "font-extrabold text-foreground"
+              : "font-semibold text-foreground",
+          )}
+        >
+          {entry.name || "Unknown"}
         </p>
-        {isMe && <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">You</p>}
+        {isMe && (
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+            {t("leaderboard.you")}
+          </p>
+        )}
       </div>
-      <div className="shrink-0 text-right">
+      {/* <div className="shrink-0 text-right">
         <p className={cn('text-xs sm:text-xs sm:text-sm font-extrabold', entry.totalEarned > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
           {formatINR(entry.totalEarned)}
         </p>
         <p className="text-[11px] font-medium text-text-tertiary">
           {entry.totalQuestions > 0 ? `${entry.totalQuestions} Qs` : '—'}
         </p>
+      </div> */}
+
+      <div className="shrink-0 text-right">
+        <p
+          className={cn(
+            "text-xs sm:text-sm font-extrabold",
+            entry.totalQuestions > 0
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-text-tertiary",
+          )}
+        >
+          {entry.totalQuestions}
+        </p>
+        <p className="text-[11px] font-medium text-text-tertiary">
+          Qs Approved
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Main page ───────────────────────────────────────────────────────────────
@@ -253,19 +381,22 @@ function ListRow({ entry }: { entry: LeaderboardEntry }) {
 // }
 
 export function PublicLeaderboardPage(): ReactNode {
-  const { t } = useTranslation()
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([])
-  const [userRank, setUserRank] = useState<number | null>(null)
-  const [total, setTotal] = useState(0)
+  const { t } = useTranslation();
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [total, setTotal] = useState(0);
 
-  const [offset, setOffset] = useState(0)
+  const [offset, setOffset] = useState(0);
 
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const FETCH_LIMIT = 10
 
-  const hasMore = entries.length < total
+  const [totalApproved, setTotalApproved] = useState(0)
+
+  const FETCH_LIMIT = 10;
+
+  const hasMore = entries.length < total;
 
   // ─────────────────────────────────────────────────────────────
   // Fetch leaderboard page
@@ -275,115 +406,92 @@ export function PublicLeaderboardPage(): ReactNode {
     async (currentOffset: number, isInitial = false) => {
       try {
         if (isInitial) {
-          setLoading(true)
+          setLoading(true);
         } else {
-          setLoadingMore(true)
+          setLoadingMore(true);
         }
 
         const res = await leaderboardApi.getLeaderboard({
           limit: FETCH_LIMIT,
           offset: currentOffset,
-        })
+        });
 
         // Initial request → replace
         // Subsequent requests → append
-        setEntries((prev) =>
-          currentOffset === 0
-            ? res.entries
-            : [...prev, ...res.entries],
-        )
+        // setEntries((prev) =>
+        //   currentOffset === 0 ? res.entries : [...prev, ...res.entries],
+        // );
 
-        setTotal(res.total)
-        setUserRank(res.userRank)
+        setEntries((prev) => {
+          if (currentOffset === 0) return res.entries;
+          const seen = new Set(prev.map((e) => e.userId));
+          return [...prev, ...res.entries.filter((e) => !seen.has(e.userId))];
+        });
+
+        setTotal(res.total);
+        setUserRank(res.userRank);
+        setTotalApproved(res.totalApprovedQuestions ?? 0)
 
         // Move offset forward by the number actually returned
-        setOffset(
-          currentOffset + res.entries.length,
-        )
+        setOffset(currentOffset + res.entries.length);
       } catch (e) {
-        toast.error(
-          getErrorMessage(
-            e,
-            t('leaderboard.loadError'),
-          ),
-        )
+        toast.error(getErrorMessage(e, t("leaderboard.loadError")));
       } finally {
-        setLoading(false)
-        setLoadingMore(false)
+        setLoading(false);
+        setLoadingMore(false);
       }
     },
     [t],
-  )
+  );
 
   // ─────────────────────────────────────────────────────────────
   // Initial load
   // ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetchLeaderboard(0, true)
-  }, [fetchLeaderboard])
+    fetchLeaderboard(0, true);
+  }, [fetchLeaderboard]);
 
   // ─────────────────────────────────────────────────────────────
   // Load next page
   // ─────────────────────────────────────────────────────────────
 
   const handleLoadMore = () => {
-    if (loadingMore || !hasMore) return
+    if (loadingMore || !hasMore) return;
 
-    fetchLeaderboard(offset)
-  }
+    fetchLeaderboard(offset);
+  };
 
-  // ─────────────────────────────────────────────────────────────
-  // Sort
-  // ─────────────────────────────────────────────────────────────
-
-  const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => {
-      if (b.totalEarned !== a.totalEarned) {
-        return b.totalEarned - a.totalEarned
-      }
-
-      if (b.totalQuestions !== a.totalQuestions) {
-        return b.totalQuestions - a.totalQuestions
-      }
-
-      return a.rank - b.rank
-    })
-  }, [entries])
+  // Entries arrive already ranked by the server on approved question count, so no client-side sort.
 
   // ─────────────────────────────────────────────────────────────
   // Top 3
   // ─────────────────────────────────────────────────────────────
 
-  const top3 = sortedEntries.filter(
-    (entry) => entry.rank <= 3,
-  )
+  const top3 = entries.filter((entry) => entry.rank <= 3);
 
   // ─────────────────────────────────────────────────────────────
   // Remaining users
   // ─────────────────────────────────────────────────────────────
 
-  const rest = sortedEntries.filter(
-    (entry) => entry.rank > 3,
-  )
+  const rest = entries.filter((entry) => entry.rank > 3);
 
   // ─────────────────────────────────────────────────────────────
   // Stats
   // ─────────────────────────────────────────────────────────────
 
-  const totalEarningsAll = entries.reduce(
-    (sum, e) => sum + (e.totalEarned ?? 0),
-    0,
-  )
+  // const totalEarningsAll = entries.reduce(
+  //   (sum, e) => sum + (e.totalEarned ?? 0),
+  //   0,
+  // );
 
-  const totalQuestionsAll = entries.reduce(
-    (sum, e) => sum + (e.totalQuestions ?? 0),
-    0,
-  )
+  // const totalQuestionsAll = entries.reduce(
+  //   (sum, e) => sum + (e.totalQuestions ?? 0),
+  //   0,
+  // );
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-4">
-
       {/* ─────────────────────────────────────────────
           Header
       ───────────────────────────────────────────── */}
@@ -391,13 +499,18 @@ export function PublicLeaderboardPage(): ReactNode {
       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
         <CardContent className="p-4">
           <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
-            {t('leaderboard.title')}
+            {t("leaderboard.title")}
           </h1>
 
           <p className="mt-0.5 text-xs sm:text-sm text-text-secondary">
             {total > 0
-              ? `${total} ${t('leaderboard.participants')}`
-              : t('leaderboard.loading')}
+              ? `${total} ${t("leaderboard.participants")}`
+              : t("leaderboard.loading")}
+          </p>
+
+          <p className="mt-2 flex items-start gap-1.5 text-[11px] sm:text-xs text-text-tertiary">
+            <Info className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>{t("leaderboard.rankingNote")}</span>
           </p>
         </CardContent>
       </Card>
@@ -412,12 +525,11 @@ export function PublicLeaderboardPage(): ReactNode {
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
 
             <p className="mt-3 text-xs sm:text-sm font-medium">
-              {t('leaderboard.loading')}
+              {t("leaderboard.loading")}
             </p>
           </CardContent>
         </Card>
-      ) : sortedEntries.length === 0 ? (
-
+      ) : entries.length === 0 ? (
         /* ───────────────────────────────────────────
            Empty state
         ─────────────────────────────────────────── */
@@ -432,50 +544,61 @@ export function PublicLeaderboardPage(): ReactNode {
             </div>
 
             <h2 className="mt-5 text-lg sm:text-xl font-extrabold text-foreground">
-              {t('leaderboard.empty.title')}
+              {t("leaderboard.empty.title")}
             </h2>
 
             <p className="mt-2 max-w-sm text-xs sm:text-sm text-text-secondary">
-              {t('leaderboard.empty.subtitle')}
+              {t("leaderboard.empty.subtitle")}
             </p>
           </CardContent>
         </Card>
-
       ) : (
-
         <>
           {/* ─────────────────────────────────────────
               Stats
           ───────────────────────────────────────── */}
 
-          <div className="flex flex-wrap gap-2.5 min-w-0">
+          {/* <div className="flex flex-wrap gap-2.5 min-w-0">
             <StatCard
               icon={Banknote}
               iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
               value={formatINR(totalEarningsAll)}
-              label={t('leaderboard.stats.totalRewards')}
+              label={t("leaderboard.stats.totalRewards")}
             />
 
             <StatCard
               icon={HelpCircle}
               iconClassName="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
-              value={
-                totalQuestionsAll > 0
-                  ? totalQuestionsAll
-                  : '—'
-              }
-              label={t('leaderboard.stats.approvedQs')}
+              value={totalQuestionsAll > 0 ? totalQuestionsAll : "—"}
+              label={t("leaderboard.stats.approvedQs")}
             />
 
             <StatCard
               icon={Trophy}
               iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-              value={
-                userRank
-                  ? `#${userRank}`
-                  : '—'
-              }
-              label={t('leaderboard.stats.yourRank')}
+              value={userRank ? `#${userRank}` : "—"}
+              label={t("leaderboard.stats.yourRank")}
+            />
+          </div> */}
+
+          <div className="flex flex-wrap gap-2.5 min-w-0">
+            <StatCard
+              icon={HelpCircle}
+              iconClassName="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
+              value={totalApproved}
+              label={t("leaderboard.stats.approvedQs")}
+            />
+            <StatCard
+              icon={Users}
+              iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
+              value={total}
+              label={t("leaderboard.participants")}
+            />
+            <StatCard
+              icon={Trophy}
+              iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+              value={userRank ? `#${userRank}` : "—"}
+              label={t("leaderboard.stats.yourRank")}
             />
           </div>
 
@@ -492,15 +615,12 @@ export function PublicLeaderboardPage(): ReactNode {
           {rest.length > 0 && (
             <div>
               <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
-                {t('leaderboard.section.allParticipants')}
+                {t("leaderboard.section.allParticipants")}
               </p>
 
               <div className="space-y-2">
                 {rest.map((entry) => (
-                  <ListRow
-                    key={entry.userId}
-                    entry={entry}
-                  />
+                  <ListRow key={entry.userId} entry={entry} />
                 ))}
               </div>
 
@@ -515,19 +635,19 @@ export function PublicLeaderboardPage(): ReactNode {
                     onClick={handleLoadMore}
                     disabled={loadingMore}
                     className={cn(
-                      'rounded-lg border px-5 py-2.5 text-sm font-bold transition',
-                      'border-border-subtle bg-surface',
-                      'hover:bg-surface-variant',
-                      'disabled:cursor-not-allowed disabled:opacity-50',
+                      "rounded-lg border px-5 py-2.5 text-sm font-bold transition",
+                      "border-border-subtle bg-surface",
+                      "hover:bg-surface-variant",
+                      "disabled:cursor-not-allowed disabled:opacity-50",
                     )}
                   >
                     {loadingMore ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {t('leaderboard.loadingMore')}
+                        {t("leaderboard.loadingMore")}
                       </span>
                     ) : (
-                      t('leaderboard.loadMore')
+                      t("leaderboard.loadMore")
                     )}
                   </button>
                 </div>
@@ -535,7 +655,7 @@ export function PublicLeaderboardPage(): ReactNode {
 
               {!hasMore && (
                 <p className="pt-5 text-center text-[11px] sm:text-xs text-text-tertiary">
-                  {t('leaderboard.reachedEnd')}
+                  {t("leaderboard.reachedEnd")}
                 </p>
               )}
             </div>
@@ -544,17 +664,17 @@ export function PublicLeaderboardPage(): ReactNode {
           {/* If there are only 1–3 users */}
           {rest.length === 0 && hasMore === false && (
             <p className="text-center text-[11px] sm:text-xs text-text-tertiary">
-              {t('leaderboard.reachedEnd')}
+              {t("leaderboard.reachedEnd")}
             </p>
           )}
         </>
       )}
 
       <p className="pt-2 text-center text-[11px] sm:text-xs text-text-tertiary">
-        {t('app.footer')}
+        {t("app.footer")}
       </p>
     </div>
-  )
+  );
 }
 
-export default PublicLeaderboardPage
+export default PublicLeaderboardPage;

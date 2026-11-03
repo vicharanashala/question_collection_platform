@@ -537,7 +537,9 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
   ): Promise<number> {
     if (!filter) return this._model.countDocuments().exec();
     const where = 'where' in filter ? filter.where : filter;
-    return this._model.countDocuments(toMongoFilter(this.translateIdField({ where }))).exec();
+    return this._model
+      .countDocuments(toMongoFilter(this.translateIdField({ where })))
+      .exec();
   }
 
   async findAndCount(
@@ -612,24 +614,6 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
    * - Rename _id → id (string)
    * - Remove __v
    */
-//   protected docToEntity(doc: unknown): T {
-//     // If passed a Mongoose document, use _doc which holds the actual plain data;
-//     // otherwise use the object as-is (supports plain objects from create()).
-//     const raw = doc as Record<string, unknown>;
-//     const obj = raw._doc ?? raw;
-//     const out: Record<string, unknown> = {};
-//     for (const [k, v] of Object.entries(obj)) {
-//       if (k === '__v') continue;
-//       if (k === '_id') {
-//         out['id'] = String(v);
-//       } else {
-//         out[k] = v;
-//       }
-//     }
-//     return out as T;
-//   }
-
-
 protected docToEntity(doc: unknown): T {
   if (!doc) return doc as T;
   const raw = doc as Record<string, unknown>;
